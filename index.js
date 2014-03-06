@@ -595,9 +595,9 @@ var drawState = function(rect, values) {
 	ctx.moveTo(rect.x, b);
 	ctx.lineTo(rect.x, rect.y);
     for (var i2 = 0; i2 < values.length; i2++) {
-		var y = rect.y + h * i2;
-		ctx.moveTo(rect.x, y);
-		ctx.lineTo(r, y);
+		var y2 = rect.y + h * i2;
+		ctx.moveTo(rect.x, y2);
+		ctx.lineTo(r, y2);
     }
 	ctx.moveTo(rect.x, b);
 	ctx.lineTo(r, b);
@@ -679,10 +679,10 @@ var drawPuzzleButton = function(x, y, p) {
         var r = gateRadius;
         ctx.globalAlpha=0.5;
         ctx.fillStyle = "white";
-        ctx.fillRect(0, y+r+15, 800, 800);
+        ctx.fillRect(0, y+r+15, canvas.width, canvas.height);
         ctx.globalAlpha=1;
         
-        var dx = canvas.width - 400;
+        var dx = canvas.width - 410;
         drawRect(makeRect(dx, y+r+10, 400, p.desc.split("\n").length*16+10));
         drawParagraph(dx+5, y+r+25, p.desc);
     }
