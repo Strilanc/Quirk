@@ -82,7 +82,7 @@ var makeIndexVector = function(index) {
 var makeSwappedIndexVector = function(index) {
     var d = [];
     for (var i = 0; i < numStates; i++) {
-        var rv = ((i >> 2) & 1) + (i & 2) + ((i << 2) & 4)
+        var rv = ((i >> 2) & 1) + (i & 2) + ((i << 2) & 4);
         d.push({
             r: rv == index ? 1 : 0,
             i: 0
@@ -93,7 +93,7 @@ var makeSwappedIndexVector = function(index) {
 var makeBitFlippedIndexVector = function(index) {
     var d = [];
     for (var i = 0; i < numStates; i++) {
-        var rv = ~i & ((1 << numWires) - 1)
+        var rv = ~i & ((1 << numWires) - 1);
         d.push({
             r: rv == index ? 1 : 0,
             i: 0
@@ -104,7 +104,7 @@ var makeBitFlippedIndexVector = function(index) {
 var makeCondFlippedIndexVector = function(index) {
     var d = [];
     for (var i = 0; i < numStates; i++) {
-        var rv = i ^ ((i & 4) != 0 ? 2 : 0);
+        var rv = i ^ ((i & 4) !== 0 ? 2 : 0);
         d.push({
             r: rv == index ? 1 : 0,
             i: 0
@@ -159,7 +159,7 @@ var entangledIndexVectorsInput = function() {
 		r.push(null);
 	}
 	r.push({label: "0", v:d});
-	for (var j = numStates/2+1; j < numStates; j++) {
+	for (var j2 = numStates/2+1; j2 < numStates; j2++) {
 		r.push(null);
 	}
     return r;
@@ -177,7 +177,7 @@ var entangledIndexVectors = function() {
 		r.push(null);
 	}
 	r.push({label: "0", v:d});
-	for (var j = numStates/2+1; j < numStates; j++) {
+	for (var j2 = numStates/2+1; j2 < numStates; j2++) {
 		r.push(null);
 	}
     return r;
@@ -278,8 +278,8 @@ gateSet.push({
 });
 gateSet.push({
     name: "Pauli Y Gate",
-    desc: "Flips a bit's value and rotates its phase by 90°.\n"
-          + "The direction of rotation switches when the bit is ON.\n" +
+    desc: "Flips a bit's value and rotates its phase by 90°.\n" +
+          "The direction of rotation switches when the bit is ON.\n" +
           "\n" +
           "Other interpretations:\n" +
           "- A 180° turn around the Y axis of the Block Sphere.",
@@ -376,7 +376,7 @@ puzzles.push({
     desc: "Goal: Hadamard bit0 then make bit1 and bit2 match it.\n" +
           "\n" +
           "Hint: Conditionally flipping an OFF bit will make\n" +
-		  "      it match the conditioned-upon bit.",
+          "      it match the conditioned-upon bit.",
     input: entangledIndexVectorsInput,
     output: entangledIndexVectors,
     passed: false
@@ -599,7 +599,7 @@ var drawStates = function(rect, states, label, highlight) {
 	var widthVector = widthDelta - testVectorSeparation;
     
     for (var i = 0; i < states.length; i++) {
-		if (states[i] == null) continue;
+		if (states[i] === null) continue;
         drawCenteredString(rect.x + i*widthDelta + widthVector/2, rect.y + testVectorLabelOffset, states[i].label, testVectorLabelFontSize);
         drawState(makeRect(rect.x + i*widthDelta, rect.y, widthVector, rect.h), states[i].v);
     }
@@ -607,7 +607,7 @@ var drawStates = function(rect, states, label, highlight) {
 var drawTestStates = function(rect, operations, label, highlightIfMatches) {
     var states = [];
     for (var i = 0; i < curPuzzle.input.length; i++) {
-		if (curPuzzle.input[i] == null) {
+		if (curPuzzle.input[i] === null) {
 			states.push(null);
 			continue;
 		}
@@ -618,11 +618,11 @@ var drawTestStates = function(rect, operations, label, highlightIfMatches) {
 	
 	var matches = true;
 	if (highlightIfMatches) {
-		for (var i = 0; i < curPuzzle.output.length; i++) {
-			if (curPuzzle.output[i] == null) continue;
-			for (var j = 0; j < curPuzzle.output[i].v.length; j++) {
-				var c1 = curPuzzle.output[i].v[j];
-				var c2 = states[i].v[j];
+		for (var i2 = 0; i2 < curPuzzle.output.length; i2++) {
+			if (curPuzzle.output[i2] === null) continue;
+			for (var j = 0; j < curPuzzle.output[i2].v.length; j++) {
+				var c1 = curPuzzle.output[i2].v[j];
+				var c2 = states[i2].v[j];
 				matches = matches && Math.abs(c1.r - c2.r) < 0.001;
 				matches = matches && Math.abs(c1.i - c2.i) < 0.001;
 			}
@@ -777,9 +777,9 @@ var redraw = function () {
     }
 };
 
-var mouseUpdate = function(x, y, pressed) {
-    latestMouseX = x;
-    latestMouseY = y;
+var mouseUpdate = function(p, pressed) {
+    latestMouseX = p.pageX - $(canvas).position().left;
+    latestMouseY = p.pageY - $(canvas).position().top;
 	if (isTapping != pressed) {
 		wasTapping = isTapping;
 		isTapping = pressed;
@@ -794,24 +794,27 @@ var mouseUpdate = function(x, y, pressed) {
 		redraw();
 	}
 };
-canvas.onmousemove = function(p) {
-	mouseUpdate(p.offsetX, p.offsetY, isTapping);
-};
-canvas.onmousedown = function(p) {
+$(canvas).mousedown(function(p) {
 	if (p.which != 1) return;
-	mouseUpdate(p.offsetX, p.offsetY, true);
-};
-canvas.onmouseup = function(p) {
+	mouseUpdate(p, true);
+});
+$(document).mouseup(function(p) {
 	if (p.which != 1) return;
-	mouseUpdate(p.offsetX, p.offsetY, false);
-};
-canvas.onmouseout = function(p) {
-	mouseUpdate(-100, -100, isTapping);
-};
-canvas.onmouseover = function(p) {
-	mouseUpdate(-100, -100, p.which == 1);
-	mouseUpdate(p.offsetX, p.offsetY, p.which == 1);
-};
+	mouseUpdate(p, false);
+});
+$(document).mousemove(function(p) {
+    if (isTapping) {
+        mouseUpdate(p, isTapping);
+    }
+});
+$(canvas).mousemove(function(p) {
+    if (!isTapping) {
+        mouseUpdate(p, isTapping);
+    }
+});
+$(canvas).mouseleave(function(p) {
+    mouseUpdate({offsetX:-100, offsetY:-100}, isTapping);
+});
 
 curPuzzle = puzzles[0];
 redraw();
