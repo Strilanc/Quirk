@@ -8,11 +8,11 @@ var makeRect = function(x, y, w, h) {
 };
 var canvas = document.getElementById("drawCanvas");
 var ctx = canvas.getContext("2d");
+ctx.font = "12px Helvetica";
 var gateRadius = 25;
 var circuitOperationHorizontalSpacing = 10;
 var circuitOperations = [];
 
-var testVectorLabelFontSize = 10;
 var testVectorsTitleOffset = -20;
 var testVectorLabelOffset = -8;
 var testVectorSeparation = 3;
@@ -21,7 +21,7 @@ var testVectorsY = 350;
 var testVectorsInterSpacing = 25;
 var testVectorsWidth = (canvas.width + testVectorsInterSpacing) / 4 - testVectorsInterSpacing;
 
-var circuitRect = makeRect(0, 120, canvas.width, 200);
+var circuitRect = makeRect(0, 120, canvas.width, 201);
 var inputVectorsRect = makeRect(0, testVectorsY, testVectorsWidth, -1);
 var operationMatrixRect = makeRect(
 	inputVectorsRect.x + inputVectorsRect.w + testVectorsInterSpacing, 
@@ -353,7 +353,7 @@ puzzles.push({
     passed: false
 });
 puzzles.push({
-    title: "Not When",
+    title: "Not If",
     desc: "Goal: Make a circuit that flips bit1 when bit2 is ON.\n" +
           "\n" +
           "Hint: Tap the boxes shown when the circuit is highlighted\n" +
@@ -423,27 +423,20 @@ var wasTapping = false;
 var curPuzzle = null;
 
 var drawRect = function(rect, fill) {
-    ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.w, rect.h);
-    ctx.fillStyle = fill ? fill : "white";
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.w, rect.h);
+    ctx.fillStyle = fill || "white";
     ctx.strokeStyle = "black";
-    ctx.stroke();
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 };
 
-var drawParagraph = function(x,y,paragraph,fontSize) {
-    ctx.font = (fontSize ? fontSize : 14) + "px Helvetica";
+var drawParagraph = function(x,y,paragraph) {
     ctx.fillStyle = "black";
     var lines = paragraph.split("\n");
     for (var i = 0; i < lines.length; i++) {
         ctx.fillText(lines[i], x, y + i*16);
     }
 };
-var drawCenteredString = function(x,y,text,fontSize) {
-    ctx.font = (fontSize ? fontSize : 14) + "px Helvetica";
+var drawCenteredString = function(x,y,text) {
     ctx.fillStyle = "black";
 	var s = ctx.measureText(text);
 	ctx.fillText(text,x-s.width/2,y+5);
@@ -469,7 +462,7 @@ var rectContainsMouse = function(b) {
 var drawFloatingGate = function(x, y, g) {
     var b = makeRectRadius(x, y, gateRadius);
     drawRect(b, "orange");
-    drawCenteredString(x, y, g.symbol, g.symbol.length > 2 ? 11 : null);
+    drawCenteredString(x, y, g.symbol);
 };
 var drawToolboxGate = function(x, y, g) {
     var b = makeRectRadius(x, y, gateRadius);
@@ -483,11 +476,9 @@ var drawToolboxGate = function(x, y, g) {
         }
         if (heldOperation === null) {
             var r = gateRadius;
-            ctx.beginPath();
-            ctx.rect(0, y+r+15, 800, 800);
             ctx.globalAlpha=0.5;
             ctx.fillStyle = "white";
-            ctx.fill();
+            ctx.fillRect(0, y+r+15, 800, 800);
             ctx.globalAlpha=1;
             
             drawRect(b, "orange");
@@ -501,7 +492,7 @@ var drawToolboxGate = function(x, y, g) {
     } else {
         drawRect(b);
     }
-    drawCenteredString(x, y, g.symbol, g.symbol.length > 2 ? 11 : null);
+    drawCenteredString(x, y, g.symbol);
 };
 var drawCircuitOperation = function(operation, operationIndex) {
 	var x = operationIndexToX(operationIndex);
@@ -516,7 +507,7 @@ var drawCircuitOperation = function(operation, operationIndex) {
     
     var highlightGate = heldOperation == operation || (rectContainsMouse(b) && heldOperation === null && !isTapping);
 	drawRect(b, highlightGate ? "orange" : null);
-    drawCenteredString(x, cy, operation.gate.symbol, operation.gate.symbol.length > 2 ? 11 : null);
+    drawCenteredString(x, cy, operation.gate.symbol);
     if (rectContainsMouse(b) && heldOperation === null && !wasTapping && isTapping) {
         heldOperation = operation;
         circuitOperations.splice(operationIndex, 1);
@@ -537,33 +528,21 @@ var drawCircuit = function(ops) {
 var drawComplex = function(rect, value) {
     var x = rect.x + rect.w/2;
     var y = rect.y + rect.h/2;
-    var len = value.r*value.r + value.i*value.i;
+    var len = Math.sqrt(value.r*value.r + value.i*value.i);
     
-    ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.w, rect.h);
-    ctx.fillStyle = "white";
-    ctx.fill();
-
     if (len > 0.0001) {
-        ctx.beginPath();
-        var h = Math.sqrt(len)*(rect.h-1);
-        var w = Math.sqrt(len)*(rect.w-1);
-        ctx.rect(rect.x+rect.w/2-w/2, rect.y+rect.h/2-h/2, w, h);
+        var h = len*(rect.h-1);
+        var w = len*(rect.w-1);
         ctx.fillStyle = "orange";
-        ctx.fill();
+        ctx.fillRect(rect.x+rect.w/2-w/2, rect.y+rect.h/2-h/2, w, h);
     }
-
-    ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.w, rect.h);
-    ctx.strokeStyle = "black";
-    ctx.stroke();
 
     if (len > 0.0001) {
         if (rect.w/2 > showComplexPhaseHaveEnoughRadiusCutoff && (value.r < 0 || Math.abs(value.i) > 0.0001)) {
-            ctx.beginPath();
             var theta = Math.atan2(-value.i, value.r);
             if (theta <= -tau/2) theta += tau;
             if (theta > tau/2-0.001) theta -= tau;
+            ctx.beginPath();
             ctx.moveTo(x, y);
             ctx.arc(x, y, complexPhaseSweepRadius, Math.min(0, theta), Math.max(0, theta));
             ctx.strokeStyle = "black";
@@ -573,7 +552,7 @@ var drawComplex = function(rect, value) {
             ctx.fill();
         }
 
-        drawLine(x, y, x + rect.w/2.2*value.r/Math.sqrt(len), y - rect.h/2.2*value.i/Math.sqrt(len));
+        drawLine(x, y, x + rect.w/2.2*value.r/len, y - rect.h/2.2*value.i/len);
     }
 };
 var drawMatrix = function(rect, matrix) {
@@ -585,12 +564,46 @@ var drawMatrix = function(rect, matrix) {
             drawComplex(makeRect(rect.x+w*i, rect.y+h*j, w, h), matrix[j][i]);
         }
     }
+
+	// draw borders
+	ctx.beginPath();
+	var r = rect.x+rect.w;
+	var b = rect.y+rect.h;
+    for (var k = 0; k <= n; k++) {
+		var x = rect.x + w*k;
+		var y = rect.y + h*k;
+		ctx.moveTo(rect.x, y);
+		ctx.lineTo(r, y);
+		ctx.moveTo(x, b);
+		ctx.lineTo(x, rect.y);
+	}
+	ctx.strokeStyle = "black";
+	ctx.stroke();
 };
 var drawState = function(rect, values) {
+	// draw values
     var h = rect.w;
     for (var i = 0; i < values.length; i++) {
-        drawComplex(makeRect(rect.x, rect.y + h * i, rect.w, h), values[i]);
+		var y = rect.y + h * i;
+        drawComplex(makeRect(rect.x, y, rect.w, h), values[i]);
     }
+	
+	// draw borders
+	ctx.beginPath();
+	var r = rect.x + rect.w;
+	var b = rect.y+h*values.length;
+	ctx.moveTo(rect.x, b);
+	ctx.lineTo(rect.x, rect.y);
+    for (var i2 = 0; i2 < values.length; i2++) {
+		var y = rect.y + h * i2;
+		ctx.moveTo(rect.x, y);
+		ctx.lineTo(r, y);
+    }
+	ctx.moveTo(rect.x, b);
+	ctx.lineTo(r, b);
+	ctx.lineTo(r, rect.y);
+	ctx.strokeStyle = "black";
+	ctx.stroke();
 };
 var drawStates = function(rect, states, label, highlight) {
     drawCenteredString(rect.x+rect.w/2, rect.y + testVectorsTitleOffset, label + (highlight ? "✓" : ""));
@@ -600,7 +613,7 @@ var drawStates = function(rect, states, label, highlight) {
     
     for (var i = 0; i < states.length; i++) {
 		if (states[i] === null) continue;
-        drawCenteredString(rect.x + i*widthDelta + widthVector/2, rect.y + testVectorLabelOffset, states[i].label, testVectorLabelFontSize);
+        drawCenteredString(rect.x + i*widthDelta + widthVector/2, rect.y + testVectorLabelOffset, states[i].label);
         drawState(makeRect(rect.x + i*widthDelta, rect.y, widthVector, rect.h), states[i].v);
     }
 };
@@ -652,7 +665,7 @@ var drawIntermediateVectors = function(operations) {
 var drawGateSet = function() {
     var r = makeRect(2, 2, gateSet.length*75+25, 100);
     drawRect(r, "gray");
-    drawCenteredString(r.x + r.w/2, 15, "Toolbox (drag gates onto circuit)", 12);
+    drawCenteredString(r.x + r.w/2, 15, "Toolbox (drag gates onto circuit)");
     for (var i = 0; i < gateSet.length; i++) {
         drawToolboxGate(i*75 + 50, 65, gateSet[i], true);
     }
@@ -664,11 +677,9 @@ var drawPuzzleButton = function(x, y, p) {
             curPuzzle = p;
         }
         var r = gateRadius;
-        ctx.beginPath();
-        ctx.rect(0, y+r+15, 800, 800);
         ctx.globalAlpha=0.5;
         ctx.fillStyle = "white";
-        ctx.fill();
+        ctx.fillRect(0, y+r+15, 800, 800);
         ctx.globalAlpha=1;
         
         var dx = canvas.width - 400;
@@ -682,22 +693,21 @@ var drawPuzzleButton = function(x, y, p) {
     if (curPuzzle == p) color = "orange";
     if (curPuzzle == p && p.passed) color = "green";
     drawRect(b, color);
-    drawCenteredString(x, y, p.title, p.title.length > 2 ? 11 : null);
+    drawCenteredString(x, y, p.title);
 };
 var drawPuzzleSet = function() {
     var x = gateSet.length*75+25+10;
     var r = makeRect(x, 2, canvas.width - x, 100);
     drawRect(r, "gray");
-    drawCenteredString(r.x + r.w/2, 15, "Select Puzzle", 12);
+    drawCenteredString(r.x + r.w/2, 15, "Select Puzzle");
     for (var i = 0; i < puzzles.length; i++) {
         drawPuzzleButton(x + 2 + i*61 + 34, 65, puzzles[i]);
     }
 };
 
 var redraw = function () {
-    ctx.rect(0,0,800,800);
     ctx.fillStyle = "white";
-    ctx.fill();
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
     var focusedOperationIndex = rectContainsMouse(circuitRect) ? operationXToIndex(latestMouseX) : null;
     if (focusedOperationIndex !== null) {
@@ -717,12 +727,10 @@ var redraw = function () {
         }
     }
     if (focusedOperationIndex !== null) {
-        ctx.beginPath();
         var x1 = operationIndexToX(focusedOperationIndex-0.5);
         var x2 = operationIndexToX(focusedOperationIndex+0.5);
-        ctx.rect(x1, circuitRect.y, x2 - x1, circuitRect.h);
         ctx.fillStyle = heldOperation === null ? "yellow" : "orange";
-        ctx.fill();
+        ctx.fillRect(x1, circuitRect.y, x2 - x1, circuitRect.h);
         ctx.globalAlpha = 1;
         ctx.beginPath();
         ctx.moveTo(x2, circuitRect.y);
