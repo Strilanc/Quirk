@@ -22,7 +22,7 @@ var testVectorsInterSpacing = 25;
 var testVectorsWidth = (canvas.width + testVectorsInterSpacing) / 4 - testVectorsInterSpacing;
 
 var circuitRect = makeRect(0, 120, canvas.width, 201);
-var inputVectorsRect = makeRect(0, testVectorsY, testVectorsWidth, -1);
+var inputVectorsRect = makeRect(5, testVectorsY, testVectorsWidth, -1);
 var operationMatrixRect = makeRect(
 	inputVectorsRect.x + inputVectorsRect.w + testVectorsInterSpacing, 
 	testVectorsY, 
