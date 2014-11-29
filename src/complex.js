@@ -2,6 +2,7 @@
  * A Complex number of the form a + bi, where i is the square root of -1.
  * @param real The real part of the Complex number. The 'a' in a + bi.
  * @param imag The imaginary part of the Complex number. The 'b' in a + bi.
+ * @class
  */
 function Complex(real, imag) {
     this.real = real;
@@ -10,7 +11,7 @@ function Complex(real, imag) {
 
 /**
  * Wraps the given number into a Complex value (unless it's already a Complex value).
- * @param {(Number|Complex)} v
+ * @param {number|Complex} v
  * @returns {Complex)
  */
 Complex.from = function (v) {
@@ -25,8 +26,8 @@ Complex.from = function (v) {
 
 /**
  * Returns the real component of a Complex, integer, or float value.
- * @param {(Number|Complex)} v
- * @returns {Number)
+ * @param {number|Complex} v
+ * @returns {number)
  */
 Complex.real = function (v) {
     if (v instanceof Complex) {
@@ -40,8 +41,8 @@ Complex.real = function (v) {
 
 /**
  * Returns the imaginary component of a Complex value, or else 0 for integer and float values.
- * @param {(Number|Complex)} v
- * @returns {Number)
+ * @param {number|Complex} v
+ * @returns {number)
  */
 Complex.imag = function (v) {
     if (v instanceof Complex) {
@@ -55,12 +56,18 @@ Complex.imag = function (v) {
 
 /**
  * Determines if the receiving complex value is equal to the given complex, integer, or float value.
- * @param {(Number|Complex)} v
+ * This method returns false, instead of throwing, when given badly typed arguments.
+ * @param {number|Complex|object} other
  * @returns {boolean}
  */
-Complex.prototype.isEqualTo = function (v) {
-    var c = Complex.from(v);
-    return this.real == c.real && this.imag == c.imag;
+Complex.prototype.isEqualTo = function (other) {
+    if (other instanceof Complex) {
+        return this.real == other.real && this.imag == other.imag;
+    }
+    if (typeof other == "number") {
+        return this.real == other;
+    }
+    return false;
 };
 
 /**
@@ -87,7 +94,7 @@ Complex.prototype.toString = function () {
 
 /**
  * Returns the squared euclidean length of the receiving complex value.
- * @returns {Number}
+ * @returns {number}
  */
 Complex.prototype.norm2 = function () {
     return this.real * this.real + this.imag * this.imag;
@@ -95,7 +102,7 @@ Complex.prototype.norm2 = function () {
 
 /**
  * Returns the euclidean length of the receiving complex value.
- * @returns {Number}
+ * @returns {number}
  */
 Complex.prototype.abs = function () {
     return Math.sqrt(this.norm2());
@@ -112,7 +119,7 @@ Complex.prototype.conjugate = function () {
 /**
  * Returns the angle, in radians, of the receiving complex value with 0 being +real-ward and τ/4 being +imag-ward.
  * Zero defaults to having a phase of zero.
- * @returns {Number}
+ * @returns {number}
  */
 Complex.prototype.phase = function () {
     return Math.atan2(this.imag, this.real);
@@ -134,7 +141,7 @@ Complex.prototype.unit = function () {
 
 /**
  * Returns the sum of the receiving complex value plus the given value.
- * @param {(Number|Complex)} v
+ * @param {number|Complex} v
  * @returns {Complex)
  */
 Complex.prototype.plus = function (v) {
@@ -144,7 +151,7 @@ Complex.prototype.plus = function (v) {
 
 /**
  * Returns the difference from the receiving complex value to the given value.
- * @param {(Number|Complex)} v
+ * @param {number|Complex} v
  * @returns {Complex)
  */
 Complex.prototype.minus = function (v) {
@@ -154,7 +161,7 @@ Complex.prototype.minus = function (v) {
 
 /**
  * Returns the product of the receiving complex value times the given value.
- * @param {(Number|Complex)} v
+ * @param {number|Complex} v
  * @returns {Complex)
  */
 Complex.prototype.times = function (v) {
@@ -166,7 +173,7 @@ Complex.prototype.times = function (v) {
 
 /**
  * Returns the ratio of the receiving complex value to the given value.
- * @param {(Number|Complex)} v
+ * @param {number|Complex} v
  * @returns {Complex)
  */
 Complex.prototype.dividedBy = function (v) {

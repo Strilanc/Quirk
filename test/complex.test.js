@@ -10,6 +10,9 @@ ComplexTest.prototype.testFrom = function() {
 };
 
 ComplexTest.prototype.testIsEqualTo = function() {
+    var c = new Complex(5, 7);
+    assertTrue(c.isEqualTo(c));
+
     assertTrue(new Complex(2, 3).isEqualTo(new Complex(2, 3)));
     assertFalse(new Complex(2, 3).isEqualTo(new Complex(3, 3)));
     assertFalse(new Complex(2, 3).isEqualTo(new Complex(2, 4)));
@@ -103,6 +106,5 @@ ComplexTest.prototype.testTimes = function() {
 ComplexTest.prototype.testDividedBy = function() {
     assertTrue(new Complex(2, 3).dividedBy(new Complex(2, 0)).isEqualTo(new Complex(1, 1.5)));
     assertTrue(new Complex(2, 3).dividedBy(new Complex(0, 2)).isEqualTo(new Complex(1.5, -1)));
-    assertEquals("", new Complex(2, -2).dividedBy(new Complex(1, 1)).toString());
     assertTrue(new Complex(2, -2).dividedBy(new Complex(1, 1)).isEqualTo(new Complex(0, -2)));
 };
