@@ -38,11 +38,6 @@ Quop.from = function (coefs) {
     throw "Don't know how to convert into a 2x2 unitary matrix: " + coefs;
 };
 
-Quop.IDENTITY = Quop.from([1, 0, 0, 1]);
-Quop.PAULI_X = Quop.from([0, 1, 1, 0]);
-Quop.PAULI_Y = Quop.from([0, new Complex(0, -1), new Complex(0, 1), 0]);
-Quop.PAULI_Z = Quop.from([1, 0, 0, -1]);
-
 /**
  * Determines if the receiving quop is equal to the given quop.
  * This method returns false, instead of throwing, when given badly typed arguments.
@@ -101,6 +96,17 @@ Quop.prototype.plus = function (other) {
 };
 
 /**
+ * Returns the difference from the receiving matrix to the given matrix.
+ * @param {Quop} other
+ * @returns {Quop}
+ */
+Quop.prototype.minus = function (other) {
+    return new Quop(
+        this.a.minus(other.a), this.b.minus(other.b),
+        this.c.minus(other.c), this.d.minus(other.d));
+};
+
+/**
  * Returns the matrix product (i.e. the composition) of the receiving matrix and the given matrix.
  * @param {Quop} other
  * @returns {Quop}
@@ -120,3 +126,41 @@ Quop.prototype.times = function (other) {
         a.times(e).plus(b.times(g)), a.times(f).plus(b.times(h)),
         c.times(e).plus(d.times(g)), c.times(f).plus(d.times(h)));
 };
+
+/**
+ * Returns a quantum operation corresponding to the given rotation.
+ *
+ * @param {number[]} v An [x, y, z] vector. The direction of the vector determines which axis to rotate around, and the
+ * length of the vector determines what fraction of an entire turn to rotate. For example, if v is
+ * [Math.sqrt(1/8), 0, Math.sqrt(1/8)] then the rotation is a half-turn around the X+Z axis and the resulting operation
+ * is the Hadamard operation {{1, 1}, {1, -1}}/sqrt(2).
+ *
+ * @returns {Quop}
+ */
+Quop.fromRotation = function (v) {
+    var sinc = function(t) {
+        if (Math.abs(t) < 0.0002) return 1 - t*t / 6.0;
+        return Math.sin(t) / t;
+    };
+
+    var x = v[0] * Math.PI * 2;
+    var y = v[1] * Math.PI * 2;
+    var z = v[2] * Math.PI * 2;
+
+    var s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
+    var theta = Math.sqrt(x*x + y*y + z*z);
+    var sigma_v = Quop.PAULI_X.scaledBy(x).plus(
+                  Quop.PAULI_Y.scaledBy(y)).plus(
+                  Quop.PAULI_Z.scaledBy(z));
+
+    var ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
+    var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
+
+    return Quop.IDENTITY.scaledBy(ci).minus(sigma_v.scaledBy(cv));
+};
+
+Quop.IDENTITY = Quop.from([1, 0, 0, 1]);
+Quop.PAULI_X = Quop.from([0, 1, 1, 0]);
+Quop.PAULI_Y = Quop.from([0, new Complex(0, -1), new Complex(0, 1), 0]);
+Quop.PAULI_Z = Quop.from([1, 0, 0, -1]);
+Quop.HADAMARD = Quop.from([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
