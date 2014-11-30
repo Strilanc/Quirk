@@ -184,7 +184,16 @@ if (canvas !== null) {
     var drawFloatingGate = function (x, y, g) {
         var b = makeRectRadius(x, y, gateRadius);
         drawRect(b, "orange");
-        drawCenteredString(x, y, g.symbol);
+        drawGateSymbol(x, y, g);
+    };
+    var drawGateSymbol = function(x, y, g) {
+        if (g.symbol === "\\⊹") {
+            drawMatrix(makeRectRadius(x, y, gateRadius), g.matrix)
+        } else if (g.symbol === "\\•") {
+            drawBall(x, y, 5);
+        } else {
+            drawCenteredString(x, y, g.symbol);
+        }
     };
     var drawToolboxGate = function (x, y, g) {
         var b = makeRectRadius(x, y, gateRadius);
@@ -214,7 +223,7 @@ if (canvas !== null) {
         } else {
             drawRect(b);
         }
-        drawCenteredString(x, y, g.symbol);
+        drawGateSymbol(x, y, g);
     };
     var drawCircuitOperation = function (operation, operationIndex) {
         var x = operationIndexToX(operationIndex);
@@ -228,8 +237,10 @@ if (canvas !== null) {
         var b = makeRectRadius(x, cy, gateRadius);
 
         var highlightGate = heldOperation == operation || (rectContainsMouse(b) && heldOperation === null && !isTapping);
-        drawRect(b, highlightGate ? "orange" : null);
-        drawCenteredString(x, cy, operation.gate.symbol);
+        if (highlightGate || operation.gate.symbol !== "\\•") {
+            drawRect(b, highlightGate ? "orange" : null);
+        }
+        drawGateSymbol(x, cy, operation.gate);
         if (rectContainsMouse(b) && heldOperation === null && !wasTapping && isTapping) {
             heldOperation = operation;
             circuitOperations.splice(operationIndex, 1);

@@ -18,9 +18,11 @@ Gate.CONTROL = new Gate(
     "\\•", // special character that means "draw fancy controlled thingies"
     Matrix.CONTROL_SYGIL,
     "Control",
-    "This special operation makes other operations on the same column only apply when the control qubit is ON.\n" +
+    "This special operation makes other operations on the same column\n" +
+    "only apply when the control qubit is ON.\n" +
     "\n" +
-    "(When the control qubit is in a superposition of ON and OFF, the operation applies only to the parts of the" +
+    "(When the control qubit is in a superposition of ON and OFF, the\n" +
+    "operation applies only to the parts of the" +
     "superposition where it is on.)");
 
 Gate.X = new Gate(
@@ -29,20 +31,20 @@ Gate.X = new Gate(
     "NOT Gate / Pauli X Gate",
     "Toggles a qubit's value between ON and OFF.\n" +
     "\n" +
-    "The NOT gate is also known as the Pauli X gate because it corresponds to a 180° turn around the X axis of the " +
-    "Block Sphere. " +
-    "The X gate is its own inverse.");
+    "The NOT gate is also known as the Pauli X gate because it corresponds\n" +
+    "to a 180° turn around the X axis of the Block Sphere. The X gate is\n" +
+    "its own inverse.");
 
 
 Gate.Y = new Gate(
     "Y",
     Matrix.PAULI_Y,
     "Pauli Y Gate",
-    "Toggles a qubit's value between ON and OFF, but with a phase adjustment.\n" +
+    "Toggles a qubit's value, but with a phase adjustment.\n" +
     "\n" +
-    "The Pauli Y gate corresponds to a 180° turn around the Y axis of the Block Sphere. " +
-    "You can think of it as a combination of the X and Z gates, but with an extra 90 degree global phase twist. " +
-    "The Y its own inverse.");
+    "The Pauli Y gate corresponds to a 180° turn around the Y axis of the\n" +
+    "Block Sphere. You can think of it as a combination of the X and Z gates,\n" +
+    "but with an extra 90 degree global phase twist. The Y its own inverse.");
 
 Gate.Z = new Gate(
     "Z",
@@ -50,8 +52,8 @@ Gate.Z = new Gate(
     "Phase Flip Gate / Pauli Z Gate",
     "Flips the phase of a qubit's ON state, while leaving its OFF state alone.\n" +
     "\n" +
-    "The Pauli Z gate corresponds to a 180° turn around the Z axis of the Block Sphere. " +
-    "The Z gate is its own inverse.");
+    "The Pauli Z gate corresponds to a 180° turn around the Z axis of the\n" +
+    "Block Sphere. The Z gate is its own inverse.");
 
 Gate.H = new Gate(
     "H",
@@ -59,8 +61,9 @@ Gate.H = new Gate(
     "Hadamard Gate",
     "Cycles a qubit's state through ON, ON+OFF, OFF, and ON-OFF.\n",
     "\n" +
-    "The Hadamard gate is objectively the best quantum gate. It is its own inverse, corresponds to a single-bit " +
-    "Fourier transform or a 180° turn around the X+Z diagonal axis of the Block Sphere, and is probably the simplest " +
+    "The Hadamard gate is objectively the best quantum gate. It is its own\n" +
+    "inverse, corresponds to a single-bit Fourier transform or a 180° turn\n" +
+    "around the X+Z diagonal axis of the Block Sphere, and is the simplest\n" +
     "quantum gate that creates/interferes superpositions.");
 
 Gate.fromPhaseRotation = function(fraction) {
@@ -72,8 +75,9 @@ Gate.fromPhaseRotation = function(fraction) {
         "Z(" + deg + "°)",
         Matrix.fromRotation(0, 0, fraction),
         deg + "° Phase Gate",
-        "Rotates the phase of a qubit's ON state, while leaving its OFF state alone. " +
-        "The standard Pauli Z gate corresponds to Z(180°).");
+        "Rotates the phase of a qubit's ON state by " + deg + " degrees,\n" +
+        "while leaving its OFF state alone. The standard Pauli Z gate\n" +
+        "corresponds to Z(180°).");
 };
 
 Gate.fromRotation = function(x, y, z) {
@@ -84,7 +88,7 @@ Gate.fromRotation = function(x, y, z) {
     var n = Math.sqrt(x*x + y*y + z*z);
     var deg = n*360;
     return new Gate(
-        "⊹",
+        "\\⊹", // special character that means "render the matrix"
         Matrix.fromRotation(x, y, z),
         deg +  "° around <" + x/n + ", " + y/n + ", " + z/n + ">",
         "A custom operation based on a rotation.");
