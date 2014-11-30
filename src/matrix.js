@@ -1,12 +1,11 @@
 // uses: complex.js
-// uses: quop.js
 
 /**
- * A unitary matrix.
+ * A square matrix of complex values.
  * @param rows {Complex[][]} The rows of complex coefficients making up the matrix.
  * @class
  */
-function Unitary(rows) {
+function Matrix(rows) {
     if (!(rows instanceof Array)) {
         throw "need(rows instanceof Array): " + rows;
     }
@@ -27,12 +26,12 @@ function Unitary(rows) {
 }
 
 /**
- * Returns a unitary matrix of the given size, using the given function to generate the coefficients.
+ * Returns a matrix of the given size, using the given function to generate the coefficients.
  * @param {number} size
  * @param {function} coefficientRowColGenerator
- * @returns {Unitary}
+ * @returns {Matrix}
  */
-Unitary.generate = function (size, coefficientRowColGenerator) {
+Matrix.generate = function (size, coefficientRowColGenerator) {
     var rows = [];
     for (var r = 0; r < size; r++) {
         var row = [];
@@ -42,33 +41,33 @@ Unitary.generate = function (size, coefficientRowColGenerator) {
         }
     }
 
-    return new Unitary(rows);
+    return new Matrix(rows);
 };
 
 /**
- * Converts the given square block of coefficients into a unitary matrix.
- * @param {(number|Complex)[]|number[]|Complex[]} coefs The coefficients of the unitary matrix, arranged in a flat
- * array of square length with the coefficients in row order.
- * @returns {Unitary}
+ * Converts the given square block of coefficients into a square complex matrix.
+ * @param {(number|Complex)[]|number[]|Complex[]} coefs The coefficients of the matrix, arranged in a flat array of
+ * square length with the coefficients (which can be numeric or complex) in row order.
+ * @returns {Matrix}
  */
-Unitary.from = function (coefs) {
+Matrix.from = function (coefs) {
     if (coefs instanceof Array) {
         var n = Math.round(Math.sqrt(coefs.length));
         if (n * n != coefs.length) throw "Not square: " + coefs;
-        return Unitary.generate(n, function(r, c) { return coefs[r * n + c]; });
+        return Matrix.generate(n, function(r, c) { return coefs[r * n + c]; });
     }
 
-    throw "Don't know how to convert value into unitary matrix: " + coefs;
+    throw "Don't know how to convert value into matrix: " + coefs;
 };
 
 /**
- * Determines if the receiving unitary matrix is equal to the given unitary matrix.
+ * Determines if the receiving matrix is equal to the given matrix.
  * This method returns false, instead of throwing, when given badly typed arguments.
- * @param {Unitary|object} other
+ * @param {Matrix|object} other
  * @returns {boolean}
  */
-Unitary.prototype.isEqualTo = function (other) {
-    if (!(other instanceof Unitary)) return false;
+Matrix.prototype.isEqualTo = function (other) {
+    if (!(other instanceof Matrix)) return false;
 
     var n = this.rows.length;
     if (other.rows.length != n) return false;
@@ -85,14 +84,14 @@ Unitary.prototype.isEqualTo = function (other) {
 };
 
 /**
- * Returns a text representation of the receiving unitary matrix.
+ * Returns a text representation of the receiving matrix.
  * (It uses curly braces so you can paste it into wolfram alpha.)
  * @returns {string}
  */
-Unitary.prototype.toString = function () {
+Matrix.prototype.toString = function () {
     var data = this.rows.map(function(row) {
         var rowData = row.map(function(e) {
-           return e === Unitary.__CONTROL_SYGIL_COMPLEX ? "C" : e.toString();
+           return e === Matrix.__CONTROL_SYGIL_COMPLEX ? "C" : e.toString();
         });
         return rowData.join(", ");
     }).join("}, {");
@@ -100,12 +99,12 @@ Unitary.prototype.toString = function () {
 };
 
 /**
- * Returns the conjugate transpose of the receiving operation (the adjoint is the inverse of unitary operations).
- * @returns {Unitary}
+ * Returns the conjugate transpose of the receiving operation (the adjoint is the inverse when the matrix is unitary).
+ * @returns {Matrix}
  */
-Unitary.prototype.adjoint = function () {
+Matrix.prototype.adjoint = function () {
     var m = this;
-    return Unitary.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.rows.length, function(r, c) {
         return m.rows[c][r].conjugate();
     });
 };
@@ -113,47 +112,47 @@ Unitary.prototype.adjoint = function () {
 /**
  * Returns the result of scaling the receiving matrix by the given scalar factor.
  * @param {number|Complex} v
- * @returns {Unitary}
+ * @returns {Matrix}
  */
-Unitary.prototype.scaledBy = function (v) {
+Matrix.prototype.scaledBy = function (v) {
     var m = this;
-    return Unitary.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.rows.length, function(r, c) {
         return m.rows[r][c].times(v);
     });
 };
 
 /**
  * Returns the sum of the receiving matrix and the given matrix.
- * @param {Unitary} other
- * @returns {Unitary}
+ * @param {Matrix} other
+ * @returns {Matrix}
  */
-Unitary.prototype.plus = function (other) {
+Matrix.prototype.plus = function (other) {
     var m = this;
-    return Unitary.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.rows.length, function(r, c) {
         return m.rows[r][c].plus(other.rows[r][c]);
     });
 };
 
 /**
  * Returns the difference from the receiving matrix to the given matrix.
- * @param {Unitary} other
- * @returns {Unitary}
+ * @param {Matrix} other
+ * @returns {Matrix}
  */
-Unitary.prototype.minus = function (other) {
+Matrix.prototype.minus = function (other) {
     var m = this;
-    return Unitary.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.rows.length, function(r, c) {
         return m.rows[r][c].minus(other.rows[r][c]);
     });
 };
 
 /**
  * Returns the matrix product (i.e. the composition) of the receiving matrix and the given matrix.
- * @param {Unitary} other
- * @returns {Unitary}
+ * @param {Matrix} other
+ * @returns {Matrix}
  */
-Unitary.prototype.times = function (other) {
+Matrix.prototype.times = function (other) {
     var m = this;
-    return Unitary.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.rows.length, function(r, c) {
         var t = Complex.from(0);
         for (var i = 0; i < m.rows.length; i++) {
             t = t.plus(m.rows[r][i].times(other.rows[i][c]));
@@ -164,21 +163,21 @@ Unitary.prototype.times = function (other) {
 
 /**
  * Returns the tensor product of the receiving matrix and the given matrix.
- * @param {Unitary} other
- * @returns {Unitary}
+ * @param {Matrix} other
+ * @returns {Matrix}
  */
-Unitary.prototype.tensorProduct = function (other) {
+Matrix.prototype.tensorProduct = function (other) {
     var m = this;
     var n1 = this.rows.length;
     var n2 = other.rows.length;
-    return Unitary.generate(n1 * n2, function(r, c) {
+    return Matrix.generate(n1 * n2, function(r, c) {
         var r1 = Math.floor(r / n2);
         var c1 = Math.floor(c / n2);
         var r2 = r % n2;
         var c2 = c % n2;
         var v1 = m.rows[r1][c1];
         var v2 = other.rows[r2][c2];
-        if (v1 === Unitary.__CONTROL_SYGIL_COMPLEX || v2 === Unitary.__CONTROL_SYGIL_COMPLEX) {
+        if (v1 === Matrix.__CONTROL_SYGIL_COMPLEX || v2 === Matrix.__CONTROL_SYGIL_COMPLEX) {
             return r1 == c1 && r2 == c2 ? 1 : 0;
         }
         return v1.times(v2);
@@ -193,9 +192,9 @@ Unitary.prototype.tensorProduct = function (other) {
  * [Math.sqrt(1/8), 0, Math.sqrt(1/8)] then the rotation is a half-turn around the X+Z axis and the resulting operation
  * is the Hadamard operation {{1, 1}, {1, -1}}/sqrt(2).
  *
- * @returns {Unitary}
+ * @returns {Matrix}
  */
-Unitary.fromRotation = function (v) {
+Matrix.fromRotation = function (v) {
     var sinc = function(t) {
         if (Math.abs(t) < 0.0002) return 1 - t*t / 6.0;
         return Math.sin(t) / t;
@@ -207,60 +206,62 @@ Unitary.fromRotation = function (v) {
 
     var s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
     var theta = Math.sqrt(x*x + y*y + z*z);
-    var sigma_v = Unitary.PAULI_X.scaledBy(x).plus(
-                  Unitary.PAULI_Y.scaledBy(y)).plus(
-                  Unitary.PAULI_Z.scaledBy(z));
+    var sigma_v = Matrix.PAULI_X.scaledBy(x).plus(
+                  Matrix.PAULI_Y.scaledBy(y)).plus(
+                  Matrix.PAULI_Z.scaledBy(z));
 
     var ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
     var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
 
-    return Unitary.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
+    return Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
 };
 
 /**
  * Returns the identity matrix, with 1s on the main diagonal and all other entries zero.
  * @param size The dimension of the returned identity matrix.
- * @returns {Unitary}
+ * @returns {Matrix}
  */
-Unitary.identity = function(size) {
-    return Unitary.generate(size, function(r, c) {
+Matrix.identity = function(size) {
+    return Matrix.generate(size, function(r, c) {
         return r == c ? 1 : 0;
     });
 };
 
 /**
  * The 2x2 Pauli X matrix.
- * @type {Unitary}
+ * @type {Matrix}
  */
-Unitary.PAULI_X = Unitary.from([0, 1, 1, 0]);
+Matrix.PAULI_X = Matrix.from([0, 1, 1, 0]);
 
 /**
  * The 2x2 Pauli Y matrix.
- * @type {Unitary}
+ * @type {Matrix}
  */
-Unitary.PAULI_Y = Unitary.from([0, new Complex(0, -1), new Complex(0, 1), 0]);
+Matrix.PAULI_Y = Matrix.from([0, new Complex(0, -1), new Complex(0, 1), 0]);
 
 /**
  * The 2x2 Pauli Z matrix.
- * @type {Unitary}
+ * @type {Matrix}
  */
-Unitary.PAULI_Z = Unitary.from([1, 0, 0, -1]);
+Matrix.PAULI_Z = Matrix.from([1, 0, 0, -1]);
 
 /**
  * The 2x2 Hadamard matrix.
- * @type {Unitary}
+ * @type {Matrix}
  */
-Unitary.HADAMARD = Unitary.from([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
+Matrix.HADAMARD = Matrix.from([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
 
 /**
  * The special complex value that the tensor product checks for in order to support controlled operations.
- * @type {Unitary}
+ * @type {Matrix}
  */
-Unitary.__CONTROL_SYGIL_COMPLEX = new Complex(1, 0);
+Matrix.__CONTROL_SYGIL_COMPLEX = new Complex(1, 0);
 
 /**
- * A unitary matrix [[C, 0], [0, 1]], where C is a special value that interacts with the tensor product in a way that
- * causes it to act like the other matrix was the identity matrix.
- * @type {Unitary}
+ * A special value that acts like the pseudo-operation "use this qubit as a control".
+ *
+ * Implemented as a matrix [[C, 0], [0, 1]], where C is a special value that causes a 1 to end up on the diagonal of the
+ * expanded matrix and 0 otherwise.
+ * @type {Matrix}
  */
-Unitary.CONTROL_SYGIL = Unitary.from([Unitary.__CONTROL_SYGIL_COMPLEX, 0, 0, 1]);
+Matrix.CONTROL_SYGIL = Matrix.from([Matrix.__CONTROL_SYGIL_COMPLEX, 0, 0, 1]);
