@@ -113,34 +113,34 @@ var assertUnitaryApproxEqual = function (v1, v2) {
 
 MatrixTest.prototype.testFromRotation = function() {
     // No turn gives no-op
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0, 0]), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, 0), Matrix.identity(2));
 
     // Whole turns are no-ops
-    assertUnitaryApproxEqual(Matrix.fromRotation([1, 0, 0]), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 1, 0]), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0, 1]), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([-1, 0, 0]), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, -1, 0]), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0, -1]), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0.6, 0.8, 0]), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(1, 0, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 1, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, 1), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(-1, 0, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, -1, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, -1), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromRotation(0.6, 0.8, 0), Matrix.identity(2));
 
     // Half turns along each axis is the corresponding Pauli operation
-    assertUnitaryApproxEqual(Matrix.fromRotation([0.5, 0, 0]), Matrix.PAULI_X);
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0.5, 0]), Matrix.PAULI_Y);
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0, 0.5]), Matrix.PAULI_Z);
-    assertUnitaryApproxEqual(Matrix.fromRotation([-0.5, 0, 0]), Matrix.PAULI_X);
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, -0.5, 0]), Matrix.PAULI_Y);
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0, -0.5]), Matrix.PAULI_Z);
+    assertUnitaryApproxEqual(Matrix.fromRotation(0.5, 0, 0), Matrix.PAULI_X);
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0.5, 0), Matrix.PAULI_Y);
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, 0.5), Matrix.PAULI_Z);
+    assertUnitaryApproxEqual(Matrix.fromRotation(-0.5, 0, 0), Matrix.PAULI_X);
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, -0.5, 0), Matrix.PAULI_Y);
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, -0.5), Matrix.PAULI_Z);
 
     // Hadamard
-    assertUnitaryApproxEqual(Matrix.fromRotation([Math.sqrt(0.125), 0, Math.sqrt(0.125)]), Matrix.HADAMARD);
+    assertUnitaryApproxEqual(Matrix.fromRotation(Math.sqrt(0.125), 0, Math.sqrt(0.125)), Matrix.HADAMARD);
 
     // Opposites are inverses
-    assertUnitaryApproxEqual(Matrix.fromRotation([-0.25, 0, 0]).times(Matrix.fromRotation([0.25, 0, 0])),
+    assertUnitaryApproxEqual(Matrix.fromRotation(-0.25, 0, 0).times(Matrix.fromRotation(0.25, 0, 0)),
         Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, -0.25, 0]).times(Matrix.fromRotation([0, 0.25, 0])),
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, -0.25, 0).times(Matrix.fromRotation(0, 0.25, 0)),
         Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation([0, 0, -0.25]).times(Matrix.fromRotation([0, 0, 0.25])),
+    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, -0.25).times(Matrix.fromRotation(0, 0, 0.25)),
         Matrix.identity(2));
 
     // Doubling rotation is like squaring
@@ -151,7 +151,7 @@ MatrixTest.prototype.testFromRotation = function() {
 
 MatrixTest.prototype.testTensorProduct = function() {
     assertTrue(Matrix.square([2]).tensorProduct(Matrix.square([3])).isEqualTo(Matrix.square([6])));
-    assertTrue(new Matrix.square([2]).tensorProduct(Matrix.square([3])).isEqualTo(Matrix.square([6])));
+    assertTrue(Matrix.square([2]).tensorProduct(Matrix.square([3])).isEqualTo(Matrix.square([6])));
     assertTrue(Matrix.PAULI_X.tensorProduct(Matrix.PAULI_Z).isEqualTo(Matrix.square([
         0, 0, 1, 0,
         0, 0, 0, -1,

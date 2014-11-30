@@ -220,7 +220,7 @@ Matrix.prototype.tensorProduct = function (other) {
         var v1 = m.rows[r1][c1];
         var v2 = other.rows[r2][c2];
         if (v1 === Matrix.__CONTROL_SYGIL_COMPLEX || v2 === Matrix.__CONTROL_SYGIL_COMPLEX) {
-            return r1 == c1 && r2 == c2 ? 1 : 0;
+            return r1 == c1 && r2 == c2 ? Matrix.__CONTROL_SYGIL_COMPLEX : 0;
         }
         return v1.times(v2);
     });
@@ -229,22 +229,26 @@ Matrix.prototype.tensorProduct = function (other) {
 /**
  * Returns a single-qubit quantum operation corresponding to the given rotation.
  *
- * @param {number[]} v An [x, y, z] vector. The direction of the vector determines which axis to rotate around, and the
- * length of the vector determines what fraction of an entire turn to rotate. For example, if v is
- * [Math.sqrt(1/8), 0, Math.sqrt(1/8)] then the rotation is a half-turn around the X+Z axis and the resulting operation
- * is the Hadamard operation {{1, 1}, {1, -1}}/sqrt(2).
+ * The direction of the given x, y, z vector determines which axis to rotate around, and the length of the vector
+ * determines what fraction of an entire turn to rotate. For example, if [x, y, z] is [1/√8), 0, 1/√8], then the
+ * rotation is a half-turn around the X+Z axis and the resulting operation is the Hadamard operation
+ * {{1, 1}, {1, -1}}/√2.
+ *
+ * @param {number} x The x component of the rotation vector.
+ * @param {number} y The y component of the rotation vector.
+ * @param {number} z The z component of the rotation vector.
  *
  * @returns {Matrix}
  */
-Matrix.fromRotation = function (v) {
+Matrix.fromRotation = function (x, y, z) {
     var sinc = function(t) {
         if (Math.abs(t) < 0.0002) return 1 - t*t / 6.0;
         return Math.sin(t) / t;
     };
 
-    var x = v[0] * Math.PI * 2;
-    var y = v[1] * Math.PI * 2;
-    var z = v[2] * Math.PI * 2;
+    x = x * Math.PI * 2;
+    y = y * Math.PI * 2;
+    z = z * Math.PI * 2;
 
     var s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
     var theta = Math.sqrt(x*x + y*y + z*z);

@@ -91,7 +91,7 @@ if (canvas !== null) {
         }
 
         return es.reduce(function (e1, e2) {
-            return e1.tensorProduct(e2);
+            return e2.tensorProduct(e1);
         }, Matrix.identity(1));
     };
     var transformVectorWithOperation = function (input, operation) {
@@ -105,69 +105,16 @@ if (canvas !== null) {
     };
 
 // --- Define toolbox gate types ---
-    var gateSet = [];
-    gateSet.push({
-        name: "Pauli X Gate",
-        desc: "Flips a bit's value.\n" +
-        "\n" +
-        "Other interpretations:\n" +
-        "- A NOT gate.\n" +
-        "- A 180° turn around the X axis of the Block Sphere.",
-        matrix: Matrix.PAULI_X,
-        symbol: "X"
-    });
-    gateSet.push({
-        name: "Pauli Y Gate",
-        desc: "Flips a bit's value and rotates its phase by 90°.\n" +
-        "The direction of rotation switches when the bit is ON.\n" +
-        "\n" +
-        "Other interpretations:\n" +
-        "- A 180° turn around the Y axis of the Block Sphere.",
-        matrix: Matrix.PAULI_Y,
-        symbol: "Y"
-    });
-    gateSet.push({
-        name: "Pauli Z Gate",
-        desc: "Rotates the phase of a bit by 180° when it is in the ON state.\n" +
-        "No effect when the bit is OFF.\n" +
-        "\n" +
-        "Other interpretations:\n" +
-        "- The R(" + turnToAngleDescription(0.5) + ") gate.\n" +
-        "- A 180° turn around the Z axis of the Block Sphere.",
-        matrix: Matrix.PAULI_Z,
-        symbol: "Z"
-    });
-    gateSet.push({
-        name: "Hadamard Gate",
-        desc: "Translates a bit's value into a uniform superposition,\n" +
-        "moving the value into the phases of the output.\n" +
-        "\n" +
-        "Other interpretations:\n" +
-        "- A 180° turn around the X+Z diagonal axis of the Block Sphere.\n" +
-        "- A single-bit Fourier transform.\n" +
-        "- Converts to/from the diagonal [1,1],[1,-1] basis.",
-        matrix: Matrix.HADAMARD,
-        symbol: "H"
-    });
-    var makeRGate = function (turnProportion) {
-        var angle = turnToAngleDescription(turnProportion);
-        var posAngle = turnToAngleDescription((turnProportion + 1) % 1);
-        return {
-            name: "Phase Shift Gate (" + angle + ")",
-            desc: "Rotates the phase of a bit in the ON state by " + angle + ".\n" +
-            "No effect when the bit is OFF.\n" +
-            "\n" +
-            "Other interpretations:\n" +
-            "- A " + posAngle + " rotation around the Z axis of the Block Sphere.",
-            matrix: Matrix.fromRotation([0, 0, turnProportion]),
-            symbol: "R(" + angle + ")"
-        };
-    };
-    gateSet.push(makeRGate(-1 / 4));
-    gateSet.push(makeRGate(-1 / 8));
-    if (numWires > 3) {
-        gateSet.push(makeRGate(-1 / 16));
-    }
+    var gateSet = [
+        Gate.CONTROL,
+        Gate.X,
+        Gate.Y,
+        Gate.Z,
+        Gate.H,
+        Gate.fromRotation(0.25, 0, 0),
+        Gate.fromRotation(0, 0.25, 0),
+        Gate.fromRotation(0, 0, 0.25)
+    ];
 
 // --- Layout Functions ---
     var wireIndexToY = function (i) {
@@ -258,9 +205,9 @@ if (canvas !== null) {
 
                 drawRect(b, "orange");
 
-                drawRect(makeRect(50, y + r + 10, 400, (g.desc.split("\n").length + 5) * 16 + 4 * r + 10));
-                drawParagraph(50 + 5, y + r + 25, g.name + "\n\n" + g.desc + "\n\n1-Wire Matrix:");
-                drawMatrix(makeRect(55, y + r + 10 + (g.desc.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
+                drawRect(makeRect(50, y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 10));
+                drawParagraph(50 + 5, y + r + 25, g.name + "\n\n" + g.description + "\n\n1-Wire Matrix:");
+                drawMatrix(makeRect(55, y + r + 10 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
             } else {
                 drawRect(b);
             }
