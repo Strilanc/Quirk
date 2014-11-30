@@ -1,7 +1,7 @@
 // uses: complex.js
 
 /**
- * A square matrix of complex values.
+ * A matrix of complex values.
  * @param rows {Complex[][]} The rows of complex coefficients making up the matrix.
  * @class
  */
@@ -12,11 +12,13 @@ function Matrix(rows) {
     if (rows.length == 0) {
         throw "need(rows.length > 0): " + rows;
     }
+
     if (!rows.every(function(row) { return row instanceof Array; })) {
         throw "need(rows.all(_.length == cols.length)): " + rows;
     }
-    if (!rows.every(function(row) { return row.length == rows.length; })) {
-        throw "need(rows.all(_.length == cols.length)): " + rows;
+    var w = rows[0].length;
+    if (w == 0 || !rows.every(function(row) { return row.length === w; })) {
+        throw "need(rows.map(e -> e.length).single() > 0): " + rows;
     }
     if (![].concat.apply([], rows).every(function(e) { return e instanceof Complex; })) {
         throw "need(rows.flatten().all(_ instanceof Complex)): " + rows;
@@ -25,18 +27,27 @@ function Matrix(rows) {
     this.rows = rows;
 }
 
+Matrix.prototype.width = function() {
+    return this.rows[0].length;
+};
+
+Matrix.prototype.height = function() {
+    return this.rows.length;
+};
+
 /**
- * Returns a matrix of the given size, using the given function to generate the coefficients.
- * @param {number} size
+ * Returns a matrix of the given dimensions, using the given function to generate the coefficients.
+ * @param {number} width
+ * @param {number} height
  * @param {function} coefficientRowColGenerator
  * @returns {Matrix}
  */
-Matrix.generate = function (size, coefficientRowColGenerator) {
+Matrix.generate = function (width, height, coefficientRowColGenerator) {
     var rows = [];
-    for (var r = 0; r < size; r++) {
+    for (var r = 0; r < height; r++) {
         var row = [];
         rows.push(row);
-        for (var c = 0; c < size; c++) {
+        for (var c = 0; c < width; c++) {
             row.push(Complex.from(coefficientRowColGenerator(r, c)));
         }
     }
@@ -50,14 +61,32 @@ Matrix.generate = function (size, coefficientRowColGenerator) {
  * square length with the coefficients (which can be numeric or complex) in row order.
  * @returns {Matrix}
  */
-Matrix.from = function (coefs) {
+Matrix.square = function (coefs) {
     if (coefs instanceof Array) {
         var n = Math.round(Math.sqrt(coefs.length));
         if (n * n != coefs.length) throw "Not square: " + coefs;
-        return Matrix.generate(n, function(r, c) { return coefs[r * n + c]; });
+        return Matrix.generate(n, n, function(r, c) { return coefs[r * n + c]; });
     }
 
     throw "Don't know how to convert value into matrix: " + coefs;
+};
+
+/**
+ * Converts the array of complex coefficients into a column vector.
+ * @param {(number|Complex)[]|number[]|Complex[]} coefs
+ * @returns {Matrix}
+ */
+Matrix.col = function (coefs) {
+    return Matrix.generate(1, coefs.length, function(r) { return coefs[r]; });
+};
+
+/**
+ * Converts the array of complex coefficients into a row vector.
+ * @param {(number|Complex)[]|number[]|Complex[]} coefs
+ * @returns {Matrix}
+ */
+Matrix.row = function (coefs) {
+    return Matrix.generate(coefs.length, 1, function(r, c) { return coefs[c]; });
 };
 
 /**
@@ -69,11 +98,12 @@ Matrix.from = function (coefs) {
 Matrix.prototype.isEqualTo = function (other) {
     if (!(other instanceof Matrix)) return false;
 
-    var n = this.rows.length;
-    if (other.rows.length != n) return false;
+    var w = this.width();
+    var h = other.height();
+    if (other.width() != w || other.height() != h) return false;
 
-    for (var r = 0; r < n; r++) {
-        for (var c = 0; c < n; c++) {
+    for (var r = 0; r < h; r++) {
+        for (var c = 0; c < w; c++) {
             if (!this.rows[r][c].isEqualTo(other.rows[r][c])) {
                 return false;
             }
@@ -104,7 +134,7 @@ Matrix.prototype.toString = function () {
  */
 Matrix.prototype.adjoint = function () {
     var m = this;
-    return Matrix.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.height(), this.width(), function(r, c) {
         return m.rows[c][r].conjugate();
     });
 };
@@ -116,7 +146,7 @@ Matrix.prototype.adjoint = function () {
  */
 Matrix.prototype.scaledBy = function (v) {
     var m = this;
-    return Matrix.generate(this.rows.length, function(r, c) {
+    return Matrix.generate(this.width(), this.height(), function(r, c) {
         return m.rows[r][c].times(v);
     });
 };
@@ -128,7 +158,10 @@ Matrix.prototype.scaledBy = function (v) {
  */
 Matrix.prototype.plus = function (other) {
     var m = this;
-    return Matrix.generate(this.rows.length, function(r, c) {
+    var w = this.width();
+    var h = this.height();
+    if (other.width() != w || other.height() != h) throw "Incompatible matrices: " + this + " + " + other;
+    return Matrix.generate(w, h, function(r, c) {
         return m.rows[r][c].plus(other.rows[r][c]);
     });
 };
@@ -140,7 +173,10 @@ Matrix.prototype.plus = function (other) {
  */
 Matrix.prototype.minus = function (other) {
     var m = this;
-    return Matrix.generate(this.rows.length, function(r, c) {
+    var w = this.width();
+    var h = this.height();
+    if (other.width() != w || other.height() != h) throw "Incompatible matrices: " + this + " - " + other;
+    return Matrix.generate(w, h, function(r, c) {
         return m.rows[r][c].minus(other.rows[r][c]);
     });
 };
@@ -152,9 +188,13 @@ Matrix.prototype.minus = function (other) {
  */
 Matrix.prototype.times = function (other) {
     var m = this;
-    return Matrix.generate(this.rows.length, function(r, c) {
-        var t = Complex.from(0);
-        for (var i = 0; i < m.rows.length; i++) {
+    var w = other.width();
+    var h = this.height();
+    var n = this.width();
+    if (other.height() != n) throw "Incompatible matrices: " + this + " * " + other;
+    return Matrix.generate(w, h, function(r, c) {
+        var t = Complex.ZERO;
+        for (var i = 0; i < n; i++) {
             t = t.plus(m.rows[r][i].times(other.rows[i][c]));
         }
         return t;
@@ -168,13 +208,15 @@ Matrix.prototype.times = function (other) {
  */
 Matrix.prototype.tensorProduct = function (other) {
     var m = this;
-    var n1 = this.rows.length;
-    var n2 = other.rows.length;
-    return Matrix.generate(n1 * n2, function(r, c) {
-        var r1 = Math.floor(r / n2);
-        var c1 = Math.floor(c / n2);
-        var r2 = r % n2;
-        var c2 = c % n2;
+    var w1 = this.width();
+    var w2 = other.width();
+    var h1 = this.height();
+    var h2 = other.height();
+    return Matrix.generate(w1 * w2, h1 * h2, function(r, c) {
+        var r1 = Math.floor(r / h2);
+        var c1 = Math.floor(c / w2);
+        var r2 = r % h2;
+        var c2 = c % w2;
         var v1 = m.rows[r1][c1];
         var v2 = other.rows[r2][c2];
         if (v1 === Matrix.__CONTROL_SYGIL_COMPLEX || v2 === Matrix.__CONTROL_SYGIL_COMPLEX) {
@@ -222,7 +264,7 @@ Matrix.fromRotation = function (v) {
  * @returns {Matrix}
  */
 Matrix.identity = function(size) {
-    return Matrix.generate(size, function(r, c) {
+    return Matrix.generate(size, size, function(r, c) {
         return r == c ? 1 : 0;
     });
 };
@@ -231,25 +273,25 @@ Matrix.identity = function(size) {
  * The 2x2 Pauli X matrix.
  * @type {Matrix}
  */
-Matrix.PAULI_X = Matrix.from([0, 1, 1, 0]);
+Matrix.PAULI_X = Matrix.square([0, 1, 1, 0]);
 
 /**
  * The 2x2 Pauli Y matrix.
  * @type {Matrix}
  */
-Matrix.PAULI_Y = Matrix.from([0, new Complex(0, -1), new Complex(0, 1), 0]);
+Matrix.PAULI_Y = Matrix.square([0, new Complex(0, -1), new Complex(0, 1), 0]);
 
 /**
  * The 2x2 Pauli Z matrix.
  * @type {Matrix}
  */
-Matrix.PAULI_Z = Matrix.from([1, 0, 0, -1]);
+Matrix.PAULI_Z = Matrix.square([1, 0, 0, -1]);
 
 /**
  * The 2x2 Hadamard matrix.
  * @type {Matrix}
  */
-Matrix.HADAMARD = Matrix.from([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
+Matrix.HADAMARD = Matrix.square([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
 
 /**
  * The special complex value that the tensor product checks for in order to support controlled operations.
@@ -264,4 +306,4 @@ Matrix.__CONTROL_SYGIL_COMPLEX = new Complex(1, 0);
  * expanded matrix and 0 otherwise.
  * @type {Matrix}
  */
-Matrix.CONTROL_SYGIL = Matrix.from([Matrix.__CONTROL_SYGIL_COMPLEX, 0, 0, 1]);
+Matrix.CONTROL_SYGIL = Matrix.square([Matrix.__CONTROL_SYGIL_COMPLEX, 0, 0, 1]);

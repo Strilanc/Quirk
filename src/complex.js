@@ -184,3 +184,9 @@ Complex.prototype.dividedBy = function (v) {
     var n = this.times(c.conjugate());
     return new Complex(n.real / d, n.imag / d);
 };
+
+/**
+ * The complex number equal to zero.
+ * @type {Complex}
+ */
+Complex.ZERO = new Complex(0, 0);
