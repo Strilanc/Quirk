@@ -219,8 +219,11 @@ Matrix.prototype.tensorProduct = function (other) {
         var c2 = c % w2;
         var v1 = m.rows[r1][c1];
         var v2 = other.rows[r2][c2];
+        if (v1 === Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX || v2 === Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX) {
+            return Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX;
+        }
         if (v1 === Matrix.__CONTROL_SYGIL_COMPLEX || v2 === Matrix.__CONTROL_SYGIL_COMPLEX) {
-            return r1 == c1 && r2 == c2 ? Matrix.__CONTROL_SYGIL_COMPLEX : 0;
+            return r1 == c1 && r2 == c2 ? Matrix.__CONTROL_SYGIL_COMPLEX : Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX;
         }
         return v1.times(v2);
     });
@@ -246,9 +249,9 @@ Matrix.fromRotation = function (x, y, z) {
         return Math.sin(t) / t;
     };
 
-    x = x * Math.PI * 2;
-    y = y * Math.PI * 2;
-    z = z * Math.PI * 2;
+    x = -x * Math.PI * 2;
+    y = -y * Math.PI * 2;
+    z = -z * Math.PI * 2;
 
     var s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
     var theta = Math.sqrt(x*x + y*y + z*z);
@@ -269,9 +272,42 @@ Matrix.fromRotation = function (x, y, z) {
  */
 Matrix.identity = function(size) {
     return Matrix.generate(size, size, function(r, c) {
-        return r == c ? 1 : 0;
+        return r == c ? 1 : Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX;
     });
 };
+
+
+/**
+ * A special complex value that the tensor product checks for in order to support controlled operations.
+ * @type {Matrix}
+ */
+Matrix.__CONTROL_SYGIL_COMPLEX = new Complex(1, 0);
+
+/**
+ * A marked complex zero that the tensor product propagates, so large empty areas can be grayed out when drawing.
+ * @type {Matrix}
+ */
+Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX = Complex.from(0);
+
+/**
+ * A special value that acts like the pseudo-operation "use this qubit as a control".
+ *
+ * Implemented as a matrix [[C, 0], [0, 1]], where C is a special value that causes a 1 to end up on the diagonal of the
+ * expanded matrix and 0 otherwise.
+ * @type {Matrix}
+ */
+Matrix.CONTROL_SYGIL = Matrix.square([Matrix.__CONTROL_SYGIL_COMPLEX, Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX,
+                                      Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX, 1]);
+
+/**
+ * A special value that acts like the pseudo-operation "use this qubit as an anti-control".
+ *
+ * Implemented as a matrix [[1, 0], [0, C]], where C is a special value that causes a 1 to end up on the diagonal of the
+ * expanded matrix and 0 otherwise.
+ * @type {Matrix}
+ */
+Matrix.ANTI_CONTROL_SYGIL = Matrix.square([1, Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX,
+                                           Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX, Matrix.__CONTROL_SYGIL_COMPLEX]);
 
 /**
  * The 2x2 Pauli X matrix.
@@ -296,18 +332,3 @@ Matrix.PAULI_Z = Matrix.square([1, 0, 0, -1]);
  * @type {Matrix}
  */
 Matrix.HADAMARD = Matrix.square([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
-
-/**
- * The special complex value that the tensor product checks for in order to support controlled operations.
- * @type {Matrix}
- */
-Matrix.__CONTROL_SYGIL_COMPLEX = new Complex(1, 0);
-
-/**
- * A special value that acts like the pseudo-operation "use this qubit as a control".
- *
- * Implemented as a matrix [[C, 0], [0, 1]], where C is a special value that causes a 1 to end up on the diagonal of the
- * expanded matrix and 0 otherwise.
- * @type {Matrix}
- */
-Matrix.CONTROL_SYGIL = Matrix.square([Matrix.__CONTROL_SYGIL_COMPLEX, 0, 0, 1]);

@@ -75,21 +75,39 @@ Complex.prototype.isEqualTo = function (other) {
  * @returns {String}
  */
 Complex.prototype.toString = function () {
-    if (this.imag == 0) {
-        return this.real.toString();
+    var epsilon = 0.0000000000001;
+
+    var radicalToString = function(v) {
+        var matches = [
+            [0.5, "½"],
+            [Math.sqrt(0.5), "√½"],
+            [0.25, "¼"],
+            [0.125, "⅛"],
+            [Math.sqrt(0.125), "√⅛"]
+        ];
+        for (var i = 0; i < matches.length; i++) {
+            if (Math.abs(Math.abs(v) - matches[i][0]) < epsilon) {
+                return (v < 0 ? "-" : "") + matches[i][1];
+            }
+        }
+        return v.toString();
+    };
+
+    if (Math.abs(this.imag) < epsilon) {
+        return radicalToString(this.real);
     }
-    if (this.real == 0) {
-        if (this.imag == 1) {
+    if (Math.abs(this.real) < epsilon) {
+        if (Math.abs(this.imag - 1) < epsilon == 1) {
             return "i";
         }
-        if (this.imag == -1) {
+        if (Math.abs(this.imag + 1) < epsilon) {
             return "-i";
         }
         return this.imag.toString() + "i";
     }
     var separator = this.imag > 0 ? "+" : "-";
-    var imagFactor = Math.abs(this.imag) == 1 ? "" : Math.abs(this.imag).toString();
-    return this.real.toString() + separator + imagFactor + "i";
+    var imagFactor = Math.abs(this.imag - 1) < epsilon ? "" : radicalToString(Math.abs(this.imag));
+    return radicalToString(this.real) + separator + imagFactor + "i";
 };
 
 /**

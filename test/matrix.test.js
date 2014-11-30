@@ -144,8 +144,8 @@ MatrixTest.prototype.testFromRotation = function() {
         Matrix.identity(2));
 
     // Doubling rotation is like squaring
-    var s1 = Matrix.fromRotation([0.1, 0.15, 0.25]);
-    var s2 = Matrix.fromRotation([0.2, 0.3, 0.5]);
+    var s1 = Matrix.fromRotation(0.1, 0.15, 0.25);
+    var s2 = Matrix.fromRotation(0.2, 0.3, 0.5);
     assertUnitaryApproxEqual(s1.times(s1), s2);
 };
 

@@ -13,7 +13,10 @@ if (canvas !== null) {
     };
     var gateRadius = 25;
     var circuitOperationHorizontalSpacing = 10;
-    var circuitOperations = [];
+    /**
+     * @type {GateColumn[]}
+     */
+    var circuitOperationColumns = [];
 
     var testVectorsTitleOffset = -20;
     var testVectorLabelOffset = -8;
@@ -72,34 +75,14 @@ if (canvas !== null) {
     }();
 
 // --- Math and Circuits ---
-    var turnToAngleDescription = function (r) {
-        return (r * 360) + "°";
-    };
-    var matrixForOperation = function (operation) {
-        var es = [];
-        for (var i = 0; i < numWires; i++) {
-            var p = null;
-            if (operation.wire == i) {
-                p = operation.gate.matrix;
-            } else if (operation.controls.indexOf(i) >= 0) {
-                p = Matrix.CONTROL_SYGIL;
-            } else {
-                p = Matrix.identity(2);
-            }
-            es.push(p);
-
-        }
-
-        return es.reduce(function (e1, e2) {
-            return e2.tensorProduct(e1);
-        }, Matrix.identity(1));
-    };
-    var transformVectorWithOperation = function (input, operation) {
-        return matrixForOperation(operation).times(input);
-    };
+    /**
+     * @param {Matrix} input
+     * @param {GateColumn[]} operations
+     * @returns {Matrix}
+     */
     var transformVectorWithOperations = function (input, operations) {
         for (var i = 0; i < operations.length; i++) {
-            input = transformVectorWithOperation(input, operations[i]);
+            input = operations[i].transform(input);
         }
         return input;
     };
@@ -107,13 +90,18 @@ if (canvas !== null) {
 // --- Define toolbox gate types ---
     var gateSet = [
         Gate.CONTROL,
+        Gate.ANTI_CONTROL,
+        Gate.DOWN,
         Gate.X,
+        Gate.UP,
+        Gate.RIGHT,
         Gate.Y,
+        Gate.LEFT,
+        Gate.COUNTER_CLOCKWISE,
         Gate.Z,
+        Gate.CLOCKWISE,
         Gate.H,
-        Gate.fromRotation(0.25, 0, 0),
-        Gate.fromRotation(0, 0.25, 0),
-        Gate.fromRotation(0, 0, 0.25)
+        Gate.fromRotation(0, 0, 0.125)
     ];
 
 // --- Layout Functions ---
@@ -126,12 +114,49 @@ if (canvas !== null) {
         return result;
     };
     var operationIndexToX = function (index) {
+        if (held !== null && held.col !== null) {
+            if (index === held.col && circuitOperationColumns.length > 0) {
+                index -= 0.5;
+            }
+            if (index > held.col) {
+                index -= 1;
+            }
+        }
         var s = gateRadius * 2 + circuitOperationHorizontalSpacing;
         return s * (index + 1);
     };
-    var operationXToIndex = function (x) {
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {GateColumn[]} circuitCols
+     * @returns {{ col : number, row : number, inExisting : boolean }}
+     */
+    var posToColumnIndexAndInsertSuggestion = function (x, y, circuitCols) {
         var s = gateRadius * 2 + circuitOperationHorizontalSpacing;
-        return Math.floor(x / s - 0.5);
+        var c = x / s - 0.5;
+        var i = Math.floor(c);
+        var j = wireYToIndex(y);
+        if (j === null) {
+            return null;
+        }
+        if (i < 0) {
+            return {col: 0, row: j, inExisting: false};
+        }
+        if (i >= circuitCols.length) {
+            return {col: i, row: j, inExisting: false};
+        }
+
+        var dc = c % 1;
+        var isBefore = dc <= 0.3;
+        var isAfter = dc >= 0.7;
+        var isCentered = !isBefore && !isAfter;
+        var isFree = circuitCols[i].gates[j] === null;
+        if (isFree && isCentered) {
+            return {col: i, row: j, inExisting: true};
+        }
+
+        var di = isAfter ? 1 : 0;
+        return {col: i + di, row: j, inExisting: false};
     };
     var makeRectRadius = function (x, y, r) {
         return makeRect(x - r, y - r, 2 * r, 2 * r);
@@ -140,15 +165,22 @@ if (canvas !== null) {
 // --- State ---
     var latestMouseX = 0;
     var latestMouseY = 0;
-    var heldOperation = null;
+    /**
+     * @type {null|{ gate: Gate, col: (number|null), row: (number|null) }}
+     */
+    var held = null;
     var isTapping = false;
     var wasTapping = false;
 
-    var drawRect = function (rect, fill) {
+    var fillRect = function (rect, fill) {
         ctx.fillStyle = fill || "white";
+        ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    };
+
+    var drawRect = function (rect, fill) {
         ctx.strokeStyle = "black";
         ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
-        ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+        fillRect(rect, fill);
     };
 
     var drawParagraph = function (x, y, paragraph) {
@@ -170,12 +202,6 @@ if (canvas !== null) {
         ctx.strokeStyle = "black";
         ctx.stroke();
     };
-    var drawBall = function (x, y, r) {
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, 2 * Math.PI);
-        ctx.fillStyle = "black";
-        ctx.fill();
-    };
     var rectContainsMouse = function (b) {
         var x = latestMouseX;
         var y = latestMouseY;
@@ -190,7 +216,17 @@ if (canvas !== null) {
         if (g.symbol === "\\⊹") {
             drawMatrix(makeRectRadius(x, y, gateRadius), g.matrix)
         } else if (g.symbol === "\\•") {
-            drawBall(x, y, 5);
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            if (g.matrix === Matrix.ANTI_CONTROL_SYGIL) {
+                ctx.fillStyle = "white";
+                ctx.strokeStyle = "black";
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = "black";
+                ctx.fill();
+            }
         } else {
             drawCenteredString(x, y, g.symbol);
         }
@@ -199,13 +235,13 @@ if (canvas !== null) {
         var b = makeRectRadius(x, y, gateRadius);
         if (rectContainsMouse(b)) {
             if (isTapping && !wasTapping) {
-                heldOperation = {
+                held = {
                     gate: g,
-                    controls: [],
-                    wire: 0
+                    row: null,
+                    col: null
                 };
             }
-            if (heldOperation === null) {
+            if (held === null) {
                 var r = gateRadius;
                 ctx.globalAlpha = 0.5;
                 ctx.fillStyle = "white";
@@ -214,9 +250,23 @@ if (canvas !== null) {
 
                 drawRect(b, "orange");
 
-                drawRect(makeRect(50, y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 10));
-                drawParagraph(50 + 5, y + r + 25, g.name + "\n\n" + g.description + "\n\n1-Wire Matrix:");
-                drawMatrix(makeRect(55, y + r + 10 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
+                drawRect(makeRect(50, y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 35));
+                drawParagraph(50 + 5, y + r + 25,
+                    g.name +
+                    "\n\n" +
+                    g.description +
+                    "\n\n" +
+                    "Transition Matrix (input chooses column(s)):\n" +
+                    "    if OFF      if ON\n" +
+                    "\n" +
+                    "                                  OFF output\n" +
+                    "\n" +
+                    "\n" +
+                    "                                  ON output\n" +
+                    "\n" +
+                    "\n" +
+                    g.matrix.toString());
+                drawMatrix(makeRect(55, y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
             } else {
                 drawRect(b);
             }
@@ -225,27 +275,67 @@ if (canvas !== null) {
         }
         drawGateSymbol(x, y, g);
     };
-    var drawCircuitOperation = function (operation, operationIndex) {
-        var x = operationIndexToX(operationIndex);
-        var cy = wireIndexToY(operation.wire);
-        for (var i = 0; i < operation.controls.length; i++) {
-            var cy2 = wireIndexToY(operation.controls[i]);
-            drawLine(x, cy2, x, cy);
-            drawBall(x, cy2, 5);
+
+    var drawColumnControlWires = function(gateColumn, columnIndex) {
+        var nonNullGates = gateColumn.gates.filter(function(e) { return e !== null; });
+        var controls = nonNullGates.filter(function(e) { return e.symbol === "\\•"; });
+
+        var hasControls = controls.length > 0;
+        var hasOthers = controls.length < nonNullGates.length;
+        if (!hasControls || !hasOthers) {
+            return;
         }
 
-        var b = makeRectRadius(x, cy, gateRadius);
-
-        var highlightGate = heldOperation == operation || (rectContainsMouse(b) && heldOperation === null && !isTapping);
-        if (highlightGate || operation.gate.symbol !== "\\•") {
-            drawRect(b, highlightGate ? "orange" : null);
+        var minIndex;
+        var maxIndex;
+        for (var i = 0; i < gateColumn.gates.length; i++) {
+            if (gateColumn.gates[gateColumn.gates.length - 1 - i] !== null) {
+                minIndex = gateColumn.gates.length - 1 - i;
+            }
+            if (gateColumn.gates[i] !== null) {
+                maxIndex = i;
+            }
         }
-        drawGateSymbol(x, cy, operation.gate);
-        if (rectContainsMouse(b) && heldOperation === null && !wasTapping && isTapping) {
-            heldOperation = operation;
-            circuitOperations.splice(operationIndex, 1);
+        var x = operationIndexToX(columnIndex);
+        drawLine(x, wireIndexToY(minIndex), x, wireIndexToY(maxIndex));
+    };
+
+    /**
+     * @param {GateColumn} gateColumn
+     * @param {number} columnIndex
+     */
+    var drawCircuitOperation = function (gateColumn, columnIndex) {
+
+        drawColumnControlWires(gateColumn, columnIndex);
+        var x = operationIndexToX(columnIndex);
+
+        for (var i = 0; i < gateColumn.gates.length; i++) {
+            var cy = wireIndexToY(i);
+            var b = makeRectRadius(x, cy, gateRadius);
+            var gate = gateColumn.gates[i];
+            if (gate === null) {
+                continue;
+            }
+
+            var isHolding = held !== null && held.col === columnIndex && held.row === i;
+            var canGrab = rectContainsMouse(b) && held === null && !isTapping;
+            var didGrab = rectContainsMouse(b) && held === null && !wasTapping && isTapping;
+            var highlightGate = isHolding || canGrab;
+            var isNotControl = gate.symbol !== "\\•";
+            var doDrawGateBox = isHolding || canGrab || isNotControl;
+            if (doDrawGateBox) {
+                drawRect(b, highlightGate ? "orange" : null);
+            }
+            drawGateSymbol(x, cy, gate);
+            if (didGrab) {
+                held = {gate: gate, col: null, row: null};
+                circuitOperationColumns[columnIndex].gates[i] = null;
+            }
         }
     };
+    /**
+     * @param {GateColumn[]} ops
+     */
     var drawCircuit = function (ops) {
         for (var i = 0; i < numWires; i++) {
             var wireY = wireIndexToY(i);
@@ -256,36 +346,50 @@ if (canvas !== null) {
             drawCircuitOperation(ops[i2], i2);
         }
     };
+
     var drawComplex = function (rect, value) {
+        if (value === Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX) {
+            fillRect(rect, "#444");
+            return;
+        }
+
         var x = rect.x + rect.w / 2;
         var y = rect.y + rect.h / 2;
         var len = value.abs();
 
-        if (len > 0.0001) {
-            var h = len * (rect.h - 1);
-            var w = len * (rect.w - 1);
-            ctx.fillStyle = "orange";
-            ctx.fillRect(rect.x + rect.w / 2 - w / 2, rect.y + rect.h / 2 - h / 2, w, h);
+        if (len <= 0.0001) {
+            return;
         }
 
-        if (len > 0.0001) {
-            if (rect.w / 2 > showComplexPhaseHaveEnoughRadiusCutoff && (value.real < 0 || Math.abs(value.imag) > 0.0001)) {
-                var theta = -value.phase();
-                if (theta <= -tau / 2) theta += tau;
-                if (theta > tau / 2 - 0.001) theta -= tau;
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.arc(x, y, complexPhaseSweepRadius, Math.min(0, theta), Math.max(0, theta));
-                ctx.strokeStyle = "black";
-                ctx.fillStyle = "yellow";
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                ctx.fill();
-            }
-
-            drawLine(x, y, x + rect.w / 2.2 * value.real / len, y - rect.h / 2.2 * value.imag / len);
+        // area magnitude
+        var h = len * (rect.h - 1);
+        var w = len * (rect.w - 1);
+        var isControl = value === Matrix.__CONTROL_SYGIL_COMPLEX;
+        ctx.fillStyle = isControl ? "#201000" : "orange";
+        ctx.fillRect(Math.round(rect.x + (rect.w - w) / 2), Math.round(rect.y + (rect.h - h) / 2), w, h);
+        if (isControl) {
+            drawLine(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
         }
+
+        // angle sweep
+        if (rect.w / 2 > showComplexPhaseHaveEnoughRadiusCutoff && (value.real < 0 || Math.abs(value.imag) > 0.0001)) {
+            var theta = -value.phase();
+            if (theta <= -tau / 2) theta += tau;
+            if (theta > tau / 2 - 0.001) theta -= tau;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.arc(x, y, complexPhaseSweepRadius, Math.min(0, theta), Math.max(0, theta));
+            ctx.strokeStyle = "black";
+            ctx.fillStyle = "yellow";
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.fill();
+        }
+
+        // arrow body
+        drawLine(x, y, x + rect.w / 2.2 * value.real / len, y - rect.h / 2.2 * value.imag / len);
     };
+
     var drawMatrix = function (rect, matrix) {
         var n = matrix.width();
         var w = rect.w / n;
@@ -311,6 +415,7 @@ if (canvas !== null) {
         ctx.strokeStyle = "black";
         ctx.stroke();
     };
+
     var drawState = function (rect, values) {
         // draw values
         var h = rect.w;
@@ -336,6 +441,7 @@ if (canvas !== null) {
         ctx.strokeStyle = "black";
         ctx.stroke();
     };
+
     var drawStates = function (rect, states, label, highlight) {
         drawCenteredString(rect.x + rect.w / 2, rect.y + testVectorsTitleOffset, label + (highlight ? "✓" : ""));
 
@@ -348,7 +454,8 @@ if (canvas !== null) {
             drawState(makeRect(rect.x + i * widthDelta, rect.y, widthVector, rect.h), states[i].v);
         }
     };
-    var drawTestStates = function (rect, operations, label, highlightIfMatches) {
+
+    var drawTestStates = function (rect, operations, label) {
         var states = [];
         for (var i = 0; i < testInputs.length; i++) {
             if (testInputs[i] === null) {
@@ -362,12 +469,15 @@ if (canvas !== null) {
 
         drawStates(rect, states, label, true);
     };
+
     var drawInputVectors = function () {
         drawStates(inputVectorsRect, testInputs, inputTestVectorsCaption);
     };
+
     var drawOutputVectors = function (operations) {
         drawTestStates(outputVectorsRect, operations, outputTestVectorsCaption, true);
     };
+
     var drawIntermediateVectors = function (operations) {
         drawTestStates(intermediateVectorsRect, operations, intermediatePostTestVectorsCaption);
     };
@@ -385,27 +495,35 @@ if (canvas !== null) {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        var focusedOperationIndex = rectContainsMouse(circuitRect) ? operationXToIndex(latestMouseX) : null;
-        if (focusedOperationIndex !== null) {
-            if (heldOperation !== null) {
-                focusedOperationIndex = Math.max(0, Math.min(circuitOperations.length, focusedOperationIndex));
-            } else if (focusedOperationIndex < 0 || focusedOperationIndex >= circuitOperations.length) {
-                focusedOperationIndex = null;
-            }
+        var candidateNewCols = circuitOperationColumns.slice(0);
+        for (var i = 0; i < candidateNewCols.length; i++) {
+            candidateNewCols[i] = new GateColumn(candidateNewCols[i].gates.slice(0));
+        }
+        var insertSite = rectContainsMouse(circuitRect) ? posToColumnIndexAndInsertSuggestion(latestMouseX, latestMouseY, candidateNewCols) : null;
+        if (insertSite !== null && held === null && insertSite.col >= candidateNewCols.length) {
+            insertSite = null;
         }
 
-        var ops = circuitOperations.slice(0);
-        if (focusedOperationIndex !== null && heldOperation !== null) {
-            heldOperation.wire = wireYToIndex(latestMouseY);
-            ops.splice(focusedOperationIndex, 0, heldOperation);
-            if (wasTapping && !isTapping) {
-                circuitOperations = ops;
+        // Add held operation into circuit
+        if (insertSite !== null && held !== null) {
+            if (!insertSite.inExisting) {
+                while (candidateNewCols.length < insertSite.col) {
+                    candidateNewCols.push(GateColumn.empty(numWires));
+                }
+                candidateNewCols.splice(insertSite.col, 0, GateColumn.empty(numWires));
+                held.row = insertSite.row;
+                held.col = insertSite.col;
+            } else {
+                held.row = null;
+                held.col = null;
             }
+            candidateNewCols[insertSite.col].gates[insertSite.row] = held.gate;
         }
-        if (focusedOperationIndex !== null) {
-            var x1 = operationIndexToX(focusedOperationIndex - 0.5);
-            var x2 = operationIndexToX(focusedOperationIndex + 0.5);
-            ctx.fillStyle = heldOperation === null ? "yellow" : "orange";
+
+        if (insertSite !== null && held === null) {
+            var x1 = operationIndexToX(insertSite.col - 0.5);
+            var x2 = operationIndexToX(insertSite.col + 0.5);
+            ctx.fillStyle = held === null ? "yellow" : "orange";
             ctx.fillRect(x1, circuitRect.y, x2 - x1, circuitRect.h);
             ctx.globalAlpha = 1;
             ctx.beginPath();
@@ -413,54 +531,42 @@ if (canvas !== null) {
             ctx.lineTo(x2, circuitRect.y + circuitRect.h);
             ctx.strokeStyle = "gray";
             ctx.stroke();
-
-            for (var i = 0; i < numWires; i++) {
-                var opRect = makeRect(operationIndexToX(focusedOperationIndex) - 10, wireIndexToY(i) - 10, 20, 20);
-                if (rectContainsMouse(opRect)) {
-                    if (isTapping && !wasTapping && i != circuitOperations[focusedOperationIndex].wire) {
-                        var conds = circuitOperations[focusedOperationIndex].controls;
-                        var ind = conds.indexOf(i);
-                        if (ind == -1) {
-                            conds.push(i);
-                        } else {
-                            conds.splice(ind, 1);
-                        }
-                    }
-                    drawRect(opRect, "orange");
-                } else {
-                    drawRect(opRect);
-                }
-            }
         }
 
-        drawCircuit(ops);
+        drawCircuit(candidateNewCols);
 
-        if (focusedOperationIndex !== null) {
+        if (insertSite !== null) {
             if (showOperationMatrixInline) {
-                operationMatrixRect.x = operationIndexToX(focusedOperationIndex);
+                operationMatrixRect.x = operationIndexToX(insertSite.col);
                 operationMatrixRect.x += operationMatrixRect.x > operationMatrixRect.w + 75 ? -operationMatrixRect.w - 50 : 50;
             } else {
                 drawCenteredString(operationMatrixRect.x + operationMatrixRect.w / 2, operationMatrixRect.y + testVectorsTitleOffset, effectOfOperationCaption);
             }
-            var m = matrixForOperation(ops[focusedOperationIndex]);
+            var m = candidateNewCols[insertSite.col].matrix();
             drawMatrix(makeRect(operationMatrixRect.x, operationMatrixRect.y, operationMatrixRect.w, operationMatrixRect.h), m);
 
-            drawIntermediateVectors(ops.slice(0, focusedOperationIndex + 1));
+            drawIntermediateVectors(candidateNewCols.slice(0, insertSite.col + 1));
         } else {
             drawInputVectors();
         }
 
-        drawOutputVectors(ops);
+        drawOutputVectors(candidateNewCols);
 
         drawGateSet();
 
-        if (heldOperation !== null && focusedOperationIndex === null) {
-            drawFloatingGate(latestMouseX, latestMouseY, heldOperation.gate);
+        if (held !== null && insertSite === null) {
+            drawFloatingGate(latestMouseX, latestMouseY, held.gate);
+        }
+
+        if (insertSite !== null && held !== null && wasTapping && !isTapping) {
+            circuitOperationColumns = candidateNewCols.filter(function(e) { return !e.isEmpty();});
         }
     };
 
     var mouseUpdate = function (p, pressed) {
+        //noinspection JSUnresolvedFunction
         latestMouseX = p.pageX - $(canvas).position().left;
+        //noinspection JSUnresolvedFunction
         latestMouseY = p.pageY - $(canvas).position().top;
         if (isTapping != pressed) {
             wasTapping = isTapping;
@@ -469,32 +575,37 @@ if (canvas !== null) {
         redraw();
 
         if (!isTapping) {
-            heldOperation = null;
+            held = null;
         }
         if (isTapping != wasTapping) {
             wasTapping = isTapping;
             redraw();
         }
     };
+    //noinspection JSUnresolvedFunction
     $(canvas).mousedown(function (p) {
         if (p.which != 1) return;
         mouseUpdate(p, true);
     });
+    //noinspection JSUnresolvedFunction
     $(document).mouseup(function (p) {
         if (p.which != 1) return;
         mouseUpdate(p, false);
     });
+    //noinspection JSUnresolvedFunction
     $(document).mousemove(function (p) {
         if (isTapping) {
             mouseUpdate(p, isTapping);
         }
     });
+    //noinspection JSUnresolvedFunction
     $(canvas).mousemove(function (p) {
         if (!isTapping) {
             mouseUpdate(p, isTapping);
         }
     });
-    $(canvas).mouseleave(function (p) {
+    //noinspection JSUnresolvedFunction
+    $(canvas).mouseleave(function () {
         mouseUpdate({offsetX: -100, offsetY: -100}, isTapping);
     });
 
