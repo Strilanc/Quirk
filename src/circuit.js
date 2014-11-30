@@ -2,7 +2,7 @@ var canvas = document.getElementById("drawCanvas");
 if (canvas !== null) {
     var numWires = 3;
     var numStates = Math.pow(2, numWires);
-    var tau = Math.PI*2;
+    var tau = Math.PI * 2;
 
     var ctx = canvas.getContext("2d");
     ctx.font = "12px Helvetica";
@@ -55,34 +55,16 @@ if (canvas !== null) {
 // --- Inputs ---
     var entangledIndexVectorsInput = function () {
         var d = [];
-        d.push({r: 1, i: 0});
+        d.push(Complex.from(1));
         for (var i = 0; i < numStates - 1; i++) {
-            d.push({r: 0, i: 0});
+            d.push(Complex.ZERO);
         }
 
         var r = [];
         for (var j = 0; j < numStates / 2 - 1; j++) {
             r.push(null);
         }
-        r.push({label: "0", v: d});
-        for (var j2 = numStates / 2 + 1; j2 < numStates; j2++) {
-            r.push(null);
-        }
-        return r;
-    }();
-    var entangledIndexVectors = function () {
-        var d = [];
-        d.push({r: Math.sqrt(0.5), i: 0});
-        for (var i = 0; i < numStates - 2; i++) {
-            d.push({r: 0, i: 0});
-        }
-        d.push({r: Math.sqrt(0.5), i: 0});
-
-        var r = [];
-        for (var j = 0; j < numStates / 2 - 1; j++) {
-            r.push(null);
-        }
-        r.push({label: "0", v: d});
+        r.push({label: "0", v: Matrix.col(d)});
         for (var j2 = numStates / 2 + 1; j2 < numStates; j2++) {
             r.push(null);
         }
@@ -93,72 +75,27 @@ if (canvas !== null) {
     var turnToAngleDescription = function (r) {
         return (r * 360) + "°";
     };
-    var complexPlusComplex = function (v1, v2) {
-        return {r: v1.r + v2.r, i: v1.i + v2.i};
-    };
-    var complexTimesComplex = function (v1, v2) {
-        return {
-            r: v1.r * v2.r - v1.i * v2.i,
-            i: v1.r * v2.i + v2.r * v1.i
-        };
-    };
-    var vectorDotVector = function (v1, v2) {
-        var v = {r: 0, i: 0};
-        for (var i = 0; i < v1.length; i++) {
-            v = complexPlusComplex(v, complexTimesComplex(v1[i], v2[i]));
-        }
-        return v;
-    };
-    var matrixTimesVector = function (matrix, vector) {
-        var result = [];
-        for (var i = 0; i < vector.length; i++) {
-            result.push(vectorDotVector(vector, matrix[i]));
-        }
-        return result;
-    };
     var matrixForOperation = function (operation) {
-        var innerMatrix = operation.gate.matrix;
-
-        // we will touch pairs of states where only the affected wire differs
-        var affectedWireMask = Math.pow(2, operation.wire);
-
-        // when a control wire is OFF, the operation will not affect the state
-        var controlWiresMask = 0;
-        for (var i = 0; i < operation.controls.length; i++) {
-            controlWiresMask |= Math.pow(2, operation.controls[i]);
-        }
-        controlWiresMask &= ~affectedWireMask;
-
-        var circuitMatrix = [];
-        for (var r = 0; r < numStates; r++) {
-            var row = [];
-            for (var c = 0; c < numStates; c++) {
-                var isBlockedByControlWire = (controlWiresMask & ~c) !== 0 || (controlWiresMask & ~r) !== 0;
-
-                var outerRowBits = ~affectedWireMask & r;
-                var outerColumnBits = ~affectedWireMask & c;
-                var unaffectedWiresDoNotDiffer = outerRowBits == outerColumnBits;
-
-                var v = {r: 0, i: 0};
-                if (isBlockedByControlWire) {
-                    var isOnMainDiagonal = r == c;
-                    v = {
-                        r: isOnMainDiagonal ? 1 : 0,
-                        i: 0
-                    };
-                } else if (unaffectedWiresDoNotDiffer) {
-                    var innerColumn = (affectedWireMask & c) !== 0 ? 1 : 0;
-                    var innerRow = (affectedWireMask & r) !== 0 ? 1 : 0;
-                    v = innerMatrix[innerRow][innerColumn];
-                }
-                row.push(v);
+        var es = [];
+        for (var i = 0; i < numWires; i++) {
+            var p = null;
+            if (operation.wire == i) {
+                p = operation.gate.matrix;
+            } else if (operation.controls.indexOf(i) >= 0) {
+                p = Matrix.CONTROL_SYGIL;
+            } else {
+                p = Matrix.identity(2);
             }
-            circuitMatrix.push(row);
+            es.push(p);
+
         }
-        return circuitMatrix;
+
+        return es.reduce(function (e1, e2) {
+            return e1.tensorProduct(e2);
+        }, Matrix.identity(1));
     };
     var transformVectorWithOperation = function (input, operation) {
-        return matrixTimesVector(matrixForOperation(operation), input);
+        return matrixForOperation(operation).times(input);
     };
     var transformVectorWithOperations = function (input, operations) {
         for (var i = 0; i < operations.length; i++) {
@@ -176,10 +113,7 @@ if (canvas !== null) {
         "Other interpretations:\n" +
         "- A NOT gate.\n" +
         "- A 180° turn around the X axis of the Block Sphere.",
-        matrix: [
-            [{r: 0, i: 0}, {r: 1, i: 0}],
-            [{r: 1, i: 0}, {r: 0, i: 0}]
-        ],
+        matrix: Matrix.PAULI_X,
         symbol: "X"
     });
     gateSet.push({
@@ -189,10 +123,7 @@ if (canvas !== null) {
         "\n" +
         "Other interpretations:\n" +
         "- A 180° turn around the Y axis of the Block Sphere.",
-        matrix: [
-            [{r: 0, i: 0}, {r: 0, i: -1}],
-            [{r: 0, i: 1}, {r: 0, i: 0}]
-        ],
+        matrix: Matrix.PAULI_Y,
         symbol: "Y"
     });
     gateSet.push({
@@ -203,10 +134,7 @@ if (canvas !== null) {
         "Other interpretations:\n" +
         "- The R(" + turnToAngleDescription(0.5) + ") gate.\n" +
         "- A 180° turn around the Z axis of the Block Sphere.",
-        matrix: [
-            [{r: 1, i: 0}, {r: 0, i: 0}],
-            [{r: 0, i: 0}, {r: -1, i: 0}]
-        ],
+        matrix: Matrix.PAULI_Z,
         symbol: "Z"
     });
     gateSet.push({
@@ -218,10 +146,7 @@ if (canvas !== null) {
         "- A 180° turn around the X+Z diagonal axis of the Block Sphere.\n" +
         "- A single-bit Fourier transform.\n" +
         "- Converts to/from the diagonal [1,1],[1,-1] basis.",
-        matrix: [
-            [{r: Math.sqrt(1 / 2), i: 0}, {r: Math.sqrt(1 / 2), i: 0}],
-            [{r: Math.sqrt(1 / 2), i: 0}, {r: -Math.sqrt(1 / 2), i: 0}]
-        ],
+        matrix: Matrix.HADAMARD,
         symbol: "H"
     });
     var makeRGate = function (turnProportion) {
@@ -234,10 +159,7 @@ if (canvas !== null) {
             "\n" +
             "Other interpretations:\n" +
             "- A " + posAngle + " rotation around the Z axis of the Block Sphere.",
-            matrix: [
-                [{r: 1, i: 0}, {r: 0, i: 0}],
-                [{r: 0, i: 0}, {r: Math.cos(turnProportion * tau), i: Math.sin(turnProportion * tau)}]
-            ],
+            matrix: Matrix.fromRotation([0, 0, turnProportion]),
             symbol: "R(" + angle + ")"
         };
     };
@@ -246,19 +168,6 @@ if (canvas !== null) {
     if (numWires > 3) {
         gateSet.push(makeRGate(-1 / 16));
     }
-
-// --- Define puzzles
-    var puzzles = [];
-    puzzles.push({
-        title: "Entangle",
-        desc: "Goal: Hadamard bit0 then make bit1 and bit2 match it.\n" +
-        "\n" +
-        "Hint: Conditionally flipping an OFF bit will make\n" +
-        "      it match the conditioned-upon bit.",
-        input: entangledIndexVectorsInput,
-        output: entangledIndexVectors,
-        passed: false
-    });
 
 // --- Layout Functions ---
     var wireIndexToY = function (i) {
@@ -287,7 +196,6 @@ if (canvas !== null) {
     var heldOperation = null;
     var isTapping = false;
     var wasTapping = false;
-    var curPuzzle = null;
 
     var drawRect = function (rect, fill) {
         ctx.fillStyle = fill || "white";
@@ -393,7 +301,7 @@ if (canvas !== null) {
     var drawComplex = function (rect, value) {
         var x = rect.x + rect.w / 2;
         var y = rect.y + rect.h / 2;
-        var len = Math.sqrt(value.r * value.r + value.i * value.i);
+        var len = value.abs();
 
         if (len > 0.0001) {
             var h = len * (rect.h - 1);
@@ -403,8 +311,8 @@ if (canvas !== null) {
         }
 
         if (len > 0.0001) {
-            if (rect.w / 2 > showComplexPhaseHaveEnoughRadiusCutoff && (value.r < 0 || Math.abs(value.i) > 0.0001)) {
-                var theta = Math.atan2(-value.i, value.r);
+            if (rect.w / 2 > showComplexPhaseHaveEnoughRadiusCutoff && (value.real < 0 || Math.abs(value.imag) > 0.0001)) {
+                var theta = -value.phase();
                 if (theta <= -tau / 2) theta += tau;
                 if (theta > tau / 2 - 0.001) theta -= tau;
                 ctx.beginPath();
@@ -417,16 +325,16 @@ if (canvas !== null) {
                 ctx.fill();
             }
 
-            drawLine(x, y, x + rect.w / 2.2 * value.r / len, y - rect.h / 2.2 * value.i / len);
+            drawLine(x, y, x + rect.w / 2.2 * value.real / len, y - rect.h / 2.2 * value.imag / len);
         }
     };
     var drawMatrix = function (rect, matrix) {
-        var n = matrix.length;
+        var n = matrix.width();
         var w = rect.w / n;
         var h = rect.h / n;
         for (var i = 0; i < n; i++) {
             for (var j = 0; j < n; j++) {
-                drawComplex(makeRect(rect.x + w * i, rect.y + h * j, w, h), matrix[j][i]);
+                drawComplex(makeRect(rect.x + w * i, rect.y + h * j, w, h), matrix.rows[j][i]);
             }
         }
 
@@ -448,18 +356,18 @@ if (canvas !== null) {
     var drawState = function (rect, values) {
         // draw values
         var h = rect.w;
-        for (var i = 0; i < values.length; i++) {
+        for (var i = 0; i < values.height(); i++) {
             var y = rect.y + h * i;
-            drawComplex(makeRect(rect.x, y, rect.w, h), values[i]);
+            drawComplex(makeRect(rect.x, y, rect.w, h), values.rows[i][0]);
         }
 
         // draw borders
         ctx.beginPath();
         var r = rect.x + rect.w;
-        var b = rect.y + h * values.length;
+        var b = rect.y + h * values.height();
         ctx.moveTo(rect.x, b);
         ctx.lineTo(rect.x, rect.y);
-        for (var i2 = 0; i2 < values.length; i2++) {
+        for (var i2 = 0; i2 < values.height(); i2++) {
             var y2 = rect.y + h * i2;
             ctx.moveTo(rect.x, y2);
             ctx.lineTo(r, y2);
@@ -484,38 +392,20 @@ if (canvas !== null) {
     };
     var drawTestStates = function (rect, operations, label, highlightIfMatches) {
         var states = [];
-        for (var i = 0; i < curPuzzle.input.length; i++) {
-            if (curPuzzle.input[i] === null) {
+        for (var i = 0; i < testInputs.length; i++) {
+            if (testInputs[i] === null) {
                 states.push(null);
                 continue;
             }
-            var input = curPuzzle.input[i].v;
+            var input = testInputs[i].v;
             var output = transformVectorWithOperations(input, operations);
-            states.push({label: curPuzzle.input[i].label, v: output});
+            states.push({label: testInputs[i].label, v: output});
         }
 
-        var matches = true;
-        if (highlightIfMatches) {
-            for (var i2 = 0; i2 < curPuzzle.output.length; i2++) {
-                if (curPuzzle.output[i2] === null) continue;
-                for (var j = 0; j < curPuzzle.output[i2].v.length; j++) {
-                    var c1 = curPuzzle.output[i2].v[j];
-                    var c2 = states[i2].v[j];
-                    matches = matches && Math.abs(c1.r - c2.r) < 0.001;
-                    matches = matches && Math.abs(c1.i - c2.i) < 0.001;
-                }
-            }
-            if (matches) {
-                curPuzzle.passed = true;
-            }
-        } else {
-            matches = false;
-        }
-
-        drawStates(rect, states, label, matches);
+        drawStates(rect, states, label, true);
     };
     var drawInputVectors = function () {
-        drawStates(inputVectorsRect, curPuzzle.input, inputTestVectorsCaption);
+        drawStates(inputVectorsRect, testInputs, inputTestVectorsCaption);
     };
     var drawOutputVectors = function (operations) {
         drawTestStates(outputVectorsRect, operations, outputTestVectorsCaption, true);
@@ -650,6 +540,6 @@ if (canvas !== null) {
         mouseUpdate({offsetX: -100, offsetY: -100}, isTapping);
     });
 
-    curPuzzle = puzzles[0];
+    var testInputs = entangledIndexVectorsInput;
     redraw();
 }
