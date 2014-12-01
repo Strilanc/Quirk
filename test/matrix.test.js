@@ -185,16 +185,23 @@ MatrixTest.prototype.testColRowProducts = function() {
 };
 
 MatrixTest.prototype.testTensorProduct_Controlled = function() {
-    assertTrue(Matrix.CONTROL_SYGIL.tensorProduct(Matrix.square([2, 3, 5, 7])).isEqualTo(Matrix.square([
+    assertTrue(Matrix.CONTROL.tensorProduct(Matrix.square([2, 3, 5, 7])).isEqualTo(Matrix.square([
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 2, 3,
         0, 0, 5, 7
     ])));
-    assertTrue(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.CONTROL_SYGIL).isEqualTo(Matrix.square([
+    assertTrue(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.CONTROL).isEqualTo(Matrix.square([
         1, 0, 0, 0,
         0, 2, 0, 3,
         0, 0, 1, 0,
         0, 5, 0, 7
     ])));
+};
+
+MatrixTest.prototype.testTensorPower = function() {
+    assertEquals("{{1}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(0));
+    assertEquals("{{1, i}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(1));
+    assertEquals("{{1, i, i, -1}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(2));
+    assertEquals("{{1, i, i, -1, i, -1, -1, -i}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(3));
 };

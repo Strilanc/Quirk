@@ -1,8 +1,7 @@
 var canvas = document.getElementById("drawCanvas");
 if (canvas !== null) {
-    var numWires = 3;
-    var numStates = Math.pow(2, numWires);
-    var tau = Math.PI * 2;
+    var numWires = 4;
+    var numStates = 1 << numWires;
 
     var ctx = canvas.getContext("2d");
     ctx.font = "12px Helvetica";
@@ -24,10 +23,10 @@ if (canvas !== null) {
 
     var testVectorsY = 350;
     var testVectorsInterSpacing = 25;
-    var testVectorsWidth = (canvas.width + testVectorsInterSpacing) / 4 - testVectorsInterSpacing;
+    var testVectorsWidth = 200;
 
     var circuitRect = makeRect(0, 120, canvas.width, 201);
-    var inputVectorsRect = makeRect(5, testVectorsY, testVectorsWidth, -1);
+    var inputVectorsRect = makeRect(5, testVectorsY, testVectorsWidth / numStates, -1);
     var operationMatrixRect = makeRect(
         inputVectorsRect.x + inputVectorsRect.w + testVectorsInterSpacing,
         testVectorsY,
@@ -36,43 +35,14 @@ if (canvas !== null) {
     var outputVectorsRect = makeRect(
         operationMatrixRect.x + operationMatrixRect.w + testVectorsInterSpacing,
         testVectorsY,
-        testVectorsWidth,
+        testVectorsWidth / numStates,
         -1);
     var showOperationMatrixInline = false;
     var intermediateVectorsRect = inputVectorsRect;
-    if (numWires > 3) {
-        circuitRect = makeRect(0, 120, 1400, 200);
-        inputVectorsRect = makeRect(0, testVectorsY, 300, -1);
-        operationMatrixRect = makeRect(0, 130, 200, 200);
-        showOperationMatrixInline = true;
-        outputVectorsRect = makeRect(350, testVectorsY, 300, -1);
-        intermediateVectorsRect = inputVectorsRect;
-    }
-    var complexPhaseSweepRadius = 8;
-    var showComplexPhaseHaveEnoughRadiusCutoff = 20;
     var inputTestVectorsCaption = "Test Inputs";
     var intermediatePostTestVectorsCaption = "States after Operation";
     var outputTestVectorsCaption = "Current Outputs";
     var effectOfOperationCaption = "Highlighted Operation";
-
-// --- Inputs ---
-    var entangledIndexVectorsInput = function () {
-        var d = [];
-        d.push(Complex.from(1));
-        for (var i = 0; i < numStates - 1; i++) {
-            d.push(Complex.ZERO);
-        }
-
-        var r = [];
-        for (var j = 0; j < numStates / 2 - 1; j++) {
-            r.push(null);
-        }
-        r.push({label: "0", v: Matrix.col(d)});
-        for (var j2 = numStates / 2 + 1; j2 < numStates; j2++) {
-            r.push(null);
-        }
-        return r;
-    }();
 
 // --- Math and Circuits ---
     /**
@@ -88,9 +58,18 @@ if (canvas !== null) {
     };
 
 // --- Define toolbox gate types ---
+    var spinR = new Gate("R(t)", Matrix.identity(2), "Rotater", "");
+    var spinX = new Gate("X(t)", Matrix.identity(2), "X Spinner", "");
+    var spinY = new Gate("Y(t)", Matrix.identity(2), "Y Spinner", "");
+    var spinZ = new Gate("Z(t)", Matrix.identity(2), "Z Spinner", "");
     var gateSet = [
         Gate.CONTROL,
         Gate.ANTI_CONTROL,
+        Gate.PEEK,
+        spinR,
+        spinX,
+        spinY,
+        spinZ,
         Gate.DOWN,
         Gate.X,
         Gate.UP,
@@ -213,12 +192,14 @@ if (canvas !== null) {
         drawGateSymbol(x, y, g);
     };
     var drawGateSymbol = function(x, y, g) {
-        if (g.symbol === "\\⊹") {
+        if (g.symbol === "\\∡") {
+            drawCenteredString(x, y, g.symbol);
+        } if (g.symbol === "\\⊹") {
             drawMatrix(makeRectRadius(x, y, gateRadius), g.matrix)
         } else if (g.symbol === "\\•") {
             ctx.beginPath();
             ctx.arc(x, y, 5, 0, 2 * Math.PI);
-            if (g.matrix === Matrix.ANTI_CONTROL_SYGIL) {
+            if (g.matrix === Matrix.ANTI_CONTROL) {
                 ctx.fillStyle = "white";
                 ctx.strokeStyle = "black";
                 ctx.fill();
@@ -301,10 +282,38 @@ if (canvas !== null) {
     };
 
     /**
+     * Returns the probability of controls on a column being satisfied and a wire being ON,
+     * if that was measured.
+     *
+     * @param {GateColumn} gateColumn
+     * @param {number} targetWire
+     * @param {Matrix} columnState
+     * @returns {{conditional: number, total: number, canDiffer: boolean}}
+     */
+    var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
+        var expectedMask = 0;
+        var requiredMask = 0;
+        for (var i = 0; i < gateColumn.gates.length; i++) {
+            if (gateColumn.gates[i] === Gate.CONTROL) {
+                requiredMask |= 1 << i;
+                expectedMask |= 1 << i;
+            } else if (gateColumn.gates[i] === Gate.ANTI_CONTROL) {
+                requiredMask |= 1 << i;
+            }
+        }
+        return {
+            conditional: measureConditionalProbability(targetWire, expectedMask, requiredMask, columnState),
+            total: measureProbability(expectedMask | (1 << targetWire), requiredMask | (1 << targetWire), columnState),
+            canDiffer: requiredMask != 0
+        };
+    };
+
+    /**
      * @param {GateColumn} gateColumn
      * @param {number} columnIndex
+     * @param {Matrix} columnState A complex column vector.
      */
-    var drawCircuitOperation = function (gateColumn, columnIndex) {
+    var drawCircuitOperation = function (gateColumn, columnIndex, columnState) {
 
         drawColumnControlWires(gateColumn, columnIndex);
         var x = operationIndexToX(columnIndex);
@@ -326,7 +335,12 @@ if (canvas !== null) {
             if (doDrawGateBox) {
                 drawRect(b, highlightGate ? "orange" : null);
             }
-            drawGateSymbol(x, cy, gate);
+            if (gate === Gate.PEEK) {
+                var p = measureGateColumnProbabilityOn(gateColumn, i, columnState);
+                drawProbabilityBox(b, p.conditional, p.total, p.canDiffer);
+            } else {
+                drawGateSymbol(x, cy, gate);
+            }
             if (didGrab) {
                 held = {gate: gate, col: null, row: null};
                 circuitOperationColumns[columnIndex].gates[i] = null;
@@ -334,21 +348,66 @@ if (canvas !== null) {
         }
     };
     /**
-     * @param {GateColumn[]} ops
+     * @param {Matrix} inputState
+     * @param {GateColumn[]} gateColumns
      */
-    var drawCircuit = function (ops) {
+    var drawCircuit = function (inputState, gateColumns) {
         for (var i = 0; i < numWires; i++) {
             var wireY = wireIndexToY(i);
             drawCenteredString(circuitRect.x + 14, wireY, "bit" + i + ":");
             drawLine(circuitRect.x + 30, wireY, circuitRect.x + canvas.width, wireY);
         }
-        for (var i2 = 0; i2 < ops.length; i2++) {
-            drawCircuitOperation(ops[i2], i2);
+        for (var i2 = 0; i2 < gateColumns.length; i2++) {
+            inputState = gateColumns[i2].matrix().times(inputState);
+            drawCircuitOperation(gateColumns[i2], i2, inputState);
         }
     };
 
+    /**
+     * @param {{x: number, y: number, w: number, h: number}} rect
+     * @param {number} conditional_probability
+     * @param {number} intersection_probability
+     * @param (boolean) can_differ
+     */
+    var drawProbabilityBox = function (rect, conditional_probability, intersection_probability, can_differ) {
+        drawRect(rect);
+        if (!can_differ) {
+            var w = rect.w * conditional_probability;
+            fillRect({x: rect.x, y: rect.y, w: w, h: rect.h}, "gray");
+            drawCenteredString(rect.x + rect.w/2, rect.y + rect.h/2, (conditional_probability*100).toFixed(1) + "%");
+        } else {
+            ctx.font = "10px Helvetica";
+            if (isNaN(conditional_probability)) {
+                ctx.beginPath();
+                ctx.moveTo(rect.x, rect.y);
+                ctx.lineTo(rect.x + rect.w, rect.y + rect.h/2);
+                ctx.lineTo(rect.x, rect.y + rect.h/2);
+                ctx.lineTo(rect.x, rect.y);
+                ctx.fillStyle = "gray";
+                ctx.fill();
+                drawLine(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h/2);
+                ctx.fillStyle = "black";
+                ctx.fillText(" p|c:N/A", rect.x + 2, rect.y + 15);
+            } else {
+                var w1 = rect.w * conditional_probability;
+                fillRect({x: rect.x, y: rect.y, w: w1, h: rect.h/2}, "gray");
+                ctx.fillStyle = "black";
+                ctx.fillText(" p|c:" + Math.round(conditional_probability*100) + "%", rect.x + 2, rect.y + 15);
+            }
+            var w2 = rect.w * intersection_probability;
+            fillRect({x: rect.x, y: rect.y + rect.h/2, w: w2, h: rect.h/2}, "gray");
+            ctx.fillStyle = "black";
+            ctx.fillText("p∧c:" + Math.round(intersection_probability*100) + "%", rect.x + 2, rect.y + rect.h/2 + 15);
+            ctx.font = "12px Helvetica";
+        }
+    };
+
+    /**
+     * @param {{x: number, y: number, w: number, h: number}} rect
+     * @param {Complex} value
+     */
     var drawComplex = function (rect, value) {
-        if (value === Matrix.__IDENTITY_ZERO_SYGIL_COMPLEX) {
+        if (value === Matrix.__TENSOR_SYGIL_ZERO) {
             fillRect(rect, "#444");
             return;
         }
@@ -362,32 +421,21 @@ if (canvas !== null) {
         }
 
         // area magnitude
-        var h = len * (rect.h - 1);
-        var w = len * (rect.w - 1);
-        var isControl = value === Matrix.__CONTROL_SYGIL_COMPLEX;
-        ctx.fillStyle = isControl ? "#201000" : "orange";
-        ctx.fillRect(Math.round(rect.x + (rect.w - w) / 2), Math.round(rect.y + (rect.h - h) / 2), w, h);
+        fillRect({x: rect.x, y: rect.y + (1 - value.norm2()) * rect.h, w: rect.w, h: value.norm2() * rect.h}, "orange");
+
+        var isControl = value === Matrix.__TENSOR_SYGIL_CONTROL;
+        var r = rect.w / 2 * value.abs();
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isControl ? "#201000" : "yellow";
+        ctx.strokeStyle = "gray";
+        ctx.fill();
+        ctx.stroke();
+        drawLine(x, y, x + rect.w / 2 * value.real, y - rect.h / 2 * value.imag);
+
         if (isControl) {
             drawLine(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
         }
-
-        // angle sweep
-        if (rect.w / 2 > showComplexPhaseHaveEnoughRadiusCutoff && (value.real < 0 || Math.abs(value.imag) > 0.0001)) {
-            var theta = -value.phase();
-            if (theta <= -tau / 2) theta += tau;
-            if (theta > tau / 2 - 0.001) theta -= tau;
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.arc(x, y, complexPhaseSweepRadius, Math.min(0, theta), Math.max(0, theta));
-            ctx.strokeStyle = "black";
-            ctx.fillStyle = "yellow";
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.fill();
-        }
-
-        // arrow body
-        drawLine(x, y, x + rect.w / 2.2 * value.real / len, y - rect.h / 2.2 * value.imag / len);
     };
 
     var drawMatrix = function (rect, matrix) {
@@ -442,40 +490,91 @@ if (canvas !== null) {
         ctx.stroke();
     };
 
-    var drawStates = function (rect, states, label, highlight) {
-        drawCenteredString(rect.x + rect.w / 2, rect.y + testVectorsTitleOffset, label + (highlight ? "✓" : ""));
+    /**
+     * @param {{x: number, y: number, w: number, h: number}} rect
+     * @param {{label: String, vec: Matrix}[]} states
+     * @param {string} label
+     */
+    var drawStates = function (rect, states, label) {
+        drawCenteredString(rect.x + rect.w / 2, rect.y + testVectorsTitleOffset, label);
 
-        var widthDelta = (rect.w + testVectorSeparation) / states.length;
+        var widthDelta = Math.min(50, (rect.w + testVectorSeparation) / states.length);
         var widthVector = widthDelta - testVectorSeparation;
 
         for (var i = 0; i < states.length; i++) {
-            if (states[i] === null) continue;
             drawCenteredString(rect.x + i * widthDelta + widthVector / 2, rect.y + testVectorLabelOffset, states[i].label);
-            drawState(makeRect(rect.x + i * widthDelta, rect.y, widthVector, rect.h), states[i].v);
+            drawState(makeRect(rect.x + i * widthDelta, rect.y, widthVector, rect.h), states[i].vec);
         }
     };
 
-    var drawTestStates = function (rect, operations, label) {
-        var states = [];
-        for (var i = 0; i < testInputs.length; i++) {
-            if (testInputs[i] === null) {
-                states.push(null);
-                continue;
+    /**
+     * Determines the probability of a wire or wires having particular values, given a quantum state.
+     *
+     * Note that wire probabilities are not independent in general. Wires may be correlated.
+     *
+     * @param {number} wireExpectedMask The bits of this number determine the desired wire values.
+     * @param {number} wireRequiredMask The set bits of this number determine which wire values to check.
+     * @param {Matrix} state A complex column vector.
+     */
+    var measureProbability = function(wireExpectedMask, wireRequiredMask, state) {
+        var t = 0;
+        for (var i = 0; i < state.height(); i++) {
+            if ((i & wireRequiredMask) == (wireExpectedMask & wireRequiredMask)) {
+                t += state.rows[i][0].norm2();
             }
-            var input = testInputs[i].v;
-            var output = transformVectorWithOperations(input, operations);
-            states.push({label: testInputs[i].label, v: output});
+        }
+        return t;
+    };
+
+    var measureConditionalProbability = function(wireTarget, wireExpectedMask, wireRequiredMask, state) {
+        var t_off = 0;
+        var t_on = 0;
+        for (var i = 0; i < state.height(); i++) {
+            if ((i & wireRequiredMask) == (wireExpectedMask & wireRequiredMask)) {
+                if ((i & (1 << wireTarget)) != 0) {
+                    t_on += state.rows[i][0].norm2();;
+                } else {
+                    t_off += state.rows[i][0].norm2();
+                }
+            }
+        }
+        return t_on / (t_off + t_on);
+    };
+
+    /**
+     * @param {number} x
+     * @param {Matrix} outputState
+     */
+    var drawSingleWireProbabilities = function (x, outputState) {
+        for (var i = 0; i < numWires; i++) {
+            var p = measureProbability(1 << i, 1 << i, outputState);
+            drawProbabilityBox({x: x, y: wireIndexToY(i) - 25, w: 50, h: 50}, p, p, false);
+        }
+    };
+
+    /**
+     * @param {{x: number, y: number, w: number, h: number}} rect
+     * @param {{label: string, vec: GateColumn}[]} operations
+     * @param {string} label
+     */
+    var drawTestStates = function (rect, operations, label) {
+        var inputs = makeInputVectors();
+        var states = [];
+        for (var i = 0; i < inputs.length; i++) {
+            var output = transformVectorWithOperations(inputs[i].vec, operations);
+            states.push({label: inputs[i].label, vec: output});
+            drawSingleWireProbabilities(canvas.width - 55, output);
         }
 
-        drawStates(rect, states, label, true);
+        drawStates(rect, states, label);
     };
 
     var drawInputVectors = function () {
-        drawStates(inputVectorsRect, testInputs, inputTestVectorsCaption);
+        drawStates(inputVectorsRect, makeInputVectors(), inputTestVectorsCaption);
     };
 
     var drawOutputVectors = function (operations) {
-        drawTestStates(outputVectorsRect, operations, outputTestVectorsCaption, true);
+        drawTestStates(outputVectorsRect, operations, outputTestVectorsCaption);
     };
 
     var drawIntermediateVectors = function (operations) {
@@ -487,7 +586,7 @@ if (canvas !== null) {
         drawRect(r, "gray");
         drawCenteredString(r.x + r.w / 2, 15, "Toolbox (drag gates onto circuit)");
         for (var i = 0; i < gateSet.length; i++) {
-            drawToolboxGate(i * 75 + 50, 65, gateSet[i], true);
+            drawToolboxGate(i * 40 + 50, 65, gateSet[i], true);
         }
     };
 
@@ -533,7 +632,7 @@ if (canvas !== null) {
             ctx.stroke();
         }
 
-        drawCircuit(candidateNewCols);
+        drawCircuit(makeInputVectors()[0].vec, candidateNewCols);
 
         if (insertSite !== null) {
             if (showOperationMatrixInline) {
@@ -609,6 +708,25 @@ if (canvas !== null) {
         mouseUpdate({offsetX: -100, offsetY: -100}, isTapping);
     });
 
-    var testInputs = entangledIndexVectorsInput;
+    var ts = 0;
+    /**
+     * @returns {{label: string, vec: Matrix}[]}
+     */
+    var makeInputVectors = function () {
+        var off = Matrix.col([1, 0]);
+        return [{label: "", vec: off.tensorPower(numWires)}];
+    };
+
+    setInterval(function() {
+        ts += 0.05;
+        ts %= 2 * Math.PI;
+        spinR.matrix = Matrix.square([
+            Math.cos(ts), -Math.sin(ts),
+            Math.sin(ts), Math.cos(ts)]);
+        spinX.matrix = Matrix.fromRotation(ts / 2 / Math.PI, 0, 0);
+        spinY.matrix = Matrix.fromRotation(0, ts / 2 / Math.PI, 0);
+        spinZ.matrix = Matrix.fromRotation(0, 0, ts / 2 / Math.PI);
+        redraw();
+    }, 50);
     redraw();
 }

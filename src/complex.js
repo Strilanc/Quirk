@@ -75,10 +75,11 @@ Complex.prototype.isEqualTo = function (other) {
  * @returns {String}
  */
 Complex.prototype.toString = function () {
-    var epsilon = 0.0000000000001;
+    var epsilon = 0.00000001;
 
     var radicalToString = function(v) {
         var matches = [
+            [1, "1"],
             [0.5, "½"],
             [Math.sqrt(0.5), "√½"],
             [0.25, "¼"],
@@ -90,6 +91,7 @@ Complex.prototype.toString = function () {
                 return (v < 0 ? "-" : "") + matches[i][1];
             }
         }
+        if (Math.abs(v).toString().length > 4) { return v.toFixed(2); }
         return v.toString();
     };
 
@@ -106,7 +108,7 @@ Complex.prototype.toString = function () {
         return this.imag.toString() + "i";
     }
     var separator = this.imag > 0 ? "+" : "-";
-    var imagFactor = Math.abs(this.imag - 1) < epsilon ? "" : radicalToString(Math.abs(this.imag));
+    var imagFactor = Math.abs(Math.abs(this.imag) - 1) < epsilon ? "" : radicalToString(Math.abs(this.imag));
     return radicalToString(this.real) + separator + imagFactor + "i";
 };
 

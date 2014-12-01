@@ -1,3 +1,6 @@
+// uses: complex.js
+// uses: matrix.js
+
 /**
  * A named single-qubit quantum operation.
  *
@@ -20,7 +23,7 @@ Gate.prototype.toString = function() {
 
 Gate.CONTROL = new Gate(
     "\\•", // special character that means "draw fancy controlled thingies"
-    Matrix.CONTROL_SYGIL,
+    Matrix.CONTROL,
     "Control",
     "Linked operations apply only when control qubit is ON.\n" +
     "\n" +
@@ -32,13 +35,33 @@ Gate.CONTROL = new Gate(
 
 Gate.ANTI_CONTROL = new Gate(
     "\\•", // special character that means "draw fancy controlled thingies"
-    Matrix.ANTI_CONTROL_SYGIL,
+    Matrix.ANTI_CONTROL,
     "Anti-Control",
     "Linked operations apply only when control qubit is OFF.\n" +
     "\n" +
     "The anti-control operation like the control operation, except it\n" +
     "conditions on OFF instead of ON. Linked operations will only apply\n" +
     "to parts of the superposition where the control qubit is OFF.");
+
+/**
+ * A visualization gate with no effect.
+ *
+ * @type {Gate}
+ */
+Gate.PEEK = new Gate(
+    "Peek",
+    Matrix.identity(2),
+    "Peek",
+    "Shows the odds that a wire WOULD be on, IF it was measured.\n" +
+    "\n" +
+    "When this 'operation' is controlled, it show both the probability that the\n" +
+    "wire is on in the cases where the controls are true (p|c) as well as the\n" +
+    "overall probability of the wire being on and the controls being satisfied\n" +
+    "(p∧c).\n" +
+    "\n" +
+    "(In practice this 'operation' would disturb the result and require\n" +
+    "re-running the computation many times. Here we get to be more\n" +
+    "convenient.)");
 
 Gate.DOWN = new Gate(
     "↓",
