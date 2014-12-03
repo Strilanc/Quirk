@@ -50,8 +50,8 @@ Matrix.prototype.height = function() {
 
 /**
  * Returns a matrix of the given dimensions, using the given function to generate the coefficients.
- * @param {number} width
- * @param {number} height
+ * @param {int} width
+ * @param {int} height
  * @param {function} coefficientRowColGenerator
  * @returns {Matrix}
  */
@@ -134,7 +134,7 @@ Matrix.prototype.isEqualTo = function (other) {
 Matrix.prototype.toString = function () {
     var data = this.rows.map(function(row) {
         var rowData = row.map(function(e) {
-           return e === Matrix.__TENSOR_SYGIL_CONTROL ? "C" : e.toString();
+           return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL ? "C" : e.toString();
         });
         return rowData.join(", ");
     }).join("}, {");
@@ -232,11 +232,11 @@ Matrix.prototype.tensorProduct = function (other) {
         var c2 = c % w2;
         var v1 = m.rows[r1][c1];
         var v2 = other.rows[r2][c2];
-        if (v1 === Matrix.__TENSOR_SYGIL_ZERO || v2 === Matrix.__TENSOR_SYGIL_ZERO) {
-            return Matrix.__TENSOR_SYGIL_ZERO;
+        if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
+            return Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
         }
-        if (v1 === Matrix.__TENSOR_SYGIL_CONTROL || v2 === Matrix.__TENSOR_SYGIL_CONTROL) {
-            return r1 == c1 && r2 == c2 ? Matrix.__TENSOR_SYGIL_CONTROL : Matrix.__TENSOR_SYGIL_ZERO;
+        if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL) {
+            return r1 == c1 && r2 == c2 ? Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
         }
         return v1.times(v2);
     });
@@ -285,7 +285,7 @@ Matrix.fromRotation = function (x, y, z) {
  */
 Matrix.identity = function(size) {
     return Matrix.generate(size, size, function(r, c) {
-        return r == c ? 1 : Matrix.__TENSOR_SYGIL_ZERO;
+        return r == c ? 1 : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
     });
 };
 
@@ -294,13 +294,13 @@ Matrix.identity = function(size) {
  * A special complex value that the tensor product checks for in order to support controlled operations.
  * @type {Complex}
  */
-Matrix.__TENSOR_SYGIL_CONTROL = new Complex(1, 0);
+Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL = new Complex(1, 0);
 
 /**
  * A marked complex zero that the tensor product propagates, so large empty areas can be grayed out when drawing.
- * @type {Matrix}
+ * @type {Complex}
  */
-Matrix.__TENSOR_SYGIL_ZERO = Complex.from(0);
+Matrix.__TENSOR_SYGIL_COMPLEX_ZERO = Complex.from(0);
 
 /**
  * A special value that acts like the pseudo-operation "use this qubit as a control" w.r.t. the tensor product.
@@ -309,8 +309,8 @@ Matrix.__TENSOR_SYGIL_ZERO = Complex.from(0);
  * expanded matrix and 0 otherwise.
  * @type {Matrix}
  */
-Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_CONTROL, Matrix.__TENSOR_SYGIL_ZERO,
-                                Matrix.__TENSOR_SYGIL_ZERO, 1]);
+Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
+                                Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, 1]);
 
 /**
  * A special value that acts like the pseudo-operation "use this qubit as an anti-control" w.r.t. the tensor product.
@@ -319,8 +319,8 @@ Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_CONTROL, Matrix.__TENSOR_S
  * expanded matrix and 0 otherwise.
  * @type {Matrix}
  */
-Matrix.ANTI_CONTROL = Matrix.square([1, Matrix.__TENSOR_SYGIL_ZERO,
-                                     Matrix.__TENSOR_SYGIL_ZERO, Matrix.__TENSOR_SYGIL_CONTROL]);
+Matrix.ANTI_CONTROL = Matrix.square([1, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
+                                     Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL]);
 
 /**
  * The 2x2 Pauli X matrix.

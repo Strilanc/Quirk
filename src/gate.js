@@ -77,13 +77,14 @@ Gate.DOWN = new Gate(
 Gate.UP = new Gate(
     "↑",
     Matrix.fromRotation(0.75, 0, 0),
-    "Up Gate",
+    "Up Gate / Beam Splitter",
     "Cycles through OFF, (1-i)(OFF + i ON), ON, and (1+i)(OFF - i ON).\n" +
     "\n" +
-    "The Up gate is a non-standard square-root-of-NOT gate. It's one\n" +
-    "of the four square roots of the Pauli X gate, so applying it twice\n" +
-    "is equivalent to a NOT. The Up gate is the inverse of the Down\n" +
-    "gate.");
+    "The Up gate's effect is analogous to an optical beam splitter, in\n" +
+    "that it splits and rotates the relative phase the right way. However,\n" +
+    "it does have a different global phase factor so that it can be one of\n" +
+    "the four square roots of the Pauli X gate (so applying it twice is\n" +
+    "equivalent to a NOT). The Up gate is the inverse of the Down gate.");
 
 Gate.X = new Gate(
     "X",
