@@ -210,3 +210,9 @@ Complex.prototype.dividedBy = function (v) {
  * @type {Complex}
  */
 Complex.ZERO = new Complex(0, 0);
+
+/**
+ * The square root of negative 1.
+ * @type {Complex}
+ */
+Complex.I = new Complex(0, 1);
