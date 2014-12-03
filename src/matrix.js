@@ -134,7 +134,7 @@ Matrix.prototype.isEqualTo = function (other) {
 Matrix.prototype.toString = function () {
     var data = this.rows.map(function(row) {
         var rowData = row.map(function(e) {
-           return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL ? "C" : e.toString();
+           return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString();
         });
         return rowData.join(", ");
     }).join("}, {");
@@ -235,8 +235,8 @@ Matrix.prototype.tensorProduct = function (other) {
         if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
             return Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
         }
-        if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL) {
-            return r1 == c1 && r2 == c2 ? Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
+        if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE) {
+            return r1 == c1 && r2 == c2 ? Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
         }
         return v1.times(v2);
     });
@@ -294,7 +294,7 @@ Matrix.identity = function(size) {
  * A special complex value that the tensor product checks for in order to support controlled operations.
  * @type {Complex}
  */
-Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL = new Complex(1, 0);
+Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE = new Complex(1, 0);
 
 /**
  * A marked complex zero that the tensor product propagates, so large empty areas can be grayed out when drawing.
@@ -309,7 +309,7 @@ Matrix.__TENSOR_SYGIL_COMPLEX_ZERO = Complex.from(0);
  * expanded matrix and 0 otherwise.
  * @type {Matrix}
  */
-Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
+Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
                                 Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, 1]);
 
 /**
@@ -320,7 +320,7 @@ Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL, Matrix.__
  * @type {Matrix}
  */
 Matrix.ANTI_CONTROL = Matrix.square([1, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
-                                     Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL]);
+                                     Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE]);
 
 /**
  * The 2x2 Pauli X matrix.

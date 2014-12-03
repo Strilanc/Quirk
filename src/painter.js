@@ -1,3 +1,12 @@
+// ===================================
+//      CONFIGURATION CONSTANTS
+// ===================================
+var AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL = "yellow";
+var AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE = "#201000";
+var AMPLITUDE_CIRCLE_STROKE_COLOR = "gray";
+var AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO = "#444";
+var AMPLITUDE_PROBABILITY_FILL_UP_COLOR = "orange";
+
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @constructor
@@ -26,6 +35,34 @@ Painter.prototype.strokeRect = function (rect, color, thickness) {
     this.ctx.strokeStyle = color || "black";
     this.ctx.strokeWidth = thickness || 1;
     this.ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+};
+
+/**
+ * Draws the inside of a circle.
+ * @param {{x: number, y: number}} center The center of the circle.
+ * @param radius The distance from the center of the circle to its side.
+ * @param {=string} color The fill color. Defaults to white.
+ */
+Painter.prototype.fillCircle = function (center, radius, color) {
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = color || "white";
+    ctx.fill();
+};
+
+/**
+ * Draws the outside of a circle.
+ * @param {{x: number, y: number}} center The center of the circle.
+ * @param radius The distance from the center of the circle to its side.
+ * @param {=string} color The stroke color. Defaults to black.
+ * @param {=number} thickness The stroke thickness. Defaults to 1.
+ */
+Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = color || "black";
+    ctx.strokeWidth = thickness || 1;
+    ctx.stroke();
 };
 
 /**
@@ -89,4 +126,45 @@ Painter.prototype.strokeLine = function(p1, p2, color, thickness) {
     this.ctx.strokeStyle = color || "black";
     this.ctx.strokeWidth = thickness || 1;
     this.ctx.stroke();
+};
+
+/**
+ * Draws representations of complex values used to weight components of a superposition.
+ *
+ * @param {Rect} area The drawing area, where the amplitude will be represented visually.
+ * @param {Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
+ */
+Painter.prototype.paintAmplitude = function(amplitude, area) {
+    if (amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
+        painter.fillRect(area, AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO);
+        return;
+    }
+
+    var c = area.center();
+    var magnitude = amplitude.abs();
+    var p = amplitude.norm2();
+    var d = Math.min(area.w, area.h) / 2;
+    var r = d * magnitude;
+    var dx = d * amplitude.real;
+    var dy = d * amplitude.imag;
+    var isControl = amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE;
+
+    if (magnitude <= 0.0001) {
+        return; // Even showing a tiny dot is too much.
+    }
+
+    // fill rect from bottom to top as the amplitude becomes more probable
+    painter.fillRect(area.takeBottom(p * area.h), AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
+
+    // show the direction and magnitude as a circle with a line indicator
+    painter.fillCircle(c, r, isControl
+        ? AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE
+        : AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
+    painter.strokeCircle(c, r, AMPLITUDE_CIRCLE_STROKE_COLOR);
+    painter.strokeLine(c, {x: c.x + dx, y: c.y - dy});
+
+    // cross out (in addition to the darkening) when controlled
+    if (isControl) {
+        painter.strokeLine(area.topLeft(), area.bottomRight());
+    }
 };

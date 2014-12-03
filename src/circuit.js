@@ -168,16 +168,13 @@ if (canvas !== null) {
         } if (g.symbol === "\\⊹") {
             drawMatrix(Rect.centeredSquareWithRadius(x, y, gateRadius), g.matrix)
         } else if (g.symbol === "\\•") {
-            ctx.beginPath();
-            ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            var c = {x: x, y: y};
+            var r = 5;
             if (g.matrix === Matrix.ANTI_CONTROL) {
-                ctx.fillStyle = "white";
-                ctx.strokeStyle = "black";
-                ctx.fill();
-                ctx.stroke();
+                painter.fillCircle(c, r);
+                painter.strokeCircle(c, r);
             } else {
-                ctx.fillStyle = "black";
-                ctx.fill();
+                painter.fillCircle(c, r, "black");
             }
         } else {
             painter.printCenteredText(g.symbol, x, y);
@@ -388,41 +385,6 @@ if (canvas !== null) {
 
     /**
      * @param {Rect} rect
-     * @param {Complex} value
-     */
-    var drawComplex = function (rect, value) {
-        if (value === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
-            painter.fillRect(rect, "#444");
-            return;
-        }
-
-        var c = rect.center();
-        var len = value.abs();
-
-        if (len <= 0.0001) {
-            return;
-        }
-
-        // area magnitude
-        painter.fillRect(rect.takeBottom(value.norm2() * rect.h), "orange");
-
-        var isControl = value === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL;
-        var r = rect.w / 2 * value.abs();
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = isControl ? "#201000" : "yellow";
-        ctx.strokeStyle = "gray";
-        ctx.fill();
-        ctx.stroke();
-        painter.strokeLine(c, {x: c.x + rect.w / 2 * value.real, y: c.y - rect.h / 2 * value.imag});
-
-        if (isControl) {
-            painter.strokeLine(rect.topLeft(), rect.bottomRight());
-        }
-    };
-
-    /**
-     * @param {Rect} rect
      * @param {Matrix} matrix
      */
     var drawMatrix = function (rect, matrix) {
@@ -431,7 +393,7 @@ if (canvas !== null) {
         var h = rect.h / n;
         for (var i = 0; i < n; i++) {
             for (var j = 0; j < n; j++) {
-                drawComplex(new Rect(rect.x + w * i, rect.y + h * j, w, h), matrix.rows[j][i]);
+                painter.paintAmplitude(matrix.rows[j][i], new Rect(rect.x + w * i, rect.y + h * j, w, h));
             }
         }
 
@@ -460,7 +422,7 @@ if (canvas !== null) {
         var h = rect.w;
         for (var i = 0; i < values.height(); i++) {
             var y = rect.y + h * i;
-            drawComplex(new Rect(rect.x, y, rect.w, h), values.rows[i][0]);
+            painter.paintAmplitude(values.rows[i][0], new Rect(rect.x, y, rect.w, h));
         }
 
         // draw borders
