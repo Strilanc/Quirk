@@ -13,6 +13,17 @@ function Rect(x, y, w, h) {
     this.h = h;
 }
 
+/**
+ *
+ * @param {number} x The x-coordinate of the center of the square.
+ * @param {number} y The y-coordinate of the center of the square.
+ * @param {number} r Half of the diameter of the square.
+ * @returns {Rect}
+ */
+Rect.centeredSquareWithRadius = function(x, y, r) {
+    return new Rect(x - r, y - r, r*2, r*2);
+};
+
 Rect.prototype.isEqualTo = function(other) {
     return other instanceof Rect &&
         other.x == this.x &&
@@ -55,6 +66,35 @@ Rect.prototype.bottomLeft = function() {
 Rect.prototype.bottomRight = function() {
     return {x: this.x + this.w, y: this.y + this.h};
 };
+
+/**
+ * @returns {{x: number, y: number}}
+ */
+Rect.prototype.centerLeft = function() {
+    return {x: this.x, y: this.y + this.h/2};
+};
+
+/**
+ * @returns {{x: number, y: number}}
+ */
+Rect.prototype.centerRight = function() {
+    return {x: this.x + this.w, y: this.y + this.h/2};
+};
+
+/**
+ * @returns {{x: number, y: number}}
+ */
+Rect.prototype.topCenter = function() {
+    return {x: this.x + this.w/2, y: this.y};
+};
+
+/**
+ * @returns {{x: number, y: number}}
+ */
+Rect.prototype.bottomCenter = function() {
+    return {x: this.x + this.w/2, y: this.y + this.h};
+};
+
 
 /**
  * @returns number

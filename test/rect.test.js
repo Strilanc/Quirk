@@ -18,6 +18,10 @@ RectTest.prototype.testIsEqualTo = function() {
     assertFalse(r.isEqualTo(new Rect(2, 3, 7, 7)));
 };
 
+RectTest.prototype.testCenteredSquareWithRadius = function() {
+    assertTrue(Rect.centeredSquareWithRadius(2, 3, 5).isEqualTo(new Rect(-3, -2, 10, 10)));
+};
+
 RectTest.prototype.testCenter = function() {
     assertEquals(4.5, new Rect(2, 3, 5, 7).center().x);
     assertEquals(6.5, new Rect(2, 3, 5, 7).center().y);
@@ -42,6 +46,26 @@ RectTest.prototype.testBottomLeft = function() {
 RectTest.prototype.testBottomRight = function() {
     assertEquals(7, new Rect(2, 3, 5, 7).bottomRight().x);
     assertEquals(10, new Rect(2, 3, 5, 7).bottomRight().y);
+};
+
+RectTest.prototype.testCenterLeft = function() {
+    assertEquals(2, new Rect(2, 3, 5, 7).centerLeft().x);
+    assertEquals(6.5, new Rect(2, 3, 5, 7).centerLeft().y);
+};
+
+RectTest.prototype.testCenterRight = function() {
+    assertEquals(7, new Rect(2, 3, 5, 7).centerRight().x);
+    assertEquals(6.5, new Rect(2, 3, 5, 7).centerRight().y);
+};
+
+RectTest.prototype.testTopCenter = function() {
+    assertEquals(4.5, new Rect(2, 3, 5, 7).topCenter().x);
+    assertEquals(3, new Rect(2, 3, 5, 7).topCenter().y);
+};
+
+RectTest.prototype.testBottomCenter = function() {
+    assertEquals(4.5, new Rect(2, 3, 5, 7).bottomCenter().x);
+    assertEquals(10, new Rect(2, 3, 5, 7).bottomCenter().y);
 };
 
 RectTest.prototype.testRight = function() {
