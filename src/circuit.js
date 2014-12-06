@@ -7,39 +7,44 @@ if (canvas !== null) {
     var painter = new Painter(ctx);
 
     // --- Layout Constants ---
-    var gateRadius = 25;
+    var gateRadius = 20;
     var circuitOperationHorizontalSpacing = 10;
     /**
      * @type {GateColumn[]}
      */
     var circuitOperationColumns = [];
 
-    var testVectorsTitleOffset = -20;
-    var testVectorLabelOffset = -8;
-    var testVectorSeparation = 3;
+    var TOOLBOX_HEIGHT = 4 * (gateRadius*2 + 2) - gateRadius;
 
-    var testVectorsY = 350;
-    var testVectorsInterSpacing = 25;
-    var testVectorsWidth = 200;
+    var CIRCUIT_AREA = new Rect(0, TOOLBOX_HEIGHT + 2, canvas.width, 201);
+    var STATE_DRAW_Y = CIRCUIT_AREA.bottom() + 2;
+    var STATE_DRAW_H = canvas.height - STATE_DRAW_Y;
 
-    var circuitRect = new Rect(0, 120, canvas.width, 201);
-    var inputVectorsRect = new Rect(5, testVectorsY, testVectorsWidth / numStates, -1);
-    var operationMatrixRect = new Rect(
-        inputVectorsRect.x + inputVectorsRect.w + testVectorsInterSpacing,
-        testVectorsY,
-        testVectorsWidth - testVectorSeparation * (numStates - 1),
-        testVectorsWidth - testVectorSeparation * (numStates - 1));
-    var outputVectorsRect = new Rect(
-        operationMatrixRect.x + operationMatrixRect.w + testVectorsInterSpacing,
-        testVectorsY,
-        testVectorsWidth / numStates,
-        -1);
-    var showOperationMatrixInline = false;
-    var intermediateVectorsRect = inputVectorsRect;
-    var inputTestVectorsCaption = "Test Inputs";
-    var intermediatePostTestVectorsCaption = "States after Operation";
-    var outputTestVectorsCaption = "Current Outputs";
-    var effectOfOperationCaption = "Highlighted Operation";
+    var OPERATION_HINT_AREA = new Rect(
+        0,
+        STATE_DRAW_Y,
+        STATE_DRAW_H,
+        STATE_DRAW_H);
+
+    var INTERMEDIATE_STATE_HINT_AREA = new Rect(
+        OPERATION_HINT_AREA.right() + 5,
+        STATE_DRAW_Y,
+        STATE_DRAW_H,
+        STATE_DRAW_H);
+
+    var OUTPUT_STATE_HINT_AREA = new Rect(
+        canvas.width - STATE_DRAW_H,
+        STATE_DRAW_Y,
+        STATE_DRAW_H,
+        STATE_DRAW_H);
+
+    var makeBitLabel = function(i) {
+        if (i == 0) return "A1";
+        if (i == 1) return "A2";
+        if (i == 2) return "B1";
+        if (i == 3) return "B2";
+        return "bit" + i;
+    }
 
 // --- Math and Circuits ---
     /**
@@ -55,37 +60,87 @@ if (canvas !== null) {
     };
 
 // --- Define toolbox gate types ---
-    var spinR = new Gate("R(t)", Matrix.identity(2), "Rotater", "");
-    var spinX = new Gate("X(t)", Matrix.identity(2), "X Spinner", "");
-    var spinY = new Gate("Y(t)", Matrix.identity(2), "Y Spinner", "");
-    var spinZ = new Gate("Z(t)", Matrix.identity(2), "Z Spinner", "");
+    var spinR = new Gate(
+        "R(t)",
+        Matrix.identity(2),
+        "Evolving Rotation Gate",
+        "A rotation gate where the angle of rotation increases and cycles over\n" +
+        "time.");
+    var spinH = new Gate(
+        "H(t)",
+        Matrix.identity(2),
+        "Evolving Hadamard Gate",
+        "Smoothly interpolates from no-op to the Hadamard gate and back over\n" +
+        "time. A continuous rotation around the X+Z axis of the Block Sphere.");
+    var spinX = new Gate(
+        "X(t)",
+        Matrix.identity(2),
+        "Evolving X Gate",
+        "Smoothly interpolates from no-op to the Pauli X gate and back over\n" +
+        "time. A continuous rotation around the X axis of the Block Sphere.");
+    var spinY = new Gate(
+        "Y(t)",
+        Matrix.identity(2),
+        "Evolving Y Gate",
+        "Smoothly interpolates from no-op to the Pauli Y gate and back over\n" +
+        "time. A continuous rotation around the Y axis of the Block Sphere.");
+    var spinZ = new Gate(
+        "Z(t)",
+        Matrix.identity(2),
+        "Evolving Z Gate",
+        "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
+        "time. A phase gate where the phase angle increases and cycles over\n" +
+        "time. A continuous rotation around the Z axis of the Block Sphere.");
+    /**
+     * @type {{hint: string, gates: Gate[]}[]}
+     */
     var gateSet = [
-        Gate.CONTROL,
-        Gate.ANTI_CONTROL,
-        Gate.PEEK,
-        spinR,
-        spinX,
-        spinY,
-        spinZ,
-        Gate.DOWN,
-        Gate.X,
-        Gate.UP,
-        Gate.RIGHT,
-        Gate.Y,
-        Gate.LEFT,
-        Gate.COUNTER_CLOCKWISE,
-        Gate.Z,
-        Gate.CLOCKWISE,
-        Gate.H,
-        Gate.fromRotation(0, 0, 0.125)
+        {
+            hint: "Special",
+            gates: [
+                Gate.CONTROL,
+                Gate.PEEK,
+                null,
+                Gate.ANTI_CONTROL
+            ]
+        },
+        {
+            hint: "Half Turns",
+            gates: [Gate.H, null, null, Gate.X, Gate.Y, Gate.Z]
+        },
+        {
+            hint: "Quarter Turns (+/-)",
+            gates: [
+                Gate.DOWN,
+                Gate.RIGHT,
+                Gate.COUNTER_CLOCKWISE,
+                Gate.UP,
+                Gate.LEFT,
+                Gate.CLOCKWISE]
+        },
+        {
+            hint: "Evolving",
+            gates: [spinX, spinY, spinZ, spinR, spinH]
+        },
+        {
+            hint: "Other Z",
+            gates: [
+                Gate.fromRotation(0, 0, 1 / 3),
+                Gate.fromRotation(0, 0, 1 / 8),
+                Gate.fromRotation(0, 0, 1 / 16),
+                Gate.fromRotation(0, 0, -1 / 3),
+                Gate.fromRotation(0, 0, -1 / 8),
+                Gate.fromRotation(0, 0, -1 / 16)
+            ]
+        }
     ];
 
 // --- Layout Functions ---
     var wireIndexToY = function (i) {
-        return circuitRect.y + (2 * i + 1) * circuitRect.h / numWires / 2;
+        return CIRCUIT_AREA.y + (2 * i + 1) * CIRCUIT_AREA.h / numWires / 2;
     };
     var wireYToIndex = function (y) {
-        var result = Math.round(((y - circuitRect.y) * 2 * numWires / circuitRect.h - 1) / 2);
+        var result = Math.round(((y - CIRCUIT_AREA.y) * 2 * numWires / CIRCUIT_AREA.h - 1) / 2);
         if (result < 0 || result >= numWires) return null;
         return result;
     };
@@ -188,47 +243,53 @@ if (canvas !== null) {
      */
     var drawToolboxGate = function (x, y, g) {
         var b = Rect.centeredSquareWithRadius(x, y, gateRadius);
-        if (b.containsPoint({x: latestMouseX, y: latestMouseY})) {
-            if (isTapping && !wasTapping) {
-                held = {
-                    gate: g,
-                    row: null,
-                    col: null
-                };
-            }
-            if (held === null) {
-                var r = gateRadius;
-                ctx.globalAlpha = 0.5;
-                ctx.fillStyle = "white";
-                ctx.fillRect(0, y + r + 15, 800, 800);
-                ctx.globalAlpha = 1;
+        painter.fillRect(b);
+        painter.strokeRect(b);
+        drawGateSymbol(x, y, g);
+    };
 
-                painter.fillRect(b, "orange");
-                painter.strokeRect(b);
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {Gate} g
+     */
+    var drawToolboxGateHintIfHovering = function (x, y, g) {
+        var b = Rect.centeredSquareWithRadius(x, y, gateRadius);
+        if (!b.containsPoint({x: latestMouseX, y: latestMouseY})) {
+            return;
+        }
+        if (isTapping && !wasTapping) {
+            held = {
+                gate: g,
+                row: null,
+                col: null
+            };
+        }
+        if (held === null) {
+            var r = gateRadius;
 
-                var r2 = new Rect(50, y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 35);
-                painter.fillRect(r2);
-                painter.strokeRect(r2);
-                painter.printText(
-                    g.name +
-                    "\n\n" +
-                    g.description +
-                    "\n\n" +
-                    "Transition Matrix (input chooses column(s)):\n" +
-                    "    if OFF      if ON\n" +
-                    "\n" +
-                    "                                  OFF output\n" +
-                    "\n" +
-                    "\n" +
-                    "                                  ON output\n" +
-                    "\n" +
-                    "\n" +
-                    g.matrix.toString(), 50 + 5, y + r + 25);
-                drawMatrix(new Rect(55, y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
-            } else {
-                painter.fillRect(b);
-                painter.strokeRect(b);
-            }
+            painter.fillRect(b, "orange");
+            painter.strokeRect(b);
+
+            var r2 = new Rect(50, y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 35);
+            painter.fillRect(r2);
+            painter.strokeRect(r2);
+            painter.printText(
+                g.name +
+                "\n\n" +
+                g.description +
+                "\n\n" +
+                "Transition Matrix (input chooses column(s)):\n" +
+                "  if OFF   if ON\n" +
+                "\n" +
+                "                            OFF output\n" +
+                "\n" +
+                "\n" +
+                "                            ON output\n" +
+                "\n" +
+                "\n" +
+                g.matrix.toString(), 50 + 5, y + r + 25);
+            drawMatrix(new Rect(55, y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
         } else {
             painter.fillRect(b);
             painter.strokeRect(b);
@@ -338,8 +399,8 @@ if (canvas !== null) {
     var drawCircuit = function (inputState, gateColumns) {
         for (var i = 0; i < numWires; i++) {
             var wireY = wireIndexToY(i);
-            painter.printCenteredText("bit" + i + ":", circuitRect.x + 14, wireY);
-            painter.strokeLine({x: circuitRect.x + 30, y: wireY}, {x: circuitRect.x + canvas.width, y: wireY});
+            painter.printCenteredText(makeBitLabel(i) + ":", CIRCUIT_AREA.x + 14, wireY);
+            painter.strokeLine({x: CIRCUIT_AREA.x + 30, y: wireY}, {x: CIRCUIT_AREA.x + canvas.width, y: wireY});
         }
         for (var i2 = 0; i2 < gateColumns.length; i2++) {
             inputState = gateColumns[i2].matrix().times(inputState);
@@ -370,16 +431,16 @@ if (canvas !== null) {
                 ctx.fillStyle = "gray";
                 ctx.fill();
                 painter.strokeLine(rect.topLeft(), rect.centerRight());
-                painter.printText(" p|c:N/A", rect.x + 2, rect.y + 15, undefined, 10);
+                painter.printText("|:N/A", rect.x + 2, rect.y + 15, undefined, 10);
             } else {
                 var w1 = rect.w * conditional_probability;
                 painter.fillRect(rect.topHalf().takeLeft(w1), "gray");
-                painter.printText(" p|c:" + Math.round(conditional_probability*100) + "%", rect.x + 2, rect.y + 15, undefined, 10);
+                painter.printText(" |:" + Math.round(conditional_probability*100) + "%", rect.x + 2, rect.y + 15, undefined, 10);
             }
             var w2 = rect.w * intersection_probability;
             painter.fillRect(rect.bottomHalf().takeLeft(w2), "gray");
             ctx.fillStyle = "black";
-            ctx.fillText("p∧c:" + Math.round(intersection_probability*100) + "%", rect.x + 2, rect.y + rect.h/2 + 15);
+            ctx.fillText("∧:" + Math.round(intersection_probability*100) + "%", rect.x + 2, rect.y + rect.h/2 + 15);
         }
     };
 
@@ -419,45 +480,19 @@ if (canvas !== null) {
      */
     var drawState = function (rect, values) {
         // draw values
-        var h = rect.w;
+        var s = 1 << Math.ceil(numWires / 2);
+        var dw = Math.floor(Math.min(rect.w, rect.h) / s);
+        var dh = dw;
         for (var i = 0; i < values.height(); i++) {
-            var y = rect.y + h * i;
-            painter.paintAmplitude(values.rows[i][0], new Rect(rect.x, y, rect.w, h));
+            var dx = i % s;
+            var dy = Math.floor(i / s);
+            var x = rect.x + dw * dx;
+            var y = rect.y + dh * dy;
+            painter.paintAmplitude(values.rows[i][0], new Rect(x, y, dw, dh));
         }
 
         // draw borders
-        ctx.beginPath();
-        var r = rect.x + rect.w;
-        var b = rect.y + h * values.height();
-        ctx.moveTo(rect.x, b);
-        ctx.lineTo(rect.x, rect.y);
-        for (var i2 = 0; i2 < values.height(); i2++) {
-            var y2 = rect.y + h * i2;
-            ctx.moveTo(rect.x, y2);
-            ctx.lineTo(r, y2);
-        }
-        ctx.moveTo(rect.x, b);
-        ctx.lineTo(r, b);
-        ctx.lineTo(r, rect.y);
-        ctx.strokeStyle = "black";
-        ctx.stroke();
-    };
-
-    /**
-     * @param {Rect} rect
-     * @param {{label: String, vec: Matrix}[]} states
-     * @param {string} label
-     */
-    var drawStates = function (rect, states, label) {
-        painter.printCenteredText(label, rect.x + rect.w / 2, rect.y + testVectorsTitleOffset);
-
-        var widthDelta = Math.min(50, (rect.w + testVectorSeparation) / states.length);
-        var widthVector = widthDelta - testVectorSeparation;
-
-        for (var i = 0; i < states.length; i++) {
-            painter.printCenteredText(states[i].label, rect.x + i * widthDelta + widthVector / 2, rect.y + testVectorLabelOffset);
-            drawState(new Rect(rect.x + i * widthDelta, rect.y, widthVector, rect.h), states[i].vec);
-        }
+        painter.strokeGrid(new Rect(rect.x, rect.y, dw, dh), s, values.height() / s);
     };
 
     /**
@@ -512,47 +547,50 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {Rect} rect
      * @param {GateColumn[]} operations
-     * @param {string} label
+     * @param {Rect} drawRect
      */
-    var drawTestStates = function (rect, operations, label) {
-        var inputs = makeInputVectors();
-        var states = [];
-        for (var i = 0; i < inputs.length; i++) {
-            var output = transformVectorWithOperations(inputs[i].vec, operations);
-            states.push({label: inputs[i].label, vec: output});
-            drawSingleWireProbabilities(canvas.width - 55, output);
-        }
-
-        drawStates(rect, states, label);
-    };
-
-    var drawInputVectors = function () {
-        drawStates(inputVectorsRect, makeInputVectors(), inputTestVectorsCaption);
-    };
-
-    /**
-     * @param {GateColumn[]} operations
-     */
-    var drawOutputVectors = function (operations) {
-        drawTestStates(outputVectorsRect, operations, outputTestVectorsCaption);
-    };
-
-    /**
-     * @param {GateColumn[]} operations
-     */
-    var drawIntermediateVectors = function (operations) {
-        drawTestStates(intermediateVectorsRect, operations, intermediatePostTestVectorsCaption);
+    var drawOutputAfter = function (operations, drawRect) {
+        var input = makeInputVector();
+        var output = transformVectorWithOperations(input, operations);
+        drawSingleWireProbabilities(canvas.width - gateRadius*2 - 10, output);
+        var gridRect = drawRect.skipLeft(14).skipTop(14);
+        drawState(gridRect, output);
+        painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w*1/4, drawRect.y + 8);
+        painter.printCenteredText(makeBitLabel(1), gridRect.x + gridRect.w*2/4, drawRect.y + 6);
+        painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w*3/4, drawRect.y + 8);
+        painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h*1/4);
+        painter.printCenteredText(makeBitLabel(3), drawRect.x + 4, gridRect.y + gridRect.h*2/4);
+        painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h*3/4);
     };
 
     var drawGateSet = function () {
-        var r = new Rect(2, 2, gateSet.length * 75 + 25, 100);
-        painter.fillRect(r, "gray");
-        painter.strokeRect(r);
-        painter.printCenteredText("Toolbox (drag gates onto circuit)", r.x + r.w / 2, 15);
-        for (var i = 0; i < gateSet.length; i++) {
-            drawToolboxGate(i * 40 + 50, 65, gateSet[i]);
+        var backRect = new Rect(0, 0, canvas.width, TOOLBOX_HEIGHT);
+        painter.fillRect(backRect, "#CCC");
+        painter.strokeRect(backRect);
+
+        for (var i = 0; i < 2; i++) {
+            for (var c = 0; c < gateSet.length; c++) {
+                var col = gateSet[c];
+                var x1 = c * (gateRadius * 4 + 22) + 50;
+                var x2 = x1 + gateRadius * 2 + 2;
+                if (i == 0) {
+                    painter.printCenteredText(col.hint, (x1 + x2) / 2, 10);
+                }
+
+                for (var r = 0; r < col.gates.length; r++) {
+                    if (col.gates[r] === null) continue;
+                    var dx = Math.floor(r / 3);
+                    var dy = r % 3;
+                    var x = x1 + (gateRadius * 2 + 2) * dx;
+                    var y = 18 + gateRadius + dy * (gateRadius * 2 + 2);
+                    if (i == 0) {
+                        drawToolboxGate(x, y, col.gates[r]);
+                    } else {
+                        drawToolboxGateHintIfHovering(x, y, col.gates[r]);
+                    }
+                }
+            }
         }
     };
 
@@ -564,7 +602,7 @@ if (canvas !== null) {
         for (var i = 0; i < candidateNewCols.length; i++) {
             candidateNewCols[i] = new GateColumn(candidateNewCols[i].gates.slice(0));
         }
-        var insertSite = circuitRect.containsPoint({x: latestMouseX, y: latestMouseY})
+        var insertSite = CIRCUIT_AREA.containsPoint({x: latestMouseX, y: latestMouseY})
             ? posToColumnIndexAndInsertSuggestion(latestMouseX, latestMouseY, candidateNewCols)
             : null;
         if (insertSite !== null && held === null && insertSite.col >= candidateNewCols.length) {
@@ -591,33 +629,24 @@ if (canvas !== null) {
             var x1 = operationIndexToX(insertSite.col - 0.5);
             var x2 = operationIndexToX(insertSite.col + 0.5);
             ctx.fillStyle = held === null ? "yellow" : "orange";
-            ctx.fillRect(x1, circuitRect.y, x2 - x1, circuitRect.h);
+            ctx.fillRect(x1, CIRCUIT_AREA.y, x2 - x1, CIRCUIT_AREA.h);
             ctx.globalAlpha = 1;
             ctx.beginPath();
-            ctx.moveTo(x2, circuitRect.y);
-            ctx.lineTo(x2, circuitRect.y + circuitRect.h);
+            ctx.moveTo(x2, CIRCUIT_AREA.y);
+            ctx.lineTo(x2, CIRCUIT_AREA.y + CIRCUIT_AREA.h);
             ctx.strokeStyle = "gray";
             ctx.stroke();
         }
 
-        drawCircuit(makeInputVectors()[0].vec, candidateNewCols);
+        drawCircuit(makeInputVector(), candidateNewCols);
 
         if (insertSite !== null) {
-            if (showOperationMatrixInline) {
-                operationMatrixRect.x = operationIndexToX(insertSite.col);
-                operationMatrixRect.x += operationMatrixRect.x > operationMatrixRect.w + 75 ? -operationMatrixRect.w - 50 : 50;
-            } else {
-                painter.printCenteredText(effectOfOperationCaption, operationMatrixRect.x + operationMatrixRect.w / 2, operationMatrixRect.y + testVectorsTitleOffset);
-            }
             var m = candidateNewCols[insertSite.col].matrix();
-            drawMatrix(operationMatrixRect, m);
+            drawMatrix(OPERATION_HINT_AREA, m);
 
-            drawIntermediateVectors(candidateNewCols.slice(0, insertSite.col + 1));
-        } else {
-            drawInputVectors();
+            drawOutputAfter(candidateNewCols.slice(0, insertSite.col + 1), INTERMEDIATE_STATE_HINT_AREA);
         }
-
-        drawOutputVectors(candidateNewCols);
+        drawOutputAfter(candidateNewCols, OUTPUT_STATE_HINT_AREA);
 
         drawGateSet();
 
@@ -678,22 +707,25 @@ if (canvas !== null) {
 
     var ts = 0;
     /**
-     * @returns {{label: string, vec: Matrix}[]}
+     * @returns {Matrix}
      */
-    var makeInputVectors = function () {
-        var off = Matrix.col([1, 0]);
-        return [{label: "", vec: off.tensorPower(numWires)}];
+    var makeInputVector = function () {
+        return Matrix.col([1, 0]).tensorPower(numWires);
     };
 
     setInterval(function() {
         ts += 0.05;
         ts %= 2 * Math.PI;
-        spinR.matrix = Matrix.square([
-            Math.cos(ts), -Math.sin(ts),
-            Math.sin(ts), Math.cos(ts)]);
-        spinX.matrix = Matrix.fromRotation(ts / 2 / Math.PI, 0, 0);
-        spinY.matrix = Matrix.fromRotation(0, ts / 2 / Math.PI, 0);
-        spinZ.matrix = Matrix.fromRotation(0, 0, ts / 2 / Math.PI);
+        var u = ts / 2 / Math.PI;
+        var u2 = u / Math.sqrt(2);
+        var c = Math.cos(ts);
+        var s = Math.sin(ts);
+
+        spinR.matrix = Matrix.square([c, -s, s, c]);
+        spinX.matrix = Matrix.fromRotation(u, 0, 0);
+        spinY.matrix = Matrix.fromRotation(0, u, 0);
+        spinZ.matrix = Matrix.fromRotation(0, 0, u);
+        spinH.matrix = Matrix.fromRotation(u2, 0, u2);
         redraw();
     }, 50);
     redraw();

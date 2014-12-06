@@ -174,12 +174,21 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
     var mod = function(n, d) { return ((n % d) + d) % d; };
     var dif_mod = function(n, d) { return mod(n + d/2, d) - d/2; };
     var deg = dif_mod(fraction, 1) * 360;
+    var deg_desc = (Math.round(deg*64)/64).toString();
+    var name_desc =
+          fraction == 1/3 ? "/3"
+        : fraction == -1/3 ? "-/3"
+        : fraction == 1/8 ? "/8"
+        : fraction == -1/8 ? "-/8"
+        : fraction == 1/16 ? "/16"
+        : fraction == -1/16 ? "-/16"
+        : (Math.round(deg*64)/64).toString() + "°";
 
     return new Gate(
-        symbol || "Z(" + deg + "°)",
+        symbol || "Z(" + name_desc + ")",
         Matrix.fromRotation(0, 0, fraction),
-        deg + "° Phase Gate",
-        "Rotates the phase of a qubit's ON state by " + deg + " degrees,\n" +
+        deg_desc + "° Phase Gate",
+        "Rotates the phase of a qubit's ON state by " + deg_desc + " degrees,\n" +
         "while leaving its OFF state alone. The standard Pauli Z gate\n" +
         "corresponds to Z(180°).");
 };

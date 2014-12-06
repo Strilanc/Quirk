@@ -168,3 +168,33 @@ Painter.prototype.paintAmplitude = function(amplitude, area) {
         painter.strokeLine(area.topLeft(), area.bottomRight());
     }
 };
+
+/**
+ * Draws a grid.
+ * @param {Rect} topLeftCell
+ * @param {number} cols
+ * @param {number} rows
+ * @param {=string} strokeColor
+ * @param {=number} strokeThickness
+ */
+Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, strokeThickness) {
+    var x = topLeftCell.x;
+    var y = topLeftCell.y;
+    var dw = topLeftCell.w;
+    var dh = topLeftCell.h;
+    var x2 = x + cols*dw;
+    var y2 = y + rows*dh;
+    this.ctx.beginPath();
+    for (var c = 0; c <= rows; c++) {
+        this.ctx.moveTo(x + c*dw, y);
+        this.ctx.lineTo(x + c*dw, y2);
+    }
+    for (var r = 0; r <= rows; r++) {
+        this.ctx.moveTo(x, y + r*dh);
+        this.ctx.lineTo(x2, y + r*dh);
+    }
+
+    this.ctx.strokeStyle = strokeColor || "black";
+    this.ctx.strokeWidth = strokeThickness || 1;
+    this.ctx.stroke();
+};
