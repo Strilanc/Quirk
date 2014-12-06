@@ -1,10 +1,16 @@
 Quantum Circuit Inspector
 =========================
 
-The quantum circuit inspector is a simple javascript program that allows you to build small quantum circuits and inspect what the circuit is doing.
+A visualization and experimentation tool for small quantum circuits. Includes common single-qubit gates, but not many multi-qubit gates (e.g. swap and fourier transform). Supports controlled and time-varying operations. Not much support for customization yet.
 
-For example, you can make a fourier transform circuit and see that it does in fact extract frequencies:
+For example, here is a screenshot of a quantum teleportation circuit. The qubit in A1, which is entangled with B2, is teleported to B1:
 
-![The inspector](http://i.imgur.com/b5Racyy.png)
+![The Inspector](http://imgur.com/t1aIye1)
 
-The code, and UX, are still very rough.
+JSFiddle Instance
+=================
+
+(Up to date as of Dec 6. Basically just all of the javascript concatenated together.)
+
+http://jsfiddle.net/c4f5z73v/1/
+
