@@ -91,6 +91,8 @@ if (canvas !== null) {
         "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
         "time. A phase gate where the phase angle increases and cycles over\n" +
         "time. A continuous rotation around the Z axis of the Block Sphere.");
+    var timeVaryingGates = [spinX, spinY, spinZ, spinR, spinH];
+
     /**
      * @type {{hint: string, gates: Gate[]}[]}
      */
@@ -120,7 +122,7 @@ if (canvas !== null) {
         },
         {
             hint: "Evolving",
-            gates: [spinX, spinY, spinZ, spinR, spinH]
+            gates: timeVaryingGates
         },
         {
             hint: "Other Z",
@@ -136,6 +138,7 @@ if (canvas !== null) {
     ];
 
 // --- Layout Functions ---
+    var isHoveringOverTimeBasedGate = false;
     var wireIndexToY = function (i) {
         return CIRCUIT_AREA.y + (2 * i + 1) * CIRCUIT_AREA.h / numWires / 2;
     };
@@ -258,6 +261,7 @@ if (canvas !== null) {
         if (!b.containsPoint({x: latestMouseX, y: latestMouseY})) {
             return;
         }
+        isHoveringOverTimeBasedGate |= !isNotTimeBasedGate(g);
         if (isTapping && !wasTapping) {
             held = {
                 gate: g,
@@ -595,6 +599,7 @@ if (canvas !== null) {
     };
 
     var redraw = function () {
+        isHoveringOverTimeBasedGate = false;
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -657,6 +662,24 @@ if (canvas !== null) {
         if (insertSite !== null && held !== null && wasTapping && !isTapping) {
             circuitOperationColumns = candidateNewCols.filter(function(e) { return !e.isEmpty();});
         }
+
+        var shouldBeTicking = isHoveringOverTimeBasedGate || hasTimeBasedGates();
+        var isTicking = ticker !== null;
+        if (isTicking != shouldBeTicking) {
+            if (shouldBeTicking) {
+                ticker = setInterval(tick, 50);
+            } else {
+                clearInterval(ticker);
+                ticker = null;
+            }
+        }
+    };
+
+    var hasTimeBasedGates = function() {
+        return !circuitOperationColumns.every(function(e) { return e.gates.every(isNotTimeBasedGate); });
+    };
+    var isNotTimeBasedGate = function(g) {
+        return timeVaryingGates.indexOf(g) == -1;
     };
 
     var mouseUpdate = function (p, pressed) {
@@ -713,7 +736,7 @@ if (canvas !== null) {
         return Matrix.col([1, 0]).tensorPower(numWires);
     };
 
-    setInterval(function() {
+    var tick = function() {
         ts += 0.05;
         ts %= 2 * Math.PI;
         var u = ts / 2 / Math.PI;
@@ -727,6 +750,7 @@ if (canvas !== null) {
         spinZ.matrix = Matrix.fromRotation(0, 0, u);
         spinH.matrix = Matrix.fromRotation(u2, 0, u2);
         redraw();
-    }, 50);
+    };
+    var ticker = null;
     redraw();
 }
