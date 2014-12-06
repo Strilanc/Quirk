@@ -7,6 +7,8 @@ For example, here is a screenshot of a quantum teleportation circuit. The qubit 
 
 ![The Inspector](http://i.imgur.com/t1aIye1.png)
 
+The bottom left thing is a representation of the highlighted operation as a matrix. Next to it is a representation of the state after the highlighted operation (each cell is one of the classical states, and the contents represent the amplitude). The bottom right thing is a representation of the final state. Within the circuit, the gates showing percentages are "peek" gates. They are showing the probability of the wire being on (*if* it was measured at that point), both given that the controls are satisfied and in-addition-to the controls being satisfied.
+
 JSFiddle Instance
 =================
 
