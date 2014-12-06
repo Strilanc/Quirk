@@ -5,7 +5,7 @@ A visualization and experimentation tool for small quantum circuits. Includes co
 
 For example, here is a screenshot of a quantum teleportation circuit. The qubit in A1, which is entangled with B2, is teleported to B1:
 
-![The Inspector](http://imgur.com/t1aIye1)
+![The Inspector](http://i.imgur.com/t1aIye1.png)
 
 JSFiddle Instance
 =================
