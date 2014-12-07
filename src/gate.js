@@ -1,6 +1,3 @@
-// uses: complex.js
-// uses: matrix.js
-
 /**
  * A named single-qubit quantum operation.
  *
@@ -22,7 +19,7 @@ Gate.prototype.toString = function() {
 };
 
 Gate.CONTROL = new Gate(
-    "\\•", // special character that means "draw fancy controlled thingies"
+    "•",
     Matrix.CONTROL,
     "Control",
     "Linked operations apply only when control qubit is ON.\n" +
@@ -34,7 +31,7 @@ Gate.CONTROL = new Gate(
     "superposition control qubit is on.");
 
 Gate.ANTI_CONTROL = new Gate(
-    "\\•", // special character that means "draw fancy controlled thingies"
+    "◦",
     Matrix.ANTI_CONTROL,
     "Anti-Control",
     "Linked operations apply only when control qubit is OFF.\n" +
@@ -170,6 +167,19 @@ Gate.H = new Gate(
     "The hadamard operation also corresponds to a 180° turn around the\n" +
     "X+Z diagonal axis of the Block Sphere, and is its own inverse.");
 
+Gate.SWAP_HALF = new Gate(
+    "Swap",
+    Matrix.square([1, 0, 0, 0,
+                   0, 0, 1, 0,
+                   0, 1, 0, 0,
+                   0, 0, 0, 1]),
+    "Swap Gate [Half]",
+    "Swaps the values of two qubits.\n" +
+    "\n" +
+    "(You must place two swap gate halves in a column to do a swap.)");
+
+Gate.DRAW_MATRIX_SYMBOL = "\\__SPECIAL_SYMBOL__DRAW_MATRIX";
+
 Gate.fromPhaseRotation = function(fraction, symbol) {
     var mod = function(n, d) { return ((n % d) + d) % d; };
     var dif_mod = function(n, d) { return mod(n + d/2, d) - d/2; };
@@ -201,7 +211,7 @@ Gate.fromRotation = function(x, y, z, symbol) {
     var n = Math.sqrt(x*x + y*y + z*z);
     var deg = n*360;
     return new Gate(
-        symbol || "\\⊹", // special character that means "render the matrix"
+        symbol || Gate.DRAW_MATRIX_SYMBOL, // special character that means "render the matrix"
         Matrix.fromRotation(x, y, z),
         deg +  "° around <" + x/n + ", " + y/n + ", " + z/n + ">",
         "A custom operation based on a rotation.");
@@ -209,7 +219,7 @@ Gate.fromRotation = function(x, y, z, symbol) {
 
 Gate.fromCustom = function(matrix) {
     return new Gate(
-        "\\⊹", // special character that means "render the matrix"
+        Gate.DRAW_MATRIX_SYMBOL,
         matrix,
         matrix.toString(),
         "A custom operation.");
@@ -247,17 +257,25 @@ GateColumn.prototype.isEmpty = function() {
  */
 GateColumn.prototype.matrix = function() {
     var ops = [];
+    var swapIndices = [];
     for (var i = 0; i < this.gates.length; i++) {
         var op;
         if (this.gates[i] === null) {
             op = Matrix.identity(2)
+        } else if (this.gates[i] === Gate.SWAP_HALF) {
+            swapIndices.push(i);
+            op = Matrix.identity(2);
         } else {
             op = this.gates[i].matrix;;
         }
         ops.push(op);
     }
 
-    return ops.reduce(function (a, e) { return e.tensorProduct(a); }, Matrix.identity(1));
+    var result = ops.reduce(function (a, e) { return e.tensorProduct(a); }, Matrix.identity(1));
+    if (swapIndices.length === 2) {
+        result = Matrix.fromWireSwap(this.gates.length, swapIndices[0], swapIndices[1]).times(result);
+    }
+    return result;
 };
 
 /**

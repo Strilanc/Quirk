@@ -1,8 +1,7 @@
-// uses: complex.js
-
 /**
  * A matrix of complex values.
  * @param rows {Complex[][]} The rows of complex coefficients making up the matrix.
+ * @property rows {Complex[][]}
  * @class
  */
 function Matrix(rows) {
@@ -276,6 +275,26 @@ Matrix.fromRotation = function (x, y, z) {
     var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
 
     return Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
+};
+
+/**
+ * Returns a matrix for an n-wire circuit that swaps wires i and j.
+ * @param {int} numWires
+ * @param {int} swapWire1
+ * @param {int} swapWire2
+ */
+Matrix.fromWireSwap = function(numWires, swapWire1, swapWire2) {
+    return Matrix.generate(1 << numWires, 1 << numWires, function(r, c) {
+        var bitSwap = function(n) {
+            var m1 = 1 << swapWire1;
+            var m2 = 1 << swapWire2;
+            var s = n & ~(m1 | m2);
+            if ((n & m1) != 0) s |= m2;
+            if ((n & m2) != 0) s |= m1;
+            return s;
+        };
+        return bitSwap(r) === c ? 1 : 0;
+    });
 };
 
 /**

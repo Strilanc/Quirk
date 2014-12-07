@@ -9,6 +9,7 @@ var AMPLITUDE_PROBABILITY_FILL_UP_COLOR = "orange";
 
 /**
  * @param {CanvasRenderingContext2D} ctx
+ * @property {CanvasRenderingContext2D} ctx
  * @constructor
  */
 function Painter(ctx) {
@@ -44,10 +45,10 @@ Painter.prototype.strokeRect = function (rect, color, thickness) {
  * @param {=string} color The fill color. Defaults to white.
  */
 Painter.prototype.fillCircle = function (center, radius, color) {
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = color || "white";
-    ctx.fill();
+    this.ctx.beginPath();
+    this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    this.ctx.fillStyle = color || "white";
+    this.ctx.fill();
 };
 
 /**
@@ -58,24 +59,23 @@ Painter.prototype.fillCircle = function (center, radius, color) {
  * @param {=number} thickness The stroke thickness. Defaults to 1.
  */
 Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = color || "black";
-    ctx.strokeWidth = thickness || 1;
-    ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    this.ctx.strokeStyle = color || "black";
+    this.ctx.strokeWidth = thickness || 1;
+    this.ctx.stroke();
 };
 
 /**
  * Draws a string. Handles multi-line strings.
  *
  * @param {string} text The string to draw.
- * @param {number} x The left position of the drawn string.
- * @param {number} y The top position of the drawn string.
+ * @param {{x: number, y: number}} pos The top-left position of the drawn string.
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
  */
-Painter.prototype.printText = function (text, x, y, fontColor, fontSize, fontFamily) {
+Painter.prototype.printText = function (text, pos, fontColor, fontSize, fontFamily) {
     fontSize = fontSize || 12;
     fontColor = fontColor || "black";
     fontFamily = fontFamily || "Helvetica";
@@ -85,21 +85,20 @@ Painter.prototype.printText = function (text, x, y, fontColor, fontSize, fontFam
 
     var lines = text.split("\n");
     for (var i = 0; i < lines.length; i++) {
-        this.ctx.fillText(lines[i], x, y + (i*4*fontSize)/3);
+        this.ctx.fillText(lines[i], pos.x, pos.y + (i*4*fontSize)/3);
     }
 };
 
 /**
  * Draws a string centered around the given point. Does NOT handle multi-line strings.
  *
- * @param text The string to draw.
- * @param x The x coordinate of the center position of the drawn string.
- * @param y The y coordinate of the center position of the drawn string.
+ * @param {string} text The string to draw.
+ * @param {{x: number, y: number}} pos The center position of the drawn string.
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
  */
-Painter.prototype.printCenteredText = function (text, x, y, fontColor, fontSize, fontFamily) {
+Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, fontFamily) {
     fontSize = fontSize || 12;
     fontColor = fontColor || "black";
     fontFamily = fontFamily || "Helvetica";
@@ -108,7 +107,7 @@ Painter.prototype.printCenteredText = function (text, x, y, fontColor, fontSize,
     this.ctx.font = fontSize + "px " + fontFamily;
     var s = this.ctx.measureText(text);
 
-    this.ctx.fillText(text, x - s.width / 2, y + fontSize/3);
+    this.ctx.fillText(text, pos.x - s.width / 2, pos.y + fontSize/3);
 };
 
 /**

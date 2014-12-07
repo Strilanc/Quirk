@@ -19,7 +19,7 @@ RectTest.prototype.testIsEqualTo = function() {
 };
 
 RectTest.prototype.testCenteredSquareWithRadius = function() {
-    assertTrue(Rect.centeredSquareWithRadius(2, 3, 5).isEqualTo(new Rect(-3, -2, 10, 10)));
+    assertTrue(Rect.centeredSquareWithRadius({x: 2, y: 3}, 5).isEqualTo(new Rect(-3, -2, 10, 10)));
 };
 
 RectTest.prototype.testCenter = function() {
