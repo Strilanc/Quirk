@@ -1,10 +1,25 @@
 var canvas = document.getElementById("drawCanvas");
 if (canvas !== null) {
+    /** @type {!int} */
+    var numWires = 4;
+
+    /**
+     * @returns {!Matrix}
+     */
+    var makeInputVector = function () {
+        return Matrix.col([1, 0]).tensorPower(numWires);
+    };
+
     /** @type {!Painter} */
     var painter = new Painter(canvas.getContext("2d"));
 
-    /** @type {!int} */
-    var numWires = 4;
+    // --- State ---
+    /** @type {!{x: !number, y: !number}} */
+    var latestMousePos = {x: 0, y: 0};
+    /** @type {?{ gate: !Gate, col: (?number), row: (?number) }} */
+    var held = null;
+    var isTapping = false;
+    var wasTapping = false;
 
     // --- Layout Constants ---
     /** @type {!number} */
@@ -15,7 +30,7 @@ if (canvas !== null) {
     var circuitOperationColumns = [];
 
     /** @type {!number} */
-    var TOOLBOX_HEIGHT = 4 * (gateRadius*2 + 2) - gateRadius;
+    var TOOLBOX_HEIGHT = 4 * (gateRadius * 2 + 2) - gateRadius;
 
     /** @type {!Rect} */
     var CIRCUIT_AREA = new Rect(0, TOOLBOX_HEIGHT + 2, canvas.width, 201);
@@ -29,31 +44,34 @@ if (canvas !== null) {
         0,
         STATE_DRAW_Y,
         STATE_DRAW_H,
-        STATE_DRAW_H);
+        STATE_DRAW_H
+    );
 
     /** @type {!Rect} */
     var INTERMEDIATE_STATE_HINT_AREA = new Rect(
         OPERATION_HINT_AREA.right() + 5,
         STATE_DRAW_Y,
         STATE_DRAW_H,
-        STATE_DRAW_H);
+        STATE_DRAW_H
+    );
 
     /** @type {!Rect} */
     var OUTPUT_STATE_HINT_AREA = new Rect(
         canvas.width - STATE_DRAW_H,
         STATE_DRAW_Y,
         STATE_DRAW_H,
-        STATE_DRAW_H);
+        STATE_DRAW_H
+    );
 
     /**
      * @param {!int} i
      * @returns {!string}
      */
-    var makeBitLabel = function(i) {
-        if (i == 0) return "A1";
-        if (i == 1) return "A2";
-        if (i == 2) return "B1";
-        if (i == 3) return "B2";
+    var makeBitLabel = function (i) {
+        if (i === 0) { return "A1"; }
+        if (i === 1) { return "A2"; }
+        if (i === 2) { return "B1"; }
+        if (i === 3) { return "B2"; }
         return "bit" + i;
     };
 
@@ -153,15 +171,33 @@ if (canvas !== null) {
     ];
 
 // --- Layout Functions ---
+    /** @type {!boolean} */
     var isHoveringOverTimeBasedGate = false;
+
+    /**
+     * @param {!number} i
+     * @returns {number}
+     */
     var wireIndexToY = function (i) {
         return CIRCUIT_AREA.y + (2 * i + 1) * CIRCUIT_AREA.h / numWires / 2;
     };
+
+    /**
+     * @param {!number} y
+     * @returns {?int}
+     */
     var wireYToIndex = function (y) {
         var result = Math.round(((y - CIRCUIT_AREA.y) * 2 * numWires / CIRCUIT_AREA.h - 1) / 2);
-        if (result < 0 || result >= numWires) return null;
+        if (result < 0 || result >= numWires) {
+            return null;
+        }
         return result;
     };
+
+    /**
+     * @param {!number} index
+     * @returns {number}
+     */
     var operationIndexToX = function (index) {
         if (held !== null && held.col !== null) {
             if (index === held.col && circuitOperationColumns.length > 0) {
@@ -174,6 +210,7 @@ if (canvas !== null) {
         var s = gateRadius * 2 + circuitOperationHorizontalSpacing;
         return s * (index + 1);
     };
+
     /**
      * @param {!number} x
      * @param {!number} y
@@ -208,13 +245,22 @@ if (canvas !== null) {
         return {col: i + di, row: j, inExisting: false};
     };
 
-// --- State ---
-    /** @type {!{x: !number, y: !number}} */
-    var latestMousePos = {x: 0, y: 0};
-    /** @type {?{ gate: !Gate, col: (?number), row: (?number) }} */
-    var held = null;
-    var isTapping = false;
-    var wasTapping = false;
+    /**
+     * @param {!{x: !number, y: !number}} p
+     * @param {!Gate} g
+     */
+    var drawGateSymbol = function (p, g) {
+        if (g.symbol === Gate.DRAW_MATRIX_SYMBOL) {
+            painter.paintMatrix(g.matrix, Rect.centeredSquareWithRadius(p, gateRadius));
+        } else if (g === Gate.CONTROL) {
+            painter.fillCircle(p, 5, "black");
+        } else if (g === Gate.ANTI_CONTROL) {
+            painter.fillCircle(p, 5);
+            painter.strokeCircle(p, 5);
+        } else {
+            painter.printCenteredText(g.symbol, p);
+        }
+    };
 
     /**
      * @param {!{x: !number, y: !number}} p
@@ -231,28 +277,19 @@ if (canvas !== null) {
      * @param {!{x: !number, y: !number}} p
      * @param {!Gate} g
      */
-    var drawGateSymbol = function(p, g) {
-        if (g.symbol === Gate.DRAW_MATRIX_SYMBOL) {
-            painter.paintMatrix(g.matrix, Rect.centeredSquareWithRadius(p, gateRadius))
-        } else if (g === Gate.CONTROL) {
-            painter.fillCircle(p, 5, "black");
-        } else if (g === Gate.ANTI_CONTROL) {
-            painter.fillCircle(p, 5);
-            painter.strokeCircle(p, 5);
-        } else {
-            painter.printCenteredText(g.symbol, p);
-        }
-    };
-
-    /**
-     * @param {!{x: !number, y: !number}} p
-     * @param {!Gate} g
-     */
     var drawToolboxGate = function (p, g) {
         var b = Rect.centeredSquareWithRadius(p, gateRadius);
         painter.fillRect(b);
         painter.strokeRect(b);
         drawGateSymbol(p, g);
+    };
+
+    var isNotTimeBasedGate = function (g) {
+        return timeVaryingGates.indexOf(g) === -1;
+    };
+
+    var hasTimeBasedGates = function () {
+        return !circuitOperationColumns.every(function (e) { return e.gates.every(isNotTimeBasedGate); });
     };
 
     /**
@@ -264,7 +301,7 @@ if (canvas !== null) {
         if (!b.containsPoint(latestMousePos)) {
             return;
         }
-        isHoveringOverTimeBasedGate |= !isNotTimeBasedGate(g);
+        isHoveringOverTimeBasedGate = isHoveringOverTimeBasedGate || !isNotTimeBasedGate(g);
         if (isTapping && !wasTapping) {
             held = {
                 gate: g,
@@ -310,7 +347,7 @@ if (canvas !== null) {
      * @param {!GateColumn} gateColumn
      * @param {!int} columnIndex
      */
-    var drawColumnControlWires = function(gateColumn, columnIndex) {
+    var drawColumnControlWires = function (gateColumn, columnIndex) {
         var hasControls = gateColumn.gates.indexOf(Gate.CONTROL) > -1;
         var hasAntiControls = gateColumn.gates.indexOf(Gate.ANTI_CONTROL) > -1;
         var hasSwaps = gateColumn.gates.indexOf(Gate.SWAP_HALF) > -1;
@@ -331,6 +368,46 @@ if (canvas !== null) {
         }
         var x = operationIndexToX(columnIndex);
         painter.strokeLine({x: x, y: wireIndexToY(minIndex)}, {x: x, y: wireIndexToY(maxIndex)});
+    };
+
+    /**
+     * Determines the probability of a wire or wires having particular values, given a quantum state.
+     *
+     * Note that wire probabilities are not independent in general. Wires may be correlated.
+     *
+     * @param {!int} wireExpectedMask The bits of this number determine the desired wire values.
+     * @param {!int} wireRequiredMask The set bits of this number determine which wire values to check.
+     * @param {!Matrix} state A complex column vector.
+     */
+    var measureProbability = function (wireExpectedMask, wireRequiredMask, state) {
+        var t = 0;
+        for (var i = 0; i < state.height(); i++) {
+            if ((i & wireRequiredMask) === (wireExpectedMask & wireRequiredMask)) {
+                t += state.rows[i][0].norm2();
+            }
+        }
+        return t;
+    };
+
+    /**
+     * @param {!int} wireTarget
+     * @param {!int} wireExpectedMask
+     * @param {!int} wireRequiredMask
+     * @param {!Matrix} state
+     */
+    var measureConditionalProbability = function (wireTarget, wireExpectedMask, wireRequiredMask, state) {
+        var t_off = 0;
+        var t_on = 0;
+        for (var i = 0; i < state.height(); i++) {
+            if ((i & wireRequiredMask) === (wireExpectedMask & wireRequiredMask)) {
+                if ((i & (1 << wireTarget)) === 0) {
+                    t_off += state.rows[i][0].norm2();
+                } else {
+                    t_on += state.rows[i][0].norm2();
+                }
+            }
+        }
+        return t_on / (t_off + t_on);
     };
 
     /**
@@ -356,7 +433,7 @@ if (canvas !== null) {
         return {
             conditional: measureConditionalProbability(targetWire, expectedMask, requiredMask, columnState),
             total: measureProbability(expectedMask | (1 << targetWire), requiredMask | (1 << targetWire), columnState),
-            canDiffer: requiredMask != 0
+            canDiffer: requiredMask !== 0
         };
     };
 
@@ -369,7 +446,7 @@ if (canvas !== null) {
 
         drawColumnControlWires(gateColumn, columnIndex);
         var x = operationIndexToX(columnIndex);
-        var hasTwoSwaps = gateColumn.gates.filter(function(e) { return e === Gate.SWAP_HALF; }).length === 2;
+        var hasTwoSwaps = gateColumn.gates.filter(function (e) { return e === Gate.SWAP_HALF; }).length === 2;
 
         for (var i = 0; i < gateColumn.gates.length; i++) {
             var cy = wireIndexToY(i);
@@ -401,7 +478,7 @@ if (canvas !== null) {
                 } else {
                     painter.paintProbabilityBox(p.total, b);
                 }
-            } else if (gate == Gate.SWAP_HALF) {
+            } else if (gate === Gate.SWAP_HALF) {
                 if (hasTwoSwaps) {
                     var swapRect = Rect.centeredSquareWithRadius({x: x, y: cy}, gateRadius/2);
                     painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
@@ -419,6 +496,7 @@ if (canvas !== null) {
             }
         }
     };
+
     /**
      * @param {!Matrix} inputState
      * @param {!Array.<!GateColumn>} gateColumns
@@ -433,46 +511,6 @@ if (canvas !== null) {
             inputState = gateColumns[i2].matrix().times(inputState);
             drawCircuitOperation(gateColumns[i2], i2, inputState);
         }
-    };
-
-    /**
-     * Determines the probability of a wire or wires having particular values, given a quantum state.
-     *
-     * Note that wire probabilities are not independent in general. Wires may be correlated.
-     *
-     * @param {!int} wireExpectedMask The bits of this number determine the desired wire values.
-     * @param {!int} wireRequiredMask The set bits of this number determine which wire values to check.
-     * @param {!Matrix} state A complex column vector.
-     */
-    var measureProbability = function(wireExpectedMask, wireRequiredMask, state) {
-        var t = 0;
-        for (var i = 0; i < state.height(); i++) {
-            if ((i & wireRequiredMask) == (wireExpectedMask & wireRequiredMask)) {
-                t += state.rows[i][0].norm2();
-            }
-        }
-        return t;
-    };
-
-    /**
-     * @param {!int} wireTarget
-     * @param {!int} wireExpectedMask
-     * @param {!int} wireRequiredMask
-     * @param {!Matrix} state
-     */
-    var measureConditionalProbability = function(wireTarget, wireExpectedMask, wireRequiredMask, state) {
-        var t_off = 0;
-        var t_on = 0;
-        for (var i = 0; i < state.height(); i++) {
-            if ((i & wireRequiredMask) == (wireExpectedMask & wireRequiredMask)) {
-                if ((i & (1 << wireTarget)) != 0) {
-                    t_on += state.rows[i][0].norm2();
-                } else {
-                    t_off += state.rows[i][0].norm2();
-                }
-            }
-        }
-        return t_on / (t_off + t_on);
     };
 
     /**
@@ -514,17 +552,17 @@ if (canvas !== null) {
                 var col = gateSet[c];
                 var x1 = c * (gateRadius * 4 + 22) + 50;
                 var x2 = x1 + gateRadius * 2 + 2;
-                if (i == 0) {
+                if (i === 0) {
                     painter.printCenteredText(col.hint, {x: (x1 + x2) / 2, y: 10});
                 }
 
                 for (var r = 0; r < col.gates.length; r++) {
-                    if (col.gates[r] === null) continue;
+                    if (col.gates[r] === null) { continue; }
                     var dx = Math.floor(r / 3);
                     var dy = r % 3;
                     var x = x1 + (gateRadius * 2 + 2) * dx;
                     var y = 18 + gateRadius + dy * (gateRadius * 2 + 2);
-                    if (i == 0) {
+                    if (i === 0) {
                         drawToolboxGate({x: x, y: y}, col.gates[r]);
                     } else {
                         drawToolboxGateHintIfHovering({x: x, y: y}, col.gates[r]);
@@ -534,6 +572,22 @@ if (canvas !== null) {
         }
     };
 
+    var ts = 0;
+    var ticker = null;
+    var tick = function () {
+        ts += 0.05;
+        ts %= 2 * Math.PI;
+        var u = ts / 2 / Math.PI;
+        var u2 = u / Math.sqrt(2);
+        var c = Math.cos(ts);
+        var s = Math.sin(ts);
+
+        spinR.matrix = Matrix.square([c, -s, s, c]);
+        spinX.matrix = Matrix.fromRotation(u, 0, 0);
+        spinY.matrix = Matrix.fromRotation(0, u, 0);
+        spinZ.matrix = Matrix.fromRotation(0, 0, u);
+        spinH.matrix = Matrix.fromRotation(u2, 0, u2);
+    };
     var redraw = function () {
         isHoveringOverTimeBasedGate = false;
         painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), "white");
@@ -542,8 +596,8 @@ if (canvas !== null) {
         for (var i = 0; i < candidateNewCols.length; i++) {
             candidateNewCols[i] = new GateColumn(candidateNewCols[i].gates.slice(0));
         }
-        var insertSite = CIRCUIT_AREA.containsPoint(latestMousePos)
-            ? posToColumnIndexAndInsertSuggestion(latestMousePos.x, latestMousePos.y, candidateNewCols)
+        var insertSite = CIRCUIT_AREA.containsPoint(latestMousePos) ?
+            posToColumnIndexAndInsertSuggestion(latestMousePos.x, latestMousePos.y, candidateNewCols)
             : null;
         if (insertSite !== null && held === null && insertSite.col >= candidateNewCols.length) {
             insertSite = null;
@@ -551,16 +605,16 @@ if (canvas !== null) {
 
         // Add held operation into circuit
         if (insertSite !== null && held !== null) {
-            if (!insertSite.inExisting) {
+            if (insertSite.inExisting) {
+                held.row = null;
+                held.col = null;
+            } else {
                 while (candidateNewCols.length < insertSite.col) {
                     candidateNewCols.push(GateColumn.empty(numWires));
                 }
                 candidateNewCols.splice(insertSite.col, 0, GateColumn.empty(numWires));
                 held.row = insertSite.row;
                 held.col = insertSite.col;
-            } else {
-                held.row = null;
-                held.col = null;
             }
             candidateNewCols[insertSite.col].gates[insertSite.row] = held.gate;
         }
@@ -595,14 +649,14 @@ if (canvas !== null) {
         }
 
         if (insertSite !== null && held !== null && wasTapping && !isTapping) {
-            circuitOperationColumns = candidateNewCols.filter(function(e) { return !e.isEmpty();});
+            circuitOperationColumns = candidateNewCols.filter(function (e) { return !e.isEmpty();});
         }
 
         var shouldBeTicking = isHoveringOverTimeBasedGate || hasTimeBasedGates();
         var isTicking = ticker !== null;
-        if (isTicking != shouldBeTicking) {
+        if (isTicking !== shouldBeTicking) {
             if (shouldBeTicking) {
-                ticker = setInterval(tick, 50);
+                ticker = setInterval(function() { tick(); redraw(); }, 50);
             } else {
                 clearInterval(ticker);
                 ticker = null;
@@ -610,19 +664,12 @@ if (canvas !== null) {
         }
     };
 
-    var hasTimeBasedGates = function() {
-        return !circuitOperationColumns.every(function(e) { return e.gates.every(isNotTimeBasedGate); });
-    };
-    var isNotTimeBasedGate = function(g) {
-        return timeVaryingGates.indexOf(g) == -1;
-    };
-
     var mouseUpdate = function (p, pressed) {
         //noinspection JSUnresolvedFunction
         latestMousePos.x = p.pageX - $(canvas).position().left;
         //noinspection JSUnresolvedFunction
         latestMousePos.y = p.pageY - $(canvas).position().top;
-        if (isTapping != pressed) {
+        if (isTapping !== pressed) {
             wasTapping = isTapping;
             isTapping = pressed;
         }
@@ -631,19 +678,19 @@ if (canvas !== null) {
         if (!isTapping) {
             held = null;
         }
-        if (isTapping != wasTapping) {
+        if (isTapping !== wasTapping) {
             wasTapping = isTapping;
             redraw();
         }
     };
     //noinspection JSUnresolvedFunction
     $(canvas).mousedown(function (p) {
-        if (p.which != 1) return;
+        if (p.which !== 1) { return; }
         mouseUpdate(p, true);
     });
     //noinspection JSUnresolvedFunction
     $(document).mouseup(function (p) {
-        if (p.which != 1) return;
+        if (p.which !== 1) { return; }
         mouseUpdate(p, false);
     });
     //noinspection JSUnresolvedFunction
@@ -662,30 +709,5 @@ if (canvas !== null) {
     $(canvas).mouseleave(function () {
         mouseUpdate({offsetX: -100, offsetY: -100}, isTapping);
     });
-
-    var ts = 0;
-    /**
-     * @returns {!Matrix}
-     */
-    var makeInputVector = function () {
-        return Matrix.col([1, 0]).tensorPower(numWires);
-    };
-
-    var tick = function() {
-        ts += 0.05;
-        ts %= 2 * Math.PI;
-        var u = ts / 2 / Math.PI;
-        var u2 = u / Math.sqrt(2);
-        var c = Math.cos(ts);
-        var s = Math.sin(ts);
-
-        spinR.matrix = Matrix.square([c, -s, s, c]);
-        spinX.matrix = Matrix.fromRotation(u, 0, 0);
-        spinY.matrix = Matrix.fromRotation(0, u, 0);
-        spinZ.matrix = Matrix.fromRotation(0, 0, u);
-        spinH.matrix = Matrix.fromRotation(u2, 0, u2);
-        redraw();
-    };
-    var ticker = null;
     redraw();
 }
