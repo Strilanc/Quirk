@@ -510,27 +510,6 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {Rect} rect
-     * @param {Matrix} values A column vector.
-     */
-    var drawState = function (rect, values) {
-        // draw values
-        var s = 1 << Math.ceil(numWires / 2);
-        var dw = Math.floor(Math.min(rect.w, rect.h) / s);
-        var dh = dw;
-        for (var i = 0; i < values.height(); i++) {
-            var dx = i % s;
-            var dy = Math.floor(i / s);
-            var x = rect.x + dw * dx;
-            var y = rect.y + dh * dy;
-            painter.paintAmplitude(values.rows[i][0], new Rect(x, y, dw, dh));
-        }
-
-        // draw borders
-        painter.strokeGrid(new Rect(rect.x, rect.y, dw, dh), s, values.height() / s);
-    };
-
-    /**
      * Determines the probability of a wire or wires having particular values, given a quantum state.
      *
      * Note that wire probabilities are not independent in general. Wires may be correlated.
@@ -590,7 +569,7 @@ if (canvas !== null) {
         var output = transformVectorWithOperations(input, operations);
         drawSingleWireProbabilities(canvas.width - gateRadius*2 - 10, output);
         var gridRect = drawRect.skipLeft(14).skipTop(14);
-        drawState(gridRect, output);
+        painter.paintColumnVectorAsGrid(output, gridRect);
         painter.printCenteredText(makeBitLabel(0), {x: gridRect.x + gridRect.w/4, y: drawRect.y + 8});
         painter.printCenteredText(makeBitLabel(1), {x: gridRect.x + gridRect.w*2/4, y: drawRect.y + 6});
         painter.printCenteredText(makeBitLabel(0), {x: gridRect.x + gridRect.w*3/4, y: drawRect.y + 8});

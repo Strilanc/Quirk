@@ -135,7 +135,7 @@ Painter.prototype.strokeLine = function(p1, p2, color, thickness) {
  */
 Painter.prototype.paintAmplitude = function(amplitude, area) {
     if (amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
-        painter.fillRect(area, AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO);
+        this.fillRect(area, AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO);
         return;
     }
 
@@ -153,18 +153,18 @@ Painter.prototype.paintAmplitude = function(amplitude, area) {
     }
 
     // fill rect from bottom to top as the amplitude becomes more probable
-    painter.fillRect(area.takeBottom(p * area.h), AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
+    this.fillRect(area.takeBottom(p * area.h), AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
 
     // show the direction and magnitude as a circle with a line indicator
-    painter.fillCircle(c, r, isControl
+    this.fillCircle(c, r, isControl
         ? AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE
         : AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
-    painter.strokeCircle(c, r, AMPLITUDE_CIRCLE_STROKE_COLOR);
-    painter.strokeLine(c, {x: c.x + dx, y: c.y - dy});
+    this.strokeCircle(c, r, AMPLITUDE_CIRCLE_STROKE_COLOR);
+    this.strokeLine(c, {x: c.x + dx, y: c.y - dy});
 
     // cross out (in addition to the darkening) when controlled
     if (isControl) {
-        painter.strokeLine(area.topLeft(), area.bottomRight());
+        this.strokeLine(area.topLeft(), area.bottomRight());
     }
 };
 
@@ -200,20 +200,43 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
 
 /**
  * Draws a visual representation of a complex matrix.
- * @param {Matrix} matrix The matrix to represent visually.
+ * @param {Matrix} matrix The matrix to draw.
  * @param {Rect} drawArea The rectangle to draw the matrix within.
  */
 Painter.prototype.paintMatrix = function(matrix, drawArea) {
     var numCols = matrix.width();
     var numRows = matrix.height();
     var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
-    for (var i = 0; i < numCols; i++) {
-        for (var j = 0; j < numRows; j++) {
-            painter.paintAmplitude(
-                matrix.rows[j][i],
-                topLeftCell.proportionalShiftedBy(i, j));
+
+    for (var c = 0; c < numCols; c++) {
+        for (var r = 0; r < numRows; r++) {
+            this.paintAmplitude(matrix.rows[r][c], topLeftCell.proportionalShiftedBy(c, r));
         }
     }
 
-    painter.strokeGrid(topLeftCell, numCols, numRows);
+    this.strokeGrid(topLeftCell, numCols, numRows);
+};
+
+/**
+ * Draws a visual representation of a column vector, using a grid layout.
+ * @param {Matrix} columnVector The complex column vector to draw.
+ * @param {Rect} drawArea The rectangle to draw the vector within.
+ */
+Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
+    var n = columnVector.height();
+    var numDrawRows = 1 << Math.ceil(Math.log(n) / Math.log(2) / 2);
+    var numDrawCols = Math.ceil(columnVector.height() / numDrawRows);
+    var topLeftCell = new Rect(
+        drawArea.x,
+        drawArea.y,
+        drawArea.w / numDrawCols,
+        drawArea.h / numDrawRows);
+
+    for (var r = 0; r < n; r++) {
+        var dx = r % numDrawCols;
+        var dy = Math.floor(r / numDrawCols);
+        this.paintAmplitude(columnVector.rows[r][0], topLeftCell.proportionalShiftedBy(dx, dy));
+    }
+
+    this.strokeGrid(topLeftCell, numDrawCols, numDrawRows);
 };
