@@ -1,13 +1,13 @@
 /**
  * A 2-d rectangle.
- * @param {number} x
- * @param {number} y
- * @param {number} w
- * @param {number} h
- * @property {number} x
- * @property {number} y
- * @property {number} w
- * @property {number} h
+ * @param {!number} x
+ * @param {!number} y
+ * @param {!number} w
+ * @param {!number} h
+ * @property {!number} x
+ * @property {!number} y
+ * @property {!number} w
+ * @property {!number} h
  * @constructor
  */
 function Rect(x, y, w, h) {
@@ -19,14 +19,18 @@ function Rect(x, y, w, h) {
 
 /**
  *
- * @param {{x: number, y: number}} p The x/y point at the center of the square.
- * @param {number} r Half of the diameter of the square.
- * @returns {Rect}
+ * @param {!{x: !number, y: !number}} p The x/y point at the center of the square.
+ * @param {!number} r Half of the diameter of the square.
+ * @returns {!Rect}
  */
 Rect.centeredSquareWithRadius = function(p, r) {
     return new Rect(p.x - r, p.y - r, r*2, r*2);
 };
 
+/**
+ * @param {!Rect|*} other
+ * @returns {!boolean}
+ */
 Rect.prototype.isEqualTo = function(other) {
     return other instanceof Rect &&
         other.x == this.x &&
@@ -36,63 +40,63 @@ Rect.prototype.isEqualTo = function(other) {
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.center = function() {
     return {x: this.x + this.w / 2, y: this.y + this.h / 2};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.topLeft = function() {
     return {x: this.x, y: this.y};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.topRight = function() {
     return {x: this.x + this.w, y: this.y};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.bottomLeft = function() {
     return {x: this.x, y: this.y + this.h};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.bottomRight = function() {
     return {x: this.x + this.w, y: this.y + this.h};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.centerLeft = function() {
     return {x: this.x, y: this.y + this.h/2};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.centerRight = function() {
     return {x: this.x + this.w, y: this.y + this.h/2};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.topCenter = function() {
     return {x: this.x + this.w/2, y: this.y};
 };
 
 /**
- * @returns {{x: number, y: number}}
+ * @returns {!{x: !number, y: !number}}
  */
 Rect.prototype.bottomCenter = function() {
     return {x: this.x + this.w/2, y: this.y + this.h};
@@ -100,14 +104,14 @@ Rect.prototype.bottomCenter = function() {
 
 
 /**
- * @returns number
+ * @returns !number
  */
 Rect.prototype.right = function() {
     return this.x + this.w;
 };
 
 /**
- * @returns number
+ * @returns !number
  */
 Rect.prototype.bottom = function() {
     return this.y + this.h;
@@ -117,8 +121,8 @@ Rect.prototype.bottom = function() {
  * Returns the result of removing the given width from the left side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} lostWidth
- * @returns Rect
+ * @param {!number} lostWidth
+ * @returns !Rect
  */
 Rect.prototype.skipLeft = function(lostWidth) {
     var d = Math.min(lostWidth, this.w);
@@ -129,8 +133,8 @@ Rect.prototype.skipLeft = function(lostWidth) {
  * Returns the result of removing the given width from the right side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} lostWidth
- * @returns Rect
+ * @param {!number} lostWidth
+ * @returns !Rect
  */
 Rect.prototype.skipRight = function(lostWidth) {
     var d = Math.min(lostWidth, this.w);
@@ -141,8 +145,8 @@ Rect.prototype.skipRight = function(lostWidth) {
  * Returns the result of removing the given height from the top side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} lostHeight
- * @returns Rect
+ * @param {!number} lostHeight
+ * @returns !Rect
  */
 Rect.prototype.skipTop = function(lostHeight) {
     var d = Math.min(lostHeight, this.h);
@@ -153,8 +157,8 @@ Rect.prototype.skipTop = function(lostHeight) {
  * Returns the result of removing the given height from the bottom side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} lostHeight
- * @returns Rect
+ * @param {!number} lostHeight
+ * @returns !Rect
  */
 Rect.prototype.skipBottom = function(lostHeight) {
     var d = Math.min(lostHeight, this.h);
@@ -165,8 +169,8 @@ Rect.prototype.skipBottom = function(lostHeight) {
  * Returns the result of removing all but the given width from the left side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} keptWidth
- * @returns Rect
+ * @param {!number} keptWidth
+ * @returns !Rect
  */
 Rect.prototype.takeLeft = function(keptWidth) {
     var d = Math.max(keptWidth, 0);
@@ -177,8 +181,8 @@ Rect.prototype.takeLeft = function(keptWidth) {
  * Returns the result of removing all but the given width from the right side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} keptWidth
- * @returns Rect
+ * @param {!number} keptWidth
+ * @returns !Rect
  */
 Rect.prototype.takeRight = function(keptWidth) {
     var d = Math.max(keptWidth, 0);
@@ -189,8 +193,8 @@ Rect.prototype.takeRight = function(keptWidth) {
  * Returns the result of removing all but the given height from the top side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} keptHeight
- * @returns Rect
+ * @param {!number} keptHeight
+ * @returns !Rect
  */
 Rect.prototype.takeTop = function(keptHeight) {
     var d = Math.max(keptHeight, 0);
@@ -201,8 +205,8 @@ Rect.prototype.takeTop = function(keptHeight) {
  * Returns the result of removing all but the given height from the bottom side of the rectangle.
  * The cut is clamped so it doesn't go into negative heights.
  *
- * @param {number} keptHeight
- * @returns Rect
+ * @param {!number} keptHeight
+ * @returns !Rect
  */
 Rect.prototype.takeBottom = function(keptHeight) {
     var d = Math.max(keptHeight, 0);
@@ -212,8 +216,8 @@ Rect.prototype.takeBottom = function(keptHeight) {
 /**
  * Returns the result of padding to each side of the rectangle by the given amount.
  *
- * @param {number} p The margin from the receiving rect's outside to the returned rect's inside.
- * @returns Rect
+ * @param {!number} p The margin from the receiving rect's outside to the returned rect's inside.
+ * @returns !Rect
  */
 Rect.prototype.paddedBy = function(p) {
     return new Rect(this.x - p, this.y - p, this.w + p * 2, this.h + p * 2);
@@ -224,8 +228,8 @@ Rect.prototype.paddedBy = function(p) {
  *
  * Note that the top and left of the rectangle are inclusive, but the bottom and right are exclusive.
  *
- * @param {{x: number, y: number}} p The query point.
- * @returns {boolean}
+ * @param {!{x: !number, y: !number}} p The query point.
+ * @returns {!boolean}
  */
 Rect.prototype.containsPoint = function(p) {
     return p.x >= this.x &&
@@ -235,45 +239,45 @@ Rect.prototype.containsPoint = function(p) {
 };
 
 /**
- * @param {number} proportion
- * @returns {Rect}
+ * @param {!number} proportion
+ * @returns {!Rect}
  */
 Rect.prototype.takeLeftProportion = function(proportion) {
     return this.takeLeft(this.w * proportion);
 };
 
 /**
- * @returns {Rect}
+ * @returns {!Rect}
  */
 Rect.prototype.topHalf = function() {
     return this.skipBottom(this.h / 2);
 };
 
 /**
- * @returns {Rect}
+ * @returns {!Rect}
  */
 Rect.prototype.bottomHalf = function() {
     return this.skipTop(this.h / 2);
 };
 
 /**
- * @returns {Rect}
+ * @returns {!Rect}
  */
 Rect.prototype.leftHalf = function() {
     return this.skipRight(this.w / 2);
 };
 
 /**
- * @returns {Rect}
+ * @returns {!Rect}
  */
 Rect.prototype.rightHalf = function() {
     return this.skipLeft(this.w / 2);
 };
 
 /**
- * @param {number} dx The displacement to move the rect horizontally.
- * @param {number} dy The displacement to move the rect vertically.
- * @returns {Rect}
+ * @param {!number} dx The displacement to move the rect horizontally.
+ * @param {!number} dy The displacement to move the rect vertically.
+ * @returns {!Rect}
  */
 Rect.prototype.shiftedBy = function(dx, dy) {
     return new Rect(this.x + dx, this.y + dy, this.w, this.h);
@@ -281,9 +285,9 @@ Rect.prototype.shiftedBy = function(dx, dy) {
 
 
 /**
- * @param {number} dx The proportional amount to move the rect horizontally.
- * @param {number} dy The proportional amount to move the rect vertically.
- * @returns {Rect}
+ * @param {!number} dx The proportional amount to move the rect horizontally.
+ * @param {!number} dy The proportional amount to move the rect vertically.
+ * @returns {!Rect}
  */
 Rect.prototype.proportionalShiftedBy = function(dx, dy) {
     return this.shiftedBy(dx * this.w, dy * this.h);

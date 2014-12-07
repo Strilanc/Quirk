@@ -8,8 +8,8 @@ var AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO = "#444";
 var AMPLITUDE_PROBABILITY_FILL_UP_COLOR = "orange";
 
 /**
- * @param {CanvasRenderingContext2D} ctx
- * @property {CanvasRenderingContext2D} ctx
+ * @param {!CanvasRenderingContext2D} ctx
+ * @property {!CanvasRenderingContext2D} ctx
  * @constructor
  */
 function Painter(ctx) {
@@ -18,7 +18,7 @@ function Painter(ctx) {
 
 /**
  * Draws the inside of a rectangle.
- * @param {Rect} rect The rectangular area to fill.
+ * @param {!Rect} rect The rectangular area to fill.
  * @param {=string} color The fill color. Defaults to black.
  */
 Painter.prototype.fillRect = function (rect, color) {
@@ -28,7 +28,7 @@ Painter.prototype.fillRect = function (rect, color) {
 
 /**
  * Draws the outside of a rectangle.
- * @param {Rect} rect The rectangular perimeter to stroke.
+ * @param {!Rect} rect The rectangular perimeter to stroke.
  * @param {=string} color The stroke color. Defaults to black.
  * @param {=number} thickness The stroke thickness. Defaults to 1.
  */
@@ -40,8 +40,8 @@ Painter.prototype.strokeRect = function (rect, color, thickness) {
 
 /**
  * Draws the inside of a circle.
- * @param {{x: number, y: number}} center The center of the circle.
- * @param radius The distance from the center of the circle to its side.
+ * @param {!{x: !number, y: !number}} center The center of the circle.
+ * @param {!number} radius The distance from the center of the circle to its side.
  * @param {=string} color The fill color. Defaults to white.
  */
 Painter.prototype.fillCircle = function (center, radius, color) {
@@ -53,8 +53,8 @@ Painter.prototype.fillCircle = function (center, radius, color) {
 
 /**
  * Draws the outside of a circle.
- * @param {{x: number, y: number}} center The center of the circle.
- * @param radius The distance from the center of the circle to its side.
+ * @param {!{x: !number, y: !number}} center The center of the circle.
+ * @param {!number} radius The distance from the center of the circle to its side.
  * @param {=string} color The stroke color. Defaults to black.
  * @param {=number} thickness The stroke thickness. Defaults to 1.
  */
@@ -69,8 +69,8 @@ Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
 /**
  * Draws a string. Handles multi-line strings.
  *
- * @param {string} text The string to draw.
- * @param {{x: number, y: number}} pos The top-left position of the drawn string.
+ * @param {!string} text The string to draw.
+ * @param {!{x: !number, y: !number}} pos The top-left position of the drawn string.
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
@@ -92,8 +92,8 @@ Painter.prototype.printText = function (text, pos, fontColor, fontSize, fontFami
 /**
  * Draws a string centered around the given point. Does NOT handle multi-line strings.
  *
- * @param {string} text The string to draw.
- * @param {{x: number, y: number}} pos The center position of the drawn string.
+ * @param {!string} text The string to draw.
+ * @param {!{x: !number, y: !number}} pos The center position of the drawn string.
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
@@ -113,8 +113,8 @@ Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, 
 /**
  * Draws a line segment between the two points.
  *
- * @param {{x: number, y: number}} p1
- * @param {{x: number, y: number}} p2
+ * @param {!{x: !number, y: !number}} p1
+ * @param {!{x: !number, y: !number}} p2
  * @param {=string} color The color of the drawn line. Defaults to black.
  * @param {=number} thickness The thickness of the drawn line. Defaults to 1.
  */
@@ -130,8 +130,8 @@ Painter.prototype.strokeLine = function(p1, p2, color, thickness) {
 /**
  * Draws representations of complex values used to weight components of a superposition.
  *
- * @param {Rect} area The drawing area, where the amplitude will be represented visually.
- * @param {Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
+ * @param {!Rect} area The drawing area, where the amplitude will be represented visually.
+ * @param {!Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
  */
 Painter.prototype.paintAmplitude = function(amplitude, area) {
     if (amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
@@ -170,9 +170,9 @@ Painter.prototype.paintAmplitude = function(amplitude, area) {
 
 /**
  * Draws a grid.
- * @param {Rect} topLeftCell
- * @param {number} cols
- * @param {number} rows
+ * @param {!Rect} topLeftCell
+ * @param {!number} cols
+ * @param {!number} rows
  * @param {=string} strokeColor
  * @param {=number} strokeThickness
  */
@@ -200,8 +200,8 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
 
 /**
  * Draws a visual representation of a complex matrix.
- * @param {Matrix} matrix The matrix to draw.
- * @param {Rect} drawArea The rectangle to draw the matrix within.
+ * @param {!Matrix} matrix The matrix to draw.
+ * @param {!Rect} drawArea The rectangle to draw the matrix within.
  */
 Painter.prototype.paintMatrix = function(matrix, drawArea) {
     var numCols = matrix.width();
@@ -219,8 +219,8 @@ Painter.prototype.paintMatrix = function(matrix, drawArea) {
 
 /**
  * Draws a visual representation of a column vector, using a grid layout.
- * @param {Matrix} columnVector The complex column vector to draw.
- * @param {Rect} drawArea The rectangle to draw the vector within.
+ * @param {!Matrix} columnVector The complex column vector to draw.
+ * @param {!Rect} drawArea The rectangle to draw the vector within.
  */
 Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
     var n = columnVector.height();
@@ -242,8 +242,8 @@ Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
 };
 
 /**
- * @param {number} probability
- * @param {Rect} drawArea
+ * @param {!number} probability
+ * @param {!Rect} drawArea
  */
 Painter.prototype.paintProbabilityBox = function (probability, drawArea) {
     var w = drawArea.w * probability;
@@ -254,9 +254,9 @@ Painter.prototype.paintProbabilityBox = function (probability, drawArea) {
 };
 
 /**
- * @param {number} probabilityIncludingConditions
- * @param {number} probabilityGivenConditions
- * @param {Rect} drawArea
+ * @param {!number} probabilityIncludingConditions
+ * @param {!number} probabilityGivenConditions
+ * @param {!Rect} drawArea
  */
 Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncludingConditions,
                                                             probabilityGivenConditions,

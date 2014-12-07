@@ -23,6 +23,23 @@ ComplexTest.prototype.testIsEqualTo = function() {
     assertFalse(new Complex(0, 2.5).isEqualTo(2.5));
 };
 
+ComplexTest.testRealPartOf = function() {
+    assertEquals(1, Complex.realPartOf(1));
+    assertEquals(1.5, Complex.realPartOf(1.5));
+    assertEquals(-2, Complex.realPartOf(-2));
+    assertEquals(3, Complex.realPartOf(new Complex(3, 1)));
+    assertEquals(5, Complex.realPartOf(new Complex(5, 0)));
+};
+
+ComplexTest.testImagPartOf = function() {
+    assertEquals(0, Complex.imagPartOf(1));
+    assertEquals(0, Complex.imagPartOf(1.5));
+    assertEquals(0, Complex.imagPartOf(-2));
+    assertEquals(0, Complex.imagPartOf(new Complex(3, 0)));
+    assertEquals(1, Complex.imagPartOf(new Complex(3, 1)));
+    assertEquals(-2, Complex.imagPartOf(new Complex(5, -2)));
+};
+
 ComplexTest.prototype.testToString = function() {
     assertEquals("0", new Complex(0, 0).toString());
 

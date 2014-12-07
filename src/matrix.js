@@ -1,7 +1,7 @@
 /**
  * A matrix of complex values.
- * @param rows {Complex[][]} The rows of complex coefficients making up the matrix.
- * @property rows {Complex[][]}
+ * @param rows {!Array.<!Array.<!Complex>>} The rows of complex coefficients making up the matrix.
+ * @property rows {!Array.<!Array.<!Complex>>}
  * @class
  */
 function Matrix(rows) {
@@ -28,8 +28,8 @@ function Matrix(rows) {
 
 /**
  * Returns the result of tensor-product-ing the receiving matrix with itself the given number of times.
- * @param {int} exponent The number of times the matrix is tensor-producted with itself.
- * @returns {Matrix}
+ * @param {!int} exponent The number of times the matrix is tensor-product-ed with itself.
+ * @returns {!Matrix}
  */
 Matrix.prototype.tensorPower = function(exponent) {
     if (exponent == 0) {
@@ -46,7 +46,7 @@ Matrix.prototype.tensorPower = function(exponent) {
 
 /**
  * Returns the width of the receiving matrix.
- * @returns {int}
+ * @returns {!int}
  */
 Matrix.prototype.width = function() {
     return this.rows[0].length;
@@ -54,7 +54,7 @@ Matrix.prototype.width = function() {
 
 /**
  * Returns the height of the receiving matrix.
- * @returns {int}
+ * @returns {!int}
  */
 Matrix.prototype.height = function() {
     return this.rows.length;
@@ -62,10 +62,10 @@ Matrix.prototype.height = function() {
 
 /**
  * Returns a matrix of the given dimensions, using the given function to generate the coefficients.
- * @param {int} width
- * @param {int} height
- * @param {function} coefficientRowColGenerator
- * @returns {Matrix}
+ * @param {!int} width
+ * @param {!int} height
+ * @param {!function} coefficientRowColGenerator
+ * @returns {!Matrix}
  */
 Matrix.generate = function (width, height, coefficientRowColGenerator) {
     var rows = [];
@@ -82,9 +82,9 @@ Matrix.generate = function (width, height, coefficientRowColGenerator) {
 
 /**
  * Converts the given square block of coefficients into a square complex matrix.
- * @param {(number|Complex)[]|number[]|Complex[]} coefs The coefficients of the matrix, arranged in a flat array of
+ * @param {!Array.<(!number|!Complex)>|!Array.<!number>|!Array.<!Complex>} coefs The coefficients of the matrix, arranged in a flat array of
  * square length with the coefficients (which can be numeric or complex) in row order.
- * @returns {Matrix}
+ * @returns {!Matrix}
  */
 Matrix.square = function (coefs) {
     if (coefs instanceof Array) {
@@ -98,8 +98,8 @@ Matrix.square = function (coefs) {
 
 /**
  * Converts the array of complex coefficients into a column vector.
- * @param {(number|Complex)[]|number[]|Complex[]} coefs
- * @returns {Matrix}
+ * @param {!Array.<(!number|!Complex)>|!Array.<!number>|!Array.<!Complex>} coefs
+ * @returns {!Matrix}
  */
 Matrix.col = function (coefs) {
     return Matrix.generate(1, coefs.length, function(r) { return coefs[r]; });
@@ -107,8 +107,8 @@ Matrix.col = function (coefs) {
 
 /**
  * Converts the array of complex coefficients into a row vector.
- * @param {(number|Complex)[]|number[]|Complex[]} coefs
- * @returns {Matrix}
+ * @param {!Array.<(!number|!Complex)>|!Array.<!number>|!Array.<!Complex>} coefs
+ * @returns {!Matrix}
  */
 Matrix.row = function (coefs) {
     return Matrix.generate(coefs.length, 1, function(r, c) { return coefs[c]; });
@@ -117,8 +117,8 @@ Matrix.row = function (coefs) {
 /**
  * Determines if the receiving matrix is equal to the given matrix.
  * This method returns false, instead of throwing, when given badly typed arguments.
- * @param {Matrix|object} other
- * @returns {boolean}
+ * @param {!Matrix|*} other
+ * @returns {!boolean}
  */
 Matrix.prototype.isEqualTo = function (other) {
     if (!(other instanceof Matrix)) return false;
@@ -141,7 +141,7 @@ Matrix.prototype.isEqualTo = function (other) {
 /**
  * Returns a text representation of the receiving matrix.
  * (It uses curly braces so you can paste it into wolfram alpha.)
- * @returns {string}
+ * @returns {!string}
  */
 Matrix.prototype.toString = function () {
     var data = this.rows.map(function(row) {
@@ -155,7 +155,7 @@ Matrix.prototype.toString = function () {
 
 /**
  * Returns the conjugate transpose of the receiving operation (the adjoint is the inverse when the matrix is unitary).
- * @returns {Matrix}
+ * @returns {!Matrix}
  */
 Matrix.prototype.adjoint = function () {
     var m = this;
@@ -166,8 +166,8 @@ Matrix.prototype.adjoint = function () {
 
 /**
  * Returns the result of scaling the receiving matrix by the given scalar factor.
- * @param {number|Complex} v
- * @returns {Matrix}
+ * @param {!number|!Complex} v
+ * @returns {!Matrix}
  */
 Matrix.prototype.scaledBy = function (v) {
     var m = this;
@@ -178,8 +178,8 @@ Matrix.prototype.scaledBy = function (v) {
 
 /**
  * Returns the sum of the receiving matrix and the given matrix.
- * @param {Matrix} other
- * @returns {Matrix}
+ * @param {!Matrix} other
+ * @returns {!Matrix}
  */
 Matrix.prototype.plus = function (other) {
     var m = this;
@@ -193,8 +193,8 @@ Matrix.prototype.plus = function (other) {
 
 /**
  * Returns the difference from the receiving matrix to the given matrix.
- * @param {Matrix} other
- * @returns {Matrix}
+ * @param {!Matrix} other
+ * @returns {!Matrix}
  */
 Matrix.prototype.minus = function (other) {
     var m = this;
@@ -208,8 +208,8 @@ Matrix.prototype.minus = function (other) {
 
 /**
  * Returns the matrix product (i.e. the composition) of the receiving matrix and the given matrix.
- * @param {Matrix} other
- * @returns {Matrix}
+ * @param {!Matrix} other
+ * @returns {!Matrix}
  */
 Matrix.prototype.times = function (other) {
     var m = this;
@@ -228,8 +228,8 @@ Matrix.prototype.times = function (other) {
 
 /**
  * Returns the tensor product of the receiving matrix and the given matrix.
- * @param {Matrix} other
- * @returns {Matrix}
+ * @param {!Matrix} other
+ * @returns {!Matrix}
  */
 Matrix.prototype.tensorProduct = function (other) {
     var m = this;
@@ -262,11 +262,11 @@ Matrix.prototype.tensorProduct = function (other) {
  * rotation is a half-turn around the X+Z axis and the resulting operation is the Hadamard operation
  * {{1, 1}, {1, -1}}/√2.
  *
- * @param {number} x The x component of the rotation vector.
- * @param {number} y The y component of the rotation vector.
- * @param {number} z The z component of the rotation vector.
+ * @param {!number} x The x component of the rotation vector.
+ * @param {!number} y The y component of the rotation vector.
+ * @param {!number} z The z component of the rotation vector.
  *
- * @returns {Matrix}
+ * @returns {!Matrix}
  */
 Matrix.fromRotation = function (x, y, z) {
     var sinc = function(t) {
@@ -292,9 +292,9 @@ Matrix.fromRotation = function (x, y, z) {
 
 /**
  * Returns a matrix for an n-wire circuit that swaps wires i and j.
- * @param {int} numWires
- * @param {int} swapWire1
- * @param {int} swapWire2
+ * @param {!int} numWires
+ * @param {!int} swapWire1
+ * @param {!int} swapWire2
  */
 Matrix.fromWireSwap = function(numWires, swapWire1, swapWire2) {
     return Matrix.generate(1 << numWires, 1 << numWires, function(r, c) {
@@ -313,7 +313,7 @@ Matrix.fromWireSwap = function(numWires, swapWire1, swapWire2) {
 /**
  * Returns the identity matrix, with 1s on the main diagonal and all other entries zero.
  * @param size The dimension of the returned identity matrix.
- * @returns {Matrix}
+ * @returns {!Matrix}
  */
 Matrix.identity = function(size) {
     return Matrix.generate(size, size, function(r, c) {
@@ -324,13 +324,13 @@ Matrix.identity = function(size) {
 
 /**
  * A special complex value that the tensor product checks for in order to support controlled operations.
- * @type {Complex}
+ * @type {!Complex}
  */
 Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE = new Complex(1, 0);
 
 /**
  * A marked complex zero that the tensor product propagates, so large empty areas can be grayed out when drawing.
- * @type {Complex}
+ * @type {!Complex}
  */
 Matrix.__TENSOR_SYGIL_COMPLEX_ZERO = Complex.from(0);
 
@@ -339,7 +339,7 @@ Matrix.__TENSOR_SYGIL_COMPLEX_ZERO = Complex.from(0);
  *
  * Implemented as a matrix [[C, 0], [0, 1]], where C is a special value that causes a 1 to end up on the diagonal of the
  * expanded matrix and 0 otherwise.
- * @type {Matrix}
+ * @type {!Matrix}
  */
 Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
                                 Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, 1]);
@@ -349,31 +349,31 @@ Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE, Matri
  *
  * Implemented as a matrix [[1, 0], [0, C]], where C is a special value that causes a 1 to end up on the diagonal of the
  * expanded matrix and 0 otherwise.
- * @type {Matrix}
+ * @type {!Matrix}
  */
 Matrix.ANTI_CONTROL = Matrix.square([1, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
                                      Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE]);
 
 /**
  * The 2x2 Pauli X matrix.
- * @type {Matrix}
+ * @type {!Matrix}
  */
 Matrix.PAULI_X = Matrix.square([0, 1, 1, 0]);
 
 /**
  * The 2x2 Pauli Y matrix.
- * @type {Matrix}
+ * @type {!Matrix}
  */
 Matrix.PAULI_Y = Matrix.square([0, new Complex(0, -1), new Complex(0, 1), 0]);
 
 /**
  * The 2x2 Pauli Z matrix.
- * @type {Matrix}
+ * @type {!Matrix}
  */
 Matrix.PAULI_Z = Matrix.square([1, 0, 0, -1]);
 
 /**
  * The 2x2 Hadamard matrix.
- * @type {Matrix}
+ * @type {!Matrix}
  */
 Matrix.HADAMARD = Matrix.square([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));

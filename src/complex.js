@@ -1,9 +1,9 @@
 /**
  * A Complex number of the form a + bi, where i is the square root of -1.
- * @param {number} real The real part of the Complex number. The 'a' in a + bi.
- * @param {number} imag The imaginary part of the Complex number. The 'b' in a + bi.
- * @property {number} real
- * @property {number} imag
+ * @param {!number} real The real part of the Complex number. The 'a' in a + bi.
+ * @param {!number} imag The imaginary part of the Complex number. The 'b' in a + bi.
+ * @property {!number} real
+ * @property {!number} imag
  * @class
  */
 function Complex(real, imag) {
@@ -13,8 +13,8 @@ function Complex(real, imag) {
 
 /**
  * Wraps the given number into a Complex value (unless it's already a Complex value).
- * @param {number|Complex} v
- * @returns {Complex)
+ * @param {!number|!Complex} v
+ * @returns {!Complex)
  */
 Complex.from = function (v) {
     if (v instanceof Complex) {
@@ -28,10 +28,10 @@ Complex.from = function (v) {
 
 /**
  * Returns the real component of a Complex, integer, or float value.
- * @param {number|Complex} v
- * @returns {number)
+ * @param {!number|!Complex} v
+ * @returns {!number}
  */
-Complex.real = function (v) {
+Complex.realPartOf = function (v) {
     if (v instanceof Complex) {
         return v.real;
     }
@@ -43,10 +43,10 @@ Complex.real = function (v) {
 
 /**
  * Returns the imaginary component of a Complex value, or else 0 for integer and float values.
- * @param {number|Complex} v
- * @returns {number)
+ * @param {!number|!Complex} v
+ * @returns {!number}
  */
-Complex.imag = function (v) {
+Complex.imagPartOf = function (v) {
     if (v instanceof Complex) {
         return v.imag;
     }
@@ -59,8 +59,8 @@ Complex.imag = function (v) {
 /**
  * Determines if the receiving complex value is equal to the given complex, integer, or float value.
  * This method returns false, instead of throwing, when given badly typed arguments.
- * @param {number|Complex|object} other
- * @returns {boolean}
+ * @param {!number|!Complex|*} other
+ * @returns {!boolean}
  */
 Complex.prototype.isEqualTo = function (other) {
     if (other instanceof Complex) {
@@ -74,7 +74,7 @@ Complex.prototype.isEqualTo = function (other) {
 
 /**
  * Returns a compact text representation of the receiving complex value.
- * @returns {String}
+ * @returns {!string}
  */
 Complex.prototype.toString = function () {
     var epsilon = 0.00000001;
@@ -116,7 +116,7 @@ Complex.prototype.toString = function () {
 
 /**
  * Returns the squared euclidean length of the receiving complex value.
- * @returns {number}
+ * @returns {!number}
  */
 Complex.prototype.norm2 = function () {
     return this.real * this.real + this.imag * this.imag;
@@ -124,7 +124,7 @@ Complex.prototype.norm2 = function () {
 
 /**
  * Returns the euclidean length of the receiving complex value.
- * @returns {number}
+ * @returns {!number}
  */
 Complex.prototype.abs = function () {
     return Math.sqrt(this.norm2());
@@ -132,7 +132,7 @@ Complex.prototype.abs = function () {
 
 /**
  * Returns the complex conjugate of the receiving complex value, with the same real part but a negated imaginary part.
- * @returns {Complex}
+ * @returns {!Complex)
  */
 Complex.prototype.conjugate = function () {
     return new Complex(this.real, -this.imag);
@@ -141,7 +141,7 @@ Complex.prototype.conjugate = function () {
 /**
  * Returns the angle, in radians, of the receiving complex value with 0 being +real-ward and τ/4 being +imag-ward.
  * Zero defaults to having a phase of zero.
- * @returns {number}
+ * @returns {!number}
  */
 Complex.prototype.phase = function () {
     return Math.atan2(this.imag, this.real);
@@ -150,7 +150,7 @@ Complex.prototype.phase = function () {
 /**
  * Returns a unit complex value parallel to the receiving complex value.
  * Zero defaults to having the unit vector 1+0i.
- * @returns {Complex}
+ * @returns {!Complex)
  */
 Complex.prototype.unit = function () {
     var m = this.norm2();
@@ -163,8 +163,8 @@ Complex.prototype.unit = function () {
 
 /**
  * Returns the sum of the receiving complex value plus the given value.
- * @param {number|Complex} v
- * @returns {Complex)
+ * @param {!number|!Complex} v
+ * @returns {!Complex)
  */
 Complex.prototype.plus = function (v) {
     var c = Complex.from(v);
@@ -173,8 +173,8 @@ Complex.prototype.plus = function (v) {
 
 /**
  * Returns the difference from the receiving complex value to the given value.
- * @param {number|Complex} v
- * @returns {Complex)
+ * @param {!number|!Complex} v
+ * @returns {!Complex)
  */
 Complex.prototype.minus = function (v) {
     var c = Complex.from(v);
@@ -183,8 +183,8 @@ Complex.prototype.minus = function (v) {
 
 /**
  * Returns the product of the receiving complex value times the given value.
- * @param {number|Complex} v
- * @returns {Complex)
+ * @param {!number|!Complex} v
+ * @returns {!Complex)
  */
 Complex.prototype.times = function (v) {
     var c = Complex.from(v);
@@ -195,8 +195,8 @@ Complex.prototype.times = function (v) {
 
 /**
  * Returns the ratio of the receiving complex value to the given value.
- * @param {number|Complex} v
- * @returns {Complex)
+ * @param {!number|!Complex} v
+ * @returns {!Complex)
  */
 Complex.prototype.dividedBy = function (v) {
     var c = Complex.from(v);
@@ -209,12 +209,12 @@ Complex.prototype.dividedBy = function (v) {
 
 /**
  * The complex number equal to zero.
- * @type {Complex}
+ * @type {!Complex)
  */
 Complex.ZERO = new Complex(0, 0);
 
 /**
  * The square root of negative 1.
- * @type {Complex}
+ * @type {!Complex)
  */
 Complex.I = new Complex(0, 1);

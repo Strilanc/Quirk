@@ -1,10 +1,16 @@
 /**
  * A named single-qubit quantum operation.
  *
- * @param {string} symbol The text shown inside the gate's box when drawn on the circuit.
- * @param {Matrix} matrix The operation the gate applies.
- * @param {string} name A helpful human-readable name for the operation.
- * @param {string} description A helpful description of what the operation does.
+ * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
+ * @param {!Matrix} matrix The operation the gate applies.
+ * @param {!string} name A helpful human-readable name for the operation.
+ * @param {!string} description A helpful description of what the operation does.
+ *
+ * @property {!string} symbol
+ * @property {!Matrix} matrix
+ * @property {!string} name
+ * @property {!string} description
+ *
  * @constructor
  */
 function Gate(symbol, matrix, name, description) {
@@ -15,14 +21,14 @@ function Gate(symbol, matrix, name, description) {
 }
 
 /**
- * @returns {string}
+ * @returns {!string}
  */
 Gate.prototype.toString = function() {
     return this.name;
 };
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.CONTROL = new Gate(
     "•",
@@ -37,7 +43,7 @@ Gate.CONTROL = new Gate(
     "superposition control qubit is on.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.ANTI_CONTROL = new Gate(
     "◦",
@@ -52,7 +58,7 @@ Gate.ANTI_CONTROL = new Gate(
 /**
  * A visualization gate with no effect.
  *
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.PEEK = new Gate(
     "Peek",
@@ -70,7 +76,7 @@ Gate.PEEK = new Gate(
     "convenient.)");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.DOWN = new Gate(
     "↓",
@@ -84,7 +90,7 @@ Gate.DOWN = new Gate(
     "gate.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.UP = new Gate(
     "↑",
@@ -99,7 +105,7 @@ Gate.UP = new Gate(
     "equivalent to a NOT). The Up gate is the inverse of the Down gate.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.X = new Gate(
     "X",
@@ -113,7 +119,7 @@ Gate.X = new Gate(
     "the amplitudes within each pair.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.RIGHT = new Gate(
     "→",
@@ -126,7 +132,7 @@ Gate.RIGHT = new Gate(
     "Y gate. The Right gate is the inverse of the Left gate.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.LEFT = new Gate(
     "←",
@@ -139,7 +145,7 @@ Gate.LEFT = new Gate(
     "Y gate. The Left gate is the inverse of the Right gate.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.Y = new Gate(
     "Y",
@@ -152,7 +158,7 @@ Gate.Y = new Gate(
     "but with an extra 90 degree global phase twist. The Y its own inverse.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.COUNTER_CLOCKWISE = new Gate(
     "↺",
@@ -165,7 +171,7 @@ Gate.COUNTER_CLOCKWISE = new Gate(
     "Clockwise Phase gate.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.CLOCKWISE = new Gate(
     "↻",
@@ -177,7 +183,7 @@ Gate.CLOCKWISE = new Gate(
     "gate. It is the inverse of the Counter Phase gate.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.Z = new Gate(
     "Z",
@@ -190,7 +196,7 @@ Gate.Z = new Gate(
     "target qubit is ON.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.H = new Gate(
     "H",
@@ -207,7 +213,7 @@ Gate.H = new Gate(
     "X+Z diagonal axis of the Block Sphere, and is its own inverse.");
 
 /**
- * @type {Gate}
+ * @type {!Gate}
  */
 Gate.SWAP_HALF = new Gate(
     "Swap",
@@ -221,14 +227,14 @@ Gate.SWAP_HALF = new Gate(
     "(You must place two swap gate halves in a column to do a swap.)");
 
 /**
- * @type {string}
+ * @type {!string}
  */
 Gate.DRAW_MATRIX_SYMBOL = "\\__SPECIAL_SYMBOL__DRAW_MATRIX";
 
 /**
- * @param {number} fraction
- * @param {string} symbol
- * @returns {Gate}
+ * @param {!number} fraction
+ * @param {!string} symbol
+ * @returns {!Gate}
  */
 Gate.fromPhaseRotation = function(fraction, symbol) {
     var mod = function(n, d) { return ((n % d) + d) % d; };
@@ -254,11 +260,11 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
 };
 
 /**
- * @param {number} x
- * @param {number} y
- * @param {number} z
+ * @param {!number} x
+ * @param {!number} y
+ * @param {!number} z
  * @param {=string} symbol
- * @returns {Gate}
+ * @returns {!Gate}
  */
 Gate.fromRotation = function(x, y, z, symbol) {
     if (x == 0 && y == 0) {
@@ -275,8 +281,8 @@ Gate.fromRotation = function(x, y, z, symbol) {
 };
 
 /**
- * @param {Matrix} matrix
- * @returns {Gate}
+ * @param {!Matrix} matrix
+ * @returns {!Gate}
  */
 Gate.fromCustom = function(matrix) {
     return new Gate(
@@ -289,10 +295,10 @@ Gate.fromCustom = function(matrix) {
 /**
  * A column of gates in a circuit with many qubits.
  *
- * @param {(Gate|null)[]} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
+ * @param {!Array.<?Gate>} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
  * Wires without a gate in this column should use null instead.
  *
- * @property {(Gate|null)[]} gates
+ * @property {!Array.<?Gate>} gates
  * @constructor
  */
 function GateColumn(gates) {
@@ -300,8 +306,8 @@ function GateColumn(gates) {
 }
 
 /**
- * @param {number} size
- * @returns {GateColumn}
+ * @param {!int} size
+ * @returns {!GateColumn}
  */
 GateColumn.empty = function(size) {
     var gates = [];
@@ -312,7 +318,7 @@ GateColumn.empty = function(size) {
 };
 
 /**
- * @returns {boolean}
+ * @returns {!boolean}
  */
 GateColumn.prototype.isEmpty = function() {
     return this.gates.every(function(e) { return e === null; });
@@ -320,7 +326,7 @@ GateColumn.prototype.isEmpty = function() {
 
 /**
  * Returns the matrix corresponding to the parallel applications of the operations in this circuit column.
- * @returns {Matrix}
+ * @returns {!Matrix}
  */
 GateColumn.prototype.matrix = function() {
     var ops = [];
@@ -333,7 +339,7 @@ GateColumn.prototype.matrix = function() {
             swapIndices.push(i);
             op = Matrix.identity(2);
         } else {
-            op = this.gates[i].matrix;;
+            op = this.gates[i].matrix;
         }
         ops.push(op);
     }
@@ -347,8 +353,8 @@ GateColumn.prototype.matrix = function() {
 
 /**
  * Returns the result of applying this circuit column to the given state.
- * @param {Matrix} state A column matrix of the correct size.
- * @returns {Matrix}
+ * @param {!Matrix} state A column matrix of the correct size.
+ * @returns {!Matrix}
  */
 GateColumn.prototype.transform = function(state) {
     return this.matrix().times(state);

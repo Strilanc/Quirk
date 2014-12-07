@@ -1,68 +1,44 @@
 var canvas = document.getElementById("drawCanvas");
 if (canvas !== null) {
-    /**
-     * @type {Painter}
-     */
+    /** @type {!Painter} */
     var painter = new Painter(canvas.getContext("2d"));
 
-    /**
-     * @type {int}
-     */
+    /** @type {!int} */
     var numWires = 4;
 
     // --- Layout Constants ---
-    /**
-     * @type {number}
-     */
+    /** @type {!number} */
     var gateRadius = 20;
-    /**
-     * @type {number}
-     */
+    /** @type {!number} */
     var circuitOperationHorizontalSpacing = 10;
-    /**
-     * @type {GateColumn[]}
-     */
+    /** @type {!Array.<!GateColumn>} */
     var circuitOperationColumns = [];
 
-    /**
-     * @type {number}
-     */
+    /** @type {!number} */
     var TOOLBOX_HEIGHT = 4 * (gateRadius*2 + 2) - gateRadius;
 
-    /**
-     * @type {Rect}
-     */
+    /** @type {!Rect} */
     var CIRCUIT_AREA = new Rect(0, TOOLBOX_HEIGHT + 2, canvas.width, 201);
-    /**
-     * @type {number}
-     */
+    /** @type {!number} */
     var STATE_DRAW_Y = CIRCUIT_AREA.bottom() + 2;
-    /**
-     * @type {number}
-     */
+    /** @type {!number} */
     var STATE_DRAW_H = canvas.height - STATE_DRAW_Y;
 
-    /**
-     * @type {Rect}
-     */
+    /** @type {!Rect} */
     var OPERATION_HINT_AREA = new Rect(
         0,
         STATE_DRAW_Y,
         STATE_DRAW_H,
         STATE_DRAW_H);
 
-    /**
-     * @type {Rect}
-     */
+    /** @type {!Rect} */
     var INTERMEDIATE_STATE_HINT_AREA = new Rect(
         OPERATION_HINT_AREA.right() + 5,
         STATE_DRAW_Y,
         STATE_DRAW_H,
         STATE_DRAW_H);
 
-    /**
-     * @type {Rect}
-     */
+    /** @type {!Rect} */
     var OUTPUT_STATE_HINT_AREA = new Rect(
         canvas.width - STATE_DRAW_H,
         STATE_DRAW_Y,
@@ -70,8 +46,8 @@ if (canvas !== null) {
         STATE_DRAW_H);
 
     /**
-     * @param {int} i
-     * @returns {string}
+     * @param {!int} i
+     * @returns {!string}
      */
     var makeBitLabel = function(i) {
         if (i == 0) return "A1";
@@ -83,9 +59,9 @@ if (canvas !== null) {
 
 // --- Math and Circuits ---
     /**
-     * @param {Matrix} input
-     * @param {GateColumn[]} operations
-     * @returns {Matrix}
+     * @param {!Matrix} input
+     * @param {!Array.<!GateColumn>} operations
+     * @returns {!Matrix}
      */
     var transformVectorWithOperations = function (input, operations) {
         for (var i = 0; i < operations.length; i++) {
@@ -95,45 +71,35 @@ if (canvas !== null) {
     };
 
 // --- Define toolbox gate types ---
-    /**
-     * @type {Gate}
-     */
+    /** @type {!Gate} */
     var spinR = new Gate(
         "R(t)",
         Matrix.identity(2),
         "Evolving Rotation Gate",
         "A rotation gate where the angle of rotation increases and cycles over\n" +
         "time.");
-    /**
-     * @type {Gate}
-     */
+    /** @type {!Gate} */
     var spinH = new Gate(
         "H(t)",
         Matrix.identity(2),
         "Evolving Hadamard Gate",
         "Smoothly interpolates from no-op to the Hadamard gate and back over\n" +
         "time. A continuous rotation around the X+Z axis of the Block Sphere.");
-    /**
-     * @type {Gate}
-     */
+    /** @type {!Gate} */
     var spinX = new Gate(
         "X(t)",
         Matrix.identity(2),
         "Evolving X Gate",
         "Smoothly interpolates from no-op to the Pauli X gate and back over\n" +
         "time. A continuous rotation around the X axis of the Block Sphere.");
-    /**
-     * @type {Gate}
-     */
+    /** @type {!Gate} */
     var spinY = new Gate(
         "Y(t)",
         Matrix.identity(2),
         "Evolving Y Gate",
         "Smoothly interpolates from no-op to the Pauli Y gate and back over\n" +
         "time. A continuous rotation around the Y axis of the Block Sphere.");
-    /**
-     * @type {Gate}
-     */
+    /** @type {!Gate} */
     var spinZ = new Gate(
         "Z(t)",
         Matrix.identity(2),
@@ -141,14 +107,10 @@ if (canvas !== null) {
         "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
         "time. A phase gate where the phase angle increases and cycles over\n" +
         "time. A continuous rotation around the Z axis of the Block Sphere.");
-    /**
-     * @type {Gate[]}
-     */
+    /** @type {!Array.<!Gate>} */
     var timeVaryingGates = [spinX, spinY, spinZ, spinR, spinH];
 
-    /**
-     * @type {{hint: string, gates: Gate[]}[]}
-     */
+    /** @type {!Array.<!{hint: !string, gates: !Array.<!Gate>}>} */
     var gateSet = [
         {
             hint: "Special",
@@ -213,9 +175,9 @@ if (canvas !== null) {
         return s * (index + 1);
     };
     /**
-     * @param {number} x
-     * @param {number} y
-     * @param {GateColumn[]} circuitCols
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!Array.<!GateColumn>} circuitCols
      * @returns {{ col : number, row : number, inExisting : boolean }}
      */
     var posToColumnIndexAndInsertSuggestion = function (x, y, circuitCols) {
@@ -247,20 +209,16 @@ if (canvas !== null) {
     };
 
 // --- State ---
-    /**
-     * @type {{x: number, y: number}}
-     */
+    /** @type {!{x: !number, y: !number}} */
     var latestMousePos = {x: 0, y: 0};
-    /**
-     * @type {null|{ gate: Gate, col: (number|null), row: (number|null) }}
-     */
+    /** @type {?{ gate: !Gate, col: (?number), row: (?number) }} */
     var held = null;
     var isTapping = false;
     var wasTapping = false;
 
     /**
-     * @param {{x: number, y: number}} p
-     * @param {Gate} g
+     * @param {!{x: !number, y: !number}} p
+     * @param {!Gate} g
      */
     var drawFloatingGate = function (p, g) {
         var b = Rect.centeredSquareWithRadius(p, gateRadius);
@@ -270,8 +228,8 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {{x: number, y: number}} p
-     * @param {Gate} g
+     * @param {!{x: !number, y: !number}} p
+     * @param {!Gate} g
      */
     var drawGateSymbol = function(p, g) {
         if (g.symbol === Gate.DRAW_MATRIX_SYMBOL) {
@@ -287,8 +245,8 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {{x: number, y: number}} p
-     * @param {Gate} g
+     * @param {!{x: !number, y: !number}} p
+     * @param {!Gate} g
      */
     var drawToolboxGate = function (p, g) {
         var b = Rect.centeredSquareWithRadius(p, gateRadius);
@@ -298,8 +256,8 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {{x: number, y: number}} p
-     * @param {Gate} g
+     * @param {!{x: !number, y: !number}} p
+     * @param {!Gate} g
      */
     var drawToolboxGateHintIfHovering = function (p, g) {
         var b = Rect.centeredSquareWithRadius(p, gateRadius);
@@ -349,8 +307,8 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {GateColumn} gateColumn
-     * @param {int} columnIndex
+     * @param {!GateColumn} gateColumn
+     * @param {!int} columnIndex
      */
     var drawColumnControlWires = function(gateColumn, columnIndex) {
         var hasControls = gateColumn.gates.indexOf(Gate.CONTROL) > -1;
@@ -379,10 +337,10 @@ if (canvas !== null) {
      * Returns the probability of controls on a column being satisfied and a wire being ON,
      * if that was measured.
      *
-     * @param {GateColumn} gateColumn
-     * @param {int} targetWire
-     * @param {Matrix} columnState
-     * @returns {{conditional: number, total: number, canDiffer: boolean}}
+     * @param {!GateColumn} gateColumn
+     * @param {!int} targetWire
+     * @param {!Matrix} columnState
+     * @returns {!{conditional: !number, total: !number, canDiffer: !boolean}}
      */
     var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
         var expectedMask = 0;
@@ -403,9 +361,9 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {GateColumn} gateColumn
-     * @param {int} columnIndex
-     * @param {Matrix} columnState A complex column vector.
+     * @param {!GateColumn} gateColumn
+     * @param {!int} columnIndex
+     * @param {!Matrix} columnState A complex column vector.
      */
     var drawCircuitOperation = function (gateColumn, columnIndex, columnState) {
 
@@ -416,10 +374,13 @@ if (canvas !== null) {
         for (var i = 0; i < gateColumn.gates.length; i++) {
             var cy = wireIndexToY(i);
             var b = Rect.centeredSquareWithRadius({x: x, y: cy}, gateRadius);
-            var gate = gateColumn.gates[i];
-            if (gate === null) {
+
+            if (gateColumn.gates[i] === null) {
                 continue;
             }
+            //noinspection JSValidateTypes
+            /** @type {!Gate} */
+            var gate = gateColumn.gates[i];
 
             var isHolding = held !== null && held.col === columnIndex && held.row === i;
             var canGrab = b.containsPoint(latestMousePos) && held === null && !isTapping;
@@ -431,8 +392,8 @@ if (canvas !== null) {
             var doDrawGateBox = isHolding || canGrab || !isModifier;
             if (doDrawGateBox) {
                 painter.fillRect(b, highlightGate ? "orange" : "white");
-            painter.strokeRect(b);
-        }
+                painter.strokeRect(b);
+            }
             if (gate === Gate.PEEK) {
                 var p = measureGateColumnProbabilityOn(gateColumn, i, columnState);
                 if (p.canDiffer) {
@@ -459,8 +420,8 @@ if (canvas !== null) {
         }
     };
     /**
-     * @param {Matrix} inputState
-     * @param {GateColumn[]} gateColumns
+     * @param {!Matrix} inputState
+     * @param {!Array.<!GateColumn>} gateColumns
      */
     var drawCircuit = function (inputState, gateColumns) {
         for (var i = 0; i < numWires; i++) {
@@ -479,9 +440,9 @@ if (canvas !== null) {
      *
      * Note that wire probabilities are not independent in general. Wires may be correlated.
      *
-     * @param {int} wireExpectedMask The bits of this number determine the desired wire values.
-     * @param {int} wireRequiredMask The set bits of this number determine which wire values to check.
-     * @param {Matrix} state A complex column vector.
+     * @param {!int} wireExpectedMask The bits of this number determine the desired wire values.
+     * @param {!int} wireRequiredMask The set bits of this number determine which wire values to check.
+     * @param {!Matrix} state A complex column vector.
      */
     var measureProbability = function(wireExpectedMask, wireRequiredMask, state) {
         var t = 0;
@@ -494,10 +455,10 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {int} wireTarget
-     * @param {int} wireExpectedMask
-     * @param {int} wireRequiredMask
-     * @param {Matrix} state
+     * @param {!int} wireTarget
+     * @param {!int} wireExpectedMask
+     * @param {!int} wireRequiredMask
+     * @param {!Matrix} state
      */
     var measureConditionalProbability = function(wireTarget, wireExpectedMask, wireRequiredMask, state) {
         var t_off = 0;
@@ -515,8 +476,8 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {number} x
-     * @param {Matrix} outputState
+     * @param {!number} x
+     * @param {!Matrix} outputState
      */
     var drawSingleWireProbabilities = function (x, outputState) {
         for (var i = 0; i < numWires; i++) {
@@ -526,8 +487,8 @@ if (canvas !== null) {
     };
 
     /**
-     * @param {GateColumn[]} operations
-     * @param {Rect} drawRect
+     * @param {!Array.<!GateColumn>} operations
+     * @param {!Rect} drawRect
      */
     var drawOutputAfter = function (operations, drawRect) {
         var input = makeInputVector();
@@ -704,7 +665,7 @@ if (canvas !== null) {
 
     var ts = 0;
     /**
-     * @returns {Matrix}
+     * @returns {!Matrix}
      */
     var makeInputVector = function () {
         return Matrix.col([1, 0]).tensorPower(numWires);
