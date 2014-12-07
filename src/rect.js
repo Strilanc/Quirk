@@ -235,6 +235,14 @@ Rect.prototype.containsPoint = function(p) {
 };
 
 /**
+ * @param {number} proportion
+ * @returns {Rect}
+ */
+Rect.prototype.takeLeftProportion = function(proportion) {
+    return this.takeLeft(this.w * proportion);
+};
+
+/**
  * @returns {Rect}
  */
 Rect.prototype.topHalf = function() {

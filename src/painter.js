@@ -240,3 +240,52 @@ Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
 
     this.strokeGrid(topLeftCell, numDrawCols, numDrawRows);
 };
+
+/**
+ * @param {number} probability
+ * @param {Rect} drawArea
+ */
+Painter.prototype.paintProbabilityBox = function (probability, drawArea) {
+    var w = drawArea.w * probability;
+    this.fillRect(drawArea);
+    this.fillRect(drawArea.takeLeft(w), "gray");
+    this.strokeRect(drawArea);
+    this.printCenteredText((probability*100).toFixed(1) + "%", drawArea.center());
+};
+
+/**
+ * @param {number} probabilityIncludingConditions
+ * @param {number} probabilityGivenConditions
+ * @param {Rect} drawArea
+ */
+Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncludingConditions,
+                                                            probabilityGivenConditions,
+                                                            drawArea) {
+    this.fillRect(drawArea);
+    this.strokeRect(drawArea);
+    var topPrintPos = {x: drawArea.x, y: drawArea.y + 15};
+    var s;
+    if (probabilityIncludingConditions === 0) {
+        // Draw bad-value triangle
+        var ps = [drawArea.topLeft(), drawArea.centerRight(), drawArea.centerLeft()];
+        this.ctx.beginPath();
+        this.ctx.moveTo(ps[0].x, ps[0].y);
+        this.ctx.lineTo(ps[1].x, ps[1].y);
+        this.ctx.lineTo(ps[2].x, ps[2].y);
+        this.ctx.lineTo(ps[0].x, ps[0].y);
+        this.ctx.fillStyle = "gray";
+        this.ctx.fill();
+        s = "N/A";
+    } else {
+        this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityGivenConditions), "gray");
+        s = Math.round(probabilityGivenConditions*100) + "%";
+    }
+
+    this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityIncludingConditions), "gray");
+    this.printText(
+        "|:" + s,
+        {x: topPrintPos.x + 7, y: topPrintPos.y});
+    this.printText(
+        "∧:" + Math.round(probabilityIncludingConditions*100) + "%",
+        {x: topPrintPos.x, y: topPrintPos.y + drawArea.h/2});
+};

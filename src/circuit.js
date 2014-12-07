@@ -431,11 +431,15 @@ if (canvas !== null) {
             var doDrawGateBox = isHolding || canGrab || !isModifier;
             if (doDrawGateBox) {
                 painter.fillRect(b, highlightGate ? "orange" : "white");
-                painter.strokeRect(b);
-            }
+            painter.strokeRect(b);
+        }
             if (gate === Gate.PEEK) {
                 var p = measureGateColumnProbabilityOn(gateColumn, i, columnState);
-                drawProbabilityBox(b, p.conditional, p.total, p.canDiffer);
+                if (p.canDiffer) {
+                    painter.paintConditionalProbabilityBox(p.total, p.conditional, b);
+                } else {
+                    painter.paintProbabilityBox(p.total, b);
+                }
             } else if (gate == Gate.SWAP_HALF) {
                 if (hasTwoSwaps) {
                     var swapRect = Rect.centeredSquareWithRadius({x: x, y: cy}, gateRadius/2);
@@ -467,45 +471,6 @@ if (canvas !== null) {
         for (var i2 = 0; i2 < gateColumns.length; i2++) {
             inputState = gateColumns[i2].matrix().times(inputState);
             drawCircuitOperation(gateColumns[i2], i2, inputState);
-        }
-    };
-
-    /**
-     * @param {Rect} rect
-     * @param {number} conditional_probability
-     * @param {number} intersection_probability
-     * @param {boolean} can_differ
-     */
-    var drawProbabilityBox = function (rect, conditional_probability, intersection_probability, can_differ) {
-        painter.fillRect(rect);
-        painter.strokeRect(rect);
-        if (!can_differ) {
-            var w = rect.w * conditional_probability;
-            painter.fillRect(rect.takeLeft(w), "gray");
-            painter.printCenteredText((conditional_probability*100).toFixed(1) + "%", rect.center());
-        } else {
-            if (isNaN(conditional_probability)) {
-                painter.ctx.beginPath();
-                painter.ctx.moveTo(rect.x, rect.y);
-                painter.ctx.lineTo(rect.x + rect.w, rect.y + rect.h/2);
-                painter.ctx.lineTo(rect.x, rect.y + rect.h/2);
-                painter.ctx.lineTo(rect.x, rect.y);
-                painter.ctx.fillStyle = "gray";
-                painter.ctx.fill();
-                painter.strokeLine(rect.topLeft(), rect.centerRight());
-                painter.printText("|:N/A", {x: rect.x + 2, y: rect.y + 15}, undefined, 10);
-            } else {
-                var w1 = rect.w * conditional_probability;
-                painter.fillRect(rect.topHalf().takeLeft(w1), "gray");
-                painter.printText(" |:" + Math.round(conditional_probability*100) + "%",
-                    {x: rect.x + 2, y: rect.y + 15},
-                    undefined,
-                    10);
-            }
-            var w2 = rect.w * intersection_probability;
-            painter.fillRect(rect.bottomHalf().takeLeft(w2), "gray");
-            painter.printText("∧:" + Math.round(intersection_probability*100) + "%",
-                {x: rect.x + 2, y: rect.y + rect.h/2 + 15});
         }
     };
 
@@ -556,7 +521,7 @@ if (canvas !== null) {
     var drawSingleWireProbabilities = function (x, outputState) {
         for (var i = 0; i < numWires; i++) {
             var p = measureProbability(1 << i, 1 << i, outputState);
-            drawProbabilityBox(Rect.centeredSquareWithRadius({x: x + 25, y: wireIndexToY(i)}, gateRadius), p, p, false);
+            painter.paintProbabilityBox(p, Rect.centeredSquareWithRadius({x: x + 25, y: wireIndexToY(i)}, gateRadius));
         }
     };
 

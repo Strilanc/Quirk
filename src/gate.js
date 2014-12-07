@@ -291,6 +291,8 @@ Gate.fromCustom = function(matrix) {
  *
  * @param {(Gate|null)[]} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
  * Wires without a gate in this column should use null instead.
+ *
+ * @property {(Gate|null)[]} gates
  * @constructor
  */
 function GateColumn(gates) {
