@@ -1,7 +1,6 @@
 var canvas = document.getElementById("drawCanvas");
 if (canvas !== null) {
     var numWires = 4;
-    var numStates = 1 << numWires;
 
     var ctx = canvas.getContext("2d");
     var painter = new Painter(ctx);
@@ -44,7 +43,7 @@ if (canvas !== null) {
         if (i == 2) return "B1";
         if (i == 3) return "B2";
         return "bit" + i;
-    }
+    };
 
 // --- Math and Circuits ---
     /**
@@ -101,8 +100,8 @@ if (canvas !== null) {
             hint: "Special",
             gates: [
                 Gate.CONTROL,
+                Gate.SWAP_HALF,
                 Gate.PEEK,
-                null,
                 Gate.ANTI_CONTROL
             ]
         },
@@ -221,19 +220,15 @@ if (canvas !== null) {
      * @param {Gate} g
      */
     var drawGateSymbol = function(x, y, g) {
-        if (g.symbol === "\\∡") {
-            painter.printCenteredText(g.symbol, x, y);
-        } if (g.symbol === "\\⊹") {
+        if (g.symbol === Gate.DRAW_MATRIX_SYMBOL) {
             drawMatrix(Rect.centeredSquareWithRadius(x, y, gateRadius), g.matrix)
-        } else if (g.symbol === "\\•") {
+        } else if (g === Gate.CONTROL) {
+            painter.fillCircle({x: x, y: y}, 5, "black");
+        } else if (g === Gate.ANTI_CONTROL) {
             var c = {x: x, y: y};
             var r = 5;
-            if (g.matrix === Matrix.ANTI_CONTROL) {
-                painter.fillCircle(c, r);
-                painter.strokeCircle(c, r);
-            } else {
-                painter.fillCircle(c, r, "black");
-            }
+            painter.fillCircle(c, r);
+            painter.strokeCircle(c, r);
         } else {
             painter.printCenteredText(g.symbol, x, y);
         }
@@ -306,12 +301,11 @@ if (canvas !== null) {
      * @param {int} columnIndex
      */
     var drawColumnControlWires = function(gateColumn, columnIndex) {
-        var nonNullGates = gateColumn.gates.filter(function(e) { return e !== null; });
-        var controls = nonNullGates.filter(function(e) { return e.symbol === "\\•"; });
+        var hasControls = gateColumn.gates.indexOf(Gate.CONTROL) > -1;
+        var hasAntiControls = gateColumn.gates.indexOf(Gate.ANTI_CONTROL) > -1;
+        var hasSwaps = gateColumn.gates.indexOf(Gate.SWAP_HALF) > -1;
 
-        var hasControls = controls.length > 0;
-        var hasOthers = controls.length < nonNullGates.length;
-        if (!hasControls || !hasOthers) {
+        if (!hasControls && !hasAntiControls && !hasSwaps) {
             return;
         }
 
@@ -365,6 +359,7 @@ if (canvas !== null) {
 
         drawColumnControlWires(gateColumn, columnIndex);
         var x = operationIndexToX(columnIndex);
+        var hasTwoSwaps = gateColumn.gates.filter(function(e) { return e === Gate.SWAP_HALF; }).length === 2;
 
         for (var i = 0; i < gateColumn.gates.length; i++) {
             var cy = wireIndexToY(i);
@@ -378,8 +373,10 @@ if (canvas !== null) {
             var canGrab = b.containsPoint({x: latestMouseX, y: latestMouseY}) && held === null && !isTapping;
             var didGrab = b.containsPoint({x: latestMouseX, y: latestMouseY}) && held === null && !wasTapping && isTapping;
             var highlightGate = isHolding || canGrab;
-            var isNotControl = gate.symbol !== "\\•";
-            var doDrawGateBox = isHolding || canGrab || isNotControl;
+            var isModifier = gate === Gate.CONTROL ||
+                gate === Gate.ANTI_CONTROL ||
+                (gate === Gate.SWAP_HALF && hasTwoSwaps);
+            var doDrawGateBox = isHolding || canGrab || !isModifier;
             if (doDrawGateBox) {
                 painter.fillRect(b, highlightGate ? "orange" : "white");
                 painter.strokeRect(b);
@@ -387,6 +384,15 @@ if (canvas !== null) {
             if (gate === Gate.PEEK) {
                 var p = measureGateColumnProbabilityOn(gateColumn, i, columnState);
                 drawProbabilityBox(b, p.conditional, p.total, p.canDiffer);
+            } else if (gate == Gate.SWAP_HALF) {
+                if (hasTwoSwaps) {
+                    var swapRect = Rect.centeredSquareWithRadius(x, cy, gateRadius/2);
+                    painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
+                    painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
+                } else {
+                    painter.printCenteredText("Swap", x, cy - 5);
+                    painter.printCenteredText("(Unpaired)", x, cy + 5, undefined, 8);
+                }
             } else {
                 drawGateSymbol(x, cy, gate);
             }
@@ -560,10 +566,10 @@ if (canvas !== null) {
         drawSingleWireProbabilities(canvas.width - gateRadius*2 - 10, output);
         var gridRect = drawRect.skipLeft(14).skipTop(14);
         drawState(gridRect, output);
-        painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w*1/4, drawRect.y + 8);
+        painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w/4, drawRect.y + 8);
         painter.printCenteredText(makeBitLabel(1), gridRect.x + gridRect.w*2/4, drawRect.y + 6);
         painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w*3/4, drawRect.y + 8);
-        painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h*1/4);
+        painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h/4);
         painter.printCenteredText(makeBitLabel(3), drawRect.x + 4, gridRect.y + gridRect.h*2/4);
         painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h*3/4);
     };
