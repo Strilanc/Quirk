@@ -41,6 +41,28 @@ ComplexTest.prototype.testToString = function() {
     assertEquals("2-3i", new Complex(2, -3).toString());
 };
 
+ComplexTest.prototype.testUnit = function() {
+    assertTrue(new Complex(0, 0).unit().isEqualTo(1));
+
+    assertTrue(new Complex(0.5, 0).unit().isEqualTo(1));
+    assertTrue(new Complex(1, 0).unit().isEqualTo(1));
+    assertTrue(new Complex(2, 0).unit().isEqualTo(1));
+
+    assertTrue(new Complex(-0.5, 0).unit().isEqualTo(-1));
+    assertTrue(new Complex(-1, 0).unit().isEqualTo(-1));
+    assertTrue(new Complex(-2, 0).unit().isEqualTo(-1));
+
+    assertTrue(new Complex(0, 0.5).unit().isEqualTo(Complex.I));
+    assertTrue(new Complex(0, 1).unit().isEqualTo(Complex.I));
+    assertTrue(new Complex(0, 2).unit().isEqualTo(Complex.I));
+
+    assertTrue(new Complex(0, -0.5).unit().isEqualTo(Complex.I.times(-1)));
+    assertTrue(new Complex(0, -1).unit().isEqualTo(Complex.I.times(-1)));
+    assertTrue(new Complex(0, -2).unit().isEqualTo(Complex.I.times(-1)));
+
+    assertTrue(new Complex(1, 1).unit().minus(new Complex(Math.sqrt(0.5), Math.sqrt(0.5))).norm2() < 0.0000001);
+};
+
 ComplexTest.prototype.testNorm2 = function() {
     assertEquals(0, new Complex(0, 0).norm2());
 

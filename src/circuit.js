@@ -1,42 +1,78 @@
 var canvas = document.getElementById("drawCanvas");
 if (canvas !== null) {
+    /**
+     * @type {Painter}
+     */
+    var painter = new Painter(canvas.getContext("2d"));
+
+    /**
+     * @type {int}
+     */
     var numWires = 4;
 
-    var ctx = canvas.getContext("2d");
-    var painter = new Painter(ctx);
-
     // --- Layout Constants ---
+    /**
+     * @type {number}
+     */
     var gateRadius = 20;
+    /**
+     * @type {number}
+     */
     var circuitOperationHorizontalSpacing = 10;
     /**
      * @type {GateColumn[]}
      */
     var circuitOperationColumns = [];
 
+    /**
+     * @type {number}
+     */
     var TOOLBOX_HEIGHT = 4 * (gateRadius*2 + 2) - gateRadius;
 
+    /**
+     * @type {Rect}
+     */
     var CIRCUIT_AREA = new Rect(0, TOOLBOX_HEIGHT + 2, canvas.width, 201);
+    /**
+     * @type {number}
+     */
     var STATE_DRAW_Y = CIRCUIT_AREA.bottom() + 2;
+    /**
+     * @type {number}
+     */
     var STATE_DRAW_H = canvas.height - STATE_DRAW_Y;
 
+    /**
+     * @type {Rect}
+     */
     var OPERATION_HINT_AREA = new Rect(
         0,
         STATE_DRAW_Y,
         STATE_DRAW_H,
         STATE_DRAW_H);
 
+    /**
+     * @type {Rect}
+     */
     var INTERMEDIATE_STATE_HINT_AREA = new Rect(
         OPERATION_HINT_AREA.right() + 5,
         STATE_DRAW_Y,
         STATE_DRAW_H,
         STATE_DRAW_H);
 
+    /**
+     * @type {Rect}
+     */
     var OUTPUT_STATE_HINT_AREA = new Rect(
         canvas.width - STATE_DRAW_H,
         STATE_DRAW_Y,
         STATE_DRAW_H,
         STATE_DRAW_H);
 
+    /**
+     * @param {int} i
+     * @returns {string}
+     */
     var makeBitLabel = function(i) {
         if (i == 0) return "A1";
         if (i == 1) return "A2";
@@ -59,30 +95,45 @@ if (canvas !== null) {
     };
 
 // --- Define toolbox gate types ---
+    /**
+     * @type {Gate}
+     */
     var spinR = new Gate(
         "R(t)",
         Matrix.identity(2),
         "Evolving Rotation Gate",
         "A rotation gate where the angle of rotation increases and cycles over\n" +
         "time.");
+    /**
+     * @type {Gate}
+     */
     var spinH = new Gate(
         "H(t)",
         Matrix.identity(2),
         "Evolving Hadamard Gate",
         "Smoothly interpolates from no-op to the Hadamard gate and back over\n" +
         "time. A continuous rotation around the X+Z axis of the Block Sphere.");
+    /**
+     * @type {Gate}
+     */
     var spinX = new Gate(
         "X(t)",
         Matrix.identity(2),
         "Evolving X Gate",
         "Smoothly interpolates from no-op to the Pauli X gate and back over\n" +
         "time. A continuous rotation around the X axis of the Block Sphere.");
+    /**
+     * @type {Gate}
+     */
     var spinY = new Gate(
         "Y(t)",
         Matrix.identity(2),
         "Evolving Y Gate",
         "Smoothly interpolates from no-op to the Pauli Y gate and back over\n" +
         "time. A continuous rotation around the Y axis of the Block Sphere.");
+    /**
+     * @type {Gate}
+     */
     var spinZ = new Gate(
         "Z(t)",
         Matrix.identity(2),
@@ -90,6 +141,9 @@ if (canvas !== null) {
         "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
         "time. A phase gate where the phase angle increases and cycles over\n" +
         "time. A continuous rotation around the Z axis of the Block Sphere.");
+    /**
+     * @type {Gate[]}
+     */
     var timeVaryingGates = [spinX, spinY, spinZ, spinR, spinH];
 
     /**
@@ -193,8 +247,10 @@ if (canvas !== null) {
     };
 
 // --- State ---
-    var latestMouseX = 0;
-    var latestMouseY = 0;
+    /**
+     * @type {{x: number, y: number}}
+     */
+    var latestMousePos = {x: 0, y: 0};
     /**
      * @type {null|{ gate: Gate, col: (number|null), row: (number|null) }}
      */
@@ -203,57 +259,51 @@ if (canvas !== null) {
     var wasTapping = false;
 
     /**
-     * @param {number} x
-     * @param {number} y
+     * @param {{x: number, y: number}} p
      * @param {Gate} g
      */
-    var drawFloatingGate = function (x, y, g) {
-        var b = Rect.centeredSquareWithRadius(x, y, gateRadius);
+    var drawFloatingGate = function (p, g) {
+        var b = Rect.centeredSquareWithRadius(p, gateRadius);
         painter.fillRect(b, "orange");
         painter.strokeRect(b);
-        drawGateSymbol(x, y, g);
+        drawGateSymbol(p, g);
     };
 
     /**
-     * @param {number} x
-     * @param {number} y
+     * @param {{x: number, y: number}} p
      * @param {Gate} g
      */
-    var drawGateSymbol = function(x, y, g) {
+    var drawGateSymbol = function(p, g) {
         if (g.symbol === Gate.DRAW_MATRIX_SYMBOL) {
-            drawMatrix(Rect.centeredSquareWithRadius(x, y, gateRadius), g.matrix)
+            drawMatrix(Rect.centeredSquareWithRadius(p, gateRadius), g.matrix)
         } else if (g === Gate.CONTROL) {
-            painter.fillCircle({x: x, y: y}, 5, "black");
+            painter.fillCircle(p, 5, "black");
         } else if (g === Gate.ANTI_CONTROL) {
-            var c = {x: x, y: y};
-            var r = 5;
-            painter.fillCircle(c, r);
-            painter.strokeCircle(c, r);
+            painter.fillCircle(p, 5);
+            painter.strokeCircle(p, 5);
         } else {
-            painter.printCenteredText(g.symbol, x, y);
+            painter.printCenteredText(g.symbol, p);
         }
     };
 
     /**
-     * @param {number} x
-     * @param {number} y
+     * @param {{x: number, y: number}} p
      * @param {Gate} g
      */
-    var drawToolboxGate = function (x, y, g) {
-        var b = Rect.centeredSquareWithRadius(x, y, gateRadius);
+    var drawToolboxGate = function (p, g) {
+        var b = Rect.centeredSquareWithRadius(p, gateRadius);
         painter.fillRect(b);
         painter.strokeRect(b);
-        drawGateSymbol(x, y, g);
+        drawGateSymbol(p, g);
     };
 
     /**
-     * @param {number} x
-     * @param {number} y
+     * @param {{x: number, y: number}} p
      * @param {Gate} g
      */
-    var drawToolboxGateHintIfHovering = function (x, y, g) {
-        var b = Rect.centeredSquareWithRadius(x, y, gateRadius);
-        if (!b.containsPoint({x: latestMouseX, y: latestMouseY})) {
+    var drawToolboxGateHintIfHovering = function (p, g) {
+        var b = Rect.centeredSquareWithRadius(p, gateRadius);
+        if (!b.containsPoint(latestMousePos)) {
             return;
         }
         isHoveringOverTimeBasedGate |= !isNotTimeBasedGate(g);
@@ -270,7 +320,7 @@ if (canvas !== null) {
             painter.fillRect(b, "orange");
             painter.strokeRect(b);
 
-            var r2 = new Rect(50, y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 35);
+            var r2 = new Rect(50, p.y + r + 10, 400, (g.description.split("\n").length + 5) * 16 + 4 * r + 35);
             painter.fillRect(r2);
             painter.strokeRect(r2);
             painter.printText(
@@ -287,13 +337,13 @@ if (canvas !== null) {
                 "                            ON output\n" +
                 "\n" +
                 "\n" +
-                g.matrix.toString(), 50 + 5, y + r + 25);
-            drawMatrix(new Rect(55, y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
+                g.matrix.toString(), {x: 50 + 5, y: p.y + r + 25});
+            drawMatrix(new Rect(55, p.y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
         } else {
             painter.fillRect(b);
             painter.strokeRect(b);
         }
-        drawGateSymbol(x, y, g);
+        drawGateSymbol(p, g);
     };
 
     /**
@@ -363,15 +413,15 @@ if (canvas !== null) {
 
         for (var i = 0; i < gateColumn.gates.length; i++) {
             var cy = wireIndexToY(i);
-            var b = Rect.centeredSquareWithRadius(x, cy, gateRadius);
+            var b = Rect.centeredSquareWithRadius({x: x, y: cy}, gateRadius);
             var gate = gateColumn.gates[i];
             if (gate === null) {
                 continue;
             }
 
             var isHolding = held !== null && held.col === columnIndex && held.row === i;
-            var canGrab = b.containsPoint({x: latestMouseX, y: latestMouseY}) && held === null && !isTapping;
-            var didGrab = b.containsPoint({x: latestMouseX, y: latestMouseY}) && held === null && !wasTapping && isTapping;
+            var canGrab = b.containsPoint(latestMousePos) && held === null && !isTapping;
+            var didGrab = b.containsPoint(latestMousePos) && held === null && !wasTapping && isTapping;
             var highlightGate = isHolding || canGrab;
             var isModifier = gate === Gate.CONTROL ||
                 gate === Gate.ANTI_CONTROL ||
@@ -386,15 +436,15 @@ if (canvas !== null) {
                 drawProbabilityBox(b, p.conditional, p.total, p.canDiffer);
             } else if (gate == Gate.SWAP_HALF) {
                 if (hasTwoSwaps) {
-                    var swapRect = Rect.centeredSquareWithRadius(x, cy, gateRadius/2);
+                    var swapRect = Rect.centeredSquareWithRadius({x: x, y: cy}, gateRadius/2);
                     painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
                     painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
                 } else {
-                    painter.printCenteredText("Swap", x, cy - 5);
-                    painter.printCenteredText("(Unpaired)", x, cy + 5, undefined, 8);
+                    painter.printCenteredText("Swap", {x: x, y: cy - 5});
+                    painter.printCenteredText("(Unpaired)", {x: x, y: cy + 5}, undefined, 8);
                 }
             } else {
-                drawGateSymbol(x, cy, gate);
+                drawGateSymbol({x: x, y: cy}, gate);
             }
             if (didGrab) {
                 held = {gate: gate, col: null, row: null};
@@ -409,7 +459,7 @@ if (canvas !== null) {
     var drawCircuit = function (inputState, gateColumns) {
         for (var i = 0; i < numWires; i++) {
             var wireY = wireIndexToY(i);
-            painter.printCenteredText(makeBitLabel(i) + ":", CIRCUIT_AREA.x + 14, wireY);
+            painter.printCenteredText(makeBitLabel(i) + ":", {x: CIRCUIT_AREA.x + 14, y: wireY});
             painter.strokeLine({x: CIRCUIT_AREA.x + 30, y: wireY}, {x: CIRCUIT_AREA.x + canvas.width, y: wireY});
         }
         for (var i2 = 0; i2 < gateColumns.length; i2++) {
@@ -430,27 +480,30 @@ if (canvas !== null) {
         if (!can_differ) {
             var w = rect.w * conditional_probability;
             painter.fillRect(rect.takeLeft(w), "gray");
-            painter.printCenteredText((conditional_probability*100).toFixed(1) + "%", rect.center().x, rect.center().y);
+            painter.printCenteredText((conditional_probability*100).toFixed(1) + "%", rect.center());
         } else {
             if (isNaN(conditional_probability)) {
-                ctx.beginPath();
-                ctx.moveTo(rect.x, rect.y);
-                ctx.lineTo(rect.x + rect.w, rect.y + rect.h/2);
-                ctx.lineTo(rect.x, rect.y + rect.h/2);
-                ctx.lineTo(rect.x, rect.y);
-                ctx.fillStyle = "gray";
-                ctx.fill();
+                painter.ctx.beginPath();
+                painter.ctx.moveTo(rect.x, rect.y);
+                painter.ctx.lineTo(rect.x + rect.w, rect.y + rect.h/2);
+                painter.ctx.lineTo(rect.x, rect.y + rect.h/2);
+                painter.ctx.lineTo(rect.x, rect.y);
+                painter.ctx.fillStyle = "gray";
+                painter.ctx.fill();
                 painter.strokeLine(rect.topLeft(), rect.centerRight());
-                painter.printText("|:N/A", rect.x + 2, rect.y + 15, undefined, 10);
+                painter.printText("|:N/A", {x: rect.x + 2, y: rect.y + 15}, undefined, 10);
             } else {
                 var w1 = rect.w * conditional_probability;
                 painter.fillRect(rect.topHalf().takeLeft(w1), "gray");
-                painter.printText(" |:" + Math.round(conditional_probability*100) + "%", rect.x + 2, rect.y + 15, undefined, 10);
+                painter.printText(" |:" + Math.round(conditional_probability*100) + "%",
+                    {x: rect.x + 2, y: rect.y + 15},
+                    undefined,
+                    10);
             }
             var w2 = rect.w * intersection_probability;
             painter.fillRect(rect.bottomHalf().takeLeft(w2), "gray");
-            ctx.fillStyle = "black";
-            ctx.fillText("∧:" + Math.round(intersection_probability*100) + "%", rect.x + 2, rect.y + rect.h/2 + 15);
+            painter.printText("∧:" + Math.round(intersection_probability*100) + "%",
+                {x: rect.x + 2, y: rect.y + rect.h/2 + 15});
         }
     };
 
@@ -468,20 +521,7 @@ if (canvas !== null) {
             }
         }
 
-        // draw borders
-        ctx.beginPath();
-        var r = rect.x + rect.w;
-        var b = rect.y + rect.h;
-        for (var k = 0; k <= n; k++) {
-            var x = rect.x + w * k;
-            var y = rect.y + h * k;
-            ctx.moveTo(rect.x, y);
-            ctx.lineTo(r, y);
-            ctx.moveTo(x, b);
-            ctx.lineTo(x, rect.y);
-        }
-        ctx.strokeStyle = "black";
-        ctx.stroke();
+        painter.strokeGrid(new Rect(rect.x, rect.y, w, h), n, n);
     };
 
     /**
@@ -552,7 +592,7 @@ if (canvas !== null) {
     var drawSingleWireProbabilities = function (x, outputState) {
         for (var i = 0; i < numWires; i++) {
             var p = measureProbability(1 << i, 1 << i, outputState);
-            drawProbabilityBox(Rect.centeredSquareWithRadius(x + 25, wireIndexToY(i), gateRadius), p, p, false);
+            drawProbabilityBox(Rect.centeredSquareWithRadius({x: x + 25, y: wireIndexToY(i)}, gateRadius), p, p, false);
         }
     };
 
@@ -566,12 +606,12 @@ if (canvas !== null) {
         drawSingleWireProbabilities(canvas.width - gateRadius*2 - 10, output);
         var gridRect = drawRect.skipLeft(14).skipTop(14);
         drawState(gridRect, output);
-        painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w/4, drawRect.y + 8);
-        painter.printCenteredText(makeBitLabel(1), gridRect.x + gridRect.w*2/4, drawRect.y + 6);
-        painter.printCenteredText(makeBitLabel(0), gridRect.x + gridRect.w*3/4, drawRect.y + 8);
-        painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h/4);
-        painter.printCenteredText(makeBitLabel(3), drawRect.x + 4, gridRect.y + gridRect.h*2/4);
-        painter.printCenteredText(makeBitLabel(2), drawRect.x + 6, gridRect.y + gridRect.h*3/4);
+        painter.printCenteredText(makeBitLabel(0), {x: gridRect.x + gridRect.w/4, y: drawRect.y + 8});
+        painter.printCenteredText(makeBitLabel(1), {x: gridRect.x + gridRect.w*2/4, y: drawRect.y + 6});
+        painter.printCenteredText(makeBitLabel(0), {x: gridRect.x + gridRect.w*3/4, y: drawRect.y + 8});
+        painter.printCenteredText(makeBitLabel(2), {x: drawRect.x + 6, y: gridRect.y + gridRect.h/4});
+        painter.printCenteredText(makeBitLabel(3), {x: drawRect.x + 4, y: gridRect.y + gridRect.h*2/4});
+        painter.printCenteredText(makeBitLabel(2), {x: drawRect.x + 6, y: gridRect.y + gridRect.h*3/4});
     };
 
     var drawGateSet = function () {
@@ -585,7 +625,7 @@ if (canvas !== null) {
                 var x1 = c * (gateRadius * 4 + 22) + 50;
                 var x2 = x1 + gateRadius * 2 + 2;
                 if (i == 0) {
-                    painter.printCenteredText(col.hint, (x1 + x2) / 2, 10);
+                    painter.printCenteredText(col.hint, {x: (x1 + x2) / 2, y: 10});
                 }
 
                 for (var r = 0; r < col.gates.length; r++) {
@@ -595,9 +635,9 @@ if (canvas !== null) {
                     var x = x1 + (gateRadius * 2 + 2) * dx;
                     var y = 18 + gateRadius + dy * (gateRadius * 2 + 2);
                     if (i == 0) {
-                        drawToolboxGate(x, y, col.gates[r]);
+                        drawToolboxGate({x: x, y: y}, col.gates[r]);
                     } else {
-                        drawToolboxGateHintIfHovering(x, y, col.gates[r]);
+                        drawToolboxGateHintIfHovering({x: x, y: y}, col.gates[r]);
                     }
                 }
             }
@@ -606,15 +646,14 @@ if (canvas !== null) {
 
     var redraw = function () {
         isHoveringOverTimeBasedGate = false;
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), "white");
 
         var candidateNewCols = circuitOperationColumns.slice(0);
         for (var i = 0; i < candidateNewCols.length; i++) {
             candidateNewCols[i] = new GateColumn(candidateNewCols[i].gates.slice(0));
         }
-        var insertSite = CIRCUIT_AREA.containsPoint({x: latestMouseX, y: latestMouseY})
-            ? posToColumnIndexAndInsertSuggestion(latestMouseX, latestMouseY, candidateNewCols)
+        var insertSite = CIRCUIT_AREA.containsPoint(latestMousePos)
+            ? posToColumnIndexAndInsertSuggestion(latestMousePos.x, latestMousePos.y, candidateNewCols)
             : null;
         if (insertSite !== null && held === null && insertSite.col >= candidateNewCols.length) {
             insertSite = null;
@@ -639,14 +678,14 @@ if (canvas !== null) {
         if (insertSite !== null && held === null) {
             var x1 = operationIndexToX(insertSite.col - 0.5);
             var x2 = operationIndexToX(insertSite.col + 0.5);
-            ctx.fillStyle = held === null ? "yellow" : "orange";
-            ctx.fillRect(x1, CIRCUIT_AREA.y, x2 - x1, CIRCUIT_AREA.h);
-            ctx.globalAlpha = 1;
-            ctx.beginPath();
-            ctx.moveTo(x2, CIRCUIT_AREA.y);
-            ctx.lineTo(x2, CIRCUIT_AREA.y + CIRCUIT_AREA.h);
-            ctx.strokeStyle = "gray";
-            ctx.stroke();
+            painter.ctx.fillStyle = held === null ? "yellow" : "orange";
+            painter.ctx.fillRect(x1, CIRCUIT_AREA.y, x2 - x1, CIRCUIT_AREA.h);
+            painter.ctx.globalAlpha = 1;
+            painter.ctx.beginPath();
+            painter.ctx.moveTo(x2, CIRCUIT_AREA.y);
+            painter.ctx.lineTo(x2, CIRCUIT_AREA.y + CIRCUIT_AREA.h);
+            painter.ctx.strokeStyle = "gray";
+            painter.ctx.stroke();
         }
 
         drawCircuit(makeInputVector(), candidateNewCols);
@@ -662,7 +701,7 @@ if (canvas !== null) {
         drawGateSet();
 
         if (held !== null && insertSite === null) {
-            drawFloatingGate(latestMouseX, latestMouseY, held.gate);
+            drawFloatingGate(latestMousePos, held.gate);
         }
 
         if (insertSite !== null && held !== null && wasTapping && !isTapping) {
@@ -690,9 +729,9 @@ if (canvas !== null) {
 
     var mouseUpdate = function (p, pressed) {
         //noinspection JSUnresolvedFunction
-        latestMouseX = p.pageX - $(canvas).position().left;
+        latestMousePos.x = p.pageX - $(canvas).position().left;
         //noinspection JSUnresolvedFunction
-        latestMouseY = p.pageY - $(canvas).position().top;
+        latestMousePos.y = p.pageY - $(canvas).position().top;
         if (isTapping != pressed) {
             wasTapping = isTapping;
             isTapping = pressed;

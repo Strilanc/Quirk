@@ -1,6 +1,3 @@
-// uses: complex.js
-// uses: matrix.js
-
 /**
  * A named single-qubit quantum operation.
  *

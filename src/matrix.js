@@ -1,8 +1,7 @@
-// uses: complex.js
-
 /**
  * A matrix of complex values.
  * @param rows {Complex[][]} The rows of complex coefficients making up the matrix.
+ * @property rows {Complex[][]}
  * @class
  */
 function Matrix(rows) {

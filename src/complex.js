@@ -1,7 +1,9 @@
 /**
  * A Complex number of the form a + bi, where i is the square root of -1.
- * @param real The real part of the Complex number. The 'a' in a + bi.
- * @param imag The imaginary part of the Complex number. The 'b' in a + bi.
+ * @param {number} real The real part of the Complex number. The 'a' in a + bi.
+ * @param {number} imag The imaginary part of the Complex number. The 'b' in a + bi.
+ * @property {number} real
+ * @property {number} imag
  * @class
  */
 function Complex(real, imag) {

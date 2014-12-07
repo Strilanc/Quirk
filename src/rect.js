@@ -4,6 +4,10 @@
  * @param {number} y
  * @param {number} w
  * @param {number} h
+ * @property {number} x
+ * @property {number} y
+ * @property {number} w
+ * @property {number} h
  * @constructor
  */
 function Rect(x, y, w, h) {
@@ -15,13 +19,12 @@ function Rect(x, y, w, h) {
 
 /**
  *
- * @param {number} x The x-coordinate of the center of the square.
- * @param {number} y The y-coordinate of the center of the square.
+ * @param {{x: number, y: number}} p The x/y point at the center of the square.
  * @param {number} r Half of the diameter of the square.
  * @returns {Rect}
  */
-Rect.centeredSquareWithRadius = function(x, y, r) {
-    return new Rect(x - r, y - r, r*2, r*2);
+Rect.centeredSquareWithRadius = function(p, r) {
+    return new Rect(p.x - r, p.y - r, r*2, r*2);
 };
 
 Rect.prototype.isEqualTo = function(other) {
