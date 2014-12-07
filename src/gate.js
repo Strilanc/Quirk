@@ -14,10 +14,16 @@ function Gate(symbol, matrix, name, description) {
     this.description = description;
 }
 
+/**
+ * @returns {string}
+ */
 Gate.prototype.toString = function() {
     return this.name;
 };
 
+/**
+ * @type {Gate}
+ */
 Gate.CONTROL = new Gate(
     "•",
     Matrix.CONTROL,
@@ -30,6 +36,9 @@ Gate.CONTROL = new Gate(
     "ON and OFF, the other operations only apply in the parts of the\n" +
     "superposition control qubit is on.");
 
+/**
+ * @type {Gate}
+ */
 Gate.ANTI_CONTROL = new Gate(
     "◦",
     Matrix.ANTI_CONTROL,
@@ -60,6 +69,9 @@ Gate.PEEK = new Gate(
     "re-running the computation many times. Here we get to be more\n" +
     "convenient.)");
 
+/**
+ * @type {Gate}
+ */
 Gate.DOWN = new Gate(
     "↓",
     Matrix.fromRotation(0.25, 0, 0),
@@ -71,6 +83,9 @@ Gate.DOWN = new Gate(
     "is equivalent to a NOT. The Down gate is the inverse of the Up\n" +
     "gate.");
 
+/**
+ * @type {Gate}
+ */
 Gate.UP = new Gate(
     "↑",
     Matrix.fromRotation(0.75, 0, 0),
@@ -83,6 +98,9 @@ Gate.UP = new Gate(
     "the four square roots of the Pauli X gate (so applying it twice is\n" +
     "equivalent to a NOT). The Up gate is the inverse of the Down gate.");
 
+/**
+ * @type {Gate}
+ */
 Gate.X = new Gate(
     "X",
     Matrix.PAULI_X,
@@ -94,6 +112,9 @@ Gate.X = new Gate(
     "that agree on everything except the value of target qubit, and swaps\n" +
     "the amplitudes within each pair.");
 
+/**
+ * @type {Gate}
+ */
 Gate.RIGHT = new Gate(
     "→",
     Matrix.fromRotation(0, 0.25, 0),
@@ -104,6 +125,9 @@ Gate.RIGHT = new Gate(
     "roots of the Pauli Y gate, so applying it twice is equivalent to a\n" +
     "Y gate. The Right gate is the inverse of the Left gate.");
 
+/**
+ * @type {Gate}
+ */
 Gate.LEFT = new Gate(
     "←",
     Matrix.fromRotation(0, 0.75, 0),
@@ -114,6 +138,9 @@ Gate.LEFT = new Gate(
     "roots of the Pauli Y gate, so applying it twice is equivalent to a\n" +
     "Y gate. The Left gate is the inverse of the Right gate.");
 
+/**
+ * @type {Gate}
+ */
 Gate.Y = new Gate(
     "Y",
     Matrix.PAULI_Y,
@@ -124,6 +151,9 @@ Gate.Y = new Gate(
     "Block Sphere. You can think of it as a combination of the X and Z gates,\n" +
     "but with an extra 90 degree global phase twist. The Y its own inverse.");
 
+/**
+ * @type {Gate}
+ */
 Gate.COUNTER_CLOCKWISE = new Gate(
     "↺",
     Matrix.fromRotation(0, 0, 0.25),
@@ -134,6 +164,9 @@ Gate.COUNTER_CLOCKWISE = new Gate(
     "of the four square roots of the Pauli Z gate. It is the inverse of the\n" +
     "Clockwise Phase gate.");
 
+/**
+ * @type {Gate}
+ */
 Gate.CLOCKWISE = new Gate(
     "↻",
     Matrix.fromRotation(0, 0, 0.75),
@@ -143,6 +176,9 @@ Gate.CLOCKWISE = new Gate(
     "The Clockwise Phase gate is one of the four square roots of the Pauli Z\n" +
     "gate. It is the inverse of the Counter Phase gate.");
 
+/**
+ * @type {Gate}
+ */
 Gate.Z = new Gate(
     "Z",
     Matrix.PAULI_Z,
@@ -153,6 +189,9 @@ Gate.Z = new Gate(
     "Block Sphere. It negates the amplitude of every state where the\n" +
     "target qubit is ON.");
 
+/**
+ * @type {Gate}
+ */
 Gate.H = new Gate(
     "H",
     Matrix.HADAMARD,
@@ -167,6 +206,9 @@ Gate.H = new Gate(
     "The hadamard operation also corresponds to a 180° turn around the\n" +
     "X+Z diagonal axis of the Block Sphere, and is its own inverse.");
 
+/**
+ * @type {Gate}
+ */
 Gate.SWAP_HALF = new Gate(
     "Swap",
     Matrix.square([1, 0, 0, 0,
@@ -178,8 +220,16 @@ Gate.SWAP_HALF = new Gate(
     "\n" +
     "(You must place two swap gate halves in a column to do a swap.)");
 
+/**
+ * @type {string}
+ */
 Gate.DRAW_MATRIX_SYMBOL = "\\__SPECIAL_SYMBOL__DRAW_MATRIX";
 
+/**
+ * @param {number} fraction
+ * @param {string} symbol
+ * @returns {Gate}
+ */
 Gate.fromPhaseRotation = function(fraction, symbol) {
     var mod = function(n, d) { return ((n % d) + d) % d; };
     var dif_mod = function(n, d) { return mod(n + d/2, d) - d/2; };
@@ -203,6 +253,13 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
         "corresponds to Z(180°).");
 };
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
+ * @param {=string} symbol
+ * @returns {Gate}
+ */
 Gate.fromRotation = function(x, y, z, symbol) {
     if (x == 0 && y == 0) {
         return Gate.fromPhaseRotation(z, symbol);
@@ -217,6 +274,10 @@ Gate.fromRotation = function(x, y, z, symbol) {
         "A custom operation based on a rotation.");
 };
 
+/**
+ * @param {Matrix} matrix
+ * @returns {Gate}
+ */
 Gate.fromCustom = function(matrix) {
     return new Gate(
         Gate.DRAW_MATRIX_SYMBOL,
@@ -248,12 +309,16 @@ GateColumn.empty = function(size) {
     return new GateColumn(gates);
 };
 
+/**
+ * @returns {boolean}
+ */
 GateColumn.prototype.isEmpty = function() {
     return this.gates.every(function(e) { return e === null; });
 };
 
 /**
  * Returns the matrix corresponding to the parallel applications of the operations in this circuit column.
+ * @returns {Matrix}
  */
 GateColumn.prototype.matrix = function() {
     var ops = [];

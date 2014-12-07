@@ -26,23 +26,36 @@ function Matrix(rows) {
     this.rows = rows;
 }
 
-Matrix.prototype.tensorPower = function(p) {
-    if (p == 0) {
+/**
+ * Returns the result of tensor-product-ing the receiving matrix with itself the given number of times.
+ * @param {int} exponent The number of times the matrix is tensor-producted with itself.
+ * @returns {Matrix}
+ */
+Matrix.prototype.tensorPower = function(exponent) {
+    if (exponent == 0) {
         return Matrix.identity(1);
     }
     var t = this;
-    while (p > 1) {
+    while (exponent > 1) {
         // TODO: use repeated squaring instead
         t = t.tensorProduct(this);
-        p -= 1;
+        exponent -= 1;
     }
     return t;
 };
 
+/**
+ * Returns the width of the receiving matrix.
+ * @returns {int}
+ */
 Matrix.prototype.width = function() {
     return this.rows[0].length;
 };
 
+/**
+ * Returns the height of the receiving matrix.
+ * @returns {int}
+ */
 Matrix.prototype.height = function() {
     return this.rows.length;
 };

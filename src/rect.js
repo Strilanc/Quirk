@@ -233,18 +233,50 @@ Rect.prototype.containsPoint = function(p) {
         p.y >= this.y &&
         p.y < this.y + this.h;
 };
+
+/**
+ * @returns {Rect}
+ */
 Rect.prototype.topHalf = function() {
     return this.skipBottom(this.h / 2);
 };
 
+/**
+ * @returns {Rect}
+ */
 Rect.prototype.bottomHalf = function() {
     return this.skipTop(this.h / 2);
 };
 
+/**
+ * @returns {Rect}
+ */
 Rect.prototype.leftHalf = function() {
     return this.skipRight(this.w / 2);
 };
 
+/**
+ * @returns {Rect}
+ */
 Rect.prototype.rightHalf = function() {
     return this.skipLeft(this.w / 2);
+};
+
+/**
+ * @param {number} dx The displacement to move the rect horizontally.
+ * @param {number} dy The displacement to move the rect vertically.
+ * @returns {Rect}
+ */
+Rect.prototype.shiftedBy = function(dx, dy) {
+    return new Rect(this.x + dx, this.y + dy, this.w, this.h);
+};
+
+
+/**
+ * @param {number} dx The proportional amount to move the rect horizontally.
+ * @param {number} dy The proportional amount to move the rect vertically.
+ * @returns {Rect}
+ */
+Rect.prototype.proportionalShiftedBy = function(dx, dy) {
+    return this.shiftedBy(dx * this.w, dy * this.h);
 };

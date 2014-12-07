@@ -188,3 +188,11 @@ RectTest.prototype.testTopHalf = function() {
 RectTest.prototype.testBottomHalf = function() {
     assertTrue(new Rect(2, 3, 5, 7).bottomHalf().isEqualTo(new Rect(2, 6.5, 5, 3.5)));
 };
+
+RectTest.prototype.testShiftedBy = function() {
+    assertTrue(new Rect(2, 3, 5, 7).shiftedBy(11, 13).isEqualTo(new Rect(13, 16, 5, 7)));
+};
+
+RectTest.prototype.testProportionalShiftedBy = function() {
+    assertTrue(new Rect(2, 3, 5, 7).proportionalShiftedBy(11, 13).isEqualTo(new Rect(57, 94, 5, 7)));
+};

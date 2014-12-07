@@ -275,7 +275,7 @@ if (canvas !== null) {
      */
     var drawGateSymbol = function(p, g) {
         if (g.symbol === Gate.DRAW_MATRIX_SYMBOL) {
-            drawMatrix(Rect.centeredSquareWithRadius(p, gateRadius), g.matrix)
+            painter.paintMatrix(g.matrix, Rect.centeredSquareWithRadius(p, gateRadius))
         } else if (g === Gate.CONTROL) {
             painter.fillCircle(p, 5, "black");
         } else if (g === Gate.ANTI_CONTROL) {
@@ -338,7 +338,9 @@ if (canvas !== null) {
                 "\n" +
                 "\n" +
                 g.matrix.toString(), {x: 50 + 5, y: p.y + r + 25});
-            drawMatrix(new Rect(55, p.y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r), g.matrix);
+            painter.paintMatrix(
+                g.matrix,
+                new Rect(55, p.y + r + 15 + (g.description.split("\n").length + 5) * 16, 4 * r, 4 * r));
         } else {
             painter.fillRect(b);
             painter.strokeRect(b);
@@ -509,23 +511,6 @@ if (canvas !== null) {
 
     /**
      * @param {Rect} rect
-     * @param {Matrix} matrix
-     */
-    var drawMatrix = function (rect, matrix) {
-        var n = matrix.width();
-        var w = rect.w / n;
-        var h = rect.h / n;
-        for (var i = 0; i < n; i++) {
-            for (var j = 0; j < n; j++) {
-                painter.paintAmplitude(matrix.rows[j][i], new Rect(rect.x + w * i, rect.y + h * j, w, h));
-            }
-        }
-
-        painter.strokeGrid(new Rect(rect.x, rect.y, w, h), n, n);
-    };
-
-    /**
-     * @param {Rect} rect
      * @param {Matrix} values A column vector.
      */
     var drawState = function (rect, values) {
@@ -692,7 +677,7 @@ if (canvas !== null) {
 
         if (insertSite !== null) {
             var m = candidateNewCols[insertSite.col].matrix();
-            drawMatrix(OPERATION_HINT_AREA, m);
+            painter.paintMatrix(m, OPERATION_HINT_AREA);
 
             drawOutputAfter(candidateNewCols.slice(0, insertSite.col + 1), INTERMEDIATE_STATE_HINT_AREA);
         }

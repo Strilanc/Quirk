@@ -197,3 +197,23 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
     this.ctx.strokeWidth = strokeThickness || 1;
     this.ctx.stroke();
 };
+
+/**
+ * Draws a visual representation of a complex matrix.
+ * @param {Matrix} matrix The matrix to represent visually.
+ * @param {Rect} drawArea The rectangle to draw the matrix within.
+ */
+Painter.prototype.paintMatrix = function(matrix, drawArea) {
+    var numCols = matrix.width();
+    var numRows = matrix.height();
+    var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+    for (var i = 0; i < numCols; i++) {
+        for (var j = 0; j < numRows; j++) {
+            painter.paintAmplitude(
+                matrix.rows[j][i],
+                topLeftCell.proportionalShiftedBy(i, j));
+        }
+    }
+
+    painter.strokeGrid(topLeftCell, numCols, numRows);
+};
