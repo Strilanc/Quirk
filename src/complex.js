@@ -4,7 +4,7 @@
  * @param {!number} imag The imaginary part of the Complex number. The 'b' in a + bi.
  * @property {!number} real
  * @property {!number} imag
- * @class
+ * @constructor
  */
 function Complex(real, imag) {
     this.real = real;
@@ -14,13 +14,13 @@ function Complex(real, imag) {
 /**
  * Wraps the given number into a Complex value (unless it's already a Complex value).
  * @param {!number|!Complex} v
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.from = function (v) {
     if (v instanceof Complex) {
         return v;
     }
-    if (typeof v == "number") {
+    if (typeof v === "number") {
         return new Complex(v, 0);
     }
     throw "Don't know how create a Complex equal to: " + v;
@@ -35,7 +35,7 @@ Complex.realPartOf = function (v) {
     if (v instanceof Complex) {
         return v.real;
     }
-    if (typeof v == "number") {
+    if (typeof v === "number") {
         return v;
     }
     throw "Don't know how to get real part of: " + v;
@@ -50,7 +50,7 @@ Complex.imagPartOf = function (v) {
     if (v instanceof Complex) {
         return v.imag;
     }
-    if (typeof v == "number") {
+    if (typeof v === "number") {
         return 0;
     }
     throw "Don't know how to get imaginary part of: " + v;
@@ -64,10 +64,10 @@ Complex.imagPartOf = function (v) {
  */
 Complex.prototype.isEqualTo = function (other) {
     if (other instanceof Complex) {
-        return this.real == other.real && this.imag == other.imag;
+        return this.real === other.real && this.imag === other.imag;
     }
-    if (typeof other == "number") {
-        return this.real == other;
+    if (typeof other === "number") {
+        return this.real === other;
     }
     return false;
 };
@@ -101,7 +101,7 @@ Complex.prototype.toString = function () {
         return radicalToString(this.real);
     }
     if (Math.abs(this.real) < epsilon) {
-        if (Math.abs(this.imag - 1) < epsilon == 1) {
+        if (Math.abs(this.imag - 1) < epsilon) {
             return "i";
         }
         if (Math.abs(this.imag + 1) < epsilon) {
@@ -132,7 +132,7 @@ Complex.prototype.abs = function () {
 
 /**
  * Returns the complex conjugate of the receiving complex value, with the same real part but a negated imaginary part.
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.prototype.conjugate = function () {
     return new Complex(this.real, -this.imag);
@@ -150,7 +150,7 @@ Complex.prototype.phase = function () {
 /**
  * Returns a unit complex value parallel to the receiving complex value.
  * Zero defaults to having the unit vector 1+0i.
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.prototype.unit = function () {
     var m = this.norm2();
@@ -164,7 +164,7 @@ Complex.prototype.unit = function () {
 /**
  * Returns the sum of the receiving complex value plus the given value.
  * @param {!number|!Complex} v
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.prototype.plus = function (v) {
     var c = Complex.from(v);
@@ -174,7 +174,7 @@ Complex.prototype.plus = function (v) {
 /**
  * Returns the difference from the receiving complex value to the given value.
  * @param {!number|!Complex} v
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.prototype.minus = function (v) {
     var c = Complex.from(v);
@@ -184,7 +184,7 @@ Complex.prototype.minus = function (v) {
 /**
  * Returns the product of the receiving complex value times the given value.
  * @param {!number|!Complex} v
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.prototype.times = function (v) {
     var c = Complex.from(v);
@@ -196,12 +196,12 @@ Complex.prototype.times = function (v) {
 /**
  * Returns the ratio of the receiving complex value to the given value.
  * @param {!number|!Complex} v
- * @returns {!Complex)
+ * @returns {!Complex}
  */
 Complex.prototype.dividedBy = function (v) {
     var c = Complex.from(v);
     var d = c.norm2();
-    if (d === 0) throw "Division by Zero";
+    if (d === 0) { throw "Division by Zero"; }
 
     var n = this.times(c.conjugate());
     return new Complex(n.real / d, n.imag / d);
@@ -209,12 +209,12 @@ Complex.prototype.dividedBy = function (v) {
 
 /**
  * The complex number equal to zero.
- * @type {!Complex)
+ * @type {!Complex}
  */
 Complex.ZERO = new Complex(0, 0);
 
 /**
  * The square root of negative 1.
- * @type {!Complex)
+ * @type {!Complex}
  */
 Complex.I = new Complex(0, 1);

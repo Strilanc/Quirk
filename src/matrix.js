@@ -8,7 +8,7 @@ function Matrix(rows) {
     if (!(rows instanceof Array)) {
         throw "need(rows instanceof Array): " + rows;
     }
-    if (rows.length == 0) {
+    if (rows.length === 0) {
         throw "need(rows.length > 0): " + rows;
     }
 
@@ -16,7 +16,7 @@ function Matrix(rows) {
         throw "need(rows.all(_.length == cols.length)): " + rows;
     }
     var w = rows[0].length;
-    if (w == 0 || !rows.every(function(row) { return row.length === w; })) {
+    if (w === 0 || !rows.every(function(row) { return row.length === w; })) {
         throw "need(rows.map(e -> e.length).single() > 0): " + rows;
     }
     if (![].concat.apply([], rows).every(function(e) { return e instanceof Complex; })) {
@@ -32,7 +32,7 @@ function Matrix(rows) {
  * @returns {!Matrix}
  */
 Matrix.prototype.tensorPower = function(exponent) {
-    if (exponent == 0) {
+    if (exponent === 0) {
         return Matrix.identity(1);
     }
     var t = this;
@@ -89,7 +89,7 @@ Matrix.generate = function (width, height, coefficientRowColGenerator) {
 Matrix.square = function (coefs) {
     if (coefs instanceof Array) {
         var n = Math.round(Math.sqrt(coefs.length));
-        if (n * n != coefs.length) throw "Not square: " + coefs;
+        if (n * n !== coefs.length) { throw "Not square: " + coefs; }
         return Matrix.generate(n, n, function(r, c) { return coefs[r * n + c]; });
     }
 
@@ -121,11 +121,11 @@ Matrix.row = function (coefs) {
  * @returns {!boolean}
  */
 Matrix.prototype.isEqualTo = function (other) {
-    if (!(other instanceof Matrix)) return false;
+    if (!(other instanceof Matrix)) { return false; }
 
     var w = this.width();
     var h = other.height();
-    if (other.width() != w || other.height() != h) return false;
+    if (other.width() !== w || other.height() !== h) { return false; }
 
     for (var r = 0; r < h; r++) {
         for (var c = 0; c < w; c++) {
@@ -185,7 +185,7 @@ Matrix.prototype.plus = function (other) {
     var m = this;
     var w = this.width();
     var h = this.height();
-    if (other.width() != w || other.height() != h) throw "Incompatible matrices: " + this + " + " + other;
+    if (other.width() !== w || other.height() !== h) { throw "Incompatible matrices: " + this + " + " + other; }
     return Matrix.generate(w, h, function(r, c) {
         return m.rows[r][c].plus(other.rows[r][c]);
     });
@@ -200,7 +200,7 @@ Matrix.prototype.minus = function (other) {
     var m = this;
     var w = this.width();
     var h = this.height();
-    if (other.width() != w || other.height() != h) throw "Incompatible matrices: " + this + " - " + other;
+    if (other.width() !== w || other.height() !== h) { throw "Incompatible matrices: " + this + " - " + other; }
     return Matrix.generate(w, h, function(r, c) {
         return m.rows[r][c].minus(other.rows[r][c]);
     });
@@ -216,7 +216,7 @@ Matrix.prototype.times = function (other) {
     var w = other.width();
     var h = this.height();
     var n = this.width();
-    if (other.height() != n) throw "Incompatible matrices: " + this + " * " + other;
+    if (other.height() !== n) { throw "Incompatible matrices: " + this + " * " + other; }
     return Matrix.generate(w, h, function(r, c) {
         var t = Complex.ZERO;
         for (var i = 0; i < n; i++) {
@@ -248,7 +248,9 @@ Matrix.prototype.tensorProduct = function (other) {
             return Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
         }
         if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE) {
-            return r1 == c1 && r2 == c2 ? Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
+            return r1 === c1 && r2 === c2 ?
+                Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE
+                : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
         }
         return v1.times(v2);
     });
@@ -270,7 +272,7 @@ Matrix.prototype.tensorProduct = function (other) {
  */
 Matrix.fromRotation = function (x, y, z) {
     var sinc = function(t) {
-        if (Math.abs(t) < 0.0002) return 1 - t*t / 6.0;
+        if (Math.abs(t) < 0.0002) { return 1 - t*t / 6.0; }
         return Math.sin(t) / t;
     };
 
@@ -302,8 +304,8 @@ Matrix.fromWireSwap = function(numWires, swapWire1, swapWire2) {
             var m1 = 1 << swapWire1;
             var m2 = 1 << swapWire2;
             var s = n & ~(m1 | m2);
-            if ((n & m1) != 0) s |= m2;
-            if ((n & m2) != 0) s |= m1;
+            if ((n & m1) !== 0) { s |= m2; }
+            if ((n & m2) !== 0) { s |= m1; }
             return s;
         };
         return bitSwap(r) === c ? 1 : 0;
@@ -317,7 +319,7 @@ Matrix.fromWireSwap = function(numWires, swapWire1, swapWire2) {
  */
 Matrix.identity = function(size) {
     return Matrix.generate(size, size, function(r, c) {
-        return r == c ? 1 : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
+        return r === c ? 1 : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
     });
 };
 

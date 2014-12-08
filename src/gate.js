@@ -242,12 +242,12 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
     var deg = dif_mod(fraction, 1) * 360;
     var deg_desc = (Math.round(deg*64)/64).toString();
     var name_desc =
-          fraction == 1/3 ? "/3"
-        : fraction == -1/3 ? "-/3"
-        : fraction == 1/8 ? "/8"
-        : fraction == -1/8 ? "-/8"
-        : fraction == 1/16 ? "/16"
-        : fraction == -1/16 ? "-/16"
+          fraction === 1/3 ? "/3"
+        : fraction === -1/3 ? "-/3"
+        : fraction === 1/8 ? "/8"
+        : fraction === -1/8 ? "-/8"
+        : fraction === 1/16 ? "/16"
+        : fraction === -1/16 ? "-/16"
         : (Math.round(deg*64)/64).toString() + "°";
 
     return new Gate(
@@ -267,7 +267,7 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
  * @returns {!Gate}
  */
 Gate.fromRotation = function(x, y, z, symbol) {
-    if (x == 0 && y == 0) {
+    if (x === 0 && y === 0) {
         return Gate.fromPhaseRotation(z, symbol);
     }
 
@@ -334,7 +334,7 @@ GateColumn.prototype.matrix = function() {
     for (var i = 0; i < this.gates.length; i++) {
         var op;
         if (this.gates[i] === null) {
-            op = Matrix.identity(2)
+            op = Matrix.identity(2);
         } else if (this.gates[i] === Gate.SWAP_HALF) {
             swapIndices.push(i);
             op = Matrix.identity(2);

@@ -156,8 +156,8 @@ Painter.prototype.paintAmplitude = function(amplitude, area) {
     this.fillRect(area.takeBottom(p * area.h), AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
 
     // show the direction and magnitude as a circle with a line indicator
-    this.fillCircle(c, r, isControl
-        ? AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE
+    this.fillCircle(c, r, isControl ?
+        AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE
         : AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
     this.strokeCircle(c, r, AMPLITUDE_CIRCLE_STROKE_COLOR);
     this.strokeLine(c, {x: c.x + dx, y: c.y - dy});

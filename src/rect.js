@@ -33,10 +33,10 @@ Rect.centeredSquareWithRadius = function(p, r) {
  */
 Rect.prototype.isEqualTo = function(other) {
     return other instanceof Rect &&
-        other.x == this.x &&
-        other.y == this.y &&
-        other.w == this.w &&
-        other.h == this.h;
+        other.x === this.x &&
+        other.y === this.y &&
+        other.w === this.w &&
+        other.h === this.h;
 };
 
 /**
