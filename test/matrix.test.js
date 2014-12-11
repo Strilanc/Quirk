@@ -35,7 +35,7 @@ MatrixTest.prototype.testSquare = function() {
     assertTrue(m.rows[0][1].isEqualTo(new Complex(2, 3)));
     assertTrue(m.rows[1][0].isEqualTo(-5.5));
     assertTrue(m.rows[1][1].isEqualTo(0));
-    assertTrue(m.rows.length == 2);
+    assertTrue(m.rows.length === 2);
 
     assertTrue(Matrix.square([1]).rows[0][0].isEqualTo(1));
 };
@@ -72,8 +72,8 @@ MatrixTest.prototype.testScaledBy = function() {
     assertTrue(v.scaledBy(0).isEqualTo(Matrix.square([0, 0, 0, 0])));
     assertTrue(v.scaledBy(1).isEqualTo(v));
 
-    assertTrue(Matrix.col([2, 3]).scaledBy(5).isEqualTo(Matrix.col([10, 15])))
-    assertTrue(Matrix.row([2, 3]).scaledBy(5).isEqualTo(Matrix.row([10, 15])))
+    assertTrue(Matrix.col([2, 3]).scaledBy(5).isEqualTo(Matrix.col([10, 15])));
+    assertTrue(Matrix.row([2, 3]).scaledBy(5).isEqualTo(Matrix.row([10, 15])));
 };
 
 MatrixTest.prototype.testPlus = function() {
@@ -97,55 +97,98 @@ MatrixTest.prototype.testTimes = function() {
         .isEqualTo(Matrix.identity(2)));
 };
 
-var assertUnitaryApproxEqual = function (v1, v2) {
-    var t = 0;
-    var n = v1.rows.length;
-    if (v2.rows.length != n) {
-        return false;
+var assertUnitaryApproxEqual = function (actual, expected) {
+    assertTrue(actual instanceof Matrix);
+    assertTrue(expected instanceof Matrix);
+    if (!actual.isApproximatelyEqualTo(expected, 0.0001)) {
+        fail('Expected ' + actual.toString() + ' to be approximately ' + expected.toString());
     }
-    for (var r = 0; r < n; r++) {
-        for (var c = 0; c < n; c++) {
-            t += v1.rows[r][c].minus(v2.rows[r][c]).norm2();
-        }
-    }
-    assertTrue(t < 0.0000001);
+};
+
+MatrixTest.prototype.testIsApproximatelyEqualTo = function() {
+    // Size must match
+    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.col([1, 1]), 0));
+    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.square([1, 1, 1, 1]), 0));
+    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.row([1, 1, 1]), 0));
+    assertTrue(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.row([1, 1]), 0));
+
+    // Error bound matters
+    assertTrue(Matrix.row([1]).isApproximatelyEqualTo(Matrix.row([1]), 0));
+    assertTrue(Matrix.row([1]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
+    assertTrue(Matrix.row([1.25]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
+    assertTrue(Matrix.row([0.75]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
+    assertFalse(Matrix.row([1.26]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
+    assertFalse(Matrix.row([0.74]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
+
+    // Error bound spreads
+    assertTrue(Matrix.row([0, 0]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
+    assertTrue(Matrix.row([1, 0]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
+    assertTrue(Matrix.row([0, 1]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
+    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
+};
+
+MatrixTest.prototype.testNorm2 = function() {
+    assertEquals(1, Matrix.row([1]).norm2());
+    assertEquals(4, Matrix.row([2]).norm2());
+    assertEquals(2, Matrix.row([1, 1]).norm2());
+    assertEquals(2, Matrix.col([1, 1]).norm2());
+    assertEquals(30, Matrix.square([1, 2, 3, 4]).norm2());
+};
+
+MatrixTest.prototype.testIsApproximatelyUnitary = function() {
+    assertFalse(Matrix.row([1, 1]).isApproximatelyUnitary(999));
+    assertFalse(Matrix.col([1, 1]).isApproximatelyUnitary(999));
+
+    assertTrue(Matrix.row([1]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row([Complex.I]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row([-1]).isApproximatelyUnitary(0));
+    assertFalse(Matrix.row([-2]).isApproximatelyUnitary(0));
+    assertFalse(Matrix.row([0]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row([-2]).isApproximatelyUnitary(999));
+
+    assertTrue(Matrix.square([1, 0, 0, 1]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.rotation(1).isApproximatelyUnitary(0.001));
+    assertTrue(Matrix.PAULI_X.isApproximatelyUnitary(0));
+    assertTrue(Matrix.PAULI_Y.isApproximatelyUnitary(0));
+    assertTrue(Matrix.PAULI_Z.isApproximatelyUnitary(0));
+    assertTrue(Matrix.HADAMARD.isApproximatelyUnitary(0.001));
 };
 
 MatrixTest.prototype.testFromRotation = function() {
     // No turn gives no-op
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, 0), Matrix.identity(2));
 
     // Whole turns are no-ops
-    assertUnitaryApproxEqual(Matrix.fromRotation(1, 0, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 1, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, 1), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(-1, 0, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, -1, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, -1), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0.6, 0.8, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(1, 0, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 1, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, 1), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(-1, 0, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, -1, 0), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, -1), Matrix.identity(2));
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0.6, 0.8, 0), Matrix.identity(2));
 
     // Half turns along each axis is the corresponding Pauli operation
-    assertUnitaryApproxEqual(Matrix.fromRotation(0.5, 0, 0), Matrix.PAULI_X);
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0.5, 0), Matrix.PAULI_Y);
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, 0.5), Matrix.PAULI_Z);
-    assertUnitaryApproxEqual(Matrix.fromRotation(-0.5, 0, 0), Matrix.PAULI_X);
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, -0.5, 0), Matrix.PAULI_Y);
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, -0.5), Matrix.PAULI_Z);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0.5, 0, 0), Matrix.PAULI_X);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0.5, 0), Matrix.PAULI_Y);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, 0.5), Matrix.PAULI_Z);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(-0.5, 0, 0), Matrix.PAULI_X);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, -0.5, 0), Matrix.PAULI_Y);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, -0.5), Matrix.PAULI_Z);
 
     // Hadamard
-    assertUnitaryApproxEqual(Matrix.fromRotation(Math.sqrt(0.125), 0, Math.sqrt(0.125)), Matrix.HADAMARD);
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(Math.sqrt(0.125), 0, Math.sqrt(0.125)), Matrix.HADAMARD);
 
     // Opposites are inverses
-    assertUnitaryApproxEqual(Matrix.fromRotation(-0.25, 0, 0).times(Matrix.fromRotation(0.25, 0, 0)),
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(-0.25, 0, 0).times(Matrix.fromPauliRotation(0.25, 0, 0)),
         Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, -0.25, 0).times(Matrix.fromRotation(0, 0.25, 0)),
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, -0.25, 0).times(Matrix.fromPauliRotation(0, 0.25, 0)),
         Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromRotation(0, 0, -0.25).times(Matrix.fromRotation(0, 0, 0.25)),
+    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, -0.25).times(Matrix.fromPauliRotation(0, 0, 0.25)),
         Matrix.identity(2));
 
     // Doubling rotation is like squaring
-    var s1 = Matrix.fromRotation(0.1, 0.15, 0.25);
-    var s2 = Matrix.fromRotation(0.2, 0.3, 0.5);
+    var s1 = Matrix.fromPauliRotation(0.1, 0.15, 0.25);
+    var s2 = Matrix.fromPauliRotation(0.2, 0.3, 0.5);
     assertUnitaryApproxEqual(s1.times(s1), s2);
 };
 
@@ -225,6 +268,59 @@ MatrixTest.prototype.testFromWireSwap = function() {
         _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, _, //11__
         _, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, //11_1
         _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1, _, //111_
-        _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1, //1111
+        _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1 //1111
     ])));
+};
+
+MatrixTest.prototype.testIdentity = function() {
+    assertEquals("{{1}}", Matrix.identity(1).toString());
+    assertEquals("{{1, 0}, {0, 1}}", Matrix.identity(2).toString());
+    assertEquals("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}", Matrix.identity(3).toString());
+    assertEquals("{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}", Matrix.identity(4).toString());
+};
+
+MatrixTest.prototype.testRotation = function() {
+    var s = Math.sqrt(0.5);
+    var t = Math.PI * 2;
+    assertUnitaryApproxEqual(Matrix.rotation(0), Matrix.square([1, 0, 0, 1]));
+    assertUnitaryApproxEqual(Matrix.rotation(t / 8), Matrix.square([s, -s, s, s]));
+    assertUnitaryApproxEqual(Matrix.rotation(t * 2 / 8), Matrix.square([0, -1, 1, 0]));
+    assertUnitaryApproxEqual(Matrix.rotation(t * 3 / 8), Matrix.square([-s, -s, s, -s]));
+    assertUnitaryApproxEqual(Matrix.rotation(t * 4 / 8), Matrix.square([-1, 0, 0, -1]));
+    assertUnitaryApproxEqual(Matrix.rotation(t * 5 / 8), Matrix.square([-s, s, -s, -s]));
+    assertUnitaryApproxEqual(Matrix.rotation(t * 6 / 8), Matrix.square([0, 1, -1, 0]));
+    assertUnitaryApproxEqual(Matrix.rotation(t * 7 / 8), Matrix.square([s, s, -s, s]));
+    assertUnitaryApproxEqual(Matrix.rotation(t), Matrix.square([1, 0, 0, 1]));
+};
+
+MatrixTest.prototype.testSingularValueDecomposition_2x2 = function() {
+    var z = Matrix.square([0, 0, 0, 0]).singularValueDecomposition();
+    assertUnitaryApproxEqual(z.u, Matrix.identity(2));
+    assertUnitaryApproxEqual(z.s, Matrix.square([0, 0, 0, 0]));
+    assertUnitaryApproxEqual(z.v, Matrix.identity(2));
+
+    var i = Matrix.identity(2).singularValueDecomposition();
+    assertUnitaryApproxEqual(i.u, Matrix.identity(2));
+    assertUnitaryApproxEqual(i.s, Matrix.identity(2));
+    assertUnitaryApproxEqual(i.v, Matrix.identity(2));
+
+    var am = Matrix.square([1, Complex.I.times(2), 3, 4]);
+    var ad = am.singularValueDecomposition();
+    assertUnitaryApproxEqual(ad.u.times(ad.s).times(ad.v), am);
+    assertUnitaryApproxEqual(ad.s, Matrix.square([5.30594, 0, 0, 1.35906]));
+};
+
+MatrixTest.prototype.testClosestUnitary_2x2 = function() {
+    assertUnitaryApproxEqual(
+        Matrix.square([0, 0, 0, 0]).closestUnitary(),
+        Matrix.square([1, 0, 0, 1]));
+    assertUnitaryApproxEqual(
+        Matrix.square([2, 0, 0, 0.0001]).closestUnitary(),
+        Matrix.square([1, 0, 0, 1]));
+    assertUnitaryApproxEqual(
+        Matrix.square([0, 0.5, 0.0001, 0]).closestUnitary(),
+        Matrix.square([0, 1, 1, 0]));
+    assertUnitaryApproxEqual(
+        Matrix.square([1, Complex.I, -1, Complex.I.times(-1)]).closestUnitary(),
+        Matrix.square([1, 0, 0, Complex.I.times(-1)]));
 };

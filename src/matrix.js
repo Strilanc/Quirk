@@ -227,6 +227,46 @@ Matrix.prototype.times = function (other) {
 };
 
 /**
+ * Returns the receiving matrix's squared euclidean length.
+ * @returns {!number}
+ */
+Matrix.prototype.norm2 = function() {
+    var t = 0;
+    for (var r = 0; r < this.rows.length; r++) {
+        var row = this.rows[r];
+        for (var c = 0; c < row.length; c++) {
+            t += row[c].norm2();
+        }
+    }
+    return t;
+};
+
+/**
+ * Determines if the matrix is approximately unitary or not.
+ * @param {!number} epsilon Distance away from unitary the matrix is allowed to be. Defaults to 0.
+ * @returns {!boolean}
+ */
+Matrix.prototype.isApproximatelyUnitary = function (epsilon) {
+    var n = this.width();
+    if (this.height() !== n) {
+        return false;
+    }
+    return this.times(this.adjoint()).isApproximatelyEqualTo(Matrix.identity(n), epsilon);
+};
+
+/**
+ * Determines if the receiving matrix is approximately equal to the given matrix.
+ * @param {!Matrix} other
+ * @param {!number} epsilon Maximum distance between the two matrices.
+ * @returns {!boolean}
+ */
+Matrix.prototype.isApproximatelyEqualTo = function (other, epsilon) {
+    return this.width() === other.width() &&
+        this.height() === other.height() &&
+        this.minus(other).norm2() <= epsilon;
+};
+
+/**
  * Returns the tensor product of the receiving matrix and the given matrix.
  * @param {!Matrix} other
  * @returns {!Matrix}
@@ -257,7 +297,10 @@ Matrix.prototype.tensorProduct = function (other) {
 };
 
 /**
- * Returns a single-qubit quantum operation corresponding to the given rotation.
+ * Returns a single-qubit quantum operation corresponding to the given 3-dimensional rotation in some useful way.
+ *
+ * The mapping is chosen so that rotating around each axis runs through the respective pauli matrix, and so that cutting
+ * a rotation in half square roots the result, and a few other nice properties.
  *
  * The direction of the given x, y, z vector determines which axis to rotate around, and the length of the vector
  * determines what fraction of an entire turn to rotate. For example, if [x, y, z] is [1/√8), 0, 1/√8], then the
@@ -270,7 +313,7 @@ Matrix.prototype.tensorProduct = function (other) {
  *
  * @returns {!Matrix}
  */
-Matrix.fromRotation = function (x, y, z) {
+Matrix.fromPauliRotation = function (x, y, z) {
     var sinc = function(t) {
         if (Math.abs(t) < 0.0002) { return 1 - t*t / 6.0; }
         return Math.sin(t) / t;
@@ -323,6 +366,124 @@ Matrix.identity = function(size) {
     });
 };
 
+/**
+ * Returns a rotation matrix that rotations by the given angle.
+ * @param {!number} theta The angle the matrix should rotate by, in radians.
+ * @returns {!Matrix} A real matrix.
+ */
+Matrix.rotation = function (theta) {
+    var c = Math.cos(theta);
+    var s = Math.sin(theta);
+    return Matrix.square([
+        c, -s,
+        s, c]);
+};
+
+/**
+ * Factors the matrix int u*s*v parts, where u and v are unitary matrices and s is a real diagonal matrix.
+ * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
+ */
+Matrix.prototype.singularValueDecomposition = function () {
+    /**
+     * @param {!Complex|!number} p
+     * @param {!Complex|!number} q
+     * @returns {!Matrix}
+     */
+    var phase_cancel_matrix = function (p, q) {
+        return Matrix.square([
+            Complex.from(p).unit().conjugate(), 0,
+            0, Complex.from(q).unit().conjugate()]);
+    };
+
+    /**
+     * @param {!Matrix} m
+     * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
+     */
+    var svd_real_2x2 = function (m) {
+        var a = Complex.realPartOf(m.rows[0][0]);
+        var b = Complex.realPartOf(m.rows[0][1]);
+        var c = Complex.realPartOf(m.rows[1][0]);
+        var d = Complex.realPartOf(m.rows[1][1]);
+
+        var t = a + d;
+        var x = b + c;
+        var y = b - c;
+        var z = a - d;
+
+        var theta_0 = Math.atan2(x, t) / 2.0;
+        var theta_d = Math.atan2(y, z) / 2.0;
+
+        var s_0 = Math.sqrt(t * t + x * x) / 2.0;
+        var s_d = Math.sqrt(z * z + y * y) / 2.0;
+
+        return {
+            u: Matrix.rotation(theta_0 - theta_d),
+            s: Matrix.square([s_0 + s_d, 0, 0, s_0 - s_d]),
+            v: Matrix.rotation(theta_0 + theta_d)
+        };
+    };
+
+    /**
+     * @param {!Matrix} m
+     * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
+     */
+    var svd_2x2 = function (m) {
+        // Initially all entries are free.
+        // m = | ?+?i  ?+?i |
+        //     | ?+?i  ?+?i |
+
+        // Cancel top row phase
+        var p = phase_cancel_matrix(m.rows[0][0], m.rows[0][1]);
+        var m2 = m.times(p);
+        // m2 = m p r = | >     >    |
+        //              | ?+?i  ?+?i |
+
+        // Cancel top-right value by rotation.
+        var r = Matrix.rotation(Math.atan2(m2.rows[0][1].real, m2.rows[0][0].real));
+        var m3 = m2.times(r);
+        // m3 = m p r = | ?+?i  0    |
+        //              | ?+?i  ?+?i |
+
+        // Make bottom row non-imaginary and non-negative by column phasing.
+        var q = phase_cancel_matrix(m3.rows[1][0], m3.rows[1][1]);
+        var m4 = m3.times(q);
+        // m4 = m p r q = | ?+?i  0 |
+        //                | >     > |
+
+        // Cancel imaginary part of top left value by row phasing.
+        var t = phase_cancel_matrix(m4.rows[0][0], 1);
+        var m5 = t.times(m4);
+        // m5 = t m p r q = | > 0 |
+        //                  | > > |
+
+        // All values are now real (also the top-right is zero), so delegate to a
+        // singular value decomposition that works for real matrices.
+        // t m p r q = u s v
+        var usv = svd_real_2x2(m5);
+
+        // m = (t* u) s (v q* r* p*)
+        return {
+            u: t.adjoint().times(usv.u),
+            s: usv.s,
+            v: usv.v.times(q.adjoint()).times(r.adjoint()).times(p.adjoint())
+        };
+    };
+
+    if (this.width() !== 2 || this.height() !== 2) {
+        throw "Not implemented: non-2x2 singular value decomposition";
+    }
+
+    return svd_2x2(this);
+};
+
+/**
+ * Returns the unitary matrix closest to the receiving matrix, "repairing" it into a unitary form.
+ * @returns {!Matrix}
+ */
+Matrix.prototype.closestUnitary = function() {
+    var svd = this.singularValueDecomposition();
+    return svd.u.times(svd.v);
+};
 
 /**
  * A special complex value that the tensor product checks for in order to support controlled operations.

@@ -80,7 +80,7 @@ Gate.PEEK = new Gate(
  */
 Gate.DOWN = new Gate(
     "↓",
-    Matrix.fromRotation(0.25, 0, 0),
+    Matrix.fromPauliRotation(0.25, 0, 0),
     "Down Gate",
     "Cycles through OFF, (1+i)(OFF - i ON), ON, and (1-i)(OFF + i ON).\n" +
     "\n" +
@@ -94,7 +94,7 @@ Gate.DOWN = new Gate(
  */
 Gate.UP = new Gate(
     "↑",
-    Matrix.fromRotation(0.75, 0, 0),
+    Matrix.fromPauliRotation(0.75, 0, 0),
     "Up Gate / Beam Splitter",
     "Cycles through OFF, (1-i)(OFF + i ON), ON, and (1+i)(OFF - i ON).\n" +
     "\n" +
@@ -123,7 +123,7 @@ Gate.X = new Gate(
  */
 Gate.RIGHT = new Gate(
     "→",
-    Matrix.fromRotation(0, 0.25, 0),
+    Matrix.fromPauliRotation(0, 0.25, 0),
     "Right Gate",
     "Cycles through OFF, (1+i)(OFF + ON), i On, and (1-i)(OFF - ON).\n" +
     "\n" +
@@ -136,7 +136,7 @@ Gate.RIGHT = new Gate(
  */
 Gate.LEFT = new Gate(
     "←",
-    Matrix.fromRotation(0, 0.75, 0),
+    Matrix.fromPauliRotation(0, 0.75, 0),
     "Left Gate",
     "Cycles through OFF, (1-i)(OFF - ON), i On, and (1+i)(OFF + ON).\n" +
     "\n" +
@@ -162,7 +162,7 @@ Gate.Y = new Gate(
  */
 Gate.COUNTER_CLOCKWISE = new Gate(
     "↺",
-    Matrix.fromRotation(0, 0, 0.25),
+    Matrix.fromPauliRotation(0, 0, 0.25),
     "Counter Phase Gate",
     "Multiplies the ON phase by i (without affecting the OFF state).\n" +
     "\n" +
@@ -175,7 +175,7 @@ Gate.COUNTER_CLOCKWISE = new Gate(
  */
 Gate.CLOCKWISE = new Gate(
     "↻",
-    Matrix.fromRotation(0, 0, 0.75),
+    Matrix.fromPauliRotation(0, 0, 0.75),
     "Clockwise Phase Gate",
     "Multiplies the ON phase by -i (without affecting the OFF state).\n" +
     "\n" +
@@ -252,7 +252,7 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
 
     return new Gate(
         symbol || "Z(" + name_desc + ")",
-        Matrix.fromRotation(0, 0, fraction),
+        Matrix.fromPauliRotation(0, 0, fraction),
         deg_desc + "° Phase Gate",
         "Rotates the phase of a qubit's ON state by " + deg_desc + " degrees,\n" +
         "while leaving its OFF state alone. The standard Pauli Z gate\n" +
@@ -266,7 +266,7 @@ Gate.fromPhaseRotation = function(fraction, symbol) {
  * @param {=string} symbol
  * @returns {!Gate}
  */
-Gate.fromRotation = function(x, y, z, symbol) {
+Gate.fromPauliRotation = function(x, y, z, symbol) {
     if (x === 0 && y === 0) {
         return Gate.fromPhaseRotation(z, symbol);
     }
@@ -275,7 +275,7 @@ Gate.fromRotation = function(x, y, z, symbol) {
     var deg = n*360;
     return new Gate(
         symbol || Gate.DRAW_MATRIX_SYMBOL, // special character that means "render the matrix"
-        Matrix.fromRotation(x, y, z),
+        Matrix.fromPauliRotation(x, y, z),
         deg +  "° around <" + x/n + ", " + y/n + ", " + z/n + ">",
         "A custom operation based on a rotation.");
 };

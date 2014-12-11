@@ -128,6 +128,58 @@ if (canvas !== null) {
     /** @type {!Array.<!Gate>} */
     var timeVaryingGates = [spinX, spinY, spinZ, spinR, spinH];
 
+    var makeFuzzyGate = function () {
+        return new Gate(
+            "Fuzz",
+            Matrix.square([
+                new Complex(Math.random() - 0.5, Math.random() - 0.5),
+                new Complex(Math.random() - 0.5, Math.random() - 0.5),
+                new Complex(Math.random() - 0.5, Math.random() - 0.5),
+                new Complex(Math.random() - 0.5, Math.random() - 0.5)
+            ]).closestUnitary(),
+            "Fuzz Gate",
+            "Replaced by a different operation each time you grab it.");
+    };
+
+    var sillyGates = [
+        makeFuzzyGate(),
+        new Gate(
+            "!Reset",
+            Matrix.square([1, 1, 0, 0]),
+            "Reset Gate [NOT UNITARY]",
+            "Forces a qubit OFF.\n" +
+            "\n" +
+            "May cause double vision or the annihilation of all things."
+        ),
+        new Gate(
+            "!Decay",
+            Matrix.square([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]),
+            "Decay Gate [NOT UNITARY]",
+            "Cuts existence in half."
+        ),
+        new Gate(
+            "",
+            Matrix.square([1, 0, 0, 1]),
+            "Identity Gate",
+            "Has no effect. Does nothing. Wastes space. A nop."
+        ),
+        new Gate(
+            "!Same",
+            Matrix.square([Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5)]),
+            "Same Gate [NOT UNITARY]",
+            "Distributes amplitudes equally in all cases, causing the ON and OFF\n" +
+            "amplitudes to always end up equal.\n" +
+            "\n" +
+            "What could go wrong?"
+        ),
+        new Gate(
+            "!Hole",
+            Matrix.square([0, 0, 0, 0]),
+            "Hole Gate [NOT UNITARY]",
+            "Throws the amplitudes down a hole. ALL of them."
+        )
+    ];
+
     /** @type {!Array.<!{hint: !string, gates: !Array.<!Gate>}>} */
     var gateSet = [
         {
@@ -160,13 +212,17 @@ if (canvas !== null) {
         {
             hint: "Other Z",
             gates: [
-                Gate.fromRotation(0, 0, 1 / 3),
-                Gate.fromRotation(0, 0, 1 / 8),
-                Gate.fromRotation(0, 0, 1 / 16),
-                Gate.fromRotation(0, 0, -1 / 3),
-                Gate.fromRotation(0, 0, -1 / 8),
-                Gate.fromRotation(0, 0, -1 / 16)
+                Gate.fromPauliRotation(0, 0, 1 / 3),
+                Gate.fromPauliRotation(0, 0, 1 / 8),
+                Gate.fromPauliRotation(0, 0, 1 / 16),
+                Gate.fromPauliRotation(0, 0, -1 / 3),
+                Gate.fromPauliRotation(0, 0, -1 / 8),
+                Gate.fromPauliRotation(0, 0, -1 / 16)
             ]
+        },
+        {
+            hint: "Silly",
+            gates: sillyGates
         }
     ];
 
@@ -308,6 +364,10 @@ if (canvas !== null) {
                 row: null,
                 col: null
             };
+            if (g === sillyGates[0]) {
+                g.symbol = Gate.DRAW_MATRIX_SYMBOL;
+                sillyGates[0] = makeFuzzyGate();
+            }
         }
         if (held === null) {
             var r = gateRadius;
@@ -468,7 +528,14 @@ if (canvas !== null) {
                 (gate === Gate.SWAP_HALF && hasTwoSwaps);
             var doDrawGateBox = isHolding || canGrab || !isModifier;
             if (doDrawGateBox) {
-                painter.fillRect(b, highlightGate ? "orange" : "white");
+                var backColor = "white";
+                if (!gate.matrix.isApproximatelyUnitary(0.001)) {
+                    backColor = "red";
+                }
+                if (highlightGate) {
+                    backColor = "orange";
+                }
+                painter.fillRect(b, backColor);
                 painter.strokeRect(b);
             }
             if (gate === Gate.PEEK) {
@@ -583,10 +650,10 @@ if (canvas !== null) {
         var s = Math.sin(ts);
 
         spinR.matrix = Matrix.square([c, -s, s, c]);
-        spinX.matrix = Matrix.fromRotation(u, 0, 0);
-        spinY.matrix = Matrix.fromRotation(0, u, 0);
-        spinZ.matrix = Matrix.fromRotation(0, 0, u);
-        spinH.matrix = Matrix.fromRotation(u2, 0, u2);
+        spinX.matrix = Matrix.fromPauliRotation(u, 0, 0);
+        spinY.matrix = Matrix.fromPauliRotation(0, u, 0);
+        spinZ.matrix = Matrix.fromPauliRotation(0, 0, u);
+        spinH.matrix = Matrix.fromPauliRotation(u2, 0, u2);
     };
     var redraw = function () {
         isHoveringOverTimeBasedGate = false;
