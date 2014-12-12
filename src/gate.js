@@ -292,70 +292,168 @@ Gate.fromCustom = function(matrix) {
         "A custom operation.");
 };
 
-/**
- * A column of gates in a circuit with many qubits.
- *
- * @param {!Array.<?Gate>} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
- * Wires without a gate in this column should use null instead.
- *
- * @property {!Array.<?Gate>} gates
- * @constructor
- */
-function GateColumn(gates) {
-    this.gates = gates;
-}
+/** @type {!Gate} */
+Gate.EVOLVING_R = new Gate(
+    "R(t)",
+    Matrix.identity(2),
+    "Evolving Rotation Gate",
+    "A rotation gate where the angle of rotation increases and cycles over\n" +
+    "time.");
+/** @type {!Gate} */
+Gate.EVOLVING_H = new Gate(
+    "H(t)",
+    Matrix.identity(2),
+    "Evolving Hadamard Gate",
+    "Smoothly interpolates from no-op to the Hadamard gate and back over\n" +
+    "time. A continuous rotation around the X+Z axis of the Block Sphere.");
+/** @type {!Gate} */
+Gate.EVOLVING_X = new Gate(
+    "X(t)",
+    Matrix.identity(2),
+    "Evolving X Gate",
+    "Smoothly interpolates from no-op to the Pauli X gate and back over\n" +
+    "time. A continuous rotation around the X axis of the Block Sphere.");
+/** @type {!Gate} */
+Gate.EVOLVING_Y = new Gate(
+    "Y(t)",
+    Matrix.identity(2),
+    "Evolving Y Gate",
+    "Smoothly interpolates from no-op to the Pauli Y gate and back over\n" +
+    "time. A continuous rotation around the Y axis of the Block Sphere.");
+/** @type {!Gate} */
+Gate.EVOLVING_Z = new Gate(
+    "Z(t)",
+    Matrix.identity(2),
+    "Evolving Z Gate",
+    "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
+    "time. A phase gate where the phase angle increases and cycles over\n" +
+    "time. A continuous rotation around the Z axis of the Block Sphere.");
+/** @type {!Array.<!Gate>} */
+Gate.EVOLVING_GATES = [
+    Gate.EVOLVING_X,
+    Gate.EVOLVING_Y,
+    Gate.EVOLVING_Z,
+    Gate.EVOLVING_R,
+    Gate.EVOLVING_H
+];
+
+Gate.updateTimeGates = function (t) {
+    var r = t % 1;
+    var u = t;
+    var u2 = u / Math.sqrt(2);
+    var c = Math.cos(r * Math.PI);
+    var s = Math.sin(r * Math.PI);
+
+    Gate.EVOLVING_R.matrix = Matrix.square([c, -s, s, c]);
+    Gate.EVOLVING_X.matrix = Matrix.fromPauliRotation(u, 0, 0);
+    Gate.EVOLVING_Y.matrix = Matrix.fromPauliRotation(0, u, 0);
+    Gate.EVOLVING_Z.matrix = Matrix.fromPauliRotation(0, 0, u);
+    Gate.EVOLVING_H.matrix = Matrix.fromPauliRotation(u2, 0, u2);
+};
+
+Gate.makeFuzzGate = function () {
+    return new Gate(
+        "Fuzz",
+        Matrix.square([
+            new Complex(Math.random() - 0.5, Math.random() - 0.5),
+            new Complex(Math.random() - 0.5, Math.random() - 0.5),
+            new Complex(Math.random() - 0.5, Math.random() - 0.5),
+            new Complex(Math.random() - 0.5, Math.random() - 0.5)
+        ]).closestUnitary(),
+        "Fuzz Gate",
+        "Replaced by a different operation each time you grab it.");
+};
+
+Gate.SILLY_GATES = [
+    Gate.makeFuzzGate(),
+    new Gate(
+        "!Reset",
+        Matrix.square([1, 1, 0, 0]),
+        "Reset Gate [NOT UNITARY]",
+        "Forces a qubit OFF.\n" +
+        "\n" +
+        "May cause double vision or the annihilation of all things."
+    ),
+    new Gate(
+        "!Decay",
+        Matrix.square([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]),
+        "Decay Gate [NOT UNITARY]",
+        "Cuts existence in half."
+    ),
+    new Gate(
+        "",
+        Matrix.square([1, 0, 0, 1]),
+        "Identity Gate",
+        "Has no effect. Does nothing. Wastes space. A nop."
+    ),
+    new Gate(
+        "!Same",
+        Matrix.square([Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5)]),
+        "Same Gate [NOT UNITARY]",
+        "Distributes amplitudes equally in all cases, causing the ON and OFF\n" +
+        "amplitudes to always end up equal.\n" +
+        "\n" +
+        "What could go wrong?"
+    ),
+    new Gate(
+        "!Hole",
+        Matrix.square([0, 0, 0, 0]),
+        "Hole Gate [NOT UNITARY]",
+        "Throws the amplitudes down a hole. ALL of them."
+    )
+];
 
 /**
- * @param {!int} size
- * @returns {!GateColumn}
+ * @param {!Gate} gate
  */
-GateColumn.empty = function(size) {
-    var gates = [];
-    for (var i = 0; i < size; i++) {
-        gates.push(null);
+Gate.updateIfFuzzGate = function(gate) {
+    if (gate === Gate.SILLY_GATES[0]) {
+        Gate.SILLY_GATES[0] = Gate.makeFuzzGate();
     }
-    return new GateColumn(gates);
 };
 
-/**
- * @returns {!boolean}
- */
-GateColumn.prototype.isEmpty = function() {
-    return this.gates.every(function(e) { return e === null; });
-};
-
-/**
- * Returns the matrix corresponding to the parallel applications of the operations in this circuit column.
- * @returns {!Matrix}
- */
-GateColumn.prototype.matrix = function() {
-    var ops = [];
-    var swapIndices = [];
-    for (var i = 0; i < this.gates.length; i++) {
-        var op;
-        if (this.gates[i] === null) {
-            op = Matrix.identity(2);
-        } else if (this.gates[i] === Gate.SWAP_HALF) {
-            swapIndices.push(i);
-            op = Matrix.identity(2);
-        } else {
-            op = this.gates[i].matrix;
-        }
-        ops.push(op);
+/** @type {!Array.<!{hint: !string, gates: !Array.<!Gate>}>} */
+Gate.GATE_SET = [
+    {
+        hint: "Special",
+        gates: [
+            Gate.CONTROL,
+            Gate.SWAP_HALF,
+            Gate.PEEK,
+            Gate.ANTI_CONTROL
+        ]
+    },
+    {
+        hint: "Half Turns",
+        gates: [Gate.H, null, null, Gate.X, Gate.Y, Gate.Z]
+    },
+    {
+        hint: "Quarter Turns (+/-)",
+        gates: [
+            Gate.DOWN,
+            Gate.RIGHT,
+            Gate.COUNTER_CLOCKWISE,
+            Gate.UP,
+            Gate.LEFT,
+            Gate.CLOCKWISE]
+    },
+    {
+        hint: "Evolving",
+        gates: Gate.EVOLVING_GATES
+    },
+    {
+        hint: "Other Z",
+        gates: [
+            Gate.fromPauliRotation(0, 0, 1 / 3),
+            Gate.fromPauliRotation(0, 0, 1 / 8),
+            Gate.fromPauliRotation(0, 0, 1 / 16),
+            Gate.fromPauliRotation(0, 0, -1 / 3),
+            Gate.fromPauliRotation(0, 0, -1 / 8),
+            Gate.fromPauliRotation(0, 0, -1 / 16)
+        ]
+    },
+    {
+        hint: "Silly",
+        gates: Gate.SILLY_GATES
     }
-
-    var result = ops.reduce(function (a, e) { return e.tensorProduct(a); }, Matrix.identity(1));
-    if (swapIndices.length === 2) {
-        result = Matrix.fromWireSwap(this.gates.length, swapIndices[0], swapIndices[1]).times(result);
-    }
-    return result;
-};
-
-/**
- * Returns the result of applying this circuit column to the given state.
- * @param {!Matrix} state A column matrix of the correct size.
- * @returns {!Matrix}
- */
-GateColumn.prototype.transform = function(state) {
-    return this.matrix().times(state);
-};
+];
