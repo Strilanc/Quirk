@@ -5,20 +5,219 @@
  * @param {!Matrix} matrix The operation the gate applies.
  * @param {!string} name A helpful human-readable name for the operation.
  * @param {!string} description A helpful description of what the operation does.
+ * @param {=function} symbolDrawer
  *
  * @property {!string} symbol
  * @property {!Matrix} matrix
  * @property {!string} name
  * @property {!string} description
+ * @property {!function} symbolDrawer
  *
  * @constructor
  */
-function Gate(symbol, matrix, name, description) {
+function Gate(symbol, matrix, name, description, symbolDrawer) {
     this.symbol = symbol;
     this.matrix = matrix;
     this.name = name;
     this.description = description;
+    this.symbolDrawer = symbolDrawer || Gate.DEFAULT_SYMBOL_DRAWER;
 }
+
+
+/**
+ * @param {!int} wireTarget
+ * @param {!int} wireExpectedMask
+ * @param {!int} wireRequiredMask
+ * @param {!Matrix} state
+ */
+var measureConditionalProbability = function (wireTarget, wireExpectedMask, wireRequiredMask, state) {
+    var t_off = 0;
+    var t_on = 0;
+    for (var i = 0; i < state.height(); i++) {
+        if ((i & wireRequiredMask) === (wireExpectedMask & wireRequiredMask)) {
+            if ((i & (1 << wireTarget)) === 0) {
+                t_off += state.rows[i][0].norm2();
+            } else {
+                t_on += state.rows[i][0].norm2();
+            }
+        }
+    }
+    return t_on / (t_off + t_on);
+};
+
+/**
+ * Returns the probability of controls on a column being satisfied and a wire being ON,
+ * if that was measured.
+ *
+ * @param {!GateColumn} gateColumn
+ * @param {!int} targetWire
+ * @param {!Matrix} columnState
+ * @returns {!{conditional: !number, total: !number, canDiffer: !boolean}}
+ */
+var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
+    var expectedMask = 0;
+    var requiredMask = 0;
+    for (var i = 0; i < gateColumn.gates.length; i++) {
+        if (gateColumn.gates[i] === Gate.CONTROL) {
+            requiredMask |= 1 << i;
+            expectedMask |= 1 << i;
+        } else if (gateColumn.gates[i] === Gate.ANTI_CONTROL) {
+            requiredMask |= 1 << i;
+        }
+    }
+    return {
+        conditional: measureConditionalProbability(targetWire, expectedMask, requiredMask, columnState),
+        total: measureProbability(expectedMask | (1 << targetWire), requiredMask | (1 << targetWire), columnState),
+        canDiffer: requiredMask !== 0
+    };
+};
+
+/**
+ * @param {!boolean} isInToolbox
+ * @param {!boolean} isHighlighted
+ * @param {!Rect} rect
+ * @param {!Gate} gate
+ * @param {?CircuitContext} circuitContext
+ *
+ * @property {!boolean} isInToolbox
+ * @property {!boolean} isHighlighted
+ * @property {!Rect} rect
+ * @property {!Gate} gate
+ * @property {?CircuitContext} circuitContext
+ *
+ * @constructor
+ */
+function GateDrawParams(isInToolbox, isHighlighted, rect, gate, circuitContext) {
+    this.isInToolbox = isInToolbox;
+    this.isHighlighted = isHighlighted;
+    this.rect = rect;
+    this.gate = gate;
+    this.circuitContext = circuitContext;
+}
+
+/**
+ * @param {!GateColumn} gateColumn
+ * @param {!int} rowIndex
+ * @param {!Matrix} state
+ *
+ * @property {!GateColumn} gateColumn
+ * @property {!int} rowIndex
+ * @property {!Matrix} state
+ *
+ * @constructor
+ */
+function CircuitContext(gateColumn, rowIndex, state) {
+    this.gateColumn = gateColumn;
+    this.rowIndex = rowIndex;
+    this.state = state;
+}
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.DEFAULT_SYMBOL_DRAWER = function(painter, params) {
+    var backColor = "white";
+    if (!params.isInToolbox && !params.gate.matrix.isApproximatelyUnitary(0.001)) {
+        backColor = "red";
+    }
+    if (params.isHighlighted) {
+        backColor = "orange";
+    }
+    painter.fillRect(params.rect, backColor);
+    painter.strokeRect(params.rect);
+    painter.printCenteredText(params.gate.symbol, params.rect.center());
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.MATRIX_SYMBOL_DRAWER = function (painter, params) {
+    painter.paintMatrix(
+        params.gate.matrix,
+        params.rect,
+        params.isHighlighted ? "orange" : undefined);
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = function (painter, params) {
+    if (params.isInToolbox) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+        return;
+    }
+    Gate.MATRIX_SYMBOL_DRAWER(painter, params);
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.DRAW_CONTROL_SYMBOL = function(painter, params) {
+    if (params.isInToolbox || params.isHighlighted) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+    }
+    painter.fillCircle(params.rect.center(), 5, "black");
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.DRAW_ANTI_CONTROL_SYMBOL = function(painter, params) {
+    if (params.isInToolbox || params.isHighlighted) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+    }
+    var p = params.rect.center();
+    painter.fillCircle(p, 5);
+    painter.strokeCircle(p, 5);
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.PEEK_SYMBOL_DRAWER = function(painter, params) {
+    if (params.circuitContext === null) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+        return;
+    }
+
+    var p = measureGateColumnProbabilityOn(
+        params.circuitContext.gateColumn,
+        params.circuitContext.rowIndex,
+        params.circuitContext.state);
+    if (p.canDiffer) {
+        painter.paintConditionalProbabilityBox(
+            p.total,
+            p.conditional,
+            params.rect,
+        params.isHighlighted ? "orange" : undefined);
+    } else {
+        painter.paintProbabilityBox(
+            p.total,
+            params.rect,
+            params.isHighlighted ? "orange" : undefined);
+    }
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
+Gate.SWAP_SYMBOL_DRAWER = function (painter, params) {
+    if (params.isInToolbox || params.isHighlighted) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+        return;
+    }
+
+    var swapRect = Rect.centeredSquareWithRadius(params.rect.center(), params.rect.w/6);
+    painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
+    painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
+};
 
 /**
  * @returns {!string}
@@ -40,7 +239,8 @@ Gate.CONTROL = new Gate(
     "other operations (ones in the same column) to only occur when the\n" +
     "control qubit is true. When the control qubit is in a superposition of\n" +
     "ON and OFF, the other operations only apply in the parts of the\n" +
-    "superposition control qubit is on.");
+    "superposition control qubit is on.",
+    Gate.DRAW_CONTROL_SYMBOL);
 
 /**
  * @type {!Gate}
@@ -53,7 +253,8 @@ Gate.ANTI_CONTROL = new Gate(
     "\n" +
     "The anti-control operation like the control operation, except it\n" +
     "conditions on OFF instead of ON. Linked operations will only apply\n" +
-    "to parts of the superposition where the control qubit is OFF.");
+    "to parts of the superposition where the control qubit is OFF.",
+    Gate.DRAW_ANTI_CONTROL_SYMBOL);
 
 /**
  * A visualization gate with no effect.
@@ -73,7 +274,8 @@ Gate.PEEK = new Gate(
     "\n" +
     "(In practice this 'operation' would disturb the result and require\n" +
     "re-running the computation many times. Here we get to be more\n" +
-    "convenient.)");
+    "convenient.)",
+    Gate.PEEK_SYMBOL_DRAWER);
 
 /**
  * @type {!Gate}
@@ -224,12 +426,8 @@ Gate.SWAP_HALF = new Gate(
     "Swap Gate [Half]",
     "Swaps the values of two qubits.\n" +
     "\n" +
-    "(You must place two swap gate halves in a column to do a swap.)");
-
-/**
- * @type {!string}
- */
-Gate.DRAW_MATRIX_SYMBOL = "\\__SPECIAL_SYMBOL__DRAW_MATRIX";
+    "(You must place two swap gate halves in a column to do a swap.)",
+    Gate.SWAP_SYMBOL_DRAWER);
 
 /**
  * @param {!number} fraction
@@ -274,10 +472,11 @@ Gate.fromPauliRotation = function(x, y, z, symbol) {
     var n = Math.sqrt(x*x + y*y + z*z);
     var deg = n*360;
     return new Gate(
-        symbol || Gate.DRAW_MATRIX_SYMBOL, // special character that means "render the matrix"
+        symbol || "", // special character that means "render the matrix"
         Matrix.fromPauliRotation(x, y, z),
         deg +  "° around <" + x/n + ", " + y/n + ", " + z/n + ">",
-        "A custom operation based on a rotation.");
+        "A custom operation based on a rotation.",
+        symbol === undefined ? Gate.MATRIX_SYMBOL_DRAWER : undefined);
 };
 
 /**
@@ -286,10 +485,11 @@ Gate.fromPauliRotation = function(x, y, z, symbol) {
  */
 Gate.fromCustom = function(matrix) {
     return new Gate(
-        Gate.DRAW_MATRIX_SYMBOL,
+        "",
         matrix,
         matrix.toString(),
-        "A custom operation.");
+        "A custom operation.",
+        Gate.MATRIX_SYMBOL_DRAWER);
 };
 
 /** @type {!Gate} */
@@ -361,7 +561,8 @@ Gate.makeFuzzGate = function () {
             new Complex(Math.random() - 0.5, Math.random() - 0.5)
         ]).closestUnitary(),
         "Fuzz Gate",
-        "Replaced by a different operation each time you grab it.");
+        "Replaced by a different operation each time you grab it.",
+        Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX);
 };
 
 Gate.SILLY_GATES = [
@@ -457,3 +658,14 @@ Gate.GATE_SET = [
         gates: Gate.SILLY_GATES
     }
 ];
+
+/**
+ * @param {!Painter} painter
+ * @param {!Rect} areaRect
+ * @param {!boolean} isInToolbox
+ * @param {!boolean} isHighlighted
+ * @param {?CircuitContext} circuitContext
+ */
+Gate.prototype.paint = function(painter, areaRect, isInToolbox, isHighlighted, circuitContext) {
+    this.symbolDrawer(painter, new GateDrawParams(isInToolbox, isHighlighted, areaRect, this, circuitContext));
+};

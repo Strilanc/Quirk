@@ -202,11 +202,14 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
  * Draws a visual representation of a complex matrix.
  * @param {!Matrix} matrix The matrix to draw.
  * @param {!Rect} drawArea The rectangle to draw the matrix within.
+ * @param {=string} highlightColor
  */
-Painter.prototype.paintMatrix = function(matrix, drawArea) {
+Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor) {
     var numCols = matrix.width();
     var numRows = matrix.height();
     var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+
+    this.fillRect(drawArea, highlightColor);
 
     for (var c = 0; c < numCols; c++) {
         for (var r = 0; r < numRows; r++) {
@@ -244,10 +247,11 @@ Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
 /**
  * @param {!number} probability
  * @param {!Rect} drawArea
+ * @param {=string} highlightColor
  */
-Painter.prototype.paintProbabilityBox = function (probability, drawArea) {
+Painter.prototype.paintProbabilityBox = function (probability, drawArea, highlightColor) {
     var w = drawArea.w * probability;
-    this.fillRect(drawArea);
+    this.fillRect(drawArea, highlightColor);
     this.fillRect(drawArea.takeLeft(w), "gray");
     this.strokeRect(drawArea);
     this.printCenteredText((probability*100).toFixed(1) + "%", drawArea.center());
@@ -257,11 +261,13 @@ Painter.prototype.paintProbabilityBox = function (probability, drawArea) {
  * @param {!number} probabilityIncludingConditions
  * @param {!number} probabilityGivenConditions
  * @param {!Rect} drawArea
+ * @param {=string} highlightColor
  */
 Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncludingConditions,
                                                             probabilityGivenConditions,
-                                                            drawArea) {
-    this.fillRect(drawArea);
+                                                            drawArea,
+                                                            highlightColor) {
+    this.fillRect(drawArea, highlightColor);
     this.strokeRect(drawArea);
     var topPrintPos = {x: drawArea.x, y: drawArea.y + 15};
     var s;
