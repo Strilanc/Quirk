@@ -12,6 +12,15 @@ function GateColumn(gates) {
 }
 
 /**
+ * @param {!GateColumn|*} other
+ * @returns {!boolean}
+ */
+GateColumn.prototype.isEqualTo = function (other) {
+    return other instanceof GateColumn &&
+        arraysEqualBy(this.gates, other.gates, STRICT_EQUALITY);
+};
+
+/**
  * @param {!int} size
  * @returns {!GateColumn}
  */
@@ -74,7 +83,7 @@ GateColumn.prototype.transform = function(state) {
 GateColumn.prototype.withGateAdded = function(startIndex, gateBlock) {
     need(startIndex >= 0 && startIndex <= this.gates.length - gateBlock.gates.length);
     var gates = this.gates.map(function(e) { return e; });
-    for (var i = 0; i < helds.gateBlock.gates.length; i++) {
+    for (var i = 0; i < gateBlock.gates.length; i++) {
         gates[startIndex + i] = gateBlock.gates[i];
     }
     return new GateColumn(gates);

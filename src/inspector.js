@@ -130,30 +130,13 @@ new TripWire("start").run(function() {
     /**
      * @param {!Painter} painter
      * @param {!Circuit} circuit
-     * @param {!number} x
-     * @param {!QuantumState} outputState
-     */
-    var drawSingleWireProbabilities = function (painter, circuit, x, outputState) {
-        for (var i = 0; i < circuit.numWires; i++) {
-            var p = outputState.probability(1 << i, 1 << i);
-            painter.paintProbabilityBox(
-                p,
-                Rect.centeredSquareWithRadius(
-                    new Point(x + 25, circuit.wireRect(i).center().y),
-                    GATE_RADIUS));
-        }
-    };
-
-    /**
-     * @param {!Painter} painter
-     * @param {!Circuit} circuit
      * @param {!int} takeCount
      * @param {!Rect} drawRect
      */
     var drawOutputAfter = function (painter, circuit, takeCount, drawRect) {
         var input = QuantumState.zero(circuit.numWires);
         var output = transformVectorWithOperations(input, take(circuit.columns, takeCount));
-        drawSingleWireProbabilities(painter, circuit, canvas.width - GATE_RADIUS*2 - 10, output);
+        circuit.drawRightHandPeekGates(painter);
         var gridRect = drawRect.skipLeft(14).skipTop(14);
         painter.paintColumnVectorAsGrid(output.columnVector, gridRect);
         painter.printCenteredText(WIRE_LABELLER(0), new Point(gridRect.x + gridRect.w/4, drawRect.y + 8));
@@ -207,10 +190,11 @@ new TripWire("start").run(function() {
     var ticker = null;
     var redraw;
     /**
+     * @param {!Circuit} circuit
      * @param {!boolean} isHoveringOverTimeBasedGate
      */
-    var tickWhenAppropriate = function(isHoveringOverTimeBasedGate) {
-        var shouldBeTicking = isHoveringOverTimeBasedGate || stableCircuit.hasTimeBasedGates();
+    var tickWhenAppropriate = function(circuit, isHoveringOverTimeBasedGate) {
+        var shouldBeTicking = isHoveringOverTimeBasedGate || circuit.hasTimeBasedGates();
         var isTicking = ticker !== null;
         if (isTicking === shouldBeTicking) {
             return;
@@ -248,11 +232,12 @@ new TripWire("start").run(function() {
 
     /**
      * @param {!Painter} painter
-     * @param modificationPoint {?{ col : !number, row : !number, isInsert : !boolean }}
+     * @param {?{ col : !number, row : !number, isInsert : !boolean }} modificationPoint
      * @param {!Circuit} newCircuit
+     * @param {!Hand} hand
      */
-    var drawInsertSite = function(painter, modificationPoint, newCircuit) {
-        //if (modificationPoint !== null && heldHand === null) {
+    var drawInsertSite = function(painter, modificationPoint, newCircuit, hand) {
+        //if (modificationPoint !== null && hand.heldGateBlock !== null) {
         //    var xr = newCircuit.opRect(modificationPoint.col);
         //    painter.ctx.globalAlpha = 0.5;
         //    painter.fillRect(xr, heldHand === null ? "yellow" : "orange");
@@ -276,16 +261,16 @@ new TripWire("start").run(function() {
         painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), "white");
 
         redrawTrip.mark("_");
-        var insertSite = circuit.findModificationIndex(hand);
-        if (insertSite !== null && hand.heldGateBlock === null && insertSite.col >= circuit.columns.length) {
-            insertSite = null;
+        var modPt = circuit.findModificationIndex(hand);
+        if (modPt !== null && hand.heldGateBlock === null && modPt.col >= circuit.columns.length) {
+            modPt = null;
         }
 
         redrawTrip.mark("a");
-        var candidateCircuit = circuit.withOpBeingAdded(insertSite, hand);
+        var candidateCircuit = circuit.withOpBeingAdded(modPt, hand);
 
         redrawTrip.mark("b");
-        drawInsertSite(painter, insertSite, candidateCircuit);
+        drawInsertSite(painter, modPt, candidateCircuit, hand);
 
         redrawTrip.mark("c");
         circuit.paint(painter, hand, isTappingState);
@@ -297,7 +282,7 @@ new TripWire("start").run(function() {
         var zz = drawGateSet(painter, hand);
 
         redrawTrip.mark("f");
-        drawHeld(painter, insertSite, hand);
+        drawHeld(painter, modPt, hand);
 
         handState = zz.newHand;
         var isHoveringOverTimeBasedGate = zz.isHoveringOverTimeBasedGate;
@@ -310,7 +295,7 @@ new TripWire("start").run(function() {
         }
 
         redrawTrip.mark("g");
-        tickWhenAppropriate(isHoveringOverTimeBasedGate);
+        tickWhenAppropriate(stableCircuit, isHoveringOverTimeBasedGate);
     });
 
     //noinspection JSUnresolvedFunction

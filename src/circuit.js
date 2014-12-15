@@ -1,7 +1,9 @@
 /** @type {!number} */
 var CIRCUIT_OP_HORIZONTAL_SPACING = 10;
 /** @type {!number} */
-var CIRCUIT_OP_LEFT_SPACING = 10;
+var CIRCUIT_OP_LEFT_SPACING = 35;
+/** @type {!number} */
+var CIRCUIT_OP_RIGHT_SPACING = 5;
 
 /**
  * @param {!int} i
@@ -37,14 +39,23 @@ function Circuit(area, numWires, columns, compressedColumnIndex) {
     this.compressedColumnIndex = compressedColumnIndex;
 }
 
+Circuit.prototype.isEqualTo = function(other) {
+    return other instanceof Circuit &&
+        this.area.isEqualTo(other.area) &&
+        this.numWires === other.numWires &&
+        arraysEqualBy(this.columns, other.columns, arg2(GateColumn.prototype.isEqualTo)) &&
+        this.compressedColumnIndex === other.compressedColumnIndex;
+};
+
 /**
+ * Returns the circuit's initial, intermediate, and final states.
  * @returns {!Array.<!QuantumState>}
  */
-Circuit.prototype.getStatesThroughout = function() {
+Circuit.prototype.scanStates = function() {
     return scan(
-        this.columns,
+        this.columns.map(arg1(GateColumn.prototype.matrix)),
         QuantumState.zero(this.numWires),
-        function(a, e) { return e.transform(a); });
+        arg2(QuantumState.prototype.transformedBy));
 };
 
 /**
@@ -174,13 +185,13 @@ Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
  * @param {!boolean} isTapping
  */
 Circuit.prototype.paint = function(painter, hand, isTapping) {
-    var states = this.getStatesThroughout();
+    var states = this.scanStates();
 
     // Draw labelled wires
     for (var i = 0; i < this.numWires; i++) {
         var wireY = this.wireRect(i).center().y;
-        painter.printCenteredText(WIRE_LABELLER(i) + ":", {x: this.area.x + 14, y: wireY});
-        painter.strokeLine({x: this.area.x + 30, y: wireY}, {x: this.area.x + this.area.w, y: wireY});
+        painter.printCenteredText(WIRE_LABELLER(i) + ":", new Point(this.area.x + 14, wireY));
+        painter.strokeLine(new Point(this.area.x + 30, wireY), new Point(this.area.x + this.area.w, wireY));
     }
 
     // Draw operations
@@ -243,8 +254,8 @@ Circuit.prototype.drawColumnControlWires = function (painter, gateColumn, column
     }
     var x = this.opRect(columnIndex).center().x;
     painter.strokeLine(
-        {x: x, y: this.wireRect(minIndex).center().y},
-        {x: x, y: this.wireRect(maxIndex).center().y});
+        new Point(x, this.wireRect(minIndex).center().y),
+        new Point(x, this.wireRect(maxIndex).center().y));
 };
 
 /**
@@ -256,6 +267,7 @@ Circuit.prototype.withOpBeingAdded = function(modificationPoint, hand) {
     if (modificationPoint === null || hand.heldGateBlock === null) {
         return this;
     }
+    var addedGateBlock = notNull(hand.heldGateBlock);
 
     var newCols = this.columns.map(function(e) { return e; });
     var compressedColumnIndex = null;
@@ -264,12 +276,12 @@ Circuit.prototype.withOpBeingAdded = function(modificationPoint, hand) {
         compressedColumnIndex = modificationPoint.col;
     }
 
-    while (newCols.length < modificationPoint.col) {
+    while (newCols.length <= modificationPoint.col) {
         newCols.push(GateColumn.empty(this.numWires));
     }
 
     newCols[modificationPoint.col] =
-        newCols[modificationPoint.col].withOpBeingAdded(modificationPoint.row, hand);
+        newCols[modificationPoint.col].withGateAdded(modificationPoint.row, addedGateBlock);
 
     return new Circuit(
         this.area,
@@ -331,10 +343,39 @@ Circuit.prototype.tryGrab = function(hand) {
     };
 };
 
+/**
+ * @returns {!boolean}
+ */
 Circuit.prototype.hasTimeBasedGates = function () {
     return !this.columns.every(function (e) {
         return e.gates.every(function(g) {
-            return !g.isTimeBased();
+            return g !== null && !g.isTimeBased();
         });
     });
+};
+
+/**
+ * @returns {!QuantumState}
+ */
+Circuit.prototype.getOutput = function() {
+    return this.columns
+        .map(arg1(GateColumn.prototype.matrix))
+        .reduce(
+            arg2(QuantumState.prototype.transformedBy),
+            QuantumState.zero(this.numWires));
+};
+
+/**
+ * Draws a peek gate on each wire at the right-hand side of the circuit.
+ *
+ * @param {!Painter} painter
+ */
+Circuit.prototype.drawRightHandPeekGates = function (painter) {
+    var left = this.area.x + this.area.w - GATE_RADIUS*2 - CIRCUIT_OP_RIGHT_SPACING;
+    var out = this.getOutput();
+    for (var i = 0; i < this.numWires; i++) {
+        painter.paintProbabilityBox(
+            out.probability(1 << i, 1 << i),
+            this.gateRect(i, 0).withX(left));
+    }
 };

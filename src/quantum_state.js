@@ -94,3 +94,12 @@ QuantumState.prototype.conditionalProbability = function (matchMask, positiveCon
 
     return this.probability(matchMask, positiveConditionMask | inclusionConditionMask) / total;
 };
+
+/**
+ *
+ * @param {!Matrix} operation
+ * @returns {!QuantumState}
+ */
+QuantumState.prototype.transformedBy = function(operation) {
+    return new QuantumState(operation.times(this.columnVector));
+};

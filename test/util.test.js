@@ -55,3 +55,40 @@ UtilTest.prototype.testSum = function() {
     assertEquals(2, sum([2]));
     assertEquals(5.5, sum([2, 3.5]));
 };
+
+UtilTest.prototype.testZip = function() {
+    assertEquals([], zip([], [], function() { throw "not called"; }));
+    assertEquals([5], zip([2], [3], function(e1, e2) { return e1 + e2; }));
+    assertEquals([5], zip([2], [3, 5], function(e1, e2) { return e1 + e2; }));
+    assertEquals([5, 12], zip([2, 7], [3, 5], function(e1, e2) { return e1 + e2; }));
+    assertEquals([5, 12], zip([2, 7, 11], [3, 5], function(e1, e2) { return e1 + e2; }));
+    assertEquals([5, 12, 24], zip([2, 7, 11], [3, 5, 13], function(e1, e2) { return e1 + e2; }));
+};
+
+UtilTest.prototype.testArg2 = function() {
+    assertTrue(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.I));
+    assertFalse(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.ZERO));
+    assertTrue(arg2(Complex.prototype.plus)(Complex.I, Complex.I).isEqualTo(new Complex(0, 2)));
+};
+
+UtilTest.prototype.testArraysEqualBy = function() {
+    assertTrue(arraysEqualBy([], [], function() { throw "not called"; }));
+    assertFalse(arraysEqualBy([1], [1, 2], function() { throw "not called"; }));
+
+    var eqMod5 = function(e1, e2) { return e1 % 5 === e2 % 5; };
+    assertTrue(arraysEqualBy([1], [1], eqMod5));
+    assertTrue(arraysEqualBy([1], [11], eqMod5));
+    assertFalse(arraysEqualBy([1], [2], eqMod5));
+
+    assertTrue(arraysEqualBy([1, 2], [1, 2], eqMod5));
+    assertTrue(arraysEqualBy([1, 2], [1, 7], eqMod5));
+    assertFalse(arraysEqualBy([1, 2], [1, 1], eqMod5));
+    assertFalse(arraysEqualBy([1, 2], [2, 1], eqMod5));
+    assertFalse(arraysEqualBy([1, 2], [2, 2], eqMod5));
+
+    assertTrue(arraysEqualBy([Complex.I, Complex.ZERO], [Complex.I, Complex.ZERO], arg2(Complex.prototype.isEqualTo)));
+    assertFalse(arraysEqualBy([Complex.I, Complex.ZERO], [Complex.I, Complex.I], arg2(Complex.prototype.isEqualTo)));
+
+    assertTrue(arraysEqualBy([1.5], [1.5], STRICT_EQUALITY));
+    assertFalse(arraysEqualBy([1.5], [1], STRICT_EQUALITY));
+};

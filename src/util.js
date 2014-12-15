@@ -118,57 +118,73 @@ var sum = function(array) {
     return array.reduce(function(e1, e2) { return e1 + e2; }, 0);
 };
 
-function TripWire(message) {
-    this.triggered = false;
-    this.message = message;
-    this.markCount = 0;
-    this.markLabel = "";
-}
+/**
+ *
+ * @param {!Array.<T1>} array1
+ * @param {!Array.<T2>} array2
+ * @param {!function(T1, T2) : R} combiner
+ *
+ * @returns {!Array.<R>}
+ *
+ * @template T1, T2, R
+ */
+var zip = function(array1, array2, combiner) {
+    return range(Math.min(array1.length, array2.length))
+        .map(function(i) { return combiner(array1[i], array2[i]); });
+};
 
 /**
- * @param {!boolean|*} expression
- * @param {=Object} values
+ *
+ * @param {!Array.<T>} array1
+ * @param {!Array.<T>} array2
+ * @param {!function(T, T) : !boolean} comparer
+ *
+ * @returns {!boolean}
+ *
+ * @template T
  */
-TripWire.prototype.tripUnless = function(expression, values) {
-    if (this.triggered) {
-        return;
-    }
-    if (expression !== true) {
-        this.triggered = true;
-        if (values === undefined) {
-            alert(this.message);
-        } else {
-            alert(this.message + ": " + (values === null ? "null" : values.toString()));
-        }
-    }
+var arraysEqualBy = function(array1, array2, comparer) {
+    return Array.isArray(array1) &&
+        Array.isArray(array2) &&
+        array1.length === array2.length &&
+        zip(array1, array2, comparer).indexOf(false) === -1;
 };
 
-TripWire.prototype.run = function(func) {
-    try {
-        this.markCount = 1;
-        this.markLabel = "";
-        func();
-        this.markCount = 0;
-        this.markLabel = "";
-    } catch (ex) {
-        if (this.markCount > 0) {
-            this.tripUnless(false, "error: " + ex + ", mark: " + this.markLabel + ", markId: " + this.markCount);
-        } else {
-            this.tripUnless(false, ex);
-        }
-        throw ex;
-    }
+/**
+ * @param {*} e1
+ * @param {*} e2
+ * @return {boolean}
+ */
+var STRICT_EQUALITY = function(e1, e2) {
+    return e1 === e2;
 };
 
-TripWire.prototype.wrap = function(func) {
-    var wire = this;
-    return function() {
-        wire.run(func);
+/**
+ * Converts a zero-argument instance method into a one-argument function.
+ *
+ * @param {!function(this:T1) : R} prototypeFunc1
+ *
+ * @returns {!function(T1) : R}
+ *
+ * @template T1, R
+ */
+var arg1 = function(prototypeFunc1) {
+    return function(e1) {
+        return prototypeFunc1.bind(e1)();
     };
 };
 
-TripWire.prototype.mark = function(markLabel) {
-    this.tripUnless(this.markCount !== 0, "mark outside of run");
-    this.markCount += 1;
-    this.markLabel = markLabel;
+/**
+ * Converts a one-argument instance method into a two-argument function.
+ *
+ * @param {!function(this:T1, T2) : R} prototypeFunc1
+ *
+ * @returns {!function(T1, T2) : R}
+ *
+ * @template T1, T2, R
+ */
+var arg2 = function(prototypeFunc1) {
+    return function(e1, e2) {
+        return prototypeFunc1.bind(e1)(e2);
+    };
 };

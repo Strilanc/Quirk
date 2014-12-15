@@ -27,7 +27,7 @@ Rect.centeredSquareWithRadius = function(p, r) {
     return new Rect(p.x - r, p.y - r, r*2, r*2);
 };
 
-Point.prototype.toString = function() {
+Rect.prototype.toString = function() {
     return "[" + this.x + " : " + this.right() + "] x [" + this.y + " : " + this.bottom() + "]";
 };
 
@@ -295,4 +295,12 @@ Rect.prototype.shiftedBy = function(dx, dy) {
  */
 Rect.prototype.proportionalShiftedBy = function(dx, dy) {
     return this.shiftedBy(dx * this.w, dy * this.h);
+};
+
+/**
+ * @param {!number} newX
+ * @returns {!Rect}
+ */
+Rect.prototype.withX = function (newX) {
+    return new Rect(newX, this.y, this.w, this.h);
 };
