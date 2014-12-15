@@ -273,7 +273,7 @@ new TripWire("start").run(function() {
         drawInsertSite(painter, modPt, candidateCircuit, hand);
 
         redrawTrip.mark("c");
-        circuit.paint(painter, hand, isTappingState);
+        candidateCircuit.paint(painter, hand, isTappingState);
 
         redrawTrip.mark("d");
         drawOutputAfter(painter, candidateCircuit, candidateCircuit.columns.length, OUTPUT_STATE_HINT_AREA);

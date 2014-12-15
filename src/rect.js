@@ -304,3 +304,11 @@ Rect.prototype.proportionalShiftedBy = function(dx, dy) {
 Rect.prototype.withX = function (newX) {
     return new Rect(newX, this.y, this.w, this.h);
 };
+
+/**
+ * @param {!number} newW
+ * @returns {!Rect}
+ */
+Rect.prototype.withW = function (newW) {
+    return new Rect(this.x, this.y, newW, this.h);
+};

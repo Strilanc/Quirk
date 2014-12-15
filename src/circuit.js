@@ -89,7 +89,7 @@ Circuit.prototype.findOpHalfColumnAt = function(p) {
         return null;
     }
 
-    var s = CIRCUIT_OP_HORIZONTAL_SPACING/2;
+    var s = (CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2)/2;
     return Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / s - 0.5) / 2;
 };
 
@@ -138,7 +138,7 @@ Circuit.prototype.findModificationIndex = function (hand) {
             }
         }
         if (!isFree) {
-            var isAfter = hand.pos.x < this.opRect(colIndex).center().x;
+            var isAfter = hand.pos.x > this.opRect(colIndex).center().x;
             isInsert = true;
             if (isAfter) {
                 colIndex += 1;
@@ -157,15 +157,15 @@ Circuit.prototype.opRect = function (operationIndex) {
     var opWidth = GATE_RADIUS * 2;
     var opSeparation = opWidth + CIRCUIT_OP_HORIZONTAL_SPACING;
     var tweak = 0;
-    if (operationIndex !== null && operationIndex === this.compressedColumnIndex) {
+    if (this.compressedColumnIndex !== null && operationIndex === this.compressedColumnIndex) {
         tweak = opSeparation/2;
     }
-    if (operationIndex !== null && operationIndex > this.compressedColumnIndex) {
-        tweak = operationIndex;
+    if (this.compressedColumnIndex !== null && operationIndex > this.compressedColumnIndex) {
+        tweak = opSeparation;
     }
 
-    var x = opSeparation * operationIndex - tweak + CIRCUIT_OP_LEFT_SPACING;
-    return this.area.skipLeft(x).takeLeft(opWidth);
+    var dx = opSeparation * operationIndex - tweak + CIRCUIT_OP_LEFT_SPACING;
+    return this.area.withX(this.area.x + dx).withW(opWidth);
 };
 
 /**
