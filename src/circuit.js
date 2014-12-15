@@ -38,19 +38,12 @@ function Circuit(area, numWires, columns, compressedColumnIndex) {
 }
 
 /**
- * @returns {!Matrix}
- */
-Circuit.prototype.makeInputState = function() {
-    return Matrix.col([1, 0]).tensorPower(this.numWires);
-};
-
-/**
- * @returns {!Array.<!Matrix>}
+ * @returns {!Array.<!QuantumState>}
  */
 Circuit.prototype.getStatesThroughout = function() {
     return scan(
         this.columns,
-        this.makeInputState(),
+        QuantumState.zero(this.numWires),
         function(a, e) { return e.transform(a); });
 };
 
@@ -181,7 +174,7 @@ Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
  * @param {!boolean} isTapping
  */
 Circuit.prototype.paint = function(painter, hand, isTapping) {
-    var inputState = this.makeInputState();
+    var states = this.getStatesThroughout();
 
     // Draw labelled wires
     for (var i = 0; i < this.numWires; i++) {
@@ -192,8 +185,7 @@ Circuit.prototype.paint = function(painter, hand, isTapping) {
 
     // Draw operations
     for (var i2 = 0; i2 < this.columns.length; i2++) {
-        inputState = this.columns[i2].matrix().times(inputState);
-        this.drawCircuitOperation(painter, this.columns[i2], i2, inputState, hand, isTapping);
+        this.drawCircuitOperation(painter, this.columns[i2], i2, states[i2 + 1], hand, isTapping);
     }
 };
 
@@ -201,11 +193,11 @@ Circuit.prototype.paint = function(painter, hand, isTapping) {
  * @param {!Painter} painter
  * @param {!GateColumn} gateColumn
  * @param {!int} columnIndex
- * @param {!Matrix} columnState A complex column vector.
+ * @param {!QuantumState} state A complex column vector.
  * @param {!Hand} hand
  * @param {!boolean} isTapping
  */
-Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, columnState, hand, isTapping) {
+Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, state, hand, isTapping) {
 
     this.drawColumnControlWires(painter, gateColumn, columnIndex);
 
@@ -221,7 +213,7 @@ Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIn
 
         //var isHolding = hand.pos !== null && hand.col === columnIndex && hand.row === i;
         var canGrab = hand.pos !== null && b.containsPoint(hand.pos) && hand.heldGateBlock === null && !isTapping;
-        gate.paint(painter, b, false, canGrab, new CircuitContext(gateColumn, i, columnState));
+        gate.paint(painter, b, false, canGrab, new CircuitContext(gateColumn, i, state));
     }
 };
 

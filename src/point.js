@@ -14,9 +14,15 @@ function Point(x, y) {
     this.y = y;
 }
 
+Point.prototype.toString = function() {
+    return "TEST";
+    //return "(x: " + this.x + ", y: " + this.y + ")";
+};
+
 /**
  * @param {!number} dx
  * @param {!number} dy
+ * @returns {!Point}
  */
 Point.prototype.offsetBy = function(dx, dy) {
     return new Point(this.x + dx, this.y + dy);
@@ -24,6 +30,7 @@ Point.prototype.offsetBy = function(dx, dy) {
 
 /**
  * @param {!Point} p
+ * @returns {!Point}
  */
 Point.prototype.plus = function(p) {
     return new Point(this.x + p.x, this.y + p.y);

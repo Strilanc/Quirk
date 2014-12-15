@@ -59,11 +59,11 @@ GateColumn.prototype.matrix = function() {
 
 /**
  * Returns the result of applying this circuit column to the given state.
- * @param {!Matrix} state A column matrix of the correct size.
- * @returns {!Matrix}
+ * @param {!QuantumState} state A column matrix of the correct size.
+ * @returns {!QuantumState}
  */
 GateColumn.prototype.transform = function(state) {
-    return this.matrix().times(state);
+    return new QuantumState(this.matrix().times(state.columnVector));
 };
 
 /**

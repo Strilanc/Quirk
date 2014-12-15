@@ -15,7 +15,7 @@ var scan = function(items, seed, aggregator) {
 
     var state = seed;
     for (var i = 0; i < items.length; i++) {
-        state = aggregator(seed, items[i]);
+        state = aggregator(state, items[i]);
         result.push(state);
     }
 
@@ -56,7 +56,7 @@ var insertAt = function(array, item, index) {
  * @template T
  */
 var withItemReplacedAt = function(array, item, index) {
-    need(index >= 0 && index <= array.length);
+    need(index >= 0 && index < array.length);
     var result = [];
     for (var i = 0; i < array.length; i++) {
         result.push(i === index ? item : array[i]);
@@ -89,16 +89,47 @@ var take = function(array, takeCount) {
     return array.slice(0, takeCount);
 };
 
+/**
+ * @param {!int} i
+ * @returns {!boolean}
+ */
+var isPowerOf2 = function(i) {
+    return i > 0 && ((i - 1) & i) === 0;
+};
+
+/**
+ * @param {!int} n
+ * @returns {!Array.<!int>}
+ */
+var range = function(n) {
+    need(n >= 0);
+    var result = [];
+    while (result.length < n) {
+        result.push(result.length);
+    }
+    return result;
+};
+
+/**
+ * @param {!Array.<!number>} array
+ * @returns {!number}
+ */
+var sum = function(array) {
+    return array.reduce(function(e1, e2) { return e1 + e2; }, 0);
+};
+
 function TripWire(message) {
     this.triggered = false;
     this.message = message;
+    this.markCount = 0;
+    this.markLabel = "";
 }
 
 /**
  * @param {!boolean|*} expression
  * @param {=Object} values
  */
-TripWire.prototype.tripIf = function(expression, values) {
+TripWire.prototype.tripUnless = function(expression, values) {
     if (this.triggered) {
         return;
     }
@@ -112,17 +143,32 @@ TripWire.prototype.tripIf = function(expression, values) {
     }
 };
 
-TripWire.prototype.try = function(func) {
+TripWire.prototype.run = function(func) {
     try {
+        this.markCount = 1;
+        this.markLabel = "";
         func();
+        this.markCount = 0;
+        this.markLabel = "";
     } catch (ex) {
-        this.tripIf(false, ex);
+        if (this.markCount > 0) {
+            this.tripUnless(false, "error: " + ex + ", mark: " + this.markLabel + ", markId: " + this.markCount);
+        } else {
+            this.tripUnless(false, ex);
+        }
+        throw ex;
     }
 };
 
-TripWire.wrap = function(msg, func) {
-    var wire = new TripWire(msg);
+TripWire.prototype.wrap = function(func) {
+    var wire = this;
     return function() {
-        wire.try(func);
+        wire.run(func);
     };
+};
+
+TripWire.prototype.mark = function(markLabel) {
+    this.tripUnless(this.markCount !== 0, "mark outside of run");
+    this.markCount += 1;
+    this.markLabel = markLabel;
 };

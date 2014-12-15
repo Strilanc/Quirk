@@ -40,7 +40,7 @@ Painter.prototype.strokeRect = function (rect, color, thickness) {
 
 /**
  * Draws the inside of a circle.
- * @param {!{x: !number, y: !number}} center The center of the circle.
+ * @param {!Point} center The center of the circle.
  * @param {!number} radius The distance from the center of the circle to its side.
  * @param {=string} color The fill color. Defaults to white.
  */
@@ -53,7 +53,7 @@ Painter.prototype.fillCircle = function (center, radius, color) {
 
 /**
  * Draws the outside of a circle.
- * @param {!{x: !number, y: !number}} center The center of the circle.
+ * @param {!Point} center The center of the circle.
  * @param {!number} radius The distance from the center of the circle to its side.
  * @param {=string} color The stroke color. Defaults to black.
  * @param {=number} thickness The stroke thickness. Defaults to 1.
@@ -70,7 +70,7 @@ Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
  * Draws a string. Handles multi-line strings.
  *
  * @param {!string} text The string to draw.
- * @param {!{x: !number, y: !number}} pos The top-left position of the drawn string.
+ * @param {!Point} pos The top-left position of the drawn string.
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
@@ -93,7 +93,7 @@ Painter.prototype.printText = function (text, pos, fontColor, fontSize, fontFami
  * Draws a string centered around the given point. Does NOT handle multi-line strings.
  *
  * @param {!string} text The string to draw.
- * @param {!{x: !number, y: !number}} pos The center position of the drawn string.
+ * @param {!Point} pos The center position of the drawn string.
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
@@ -113,8 +113,8 @@ Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, 
 /**
  * Draws a line segment between the two points.
  *
- * @param {!{x: !number, y: !number}} p1
- * @param {!{x: !number, y: !number}} p2
+ * @param {!Point} p1
+ * @param {!Point} p2
  * @param {=string} color The color of the drawn line. Defaults to black.
  * @param {=number} thickness The thickness of the drawn line. Defaults to 1.
  */
@@ -160,7 +160,7 @@ Painter.prototype.paintAmplitude = function(amplitude, area) {
         AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE
         : AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
     this.strokeCircle(c, r, AMPLITUDE_CIRCLE_STROKE_COLOR);
-    this.strokeLine(c, {x: c.x + dx, y: c.y - dy});
+    this.strokeLine(c, new Point(c.x + dx, c.y - dy));
 
     // cross out (in addition to the darkening) when controlled
     if (isControl) {
@@ -269,7 +269,7 @@ Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncluding
                                                             highlightColor) {
     this.fillRect(drawArea, highlightColor);
     this.strokeRect(drawArea);
-    var topPrintPos = {x: drawArea.x, y: drawArea.y + 15};
+    var topPrintPos = new Point(drawArea.x, drawArea.y + 15);
     var s;
     if (probabilityIncludingConditions === 0) {
         // Draw bad-value triangle
@@ -290,8 +290,8 @@ Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncluding
     this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityIncludingConditions), "gray");
     this.printText(
         "|:" + s,
-        {x: topPrintPos.x + 7, y: topPrintPos.y});
+        topPrintPos.offsetBy(7, 0));
     this.printText(
         "∧:" + Math.round(probabilityIncludingConditions*100) + "%",
-        {x: topPrintPos.x, y: topPrintPos.y + drawArea.h/2});
+        topPrintPos.offsetBy(0, drawArea.h/2));
 };

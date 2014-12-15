@@ -27,6 +27,10 @@ Rect.centeredSquareWithRadius = function(p, r) {
     return new Rect(p.x - r, p.y - r, r*2, r*2);
 };
 
+Point.prototype.toString = function() {
+    return "[" + this.x + " : " + this.right() + "] x [" + this.y + " : " + this.bottom() + "]";
+};
+
 /**
  * @param {!Rect|*} other
  * @returns {!boolean}

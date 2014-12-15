@@ -23,52 +23,31 @@ function Gate(symbol, matrix, name, description, symbolDrawer) {
     this.symbolDrawer = symbolDrawer || Gate.DEFAULT_SYMBOL_DRAWER;
 }
 
-
-/**
- * @param {!int} wireTarget
- * @param {!int} wireExpectedMask
- * @param {!int} wireRequiredMask
- * @param {!Matrix} state
- */
-var measureConditionalProbability = function (wireTarget, wireExpectedMask, wireRequiredMask, state) {
-    var t_off = 0;
-    var t_on = 0;
-    for (var i = 0; i < state.height(); i++) {
-        if ((i & wireRequiredMask) === (wireExpectedMask & wireRequiredMask)) {
-            if ((i & (1 << wireTarget)) === 0) {
-                t_off += state.rows[i][0].norm2();
-            } else {
-                t_on += state.rows[i][0].norm2();
-            }
-        }
-    }
-    return t_on / (t_off + t_on);
-};
-
 /**
  * Returns the probability of controls on a column being satisfied and a wire being ON,
  * if that was measured.
  *
  * @param {!GateColumn} gateColumn
  * @param {!int} targetWire
- * @param {!Matrix} columnState
- * @returns {!{conditional: !number, total: !number, canDiffer: !boolean}}
+ * @param {!QuantumState} columnState
+ * @returns {!{conditional: ?number, total: !number, canDiffer: !boolean}}
  */
 var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
-    var expectedMask = 0;
-    var requiredMask = 0;
+    var wireMask = 1 << targetWire;
+    var matchMask = wireMask;
+    var conditionMask = 0;
     for (var i = 0; i < gateColumn.gates.length; i++) {
         if (gateColumn.gates[i] === Gate.CONTROL) {
-            requiredMask |= 1 << i;
-            expectedMask |= 1 << i;
+            conditionMask |= 1 << i;
+            matchMask |= 1 << i;
         } else if (gateColumn.gates[i] === Gate.ANTI_CONTROL) {
-            requiredMask |= 1 << i;
+            conditionMask |= 1 << i;
         }
     }
     return {
-        conditional: measureConditionalProbability(targetWire, expectedMask, requiredMask, columnState),
-        total: measureProbability(expectedMask | (1 << targetWire), requiredMask | (1 << targetWire), columnState),
-        canDiffer: requiredMask !== 0
+        conditional: columnState.conditionalProbability(matchMask, conditionMask | wireMask, conditionMask),
+        total: columnState.probability(matchMask, conditionMask | wireMask),
+        canDiffer: conditionMask !== 0
     };
 };
 
@@ -98,11 +77,11 @@ function GateDrawParams(isInToolbox, isHighlighted, rect, gate, circuitContext) 
 /**
  * @param {!GateColumn} gateColumn
  * @param {!int} rowIndex
- * @param {!Matrix} state
+ * @param {!QuantumState} state
  *
  * @property {!GateColumn} gateColumn
  * @property {!int} rowIndex
- * @property {!Matrix} state
+ * @property {!QuantumState} state
  *
  * @constructor
  */

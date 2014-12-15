@@ -1,5 +1,5 @@
 /**
- * @param {?{x: !number, y: !number}} pos
+ * @param {?Point} pos
  * @param {?GateBlock} heldGateBlock
  * @param {?int} heldGateBlockOffset
  *
@@ -9,13 +9,14 @@
  * @constructor
  */
 function Hand(pos, heldGateBlock, heldGateBlockOffset) {
+    need(pos === null || pos instanceof Point, "pos isa ?Point");
     this.heldGateBlock = heldGateBlock;
     this.heldGateBlockOffset = heldGateBlockOffset;
     this.pos = pos;
 }
 
 /**
- * @param {?{x: !number, y: !number}} newPos
+ * @param {?Point} newPos
  * @returns {!Hand}
  */
 Hand.prototype.withPos = function(newPos) {
