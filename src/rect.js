@@ -19,7 +19,7 @@ function Rect(x, y, w, h) {
 
 /**
  *
- * @param {!{x: !number, y: !number}} p The x/y point at the center of the square.
+ * @param {!Point} p The x/y point at the center of the square.
  * @param {!number} r Half of the diameter of the square.
  * @returns {!Rect}
  */
@@ -40,66 +40,66 @@ Rect.prototype.isEqualTo = function(other) {
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.center = function() {
-    return {x: this.x + this.w / 2, y: this.y + this.h / 2};
+    return new Point(this.x + this.w / 2, this.y + this.h / 2);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.topLeft = function() {
-    return {x: this.x, y: this.y};
+    return new Point(this.x, this.y);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.topRight = function() {
-    return {x: this.x + this.w, y: this.y};
+    return new Point(this.x + this.w, this.y);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.bottomLeft = function() {
-    return {x: this.x, y: this.y + this.h};
+    return new Point(this.x, this.y + this.h);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.bottomRight = function() {
-    return {x: this.x + this.w, y: this.y + this.h};
+    return new Point(this.x + this.w, this.y + this.h);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.centerLeft = function() {
-    return {x: this.x, y: this.y + this.h/2};
+    return new Point(this.x, this.y + this.h/2);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.centerRight = function() {
-    return {x: this.x + this.w, y: this.y + this.h/2};
+    return new Point(this.x + this.w, this.y + this.h/2);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.topCenter = function() {
-    return {x: this.x + this.w/2, y: this.y};
+    return new Point(this.x + this.w/2, this.y);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.bottomCenter = function() {
-    return {x: this.x + this.w/2, y: this.y + this.h};
+    return new Point(this.x + this.w/2, this.y + this.h);
 };
 
 
@@ -228,7 +228,7 @@ Rect.prototype.paddedBy = function(p) {
  *
  * Note that the top and left of the rectangle are inclusive, but the bottom and right are exclusive.
  *
- * @param {!{x: !number, y: !number}} p The query point.
+ * @param {!Point} p The query point.
  * @returns {!boolean}
  */
 Rect.prototype.containsPoint = function(p) {

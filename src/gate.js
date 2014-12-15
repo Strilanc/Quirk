@@ -226,6 +226,14 @@ Gate.prototype.toString = function() {
     return this.name;
 };
 
+Gate.prototype.isTimeBased = function() {
+    return Gate.EVOLVING_GATES.indexOf(this) === -1;
+};
+
+Gate.prototype.isAnchor = function() {
+    return this !== Gate.CONTROL && this !== Gate.ANTI_CONTROL && this !== Gate.SWAP_HALF;
+};
+
 /**
  * @type {!Gate}
  */

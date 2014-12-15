@@ -65,3 +65,17 @@ GateColumn.prototype.matrix = function() {
 GateColumn.prototype.transform = function(state) {
     return this.matrix().times(state);
 };
+
+/**
+ * @param {!int} startIndex
+ * @param {!GateBlock} gateBlock
+ * @returns {!GateColumn}
+ */
+GateColumn.prototype.withGateAdded = function(startIndex, gateBlock) {
+    need(startIndex >= 0 && startIndex <= this.gates.length - gateBlock.gates.length);
+    var gates = this.gates.map(function(e) { return e; });
+    for (var i = 0; i < helds.gateBlock.gates.length; i++) {
+        gates[startIndex + i] = gateBlock.gates[i];
+    }
+    return new GateColumn(gates);
+};
