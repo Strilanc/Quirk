@@ -1,3 +1,6 @@
+/** @type {!number} */
+var GATE_RADIUS = 20;
+
 /**
  * A named single-qubit quantum operation.
  *
@@ -206,7 +209,7 @@ Gate.prototype.toString = function() {
 };
 
 Gate.prototype.isTimeBased = function() {
-    return Gate.EVOLVING_GATES.indexOf(this) === -1;
+    return Gate.EVOLVING_GATES.indexOf(this) !== -1;
 };
 
 Gate.prototype.isAnchor = function() {
@@ -515,13 +518,20 @@ Gate.EVOLVING_Z = new Gate(
     "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
     "time. A phase gate where the phase angle increases and cycles over\n" +
     "time. A continuous rotation around the Z axis of the Block Sphere.");
+/** @type {!Gate} */
+Gate.EVOLVING_NOISE = new Gate(
+    "Err(t)",
+    Matrix.identity(2),
+    "Evolving Noise Gate",
+    "Jitters around randomly.");
 /** @type {!Array.<!Gate>} */
 Gate.EVOLVING_GATES = [
     Gate.EVOLVING_X,
     Gate.EVOLVING_Y,
     Gate.EVOLVING_Z,
     Gate.EVOLVING_R,
-    Gate.EVOLVING_H
+    Gate.EVOLVING_H,
+    Gate.EVOLVING_NOISE
 ];
 
 Gate.updateTimeGates = function (t) {
@@ -536,6 +546,9 @@ Gate.updateTimeGates = function (t) {
     Gate.EVOLVING_Y.matrix = Matrix.fromPauliRotation(0, u, 0);
     Gate.EVOLVING_Z.matrix = Matrix.fromPauliRotation(0, 0, u);
     Gate.EVOLVING_H.matrix = Matrix.fromPauliRotation(u2, 0, u2);
+
+    var drift = function() { return new Complex(Math.random()/10-0.05, Math.random()/10-0.05); };
+    Gate.EVOLVING_NOISE.matrix = Matrix.square([drift().plus(1), drift(), drift(), drift().plus(1)]).closestUnitary();
 };
 
 Gate.makeFuzzGate = function () {

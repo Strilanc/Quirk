@@ -3,6 +3,7 @@
  * @param {?GateBlock} heldGateBlock
  * @param {?int} heldGateBlockOffset
  *
+ * @property {?Point} pos
  * @property {?GateBlock} heldGateBlock
  * @property {?int} heldGateBlockOffset
  *
