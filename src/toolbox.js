@@ -1,4 +1,6 @@
 /**
+ * That thing showing gates you can grab.
+ *
  * @param {!Rect} area
  *
  * @property {!Rect} area
@@ -21,6 +23,7 @@ Toolbox.BACK_COLOR = "#CCC";
  * @param {!int} groupIndex
  * @param {!int} gateIndex
  * @returns {!Rect}
+ * @private
  */
 Toolbox.prototype.groupedGateRect = function(groupIndex, gateIndex) {
     var dx = Math.floor(gateIndex / 3);
@@ -35,6 +38,7 @@ Toolbox.prototype.groupedGateRect = function(groupIndex, gateIndex) {
 /**
  * @param {!int} groupIndex
  * @returns {!Point}
+ * @private
  */
 Toolbox.prototype.groupLabelCenter = function(groupIndex) {
     var r = this.groupedGateRect(groupIndex, 0);
@@ -45,6 +49,7 @@ Toolbox.prototype.groupLabelCenter = function(groupIndex) {
  * @param {!Painter} painter
  * @param {!int} groupIndex
  * @param {!int} gateIndex
+ * @private
  */
 Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
     var gateRect = this.groupedGateRect(groupIndex, gateIndex);

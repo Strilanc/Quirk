@@ -1,4 +1,5 @@
 /**
+ * Utility class for raising an alert just once when something goes wrong.
  * @param {!string} message
  * @constructor
  */
@@ -10,30 +11,42 @@ function TripWire(message) {
 }
 
 /**
+ * Trips the receiving wire's alert if the given expression is not true.
  * @param {!boolean|*} expression
- * @param {=Object} values
+ * @param {=Object} value
  */
-TripWire.prototype.tripUnless = function(expression, values) {
+TripWire.prototype.tripUnless = function(expression, value) {
     if (this.triggered) {
         return;
     }
     if (expression !== true) {
         this.triggered = true;
-        if (values === undefined) {
+        if (value === undefined) {
             alert(this.message);
         } else {
-            alert(this.message + ": " + (values === null ? "null" : values.toString()));
+            alert(this.message + ": " + (value === null ? "null" : value.toString()));
         }
     }
 };
 
+/**
+ * Invokes a 0-arg function, tripping the receiving wire's alert if the function throws an exception.
+ * The exception is propagated.
+ *
+ * The alert will also mention the trip wire's last mark.
+ *
+ * @param {!function() : T} func
+ * @returns T
+ * @template T
+ */
 TripWire.prototype.run = function(func) {
     try {
         this.markCount = 1;
         this.markLabel = "";
-        func();
+        var r = func();
         this.markCount = 0;
         this.markLabel = "";
+        return r;
     } catch (ex) {
         if (this.markCount > 0) {
             this.tripUnless(false, "error: " + ex + ", mark: " + this.markLabel + ", markId: " + this.markCount);
@@ -44,6 +57,12 @@ TripWire.prototype.run = function(func) {
     }
 };
 
+/**
+ * Returns the same 0-arg function, except wrapped to run with the receiving trip wire's run method.
+ * @param {!function() : T} func
+ * @returns {!function() : T}
+ * @template T
+ */
 TripWire.prototype.wrap = function(func) {
     var wire = this;
     return function() {
@@ -51,6 +70,10 @@ TripWire.prototype.wrap = function(func) {
     };
 };
 
+/**
+ * Updates the additional provided when the wire trips due to an exception being caught.
+ * @param {!string} markLabel
+ */
 TripWire.prototype.mark = function(markLabel) {
     this.tripUnless(this.markCount !== 0, "mark outside of run");
     this.markCount += 1;

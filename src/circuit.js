@@ -117,11 +117,11 @@ Circuit.prototype.findModificationIndex = function (hand) {
     if (hand.pos === null) {
         return null;
     }
-    var halfColIndex = this.findOpHalfColumnAt(hand.pos);
+    var halfColIndex = this.findOpHalfColumnAt(notNull(hand.pos));
     if (halfColIndex === null) {
         return null;
     }
-    var wireIndex = notNull(this.findWireAt(hand.pos));
+    var wireIndex = notNull(this.findWireAt(notNull(hand.pos)));
     var colIndex = Math.ceil(halfColIndex);
     var isInsert = halfColIndex % 1 === 0.5;
     if (colIndex >= this.columns.length) {
@@ -223,7 +223,9 @@ Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIn
         var gate = gateColumn.gates[i];
 
         //var isHolding = hand.pos !== null && hand.col === columnIndex && hand.row === i;
-        var canGrab = hand.pos !== null && b.containsPoint(hand.pos) && hand.heldGateBlock === null && !isTapping;
+        var canGrab = hand.pos !== null &&
+            b.containsPoint(notNull(hand.pos)) &&
+            hand.heldGateBlock === null && !isTapping;
         gate.paint(painter, b, false, canGrab, new CircuitContext(gateColumn, i, state));
     }
 };
@@ -306,13 +308,13 @@ Circuit.prototype.tryGrab = function(hand) {
     if (hand.pos === null) {
         return {newCircuit: this, newHand: hand};
     }
-    var co = this.findExistingOpColumnAt(hand.pos);
+    var co = this.findExistingOpColumnAt(notNull(hand.pos));
     if (co === null) {
         return {newCircuit: this, newHand: hand};
     }
     var c = notNull(co);
-    var r = notNull(this.findWireAt(hand.pos));
-    if (!this.gateRect(r, c).containsPoint(hand.pos) || this.columns[c].gates[r] === null) {
+    var r = notNull(this.findWireAt(notNull(hand.pos)));
+    if (!this.gateRect(r, c).containsPoint(notNull(hand.pos)) || this.columns[c].gates[r] === null) {
         return {newCircuit: this, newHand: hand};
     }
 
