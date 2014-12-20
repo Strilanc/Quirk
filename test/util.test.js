@@ -92,3 +92,20 @@ UtilTest.prototype.testArraysEqualBy = function() {
     assertTrue(arraysEqualBy([1.5], [1.5], STRICT_EQUALITY));
     assertFalse(arraysEqualBy([1.5], [1], STRICT_EQUALITY));
 };
+
+UtilTest.prototype.testEvenPower = function() {
+    assertEquals(Math.POSITIVE_INFINITY, evenPower(0));
+    assertEquals(0, evenPower(1));
+    assertEquals(1, evenPower(2));
+    assertEquals(0, evenPower(3));
+    assertEquals(2, evenPower(4));
+    assertEquals(0, evenPower(5));
+    assertEquals(1, evenPower(6));
+    assertEquals(0, evenPower(7));
+    assertEquals(3, evenPower(8));
+    assertEquals(0, evenPower(9));
+
+    assertEquals(20, evenPower(0 + (1 << 20)));
+    assertEquals(0, evenPower(1 + (1 << 20)));
+    assertEquals(1, evenPower(2 + (1 << 20)));
+};

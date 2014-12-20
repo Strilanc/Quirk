@@ -134,6 +134,30 @@ var isPowerOf2 = function(i) {
 };
 
 /**
+ * Determines how even a number is, with results like:
+ * 0 means 'odd',
+ * 1 means 'multiple of 2 but not 4'
+ * 2 means 'multiple of 4 but not 8'
+ * etc
+ *
+ * Note that 0 is infinitely even.
+ *
+ * @param {!int} i
+ * @returns {!int}
+ */
+var evenPower = function(i) {
+    if (i === 0) {
+        return Math.POSITIVE_INFINITY;
+    }
+    if (i < 0) {
+        return evenPower(-i);
+    }
+    var lowMask = i ^ (i - 1)
+    var lowBit = i & lowMask;
+    return Math.round(Math.log(lowBit) / Math.log(2));
+};
+
+/**
  * Returns an array of the first n natural numbers, in order from 0 to n-1.
  * @param {!int} n
  * @returns {!Array.<!int>}

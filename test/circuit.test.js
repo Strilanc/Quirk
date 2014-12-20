@@ -1,7 +1,7 @@
 CircuitTest = TestCase("CircuitTest");
 
 CircuitTest.prototype.testFindOpHalfColumnAt = function() {
-    var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null);
+    var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null, undefined);
     var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
     var x = CIRCUIT_OP_LEFT_SPACING + 11;
 
@@ -16,7 +16,7 @@ CircuitTest.prototype.testFindOpHalfColumnAt = function() {
 };
 
 CircuitTest.prototype.testOpRect = function() {
-    var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null);
+    var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null, undefined);
     var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
     var x = CIRCUIT_OP_LEFT_SPACING + 10;
 
@@ -25,7 +25,7 @@ CircuitTest.prototype.testOpRect = function() {
     assertEquals(x + GATE_RADIUS + w, c.opRect(1).center().x);
     assertEquals(x + GATE_RADIUS + w*2, c.opRect(2).center().x);
 
-    var d = new Circuit(new Rect(10, 10, 200, 100), 9, [], 1);
+    var d = new Circuit(new Rect(10, 10, 200, 100), 9, [], 1, undefined);
 
     assertEquals(x + GATE_RADIUS, d.opRect(0).center().x);
     assertEquals(x + GATE_RADIUS + w/2, d.opRect(1).center().x);
@@ -34,9 +34,9 @@ CircuitTest.prototype.testOpRect = function() {
 
 CircuitTest.prototype.testFindExistingOpColumnAt = function() {
     var col = new GateColumn(repeat(null, 9));
-    var c0 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 0), null);
-    var c1 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 1), null);
-    var c3 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 3), null);
+    var c0 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 0), null, undefined);
+    var c1 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 1), null, undefined);
+    var c3 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 3), null, undefined);
     var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
     var x = CIRCUIT_OP_LEFT_SPACING + 11;
 
@@ -67,7 +67,7 @@ CircuitTest.prototype.testTryGrab = function() {
 
     gates[1] = Gate.X;
     var area = new Rect(10, 10, 200, 1000);
-    var c = new Circuit(area, 9, [new GateColumn(gates)], null);
+    var c = new Circuit(area, 9, [new GateColumn(gates)], null, undefined);
     var p = c.gateRect(1, 0).center();
 
     var n_miss = c.tryGrab(new Hand(c.gateRect(0, 0).center(), null, null));
@@ -75,6 +75,6 @@ CircuitTest.prototype.testTryGrab = function() {
     assertTrue(n_miss.newHand.isEqualTo(new Hand(c.gateRect(0, 0).center(), null, null)));
 
     var n = c.tryGrab(new Hand(p, null, null));
-    assertTrue(n.newCircuit.isEqualTo(new Circuit(area, 9, [new GateColumn(repeat(null, 9))], null)));
+    assertTrue(n.newCircuit.isEqualTo(new Circuit(area, 9, [new GateColumn(repeat(null, 9))], null, undefined)));
     assertTrue(n.newHand.isEqualTo(new Hand(p, new GateBlock([Gate.X]), 0)));
 };

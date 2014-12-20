@@ -97,17 +97,58 @@ Painter.prototype.printText = function (text, pos, fontColor, fontSize, fontFami
  * @param {=string} fontColor The text color. Defaults to black.
  * @param {=number} fontSize The text size. Defaults to 12px.
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
+ * @param {=Point} centerPointProportion The porportional point to center on, defaulting to (0.5, 0.5).
  */
-Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, fontFamily) {
+Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, fontFamily, centerPointProportion) {
     fontSize = fontSize || 12;
     fontColor = fontColor || "black";
     fontFamily = fontFamily || "Helvetica";
+    centerPointProportion = centerPointProportion || new Point(0.5, 0.5);
 
     this.ctx.fillStyle = fontColor;
     this.ctx.font = fontSize + "px " + fontFamily;
     var s = this.ctx.measureText(text);
 
-    this.ctx.fillText(text, pos.x - s.width / 2, pos.y + fontSize/3);
+    this.ctx.fillText(
+        text,
+        pos.x - s.width * centerPointProportion.x,
+        pos.y + fontSize * 0.8 * (1 - centerPointProportion.y));
+};
+
+/**
+ *
+ * @param {!Point} firstNodePoint
+ * @param {!Point} levelDelta
+ * @param {!Point} nodeDelta
+ * @param {!Array.<!String>} levelLabels
+ */
+Painter.prototype.paintBinaryTree = function(firstNodePoint, levelDelta, nodeDelta, levelLabels) {
+    var makeNodePoint = function(i) {
+        return firstNodePoint.
+            plus(nodeDelta.times(i)).
+            plus(levelDelta.times(evenPower(i)));
+    };
+
+    var n = 1 << levelLabels.length;
+    for (var i = 1; i < n; i++) {
+        var b = evenPower(i);
+        var p = makeNodePoint(i);
+        if (b > 0) {
+            var d = 1 << (b - 1);
+            this.strokeLine(p, makeNodePoint(i + d), "gray");
+            this.strokeLine(p, makeNodePoint(i - d), "gray");
+        }
+
+        var levelDeltaLength = Math.sqrt(levelDelta.x * levelDelta.x + levelDelta.y * levelDelta.y);
+        var weight = new Point(0.5, 0.5).plus(levelDelta.times(-0.5/levelDeltaLength));
+        this.printCenteredText(
+            levelLabels[b],
+            p,
+            undefined,
+            undefined,
+            undefined,
+            weight);
+    }
 };
 
 /**
@@ -221,6 +262,39 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor) {
 };
 
 /**
+ *
+ * @param {!QuantumState} state
+ * @param {!Rect} drawArea
+ * @param {!Array.<!string>} labels
+ */
+Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, labels) {
+    need(state.columnVector.height() === 1 << labels.length, "columnVector.height() === labels.length");
+
+    var numWireRows = Math.ceil(labels.length / 2);
+    var numWireCols = labels.length - numWireRows;
+    var numDrawRows = 1 << numWireRows;
+    var numDrawCols = 1 << numWireCols;
+
+    var labelDif = 5;
+    var labelSpace = 8;
+    var skipLength = Math.max(numWireRows, numWireCols) * labelDif + labelSpace;
+
+    var gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
+    this.paintColumnVectorAsGrid(state.columnVector, gridRect);
+
+    this.paintBinaryTree(
+        gridRect.topLeft().offsetBy(0, -1),
+        new Point(-labelDif, 0),
+        new Point(0, gridRect.h / numDrawRows),
+        labels.slice(0, numWireCols));
+    this.paintBinaryTree(
+        gridRect.topLeft().offsetBy(0, -1),
+        new Point(0, -labelDif),
+        new Point(gridRect.w / numDrawCols, 0),
+        labels.slice(numWireCols));
+};
+
+/**
  * Draws a visual representation of a column vector, using a grid layout.
  * @param {!Matrix} columnVector The complex column vector to draw.
  * @param {!Rect} drawArea The rectangle to draw the vector within.
@@ -228,7 +302,7 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor) {
 Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
     var n = columnVector.height();
     var numDrawRows = 1 << Math.ceil(Math.log(n) / Math.log(2) / 2);
-    var numDrawCols = Math.ceil(columnVector.height() / numDrawRows);
+    var numDrawCols = Math.ceil(n / numDrawRows);
     var topLeftCell = new Rect(
         drawArea.x,
         drawArea.y,

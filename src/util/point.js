@@ -44,3 +44,12 @@ Point.prototype.isEqualTo = function(other) {
         other.x === this.x &&
         other.y === this.y;
 };
+
+/**
+ *
+ * @param {!number} c
+ * @returns {!Point}
+ */
+Point.prototype.times = function(c) {
+    return new Point(this.x * c, this.y * c);
+};

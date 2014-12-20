@@ -17,7 +17,7 @@ new TripWire("start").run(function() {
     var toolbox = new Toolbox(new Rect(0, 0, canvas.width, TOOLBOX_HEIGHT));
 
     /** @type {!Circuit} */
-    var stableCircuit = new Circuit(new Rect(0, TOOLBOX_HEIGHT + 2, canvas.width, 201), 4, [], null);
+    var stableCircuit = new Circuit(new Rect(0, TOOLBOX_HEIGHT + 2, canvas.width, 201), 4, [], null, undefined);
     /** @type {!number} */
     var STATE_DRAW_Y = stableCircuit.area.bottom() + 2;
     /** @type {!number} */
@@ -76,14 +76,7 @@ new TripWire("start").run(function() {
         var input = QuantumState.zero(circuit.numWires);
         var output = transformVectorWithOperations(input, take(circuit.columns, takeCount));
         circuit.drawRightHandPeekGates(painter);
-        var gridRect = drawRect.skipLeft(14).skipTop(14);
-        painter.paintColumnVectorAsGrid(output.columnVector, gridRect);
-        painter.printCenteredText(WIRE_LABELLER(0), new Point(gridRect.x + gridRect.w/4, drawRect.y + 8));
-        painter.printCenteredText(WIRE_LABELLER(1), new Point(gridRect.x + gridRect.w*2/4, drawRect.y + 6));
-        painter.printCenteredText(WIRE_LABELLER(0), new Point(gridRect.x + gridRect.w*3/4, drawRect.y + 8));
-        painter.printCenteredText(WIRE_LABELLER(2), new Point(drawRect.x + 6, gridRect.y + gridRect.h/4));
-        painter.printCenteredText(WIRE_LABELLER(3), new Point(drawRect.x + 4, gridRect.y + gridRect.h*2/4));
-        painter.printCenteredText(WIRE_LABELLER(2), new Point(drawRect.x + 6, gridRect.y + gridRect.h*3/4));
+        painter.paintQuantumStateAsLabelledGrid(output, drawRect, range(circuit.numWires).map(circuit.wireLabeller));
     };
 
     var ts = 0;

@@ -6,16 +6,46 @@ var CIRCUIT_OP_LEFT_SPACING = 35;
 var CIRCUIT_OP_RIGHT_SPACING = 5;
 
 /**
- * @param {!int} i
- * @returns {!string}
+ * @param {!Array.<!int>|!int} grouping
+ * @returns {!function() : !string}
  */
-var WIRE_LABELLER = function (i) {
-    if (i === 0) { return "A1"; }
-    if (i === 1) { return "A2"; }
-    if (i === 2) { return "B1"; }
-    if (i === 3) { return "B2"; }
-    return "bit" + i;
+Circuit.makeWireLabeller = function (grouping) {
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (grouping === 1) {
+        return function(i) {
+            return alphabet[i];
+        };
+    }
+
+    if (typeof grouping === 'number') {
+        need(grouping >= 1);
+        return function(i) {
+            var g = Math.floor(i / grouping);
+            var e = i % grouping;
+            return alphabet[g] + (e + 1);
+        };
+    }
+
+    if (Array.isArray(grouping)) {
+        var labels = [];
+        for (var g = 0; g < grouping.length; g++) {
+            if (grouping[g] === 1) {
+                labels.push(alphabet[g]);
+            } else {
+                for (var i = 0; i < grouping[g]; i++) {
+                    labels.push(alphabet[g] + (i + 1));
+                }
+            }
+        }
+        return function(i) {
+            return labels[i];
+        };
+    }
+
+    throw "Unrecognized grouping type: " + grouping;
 };
+
+Circuit.DEFAULT_WIRE_LABELLER = Circuit.makeWireLabeller(1);
 
 /**
  *
@@ -23,15 +53,17 @@ var WIRE_LABELLER = function (i) {
  * @param {!int} numWires
  * @param {!Array.<!GateColumn>} columns
  * @param {?int} compressedColumnIndex
+ * @param {undefined|!function(!int) : !string} wireLabeller
  *
  * @property {!Rect} area
  * @property {!int} numWires
  * @property {!Array.<!GateColumn>} columns;
  * @property {?int} compressedColumnIndex
+ * @property {!function(!int) : !string} wireLabeller
  *
  * @constructor
  */
-function Circuit(area, numWires, columns, compressedColumnIndex) {
+function Circuit(area, numWires, columns, compressedColumnIndex, wireLabeller) {
     need(numWires >= 0, "numWires >= 0");
     need(columns.every(function(e) { return e instanceof GateColumn; }), "columns not columns");
     need(columns.every(function(e) { return e.gates.length === numWires; }), "columns of correct length");
@@ -39,14 +71,17 @@ function Circuit(area, numWires, columns, compressedColumnIndex) {
     this.numWires = numWires;
     this.columns = columns;
     this.compressedColumnIndex = compressedColumnIndex;
+    this.wireLabeller = wireLabeller || Circuit.DEFAULT_WIRE_LABELLER;
 }
 
 Circuit.prototype.isEqualTo = function(other) {
+    var self = this;
     return other instanceof Circuit &&
         this.area.isEqualTo(other.area) &&
         this.numWires === other.numWires &&
         arraysEqualBy(this.columns, other.columns, CUSTOM_IS_EQUAL_TO_EQUALITY) &&
-        this.compressedColumnIndex === other.compressedColumnIndex;
+        this.compressedColumnIndex === other.compressedColumnIndex &&
+        range(this.numWires).every(function(i) { return self.wireLabeller(i) === other.wireLabeller(i); });
 };
 
 Circuit.prototype.toString = function() {
@@ -201,7 +236,7 @@ Circuit.prototype.paint = function(painter, hand, isTapping) {
     // Draw labelled wires
     for (var i = 0; i < this.numWires; i++) {
         var wireY = this.wireRect(i).center().y;
-        painter.printCenteredText(WIRE_LABELLER(i) + ":", new Point(this.area.x + 14, wireY));
+        painter.printCenteredText(this.wireLabeller(i) + ":", new Point(this.area.x + 14, wireY));
         painter.strokeLine(new Point(this.area.x + 30, wireY), new Point(this.area.x + this.area.w, wireY));
     }
 
@@ -300,7 +335,8 @@ Circuit.prototype.withOpBeingAdded = function(modificationPoint, hand) {
         this.area,
         this.numWires,
         newCols,
-        compressedColumnIndex);
+        compressedColumnIndex,
+        this.wireLabeller);
 };
 
 Circuit.prototype.withoutEmpties = function() {
@@ -308,7 +344,8 @@ Circuit.prototype.withoutEmpties = function() {
         this.area,
         this.numWires,
         this.columns.filter(function (e) { return !e.isEmpty();}),
-        null);
+        null,
+        this.wireLabeller);
 };
 
 /**
@@ -353,7 +390,8 @@ Circuit.prototype.tryGrab = function(hand) {
             this.area,
             this.numWires,
             withItemReplacedAt(this.columns, new GateColumn(newCol), c),
-            null),
+            null,
+            this.wireLabeller),
         newHand: hand.withHeldGate(new GateBlock(newGateBlock), 0)
     };
 };
