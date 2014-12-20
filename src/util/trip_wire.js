@@ -59,14 +59,27 @@ TripWire.prototype.run = function(func) {
 
 /**
  * Returns the same 0-arg function, except wrapped to run with the receiving trip wire's run method.
- * @param {!function() : T} func
- * @returns {!function() : T}
- * @template T
+ * @param {!function() : R} func
+ * @returns {!function() : R}
+ * @template R
  */
-TripWire.prototype.wrap = function(func) {
+TripWire.prototype.wrap0 = function(func) {
     var wire = this;
     return function() {
         wire.run(func);
+    };
+};
+
+/**
+ * Returns the same 1-arg function, except wrapped to run with the receiving trip wire's run method.
+ * @param {!function(T1) : R} func
+ * @returns {!function(T1) : R}
+ * @template T1, R
+ */
+TripWire.prototype.wrap1 = function(func) {
+    var wire = this;
+    return function(e) {
+        wire.run(function() { return func(e); });
     };
 };
 

@@ -26,6 +26,10 @@ function Gate(symbol, matrix, name, description, symbolDrawer) {
     this.symbolDrawer = symbolDrawer || Gate.DEFAULT_SYMBOL_DRAWER;
 }
 
+Gate.prototype.toString = function() {
+    return this.symbol;
+};
+
 /**
  * Returns the probability of controls on a column being satisfied and a wire being ON,
  * if that was measured.
@@ -294,7 +298,13 @@ Gate.UP = new Gate(
     "that it splits and rotates the relative phase the right way. However,\n" +
     "it does have a different global phase factor so that it can be one of\n" +
     "the four square roots of the Pauli X gate (so applying it twice is\n" +
-    "equivalent to a NOT). The Up gate is the inverse of the Down gate.");
+    "equivalent to a NOT). The Up gate is the inverse of the Down gate.",
+    function(painter, params) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+        painter.ctx.globalAlpha = 0.25;
+        painter.strokeLine(params.rect.topLeft(), params.rect.bottomRight());
+        painter.ctx.globalAlpha = 1;
+    });
 
 /**
  * @type {!Gate}
@@ -613,7 +623,7 @@ Gate.updateIfFuzzGate = function(gate) {
     }
 };
 
-/** @type {!Array.<!{hint: !string, gates: !Array.<!Gate>}>} */
+/** @type {!Array.<!{hint: !string, gates: !Array.<?Gate>}>} */
 Gate.GATE_SET = [
     {
         hint: "Special",

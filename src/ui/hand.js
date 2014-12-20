@@ -11,10 +11,27 @@
  */
 function Hand(pos, heldGateBlock, heldGateBlockOffset) {
     need(pos === null || pos instanceof Point, "pos isa ?Point");
+    need((heldGateBlock === null) === (heldGateBlockOffset === null), "heldGateBlock iff heldGateBlockOffset");
     this.heldGateBlock = heldGateBlock;
     this.heldGateBlockOffset = heldGateBlockOffset;
     this.pos = pos;
 }
+
+/**
+ *
+ * @param {!Hand|*} other
+ * @returns {!boolean}
+ */
+Hand.prototype.isEqualTo = function(other) {
+    return other instanceof Hand &&
+        this.pos.isEqualTo(other.pos) &&
+        this.heldGateBlockOffset === other.heldGateBlockOffset &&
+        CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGateBlock, other.heldGateBlock);
+};
+
+Hand.prototype.toString = function() {
+    return "pos: " + this.pos + ", holding: " + this.heldGateBlock;
+};
 
 /**
  * @param {?Point} newPos

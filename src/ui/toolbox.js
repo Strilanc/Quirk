@@ -93,9 +93,11 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
  */
 Toolbox.prototype.findGateAt = function(p) {
     for (var groupIndex = 0; groupIndex < Gate.GATE_SET.length; groupIndex++) {
-        for (var gateIndex = 0; gateIndex < Gate.GATE_SET[groupIndex].gates.length; gateIndex++) {
-            if (this.groupedGateRect(groupIndex, gateIndex).containsPoint(p)) {
-                return {groupIndex: groupIndex, gateIndex: gateIndex, gate: Gate.GATE_SET[groupIndex].gates[gateIndex]};
+        var group = Gate.GATE_SET[groupIndex];
+        for (var gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
+            var gate = group.gates[gateIndex];
+            if (gate !== null && this.groupedGateRect(groupIndex, gateIndex).containsPoint(p)) {
+                return {groupIndex: groupIndex, gateIndex: gateIndex, gate: gate};
             }
         }
     }

@@ -12,6 +12,20 @@ function GateBlock(gates) {
 }
 
 /**
+ *
+ * @param {!GateBlock|*} other
+ * @returns {!boolean}
+ */
+GateBlock.prototype.isEqualTo = function(other) {
+    return other instanceof GateBlock &&
+        arraysEqualBy(this.gates, other.gates, STRICT_EQUALITY);
+};
+
+GateBlock.prototype.toString = function() {
+    return "GateBlock(" + arrayToString(this.gates) + ")";
+};
+
+/**
  * @param {!Gate} gate
  * @returns {!GateBlock}
  */

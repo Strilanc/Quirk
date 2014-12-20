@@ -20,6 +20,10 @@ GateColumn.prototype.isEqualTo = function (other) {
         arraysEqualBy(this.gates, other.gates, STRICT_EQUALITY);
 };
 
+GateColumn.prototype.toString = function() {
+    return "GateColumn(" + arrayToString(this.gates) + ")";
+};
+
 /**
  * @param {!int} size
  * @returns {!GateColumn}

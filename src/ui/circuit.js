@@ -33,6 +33,8 @@ var WIRE_LABELLER = function (i) {
  */
 function Circuit(area, numWires, columns, compressedColumnIndex) {
     need(numWires >= 0, "numWires >= 0");
+    need(columns.every(function(e) { return e instanceof GateColumn; }), "columns not columns");
+    need(columns.every(function(e) { return e.gates.length === numWires; }), "columns of correct length");
     this.area = area;
     this.numWires = numWires;
     this.columns = columns;
@@ -43,8 +45,15 @@ Circuit.prototype.isEqualTo = function(other) {
     return other instanceof Circuit &&
         this.area.isEqualTo(other.area) &&
         this.numWires === other.numWires &&
-        arraysEqualBy(this.columns, other.columns, arg2(GateColumn.prototype.isEqualTo)) &&
+        arraysEqualBy(this.columns, other.columns, CUSTOM_IS_EQUAL_TO_EQUALITY) &&
         this.compressedColumnIndex === other.compressedColumnIndex;
+};
+
+Circuit.prototype.toString = function() {
+    return "Circuit(area: " + this.area +
+        ", numWires: " + this.numWires +
+        ", columns: " + arrayToString(this.columns) +
+        ", compressedColumnIndex: " + this.compressedColumnIndex + ")";
 };
 
 /**
@@ -90,7 +99,8 @@ Circuit.prototype.findOpHalfColumnAt = function(p) {
     }
 
     var s = (CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2)/2;
-    return Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / s - 0.5) / 2;
+    var i = Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / s - 0.5) / 2;
+    return Math.max(-0.5, i);
 };
 
 /**
@@ -102,7 +112,8 @@ Circuit.prototype.findExistingOpColumnAt = function(p) {
         return null;
     }
 
-    var i = Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / CIRCUIT_OP_HORIZONTAL_SPACING);
+    var s = CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2;
+    var i = Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / s);
     if (i < 0 || i >= this.columns.length) {
         return null;
     }
@@ -297,7 +308,7 @@ Circuit.prototype.withoutEmpties = function() {
         this.area,
         this.numWires,
         this.columns.filter(function (e) { return !e.isEmpty();}),
-        this.compressedColumnIndex);
+        null);
 };
 
 /**
@@ -308,18 +319,20 @@ Circuit.prototype.tryGrab = function(hand) {
     if (hand.pos === null) {
         return {newCircuit: this, newHand: hand};
     }
-    var co = this.findExistingOpColumnAt(notNull(hand.pos));
-    if (co === null) {
+
+    var possibleCol = this.findExistingOpColumnAt(notNull(hand.pos));
+    if (possibleCol === null) {
         return {newCircuit: this, newHand: hand};
     }
-    var c = notNull(co);
+
+    var c = notNull(possibleCol);
     var r = notNull(this.findWireAt(notNull(hand.pos)));
     if (!this.gateRect(r, c).containsPoint(notNull(hand.pos)) || this.columns[c].gates[r] === null) {
         return {newCircuit: this, newHand: hand};
     }
 
-    var newCol = this.columns[c].gates.map(function(e) { return e; });
-    var gate = notNull(newCol[r]);
+    var newCol = copyArray(this.columns[c].gates);
+    var gate = newCol[r];
     newCol[r] = null;
     var newGateBlock = [gate];
 
@@ -339,7 +352,7 @@ Circuit.prototype.tryGrab = function(hand) {
         newCircuit: new Circuit(
             this.area,
             this.numWires,
-            withItemReplacedAt(this.columns, newCol, c),
+            withItemReplacedAt(this.columns, new GateColumn(newCol), c),
             null),
         newHand: hand.withHeldGate(new GateBlock(newGateBlock), 0)
     };

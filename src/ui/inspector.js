@@ -153,35 +153,35 @@ new TripWire("start").run(function() {
     };
 
     var redrawTrip = new TripWire("redraw_mark");
-    redraw = redrawTrip.wrap(function () {
+    redraw = redrawTrip.wrap0(function () {
         var painter = new Painter(canvas.getContext("2d"));
         var circuit = stableCircuit;
         var hand = handState;
 
         painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), "white");
 
-        redrawTrip.mark("_");
+        redrawTrip.mark("findModificationIndex");
         var modPt = circuit.findModificationIndex(hand);
         if (modPt !== null && hand.heldGateBlock === null && modPt.col >= circuit.columns.length) {
             modPt = null;
         }
 
-        redrawTrip.mark("a");
+        redrawTrip.mark("add");
         var candidateCircuit = circuit.withOpBeingAdded(modPt, hand);
 
-        redrawTrip.mark("b");
+        redrawTrip.mark("insert");
         drawInsertSite(painter, modPt, candidateCircuit, hand);
 
-        redrawTrip.mark("c");
+        redrawTrip.mark("circuit");
         candidateCircuit.paint(painter, hand, isTappingState);
 
-        redrawTrip.mark("d");
+        redrawTrip.mark("output");
         drawOutputAfter(painter, candidateCircuit, candidateCircuit.columns.length, OUTPUT_STATE_HINT_AREA);
 
-        redrawTrip.mark("e");
+        redrawTrip.mark("toolbox");
         toolbox.paint(painter, hand);
 
-        redrawTrip.mark("f");
+        redrawTrip.mark("held");
         drawHeld(painter, modPt, hand);
 
         if (wasTappingState && !isTappingState) {
@@ -191,15 +191,13 @@ new TripWire("start").run(function() {
             stableCircuit = stableCircuit.withoutEmpties();
         }
 
-        redrawTrip.mark("g");
+        redrawTrip.mark("isTimeBased");
 
         var isOverTimeBasedGate = hand.pos !== null &&
             toolbox.findGateAt(notNull(hand.pos)) !== null &&
             toolbox.findGateAt(notNull(hand.pos)).gate.isTimeBased();
-        var isHoldingTimeBasedGate = hand.heldGateBlock !== null &&
-            !hand.heldGateBlock.gates.every(function(e) { return e === null || !e.isTimeBased()});
 
-        tickWhenAppropriate(candidateCircuit, isOverTimeBasedGate || isHoldingTimeBasedGate);
+        tickWhenAppropriate(candidateCircuit, isOverTimeBasedGate);
     });
 
     //noinspection JSUnresolvedFunction
@@ -223,11 +221,20 @@ new TripWire("start").run(function() {
         }
     };
     //noinspection JSUnresolvedFunction
-    $(canvas).mousedown(function (p) {
+    var mouseDownTrip = new TripWire("mouse down");
+    $(canvas).mousedown(mouseDownTrip.wrap1(function (p) {
         if (p.which !== 1) { return; }
+
+        mouseDownTrip.mark("toolbox");
         handState = toolbox.tryGrab(handState);
+
+        mouseDownTrip.mark("circuit");
+        var newHandCircuit = stableCircuit.tryGrab(handState);
+        handState = newHandCircuit.newHand;
+        stableCircuit = newHandCircuit.newCircuit;
+
         mouseUpdate(p, true);
-    });
+    }));
     //noinspection JSUnresolvedFunction
     $(document).mouseup(function (p) {
         if (p.which !== 1) { return; }

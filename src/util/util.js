@@ -68,6 +68,33 @@ var withItemReplacedAt = function(array, item, index) {
     return result;
 };
 
+/**
+ * Returns a new array, with the same items as the given array.
+ * @param {!Array<T>} array
+ * @returns {!Array<T>}
+ * @template T
+ */
+var copyArray = function(array) {
+    return array.map(function(e) { return e; });
+};
+
+/**
+ * @param {!Array<*>} array
+ * @returns {!string}
+ */
+var arrayToString = function(array) {
+    return "[" + array.join(", ") + "]";
+}
+/**
+ * Returns an array containing the given item the given number of times.
+ * @param {T} item
+ * @param {!int} repeatCount
+ * @returns {!Array<T>}
+ * @template T
+ */
+var repeat = function(item, repeatCount) {
+    return range(repeatCount).map(function() { return item; });
+}
 
 /**
  * Forced cast from nullable to non-nullable, throwing an exception on failure.
@@ -170,10 +197,23 @@ var arraysEqualBy = function(array1, array2, comparer) {
  * Determines if the two given values are strictly equal.
  * @param {*} e1
  * @param {*} e2
- * @return {boolean}
+ * @return {!boolean}
  */
 var STRICT_EQUALITY = function(e1, e2) {
     return e1 === e2;
+};
+
+/**
+ * @param {*} e1
+ * @param {*} e2
+ * @returns {!boolean}
+ */
+var CUSTOM_IS_EQUAL_TO_EQUALITY = function(e1, e2) {
+    if (e1 === null) {
+        return e2 === null;
+    } else {
+        return e1.isEqualTo(e2);
+    }
 };
 
 /**

@@ -15,8 +15,7 @@ function Point(x, y) {
 }
 
 Point.prototype.toString = function() {
-    return "TEST";
-    //return "(x: " + this.x + ", y: " + this.y + ")";
+    return "(x: " + this.x + ", y: " + this.y + ")";
 };
 
 /**

@@ -128,10 +128,8 @@ Matrix.prototype.isEqualTo = function (other) {
     if (other.width() !== w || other.height() !== h) { return false; }
 
     for (var r = 0; r < h; r++) {
-        for (var c = 0; c < w; c++) {
-            if (!this.rows[r][c].isEqualTo(other.rows[r][c])) {
-                return false;
-            }
+        if (!arraysEqualBy(this.rows[r], other.rows[r], CUSTOM_IS_EQUAL_TO_EQUALITY)) {
+            return false;
         }
     }
 
