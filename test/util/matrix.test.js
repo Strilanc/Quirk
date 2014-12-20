@@ -2,57 +2,118 @@ MatrixTest = TestCase("MatrixTest");
 
 MatrixTest.prototype.testIsEqualTo = function() {
     var m = new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]);
-    assertTrue(m.isEqualTo(m));
-    assertTrue(m.isEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]])));
+    assertThat(m).isEqualTo(m);
+    assertThat(m).isNotEqualTo(null);
+    assertThat(m).isNotEqualTo("");
 
-    assertFalse(m.isEqualTo(
-        new Matrix([[new Complex(2, 3)]])));
-    assertFalse(m.isEqualTo(
-        new Matrix([[new Complex(-2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]])));
-    assertFalse(m.isEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(-5, 7)], [new Complex(11, 13), new Complex(17, 19)]])));
-    assertFalse(m.isEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(-11, 13), new Complex(17, 19)]])));
-    assertFalse(m.isEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(-17, 19)]])));
+    assertThat(m).isEqualTo(
+        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
+    assertThat(m).isNotEqualTo(
+        new Matrix([[new Complex(2, 3)]]));
+    assertThat(m).isNotEqualTo(
+        new Matrix([[new Complex(-2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
+    assertThat(m).isNotEqualTo(
+        new Matrix([[new Complex(2, 3), new Complex(-5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
+    assertThat(m).isNotEqualTo(
+        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(-11, 13), new Complex(17, 19)]]));
+    assertThat(m).isNotEqualTo(
+        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(-17, 19)]]));
 
     var col = new Matrix([[new Complex(2, 3), new Complex(5, 7)]]);
     var row = new Matrix([[new Complex(2, 3)], [new Complex(5, 7)]]);
-    assertTrue(col.isEqualTo(col));
-    assertTrue(row.isEqualTo(row));
-    assertFalse(row.isEqualTo(col));
+    assertThat(col).isEqualTo(col);
+    assertThat(row).isEqualTo(row);
+    assertThat(row).isNotEqualTo(col);
+};
+
+MatrixTest.prototype.testIsApproximatelyEqualTo = function() {
+    // Size must match
+    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.col([1, 1]), 0);
+    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.square([1, 1, 1, 1]), 0);
+    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.row([1, 1, 1]), 0);
+    assertThat(Matrix.row([1, 1])).isApproximatelyEqualTo(Matrix.row([1, 1]), 0);
+
+    // Error bound matters
+    assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 0);
+    assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 1/16);
+    assertThat(Matrix.row([1.25])).isApproximatelyEqualTo(Matrix.row([1]), 1/16);
+    assertThat(Matrix.row([0.75])).isApproximatelyEqualTo(Matrix.row([1]), 1/16);
+    assertThat(Matrix.row([1.26])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/16);
+    assertThat(Matrix.row([0.74])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/16);
+
+    // Error bound spreads
+    assertThat(Matrix.row([0, 0])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
+    assertThat(Matrix.row([1, 0])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
+    assertThat(Matrix.row([0, 1])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
+    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.row([0, 0]), 1);
+};
+
+MatrixTest.prototype.testToString = function() {
+    assertThat(Matrix.square([2]).toString()).
+        isEqualTo("{{2}}");
+    assertThat(Matrix.square([1, 0, new Complex(0, -1), new Complex(2, -3)]).toString()).
+        isEqualTo("{{1, 0}, {-i, 2-3i}}");
+    assertThat(Matrix.square([1, 0, 0, 1]).toString()).
+        isEqualTo("{{1, 0}, {0, 1}}");
+    assertThat(Matrix.identity(3).toString()).
+        isEqualTo("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}");
 };
 
 MatrixTest.prototype.testGenerate = function() {
-    assertEquals("{{0, 10, 20}, {1, 11, 21}}",
-        Matrix.generate(3, 2, function(r, c) { return r + 10* c; }).toString());
+    assertThat(Matrix.generate(3, 2, function(r, c) { return r + 10* c; }).toString()).
+        isEqualTo("{{0, 10, 20}, {1, 11, 21}}");
 };
 
 MatrixTest.prototype.testSquare = function() {
     var m = Matrix.square([1, new Complex(2, 3), -5.5, 0]);
-    assertTrue(m.rows[0][0].isEqualTo(1));
-    assertTrue(m.rows[0][1].isEqualTo(new Complex(2, 3)));
-    assertTrue(m.rows[1][0].isEqualTo(-5.5));
-    assertTrue(m.rows[1][1].isEqualTo(0));
-    assertTrue(m.rows.length === 2);
+    assertThat(m.rows[0][0]).isEqualTo(1);
+    assertThat(m.rows[0][1]).isEqualTo(new Complex(2, 3));
+    assertThat(m.rows[1][0]).isEqualTo(-5.5);
+    assertThat(m.rows[1][1]).isEqualTo(0);
+    assertThat(m.rows.length).isEqualTo(2);
 
-    assertTrue(Matrix.square([1]).rows[0][0].isEqualTo(1));
-};
-
-MatrixTest.prototype.testRow = function() {
-    assertEquals("{{2, 3, 5i}}", Matrix.row([2, 3, new Complex(0, 5)]).toString());
+    assertThat(Matrix.square([1]).rows[0][0]).isEqualTo(1);
 };
 
 MatrixTest.prototype.testCol = function() {
-    assertEquals("{{2}, {3}, {5i}}", Matrix.col([2, 3, new Complex(0, 5)]).toString());
+    assertThat(Matrix.col([2, 3, new Complex(0, 5)]).toString()).isEqualTo("{{2}, {3}, {5i}}");
 };
 
-MatrixTest.prototype.testToString = function() {
-    assertEquals("{{2}}", Matrix.square([2]).toString());
-    assertEquals("{{1, 0}, {-i, 2-3i}}", Matrix.square([1, 0, new Complex(0, -1), new Complex(2, -3)]).toString());
-    assertEquals("{{1, 0}, {0, 1}}", Matrix.square([1, 0, 0, 1]).toString());
-    assertEquals("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}", Matrix.identity(3).toString());
+MatrixTest.prototype.testRow = function() {
+    assertThat(Matrix.row([2, 3, new Complex(0, 5)]).toString()).isEqualTo("{{2, 3, 5i}}");
+};
+
+MatrixTest.prototype.testSize = function() {
+    assertThat(Matrix.row([1, 1]).width()).isEqualTo(2);
+    assertThat(Matrix.row([1, 1]).height()).isEqualTo(1);
+
+    assertThat(Matrix.row([1, 1, 3]).width()).isEqualTo(3);
+    assertThat(Matrix.row([1, 1, 3]).height()).isEqualTo(1);
+
+    assertThat(Matrix.col([1, 1]).width()).isEqualTo(1);
+    assertThat(Matrix.col([1, 1]).height()).isEqualTo(2);
+
+    assertThat(Matrix.col([1, 1, 3]).width()).isEqualTo(1);
+    assertThat(Matrix.col([1, 1, 3]).height()).isEqualTo(3);
+};
+
+MatrixTest.prototype.testIsApproximatelyUnitary = function() {
+    assertFalse(Matrix.row([1, 1]).isApproximatelyUnitary(999));
+    assertFalse(Matrix.col([1, 1]).isApproximatelyUnitary(999));
+
+    assertTrue(Matrix.row([1]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row([Complex.I]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row([-1]).isApproximatelyUnitary(0));
+    assertFalse(Matrix.row([-2]).isApproximatelyUnitary(0));
+    assertFalse(Matrix.row([0]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row([-2]).isApproximatelyUnitary(999));
+
+    assertTrue(Matrix.square([1, 0, 0, 1]).isApproximatelyUnitary(0));
+    assertTrue(Matrix.rotation(1).isApproximatelyUnitary(0.001));
+    assertTrue(Matrix.PAULI_X.isApproximatelyUnitary(0));
+    assertTrue(Matrix.PAULI_Y.isApproximatelyUnitary(0));
+    assertTrue(Matrix.PAULI_Z.isApproximatelyUnitary(0));
+    assertTrue(Matrix.HADAMARD.isApproximatelyUnitary(0.001));
 };
 
 MatrixTest.prototype.testAdjoint = function() {
@@ -60,7 +121,7 @@ MatrixTest.prototype.testAdjoint = function() {
                           new Complex(11, 13), new Complex(17, 19)]);
     var a = Matrix.square([new Complex(2, -3), new Complex(11, -13),
                           new Complex(5, -7), new Complex(17, -19)]);
-    assertTrue(v.adjoint().isEqualTo(a));
+    assertThat(v.adjoint()).isEqualTo(a);
 };
 
 MatrixTest.prototype.testScaledBy = function() {
@@ -68,12 +129,12 @@ MatrixTest.prototype.testScaledBy = function() {
                           new Complex(11, 13), new Complex(17, 19)]);
     var a = Matrix.square([new Complex(-2, -3), new Complex(-5, -7),
                           new Complex(-11, -13), new Complex(-17, -19)]);
-    assertTrue(v.scaledBy(-1).isEqualTo(a));
-    assertTrue(v.scaledBy(0).isEqualTo(Matrix.square([0, 0, 0, 0])));
-    assertTrue(v.scaledBy(1).isEqualTo(v));
+    assertThat(v.scaledBy(-1)).isEqualTo(a);
+    assertThat(v.scaledBy(0)).isEqualTo(Matrix.square([0, 0, 0, 0]));
+    assertThat(v.scaledBy(1)).isEqualTo(v);
 
-    assertTrue(Matrix.col([2, 3]).scaledBy(5).isEqualTo(Matrix.col([10, 15])));
-    assertTrue(Matrix.row([2, 3]).scaledBy(5).isEqualTo(Matrix.row([10, 15])));
+    assertThat(Matrix.col([2, 3]).scaledBy(5)).isEqualTo(Matrix.col([10, 15]));
+    assertThat(Matrix.row([2, 3]).scaledBy(5)).isEqualTo(Matrix.row([10, 15]));
 };
 
 MatrixTest.prototype.testPlus = function() {
@@ -97,149 +158,50 @@ MatrixTest.prototype.testTimes = function() {
         .isEqualTo(Matrix.identity(2)));
 };
 
-var assertUnitaryApproxEqual = function (actual, expected) {
-    assertTrue(actual instanceof Matrix);
-    assertTrue(expected instanceof Matrix);
-    if (!actual.isApproximatelyEqualTo(expected, 0.0001)) {
-        fail('Expected ' + actual.toString() + ' to be approximately ' + expected.toString());
-    }
-};
-
-MatrixTest.prototype.testIsApproximatelyEqualTo = function() {
-    // Size must match
-    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.col([1, 1]), 0));
-    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.square([1, 1, 1, 1]), 0));
-    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.row([1, 1, 1]), 0));
-    assertTrue(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.row([1, 1]), 0));
-
-    // Error bound matters
-    assertTrue(Matrix.row([1]).isApproximatelyEqualTo(Matrix.row([1]), 0));
-    assertTrue(Matrix.row([1]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
-    assertTrue(Matrix.row([1.25]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
-    assertTrue(Matrix.row([0.75]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
-    assertFalse(Matrix.row([1.26]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
-    assertFalse(Matrix.row([0.74]).isApproximatelyEqualTo(Matrix.row([1]), 1/16));
-
-    // Error bound spreads
-    assertTrue(Matrix.row([0, 0]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
-    assertTrue(Matrix.row([1, 0]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
-    assertTrue(Matrix.row([0, 1]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
-    assertFalse(Matrix.row([1, 1]).isApproximatelyEqualTo(Matrix.row([0, 0]), 1));
-};
-
-MatrixTest.prototype.testNorm2 = function() {
-    assertEquals(1, Matrix.row([1]).norm2());
-    assertEquals(4, Matrix.row([2]).norm2());
-    assertEquals(2, Matrix.row([1, 1]).norm2());
-    assertEquals(2, Matrix.col([1, 1]).norm2());
-    assertEquals(30, Matrix.square([1, 2, 3, 4]).norm2());
-};
-
-MatrixTest.prototype.testIsApproximatelyUnitary = function() {
-    assertFalse(Matrix.row([1, 1]).isApproximatelyUnitary(999));
-    assertFalse(Matrix.col([1, 1]).isApproximatelyUnitary(999));
-
-    assertTrue(Matrix.row([1]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.row([Complex.I]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.row([-1]).isApproximatelyUnitary(0));
-    assertFalse(Matrix.row([-2]).isApproximatelyUnitary(0));
-    assertFalse(Matrix.row([0]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.row([-2]).isApproximatelyUnitary(999));
-
-    assertTrue(Matrix.square([1, 0, 0, 1]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.rotation(1).isApproximatelyUnitary(0.001));
-    assertTrue(Matrix.PAULI_X.isApproximatelyUnitary(0));
-    assertTrue(Matrix.PAULI_Y.isApproximatelyUnitary(0));
-    assertTrue(Matrix.PAULI_Z.isApproximatelyUnitary(0));
-    assertTrue(Matrix.HADAMARD.isApproximatelyUnitary(0.001));
-};
-
-MatrixTest.prototype.testFromRotation = function() {
-    // No turn gives no-op
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, 0), Matrix.identity(2));
-
-    // Whole turns are no-ops
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(1, 0, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 1, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, 1), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(-1, 0, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, -1, 0), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, -1), Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0.6, 0.8, 0), Matrix.identity(2));
-
-    // Half turns along each axis is the corresponding Pauli operation
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0.5, 0, 0), Matrix.PAULI_X);
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0.5, 0), Matrix.PAULI_Y);
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, 0.5), Matrix.PAULI_Z);
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(-0.5, 0, 0), Matrix.PAULI_X);
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, -0.5, 0), Matrix.PAULI_Y);
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, -0.5), Matrix.PAULI_Z);
-
-    // Hadamard
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(Math.sqrt(0.125), 0, Math.sqrt(0.125)), Matrix.HADAMARD);
-
-    // Opposites are inverses
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(-0.25, 0, 0).times(Matrix.fromPauliRotation(0.25, 0, 0)),
-        Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, -0.25, 0).times(Matrix.fromPauliRotation(0, 0.25, 0)),
-        Matrix.identity(2));
-    assertUnitaryApproxEqual(Matrix.fromPauliRotation(0, 0, -0.25).times(Matrix.fromPauliRotation(0, 0, 0.25)),
-        Matrix.identity(2));
-
-    // Doubling rotation is like squaring
-    var s1 = Matrix.fromPauliRotation(0.1, 0.15, 0.25);
-    var s2 = Matrix.fromPauliRotation(0.2, 0.3, 0.5);
-    assertUnitaryApproxEqual(s1.times(s1), s2);
-};
-
-MatrixTest.prototype.testTensorProduct = function() {
-    assertTrue(Matrix.square([2]).tensorProduct(Matrix.square([3])).isEqualTo(Matrix.square([6])));
-    assertTrue(Matrix.square([2]).tensorProduct(Matrix.square([3])).isEqualTo(Matrix.square([6])));
-    assertTrue(Matrix.PAULI_X.tensorProduct(Matrix.PAULI_Z).isEqualTo(Matrix.square([
-        0, 0, 1, 0,
-        0, 0, 0, -1,
-        1, 0, 0, 0,
-        0, -1, 0, 0
-    ])));
-    assertTrue(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.square([11, 13, 17, 19])).isEqualTo(Matrix.square([
-        22, 26, 33, 39,
-        34, 38, 51, 57,
-        55, 65, 77, 91,
-        85, 95, 119, 133
-    ])));
-};
-
-MatrixTest.prototype.testColRowProducts = function() {
+MatrixTest.prototype.testTimes_ColRow = function() {
     // When one is a column vector and the other is a row vector...
     var r = Matrix.row([2, 3, 5]);
     var c = Matrix.col([11, 13, 17]);
 
     // Inner product
-    assertEquals("{{146}}", r.times(c).toString());
+    assertThat(r.times(c).toString()).isEqualTo("{{146}}");
 
     // Outer product
-    assertEquals("{{22, 33, 55}, {26, 39, 65}, {34, 51, 85}}", c.times(r).toString());
+    assertThat(c.times(r).toString()).isEqualTo("{{22, 33, 55}, {26, 39, 65}, {34, 51, 85}}");
 
     // Outer product matches tensor product
-    assertTrue(c.times(r).isEqualTo(c.tensorProduct(r)));
+    assertThat(c.times(r)).isEqualTo(c.tensorProduct(r));
 
     // Tensor product is order independent (in this case)
-    assertTrue(r.tensorProduct(c).isEqualTo(c.tensorProduct(r)));
+    assertThat(r.tensorProduct(c)).isEqualTo(c.tensorProduct(r));
 };
 
-MatrixTest.prototype.testTensorProduct_Controlled = function() {
-    assertTrue(Matrix.CONTROL.tensorProduct(Matrix.square([2, 3, 5, 7])).isEqualTo(Matrix.square([
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 2, 3,
-        0, 0, 5, 7
-    ])));
-    assertTrue(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.CONTROL).isEqualTo(Matrix.square([
-        1, 0, 0, 0,
-        0, 2, 0, 3,
+MatrixTest.prototype.testNorm2 = function() {
+    assertThat(Matrix.row([1]).norm2()).isEqualTo(1);
+    assertThat(Matrix.row([2]).norm2()).isEqualTo(4);
+    assertThat(Matrix.row([1, 1]).norm2()).isEqualTo(2);
+    assertThat(Matrix.col([1, 1]).norm2()).isEqualTo(2);
+    assertThat(Matrix.square([1, 2, 3, 4]).norm2()).isEqualTo(30);
+};
+
+MatrixTest.prototype.testTensorProduct = function() {
+    assertThat(Matrix.square([2]).tensorProduct(Matrix.square([3]))).
+        isEqualTo(Matrix.square([6]));
+    assertThat(Matrix.square([2]).tensorProduct(Matrix.square([3]))).
+        isEqualTo(Matrix.square([6]));
+    assertThat(Matrix.PAULI_X.tensorProduct(Matrix.PAULI_Z)).isEqualTo(Matrix.square([
         0, 0, 1, 0,
-        0, 5, 0, 7
-    ])));
+        0, 0, 0, -1,
+        1, 0, 0, 0,
+        0, -1, 0, 0
+    ]));
+    assertThat(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.square([11, 13, 17, 19]))).
+        isEqualTo(Matrix.square([
+            22, 26, 33, 39,
+            34, 38, 51, 57,
+            55, 65, 77, 91,
+            85, 95, 119, 133
+        ]));
 };
 
 MatrixTest.prototype.testTensorPower = function() {
@@ -249,10 +211,65 @@ MatrixTest.prototype.testTensorPower = function() {
     assertEquals("{{1, i, i, -1, i, -1, -1, -i}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(3));
 };
 
+MatrixTest.prototype.testTensorProduct_Controlled = function() {
+    assertThat(Matrix.CONTROL.tensorProduct(Matrix.square([2, 3, 5, 7]))).isEqualTo(Matrix.square([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 2, 3,
+        0, 0, 5, 7
+    ]));
+    assertThat(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.CONTROL)).isEqualTo(Matrix.square([
+        1, 0, 0, 0,
+        0, 2, 0, 3,
+        0, 0, 1, 0,
+        0, 5, 0, 7
+    ]));
+};
+
+MatrixTest.prototype.testFromPauliRotation = function() {
+    // No turn gives no-op
+    assertThat(Matrix.fromPauliRotation(0, 0, 0)).isApproximatelyEqualTo(Matrix.identity(2));
+
+    // Whole turns are no-ops
+    assertThat(Matrix.fromPauliRotation(1, 0, 0)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0, 1, 0)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0, 0, 1)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(-1, 0, 0)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0, -1, 0)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0, 0, -1)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0.6, 0.8, 0)).isApproximatelyEqualTo(Matrix.identity(2));
+
+    // Half turns along each axis is the corresponding Pauli operation
+    assertThat(Matrix.fromPauliRotation(0.5, 0, 0)).isApproximatelyEqualTo(Matrix.PAULI_X);
+    assertThat(Matrix.fromPauliRotation(0, 0.5, 0)).isApproximatelyEqualTo(Matrix.PAULI_Y);
+    assertThat(Matrix.fromPauliRotation(0, 0, 0.5)).isApproximatelyEqualTo(Matrix.PAULI_Z);
+    assertThat(Matrix.fromPauliRotation(-0.5, 0, 0)).isApproximatelyEqualTo(Matrix.PAULI_X);
+    assertThat(Matrix.fromPauliRotation(0, -0.5, 0)).isApproximatelyEqualTo(Matrix.PAULI_Y);
+    assertThat(Matrix.fromPauliRotation(0, 0, -0.5)).isApproximatelyEqualTo(Matrix.PAULI_Z);
+
+    // Hadamard
+    assertThat(Matrix.fromPauliRotation(Math.sqrt(0.125), 0, Math.sqrt(0.125))).
+        isApproximatelyEqualTo(Matrix.HADAMARD);
+
+    // Opposites are inverses
+    assertThat(Matrix.fromPauliRotation(-0.25, 0, 0).times(Matrix.fromPauliRotation(0.25, 0, 0))).
+        isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0, -0.25, 0).times(Matrix.fromPauliRotation(0, 0.25, 0))).
+        isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(Matrix.fromPauliRotation(0, 0, -0.25).times(Matrix.fromPauliRotation(0, 0, 0.25))).
+        isApproximatelyEqualTo(Matrix.identity(2));
+
+    // Doubling rotation is like squaring
+    var s1 = Matrix.fromPauliRotation(0.1, 0.15, 0.25);
+    var s2 = Matrix.fromPauliRotation(0.2, 0.3, 0.5);
+    assertThat(s1.times(s1)).isApproximatelyEqualTo(s2);
+};
+
 MatrixTest.prototype.testFromWireSwap = function() {
-    assertEquals("{{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}", Matrix.fromWireSwap(2, 0, 1).toString());
+    assertThat(Matrix.fromWireSwap(2, 0, 1).toString()).
+        isEqualTo("{{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}");
     var _ = 0;
-    assertTrue(Matrix.fromWireSwap(4, 1, 3).isEqualTo(Matrix.square([
+    assertThat(Matrix.square([
         1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, //____
         _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, //___1
         _, _, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, //__1_
@@ -269,58 +286,58 @@ MatrixTest.prototype.testFromWireSwap = function() {
         _, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, //11_1
         _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1, _, //111_
         _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1 //1111
-    ])));
+    ])).isEqualTo(Matrix.fromWireSwap(4, 1, 3));
 };
 
 MatrixTest.prototype.testIdentity = function() {
-    assertEquals("{{1}}", Matrix.identity(1).toString());
-    assertEquals("{{1, 0}, {0, 1}}", Matrix.identity(2).toString());
-    assertEquals("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}", Matrix.identity(3).toString());
-    assertEquals("{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}", Matrix.identity(4).toString());
+    assertThat(Matrix.identity(1).toString()).
+        isEqualTo("{{1}}");
+    assertThat(Matrix.identity(2).toString()).
+        isEqualTo("{{1, 0}, {0, 1}}");
+    assertThat(Matrix.identity(3).toString()).
+        isEqualTo("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}");
+    assertThat(Matrix.identity(4).toString()).
+        isEqualTo("{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}");
 };
 
 MatrixTest.prototype.testRotation = function() {
     var s = Math.sqrt(0.5);
     var t = Math.PI * 2;
-    assertUnitaryApproxEqual(Matrix.rotation(0), Matrix.square([1, 0, 0, 1]));
-    assertUnitaryApproxEqual(Matrix.rotation(t / 8), Matrix.square([s, -s, s, s]));
-    assertUnitaryApproxEqual(Matrix.rotation(t * 2 / 8), Matrix.square([0, -1, 1, 0]));
-    assertUnitaryApproxEqual(Matrix.rotation(t * 3 / 8), Matrix.square([-s, -s, s, -s]));
-    assertUnitaryApproxEqual(Matrix.rotation(t * 4 / 8), Matrix.square([-1, 0, 0, -1]));
-    assertUnitaryApproxEqual(Matrix.rotation(t * 5 / 8), Matrix.square([-s, s, -s, -s]));
-    assertUnitaryApproxEqual(Matrix.rotation(t * 6 / 8), Matrix.square([0, 1, -1, 0]));
-    assertUnitaryApproxEqual(Matrix.rotation(t * 7 / 8), Matrix.square([s, s, -s, s]));
-    assertUnitaryApproxEqual(Matrix.rotation(t), Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.rotation(0)).isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.rotation(t / 8)).isApproximatelyEqualTo(Matrix.square([s, -s, s, s]));
+    assertThat(Matrix.rotation(t * 2 / 8)).isApproximatelyEqualTo(Matrix.square([0, -1, 1, 0]));
+    assertThat(Matrix.rotation(t * 3 / 8)).isApproximatelyEqualTo(Matrix.square([-s, -s, s, -s]));
+    assertThat(Matrix.rotation(t * 4 / 8)).isApproximatelyEqualTo(Matrix.square([-1, 0, 0, -1]));
+    assertThat(Matrix.rotation(t * 5 / 8)).isApproximatelyEqualTo(Matrix.square([-s, s, -s, -s]));
+    assertThat(Matrix.rotation(t * 6 / 8)).isApproximatelyEqualTo(Matrix.square([0, 1, -1, 0]));
+    assertThat(Matrix.rotation(t * 7 / 8)).isApproximatelyEqualTo(Matrix.square([s, s, -s, s]));
+    assertThat(Matrix.rotation(t)).isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
 };
 
 MatrixTest.prototype.testSingularValueDecomposition_2x2 = function() {
     var z = Matrix.square([0, 0, 0, 0]).singularValueDecomposition();
-    assertUnitaryApproxEqual(z.u, Matrix.identity(2));
-    assertUnitaryApproxEqual(z.s, Matrix.square([0, 0, 0, 0]));
-    assertUnitaryApproxEqual(z.v, Matrix.identity(2));
+    assertThat(z.u).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(z.s).isApproximatelyEqualTo(Matrix.square([0, 0, 0, 0]));
+    assertThat(z.v).isApproximatelyEqualTo(Matrix.identity(2));
 
     var i = Matrix.identity(2).singularValueDecomposition();
-    assertUnitaryApproxEqual(i.u, Matrix.identity(2));
-    assertUnitaryApproxEqual(i.s, Matrix.identity(2));
-    assertUnitaryApproxEqual(i.v, Matrix.identity(2));
+    assertThat(i.u).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(i.s).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(i.v).isApproximatelyEqualTo(Matrix.identity(2));
 
     var am = Matrix.square([1, Complex.I.times(2), 3, 4]);
     var ad = am.singularValueDecomposition();
-    assertUnitaryApproxEqual(ad.u.times(ad.s).times(ad.v), am);
-    assertUnitaryApproxEqual(ad.s, Matrix.square([5.30594, 0, 0, 1.35906]));
+    assertThat(ad.u.times(ad.s).times(ad.v)).isApproximatelyEqualTo(am);
+    assertThat(ad.s).isApproximatelyEqualTo(Matrix.square([5.30594, 0, 0, 1.35906]));
 };
 
 MatrixTest.prototype.testClosestUnitary_2x2 = function() {
-    assertUnitaryApproxEqual(
-        Matrix.square([0, 0, 0, 0]).closestUnitary(),
-        Matrix.square([1, 0, 0, 1]));
-    assertUnitaryApproxEqual(
-        Matrix.square([2, 0, 0, 0.0001]).closestUnitary(),
-        Matrix.square([1, 0, 0, 1]));
-    assertUnitaryApproxEqual(
-        Matrix.square([0, 0.5, 0.0001, 0]).closestUnitary(),
-        Matrix.square([0, 1, 1, 0]));
-    assertUnitaryApproxEqual(
-        Matrix.square([1, Complex.I, -1, Complex.I.times(-1)]).closestUnitary(),
-        Matrix.square([1, 0, 0, Complex.I.times(-1)]));
+    assertThat(Matrix.square([0, 0, 0, 0]).closestUnitary()).
+        isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.square([2, 0, 0, 0.0001]).closestUnitary()).
+        isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.square([0, 0.5, 0.0001, 0]).closestUnitary()).
+        isApproximatelyEqualTo(Matrix.square([0, 1, 1, 0]));
+    assertThat(Matrix.square([1, Complex.I, -1, Complex.I.times(-1)]).closestUnitary()).
+        isApproximatelyEqualTo(Matrix.square([1, 0, 0, Complex.I.times(-1)]));
 };

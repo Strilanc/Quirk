@@ -18,20 +18,6 @@ function Rect(x, y, w, h) {
 }
 
 /**
- *
- * @param {!Point} p The x/y point at the center of the square.
- * @param {!number} r Half of the diameter of the square.
- * @returns {!Rect}
- */
-Rect.centeredSquareWithRadius = function(p, r) {
-    return new Rect(p.x - r, p.y - r, r*2, r*2);
-};
-
-Rect.prototype.toString = function() {
-    return "[" + this.x + " : " + this.right() + "] x [" + this.y + " : " + this.bottom() + "]";
-};
-
-/**
  * @param {!Rect|*} other
  * @returns {!boolean}
  */
@@ -41,6 +27,20 @@ Rect.prototype.isEqualTo = function(other) {
         other.y === this.y &&
         other.w === this.w &&
         other.h === this.h;
+};
+
+Rect.prototype.toString = function() {
+    return "[" + this.x + ":" + this.right() + "]x[" + this.y + ":" + this.bottom() + "]";
+};
+
+/**
+ *
+ * @param {!Point} p The x/y point at the center of the square.
+ * @param {!number} r Half of the diameter of the square.
+ * @returns {!Rect}
+ */
+Rect.centeredSquareWithRadius = function(p, r) {
+    return new Rect(p.x - r, p.y - r, r*2, r*2);
 };
 
 /**
@@ -253,20 +253,6 @@ Rect.prototype.takeLeftProportion = function(proportion) {
 /**
  * @returns {!Rect}
  */
-Rect.prototype.topHalf = function() {
-    return this.skipBottom(this.h / 2);
-};
-
-/**
- * @returns {!Rect}
- */
-Rect.prototype.bottomHalf = function() {
-    return this.skipTop(this.h / 2);
-};
-
-/**
- * @returns {!Rect}
- */
 Rect.prototype.leftHalf = function() {
     return this.skipRight(this.w / 2);
 };
@@ -276,6 +262,20 @@ Rect.prototype.leftHalf = function() {
  */
 Rect.prototype.rightHalf = function() {
     return this.skipLeft(this.w / 2);
+};
+
+/**
+ * @returns {!Rect}
+ */
+Rect.prototype.topHalf = function() {
+    return this.skipBottom(this.h / 2);
+};
+
+/**
+ * @returns {!Rect}
+ */
+Rect.prototype.bottomHalf = function() {
+    return this.skipTop(this.h / 2);
 };
 
 /**

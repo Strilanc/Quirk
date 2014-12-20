@@ -24,6 +24,10 @@ QuantumState.prototype.isEqualTo = function(other) {
         this.columnVector.isEqualTo(other.columnVector);
 };
 
+QuantumState.prototype.toString = function() {
+    return this.columnVector.toString();
+};
+
 /** @type {!QuantumState}  */
 QuantumState.EMPTY = new QuantumState(Matrix.col([1]));
 

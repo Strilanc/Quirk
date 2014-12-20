@@ -65,3 +65,13 @@ QuantumStateTest.prototype.testConditionalProbability = function() {
     assertEquals(0.5, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x1, 0x1, 0x0));
     assertEquals(1, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x1, 0x1, 0x1));
 };
+
+QuantumStateTest.prototype.testTransformedBy = function() {
+    var m = Matrix.square([
+        new Complex(0.5, -0.5), new Complex(0.5, 0.5),
+        new Complex(0.5, 0.5), new Complex(0.5, -0.5)]);
+    assertThat(QuantumState.SINGLE_ZERO.transformedBy(m)).
+        isEqualTo(new QuantumState(Matrix.col([new Complex(0.5, -0.5), new Complex(0.5, 0.5)])));
+    assertThat(QuantumState.SINGLE_ZERO.transformedBy(m).transformedBy(m)).
+        isEqualTo(QuantumState.SINGLE_ONE);
+};

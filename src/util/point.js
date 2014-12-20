@@ -14,6 +14,19 @@ function Point(x, y) {
     this.y = y;
 }
 
+/**
+ * @param {!Point|*} other
+ * @returns {!boolean}
+ */
+Point.prototype.isEqualTo = function(other) {
+    return other instanceof Point &&
+        other.x === this.x &&
+        other.y === this.y;
+};
+
+/**
+ * @returns {!string}
+ */
 Point.prototype.toString = function() {
     return "(x: " + this.x + ", y: " + this.y + ")";
 };
@@ -33,16 +46,6 @@ Point.prototype.offsetBy = function(dx, dy) {
  */
 Point.prototype.plus = function(p) {
     return new Point(this.x + p.x, this.y + p.y);
-};
-
-/**
- * @param {!Point|*} other
- * @returns {!boolean}
- */
-Point.prototype.isEqualTo = function(other) {
-    return other instanceof Point &&
-        other.x === this.x &&
-        other.y === this.y;
 };
 
 /**

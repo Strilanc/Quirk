@@ -1,74 +1,124 @@
 UtilTest = TestCase("UtilTest");
 
-UtilTest.prototype.testScan = function() {
-    assertEquals([2], scan([], 2, function() { throw "do not call"; }));
+UtilTest.prototype.testNotNull = function() {
+    assertThat(notNull([])).isEqualTo([]);
+    assertThat(notNull("")).isEqualTo("");
+};
 
-    assertEquals([11], scan([], 11, function(a, e) { return a + e; }));
-    assertEquals([11, 13], scan([2], 11, function(a, e) { return a + e; }));
-    assertEquals([11, 13, 16], scan([2, 3], 11, function(a, e) { return a + e; }));
-    assertEquals([11, 13, 16, 21], scan([2, 3, 5], 11, function(a, e) { return a + e; }));
+UtilTest.prototype.testScan = function() {
+    assertThat(scan([], 2, function() { throw "do not call"; })).isEqualTo([2]);
+
+    assertThat(scan([], 11, function(a, e) { return a + e; })).isEqualTo([11]);
+    assertThat(scan([2], 11, function(a, e) { return a + e; })).isEqualTo([11, 13]);
+    assertThat(scan([2, 3], 11, function(a, e) { return a + e; })).isEqualTo([11, 13, 16]);
+    assertThat(scan([2, 3, 5], 11, function(a, e) { return a + e; })).isEqualTo([11, 13, 16, 21]);
 };
 
 UtilTest.prototype.testInsertAt = function() {
     var r = [];
 
     insertAt(r, "a", 0);
-    assertEquals(["a"], r);
+    assertThat(r).isEqualTo(["a"]);
 
     insertAt(r, "b", 0);
-    assertEquals(["b", "a"], r);
+    assertThat(r).isEqualTo(["b", "a"]);
 
     insertAt(r, "c", 2);
-    assertEquals(["b", "a", "c"], r);
+    assertThat(r).isEqualTo(["b", "a", "c"]);
 
     insertAt(r, "d", 2);
-    assertEquals(["b", "a", "d", "c"], r);
+    assertThat(r).isEqualTo(["b", "a", "d", "c"]);
 };
 
 UtilTest.prototype.testWithItemReplacedAt = function() {
-    assertEquals([-1], withItemReplacedAt([1], -1, 0));
+    assertThat(withItemReplacedAt([1], -1, 0)).isEqualTo([-1]);
 
     var r = ["a", "b", "c"];
-    assertEquals(["d", "b", "c"], withItemReplacedAt(r, "d", 0));
-    assertEquals(["a", "d", "c"], withItemReplacedAt(r, "d", 1));
-    assertEquals(["a", "b", "d"], withItemReplacedAt(r, "d", 2));
-};
-
-UtilTest.prototype.testNotNull = function() {
-    assertEquals([], notNull([]));
-    assertEquals("", notNull(""));
+    assertThat(withItemReplacedAt(r, "d", 0)).isEqualTo(["d", "b", "c"]);
+    assertThat(withItemReplacedAt(r, "d", 1)).isEqualTo(["a", "d", "c"]);
+    assertThat(withItemReplacedAt(r, "d", 2)).isEqualTo(["a", "b", "d"]);
 };
 
 UtilTest.prototype.testTake = function() {
-    assertEquals([], take([], 0));
+    assertThat(take([], 0)).isEqualTo([]);
 
-    assertEquals([], take(["a"], 0));
-    assertEquals(["a"], take(["a"], 1));
+    assertThat(take(["a"], 0)).isEqualTo([]);
+    assertThat(take(["a"], 1)).isEqualTo(["a"]);
 
-    assertEquals([], take(["a", "b"], 0));
-    assertEquals(["a"], take(["a", "b"], 1));
-    assertEquals(["a", "b"], take(["a", "b"], 2));
+    assertThat(take(["a", "b"], 0)).isEqualTo([]);
+    assertThat(take(["a", "b"], 1)).isEqualTo(["a"]);
+    assertThat(take(["a", "b"], 2)).isEqualTo(["a", "b"]);
+};
+
+UtilTest.prototype.testCopyArray = function() {
+    var a = [1, 2, 3];
+    var b = copyArray(a);
+    assertThat(a).isEqualTo([1, 2, 3]);
+    assertThat(b).isEqualTo([1, 2, 3]);
+
+    b.push([4]);
+    assertThat(a).isEqualTo([1, 2, 3]);
+    assertThat(b).isEqualTo([1, 2, 3, 4]);
+};
+
+UtilTest.prototype.testArrayToString = function() {
+    assertThat(arrayToString([])).isEqualTo("[]");
+    assertThat(arrayToString([2])).isEqualTo("[2]");
+    assertThat(arrayToString([2, "a"])).isEqualTo("[2, a]");
+};
+
+UtilTest.prototype.testRepeat = function() {
+    assertThat(repeat("a", 0)).isEqualTo([]);
+    assertThat(repeat("a", 1)).isEqualTo(["a"]);
+    assertThat(repeat("a", 2)).isEqualTo(["a", "a"]);
+};
+
+UtilTest.prototype.testIsPowerOf2 = function() {
+    assertFalse(isPowerOf2(-1));
+    assertFalse(isPowerOf2(0));
+    assertTrue(isPowerOf2(1));
+    assertTrue(isPowerOf2(2));
+    assertFalse(isPowerOf2(3));
+    assertTrue(isPowerOf2(4));
+    assertFalse(isPowerOf2(5));
+};
+
+UtilTest.prototype.testEvenPower = function() {
+    assertThat(evenPower(0)).isEqualTo(Math.POSITIVE_INFINITY);
+    assertThat(evenPower(1)).isEqualTo(0);
+    assertThat(evenPower(2)).isEqualTo(1);
+    assertThat(evenPower(3)).isEqualTo(0);
+    assertThat(evenPower(4)).isEqualTo(2);
+    assertThat(evenPower(5)).isEqualTo(0);
+    assertThat(evenPower(6)).isEqualTo(1);
+    assertThat(evenPower(7)).isEqualTo(0);
+    assertThat(evenPower(8)).isEqualTo(3);
+    assertThat(evenPower(9)).isEqualTo(0);
+
+    assertThat(evenPower(0 + (1 << 20))).isEqualTo(20);
+    assertThat(evenPower(1 + (1 << 20))).isEqualTo(0);
+    assertThat(evenPower(2 + (1 << 20))).isEqualTo(1);
+};
+
+UtilTest.prototype.testRange = function() {
+    assertThat(range(0)).isEqualTo([]);
+    assertThat(range(1)).isEqualTo([0]);
+    assertThat(range(2)).isEqualTo([0, 1]);
 };
 
 UtilTest.prototype.testSum = function() {
-    assertEquals(0, sum([]));
-    assertEquals(2, sum([2]));
-    assertEquals(5.5, sum([2, 3.5]));
+    assertThat(sum([])).isEqualTo(0);
+    assertThat(sum([2])).isEqualTo(2);
+    assertThat(sum([2, 3.5])).isEqualTo(5.5);
 };
 
 UtilTest.prototype.testZip = function() {
-    assertEquals([], zip([], [], function() { throw "not called"; }));
-    assertEquals([5], zip([2], [3], function(e1, e2) { return e1 + e2; }));
-    assertEquals([5], zip([2], [3, 5], function(e1, e2) { return e1 + e2; }));
-    assertEquals([5, 12], zip([2, 7], [3, 5], function(e1, e2) { return e1 + e2; }));
-    assertEquals([5, 12], zip([2, 7, 11], [3, 5], function(e1, e2) { return e1 + e2; }));
-    assertEquals([5, 12, 24], zip([2, 7, 11], [3, 5, 13], function(e1, e2) { return e1 + e2; }));
-};
-
-UtilTest.prototype.testArg2 = function() {
-    assertTrue(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.I));
-    assertFalse(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.ZERO));
-    assertTrue(arg2(Complex.prototype.plus)(Complex.I, Complex.I).isEqualTo(new Complex(0, 2)));
+    assertThat(zip([], [], function() { throw "not called"; })).isEqualTo([]);
+    assertThat(zip([2], [3], function(e1, e2) { return e1 + e2; })).isEqualTo([5]);
+    assertThat(zip([2], [3, 5], function(e1, e2) { return e1 + e2; })).isEqualTo([5]);
+    assertThat(zip([2, 7], [3, 5], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12]);
+    assertThat(zip([2, 7, 11], [3, 5], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12]);
+    assertThat(zip([2, 7, 11], [3, 5, 13], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12, 24]);
 };
 
 UtilTest.prototype.testArraysEqualBy = function() {
@@ -91,21 +141,17 @@ UtilTest.prototype.testArraysEqualBy = function() {
 
     assertTrue(arraysEqualBy([1.5], [1.5], STRICT_EQUALITY));
     assertFalse(arraysEqualBy([1.5], [1], STRICT_EQUALITY));
+
+    assertTrue(arraysEqualBy([Complex.from(1.5)], [Complex.from(1.5)], CUSTOM_IS_EQUAL_TO_EQUALITY));
+    assertFalse(arraysEqualBy([Complex.from(1.5)], [Complex.from(1)], CUSTOM_IS_EQUAL_TO_EQUALITY));
 };
 
-UtilTest.prototype.testEvenPower = function() {
-    assertEquals(Math.POSITIVE_INFINITY, evenPower(0));
-    assertEquals(0, evenPower(1));
-    assertEquals(1, evenPower(2));
-    assertEquals(0, evenPower(3));
-    assertEquals(2, evenPower(4));
-    assertEquals(0, evenPower(5));
-    assertEquals(1, evenPower(6));
-    assertEquals(0, evenPower(7));
-    assertEquals(3, evenPower(8));
-    assertEquals(0, evenPower(9));
+UtilTest.prototype.testArg1 = function() {
+    assertThat(arg1(Complex.prototype.norm2)(Complex.I)).isEqualTo(1);
+};
 
-    assertEquals(20, evenPower(0 + (1 << 20)));
-    assertEquals(0, evenPower(1 + (1 << 20)));
-    assertEquals(1, evenPower(2 + (1 << 20)));
+UtilTest.prototype.testArg2 = function() {
+    assertTrue(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.I));
+    assertFalse(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.ZERO));
+    assertTrue(arg2(Complex.prototype.plus)(Complex.I, Complex.I).isEqualTo(new Complex(0, 2)));
 };

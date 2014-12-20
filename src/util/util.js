@@ -1,4 +1,30 @@
 /**
+ * Checks a precondition, throwing an exception containing the given message in the case of failure.
+ *
+ * @param {!boolean|*} expression
+ * @param {=string} message
+ */
+var need = function(expression, message) {
+    if (expression !== true) {
+        throw "Precondition failed: " + (message || "(no message provided)");
+    }
+};
+
+/**
+ * Forced cast from nullable to non-nullable, throwing an exception on failure.
+ *
+ * @param {?T} v
+ * @returns {!T}
+ *
+ * @template T
+ */
+var notNull = function(v) {
+    need(v !== null);
+    //noinspection JSValidateTypes
+    return v;
+};
+
+/**
  * Runs an aggregating function over an array, returning the accumulated value at each point (including the seed).
  *
  * @param {!Array.<T>} items
@@ -20,18 +46,6 @@ var scan = function(items, seed, aggregator) {
     }
 
     return result;
-};
-
-/**
- * Checks a precondition, throwing an exception containing the given message in the case of failure.
- *
- * @param {!boolean|*} expression
- * @param {=string} message
- */
-var need = function(expression, message) {
-    if (expression !== true) {
-        throw "Precondition failed: " + (message || "(no message provided)");
-    }
 };
 
 /**
@@ -69,6 +83,20 @@ var withItemReplacedAt = function(array, item, index) {
 };
 
 /**
+ * Returns an array containing the first part of the given array, up to the takeCount'th item.
+ *
+ * @param {!Array.<T>} array
+ * @param {!int} takeCount
+ * @returns {Array.<T>}
+ *
+ * @template T
+ */
+var take = function(array, takeCount) {
+    need(takeCount >= 0);
+    return array.slice(0, takeCount);
+};
+
+/**
  * Returns a new array, with the same items as the given array.
  * @param {!Array<T>} array
  * @returns {!Array<T>}
@@ -84,7 +112,8 @@ var copyArray = function(array) {
  */
 var arrayToString = function(array) {
     return "[" + array.join(", ") + "]";
-}
+};
+
 /**
  * Returns an array containing the given item the given number of times.
  * @param {T} item
@@ -94,34 +123,6 @@ var arrayToString = function(array) {
  */
 var repeat = function(item, repeatCount) {
     return range(repeatCount).map(function() { return item; });
-}
-
-/**
- * Forced cast from nullable to non-nullable, throwing an exception on failure.
- *
- * @param {?T} v
- * @returns {!T}
- *
- * @template T
- */
-var notNull = function(v) {
-    need(v !== null);
-    //noinspection JSValidateTypes
-    return v;
-};
-
-/**
- * Returns an array containing the first part of the given array, up to the takeCount'th item.
- *
- * @param {!Array.<T>} array
- * @param {!int} takeCount
- * @returns {Array.<T>}
- *
- * @template T
- */
-var take = function(array, takeCount) {
-    need(takeCount >= 0);
-    return array.slice(0, takeCount);
 };
 
 /**
