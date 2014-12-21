@@ -84,6 +84,8 @@ UtilTest.prototype.testIsPowerOf2 = function() {
 };
 
 UtilTest.prototype.testEvenPower = function() {
+    assertThat(evenPower(-2)).isEqualTo(1);
+    assertThat(evenPower(-1)).isEqualTo(0);
     assertThat(evenPower(0)).isEqualTo(Math.POSITIVE_INFINITY);
     assertThat(evenPower(1)).isEqualTo(0);
     assertThat(evenPower(2)).isEqualTo(1);
@@ -95,7 +97,7 @@ UtilTest.prototype.testEvenPower = function() {
     assertThat(evenPower(8)).isEqualTo(3);
     assertThat(evenPower(9)).isEqualTo(0);
 
-    assertThat(evenPower(0 + (1 << 20))).isEqualTo(20);
+    assertThat(evenPower(1 << 20)).isEqualTo(20);
     assertThat(evenPower(1 + (1 << 20))).isEqualTo(0);
     assertThat(evenPower(2 + (1 << 20))).isEqualTo(1);
 };

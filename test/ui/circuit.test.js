@@ -38,7 +38,7 @@ CircuitTest.prototype.testFindExistingOpColumnAt = function() {
     var c1 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 1), null, undefined);
     var c3 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 3), null, undefined);
     var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
-    var x = CIRCUIT_OP_LEFT_SPACING + 11;
+    var x = CIRCUIT_OP_LEFT_SPACING + 11 - CIRCUIT_OP_HORIZONTAL_SPACING/2;
 
     assertEquals(null, c0.findExistingOpColumnAt(new Point(x, 11)));
     assertEquals(null, c0.findExistingOpColumnAt(new Point(x + w*2/2, 11)));

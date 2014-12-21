@@ -42,7 +42,9 @@ Matrix.prototype.isEqualTo = function (other) {
 
     var w = this.width();
     var h = other.height();
-    if (other.width() !== w || other.height() !== h) { return false; }
+    if (other.width() !== w || other.height() !== h) {
+        return false;
+    }
 
     for (var r = 0; r < h; r++) {
         if (!arraysEqualBy(this.rows[r], other.rows[r], CUSTOM_IS_EQUAL_TO_EQUALITY)) {

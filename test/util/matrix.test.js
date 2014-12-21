@@ -46,6 +46,9 @@ MatrixTest.prototype.testIsApproximatelyEqualTo = function() {
     assertThat(Matrix.row([1, 0])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
     assertThat(Matrix.row([0, 1])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
     assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.row([0, 0]), 1);
+
+    assertThat(Matrix.row([0])).isNotApproximatelyEqualTo(null);
+    assertThat(Matrix.row([0])).isNotApproximatelyEqualTo("");
 };
 
 MatrixTest.prototype.testToString = function() {

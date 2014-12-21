@@ -3,6 +3,8 @@ ComplexTest = TestCase("ComplexTest");
 ComplexTest.prototype.testIsEqualTo = function() {
     var c = new Complex(5, 7);
     assertThat(c).isEqualTo(c);
+    assertThat(c).isNotEqualTo(null);
+    assertThat(c).isNotEqualTo("");
 
     assertThat(new Complex(2, 3)).isEqualTo(new Complex(2, 3));
     assertThat(new Complex(2, 3)).isNotEqualTo(new Complex(3, 3));
@@ -22,6 +24,9 @@ ComplexTest.prototype.testIsApproximatelyEqualTo = function() {
     assertThat(c).isNotApproximatelyEqualTo(new Complex(5, 6), 0.5);
     assertThat(c).isApproximatelyEqualTo(new Complex(5, 6), 1);
     assertThat(c).isApproximatelyEqualTo(new Complex(5, 8), 1);
+
+    assertThat(c).isNotApproximatelyEqualTo(null);
+    assertThat(c).isNotApproximatelyEqualTo("");
 };
 
 ComplexTest.prototype.testFrom = function() {

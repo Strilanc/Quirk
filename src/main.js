@@ -1,3 +1,4 @@
+//noinspection JSUnusedGlobalSymbols
 var print = function(s) {
     $(document.getElementById("debugOutput")).val(s);
 };
