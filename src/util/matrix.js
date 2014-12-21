@@ -33,7 +33,12 @@ function Matrix(rows) {
  * @returns {!boolean}
  */
 Matrix.prototype.isEqualTo = function (other) {
-    if (!(other instanceof Matrix)) { return false; }
+    if (this === other) {
+        return true;
+    }
+    if (!(other instanceof Matrix)) {
+        return false;
+    }
 
     var w = this.width();
     var h = other.height();

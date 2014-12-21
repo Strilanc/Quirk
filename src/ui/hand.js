@@ -23,8 +23,11 @@ function Hand(pos, heldGateBlock, heldGateBlockOffset) {
  * @returns {!boolean}
  */
 Hand.prototype.isEqualTo = function(other) {
+    if (this === other) {
+        return true;
+    }
     return other instanceof Hand &&
-        this.pos.isEqualTo(other.pos) &&
+        CUSTOM_IS_EQUAL_TO_EQUALITY(this.pos, other.pos) &&
         this.heldGateBlockOffset === other.heldGateBlockOffset &&
         CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGateBlock, other.heldGateBlock);
 };

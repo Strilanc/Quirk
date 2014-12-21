@@ -75,6 +75,9 @@ function Circuit(area, numWires, columns, compressedColumnIndex, wireLabeller) {
 }
 
 Circuit.prototype.isEqualTo = function(other) {
+    if (this === other) {
+        return true;
+    }
     var self = this;
     return other instanceof Circuit &&
         this.area.isEqualTo(other.area) &&
@@ -102,13 +105,17 @@ Circuit.prototype.scanStates = function() {
         arg2(QuantumState.prototype.transformedBy));
 };
 
+Circuit.prototype.getWireSpacing = function() {
+    return this.area.h / this.numWires;
+};
+
 /**
  * @param {!int} wireIndex
  * @returns {!Rect}
  */
 Circuit.prototype.wireRect = function (wireIndex) {
     need(wireIndex >= 0 && wireIndex < this.numWires, "wireIndex out of range");
-    var wireHeight = this.area.h / this.numWires;
+    var wireHeight = this.getWireSpacing();
     return this.area.skipTop(wireHeight * wireIndex).takeTop(wireHeight);
 };
 
@@ -125,6 +132,29 @@ Circuit.prototype.findWireAt = function (p) {
 };
 
 /**
+ * @returns {!Array.<!string>}}
+ */
+Circuit.prototype.getLabels = function() {
+    return range(this.numWires).map(this.wireLabeller);
+};
+
+/**
+ * @param {!Point} p
+ * @returns {?number}
+ * @private
+ */
+Circuit.prototype.findContinuousColumnX = function(p) {
+    if (!this.area.containsPoint(p)) {
+        return null;
+    }
+
+    var s = (CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2);
+    var left = this.area.x + CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING/2;
+    var dg = (p.x - left) / s;
+    return dg - 0.5;
+};
+
+/**
  * @param {!Point} p
  * @returns {?number}
  */
@@ -133,9 +163,7 @@ Circuit.prototype.findOpHalfColumnAt = function(p) {
         return null;
     }
 
-    var s = (CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2)/2;
-    var i = Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / s - 0.5) / 2;
-    return Math.max(-0.5, i);
+    return Math.max(-0.5, Math.round(this.findContinuousColumnX(p) * 2) / 2);
 };
 
 /**
@@ -147,11 +175,20 @@ Circuit.prototype.findExistingOpColumnAt = function(p) {
         return null;
     }
 
-    var s = CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2;
-    var i = Math.floor((p.x - this.area.x - CIRCUIT_OP_LEFT_SPACING) / s);
+    var x = this.findContinuousColumnX(p);
+    var i;
+    if (this.compressedColumnIndex === null || x < this.compressedColumnIndex - 0.75) {
+        i = Math.round(x);
+    } else if (x < this.compressedColumnIndex - 0.25) {
+        i = this.compressedColumnIndex;
+    } else {
+        i = Math.round(x) - 1;
+    }
+
     if (i < 0 || i >= this.columns.length) {
         return null;
     }
+
     return i;
 };
 
@@ -169,9 +206,9 @@ Circuit.prototype.findModificationIndex = function (hand) {
     }
     var wireIndex = notNull(this.findWireAt(notNull(hand.pos)));
     var colIndex = Math.ceil(halfColIndex);
-    var isInsert = halfColIndex % 1 === 0.5;
+    var isInsert = Math.abs(halfColIndex % 1) === 0.5;
     if (colIndex >= this.columns.length) {
-        return {col: colIndex, row: wireIndex, isInsert: false};
+        return {col: colIndex, row: wireIndex, isInsert: isInsert};
     }
 
     if (!isInsert) {
@@ -228,9 +265,8 @@ Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
  *
  * @param {!Painter} painter
  * @param {!Hand} hand
- * @param {!boolean} isTapping
  */
-Circuit.prototype.paint = function(painter, hand, isTapping) {
+Circuit.prototype.paint = function(painter, hand) {
     var states = this.scanStates();
 
     // Draw labelled wires
@@ -242,7 +278,7 @@ Circuit.prototype.paint = function(painter, hand, isTapping) {
 
     // Draw operations
     for (var i2 = 0; i2 < this.columns.length; i2++) {
-        this.drawCircuitOperation(painter, this.columns[i2], i2, states[i2 + 1], hand, isTapping);
+        this.drawCircuitOperation(painter, this.columns[i2], i2, states[i2 + 1], hand);
     }
 };
 
@@ -252,9 +288,8 @@ Circuit.prototype.paint = function(painter, hand, isTapping) {
  * @param {!int} columnIndex
  * @param {!QuantumState} state A complex column vector.
  * @param {!Hand} hand
- * @param {!boolean} isTapping
  */
-Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, state, hand, isTapping) {
+Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, state, hand) {
 
     this.drawColumnControlWires(painter, gateColumn, columnIndex);
 
@@ -271,7 +306,7 @@ Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIn
         //var isHolding = hand.pos !== null && hand.col === columnIndex && hand.row === i;
         var canGrab = hand.pos !== null &&
             b.containsPoint(notNull(hand.pos)) &&
-            hand.heldGateBlock === null && !isTapping;
+            hand.heldGateBlock === null;
         gate.paint(painter, b, false, canGrab, new CircuitContext(gateColumn, i, state));
     }
 };
@@ -319,13 +354,13 @@ Circuit.prototype.withOpBeingAdded = function(modificationPoint, hand) {
 
     var newCols = this.columns.map(function(e) { return e; });
     var compressedColumnIndex = null;
+    while (newCols.length <= modificationPoint.col) {
+        newCols.push(GateColumn.empty(this.numWires));
+    }
+
     if (modificationPoint.isInsert) {
         insertAt(newCols, GateColumn.empty(this.numWires), modificationPoint.col);
         compressedColumnIndex = modificationPoint.col;
-    }
-
-    while (newCols.length <= modificationPoint.col) {
-        newCols.push(GateColumn.empty(this.numWires));
     }
 
     newCols[modificationPoint.col] =

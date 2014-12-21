@@ -153,7 +153,7 @@ var evenPower = function(i) {
     if (i < 0) {
         return evenPower(-i);
     }
-    var lowMask = i ^ (i - 1)
+    var lowMask = i ^ (i - 1);
     var lowBit = i & lowMask;
     return Math.round(Math.log(lowBit) / Math.log(2));
 };

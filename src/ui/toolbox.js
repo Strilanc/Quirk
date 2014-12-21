@@ -11,6 +11,18 @@ function Toolbox(area) {
     this.area = area;
 }
 
+/**
+ * @param {!Toolbox|*} other
+ * @returns {!boolean}
+ */
+Toolbox.prototype.isEqualTo = function(other) {
+    if (this === other) {
+        return true;
+    }
+    return other instanceof Toolbox &&
+        other.area.isEqualTo(this.area);
+};
+
 Toolbox.GATE_SPACING = 2;
 Toolbox.GROUP_SPACING = 24 - Toolbox.GATE_SPACING;
 Toolbox.GATE_SPAN = GATE_RADIUS * 2 + Toolbox.GATE_SPACING;
@@ -151,4 +163,16 @@ Toolbox.prototype.tryGrab = function(hand) {
     Gate.updateIfFuzzGate(gate);
     var gateBlock = gate === Gate.SWAP_HALF ? GateBlock.swap(0) : GateBlock.single(gate);
     return hand.withHeldGate(gateBlock, 0);
+};
+
+/**
+ * @param {!Hand} hand
+ * @returns {!boolean}
+ */
+Toolbox.prototype.needsContinuousRedrawAt = function(hand) {
+    if (hand.pos === null || hand.heldGateBlock !== null) {
+        return false;
+    }
+    var g = this.findGateAt(notNull(hand.pos));
+    return g !== null && g.gate !== null && g.gate.isTimeBased();
 };

@@ -16,6 +16,9 @@ function GateColumn(gates) {
  * @returns {!boolean}
  */
 GateColumn.prototype.isEqualTo = function (other) {
+    if (this === other) {
+        return true;
+    }
     return other instanceof GateColumn &&
         arraysEqualBy(this.gates, other.gates, STRICT_EQUALITY);
 };
@@ -29,11 +32,7 @@ GateColumn.prototype.toString = function() {
  * @returns {!GateColumn}
  */
 GateColumn.empty = function(size) {
-    var gates = [];
-    for (var i = 0; i < size; i++) {
-        gates.push(null);
-    }
-    return new GateColumn(gates);
+    return new GateColumn(repeat(null, size));
 };
 
 /**
