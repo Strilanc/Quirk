@@ -548,8 +548,8 @@ Gate.updateTimeGates = function (t) {
     var r = t % 1;
     var u = t;
     var u2 = u / Math.sqrt(2);
-    var c = Math.cos(r * Math.PI);
-    var s = Math.sin(r * Math.PI);
+    var c = Math.cos(r * Math.PI * 2);
+    var s = Math.sin(r * Math.PI * 2);
 
     Gate.EVOLVING_R.matrix = Matrix.square([c, -s, s, c]);
     Gate.EVOLVING_X.matrix = Matrix.fromPauliRotation(u, 0, 0);
@@ -615,6 +615,42 @@ Gate.SILLY_GATES = [
 ];
 
 /**
+ *
+ * @param {!number} p
+ * @param {!string} fractionLabel
+ * @param {=string} fractionSymbol
+ * @returns {!Gate}
+ */
+Gate.fromTargetedRotation = function(p, fractionLabel, fractionSymbol) {
+    need(p >= -1 && p <= 1);
+    var c = Math.sqrt(1 - Math.abs(p));
+    var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
+    return new Gate(
+        "θ(" + (fractionSymbol || fractionLabel) + ")",
+        Matrix.square([c, -s, s, c]),
+        "" + fractionLabel + " Target Rotation Gate",
+        "A rotation gate tuned to transition an initially-OFF qubit to\n" +
+        "having a " + fractionLabel + "s probability of being ON.\n\n" +
+        "Equivalent to R(acos(√(" + fractionLabel + "))).");
+};
+
+Gate.TARGETED_ROTATION_GATES = [
+    Gate.fromTargetedRotation(-1/3, "-1/3"),
+    Gate.fromTargetedRotation(-2/3, "-2/3"),
+    //Gate.fromTargetedRotation(-1/4, "-1/4"),
+    //Gate.fromTargetedRotation(-2/4, "-2/4"),
+    //Gate.fromTargetedRotation(-3/4, "-3/4"),
+    //Gate.fromTargetedRotation(-1/5, "-1/5"),
+    //Gate.fromTargetedRotation(-2/5, "-2/5"),
+    //Gate.fromTargetedRotation(-3/5, "-3/5"),
+    //Gate.fromTargetedRotation(-4/5, "-4/5")
+    //Gate.fromTargetedRotation(-3/4, "-3/4"),
+    //null,
+    Gate.fromTargetedRotation(1/3, "1/3"),
+    Gate.fromTargetedRotation(2/3, "2/3")
+];
+
+/**
  * @param {!Gate} gate
  */
 Gate.updateIfFuzzGate = function(gate) {
@@ -651,6 +687,10 @@ Gate.GATE_SET = [
     {
         hint: "Evolving",
         gates: Gate.EVOLVING_GATES
+    },
+    {
+        hint: "Targeted",
+        gates: Gate.TARGETED_ROTATION_GATES
     },
     {
         hint: "Other Z",

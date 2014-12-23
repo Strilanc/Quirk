@@ -1,3 +1,5 @@
+var NUM_INITIAL_WIRES = 4;
+
 //noinspection JSUnusedGlobalSymbols
 var print = function(s) {
     $(document.getElementById("debugOutput")).val(s);
@@ -16,7 +18,7 @@ new TripWire("start").run(function() {
     var canvas = possibleCanvas;
 
     /** @type {!Inspector} */
-    var inspector = Inspector.empty(new Rect(0, 0, canvas.width, canvas.height));
+    var inspector = Inspector.empty(NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
 
     var ts = 0;
     var ticker = null;

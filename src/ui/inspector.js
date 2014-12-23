@@ -11,6 +11,8 @@
  * @property {!Rect} outputStateHintArea
  * @property {!Rect} focusedOperationHintArea
  * @property {!Rect} focusedStateHintArea
+ * @property {!Rect} cumulativeFocusedOperationHintArea
+ * @property {!Rect} cumulativeOperationHintArea
  *
  * @constructor
  */
@@ -22,20 +24,24 @@ function Inspector(drawArea, circuit, toolbox, hand) {
 
     var remainder = drawArea.skipTop(this.circuit.area.bottom());
     this.outputStateHintArea = remainder.takeRight(remainder.h);
+    this.cumulativeOperationHintArea = this.outputStateHintArea.
+        withX(this.outputStateHintArea.x - this.outputStateHintArea.w - 5);
     this.focusedOperationHintArea = remainder.takeLeft(remainder.h);
     this.focusedStateHintArea = this.focusedOperationHintArea.withX(this.focusedOperationHintArea.right() + 5);
+    this.cumulativeFocusedOperationHintArea = this.focusedStateHintArea.withX(this.focusedStateHintArea.right() + 5);
 }
 
 /**
+ * @param {!int} numWires
  * @param {!Rect} drawArea
  * @returns {Inspector}
  */
-Inspector.empty = function(drawArea) {
+Inspector.empty = function(numWires, drawArea) {
     var toolboxHeight = 4 * (GATE_RADIUS * 2 + 2) - GATE_RADIUS;
 
     return new Inspector(
         drawArea,
-        new Circuit(drawArea.skipTop(toolboxHeight).takeTop(200), 4, [], null, undefined),
+        new Circuit(drawArea.skipTop(toolboxHeight).takeTop(250), numWires, [], null, undefined),
         new Toolbox(drawArea.takeTop(toolboxHeight)),
         new Hand(null, null, null));
 };
@@ -68,6 +74,10 @@ Inspector.prototype.paintOutput = function(painter) {
         this.circuit.getOutput(),
         this.outputStateHintArea,
         this.circuit.getLabels());
+
+    painter.paintMatrix(
+        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length),
+        this.cumulativeOperationHintArea);
 };
 
 /**
@@ -99,6 +109,10 @@ Inspector.prototype.paintFocus = function(painter) {
     painter.paintMatrix(
         this.circuit.columns[c].matrix(),
         this.focusedOperationHintArea);
+
+    painter.paintMatrix(
+        this.circuit.getCumulativeOperationUpToBefore(c + 1),
+        this.cumulativeFocusedOperationHintArea);
 };
 
 Inspector.prototype.paint = function(painter) {

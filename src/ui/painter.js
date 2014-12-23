@@ -225,7 +225,7 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
     var x2 = x + cols*dw;
     var y2 = y + rows*dh;
     this.ctx.beginPath();
-    for (var c = 0; c <= rows; c++) {
+    for (var c = 0; c <= cols; c++) {
         this.ctx.moveTo(x + c*dw, y);
         this.ctx.lineTo(x + c*dw, y2);
     }
@@ -270,7 +270,7 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor) {
 Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, labels) {
     need(state.columnVector.height() === 1 << labels.length, "columnVector.height() === labels.length");
 
-    var numWireRows = Math.ceil(labels.length / 2);
+    var numWireRows = Math.floor(labels.length / 2);
     var numWireCols = labels.length - numWireRows;
     var numDrawRows = 1 << numWireRows;
     var numDrawCols = 1 << numWireCols;
@@ -279,19 +279,23 @@ Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, l
     var labelSpace = 8;
     var skipLength = Math.max(numWireRows, numWireCols) * labelDif + labelSpace;
 
+    // Draw state grid
     var gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
     this.paintColumnVectorAsGrid(state.columnVector, gridRect);
 
+    // Draw row label tree
     this.paintBinaryTree(
         gridRect.topLeft().offsetBy(0, -1),
         new Point(-labelDif, 0),
         new Point(0, gridRect.h / numDrawRows),
-        labels.slice(0, numWireCols));
+        labels.slice(numWireCols));
+
+    // Draw column label tree
     this.paintBinaryTree(
         gridRect.topLeft().offsetBy(0, -1),
         new Point(0, -labelDif),
         new Point(gridRect.w / numDrawCols, 0),
-        labels.slice(numWireCols));
+        labels.slice(0, numWireCols));
 };
 
 /**
@@ -301,7 +305,7 @@ Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, l
  */
 Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
     var n = columnVector.height();
-    var numDrawRows = 1 << Math.ceil(Math.log(n) / Math.log(2) / 2);
+    var numDrawRows = 1 << Math.floor(Math.log(n) / Math.log(2) / 2);
     var numDrawCols = Math.ceil(n / numDrawRows);
     var topLeftCell = new Rect(
         drawArea.x,

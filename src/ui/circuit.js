@@ -105,6 +105,16 @@ Circuit.prototype.scanStates = function() {
         arg2(QuantumState.prototype.transformedBy));
 };
 
+/**
+ * @param {!int} columnIndex
+ * @returns {!Matrix}
+ */
+Circuit.prototype.getCumulativeOperationUpToBefore = function(columnIndex) {
+    return this.columns.slice(0, columnIndex).
+        map(function(e) { return e.matrix(); }).
+        reduce(function(a, e) { return e.times(a); }, Matrix.identity(1 << this.numWires));
+};
+
 Circuit.prototype.getWireSpacing = function() {
     return this.area.h / this.numWires;
 };
