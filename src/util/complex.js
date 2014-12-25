@@ -109,20 +109,32 @@ Complex.imagPartOf = function (v) {
  * @returns {!string}
  */
 Complex.prototype.toString = function () {
-    var epsilon = 0.00000001;
+    var epsilon = 0.00001;
 
     var radicalToString = function(v) {
         var matches = [
             [1, "1"],
-            [0.5, "½"],
             [Math.sqrt(0.5), "√½"],
+            [0.5, "½"],
+            [Math.sqrt(0.5)/2, "½√½"],
             [0.25, "¼"],
+            [Math.sqrt(0.5)/4, "¼√½"],
             [0.125, "⅛"],
-            [Math.sqrt(0.125), "√⅛"]
+            [Math.sqrt(0.5)/8, "⅛√½"],
         ];
         for (var i = 0; i < matches.length; i++) {
             if (Math.abs(Math.abs(v) - matches[i][0]) < epsilon) {
                 return (v < 0 ? "-" : "") + matches[i][1];
+            }
+        }
+        for (var n = 1; n < 16; n++) {
+            for (var d = 1; d < 16; d++) {
+                if (Math.abs(Math.abs(v) - n/d) < epsilon) {
+                    return (v < 0 ? "-" : "") + n + "/" + d;
+                }
+                if (Math.abs(Math.abs(v) - Math.sqrt(n/d)) < epsilon) {
+                    return (v < 0 ? "-" : "") + "√" + n + "/" + d;
+                }
             }
         }
         if (Math.abs(v).toString().length > 4) { return v.toFixed(2); }
@@ -139,7 +151,7 @@ Complex.prototype.toString = function () {
         if (Math.abs(this.imag + 1) < epsilon) {
             return "-i";
         }
-        return this.imag.toString() + "i";
+        return radicalToString(this.imag) + "i";
     }
     var separator = this.imag > 0 ? "+" : "-";
     var imagFactor = Math.abs(Math.abs(this.imag) - 1) < epsilon ? "" : radicalToString(Math.abs(this.imag));
@@ -233,7 +245,7 @@ Complex.prototype.times = function (v) {
 Complex.prototype.dividedBy = function (v) {
     var c = Complex.from(v);
     var d = c.norm2();
-    if (d === 0) { throw "Division by Zero"; }
+    need(d !== 0, "Division by Zero");
 
     var n = this.times(c.conjugate());
     return new Complex(n.real / d, n.imag / d);

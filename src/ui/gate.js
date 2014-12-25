@@ -626,7 +626,7 @@ Gate.fromTargetedRotation = function(p, fractionLabel, fractionSymbol) {
     var c = Math.sqrt(1 - Math.abs(p));
     var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
     return new Gate(
-        "θ(" + (fractionSymbol || fractionLabel) + ")",
+        "∠" + (fractionSymbol || fractionLabel),
         Matrix.square([c, -s, s, c]),
         "" + fractionLabel + " Target Rotation Gate",
         "A rotation gate tuned to transition an initially-OFF qubit to\n" +

@@ -73,6 +73,39 @@ UtilTest.prototype.testRepeat = function() {
     assertThat(repeat("a", 2)).isEqualTo(["a", "a"]);
 };
 
+UtilTest.prototype.testMaxBy = function() {
+    assertThat(maxBy([1.5], function(e) { throw "do no call"; })).isEqualTo(1.5);
+    assertThat(maxBy([1, 2, 3, -4.5], function(e) { return e*e; })).isEqualTo(-4.5);
+    assertThat(maxBy([1, 2, 3], function(e) { return -e; })).isEqualTo(1);
+    assertThat(maxBy([{a: 1, b: 2}, {a: 2, b: 1}], function(e) { return e.a; })).isEqualTo({a: 2, b: 1});
+    assertThat(maxBy([{a: 1, b: 2}, {a: 2, b: 1}], function(e) { return e.b; })).isEqualTo({a: 1, b: 2});
+};
+
+UtilTest.prototype.testLg = function() {
+    assertThat(lg(0.25)).isEqualTo(-2);
+    assertThat(lg(0.5)).isEqualTo(-1);
+    assertThat(lg(1)).isEqualTo(0);
+    assertThat(lg(2)).isEqualTo(1);
+    assertThat(lg(4)).isEqualTo(2);
+    assertThat(lg(8)).isEqualTo(3);
+    assertThat(lg(12345)).isApproximatelyEqualTo(13.5916392160301442);
+    assertThat(lg(1 << 10)).isEqualTo(10);
+};
+
+UtilTest.prototype.testMaskCandidates = function() {
+    assertThat(maskCandidates(0)).isEqualTo([0]);
+    assertThat(maskCandidates(1)).isEqualTo([0, 1]);
+    assertThat(maskCandidates(2)).isEqualTo([0, 2]);
+    assertThat(maskCandidates(3)).isEqualTo([0, 1, 2, 3]);
+    assertThat(maskCandidates(4)).isEqualTo([0, 4]);
+    assertThat(maskCandidates(5)).isEqualTo([0, 1, 4, 5]);
+    assertThat(maskCandidates(6)).isEqualTo([0, 2, 4, 6]);
+    assertThat(maskCandidates(7)).isEqualTo([0, 1, 2, 3, 4, 5, 6, 7]);
+    assertThat(maskCandidates(8)).isEqualTo([0, 8]);
+    assertThat(maskCandidates(9)).isEqualTo([0, 1, 8, 9]);
+    assertThat(maskCandidates((1 << 20) + (1 << 10))).isEqualTo([0, 1 << 10, 1 << 20, (1 << 10) + (1 << 20)]);
+};
+
 UtilTest.prototype.testIsPowerOf2 = function() {
     assertFalse(isPowerOf2(-1));
     assertFalse(isPowerOf2(0));
@@ -81,6 +114,21 @@ UtilTest.prototype.testIsPowerOf2 = function() {
     assertFalse(isPowerOf2(3));
     assertTrue(isPowerOf2(4));
     assertFalse(isPowerOf2(5));
+};
+
+UtilTest.prototype.testBitSize = function() {
+    assertThat(bitSize(0)).isEqualTo(0);
+    assertThat(bitSize(1)).isEqualTo(1);
+    assertThat(bitSize(2)).isEqualTo(2);
+    assertThat(bitSize(3)).isEqualTo(2);
+    assertThat(bitSize(4)).isEqualTo(3);
+    assertThat(bitSize(5)).isEqualTo(3);
+    assertThat(bitSize(6)).isEqualTo(3);
+    assertThat(bitSize(7)).isEqualTo(3);
+    assertThat(bitSize(8)).isEqualTo(4);
+    assertThat(bitSize(9)).isEqualTo(4);
+    assertThat(bitSize(1 << 20)).isEqualTo(21);
+    assertThat(bitSize((1 << 20) + (1 << 19))).isEqualTo(21);
 };
 
 UtilTest.prototype.testEvenPower = function() {

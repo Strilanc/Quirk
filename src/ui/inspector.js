@@ -61,6 +61,13 @@ Inspector.prototype.isEqualTo = function(other) {
         this.hand.isEqualTo(other.hand);
 };
 
+Inspector.prototype.toString = function() {
+    return "Inspector(drawArea: " + this.drawArea +
+        ", circuit: " + this.circuit +
+        ", toolbox: " + this.toolbox +
+        ", hand: " + this.hand + ")";
+};
+
 /**
  * @param {!Painter} painter
  * @private
@@ -68,6 +75,12 @@ Inspector.prototype.isEqualTo = function(other) {
 Inspector.prototype.paintOutput = function(painter) {
     // Wire probabilities
     this.circuit.drawRightHandPeekGates(painter);
+
+    var factors = this.circuit.getOutput().contiguousFactorization();
+    for (var i = 0; i < factors.length; i++) {
+        painter.paintQuantumStateAsGrid(factors[i], this.focusedStateHintArea.leftHalf().topHalf().withX(i * this.focusedOperationHintArea.w*0.6));
+    }
+
 
     // State amplitudes
     painter.paintQuantumStateAsLabelledGrid(
@@ -77,7 +90,36 @@ Inspector.prototype.paintOutput = function(painter) {
 
     painter.paintMatrix(
         this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length),
-        this.cumulativeOperationHintArea);
+        this.cumulativeOperationHintArea,
+        undefined,
+        this.hand);
+
+    //var _ = 0;
+    //var X = 0;
+    //painter.paintDisalloweds(
+    //    Matrix.square([
+    //        // 1  0  1  0  1  0  1  0  1  0  1  0  1  0  1
+    //        // 0  1  1  0  0  1  1  0  0  1  1  0  0  1  1
+    //        // 0  0  0  1  1  1  1  0  0  0  0  1  1  1  1
+    //        // 0  0  0  0  0  0  0  1  1  1  1  1  1  1  1
+    //        1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
+    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
+    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _,
+    //        X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1,
+    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
+    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
+    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _,
+    //        X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1,
+    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
+    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
+    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _,
+    //        X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1,
+    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
+    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
+    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _
+    //    ]),
+    //    this.cumulativeOperationHintArea);
 };
 
 /**
@@ -116,6 +158,8 @@ Inspector.prototype.paintFocus = function(painter) {
 };
 
 Inspector.prototype.paint = function(painter) {
+    painter.fillRect(this.drawArea);
+
     this.paintFocus(painter);
     this.circuit.paint(painter, this.hand);
     this.paintOutput(painter);
@@ -139,6 +183,34 @@ Inspector.prototype.paintHand = function(painter) {
         var g = this.hand.heldGateBlock.gates[k];
         g.paint(painter, r, false, true, null);
     }
+};
+
+/**
+ *
+ * @param {!HTMLCanvasElement} canvas
+ * @param {!function(!number)} progressCallback
+ * @param {!function(!string)} urlCallback
+ */
+Inspector.prototype.captureCycle = function(canvas, progressCallback, urlCallback) {
+    var ctx = canvas.getContext("2d");
+    var painter = new Painter(ctx);
+    var gif = new GIF({
+        workers: 2,
+        quality: 10
+    });
+    for (var t = 0.001; t < 1; t += 0.02) {
+        Gate.updateTimeGates(t);
+        this.paint(painter);
+        gif.addFrame(canvas,  {copy: true, delay: 50});
+        if (!this.needsContinuousRedraw()) {
+            break;
+        }
+    }
+    gif.on('progress', progressCallback);
+    gif.on('finished', function(blob) {
+        urlCallback(URL.createObjectURL(blob));
+    });
+    gif.render();
 };
 
 /**

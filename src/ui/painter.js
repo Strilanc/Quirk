@@ -244,21 +244,84 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
  * @param {!Matrix} matrix The matrix to draw.
  * @param {!Rect} drawArea The rectangle to draw the matrix within.
  * @param {=string} highlightColor
+ * @param {=Hand} hand Determines if a focus box with numbers is shown.
  */
-Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor) {
+Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor, hand) {
     var numCols = matrix.width();
     var numRows = matrix.height();
     var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
 
     this.fillRect(drawArea, highlightColor);
 
+    var focus_c = null;
+    var focus_r = null;
+    var pos = hand !== undefined && hand.pos !== null && hand.heldGateBlock === null ? hand.pos : null;
     for (var c = 0; c < numCols; c++) {
         for (var r = 0; r < numRows; r++) {
-            this.paintAmplitude(matrix.rows[r][c], topLeftCell.proportionalShiftedBy(c, r));
+            var cell = topLeftCell.proportionalShiftedBy(c, r);
+            this.paintAmplitude(matrix.rows[r][c], cell);
+            if (pos !== null && cell.containsPoint(pos)) {
+                focus_c = c;
+                focus_r = r;
+            }
         }
     }
 
     this.strokeGrid(topLeftCell, numCols, numRows);
+
+    if (focus_c !== null) {
+        cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
+        var hintRect = new Rect(cell.right(), cell.bottom() - 18, 100, 18);
+        this.strokeRect(cell, "red", 3);
+        this.fillRect(hintRect, "lightgreen");
+        this.strokeRect(hintRect);
+        this.printCenteredText(
+            "[" + focus_r + "][" + focus_c + "]=" + matrix.rows[focus_r][focus_c].toString(),
+            hintRect.centerLeft(),
+            undefined,
+            undefined,
+            undefined,
+            new Point(-0.05, 0.5));
+    }
+};
+
+Painter.prototype.paintDisalloweds = function(matrix, drawArea) {
+    var numCols = matrix.width();
+    var numRows = matrix.height();
+    var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+
+    this.ctx.globalAlpha = 0.25;
+    for (var c = 0; c < numCols; c++) {
+        for (var r = 0; r < numRows; r++) {
+            var cell = topLeftCell.proportionalShiftedBy(c, r);
+            if (matrix.rows[r][c].isEqualTo(0)) {
+                this.fillRect(cell, "red")
+            }
+        }
+    }
+    this.ctx.globalAlpha = 1;
+};
+
+/**
+ *
+ * @param {!Array.<!QuantumState>} factors
+ * @param {!Rect} drawArea
+ * @param {!Array.<!string>} labels
+ */
+Painter.prototype.paintFactoredQuantumStateAsLabelledGrid = function (factors, drawArea, labels) {
+    var numWireRows = Math.floor(labels.length / 2);
+    var numWireCols = labels.length - numWireRows;
+    var numDrawRows = 1 << numWireRows;
+    var numDrawCols = 1 << numWireCols;
+
+    var labelDif = 5;
+    var labelSpace = 8;
+    var skipLength = Math.max(numWireRows, numWireCols) * labelDif + labelSpace;
+
+    // Draw state grid
+    var gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
+    this.paintQuantumStateAsGrid(state, gridRect);
+
 };
 
 /**
@@ -281,7 +344,7 @@ Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, l
 
     // Draw state grid
     var gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
-    this.paintColumnVectorAsGrid(state.columnVector, gridRect);
+    this.paintQuantumStateAsGrid(state, gridRect);
 
     // Draw row label tree
     this.paintBinaryTree(
@@ -300,23 +363,26 @@ Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, l
 
 /**
  * Draws a visual representation of a column vector, using a grid layout.
- * @param {!Matrix} columnVector The complex column vector to draw.
+ * @param {!QuantumState} quantumState The quantum state to draw.
  * @param {!Rect} drawArea The rectangle to draw the vector within.
  */
-Painter.prototype.paintColumnVectorAsGrid = function (columnVector, drawArea) {
-    var n = columnVector.height();
-    var numDrawRows = 1 << Math.floor(Math.log(n) / Math.log(2) / 2);
-    var numDrawCols = Math.ceil(n / numDrawRows);
+Painter.prototype.paintQuantumStateAsGrid = function (quantumState, drawArea) {
+    var numStates = quantumState.columnVector.height();
+    var numWires = quantumState.countQubits();
+    var numWireCols = Math.ceil(numWires / 2);
+    var numWireRows = Math.floor(numWires / 2);
+    var numDrawCols = 1 << numWireCols;
+    var numDrawRows = 1 << numWireRows;
     var topLeftCell = new Rect(
         drawArea.x,
         drawArea.y,
         drawArea.w / numDrawCols,
         drawArea.h / numDrawRows);
 
-    for (var r = 0; r < n; r++) {
+    for (var r = 0; r < numStates; r++) {
         var dx = r % numDrawCols;
         var dy = Math.floor(r / numDrawCols);
-        this.paintAmplitude(columnVector.rows[r][0], topLeftCell.proportionalShiftedBy(dx, dy));
+        this.paintAmplitude(quantumState.columnVector.rows[r][0], topLeftCell.proportionalShiftedBy(dx, dy));
     }
 
     this.strokeGrid(topLeftCell, numDrawCols, numDrawRows);

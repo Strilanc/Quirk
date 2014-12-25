@@ -126,12 +126,94 @@ var repeat = function(item, repeatCount) {
 };
 
 /**
+ * Returns the highest-scoring item in an array, as determined by a scoring function.
+ *
+ * The array must have at least one item, and the scores must be comparable by the '<' operator.
+ *
+ * @param {!Array.<T>} items
+ * @param {!function(T) : !number} projection
+ * @returns {T}
+ * @template T
+ */
+var maxBy = function(items, projection) {
+    need(items.length > 0);
+    if (items.length === 1) {
+        return items[0];
+    }
+
+    var curMaxItem = items[0];
+    var curMaxScore = projection(items[0]);
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var score = projection(item);
+        if (score > curMaxScore) {
+            curMaxItem = item;
+            curMaxScore = score;
+        }
+    }
+
+    return curMaxItem;
+};
+
+/**
+ * Returns the base-2 logarithm of the given number.
+ *
+ * @param {!number} n
+ * @returns {!number}
+ */
+var lg = function(n) {
+    need(n > 0);
+    return Math.log(n) / Math.log(2);
+};
+
+/**
+ * Returns all of the integers that are unchanged by and-ing them against a bitwise mask.
+ * @param {!int} mask
+ * @returns {!Array.<!int>}
+ */
+var maskCandidates = function(mask) {
+    need(mask >= 0);
+    var bits = [];
+    while (mask > 0) {
+        var prevMask = mask;
+        mask &= mask - 1;
+        bits.push(Math.round(lg(prevMask - mask)));
+    }
+
+    return range(1 << bits.length).map(function(e) {
+        var r = 0;
+        for (var i = 0; i < bits.length; i++) {
+            if (((1 << i) & e) !== 0) {
+                r |= 1 << bits[i];
+            }
+        }
+        return r;
+    });
+};
+
+/**
  * Determines if there is an integer p such that 2^p equals the given integer.
  * @param {!int} i
  * @returns {!boolean}
  */
 var isPowerOf2 = function(i) {
     return i > 0 && ((i - 1) & i) === 0;
+};
+
+/**
+ * Returns the number of bits needed to uniquely encode all integers up to and including the given value.
+ *
+ * A discrete off-by-one version of log_2(n).
+ *
+ * @param {!int} n
+ * @returns {!int}
+ */
+var bitSize = function(n) {
+    need(n >= 0);
+    if (n === 0) {
+        return 0;
+    }
+    return Math.floor(lg(n)  + 0.001) + 1;
 };
 
 /**

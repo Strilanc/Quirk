@@ -115,6 +115,9 @@ Circuit.prototype.getCumulativeOperationUpToBefore = function(columnIndex) {
         reduce(function(a, e) { return e.times(a); }, Matrix.identity(1 << this.numWires));
 };
 
+/**
+ * @returns {!number}
+ */
 Circuit.prototype.getWireSpacing = function() {
     return this.area.h / this.numWires;
 };

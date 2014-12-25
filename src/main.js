@@ -1,4 +1,13 @@
-var NUM_INITIAL_WIRES = 4;
+// Challenge ideas:
+
+// count ones mod n/2
+// fourier transform
+// Schur transform
+
+// Impossible:
+// count set bits
+
+var NUM_INITIAL_WIRES = 6;
 
 //noinspection JSUnusedGlobalSymbols
 var print = function(s) {
@@ -111,6 +120,25 @@ new TripWire("start").run(function() {
         }
 
         update(inspector.move(mousePosToInspectorPos(p)));
+    }));
+
+    //noinspection JSValidateTypes
+    /** @type {!HTMLButtonElement} */
+    var captureButton = document.getElementById("captureButton");
+
+    //noinspection JSValidateTypes
+    /** @type {!HTMLImageElement} */
+    var captureImage = document.getElementById("captureImage");
+
+    $(captureButton).click(new TripWire("capture click").wrap0(function() {
+        $(captureButton).attr('disabled','disabled');
+        inspector.captureCycle(canvas, function(p) {
+            $(captureButton).text(Math.round(p*100) + "%");
+        }, function(url) {
+            captureImage.src = url;
+            $(captureButton).removeAttr('disabled');
+            $(captureButton).text("capture");
+        });
     }));
 
     //noinspection JSUnresolvedFunction
