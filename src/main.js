@@ -1,13 +1,4 @@
-// Challenge ideas:
-
-// count ones mod n/2
-// fourier transform
-// Schur transform
-
-// Impossible:
-// count set bits
-
-var NUM_INITIAL_WIRES = 6;
+var NUM_INITIAL_WIRES = 4;
 
 //noinspection JSUnusedGlobalSymbols
 var print = function(s) {

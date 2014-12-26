@@ -637,15 +637,6 @@ Gate.fromTargetedRotation = function(p, fractionLabel, fractionSymbol) {
 Gate.TARGETED_ROTATION_GATES = [
     Gate.fromTargetedRotation(-1/3, "-1/3"),
     Gate.fromTargetedRotation(-2/3, "-2/3"),
-    //Gate.fromTargetedRotation(-1/4, "-1/4"),
-    //Gate.fromTargetedRotation(-2/4, "-2/4"),
-    //Gate.fromTargetedRotation(-3/4, "-3/4"),
-    //Gate.fromTargetedRotation(-1/5, "-1/5"),
-    //Gate.fromTargetedRotation(-2/5, "-2/5"),
-    //Gate.fromTargetedRotation(-3/5, "-3/5"),
-    //Gate.fromTargetedRotation(-4/5, "-4/5")
-    //Gate.fromTargetedRotation(-3/4, "-3/4"),
-    //null,
     Gate.fromTargetedRotation(1/3, "1/3"),
     Gate.fromTargetedRotation(2/3, "2/3")
 ];

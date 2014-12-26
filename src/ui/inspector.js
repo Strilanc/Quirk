@@ -76,11 +76,10 @@ Inspector.prototype.paintOutput = function(painter) {
     // Wire probabilities
     this.circuit.drawRightHandPeekGates(painter);
 
-    var factors = this.circuit.getOutput().contiguousFactorization();
-    for (var i = 0; i < factors.length; i++) {
-        painter.paintQuantumStateAsGrid(factors[i], this.focusedStateHintArea.leftHalf().topHalf().withX(i * this.focusedOperationHintArea.w*0.6));
-    }
-
+    //var factors = this.circuit.getOutput().contiguousFactorization();
+    //for (var i = 0; i < factors.length; i++) {
+    //    painter.paintQuantumStateAsGrid(factors[i], this.focusedStateHintArea.leftHalf().topHalf().withX(i * this.focusedOperationHintArea.w*0.6));
+    //}
 
     // State amplitudes
     painter.paintQuantumStateAsLabelledGrid(
