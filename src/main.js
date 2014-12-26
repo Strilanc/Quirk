@@ -1,4 +1,5 @@
 var NUM_INITIAL_WIRES = 4;
+var CAPTURE_MESSAGE = "Capture Screenshot / Animation Cycle and Encode as GIF";
 
 //noinspection JSUnusedGlobalSymbols
 var print = function(s) {
@@ -6,7 +7,7 @@ var print = function(s) {
 };
 
 //noinspection FunctionTooLongJS
-new TripWire("start").run(function() {
+var main = function() {
     var possibleCanvas = document.getElementById("drawCanvas");
     if (!(possibleCanvas instanceof HTMLCanvasElement)) {
         // Probably running the tests.
@@ -45,7 +46,7 @@ new TripWire("start").run(function() {
         }
     };
 
-    redraw = new TripWire("redraw inspector").wrap0(function () {
+    redraw = function () {
         var painter = new Painter(canvas.getContext("2d"));
 
         // Clear
@@ -54,7 +55,7 @@ new TripWire("start").run(function() {
         inspector.previewDrop().paint(painter);
 
         tickWhenAppropriate();
-    });
+    };
 
     //noinspection JSUnresolvedFunction
     var $canvas = $(canvas);
@@ -69,49 +70,49 @@ new TripWire("start").run(function() {
         return p.which === 1;
     };
 
-    var update = new TripWire("update inspector").wrap1(function(newInspector) {
+    var update = function(newInspector) {
         if (inspector.isEqualTo(newInspector)) {
             return;
         }
         inspector = newInspector;
         redraw();
-    });
+    };
 
     //noinspection JSUnresolvedFunction
-    $(canvas).mousedown(new TripWire("canvas mouse down").wrap1(function (p) {
+    $(canvas).mousedown(function (p) {
         if (!isClicking(p)) { return; }
 
         inspector = inspector.move(mousePosToInspectorPos(p)).grab();
         redraw();
-    }));
+    });
 
     //noinspection JSUnresolvedFunction
-    $(document).mouseup(new TripWire("document mouse up").wrap1(function (p) {
+    $(document).mouseup(function (p) {
         if (!isClicking(p) || inspector.hand.heldGateBlock === null ) {
             return;
         }
 
         update(inspector.move(mousePosToInspectorPos(p)).drop());
-    }));
+    });
 
     //noinspection JSUnresolvedFunction
-    $(document).mousemove(new TripWire("document mouse move").wrap1(function (p) {
+    $(document).mousemove(function (p) {
         if (!isClicking(p) || inspector.hand.heldGateBlock === null ) {
             return;
         }
 
         update(inspector.move(mousePosToInspectorPos(p)));
-    }));
+    });
 
     //noinspection JSUnresolvedFunction
-    $(canvas).mousemove(new TripWire("canvas mouse move").wrap1(function (p) {
+    $(canvas).mousemove(function (p) {
         if (inspector.hand.heldGateBlock !== null) {
             // being handled by document mouse move
             return;
         }
 
         update(inspector.move(mousePosToInspectorPos(p)));
-    }));
+    });
 
     //noinspection JSValidateTypes
     /** @type {!HTMLButtonElement} */
@@ -121,21 +122,24 @@ new TripWire("start").run(function() {
     /** @type {!HTMLImageElement} */
     var captureImage = document.getElementById("captureImage");
 
-    $(captureButton).click(new TripWire("capture click").wrap0(function() {
+    $(captureButton).text(CAPTURE_MESSAGE);
+    $(captureButton).click(function() {
         $(captureButton).attr('disabled','disabled');
         inspector.captureCycle(canvas, function(p) {
-            $(captureButton).text(Math.round(p*100) + "%");
+            $(captureButton).text("Encoding... " + Math.round(p*100) + "%");
         }, function(url) {
             captureImage.src = url;
             $(captureButton).removeAttr('disabled');
-            $(captureButton).text("capture");
+            $(captureButton).text(CAPTURE_MESSAGE);
         });
-    }));
+    });
 
     //noinspection JSUnresolvedFunction
-    $(canvas).mouseleave(new TripWire("canvas mouse leave").wrap1(function () {
+    $(canvas).mouseleave(function () {
         update(inspector.move(null));
-    }));
+    });
 
     redraw();
-});
+};
+
+main();

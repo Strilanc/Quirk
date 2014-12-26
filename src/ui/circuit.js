@@ -450,7 +450,7 @@ Circuit.prototype.tryGrab = function(hand) {
 Circuit.prototype.hasTimeBasedGates = function () {
     return !this.columns.every(function (e) {
         return e.gates.every(function(g) {
-            return g !== null && !g.isTimeBased();
+            return g === null || !g.isTimeBased();
         });
     });
 };
