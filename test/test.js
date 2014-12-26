@@ -22,11 +22,37 @@ function AssertionSubject(subject) {
  * @private
  */
 AssertionSubject.prototype.isEqualToHelper = function(other) {
-    if (this.subject instanceof Object && this.subject.hasOwnProperty("isEqualTo")) {
+    if (this.subject instanceof Object && this.subject.constructor.prototype.hasOwnProperty("isEqualTo")) {
         return this.subject.isEqualTo(other);
     } else {
         return compare_(this.subject, other);
     }
+};
+
+/**
+ * @param {!Object} subject
+ * @param {!Object} other
+ * @param {!number} epsilon
+ * @returns {!boolean}
+ * @private
+ */
+AssertionSubject.isApproximatelyEqualToHelperDestructured = function(subject, other, epsilon) {
+    var keys = [];
+    for (var subjectKey in subject) {
+        if (subject.hasOwnProperty(subjectKey)) {
+            keys.push(subjectKey);
+        }
+    }
+    for (var otherKey in other) {
+        if (other.hasOwnProperty(otherKey) && !subject.hasOwnProperty(otherKey)) {
+            return false;
+        }
+    }
+
+    return keys.every(function(key) {
+        return other.hasOwnProperty(key) &&
+            AssertionSubject.isApproximatelyEqualToHelper(subject[key], other[key], epsilon);
+    });
 };
 
 /**
@@ -47,11 +73,13 @@ AssertionSubject.isApproximatelyEqualToHelper = function(subject, other, epsilon
         if (!Array.isArray(other) || other.length !== subject.length) {
             return false;
         }
-        return range(subject.length).every(function(i) {
+        return range(subject.length).every(function (i) {
             return AssertionSubject.isApproximatelyEqualToHelper(subject[i], other[i], epsilon);
         });
+    } else if (subject instanceof Object && subject.toString() === "[object Object]") {
+        return AssertionSubject.isApproximatelyEqualToHelperDestructured(subject, other, epsilon);
     } else {
-        fail('Expected ' + this.describe(subject) + ' to have an isApproximatelyEqualTo method');
+        fail('Expected ' + AssertionSubject.describe(subject) + ' to have an isApproximatelyEqualTo method');
         return false;
     }
 };
@@ -60,7 +88,7 @@ AssertionSubject.isApproximatelyEqualToHelper = function(subject, other, epsilon
  * @param {*} e
  * @returns {!string}
  */
-AssertionSubject.prototype.describe = function(e) {
+AssertionSubject.describe = function(e) {
     if (e === null) {
         return "null";
     }
@@ -75,7 +103,7 @@ AssertionSubject.prototype.describe = function(e) {
         var entries = [];
         for (var key in e) {
             if (e.hasOwnProperty(key)) {
-                entries.push(this.describe(key) + ": " + this.describe(e[key]));
+                entries.push(AssertionSubject.describe(key) + ": " + AssertionSubject.describe(e[key]));
             }
         }
         return (typeof e) + "(\n\t" + entries.join("\n\t") + "\n)";
@@ -89,7 +117,8 @@ AssertionSubject.prototype.describe = function(e) {
  */
 AssertionSubject.prototype.isEqualTo = function(other) {
     if (!this.isEqualToHelper(other)) {
-        fail('Got <' + this.describe(this.subject) + '> but expected it to equal <' + this.describe(other) + '>');
+        fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to equal <' +
+            AssertionSubject.describe(other) + '>');
     }
 };
 
@@ -99,7 +128,8 @@ AssertionSubject.prototype.isEqualTo = function(other) {
  */
 AssertionSubject.prototype.isNotEqualTo = function(other) {
     if (this.isEqualToHelper(other)) {
-        fail('Got <' + this.describe(this.subject) + '> but expected it to NOT equal <' + this.describe(other) + '>');
+        fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to NOT equal <' +
+            AssertionSubject.describe(other) + '>');
     }
 };
 
@@ -110,8 +140,8 @@ AssertionSubject.prototype.isNotEqualTo = function(other) {
  */
 AssertionSubject.prototype.isApproximatelyEqualTo = function(other, epsilon) {
     if (!AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon || 0.000001)) {
-        fail('Got <' + this.describe(this.subject) + '> but expected it to approximately equal <' +
-            this.describe(other) + '>');
+        fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to approximately equal <' +
+            AssertionSubject.describe(other) + '>');
     }
 };
 
@@ -122,8 +152,8 @@ AssertionSubject.prototype.isApproximatelyEqualTo = function(other, epsilon) {
  */
 AssertionSubject.prototype.isNotApproximatelyEqualTo = function(other, epsilon) {
     if (AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon || 0.000001)) {
-        fail('Expected <' + this.describe(this.subject) + '> but expected it to NOT approximately equal <' +
-            this.describe(other) + '>');
+        fail('Expected <' + AssertionSubject.describe(this.subject) + '> but expected it to NOT approximately equal <' +
+            AssertionSubject.describe(other) + '>');
     }
 };
 

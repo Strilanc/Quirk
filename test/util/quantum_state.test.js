@@ -46,24 +46,65 @@ QuantumStateTest.prototype.testProbability = function() {
 };
 
 QuantumStateTest.prototype.testConditionalProbability = function() {
-    assertEquals(1, QuantumState.zero(10).conditionalProbability(0x0, 0x0, 0x0));
-    assertEquals(1, QuantumState.zero(10).conditionalProbability(0x0, 0x1, 0x0));
+    var z10 = QuantumState.zero(10);
+    assertThat(z10.conditionalProbability(0x0, 0x0, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 1
+    });
+    assertThat(z10.conditionalProbability(0x0, 0x1, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 1
+    });
 
-    assertEquals(1, QuantumState.zero(10).conditionalProbability(0x0, 0x0, 0x1));
-    assertEquals(null, QuantumState.zero(10).conditionalProbability(0x1, 0x0, 0x1));
+    assertThat(z10.conditionalProbability(0x0, 0x0, 0x1)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 1
+    });
+    assertThat(z10.conditionalProbability(0x1, 0x1, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 0
+    });
+    assertThat(z10.conditionalProbability(0x1, 0x0, 0x1)).isEqualTo({
+        probabilityOfCondition: 0,
+        probabilityOfHitGivenCondition: 1
+    });
 
-    assertEquals(0, QuantumState.zero(10).conditionalProbability(0x1, 0x1, 0x0));
-    assertEquals(null, QuantumState.zero(10).conditionalProbability(0x1, 0x1, 0x1));
+    var u2 = QuantumState.uniform(2);
+    assertThat(u2.conditionalProbability(0x0, 0x0, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 1
+    });
+    assertThat(u2.conditionalProbability(0x0, 0x1, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 0.5
+    });
 
-    var s = Math.sqrt(0.5);
-    assertEquals(1, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x0, 0x0, 0x0));
-    assertEquals(0.5, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x0, 0x1, 0x0));
+    assertThat(u2.conditionalProbability(0x0, 0x0, 0x1)).isEqualTo({
+        probabilityOfCondition: 0.5,
+        probabilityOfHitGivenCondition: 1
+    });
+    assertThat(u2.conditionalProbability(0x1, 0x0, 0x1)).isEqualTo({
+        probabilityOfCondition: 0.5,
+        probabilityOfHitGivenCondition: 1
+    });
 
-    assertEquals(1, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x0, 0x0, 0x1));
-    assertEquals(1, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x1, 0x0, 0x1));
+    assertThat(u2.conditionalProbability(0x1, 0x1, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 0.5
+    });
 
-    assertEquals(0.5, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x1, 0x1, 0x0));
-    assertEquals(1, new QuantumState(Matrix.col([s, s])).conditionalProbability(0x1, 0x1, 0x1));
+    assertThat(u2.conditionalProbability(0x0, 0x1, 0x2)).isEqualTo({
+        probabilityOfCondition: 0.5,
+        probabilityOfHitGivenCondition: 0.5
+    });
+    assertThat(u2.conditionalProbability(0x0, 0x0, 0x3)).isEqualTo({
+        probabilityOfCondition: 0.25,
+        probabilityOfHitGivenCondition: 1
+    });
+    assertThat(u2.conditionalProbability(0x0, 0x3, 0x0)).isEqualTo({
+        probabilityOfCondition: 1,
+        probabilityOfHitGivenCondition: 0.25
+    });
 };
 
 QuantumStateTest.prototype.testUniform = function() {
@@ -139,10 +180,12 @@ QuantumStateTest.prototype.testTryFactorAroundMask = function() {
         outside: QuantumState.SINGLE_ONE.concat(h(2))
     });
 
-    assertThat(QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrix).concat(h(3)).tryFactorAroundMask(6)).isEqualTo({
-        inside: h(2),
-        outside: QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrix).concat(h(1))
-    });
+    var p = new Complex(1, -1).unit();
+    assertThat(QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrix).concat(h(3)).tryFactorAroundMask(6))
+        .isApproximatelyEqualTo({
+            inside: h(2).phasedBy(p.conjugate()),
+            outside: QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrix).concat(h(1)).phasedBy(p)
+        });
 };
 
 QuantumStateTest.prototype.testContiguousFactorization = function() {

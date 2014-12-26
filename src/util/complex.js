@@ -40,7 +40,7 @@ Complex.prototype.isEqualTo = function (other) {
         return this.real === other.real && this.imag === other.imag;
     }
     if (typeof other === "number") {
-        return this.real === other;
+        return this.real === other && this.imag === 0;
     }
     return false;
 };
@@ -120,7 +120,7 @@ Complex.prototype.toString = function () {
             [0.25, "¼"],
             [Math.sqrt(0.5)/4, "¼√½"],
             [0.125, "⅛"],
-            [Math.sqrt(0.5)/8, "⅛√½"],
+            [Math.sqrt(0.5)/8, "⅛√½"]
         ];
         for (var i = 0; i < matches.length; i++) {
             if (Math.abs(Math.abs(v) - matches[i][0]) < epsilon) {
@@ -128,11 +128,13 @@ Complex.prototype.toString = function () {
             }
         }
         for (var n = 1; n < 16; n++) {
-            for (var d = 1; d < 16; d++) {
+            for (var d = 2; d < 16; d++) {
+                if (n/d % 1 === 0) {
+                    continue;
+                }
                 if (Math.abs(Math.abs(v) - n/d) < epsilon) {
                     return (v < 0 ? "-" : "") + n + "/" + d;
-                }
-                if (Math.abs(Math.abs(v) - Math.sqrt(n/d)) < epsilon) {
+                } else if (Math.abs(Math.abs(v) - Math.sqrt(n/d)) < epsilon) {
                     return (v < 0 ? "-" : "") + "√" + n + "/" + d;
                 }
             }

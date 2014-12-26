@@ -37,7 +37,7 @@ Gate.prototype.toString = function() {
  * @param {!GateColumn} gateColumn
  * @param {!int} targetWire
  * @param {!QuantumState} columnState
- * @returns {!{conditional: ?number, total: !number, canDiffer: !boolean}}
+ * @returns {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number, canDiffer: !boolean}}
  */
 var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
     var wireMask = 1 << targetWire;
@@ -51,9 +51,11 @@ var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnSta
             conditionMask |= 1 << i;
         }
     }
+
+    var p = columnState.conditionalProbability(matchMask, wireMask, conditionMask);
     return {
-        conditional: columnState.conditionalProbability(matchMask, conditionMask | wireMask, conditionMask),
-        total: columnState.probability(matchMask, conditionMask | wireMask),
+        probabilityOfCondition: p.probabilityOfCondition,
+        probabilityOfHitGivenCondition: p.probabilityOfHitGivenCondition,
         canDiffer: conditionMask !== 0
     };
 };
@@ -119,6 +121,24 @@ Gate.DEFAULT_SYMBOL_DRAWER = function(painter, params) {
  * @param {!Painter} painter
  * @param {!GateDrawParams} params
  */
+Gate.NOT_SYMBOL_DRAWER = function(painter, params) {
+    var isNotControl = function(e) { return e === null || !e.isControlModifier()};
+    if (params.circuitContext === null || params.circuitContext.gateColumn.gates.every(isNotControl)
+            || params.isHighlighted) {
+        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+    } else {
+        var drawArea = params.rect.scaledOutwardBy(0.6);
+        painter.fillCircle(drawArea.center(), drawArea.w/2);
+        painter.strokeCircle(drawArea.center(), drawArea.w/2);
+        painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
+        painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
+    }
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!GateDrawParams} params
+ */
 Gate.MATRIX_SYMBOL_DRAWER = function (painter, params) {
     painter.paintMatrix(
         params.gate.matrix,
@@ -178,13 +198,13 @@ Gate.PEEK_SYMBOL_DRAWER = function(painter, params) {
         params.circuitContext.state);
     if (p.canDiffer) {
         painter.paintConditionalProbabilityBox(
-            p.total,
-            p.conditional,
+            p.probabilityOfCondition,
+            p.probabilityOfHitGivenCondition,
             params.rect,
         params.isHighlighted ? "orange" : undefined);
     } else {
         painter.paintProbabilityBox(
-            p.total,
+            p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
             params.rect,
             params.isHighlighted ? "orange" : undefined);
     }
@@ -220,7 +240,11 @@ Gate.prototype.isAnchor = function() {
     return this !== Gate.CONTROL && this !== Gate.ANTI_CONTROL && this !== Gate.SWAP_HALF;
 };
 
-/**
+Gate.prototype.isControlModifier = function() {
+    return this === Gate.CONTROL || this === Gate.ANTI_CONTROL;
+};
+
+    /**
  * @type {!Gate}
  */
 Gate.CONTROL = new Gate(
@@ -318,7 +342,8 @@ Gate.X = new Gate(
     "The NOT gate is also known as the Pauli X gate because it corresponds\n" +
     "to a 180° turn around the X axis of the Block Sphere. It pairs states\n" +
     "that agree on everything except the value of target qubit, and swaps\n" +
-    "the amplitudes within each pair.");
+    "the amplitudes within each pair.",
+    Gate.NOT_SYMBOL_DRAWER);
 
 /**
  * @type {!Gate}

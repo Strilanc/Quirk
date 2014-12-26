@@ -228,6 +228,18 @@ Rect.prototype.paddedBy = function(p) {
 };
 
 /**
+ * Returns the result of scaling the rectangle w.r.t. its center by the given scaling factor.
+ * @param {!number} factor
+ * @returns {!Rect}
+ */
+Rect.prototype.scaledOutwardBy = function(factor) {
+    var c = this.center();
+    var w2 = this.w * factor;
+    var h2 = this.h * factor;
+    return new Rect(c.x - w2/2, c.y - w2/2, w2, h2);
+};
+
+/**
  * Determines if the given point is in the receiving rect or not.
  *
  * Note that the top and left of the rectangle are inclusive, but the bottom and right are exclusive.

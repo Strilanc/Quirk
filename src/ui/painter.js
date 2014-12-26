@@ -60,9 +60,9 @@ Painter.prototype.fillCircle = function (center, radius, color) {
  */
 Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
     this.ctx.beginPath();
-    this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
     this.ctx.strokeStyle = color || "black";
-    this.ctx.strokeWidth = thickness || 1;
+    this.ctx.lineWidth = thickness || 1;
+    this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
     this.ctx.stroke();
 };
 
@@ -164,7 +164,7 @@ Painter.prototype.strokeLine = function(p1, p2, color, thickness) {
     this.ctx.moveTo(p1.x, p1.y);
     this.ctx.lineTo(p2.x, p2.y);
     this.ctx.strokeStyle = color || "black";
-    this.ctx.strokeWidth = thickness || 1;
+    this.ctx.lineWidth = thickness || 1;
     this.ctx.stroke();
 };
 
@@ -235,7 +235,7 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
     }
 
     this.ctx.strokeStyle = strokeColor || "black";
-    this.ctx.strokeWidth = strokeThickness || 1;
+    this.ctx.lineWidth = strokeThickness || 1;
     this.ctx.stroke();
 };
 
@@ -402,20 +402,20 @@ Painter.prototype.paintProbabilityBox = function (probability, drawArea, highlig
 };
 
 /**
- * @param {!number} probabilityIncludingConditions
- * @param {!number} probabilityGivenConditions
+ * @param {!number} probabilityOfCondition
+ * @param {!number} probabilityOfHitGivenCondition
  * @param {!Rect} drawArea
  * @param {=string} highlightColor
  */
-Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncludingConditions,
-                                                            probabilityGivenConditions,
+Painter.prototype.paintConditionalProbabilityBox = function(probabilityOfCondition,
+                                                            probabilityOfHitGivenCondition,
                                                             drawArea,
                                                             highlightColor) {
     this.fillRect(drawArea, highlightColor);
     this.strokeRect(drawArea);
     var topPrintPos = new Point(drawArea.x, drawArea.y + 15);
     var s;
-    if (probabilityIncludingConditions === 0) {
+    if (probabilityOfCondition === 0) {
         // Draw bad-value triangle
         var ps = [drawArea.topLeft(), drawArea.centerRight(), drawArea.centerLeft()];
         this.ctx.beginPath();
@@ -425,17 +425,18 @@ Painter.prototype.paintConditionalProbabilityBox = function(probabilityIncluding
         this.ctx.lineTo(ps[0].x, ps[0].y);
         this.ctx.fillStyle = "gray";
         this.ctx.fill();
-        s = "N/A";
+        s = "0/0";
     } else {
-        this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityGivenConditions), "gray");
-        s = Math.round(probabilityGivenConditions*100) + "%";
+        this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityOfHitGivenCondition), "gray");
+        s = Math.round(probabilityOfHitGivenCondition*100) + "%";
     }
 
-    this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityIncludingConditions), "gray");
+    var probabilityOfHit = probabilityOfCondition * probabilityOfHitGivenCondition;
+    this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityOfHit), "gray");
     this.printText(
         "|:" + s,
         topPrintPos.offsetBy(7, 0));
     this.printText(
-        "∧:" + Math.round(probabilityIncludingConditions*100) + "%",
+        "∧:" + Math.round(probabilityOfHit*100) + "%",
         topPrintPos.offsetBy(0, drawArea.h/2));
 };

@@ -81,32 +81,41 @@ QuantumState.uniform = function(qubitCount) {
 };
 
 /**
- * @param {!int} matchMask A bit mask that says what the value states must match, what that value matters, in order to
+ * @param {!int} targetMask A bit mask that says what the value states must match, what that value matters, in order to
  * count as a bit.
  * @param {!int} conditionMask A bit mask that determined which bits in the match mask are used.
  * @return {!number}
  */
-QuantumState.prototype.probability = function (matchMask, conditionMask) {
+QuantumState.prototype.probability = function (targetMask, conditionMask) {
+    need((targetMask & ~conditionMask) === 0, "Target mask includes set bits that aren't in the condition mask.");
+    if (conditionMask === 0) {
+        return 1;
+    }
     var vec = this.columnVector;
     return sum(
         range(this.columnVector.height())
-        .filter(function(i) { return ((i & conditionMask) === (matchMask & conditionMask)); })
+        .filter(function(i) { return ((i & conditionMask) === (targetMask & conditionMask)); })
         .map(function(i) { return vec.rows[i][0].norm2(); }));
 };
 
 /**
- * @param {!int} matchMask
+ * @param {!int} targetMask
  * @param {!int} positiveConditionMask
- * @param {!int} inclusionConditionMask
- * @return {?number}
+ * @param {!int} inclusionMask
+ * @return {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number}}
  */
-QuantumState.prototype.conditionalProbability = function (matchMask, positiveConditionMask, inclusionConditionMask) {
-    var total = this.probability(matchMask, inclusionConditionMask);
-    if (total === 0) {
-        return null;
-    }
+QuantumState.prototype.conditionalProbability = function (targetMask, positiveConditionMask, inclusionMask) {
+    need((targetMask & ~(positiveConditionMask | inclusionMask)) === 0,
+        "Target mask includes set bits that aren't in the condition masks.");
+    need((positiveConditionMask & inclusionMask) === 0, "Inclusion and condition masks overlap.");
 
-    return this.probability(matchMask, positiveConditionMask | inclusionConditionMask) / total;
+    var total = this.probability(targetMask & inclusionMask, inclusionMask);
+    var conditioned = total === 0 ? 1 : this.probability(targetMask, positiveConditionMask | inclusionMask) / total;
+
+    return {
+        probabilityOfCondition: total,
+        probabilityOfHitGivenCondition: conditioned
+    };
 };
 
 /**
@@ -116,6 +125,16 @@ QuantumState.prototype.conditionalProbability = function (matchMask, positiveCon
  */
 QuantumState.prototype.transformedBy = function(operation) {
     return new QuantumState(operation.times(this.columnVector));
+};
+
+/**
+ *
+ * @param {!Complex} phase
+ * @returns {!QuantumState}
+ */
+QuantumState.prototype.phasedBy = function(phase) {
+    need(Complex.ONE.isApproximatelyEqualTo(phase.norm2(), 0.00001));
+    return new QuantumState(this.columnVector.scaledBy(phase));
 };
 
 /**

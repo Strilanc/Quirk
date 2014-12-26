@@ -12,7 +12,9 @@ ComplexTest.prototype.testIsEqualTo = function() {
     assertThat(new Complex(2, 3)).isNotEqualTo(new Complex(3, 2));
 
     assertThat(new Complex(0, 0)).isEqualTo(0);
+    assertThat(new Complex(1, 0)).isEqualTo(1);
     assertThat(new Complex(0, 0)).isNotEqualTo(1);
+    assertThat(new Complex(0, 1)).isNotEqualTo(1);
     assertThat(new Complex(2.5, 0)).isEqualTo(2.5);
     assertThat(new Complex(0, 2.5)).isNotEqualTo(2.5);
 };
