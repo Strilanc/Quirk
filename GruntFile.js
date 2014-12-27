@@ -21,7 +21,6 @@ module.exports = function(grunt) {
     },
     jstdPhantom: {
       options: {
-        useLatest : true
       },
       files: ["jsTestDriver.conf"]
     }
