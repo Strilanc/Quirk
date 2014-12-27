@@ -27,37 +27,60 @@ function Matrix(rows) {
 }
 
 /**
- * Returns the result of tensor-product-ing the receiving matrix with itself the given number of times.
- * @param {!int} exponent The number of times the matrix is tensor-product-ed with itself.
- * @returns {!Matrix}
+ * Determines if the receiving matrix is equal to the given matrix.
+ * This method returns false, instead of throwing, when given badly typed arguments.
+ * @param {!Matrix|*} other
+ * @returns {!boolean}
  */
-Matrix.prototype.tensorPower = function(exponent) {
-    if (exponent === 0) {
-        return Matrix.identity(1);
+Matrix.prototype.isEqualTo = function (other) {
+    if (this === other) {
+        return true;
     }
-    var t = this;
-    while (exponent > 1) {
-        // TODO: use repeated squaring instead
-        t = t.tensorProduct(this);
-        exponent -= 1;
+    if (!(other instanceof Matrix)) {
+        return false;
     }
-    return t;
+
+    var w = this.width();
+    var h = other.height();
+    if (other.width() !== w || other.height() !== h) {
+        return false;
+    }
+
+    for (var r = 0; r < h; r++) {
+        if (!arraysEqualBy(this.rows[r], other.rows[r], CUSTOM_IS_EQUAL_TO_EQUALITY)) {
+            return false;
+        }
+    }
+
+    return true;
 };
 
 /**
- * Returns the width of the receiving matrix.
- * @returns {!int}
+ * Determines if the receiving matrix is approximately equal to the given matrix.
+ * @param {!Matrix|*} other
+ * @param {!number} epsilon Maximum distance between the two matrices.
+ * @returns {!boolean}
  */
-Matrix.prototype.width = function() {
-    return this.rows[0].length;
+Matrix.prototype.isApproximatelyEqualTo = function (other, epsilon) {
+    return other instanceof Matrix &&
+        this.width() === other.width() &&
+        this.height() === other.height() &&
+        this.minus(other).norm2() <= epsilon;
 };
 
 /**
- * Returns the height of the receiving matrix.
- * @returns {!int}
+ * Returns a text representation of the receiving matrix.
+ * (It uses curly braces so you can paste it into wolfram alpha.)
+ * @returns {!string}
  */
-Matrix.prototype.height = function() {
-    return this.rows.length;
+Matrix.prototype.toString = function () {
+    var data = this.rows.map(function(row) {
+        var rowData = row.map(function(e) {
+            return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString();
+        });
+        return rowData.join(", ");
+    }).join("}, {");
+    return "{{" + data + "}}";
 };
 
 /**
@@ -115,42 +138,32 @@ Matrix.row = function (coefs) {
 };
 
 /**
- * Determines if the receiving matrix is equal to the given matrix.
- * This method returns false, instead of throwing, when given badly typed arguments.
- * @param {!Matrix|*} other
- * @returns {!boolean}
+ * Returns the width of the receiving matrix.
+ * @returns {!int}
  */
-Matrix.prototype.isEqualTo = function (other) {
-    if (!(other instanceof Matrix)) { return false; }
-
-    var w = this.width();
-    var h = other.height();
-    if (other.width() !== w || other.height() !== h) { return false; }
-
-    for (var r = 0; r < h; r++) {
-        for (var c = 0; c < w; c++) {
-            if (!this.rows[r][c].isEqualTo(other.rows[r][c])) {
-                return false;
-            }
-        }
-    }
-
-    return true;
+Matrix.prototype.width = function() {
+    return this.rows[0].length;
 };
 
 /**
- * Returns a text representation of the receiving matrix.
- * (It uses curly braces so you can paste it into wolfram alpha.)
- * @returns {!string}
+ * Returns the height of the receiving matrix.
+ * @returns {!int}
  */
-Matrix.prototype.toString = function () {
-    var data = this.rows.map(function(row) {
-        var rowData = row.map(function(e) {
-           return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString();
-        });
-        return rowData.join(", ");
-    }).join("}, {");
-    return "{{" + data + "}}";
+Matrix.prototype.height = function() {
+    return this.rows.length;
+};
+
+/**
+ * Determines if the matrix is approximately unitary or not.
+ * @param {!number} epsilon Distance away from unitary the matrix is allowed to be. Defaults to 0.
+ * @returns {!boolean}
+ */
+Matrix.prototype.isApproximatelyUnitary = function (epsilon) {
+    var n = this.width();
+    if (this.height() !== n) {
+        return false;
+    }
+    return this.times(this.adjoint()).isApproximatelyEqualTo(Matrix.identity(n), epsilon);
 };
 
 /**
@@ -242,31 +255,6 @@ Matrix.prototype.norm2 = function() {
 };
 
 /**
- * Determines if the matrix is approximately unitary or not.
- * @param {!number} epsilon Distance away from unitary the matrix is allowed to be. Defaults to 0.
- * @returns {!boolean}
- */
-Matrix.prototype.isApproximatelyUnitary = function (epsilon) {
-    var n = this.width();
-    if (this.height() !== n) {
-        return false;
-    }
-    return this.times(this.adjoint()).isApproximatelyEqualTo(Matrix.identity(n), epsilon);
-};
-
-/**
- * Determines if the receiving matrix is approximately equal to the given matrix.
- * @param {!Matrix} other
- * @param {!number} epsilon Maximum distance between the two matrices.
- * @returns {!boolean}
- */
-Matrix.prototype.isApproximatelyEqualTo = function (other, epsilon) {
-    return this.width() === other.width() &&
-        this.height() === other.height() &&
-        this.minus(other).norm2() <= epsilon;
-};
-
-/**
  * Returns the tensor product of the receiving matrix and the given matrix.
  * @param {!Matrix} other
  * @returns {!Matrix}
@@ -294,6 +282,24 @@ Matrix.prototype.tensorProduct = function (other) {
         }
         return v1.times(v2);
     });
+};
+
+/**
+ * Returns the result of tensor-product-ing the receiving matrix with itself the given number of times.
+ * @param {!int} exponent The number of times the matrix is tensor-product-ed with itself.
+ * @returns {!Matrix}
+ */
+Matrix.prototype.tensorPower = function(exponent) {
+    if (exponent === 0) {
+        return Matrix.identity(1);
+    }
+    var t = this;
+    while (exponent > 1) {
+        // TODO: use repeated squaring instead
+        t = t.tensorProduct(this);
+        exponent -= 1;
+    }
+    return t;
 };
 
 /**

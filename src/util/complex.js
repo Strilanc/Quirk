@@ -12,6 +12,54 @@ function Complex(real, imag) {
 }
 
 /**
+ * The complex number equal to zero.
+ * @type {!Complex}
+ */
+Complex.ZERO = new Complex(0, 0);
+
+/**
+ * The complex number equal to one.
+ * @type {!Complex}
+ */
+Complex.ONE = new Complex(1, 0);
+
+/**
+ * The square root of negative 1.
+ * @type {!Complex}
+ */
+Complex.I = new Complex(0, 1);
+
+/**
+ * Determines if the receiving complex value is equal to the given complex, integer, or float value.
+ * This method returns false, instead of throwing, when given badly typed arguments.
+ * @param {!number|!Complex|*} other
+ * @returns {!boolean}
+ */
+Complex.prototype.isEqualTo = function (other) {
+    if (other instanceof Complex) {
+        return this.real === other.real && this.imag === other.imag;
+    }
+    if (typeof other === "number") {
+        return this.real === other && this.imag === 0;
+    }
+    return false;
+};
+
+/**
+ * Determines if the receiving complex value is near the given complex, integer, or float value.
+ * This method returns false, instead of throwing, when given badly typed arguments.
+ * @param {!number|!Complex|*} other
+ * @param {!number} epsilon
+ * @returns {!boolean}
+ */
+Complex.prototype.isApproximatelyEqualTo = function (other, epsilon) {
+    if (other instanceof Complex || typeof other === "number") {
+        return this.minus(Complex.from(other)).norm2() <= epsilon;
+    }
+    return false;
+};
+
+/**
  * Wraps the given number into a Complex value (unless it's already a Complex value).
  * @param {!number|!Complex} v
  * @returns {!Complex}
@@ -57,40 +105,38 @@ Complex.imagPartOf = function (v) {
 };
 
 /**
- * Determines if the receiving complex value is equal to the given complex, integer, or float value.
- * This method returns false, instead of throwing, when given badly typed arguments.
- * @param {!number|!Complex|*} other
- * @returns {!boolean}
- */
-Complex.prototype.isEqualTo = function (other) {
-    if (other instanceof Complex) {
-        return this.real === other.real && this.imag === other.imag;
-    }
-    if (typeof other === "number") {
-        return this.real === other;
-    }
-    return false;
-};
-
-/**
  * Returns a compact text representation of the receiving complex value.
  * @returns {!string}
  */
 Complex.prototype.toString = function () {
-    var epsilon = 0.00000001;
+    var epsilon = 0.00001;
 
     var radicalToString = function(v) {
         var matches = [
             [1, "1"],
-            [0.5, "½"],
             [Math.sqrt(0.5), "√½"],
+            [0.5, "½"],
+            [Math.sqrt(0.5)/2, "½√½"],
             [0.25, "¼"],
+            [Math.sqrt(0.5)/4, "¼√½"],
             [0.125, "⅛"],
-            [Math.sqrt(0.125), "√⅛"]
+            [Math.sqrt(0.5)/8, "⅛√½"]
         ];
         for (var i = 0; i < matches.length; i++) {
             if (Math.abs(Math.abs(v) - matches[i][0]) < epsilon) {
                 return (v < 0 ? "-" : "") + matches[i][1];
+            }
+        }
+        for (var n = 1; n < 16; n++) {
+            for (var d = 2; d < 16; d++) {
+                if (n/d % 1 === 0) {
+                    continue;
+                }
+                if (Math.abs(Math.abs(v) - n/d) < epsilon) {
+                    return (v < 0 ? "-" : "") + n + "/" + d;
+                } else if (Math.abs(Math.abs(v) - Math.sqrt(n/d)) < epsilon) {
+                    return (v < 0 ? "-" : "") + "√" + n + "/" + d;
+                }
             }
         }
         if (Math.abs(v).toString().length > 4) { return v.toFixed(2); }
@@ -107,7 +153,7 @@ Complex.prototype.toString = function () {
         if (Math.abs(this.imag + 1) < epsilon) {
             return "-i";
         }
-        return this.imag.toString() + "i";
+        return radicalToString(this.imag) + "i";
     }
     var separator = this.imag > 0 ? "+" : "-";
     var imagFactor = Math.abs(Math.abs(this.imag) - 1) < epsilon ? "" : radicalToString(Math.abs(this.imag));
@@ -201,20 +247,8 @@ Complex.prototype.times = function (v) {
 Complex.prototype.dividedBy = function (v) {
     var c = Complex.from(v);
     var d = c.norm2();
-    if (d === 0) { throw "Division by Zero"; }
+    need(d !== 0, "Division by Zero");
 
     var n = this.times(c.conjugate());
     return new Complex(n.real / d, n.imag / d);
 };
-
-/**
- * The complex number equal to zero.
- * @type {!Complex}
- */
-Complex.ZERO = new Complex(0, 0);
-
-/**
- * The square root of negative 1.
- * @type {!Complex}
- */
-Complex.I = new Complex(0, 1);

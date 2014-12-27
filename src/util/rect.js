@@ -18,16 +18,6 @@ function Rect(x, y, w, h) {
 }
 
 /**
- *
- * @param {!{x: !number, y: !number}} p The x/y point at the center of the square.
- * @param {!number} r Half of the diameter of the square.
- * @returns {!Rect}
- */
-Rect.centeredSquareWithRadius = function(p, r) {
-    return new Rect(p.x - r, p.y - r, r*2, r*2);
-};
-
-/**
  * @param {!Rect|*} other
  * @returns {!boolean}
  */
@@ -39,67 +29,81 @@ Rect.prototype.isEqualTo = function(other) {
         other.h === this.h;
 };
 
+Rect.prototype.toString = function() {
+    return "[" + this.x + ":" + this.right() + "]x[" + this.y + ":" + this.bottom() + "]";
+};
+
 /**
- * @returns {!{x: !number, y: !number}}
+ *
+ * @param {!Point} p The x/y point at the center of the square.
+ * @param {!number} r Half of the diameter of the square.
+ * @returns {!Rect}
+ */
+Rect.centeredSquareWithRadius = function(p, r) {
+    return new Rect(p.x - r, p.y - r, r*2, r*2);
+};
+
+/**
+ * @returns {!Point}
  */
 Rect.prototype.center = function() {
-    return {x: this.x + this.w / 2, y: this.y + this.h / 2};
+    return new Point(this.x + this.w / 2, this.y + this.h / 2);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.topLeft = function() {
-    return {x: this.x, y: this.y};
+    return new Point(this.x, this.y);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.topRight = function() {
-    return {x: this.x + this.w, y: this.y};
+    return new Point(this.x + this.w, this.y);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.bottomLeft = function() {
-    return {x: this.x, y: this.y + this.h};
+    return new Point(this.x, this.y + this.h);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.bottomRight = function() {
-    return {x: this.x + this.w, y: this.y + this.h};
+    return new Point(this.x + this.w, this.y + this.h);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.centerLeft = function() {
-    return {x: this.x, y: this.y + this.h/2};
+    return new Point(this.x, this.y + this.h/2);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.centerRight = function() {
-    return {x: this.x + this.w, y: this.y + this.h/2};
+    return new Point(this.x + this.w, this.y + this.h/2);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.topCenter = function() {
-    return {x: this.x + this.w/2, y: this.y};
+    return new Point(this.x + this.w/2, this.y);
 };
 
 /**
- * @returns {!{x: !number, y: !number}}
+ * @returns {!Point}
  */
 Rect.prototype.bottomCenter = function() {
-    return {x: this.x + this.w/2, y: this.y + this.h};
+    return new Point(this.x + this.w/2, this.y + this.h);
 };
 
 
@@ -224,11 +228,23 @@ Rect.prototype.paddedBy = function(p) {
 };
 
 /**
+ * Returns the result of scaling the rectangle w.r.t. its center by the given scaling factor.
+ * @param {!number} factor
+ * @returns {!Rect}
+ */
+Rect.prototype.scaledOutwardBy = function(factor) {
+    var c = this.center();
+    var w2 = this.w * factor;
+    var h2 = this.h * factor;
+    return new Rect(c.x - w2/2, c.y - w2/2, w2, h2);
+};
+
+/**
  * Determines if the given point is in the receiving rect or not.
  *
  * Note that the top and left of the rectangle are inclusive, but the bottom and right are exclusive.
  *
- * @param {!{x: !number, y: !number}} p The query point.
+ * @param {!Point} p The query point.
  * @returns {!boolean}
  */
 Rect.prototype.containsPoint = function(p) {
@@ -247,17 +263,27 @@ Rect.prototype.takeLeftProportion = function(proportion) {
 };
 
 /**
+ * @param {!number} proportion
  * @returns {!Rect}
  */
-Rect.prototype.topHalf = function() {
-    return this.skipBottom(this.h / 2);
+Rect.prototype.takeRightProportion = function(proportion) {
+    return this.takeRight(this.w * proportion);
 };
 
 /**
+ * @param {!number} proportion
  * @returns {!Rect}
  */
-Rect.prototype.bottomHalf = function() {
-    return this.skipTop(this.h / 2);
+Rect.prototype.takeTopProportion = function(proportion) {
+    return this.takeTop(this.h * proportion);
+};
+
+/**
+ * @param {!number} proportion
+ * @returns {!Rect}
+ */
+Rect.prototype.takeBottomProportion = function(proportion) {
+    return this.takeBottom(this.h * proportion);
 };
 
 /**
@@ -272,6 +298,20 @@ Rect.prototype.leftHalf = function() {
  */
 Rect.prototype.rightHalf = function() {
     return this.skipLeft(this.w / 2);
+};
+
+/**
+ * @returns {!Rect}
+ */
+Rect.prototype.topHalf = function() {
+    return this.skipBottom(this.h / 2);
+};
+
+/**
+ * @returns {!Rect}
+ */
+Rect.prototype.bottomHalf = function() {
+    return this.skipTop(this.h / 2);
 };
 
 /**
@@ -291,4 +331,35 @@ Rect.prototype.shiftedBy = function(dx, dy) {
  */
 Rect.prototype.proportionalShiftedBy = function(dx, dy) {
     return this.shiftedBy(dx * this.w, dy * this.h);
+};
+
+/**
+ * @param {!number} newX
+ * @returns {!Rect}
+ */
+Rect.prototype.withX = function (newX) {
+    return new Rect(newX, this.y, this.w, this.h);
+};
+
+/**
+ * @param {!number} newX
+ * @returns {!Rect}
+ */
+Rect.prototype.withY = function (newY) {
+    return new Rect(this.x, newY, this.w, this.h);
+};
+
+/**
+ * @param {!number} newW
+ * @returns {!Rect}
+ */
+Rect.prototype.withW = function (newW) {
+    return new Rect(this.x, this.y, newW, this.h);
+};
+/**
+ * @param {!number} newH
+ * @returns {!Rect}
+ */
+Rect.prototype.withH = function (newH) {
+    return new Rect(this.x, this.y, this.w, newH);
 };
