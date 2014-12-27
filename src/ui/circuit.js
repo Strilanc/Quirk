@@ -275,6 +275,73 @@ Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
 };
 
 /**
+ * Returns the per-wire probabilities before and after each operation.
+ * @returns {!Array.<!number>}
+ */
+Circuit.prototype.scanProbabilities = function() {
+    var wireRange = range(this.numWires);
+    return this.scanStates().map(function(s) {
+        return wireRange.map(function(i) {
+            return s.probability(1 << i, 1 << i);
+        });
+    });
+};
+
+/**
+ * Returns a per-wire measure of entanglement before and after each operation.
+ * @returns {!Array.<!number>}
+ */
+Circuit.prototype.scanPerWireEntanglementMeasure = function() {
+    var maxRatio = function(a, b) {
+        var min = Math.min(a, b);
+        var max = Math.max(a, b);
+        if (max < 0.00000001) {
+            return 1;
+        }
+        if (min < 0.00000001) {
+            return Infinity;
+        }
+        return max / min;
+    };
+
+    var n = this.numWires;
+    return this.scanStates().map(function(s) {
+        return range(n).map(function(i) {
+            var otherWiresMask = (1 << n) - (1 << i) - 1;
+            var p = s.probability(1 << i, 1 << i);
+            return Math.log(arrayMax(maskCandidates(otherWiresMask).map(function(e) {
+                return maxRatio(
+                    s.coefficient(e).norm2() * p + 0.001,
+                    s.coefficient(e | (1 << i)).norm2() * (1-p) + 0.001);
+            }))) * Math.sqrt(p * (1-p));
+        });
+    });
+};
+
+Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
+    var probabilities = this.scanProbabilities();
+    var entanglementMeasures = this.scanPerWireEntanglementMeasure();
+    for (var r = 0; r < this.numWires; r++) {
+        for (var c = 0; c <= this.columns.length; c++) {
+            var x1 = c === 0 ? this.area.x + 30 : this.gateRect(r, c - 1).center().x;
+            var x2 = c === this.columns.length ? this.wireRect(r).right() : this.gateRect(r, c).center().x;
+            var y = this.wireRect(r).center().y;
+            var w = 4;
+            var we = 6;
+
+            var curve = new Rect(x1, y - w, x2 - x1, w * 2);
+            var curveWrapper = new Rect(x1, y - we, x2 - x1, we * 2);
+            var p = probabilities[c][r];
+            painter.ctx.globalAlpha = Math.min(entanglementMeasures[c][r]/3, 0.65);
+            painter.fillRect(curveWrapper, "#F00");
+            painter.ctx.globalAlpha = 1;
+            painter.fillRect(curve.bottomHalf().takeTopProportion(1 - p), "#0F8");
+            painter.fillRect(curve.topHalf().takeBottomProportion(p), "#08F");
+        }
+    }
+};
+
+/**
  *
  * @param {!Painter} painter
  * @param {!Hand} hand
@@ -288,6 +355,8 @@ Circuit.prototype.paint = function(painter, hand) {
         painter.printCenteredText(this.wireLabeller(i) + ":", new Point(this.area.x + 14, wireY));
         painter.strokeLine(new Point(this.area.x + 30, wireY), new Point(this.area.x + this.area.w, wireY));
     }
+
+    this.paintWireProbabilityCurves(painter, hand);
 
     // Draw operations
     for (var i2 = 0; i2 < this.columns.length; i2++) {

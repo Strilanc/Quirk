@@ -126,6 +126,26 @@ var repeat = function(item, repeatCount) {
 };
 
 /**
+ *
+ * @param {!Array.<T>} items
+ * @returns {T}
+ * @template T
+ */
+var arrayMax = function(items) {
+    if (items.length === 0) {
+        return -Infinity;
+    }
+
+    var result = items[0];
+    for (var i = 1; i < items.length; i++) {
+        if (result < items[i]) {
+            result = items[i];
+        }
+    }
+    return result;
+};
+
+/**
  * Returns the highest-scoring item in an array, as determined by a scoring function.
  *
  * The array must have at least one item, and the scores must be comparable by the '<' operator.

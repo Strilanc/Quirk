@@ -263,6 +263,30 @@ Rect.prototype.takeLeftProportion = function(proportion) {
 };
 
 /**
+ * @param {!number} proportion
+ * @returns {!Rect}
+ */
+Rect.prototype.takeRightProportion = function(proportion) {
+    return this.takeRight(this.w * proportion);
+};
+
+/**
+ * @param {!number} proportion
+ * @returns {!Rect}
+ */
+Rect.prototype.takeTopProportion = function(proportion) {
+    return this.takeTop(this.h * proportion);
+};
+
+/**
+ * @param {!number} proportion
+ * @returns {!Rect}
+ */
+Rect.prototype.takeBottomProportion = function(proportion) {
+    return this.takeBottom(this.h * proportion);
+};
+
+/**
  * @returns {!Rect}
  */
 Rect.prototype.leftHalf = function() {
@@ -318,9 +342,24 @@ Rect.prototype.withX = function (newX) {
 };
 
 /**
+ * @param {!number} newX
+ * @returns {!Rect}
+ */
+Rect.prototype.withY = function (newY) {
+    return new Rect(this.x, newY, this.w, this.h);
+};
+
+/**
  * @param {!number} newW
  * @returns {!Rect}
  */
 Rect.prototype.withW = function (newW) {
     return new Rect(this.x, this.y, newW, this.h);
+};
+/**
+ * @param {!number} newH
+ * @returns {!Rect}
+ */
+Rect.prototype.withH = function (newH) {
+    return new Rect(this.x, this.y, this.w, newH);
 };
