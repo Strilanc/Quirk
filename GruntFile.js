@@ -21,6 +21,8 @@ module.exports = function(grunt) {
     },
     jstdPhantom: {
       options: {
+        useLatest : true,
+        port: 8080
       },
       files: ["jsTestDriver.conf"]
     }
