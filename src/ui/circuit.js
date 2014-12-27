@@ -318,6 +318,10 @@ Circuit.prototype.scanPerWireEntanglementMeasure = function() {
     });
 };
 
+/**
+ * @param {!Painter} painter
+ * @param {!Hand} hand
+ */
 Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
     var probabilities = this.scanProbabilities();
     var entanglementMeasures = this.scanPerWireEntanglementMeasure();
@@ -337,6 +341,8 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
             painter.ctx.globalAlpha = 1;
             painter.fillRect(curve.bottomHalf().takeTopProportion(1 - p), "#0F8");
             painter.fillRect(curve.topHalf().takeBottomProportion(p), "#08F");
+
+            hand.paintToolTipIfHoveringIn(painter, curveWrapper, "P(ON) = " + (p * 100).toFixed(1) + "%");
         }
     }
 };
@@ -373,7 +379,7 @@ Circuit.prototype.paint = function(painter, hand) {
  */
 Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, state, hand) {
 
-    this.drawColumnControlWires(painter, gateColumn, columnIndex);
+    this.drawColumnControlWires(painter, gateColumn, columnIndex, state);
 
     for (var i = 0; i < this.numWires; i++) {
         var b = this.gateRect(i, columnIndex);
@@ -386,9 +392,7 @@ Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIn
         var gate = gateColumn.gates[i];
 
         //var isHolding = hand.pos !== null && hand.col === columnIndex && hand.row === i;
-        var canGrab = hand.pos !== null &&
-            b.containsPoint(notNull(hand.pos)) &&
-            hand.heldGateBlock === null;
+        var canGrab = hand.isHoveringIn(b);
         gate.paint(painter, b, false, canGrab, new CircuitContext(gateColumn, i, state));
     }
 };
@@ -397,8 +401,9 @@ Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIn
  * @param {!Painter} painter
  * @param {!GateColumn} gateColumn
  * @param {!int} columnIndex
+ * @param {!QuantumState} state
  */
-Circuit.prototype.drawColumnControlWires = function (painter, gateColumn, columnIndex) {
+Circuit.prototype.drawColumnControlWires = function (painter, gateColumn, columnIndex, state) {
     var hasControls = gateColumn.gates.indexOf(Gate.CONTROL) > -1;
     var hasAntiControls = gateColumn.gates.indexOf(Gate.ANTI_CONTROL) > -1;
     var hasSwaps = gateColumn.gates.indexOf(Gate.SWAP_HALF) > -1;
@@ -407,6 +412,8 @@ Circuit.prototype.drawColumnControlWires = function (painter, gateColumn, column
         return;
     }
 
+    var masks = gateColumn.masks();
+    var p = state.probability(masks.targetMask, masks.inclusionMask);
     var minIndex;
     var maxIndex;
     for (var i = 0; i < gateColumn.gates.length; i++) {
@@ -418,9 +425,13 @@ Circuit.prototype.drawColumnControlWires = function (painter, gateColumn, column
         }
     }
     var x = this.opRect(columnIndex).center().x;
-    painter.strokeLine(
-        new Point(x, this.wireRect(minIndex).center().y),
-        new Point(x, this.wireRect(maxIndex).center().y));
+    var y1 = this.wireRect(minIndex).center().y;
+    var y2 = this.wireRect(maxIndex).center().y;
+    painter.strokeLine(new Point(x, y1), new Point(x, y2));
+
+    painter.ctx.globalAlpha = 0.6 * p;
+    painter.fillRect(new Rect(x - 3, y1, 6, y2 - y1), "red");
+    painter.ctx.globalAlpha = 1;
 };
 
 /**

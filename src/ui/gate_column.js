@@ -12,6 +12,23 @@ function GateColumn(gates) {
 }
 
 /**
+ * @returns {!{targetMask: !int, inclusionMask: !int}}
+ */
+GateColumn.prototype.masks = function() {
+    var targetMask = 0;
+    var inclusionMask = 0;
+    for (var i = 0; i < this.gates.length; i++) {
+        if (this.gates[i] === Gate.CONTROL) {
+            inclusionMask |= 1 << i;
+            targetMask |= 1 << i;
+        } else if (this.gates[i] === Gate.ANTI_CONTROL) {
+            inclusionMask |= 1 << i;
+        }
+    }
+    return {targetMask: targetMask, inclusionMask: inclusionMask};
+};
+
+/**
  * @param {!GateColumn|*} other
  * @returns {!boolean}
  */

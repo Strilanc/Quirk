@@ -47,7 +47,7 @@ var main = function() {
     };
 
     redraw = function () {
-        var painter = new Painter(canvas.getContext("2d"));
+        var painter = new Painter(canvas);
 
         // Clear
         painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), "white");
@@ -125,7 +125,7 @@ var main = function() {
     $(captureButton).text(CAPTURE_MESSAGE);
     $(captureButton).click(function() {
         $(captureButton).attr('disabled','disabled');
-        inspector.captureCycle(canvas, function(p) {
+        inspector.captureCycle(new Painter(canvas), function(p) {
             $(captureButton).text("Encoding... " + Math.round(p*100) + "%");
         }, function(url) {
             captureImage.src = url;

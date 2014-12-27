@@ -18,6 +18,26 @@ function Hand(pos, heldGateBlock, heldGateBlockOffset) {
 }
 
 /**
+ * @param {!Rect} rect
+ * @returns {!boolean}
+ */
+Hand.prototype.isHoveringIn = function(rect) {
+    return this.pos !== null && this.heldGateBlock === null && rect.containsPoint(notNull(this.pos));
+};
+
+/**
+ * @param {!Painter} painter
+ * @param {!Rect} rect
+ * @param {!string} text
+ */
+Hand.prototype.paintToolTipIfHoveringIn = function(painter, rect, text) {
+    if (this.isHoveringIn(rect)) {
+        painter.strokeRect(rect, "red", 3);
+        painter.paintTooltip(text, notNull(this.pos), rect);
+    }
+};
+
+/**
  *
  * @param {!Hand|*} other
  * @returns {!boolean}

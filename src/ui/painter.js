@@ -8,12 +8,14 @@ var AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO = "#444";
 var AMPLITUDE_PROBABILITY_FILL_UP_COLOR = "orange";
 
 /**
- * @param {!CanvasRenderingContext2D} ctx
+ * @param {!HTMLCanvasElement} canvas
+ * @property {!HTMLCanvasElement} canvas
  * @property {!CanvasRenderingContext2D} ctx
  * @constructor
  */
-function Painter(ctx) {
-    this.ctx = ctx;
+function Painter(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
 }
 
 /**
@@ -271,36 +273,29 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor, hand)
 
     if (focus_c !== null) {
         cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
-        var hintRect = new Rect(cell.right(), cell.bottom() - 18, 100, 18);
-        this.strokeRect(cell, "red", 3);
-        this.fillRect(hintRect, "lightgreen");
-        this.strokeRect(hintRect);
-        this.printCenteredText(
-            "[" + focus_r + "][" + focus_c + "]=" + matrix.rows[focus_r][focus_c].toString(),
-            hintRect.centerLeft(),
-            undefined,
-            undefined,
-            undefined,
-            new Point(-0.05, 0.5));
+        hand.paintToolTipIfHoveringIn(
+            this,
+            cell,
+            "[" + focus_r + "][" + focus_c + "]=" + matrix.rows[focus_r][focus_c].toString());
     }
 };
 
-Painter.prototype.paintDisalloweds = function(matrix, drawArea) {
-    var numCols = matrix.width();
-    var numRows = matrix.height();
-    var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
-
-    this.ctx.globalAlpha = 0.25;
-    for (var c = 0; c < numCols; c++) {
-        for (var r = 0; r < numRows; r++) {
-            var cell = topLeftCell.proportionalShiftedBy(c, r);
-            if (matrix.rows[r][c].isEqualTo(0)) {
-                this.fillRect(cell, "red")
-            }
-        }
-    }
-    this.ctx.globalAlpha = 1;
-};
+//Painter.prototype.paintDisalloweds = function(matrix, drawArea) {
+//    var numCols = matrix.width();
+//    var numRows = matrix.height();
+//    var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+//
+//    this.ctx.globalAlpha = 0.25;
+//    for (var c = 0; c < numCols; c++) {
+//        for (var r = 0; r < numRows; r++) {
+//            var cell = topLeftCell.proportionalShiftedBy(c, r);
+//            if (matrix.rows[r][c].isEqualTo(0)) {
+//                this.fillRect(cell, "red")
+//            }
+//        }
+//    }
+//    this.ctx.globalAlpha = 1;
+//};
 
 /**
  *
@@ -308,21 +303,21 @@ Painter.prototype.paintDisalloweds = function(matrix, drawArea) {
  * @param {!Rect} drawArea
  * @param {!Array.<!string>} labels
  */
-Painter.prototype.paintFactoredQuantumStateAsLabelledGrid = function (factors, drawArea, labels) {
-    var numWireRows = Math.floor(labels.length / 2);
-    var numWireCols = labels.length - numWireRows;
-    var numDrawRows = 1 << numWireRows;
-    var numDrawCols = 1 << numWireCols;
-
-    var labelDif = 5;
-    var labelSpace = 8;
-    var skipLength = Math.max(numWireRows, numWireCols) * labelDif + labelSpace;
-
-    // Draw state grid
-    var gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
-    this.paintQuantumStateAsGrid(state, gridRect);
-
-};
+//Painter.prototype.paintFactoredQuantumStateAsLabelledGrid = function (factors, drawArea, labels) {
+//    var numWireRows = Math.floor(labels.length / 2);
+//    var numWireCols = labels.length - numWireRows;
+//    var numDrawRows = 1 << numWireRows;
+//    var numDrawCols = 1 << numWireCols;
+//
+//    var labelDif = 5;
+//    var labelSpace = 8;
+//    var skipLength = Math.max(numWireRows, numWireCols) * labelDif + labelSpace;
+//
+//    // Draw state grid
+//    var gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
+//    this.paintQuantumStateAsGrid(state, gridRect);
+//
+//};
 
 /**
  *
@@ -399,6 +394,47 @@ Painter.prototype.paintProbabilityBox = function (probability, drawArea, highlig
     this.fillRect(drawArea.takeLeft(w), "gray");
     this.strokeRect(drawArea);
     this.printCenteredText((probability*100).toFixed(1) + "%", drawArea.center());
+};
+
+/**
+ * Draws a tooltip box.
+ *
+ * @param {!string} text The tooltip's text.
+ * @param {!Point} focusPoint The position of the mouse cursor.
+ * @param {!Rect} focusRect The location of the object to which the tooltip belongs.
+ * @param {=string} fontColor The text color. Defaults to black.
+ * @param {=number} fontSize The text size. Defaults to 12px.
+ * @param {=string} fontFamily The text font family. Defaults to Helvetica.
+ */
+Painter.prototype.paintTooltip = function(text, focusPoint, focusRect, fontColor, fontSize, fontFamily) {
+    fontSize = fontSize || 12;
+
+    var ctx = this.ctx;
+    var lines = text.split("\n");
+    var w = arrayMax(lines.map(function(e) { return ctx.measureText(e).width; }));
+    var h = fontSize * 0.8 * lines.length + 0.2 * (lines.length - 1);
+
+    var paintRect = new Rect(focusPoint.x, focusRect.y - h, w, h).paddedBy(2);
+    if (paintRect.y < 0) {
+        new Rect(focusPoint.x, focusRect.bottom(), w, h).paddedBy(2);
+    }
+
+    if (paintRect.right() > this.canvas.width) {
+        paintRect = paintRect.withX(this.canvas.width - paintRect.w);
+    }
+    if (paintRect.bottom() > this.canvas.height) {
+        paintRect = paintRect.withY(this.canvas.height - paintRect.h);
+    }
+    if (paintRect.x < 0) {
+        paintRect = paintRect.withX(0);
+    }
+    if (paintRect.y < 0) {
+        paintRect = paintRect.withY(0);
+    }
+
+    this.fillRect(paintRect, "lightgreen");
+    this.strokeRect(paintRect);
+    this.printCenteredText(text, paintRect.center(), fontColor, fontSize, fontFamily);
 };
 
 /**

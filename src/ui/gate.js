@@ -40,23 +40,13 @@ Gate.prototype.toString = function() {
  * @returns {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number, canDiffer: !boolean}}
  */
 var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
+    var colMasks = gateColumn.masks();
     var wireMask = 1 << targetWire;
-    var matchMask = wireMask;
-    var conditionMask = 0;
-    for (var i = 0; i < gateColumn.gates.length; i++) {
-        if (gateColumn.gates[i] === Gate.CONTROL) {
-            conditionMask |= 1 << i;
-            matchMask |= 1 << i;
-        } else if (gateColumn.gates[i] === Gate.ANTI_CONTROL) {
-            conditionMask |= 1 << i;
-        }
-    }
-
-    var p = columnState.conditionalProbability(matchMask, wireMask, conditionMask);
+    var p = columnState.conditionalProbability(colMasks.targetMask | wireMask, wireMask, colMasks.inclusionMask);
     return {
         probabilityOfCondition: p.probabilityOfCondition,
         probabilityOfHitGivenCondition: p.probabilityOfHitGivenCondition,
-        canDiffer: conditionMask !== 0
+        canDiffer: colMasks.inclusionMask !== 0
     };
 };
 

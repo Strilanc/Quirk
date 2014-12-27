@@ -186,13 +186,12 @@ Inspector.prototype.paintHand = function(painter) {
 
 /**
  *
- * @param {!HTMLCanvasElement} canvas
+ * @param {!Painter} painter
  * @param {!function(!number)} progressCallback
  * @param {!function(!string)} urlCallback
  */
-Inspector.prototype.captureCycle = function(canvas, progressCallback, urlCallback) {
-    var ctx = canvas.getContext("2d");
-    var painter = new Painter(ctx);
+Inspector.prototype.captureCycle = function(painter, progressCallback, urlCallback) {
+    //noinspection JSUnresolvedFunction
     var gif = new GIF({
         workers: 2,
         quality: 10
@@ -200,13 +199,14 @@ Inspector.prototype.captureCycle = function(canvas, progressCallback, urlCallbac
     for (var t = 0.001; t < 1; t += 0.02) {
         Gate.updateTimeGates(t);
         this.paint(painter);
-        gif.addFrame(canvas,  {copy: true, delay: 50});
+        gif.addFrame(painter.canvas,  {copy: true, delay: 50});
         if (!this.needsContinuousRedraw()) {
             break;
         }
     }
     gif.on('progress', progressCallback);
     gif.on('finished', function(blob) {
+        //noinspection JSUnresolvedVariable,JSUnresolvedFunction
         urlCallback(URL.createObjectURL(blob));
     });
     gif.render();
