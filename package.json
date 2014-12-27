@@ -12,6 +12,7 @@
     "grunt-contrib-watch" : "0.5.3",
     "grunt-jstestdriver-phantomjs" : "0.0.7"
   },
+  "scripts": { "test": "grunt test" },
   "repository": {
     "type": "git",
     "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector.git"
