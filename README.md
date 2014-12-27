@@ -1,7 +1,7 @@
 Quantum Circuit Inspector
 =========================
 
-![Build Status Image](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)
+[![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector)
 
 A visualization and experimentation tool for small quantum circuits. Includes common single-qubit gates, but not many multi-qubit gates (e.g. swap and fourier transform). Supports controlled and time-varying operations. Not much support for customization yet.
 
