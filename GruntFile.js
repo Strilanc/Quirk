@@ -10,7 +10,7 @@ module.exports = function(grunt) {
           'src/util/rect.js',
           'src/util/*.js',
           'src/ui/*.js',
-          'src/main.js',
+          'src/main.js'
         ],
         dest : 'out/combined.js'
       }
@@ -18,13 +18,24 @@ module.exports = function(grunt) {
     watch: {
       files: ['src/**/*.js'],
       tasks: ['concat']
+    },
+    jstdPhantom: {
+      options: {
+        useLatest : true
+      },
+      files: ["jsTestDriver.conf"]
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
   grunt.registerTask('default', [
+    'jstdPhantom',
     'concat:js'
+  ]);
+  grunt.registerTask('test', [
+    'jstdPhantom'
   ]);
 
 };
