@@ -2,16 +2,34 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
-    <script src="complex.js"></script>
-    <script src="matrix.js"></script>
-    <script src="gate.js"></script>
-    <script src="rect.js"></script>
-    <script src="painter.js"></script>
+    <title>Quantum Circuit Inspector</title>
+    <script src="debug/alert_on_error.js"></script>
+    <script src="gif.worker.js"></script>
+    <script src="gif.js"></script>
+    <script src="util/point.js"></script>
+    <script src="util/rect.js"></script>
+    <script src="util/util.js"></script>
+    <script src="util/point.js"></script>
+    <script src="util/complex.js"></script>
+    <script src="util/matrix.js"></script>
+    <script src="util/quantum_state.js"></script>
+    <script src="ui/painter.js"></script>
+    <script src="ui/gate.js"></script>
+    <script src="ui/gate_block.js"></script>
+    <script src="ui/gate_column.js"></script>
+    <script src="ui/hand.js"></script>
+    <script src="ui/toolbox.js"></script>
+    <script src="ui/circuit.js"></script>
+    <script src="ui/inspector.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 </head>
 <body>
-    <canvas id="drawCanvas" width="800" height="550" style="border:1px solid #000000;"></canvas>
-    <script src="circuit.js"></script>
+    <canvas id="drawCanvas" width="1200px" height="600px" style="border:1px solid #000000;"></canvas>
+
+    <br/>
+    <button type="button" id="captureButton">Capture</button>
+    <br/>
+    <img src="" id="captureImage"/>
+    <script src="main.js"></script>
 </body>
 </html>
