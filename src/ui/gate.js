@@ -1,6 +1,3 @@
-/** @type {!number} */
-var GATE_RADIUS = 20;
-
 /**
  * A named single-qubit quantum operation.
  *
@@ -95,12 +92,12 @@ function CircuitContext(gateColumn, rowIndex, state) {
  * @param {!GateDrawParams} params
  */
 Gate.DEFAULT_SYMBOL_DRAWER = function(painter, params) {
-    var backColor = "white";
+    var backColor = Config.GATE_FILL_COLOR;
     if (!params.isInToolbox && !params.gate.matrix.isApproximatelyUnitary(0.001)) {
-        backColor = "red";
+        backColor = Config.BROKEN_COLOR_GATE;
     }
     if (params.isHighlighted) {
-        backColor = "orange";
+        backColor = Config.HIGHLIGHT_COLOR_GATE;
     }
     painter.fillRect(params.rect, backColor);
     painter.strokeRect(params.rect);
@@ -130,10 +127,15 @@ Gate.NOT_SYMBOL_DRAWER = function(painter, params) {
  * @param {!GateDrawParams} params
  */
 Gate.MATRIX_SYMBOL_DRAWER = function (painter, params) {
+    painter.fillRect(params.rect, params.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
     painter.paintMatrix(
         params.gate.matrix,
-        params.rect,
-        params.isHighlighted ? "orange" : undefined);
+        params.rect);
+    if (params.isHighlighted) {
+        painter.ctx.globalAlpha = 0.9;
+        painter.fillRect(params.rect, Config.HIGHLIGHT_COLOR_GATE);
+        painter.ctx.globalAlpha = 1;
+    }
 };
 
 /**
@@ -177,7 +179,7 @@ Gate.DRAW_ANTI_CONTROL_SYMBOL = function(painter, params) {
  * @param {!GateDrawParams} params
  */
 Gate.PEEK_SYMBOL_DRAWER = function(painter, params) {
-    if (params.circuitContext === null) {
+    if (params.circuitContext === null || params.isHighlighted) {
         Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
         return;
     }
@@ -190,13 +192,11 @@ Gate.PEEK_SYMBOL_DRAWER = function(painter, params) {
         painter.paintConditionalProbabilityBox(
             p.probabilityOfCondition,
             p.probabilityOfHitGivenCondition,
-            params.rect,
-        params.isHighlighted ? "orange" : undefined);
+            params.rect);
     } else {
         painter.paintProbabilityBox(
             p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
-            params.rect,
-            params.isHighlighted ? "orange" : undefined);
+            params.rect);
     }
 };
 
@@ -226,15 +226,11 @@ Gate.prototype.isTimeBased = function() {
     return Gate.EVOLVING_GATES.indexOf(this) !== -1;
 };
 
-Gate.prototype.isAnchor = function() {
-    return this !== Gate.CONTROL && this !== Gate.ANTI_CONTROL && this !== Gate.SWAP_HALF;
-};
-
 Gate.prototype.isControlModifier = function() {
     return this === Gate.CONTROL || this === Gate.ANTI_CONTROL;
 };
 
-    /**
+/**
  * @type {!Gate}
  */
 Gate.CONTROL = new Gate(

@@ -1,12 +1,3 @@
-// ===================================
-//      CONFIGURATION CONSTANTS
-// ===================================
-var AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL = "yellow";
-var AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE = "#201000";
-var AMPLITUDE_CIRCLE_STROKE_COLOR = "gray";
-var AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO = "#444";
-var AMPLITUDE_PROBABILITY_FILL_UP_COLOR = "orange";
-
 /**
  * @param {!HTMLCanvasElement} canvas
  * @property {!HTMLCanvasElement} canvas
@@ -24,7 +15,7 @@ function Painter(canvas) {
  * @param {=string} color The fill color. Defaults to black.
  */
 Painter.prototype.fillRect = function (rect, color) {
-    this.ctx.fillStyle = color || "white";
+    this.ctx.fillStyle = color || Config.DEFAULT_FILL_COLOR;
     this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 };
 
@@ -48,8 +39,8 @@ Painter.prototype.strokeRect = function (rect, color, thickness) {
  */
 Painter.prototype.fillCircle = function (center, radius, color) {
     this.ctx.beginPath();
-    this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
-    this.ctx.fillStyle = color || "white";
+    this.ctx.arc(center.x, center.y, Math.max(radius - 0.5, 0), 0, 2 * Math.PI);
+    this.ctx.fillStyle = color || Config.DEFAULT_FILL_COLOR;
     this.ctx.fill();
 };
 
@@ -62,9 +53,9 @@ Painter.prototype.fillCircle = function (center, radius, color) {
  */
 Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
     this.ctx.beginPath();
-    this.ctx.strokeStyle = color || "black";
-    this.ctx.lineWidth = thickness || 1;
-    this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    this.ctx.strokeStyle = color || Config.DEFAULT_STROKE_COLOR;
+    this.ctx.lineWidth = thickness || Config.DEFAULT_STROKE_THICKNESS;
+    this.ctx.arc(center.x, center.y, Math.max(radius - 0.5, 0), 0, 2 * Math.PI);
     this.ctx.stroke();
 };
 
@@ -78,9 +69,9 @@ Painter.prototype.strokeCircle = function (center, radius, color, thickness) {
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
  */
 Painter.prototype.printText = function (text, pos, fontColor, fontSize, fontFamily) {
-    fontSize = fontSize || 12;
-    fontColor = fontColor || "black";
-    fontFamily = fontFamily || "Helvetica";
+    fontSize = fontSize || Config.DEFAULT_FONT_SIZE;
+    fontColor = fontColor || Config.DEFAULT_TEXT_COLOR;
+    fontFamily = fontFamily || Config.DEFAULT_FONT_FAMILY;
 
     this.ctx.fillStyle = fontColor;
     this.ctx.font = fontSize + "px " + fontFamily;
@@ -102,9 +93,9 @@ Painter.prototype.printText = function (text, pos, fontColor, fontSize, fontFami
  * @param {=Point} centerPointProportion The porportional point to center on, defaulting to (0.5, 0.5).
  */
 Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, fontFamily, centerPointProportion) {
-    fontSize = fontSize || 12;
-    fontColor = fontColor || "black";
-    fontFamily = fontFamily || "Helvetica";
+    fontSize = fontSize || Config.DEFAULT_FONT_SIZE;
+    fontColor = fontColor || Config.DEFAULT_TEXT_COLOR;
+    fontFamily = fontFamily || Config.DEFAULT_FONT_FAMILY;
     centerPointProportion = centerPointProportion || new Point(0.5, 0.5);
 
     this.ctx.fillStyle = fontColor;
@@ -137,8 +128,8 @@ Painter.prototype.paintBinaryTree = function(firstNodePoint, levelDelta, nodeDel
         var p = makeNodePoint(i);
         if (b > 0) {
             var d = 1 << (b - 1);
-            this.strokeLine(p, makeNodePoint(i + d), "gray");
-            this.strokeLine(p, makeNodePoint(i - d), "gray");
+            this.strokeLine(p, makeNodePoint(i + d), Config.BINARY_TREE_LABEL_EDGE_COLOR);
+            this.strokeLine(p, makeNodePoint(i - d), Config.BINARY_TREE_LABEL_EDGE_COLOR);
         }
 
         var levelDeltaLength = Math.sqrt(levelDelta.x * levelDelta.x + levelDelta.y * levelDelta.y);
@@ -165,7 +156,7 @@ Painter.prototype.strokeLine = function(p1, p2, color, thickness) {
     this.ctx.beginPath();
     this.ctx.moveTo(p1.x, p1.y);
     this.ctx.lineTo(p2.x, p2.y);
-    this.ctx.strokeStyle = color || "black";
+    this.ctx.strokeStyle = color || Config.DEFAULT_STROKE_COLOR;
     this.ctx.lineWidth = thickness || 1;
     this.ctx.stroke();
 };
@@ -177,11 +168,6 @@ Painter.prototype.strokeLine = function(p1, p2, color, thickness) {
  * @param {!Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
  */
 Painter.prototype.paintAmplitude = function(amplitude, area) {
-    if (amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
-        this.fillRect(area, AMPLITUDE_CLEAR_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ZERO);
-        return;
-    }
-
     var c = area.center();
     var magnitude = amplitude.abs();
     var p = amplitude.norm2();
@@ -196,13 +182,11 @@ Painter.prototype.paintAmplitude = function(amplitude, area) {
     }
 
     // fill rect from bottom to top as the amplitude becomes more probable
-    this.fillRect(area.takeBottom(p * area.h), AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
+    this.fillRect(area.takeBottom(p * area.h), Config.AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
 
     // show the direction and magnitude as a circle with a line indicator
-    this.fillCircle(c, r, isControl ?
-        AMPLITUDE_CIRCLE_FILL_COLOR_WHEN_CONTROL_FORCES_VALUE_TO_ONE
-        : AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
-    this.strokeCircle(c, r, AMPLITUDE_CIRCLE_STROKE_COLOR);
+    this.fillCircle(c, r, Config.AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
+    this.strokeCircle(c, r, Config.AMPLITUDE_CIRCLE_STROKE_COLOR);
     this.strokeLine(c, new Point(c.x + dx, c.y - dy));
 
     // cross out (in addition to the darkening) when controlled
@@ -236,8 +220,8 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
         this.ctx.lineTo(x2, y + r*dh);
     }
 
-    this.ctx.strokeStyle = strokeColor || "black";
-    this.ctx.lineWidth = strokeThickness || 1;
+    this.ctx.strokeStyle = strokeColor || Config.DEFAULT_STROKE_COLOR;
+    this.ctx.lineWidth = strokeThickness || Config.DEFAULT_STROKE_THICKNESS;
     this.ctx.stroke();
 };
 
@@ -245,15 +229,12 @@ Painter.prototype.strokeGrid = function(topLeftCell, cols, rows, strokeColor, st
  * Draws a visual representation of a complex matrix.
  * @param {!Matrix} matrix The matrix to draw.
  * @param {!Rect} drawArea The rectangle to draw the matrix within.
- * @param {=string} highlightColor
  * @param {=Hand} hand Determines if a focus box with numbers is shown.
  */
-Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor, hand) {
+Painter.prototype.paintMatrix = function(matrix, drawArea, hand) {
     var numCols = matrix.width();
     var numRows = matrix.height();
     var topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
-
-    this.fillRect(drawArea, highlightColor);
 
     var focus_c = null;
     var focus_r = null;
@@ -262,21 +243,31 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, highlightColor, hand)
         for (var r = 0; r < numRows; r++) {
             var cell = topLeftCell.proportionalShiftedBy(c, r);
             this.paintAmplitude(matrix.rows[r][c], cell);
-            if (pos !== null && cell.containsPoint(pos)) {
+            if (pos !== null && cell.containsPoint(notNull(pos))) {
                 focus_c = c;
                 focus_r = r;
             }
         }
     }
 
-    this.strokeGrid(topLeftCell, numCols, numRows);
+    this.strokeRect(drawArea);
+    if (Config.PAINT_MATRIX_GRID_COLOR_OR_NULL !== null) {
+        this.strokeGrid(topLeftCell, numCols, numRows, Config.PAINT_MATRIX_GRID_COLOR_OR_NULL);
+    }
 
     if (focus_c !== null) {
         cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
-        hand.paintToolTipIfHoveringIn(
-            this,
-            cell,
-            "[" + focus_r + "][" + focus_c + "]=" + matrix.rows[focus_r][focus_c].toString());
+        var numWires = lg(Math.max(matrix.width(), matrix.height()));
+        var stater = function(bitMask) {
+            return range(numWires).map(function(i) {
+                return ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0";
+            }).join("");
+        };
+
+        var tip = stater(focus_c) + " → " + stater(focus_r) +
+            "\n= " + matrix.rows[focus_r][focus_c].toString();
+
+        hand.paintToolTipIfHoveringIn(this,  cell,  tip);
     }
 };
 
@@ -391,7 +382,7 @@ Painter.prototype.paintQuantumStateAsGrid = function (quantumState, drawArea) {
 Painter.prototype.paintProbabilityBox = function (probability, drawArea, highlightColor) {
     var w = drawArea.w * probability;
     this.fillRect(drawArea, highlightColor);
-    this.fillRect(drawArea.takeLeft(w), "gray");
+    this.fillRect(drawArea.takeLeft(w), Config.PROBABILITY_BOX_FILL_UP_COLOR);
     this.strokeRect(drawArea);
     this.printCenteredText((probability*100).toFixed(1) + "%", drawArea.center());
 };
@@ -407,12 +398,12 @@ Painter.prototype.paintProbabilityBox = function (probability, drawArea, highlig
  * @param {=string} fontFamily The text font family. Defaults to Helvetica.
  */
 Painter.prototype.paintTooltip = function(text, focusPoint, focusRect, fontColor, fontSize, fontFamily) {
-    fontSize = fontSize || 12;
+    fontSize = fontSize || Config.DEFAULT_FONT_SIZE;
 
     var ctx = this.ctx;
     var lines = text.split("\n");
     var w = arrayMax(lines.map(function(e) { return ctx.measureText(e).width; }));
-    var h = fontSize * 0.8 * lines.length + 0.2 * (lines.length - 1);
+    var h = fontSize * lines.length * 1.3;
 
     var paintRect = new Rect(focusPoint.x, focusRect.y - h, w, h).paddedBy(2);
     if (paintRect.y < 0) {
@@ -432,9 +423,9 @@ Painter.prototype.paintTooltip = function(text, focusPoint, focusRect, fontColor
         paintRect = paintRect.withY(0);
     }
 
-    this.fillRect(paintRect, "lightgreen");
+    this.fillRect(paintRect);
     this.strokeRect(paintRect);
-    this.printCenteredText(text, paintRect.center(), fontColor, fontSize, fontFamily);
+    this.printText(text, paintRect.center().offsetBy(-w/2, -h/2 + fontSize), fontColor, fontSize, fontFamily);
 };
 
 /**
@@ -463,12 +454,13 @@ Painter.prototype.paintConditionalProbabilityBox = function(probabilityOfConditi
         this.ctx.fill();
         s = "0/0";
     } else {
-        this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityOfHitGivenCondition), "gray");
+        this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityOfHitGivenCondition),
+            Config.PROBABILITY_BOX_FILL_UP_COLOR);
         s = Math.round(probabilityOfHitGivenCondition*100) + "%";
     }
 
     var probabilityOfHit = probabilityOfCondition * probabilityOfHitGivenCondition;
-    this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityOfHit), "gray");
+    this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityOfHit), Config.PROBABILITY_BOX_FILL_UP_COLOR);
     this.printText(
         "|:" + s,
         topPrintPos.offsetBy(7, 0));

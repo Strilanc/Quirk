@@ -2,7 +2,7 @@ CircuitTest = TestCase("CircuitTest");
 
 CircuitTest.prototype.testFindOpHalfColumnAt = function() {
     var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null, undefined);
-    var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
+    var w = Config.GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
     var x = CIRCUIT_OP_LEFT_SPACING + 11;
 
     assertEquals(-0.5, c.findOpHalfColumnAt(new Point(x, 11)));
@@ -17,19 +17,19 @@ CircuitTest.prototype.testFindOpHalfColumnAt = function() {
 
 CircuitTest.prototype.testOpRect = function() {
     var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null, undefined);
-    var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
+    var w = Config.GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
     var x = CIRCUIT_OP_LEFT_SPACING + 10;
 
 
-    assertEquals(x + GATE_RADIUS, c.opRect(0).center().x);
-    assertEquals(x + GATE_RADIUS + w, c.opRect(1).center().x);
-    assertEquals(x + GATE_RADIUS + w*2, c.opRect(2).center().x);
+    assertEquals(x + Config.GATE_RADIUS, c.opRect(0).center().x);
+    assertEquals(x + Config.GATE_RADIUS + w, c.opRect(1).center().x);
+    assertEquals(x + Config.GATE_RADIUS + w*2, c.opRect(2).center().x);
 
     var d = new Circuit(new Rect(10, 10, 200, 100), 9, [], 1, undefined);
 
-    assertEquals(x + GATE_RADIUS, d.opRect(0).center().x);
-    assertEquals(x + GATE_RADIUS + w/2, d.opRect(1).center().x);
-    assertEquals(x + GATE_RADIUS + w, d.opRect(2).center().x);
+    assertEquals(x + Config.GATE_RADIUS, d.opRect(0).center().x);
+    assertEquals(x + Config.GATE_RADIUS + w/2, d.opRect(1).center().x);
+    assertEquals(x + Config.GATE_RADIUS + w, d.opRect(2).center().x);
 };
 
 CircuitTest.prototype.testFindExistingOpColumnAt = function() {
@@ -37,7 +37,7 @@ CircuitTest.prototype.testFindExistingOpColumnAt = function() {
     var c0 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 0), null, undefined);
     var c1 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 1), null, undefined);
     var c3 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 3), null, undefined);
-    var w = GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
+    var w = Config.GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
     var x = CIRCUIT_OP_LEFT_SPACING + 11 - CIRCUIT_OP_HORIZONTAL_SPACING/2;
 
     assertEquals(null, c0.findExistingOpColumnAt(new Point(x, 11)));

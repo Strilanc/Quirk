@@ -1,6 +1,3 @@
-var NUM_INITIAL_WIRES = 4;
-var CAPTURE_MESSAGE = "Capture Screenshot / Animation Cycle and Encode as GIF";
-
 //noinspection JSUnusedGlobalSymbols
 var print = function(s) {
     $(document.getElementById("debugOutput")).val(s);
@@ -19,7 +16,7 @@ var main = function() {
     var canvas = possibleCanvas;
 
     /** @type {!Inspector} */
-    var inspector = Inspector.empty(NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
+    var inspector = Inspector.empty(Config.NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
 
     var ts = 0;
     var ticker = null;
@@ -50,7 +47,7 @@ var main = function() {
         var painter = new Painter(canvas);
 
         // Clear
-        painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), "white");
+        painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), Config.BACKGROUND_COLOR);
 
         inspector.previewDrop().paint(painter);
 
@@ -122,7 +119,7 @@ var main = function() {
     /** @type {!HTMLImageElement} */
     var captureImage = document.getElementById("captureImage");
 
-    $(captureButton).text(CAPTURE_MESSAGE);
+    $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
     $(captureButton).click(function() {
         $(captureButton).attr('disabled','disabled');
         inspector.captureCycle(new Painter(canvas), function(p) {
@@ -130,7 +127,7 @@ var main = function() {
         }, function(url) {
             captureImage.src = url;
             $(captureButton).removeAttr('disabled');
-            $(captureButton).text(CAPTURE_MESSAGE);
+            $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
         });
     });
 

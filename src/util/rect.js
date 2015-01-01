@@ -342,7 +342,7 @@ Rect.prototype.withX = function (newX) {
 };
 
 /**
- * @param {!number} newX
+ * @param {!number} newY
  * @returns {!Rect}
  */
 Rect.prototype.withY = function (newY) {

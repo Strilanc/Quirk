@@ -23,14 +23,6 @@ Toolbox.prototype.isEqualTo = function(other) {
         other.area.isEqualTo(this.area);
 };
 
-Toolbox.GATE_SPACING = 2;
-Toolbox.GROUP_SPACING = 24 - Toolbox.GATE_SPACING;
-Toolbox.GATE_SPAN = GATE_RADIUS * 2 + Toolbox.GATE_SPACING;
-Toolbox.GROUP_SPAN = Toolbox.GATE_SPAN * 2 + Toolbox.GROUP_SPACING;
-Toolbox.MARGIN_X = 5;
-Toolbox.MARGIN_Y = 18;
-Toolbox.BACK_COLOR = "#CCC";
-
 /**
  * @param {!int} groupIndex
  * @param {!int} gateIndex
@@ -41,10 +33,10 @@ Toolbox.prototype.groupedGateRect = function(groupIndex, gateIndex) {
     var dx = Math.floor(gateIndex / 3);
     var dy = gateIndex % 3;
 
-    var x = this.area.x + Toolbox.MARGIN_X + dx * Toolbox.GATE_SPAN + groupIndex * Toolbox.GROUP_SPAN;
-    var y = this.area.y + Toolbox.MARGIN_Y + dy * Toolbox.GATE_SPAN;
+    var x = this.area.x + Config.TOOLBOX_MARGIN_X + dx * Config.TOOLBOX_GATE_SPAN + groupIndex * Config.TOOLBOX_GROUP_SPAN;
+    var y = this.area.y + Config.TOOLBOX_MARGIN_Y + dy * Config.TOOLBOX_GATE_SPAN;
 
-    return new Rect(x, y, GATE_RADIUS*2, GATE_RADIUS*2);
+    return new Rect(x, y, Config.GATE_RADIUS*2, Config.GATE_RADIUS*2);
 };
 
 /**
@@ -54,7 +46,7 @@ Toolbox.prototype.groupedGateRect = function(groupIndex, gateIndex) {
  */
 Toolbox.prototype.groupLabelCenter = function(groupIndex) {
     var r = this.groupedGateRect(groupIndex, 0);
-    return new Point(r.x + Toolbox.GATE_SPAN - Toolbox.GATE_SPACING/2, r.y - 10);
+    return new Point(r.x + Config.TOOLBOX_GATE_SPAN - Config.TOOLBOX_GATE_SPACING/2, r.y - 10);
 };
 
 /**
@@ -71,7 +63,7 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
         this.area.x + 50,
         gateRect.bottom() + 10,
         400,
-        paragraphHeight + 4 * GATE_RADIUS + 35);
+        paragraphHeight + 4 * Config.GATE_RADIUS + 35);
 
     painter.fillRect(hintRect);
     painter.printText(
@@ -91,7 +83,7 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
         gate.matrix.toString(), new Point(this.area.x + 55, gateRect.bottom() + 25));
     painter.paintMatrix(
         gate.matrix,
-        new Rect(this.area.x + 55, hintRect.bottom() - 4 * GATE_RADIUS, 4 * GATE_RADIUS, 4 * GATE_RADIUS));
+        new Rect(this.area.x + 55, hintRect.bottom() - 4 * Config.GATE_RADIUS, 4 * Config.GATE_RADIUS, 4 * Config.GATE_RADIUS));
     painter.strokeRect(hintRect);
 
     gate.paint(painter, gateRect, true, true, null);
@@ -121,8 +113,7 @@ Toolbox.prototype.findGateAt = function(p) {
  * @param {!Hand} hand
  */
 Toolbox.prototype.paint = function (painter, hand) {
-    painter.fillRect(this.area, Toolbox.BACK_COLOR);
-    painter.strokeRect(this.area);
+    painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
     for (var groupIndex = 0; groupIndex < Gate.GATE_SET.length; groupIndex++) {
         var group = Gate.GATE_SET[groupIndex];

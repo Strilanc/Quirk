@@ -37,7 +37,7 @@ function Inspector(drawArea, circuit, toolbox, hand) {
  * @returns {Inspector}
  */
 Inspector.empty = function(numWires, drawArea) {
-    var toolboxHeight = 4 * (GATE_RADIUS * 2 + 2) - GATE_RADIUS;
+    var toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
 
     return new Inspector(
         drawArea,
@@ -90,7 +90,6 @@ Inspector.prototype.paintOutput = function(painter) {
     painter.paintMatrix(
         this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length),
         this.cumulativeOperationHintArea,
-        undefined,
         this.hand);
 
     //var _ = 0;
@@ -157,8 +156,6 @@ Inspector.prototype.paintFocus = function(painter) {
 };
 
 Inspector.prototype.paint = function(painter) {
-    painter.fillRect(this.drawArea);
-
     this.paintFocus(painter);
     this.circuit.paint(painter, this.hand);
     this.paintOutput(painter);
@@ -178,7 +175,7 @@ Inspector.prototype.paintHand = function(painter) {
     var dh = this.circuit.getWireSpacing();
     for (var k = 0; k < this.hand.heldGateBlock.gates.length; k++) {
         var p = this.hand.pos.offsetBy(0, dh * (k - this.hand.heldGateBlockOffset));
-        var r = Rect.centeredSquareWithRadius(p, GATE_RADIUS);
+        var r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
         var g = this.hand.heldGateBlock.gates[k];
         g.paint(painter, r, false, true, null);
     }

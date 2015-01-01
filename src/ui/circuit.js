@@ -18,7 +18,7 @@ Circuit.makeWireLabeller = function (grouping) {
     }
 
     if (typeof grouping === 'number') {
-        need(grouping >= 1);
+        need(grouping >= 1, "grouping >= 1");
         return function(i) {
             var g = Math.floor(i / grouping);
             var e = i % grouping;
@@ -161,7 +161,7 @@ Circuit.prototype.findContinuousColumnX = function(p) {
         return null;
     }
 
-    var s = (CIRCUIT_OP_HORIZONTAL_SPACING + GATE_RADIUS*2);
+    var s = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS*2);
     var left = this.area.x + CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING/2;
     var dg = (p.x - left) / s;
     return dg - 0.5;
@@ -250,7 +250,7 @@ Circuit.prototype.findModificationIndex = function (hand) {
  * @returns {Rect!}
  */
 Circuit.prototype.opRect = function (operationIndex) {
-    var opWidth = GATE_RADIUS * 2;
+    var opWidth = Config.GATE_RADIUS * 2;
     var opSeparation = opWidth + CIRCUIT_OP_HORIZONTAL_SPACING;
     var tweak = 0;
     if (this.compressedColumnIndex !== null && operationIndex === this.compressedColumnIndex) {
@@ -271,7 +271,7 @@ Circuit.prototype.opRect = function (operationIndex) {
 Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
     var op = this.opRect(operationIndex);
     var wire = this.wireRect(wireIndex);
-    return Rect.centeredSquareWithRadius(new Point(op.x + GATE_RADIUS, wire.center().y), GATE_RADIUS);
+    return Rect.centeredSquareWithRadius(new Point(op.x + Config.GATE_RADIUS, wire.center().y), Config.GATE_RADIUS);
 };
 
 /**
@@ -330,7 +330,7 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
             var x1 = c === 0 ? this.area.x + 30 : this.gateRect(r, c - 1).center().x;
             var x2 = c === this.columns.length ? this.wireRect(r).right() : this.gateRect(r, c).center().x;
             var y = this.wireRect(r).center().y;
-            var w = 4;
+            var w = 3;
             var we = 6;
 
             var curve = new Rect(x1, y - w, x2 - x1, w * 2);
@@ -339,10 +339,13 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
             painter.ctx.globalAlpha = Math.min(entanglementMeasures[c][r]/3, 0.65);
             painter.fillRect(curveWrapper, "#F00");
             painter.ctx.globalAlpha = 1;
-            painter.fillRect(curve.bottomHalf().takeTopProportion(1 - p), "#0F8");
-            painter.fillRect(curve.topHalf().takeBottomProportion(p), "#08F");
+            painter.fillRect(curve.takeTopProportion(1 - p), Config.WIRE_COLOR_OFF);
+            painter.fillRect(curve.takeBottomProportion(p), Config.WIRE_COLOR_ON);
 
-            hand.paintToolTipIfHoveringIn(painter, curveWrapper, "P(ON) = " + (p * 100).toFixed(1) + "%");
+            hand.paintToolTipIfHoveringIn(
+                painter,
+                curveWrapper.withX(hand.pos !== null ? hand.pos.x : 0).withW(1),
+                "P(ON) = " + (p * 100).toFixed(1) + "%");
         }
     }
 };
@@ -353,6 +356,7 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
  * @param {!Hand} hand
  */
 Circuit.prototype.paint = function(painter, hand) {
+    painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
     var states = this.scanStates();
 
     // Draw labelled wires
@@ -429,8 +433,8 @@ Circuit.prototype.drawColumnControlWires = function (painter, gateColumn, column
     var y2 = this.wireRect(maxIndex).center().y;
     painter.strokeLine(new Point(x, y1), new Point(x, y2));
 
-    painter.ctx.globalAlpha = 0.6 * p;
-    painter.fillRect(new Rect(x - 3, y1, 6, y2 - y1), "red");
+    painter.ctx.globalAlpha = Config.CONTROL_WIRE_ACTIVE_GLOW_ALPHA * p;
+    painter.fillRect(new Rect(x - 3, y1, 6, y2 - y1), Config.CONTROL_WIRE_ACTIVE_GLOW_COLOR);
     painter.ctx.globalAlpha = 1;
 };
 
@@ -552,7 +556,7 @@ Circuit.prototype.getOutput = function() {
  * @param {!Painter} painter
  */
 Circuit.prototype.drawRightHandPeekGates = function (painter) {
-    var left = this.area.x + this.area.w - GATE_RADIUS*2 - CIRCUIT_OP_RIGHT_SPACING;
+    var left = this.area.x + this.area.w - Config.GATE_RADIUS*2 - CIRCUIT_OP_RIGHT_SPACING;
     var out = this.getOutput();
     for (var i = 0; i < this.numWires; i++) {
         painter.paintProbabilityBox(

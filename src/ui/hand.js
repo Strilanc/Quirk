@@ -32,7 +32,7 @@ Hand.prototype.isHoveringIn = function(rect) {
  */
 Hand.prototype.paintToolTipIfHoveringIn = function(painter, rect, text) {
     if (this.isHoveringIn(rect)) {
-        painter.strokeRect(rect, "red", 3);
+        painter.strokeRect(rect, Config.TOOLTIP_HIGHLIGHT_STROKE_COLOR, 3);
         painter.paintTooltip(text, notNull(this.pos), rect);
     }
 };

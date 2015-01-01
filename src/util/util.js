@@ -19,7 +19,7 @@ var need = function(expression, message) {
  * @template T
  */
 var notNull = function(v) {
-    need(v !== null);
+    need(v !== null, "notNull");
     //noinspection JSValidateTypes
     return v;
 };
@@ -156,7 +156,7 @@ var arrayMax = function(items) {
  * @template T
  */
 var maxBy = function(items, projection) {
-    need(items.length > 0);
+    need(items.length > 0, "maxBy: items.length > 0");
     if (items.length === 1) {
         return items[0];
     }
@@ -182,7 +182,7 @@ var maxBy = function(items, projection) {
  * @returns {!number}
  */
 var lg = function(n) {
-    need(n > 0);
+    need(n > 0, "lg: n > 0");
     return Math.log(n) / Math.log(2);
 };
 
@@ -192,7 +192,7 @@ var lg = function(n) {
  * @returns {!Array.<!int>}
  */
 var maskCandidates = function(mask) {
-    need(mask >= 0);
+    need(mask >= 0, "maskCandidates: mask >= 0");
     var bits = [];
     while (mask > 0) {
         var prevMask = mask;
@@ -229,7 +229,7 @@ var isPowerOf2 = function(i) {
  * @returns {!int}
  */
 var bitSize = function(n) {
-    need(n >= 0);
+    need(n >= 0, "bitSize: n >= 0");
     if (n === 0) {
         return 0;
     }
@@ -266,7 +266,7 @@ var evenPower = function(i) {
  * @returns {!Array.<!int>}
  */
 var range = function(n) {
-    need(n >= 0);
+    need(n >= 0, "range: n >= 0");
     var result = [];
     while (result.length < n) {
         result.push(result.length);
