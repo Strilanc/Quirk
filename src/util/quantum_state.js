@@ -92,10 +92,10 @@ QuantumState.prototype.probability = function (targetMask, conditionMask) {
         return 1;
     }
     var vec = this.columnVector;
-    var p = sum(
-        range(this.columnVector.height())
+    var p = range(this.columnVector.height())
         .filter(function(i) { return ((i & conditionMask) === (targetMask & conditionMask)); })
-        .map(function(i) { return vec.rows[i][0].norm2(); }));
+        .map(function(i) { return vec.rows[i][0].norm2(); })
+        .sum();
     return Math.min(Math.max(p, 0), 1);
 };
 

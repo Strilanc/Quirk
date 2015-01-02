@@ -25,107 +25,6 @@ var notNull = function(v) {
 };
 
 /**
- * Runs an aggregating function over an array, returning the accumulated value at each point (including the seed).
- *
- * @param {!Array.<T>} items
- * @param {S} seed
- * @param {!function(S, T) : S} aggregator
- *
- * @template T, S
- *
- * @returns {!Array.<S>}
- */
-var scan = function(items, seed, aggregator) {
-    var result = [];
-    result.push(seed);
-
-    var state = seed;
-    for (var i = 0; i < items.length; i++) {
-        state = aggregator(state, items[i]);
-        result.push(state);
-    }
-
-    return result;
-};
-
-/**
- * Mutates the given array, pushing items at or past the given index ahead and placing the given item in the new space.
- *
- * @param {!Array<T>} array
- * @param {T} item
- * @param {!int} index
- *
- * @template T
- */
-var insertAt = function(array, item, index) {
-    need(index >= 0 && index <= array.length);
-    array.splice(index, 0, item);
-};
-
-/**
- * Returns a copy of the given array, except the item at the given index is swapped out for the given item.
- *
- * @param {!Array<T>} array
- * @param {T} item
- * @param {!int} index
- *
- * @returns {!Array<T>}
- *
- * @template T
- */
-var withItemReplacedAt = function(array, item, index) {
-    need(index >= 0 && index < array.length);
-    var result = [];
-    for (var i = 0; i < array.length; i++) {
-        result.push(i === index ? item : array[i]);
-    }
-    return result;
-};
-
-/**
- * Returns an array containing the first part of the given array, up to the takeCount'th item.
- *
- * @param {!Array.<T>} array
- * @param {!int} takeCount
- * @returns {Array.<T>}
- *
- * @template T
- */
-var take = function(array, takeCount) {
-    need(takeCount >= 0);
-    return array.slice(0, takeCount);
-};
-
-/**
- * Returns a new array, with the same items as the given array.
- * @param {!Array<T>} array
- * @returns {!Array<T>}
- * @template T
- */
-var copyArray = function(array) {
-    return array.map(function(e) { return e; });
-};
-
-/**
- * @param {!Array<*>} array
- * @returns {!string}
- */
-var arrayToString = function(array) {
-    return "[" + array.join(", ") + "]";
-};
-
-/**
- * Returns an array containing the given item the given number of times.
- * @param {T} item
- * @param {!int} repeatCount
- * @returns {!Array<T>}
- * @template T
- */
-var repeat = function(item, repeatCount) {
-    return range(repeatCount).map(function() { return item; });
-};
-
-/**
  * Returns the base-2 logarithm of the given number.
  *
  * @param {!number} n
@@ -211,31 +110,7 @@ var evenPower = function(i) {
 };
 
 /**
- * Returns an array of the first n natural numbers, in order from 0 to n-1.
- * @param {!int} n
- * @returns {!Array.<!int>}
- */
-var range = function(n) {
-    need(n >= 0, "range: n >= 0");
-    var result = [];
-    while (result.length < n) {
-        result.push(result.length);
-    }
-    return result;
-};
-
-/**
- * Adds up the numbers in the given array and returns the total.
- * The empty array's sum is defined to be 0, to satisfy the invariant that sum(X.concat([s])) = sum(X) + s.
- * @param {!Array.<!number>} array
- * @returns {!number}
- */
-var sum = function(array) {
-    return array.reduce(function(e1, e2) { return e1 + e2; }, 0);
-};
-
-/**
- * Determines if the two given values are strictly equal.
+ * Determines if the two given values are exactly the same, as determined by the `===` operator.
  * @param {*} e1
  * @param {*} e2
  * @return {!boolean}
@@ -245,9 +120,13 @@ var STRICT_EQUALITY = function(e1, e2) {
 };
 
 /**
- * @param {*} e1
- * @param {*} e2
+ * Uses the `isEqualTo` property of the first argument to determine equality with the second argument. Handles the case
+ * where both are null, returning true instead of throwing.
+ *
+ * @param {?T|*} e1
+ * @param {?T|*} e2
  * @returns {!boolean}
+ * @template T
  */
 var CUSTOM_IS_EQUAL_TO_EQUALITY = function(e1, e2) {
     if (e1 === null) {
@@ -287,6 +166,12 @@ var arg2 = function(prototypeFunc1) {
     };
 };
 
+/**
+ * Returns an object's property, or else throws an exception when the object doesn't have that property.
+ * @param {*} object
+ * @param {*} key
+ * @returns {*}
+ */
 var forceGetProperty = function(object, key) {
     if (!object.hasOwnProperty(key)) {
         throw new Error("Missing property: " + key);
@@ -305,14 +190,32 @@ var wrapFuncToPropagateNull = function(func) {
     }
 };
 
+/**
+ * Determines if the given value is a float or int. Note that NaN and Infinity are counted as numbers.
+ *
+ * @param {!number|*} e
+ * @returns {!boolean}
+ */
 var isNumber = function(e) {
     return typeof e === "number";
 };
 
+/**
+ * Determines if the given value is a whole number.
+ *
+ * @param {!int|!number|*} e
+ * @returns {!boolean}
+ */
 var isInt = function(e) {
     return isNumber(e) && e % 1 === 0;
 };
 
+/**
+ * Determines if the given value is a string.
+ *
+ * @param {!int|!number|*} e
+ * @returns {!boolean}
+ */
 var isString = function(e) {
     return typeof e === "string";
 };

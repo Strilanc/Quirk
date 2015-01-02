@@ -25,7 +25,7 @@ GateBlock.prototype.isEqualTo = function(other) {
 };
 
 GateBlock.prototype.toString = function() {
-    return "GateBlock(" + arrayToString(this.gates) + ")";
+    return "GateBlock(" + this.gates.toArrayString() + ")";
 };
 
 /**

@@ -1,5 +1,12 @@
 ArrayUtilTest = TestCase("ArrayUtilTest");
 
+ArrayUtilTest.prototype.testRange = function() {
+    assertThat(range(0)).isEqualTo([]);
+    assertThat(range(1)).isEqualTo([0]);
+    assertThat(range(2)).isEqualTo([0, 1]);
+    assertThat(range(5)).isEqualTo([0, 1, 2, 3, 4]);
+};
+
 ArrayUtilTest.prototype.testFirstMatchElseUndefined = function() {
     assertThat([].firstMatchElseUndefined(function() { throw new Error(); })).isEqualTo(undefined);
 
@@ -26,7 +33,7 @@ ArrayUtilTest.prototype.testMax = function() {
 };
 
 ArrayUtilTest.prototype.testMaxBy = function() {
-    assertThat([1.5].maxBy(function(e) { throw "do no call"; })).isEqualTo(1.5);
+    assertThat([1.5].maxBy(function() { throw "do not call"; })).isEqualTo(1.5);
     assertThat([1, 2, 3, -4.5].maxBy(function(e) { return e*e; })).isEqualTo(-4.5);
     assertThat([1, 2, 3].maxBy(function(e) { return -e; })).isEqualTo(1);
     assertThat([{a: 1, b: 2}, {a: 2, b: 1}].maxBy(function(e) { return e.a; })).isEqualTo({a: 2, b: 1});
@@ -42,7 +49,7 @@ ArrayUtilTest.prototype.testZip = function() {
     assertThat([2, 7, 11].zip([3, 5, 13], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12, 24]);
 };
 
-UtilTest.prototype.testArraysEqualBy = function() {
+ArrayUtilTest.prototype.testArraysEqualBy = function() {
     assertFalse([].isEqualToBy(null, function() { throw "not called"; }));
     assertFalse([].isEqualToBy(undefined, function() { throw "not called"; }));
     assertFalse([].isEqualToBy(0, function() { throw "not called"; }));
@@ -70,4 +77,80 @@ UtilTest.prototype.testArraysEqualBy = function() {
 
     assertTrue([Complex.from(1.5)].isEqualToBy([Complex.from(1.5)], CUSTOM_IS_EQUAL_TO_EQUALITY));
     assertFalse([Complex.from(1.5)].isEqualToBy([Complex.from(1)], CUSTOM_IS_EQUAL_TO_EQUALITY));
+};
+
+ArrayUtilTest.prototype.testSum = function() {
+    assertThat([].sum()).isEqualTo(0);
+    assertThat([2].sum()).isEqualTo(2);
+    assertThat([2, 3.5].sum()).isEqualTo(5.5);
+    assertThat(range(11).sum()).isEqualTo(55);
+};
+
+ArrayUtilTest.prototype.testFlatten = function() {
+    assertThat([].flatten()).isEqualTo([]);
+    assertThat([[]].flatten()).isEqualTo([]);
+    assertThat([[[]]].flatten()).isEqualTo([[]]);
+    assertThat([[1]].flatten()).isEqualTo([1]);
+    assertThat([[1, 2], [3], [], [4, 5]].flatten()).isEqualTo([1, 2, 3, 4, 5]);
+};
+
+ArrayUtilTest.prototype.testToArrayString = function() {
+    assertThat([].toArrayString()).isEqualTo("[]");
+    assertThat([2].toArrayString()).isEqualTo("[2]");
+    assertThat([2, "a"].toArrayString()).isEqualTo("[2, a]");
+};
+
+ArrayUtilTest.prototype.testRepeat = function() {
+    assertThat(repeat("a", 0)).isEqualTo([]);
+    assertThat(repeat("a", 1)).isEqualTo(["a"]);
+    assertThat(repeat("a", 2)).isEqualTo(["a", "a"]);
+    assertThat(repeat("b", 5)).isEqualTo(["b", "b", "b", "b", "b"]);
+};
+
+ArrayUtilTest.prototype.testClone = function() {
+    assertThat([].clone()).isEqualTo([]);
+    assertThat([1, "a"].clone()).isEqualTo([1, "a"]);
+
+    var a = [1, 2, 3];
+    var b = a.clone();
+    assertThat(a).isEqualTo([1, 2, 3]);
+    assertThat(b).isEqualTo([1, 2, 3]);
+
+    b.push([4]);
+    assertThat(a).isEqualTo([1, 2, 3]);
+    assertThat(b).isEqualTo([1, 2, 3, 4]);
+};
+
+ArrayUtilTest.prototype.testScan = function() {
+    assertThat([].scan(2, function() { throw "do not call"; })).isEqualTo([2]);
+
+    assertThat([].scan(11, function(a, e) { return a + e; })).isEqualTo([11]);
+    assertThat([2].scan(11, function(a, e) { return a + e; })).isEqualTo([11, 13]);
+    assertThat([2, 3].scan(11, function(a, e) { return a + e; })).isEqualTo([11, 13, 16]);
+    assertThat([2, 3, 5].scan(11, function(a, e) { return a + e; })).isEqualTo([11, 13, 16, 21]);
+};
+
+ArrayUtilTest.prototype.testInsertAt = function() {
+    var r = [];
+
+    r.insertAt(0, "a");
+    assertThat(r).isEqualTo(["a"]);
+
+    r.insertAt(0, "b");
+    assertThat(r).isEqualTo(["b", "a"]);
+
+    r.insertAt(2, "c");
+    assertThat(r).isEqualTo(["b", "a", "c"]);
+
+    r.insertAt(2, "d");
+    assertThat(r).isEqualTo(["b", "a", "d", "c"]);
+};
+
+ArrayUtilTest.prototype.testWithItemReplacedAtBy = function() {
+    assertThat([1].withItemReplacedAtBy(0, -1)).isEqualTo([-1]);
+
+    var r = ["a", "b", "c"];
+    assertThat(r.withItemReplacedAtBy(0, "d")).isEqualTo(["d", "b", "c"]);
+    assertThat(r.withItemReplacedAtBy(1, "d")).isEqualTo(["a", "d", "c"]);
+    assertThat(r.withItemReplacedAtBy(2, "d")).isEqualTo(["a", "b", "d"]);
 };

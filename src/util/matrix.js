@@ -12,14 +12,14 @@ function Matrix(rows) {
         throw "need(rows.length > 0): " + rows;
     }
 
-    if (!rows.every(function(row) { return row instanceof Array; })) {
+    if (rows.any(function(row) { return !(row instanceof Array); })) {
         throw "need(rows.all(_.length == cols.length)): " + rows;
     }
     var w = rows[0].length;
-    if (w === 0 || !rows.every(function(row) { return row.length === w; })) {
+    if (w === 0 || rows.any(function(row) { return row.length !== w; })) {
         throw "need(rows.map(e -> e.length).single() > 0): " + rows;
     }
-    if (![].concat.apply([], rows).every(function(e) { return e instanceof Complex; })) {
+    if (rows.flatten().any(function(e) { return !(e instanceof Complex); })) {
         throw "need(rows.flatten().all(_ instanceof Complex)): " + rows;
     }
 
@@ -83,7 +83,7 @@ Matrix.parse = function(json) {
     });
 
     var w = complexRows.map(function(e) { return e.length; }).max();
-    if (!complexRows.every(function(e) { return e.length == w; })) {
+    if (complexRows.any(function(e) { return e.length !== w; })) {
         throw new Error("Matrix rows must be the same length.");
     }
 

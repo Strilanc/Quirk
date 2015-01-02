@@ -1,4 +1,36 @@
 /**
+ * @returns {!string}
+ */
+Array.prototype.toArrayString = function() {
+    return "[" + this.join(", ") + "]";
+};
+
+/**
+ * Returns an array containing the given item the given number of times.
+ * @param {T} item
+ * @param {!int} repeatCount
+ * @returns {!Array<T>}
+ * @template T
+ */
+var repeat = function(item, repeatCount) {
+    return range(repeatCount).map(function() { return item; });
+};
+
+/**
+ * Returns an array of the first n natural numbers, in order from 0 to n-1.
+ * @param {!int} n
+ * @returns {!Array.<!int>}
+ */
+var range = function(n) {
+    need(n >= 0, "range: n >= 0");
+    var result = [];
+    while (result.length < n) {
+        result.push(result.length);
+    }
+    return result;
+};
+
+/**
  * Returns the first item in the given array that causes the given predicate to return true.
  *
  * If no items match the predicate, undefined is returned.
@@ -57,7 +89,7 @@ Array.prototype.maxBy = function(projection) {
 
     var curMaxItem = this[0];
     var curMaxScore = projection(this[0]);
-    for (var i = 0; i < this.length; i++) {
+    for (var i = 1; i < this.length; i++) {
         var item = this[i];
         var score = projection(item);
         if (score > curMaxScore) {
@@ -110,4 +142,95 @@ Array.prototype.isEqualToBy = function(otherArray, comparer) {
     return Array.isArray(otherArray) &&
         this.length === otherArray.length &&
         !this.zip(otherArray, comparer).contains(false);
+};
+
+/**
+ * Adds up the numbers in the given array, using the `+` operator, and returns the total.
+ * The empty array's sum is defined to be 0, to satisfy the invariant that sum(X.concat([s])) = sum(X) + s.
+ * @returns {!number}
+ */
+Array.prototype.sum = function() {
+    return this.reduce(function(e1, e2) { return e1 + e2; }, 0);
+};
+
+/**
+ * Determines if any of the items in this array match the given predicate.
+ * @param {!function(T) : !boolean} predicate
+ * @returns {!boolean}
+ * @template T
+ */
+Array.prototype.any = function(predicate) {
+    return !this.every(function(e) { return !predicate(e); });
+};
+
+/**
+ * Flattens this array of arrays into a single-level array with the same items.
+ * @returns {Array.<T>}
+ * @template T
+ */
+Array.prototype.flatten = function() {
+    return [].concat.apply([], this);
+};
+
+/**
+ * Returns a new array, with the same items as the receiving array.
+ * @returns {!Array<T>}
+ * @template T
+ */
+Array.prototype.clone = function() {
+    return this.map(function(e) { return e; });
+};
+
+/**
+ * Runs an aggregating function over the receiving array, returning the accumulated value at each point (including the
+ * seed). For example, [1, 2, 3].scan(add) returns [0, 1, 3, 6].
+ *
+ * @param {S} seed
+ * @param {!function(S, T) : S} aggregator
+ *
+ * @template T, S
+ *
+ * @returns {!Array.<S>}
+ */
+Array.prototype.scan = function(seed, aggregator) {
+    var result = [];
+    result.push(seed);
+
+    var state = seed;
+    this.forEach(function(e) {
+        state = aggregator(state, e);
+        result.push(state);
+    });
+    return result;
+};
+
+/**
+ * Mutates the receiving array, pushing items at or past the given index ahead and placing the given item in the new
+ * space.
+ *
+ * @param {!int} index
+ * @param {T} item
+ *
+ * @template T
+ */
+Array.prototype.insertAt = function(index, item) {
+    need(index >= 0 && index <= this.length, "insertAt: index >= 0 && index <= this.length");
+    this.splice(index, 0, item);
+};
+
+/**
+ * Returns a copy of the receiving array, except the item at the given index is swapped out for the given item.
+ *
+ * @param {!int} index
+ * @param {T} item
+ *
+ * @returns {!Array<T>}
+ *
+ * @template T
+ */
+Array.prototype.withItemReplacedAtBy = function(index, item) {
+    need(index >= 0 && index < this.length, "withItemReplacedAt: index >= 0 && index < this.length");
+    var result = this.clone();
+    result[index] = item;
+    return result;
 };

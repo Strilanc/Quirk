@@ -321,7 +321,7 @@ Inspector.prototype.withImportedCircuit = function(text) {
     }
 
     var gateCols = columns.map(GateColumn.parse);
-    if (!gateCols.every(function(e) { return e.gates.length !== wireCount; })) {
+    if (gateCols.any(function(e) { return e.gates.length !== wireCount; })) {
         throw new Error("Number of gates in circuit columns must match wire count.");
     }
 

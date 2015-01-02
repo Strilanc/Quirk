@@ -104,7 +104,7 @@ AssertionSubject.describe = function(e) {
         return "undefined";
     }
     if (Array.isArray(e)) {
-        return arrayToString(e);
+        return e.toArrayString();
     }
     var result = e.toString();
     if (result === "[object Object]") {

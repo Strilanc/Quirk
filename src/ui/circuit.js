@@ -90,7 +90,7 @@ Circuit.prototype.isEqualTo = function(other) {
 Circuit.prototype.toString = function() {
     return "Circuit(area: " + this.area +
         ", numWires: " + this.numWires +
-        ", columns: " + arrayToString(this.columns) +
+        ", columns: " + this.columns.toArrayString() +
         ", compressedColumnIndex: " + this.compressedColumnIndex + ")";
 };
 
@@ -99,10 +99,11 @@ Circuit.prototype.toString = function() {
  * @returns {!Array.<!QuantumState>}
  */
 Circuit.prototype.scanStates = function() {
-    return scan(
-        this.columns.map(arg1(GateColumn.prototype.matrix)),
-        QuantumState.zero(this.numWires),
-        arg2(QuantumState.prototype.transformedBy));
+    return this.columns.
+        map(arg1(GateColumn.prototype.matrix)).
+        scan(
+            QuantumState.zero(this.numWires),
+            arg2(QuantumState.prototype.transformedBy));
 };
 
 /**
@@ -456,7 +457,7 @@ Circuit.prototype.withOpBeingAdded = function(modificationPoint, hand) {
     }
 
     if (modificationPoint.isInsert) {
-        insertAt(newCols, GateColumn.empty(this.numWires), modificationPoint.col);
+        newCols.insertAt(modificationPoint.col, GateColumn.empty(this.numWires));
         compressedColumnIndex = modificationPoint.col;
     }
 
@@ -500,7 +501,7 @@ Circuit.prototype.tryGrab = function(hand) {
         return {newCircuit: this, newHand: hand};
     }
 
-    var newCol = copyArray(this.columns[c].gates);
+    var newCol = this.columns[c].gates.clone();
     var gate = newCol[r];
     newCol[r] = null;
     var newGateBlock = [gate];
@@ -521,7 +522,7 @@ Circuit.prototype.tryGrab = function(hand) {
         newCircuit: new Circuit(
             this.area,
             this.numWires,
-            withItemReplacedAt(this.columns, new GateColumn(newCol), c),
+            this.columns.withItemReplacedAtBy(c, new GateColumn(newCol)),
             null,
             this.wireLabeller),
         newHand: hand.withHeldGate(new GateBlock(newGateBlock), 0)
@@ -532,9 +533,9 @@ Circuit.prototype.tryGrab = function(hand) {
  * @returns {!boolean}
  */
 Circuit.prototype.hasTimeBasedGates = function () {
-    return !this.columns.every(function (e) {
-        return e.gates.every(function(g) {
-            return g === null || !g.isTimeBased();
+    return this.columns.any(function (e) {
+        return e.gates.any(function(g) {
+            return g !== null && g.isTimeBased();
         });
     });
 };

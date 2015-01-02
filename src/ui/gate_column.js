@@ -59,7 +59,7 @@ GateColumn.prototype.isEqualTo = function (other) {
 };
 
 GateColumn.prototype.toString = function() {
-    return "GateColumn(" + arrayToString(this.gates) + ")";
+    return "GateColumn(" + this.gates.toArrayString() + ")";
 };
 
 /**
