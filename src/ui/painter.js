@@ -402,7 +402,7 @@ Painter.prototype.paintTooltip = function(text, focusPoint, focusRect, fontColor
 
     var ctx = this.ctx;
     var lines = text.split("\n");
-    var w = arrayMax(lines.map(function(e) { return ctx.measureText(e).width; }));
+    var w = lines.map(function(e) { return ctx.measureText(e).width; }).max();
     var h = fontSize * lines.length * 1.3;
 
     var paintRect = new Rect(focusPoint.x, focusRect.y - h, w, h).paddedBy(2);

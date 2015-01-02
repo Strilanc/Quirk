@@ -82,7 +82,7 @@ Circuit.prototype.isEqualTo = function(other) {
     return other instanceof Circuit &&
         this.area.isEqualTo(other.area) &&
         this.numWires === other.numWires &&
-        arraysEqualBy(this.columns, other.columns, CUSTOM_IS_EQUAL_TO_EQUALITY) &&
+        this.columns.isEqualToBy(other.columns, CUSTOM_IS_EQUAL_TO_EQUALITY) &&
         this.compressedColumnIndex === other.compressedColumnIndex &&
         range(this.numWires).every(function(i) { return self.wireLabeller(i) === other.wireLabeller(i); });
 };
@@ -309,11 +309,11 @@ Circuit.prototype.scanPerWireEntanglementMeasure = function() {
         return range(n).map(function(i) {
             var otherWiresMask = (1 << n) - (1 << i) - 1;
             var p = s.probability(1 << i, 1 << i);
-            return Math.log(arrayMax(maskCandidates(otherWiresMask).map(function(e) {
+            return Math.log(maskCandidates(otherWiresMask).map(function(e) {
                 return maxRatio(
                     s.coefficient(e).norm2() * p + 0.001,
                     s.coefficient(e | (1 << i)).norm2() * (1-p) + 0.001);
-            }))) * Math.sqrt(p * (1-p));
+            }).max()) * Math.sqrt(p * (1-p));
         });
     });
 };

@@ -73,14 +73,6 @@ UtilTest.prototype.testRepeat = function() {
     assertThat(repeat("a", 2)).isEqualTo(["a", "a"]);
 };
 
-UtilTest.prototype.testMaxBy = function() {
-    assertThat(maxBy([1.5], function(e) { throw "do no call"; })).isEqualTo(1.5);
-    assertThat(maxBy([1, 2, 3, -4.5], function(e) { return e*e; })).isEqualTo(-4.5);
-    assertThat(maxBy([1, 2, 3], function(e) { return -e; })).isEqualTo(1);
-    assertThat(maxBy([{a: 1, b: 2}, {a: 2, b: 1}], function(e) { return e.a; })).isEqualTo({a: 2, b: 1});
-    assertThat(maxBy([{a: 1, b: 2}, {a: 2, b: 1}], function(e) { return e.b; })).isEqualTo({a: 1, b: 2});
-};
-
 UtilTest.prototype.testLg = function() {
     assertThat(lg(0.25)).isEqualTo(-2);
     assertThat(lg(0.5)).isEqualTo(-1);
@@ -162,40 +154,6 @@ UtilTest.prototype.testSum = function() {
     assertThat(sum([2, 3.5])).isEqualTo(5.5);
 };
 
-UtilTest.prototype.testZip = function() {
-    assertThat(zip([], [], function() { throw "not called"; })).isEqualTo([]);
-    assertThat(zip([2], [3], function(e1, e2) { return e1 + e2; })).isEqualTo([5]);
-    assertThat(zip([2], [3, 5], function(e1, e2) { return e1 + e2; })).isEqualTo([5]);
-    assertThat(zip([2, 7], [3, 5], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12]);
-    assertThat(zip([2, 7, 11], [3, 5], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12]);
-    assertThat(zip([2, 7, 11], [3, 5, 13], function(e1, e2) { return e1 + e2; })).isEqualTo([5, 12, 24]);
-};
-
-UtilTest.prototype.testArraysEqualBy = function() {
-    assertTrue(arraysEqualBy([], [], function() { throw "not called"; }));
-    assertFalse(arraysEqualBy([1], [1, 2], function() { throw "not called"; }));
-
-    var eqMod5 = function(e1, e2) { return e1 % 5 === e2 % 5; };
-    assertTrue(arraysEqualBy([1], [1], eqMod5));
-    assertTrue(arraysEqualBy([1], [11], eqMod5));
-    assertFalse(arraysEqualBy([1], [2], eqMod5));
-
-    assertTrue(arraysEqualBy([1, 2], [1, 2], eqMod5));
-    assertTrue(arraysEqualBy([1, 2], [1, 7], eqMod5));
-    assertFalse(arraysEqualBy([1, 2], [1, 1], eqMod5));
-    assertFalse(arraysEqualBy([1, 2], [2, 1], eqMod5));
-    assertFalse(arraysEqualBy([1, 2], [2, 2], eqMod5));
-
-    assertTrue(arraysEqualBy([Complex.I, Complex.ZERO], [Complex.I, Complex.ZERO], arg2(Complex.prototype.isEqualTo)));
-    assertFalse(arraysEqualBy([Complex.I, Complex.ZERO], [Complex.I, Complex.I], arg2(Complex.prototype.isEqualTo)));
-
-    assertTrue(arraysEqualBy([1.5], [1.5], STRICT_EQUALITY));
-    assertFalse(arraysEqualBy([1.5], [1], STRICT_EQUALITY));
-
-    assertTrue(arraysEqualBy([Complex.from(1.5)], [Complex.from(1.5)], CUSTOM_IS_EQUAL_TO_EQUALITY));
-    assertFalse(arraysEqualBy([Complex.from(1.5)], [Complex.from(1)], CUSTOM_IS_EQUAL_TO_EQUALITY));
-};
-
 UtilTest.prototype.testArg1 = function() {
     assertThat(arg1(Complex.prototype.norm2)(Complex.I)).isEqualTo(1);
 };
@@ -204,4 +162,58 @@ UtilTest.prototype.testArg2 = function() {
     assertTrue(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.I));
     assertFalse(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.ZERO));
     assertTrue(arg2(Complex.prototype.plus)(Complex.I, Complex.I).isEqualTo(new Complex(0, 2)));
+};
+
+UtilTest.prototype.testIsNumber = function() {
+    assertTrue(isNumber(0));
+    assertTrue(isNumber(1));
+    assertTrue(isNumber(-1));
+    assertTrue(isNumber(1.5));
+    assertTrue(isNumber(Math.PI));
+    assertTrue(isNumber(NaN));
+    assertTrue(isNumber(-Infinity));
+    assertTrue(isNumber(Infinity));
+    assertTrue(isNumber(1 << 31));
+    assertTrue(isNumber(~0));
+
+    assertFalse(isNumber(""));
+    assertFalse(isNumber("0"));
+    assertFalse(isNumber({}));
+    assertFalse(isNumber(null));
+    assertFalse(isNumber(undefined));
+    assertFalse(isNumber([]));
+};
+
+UtilTest.prototype.testIsInt = function() {
+    assertTrue(isInt(0));
+    assertTrue(isInt(1));
+    assertTrue(isInt(-1));
+    assertTrue(isInt(1 << 31));
+    assertTrue(isInt(~0));
+
+    assertFalse(isInt(1.5));
+    assertFalse(isInt(Math.PI));
+    assertFalse(isInt(NaN));
+    assertFalse(isInt(-Infinity));
+    assertFalse(isInt(Infinity));
+    assertFalse(isInt(""));
+    assertFalse(isInt("0"));
+    assertFalse(isInt({}));
+    assertFalse(isInt(null));
+    assertFalse(isInt(undefined));
+    assertFalse(isInt([]));
+};
+
+UtilTest.prototype.testIsString = function() {
+    assertTrue(isString(""));
+    assertTrue(isString("0"));
+    assertTrue(isString("abc"));
+
+    assertFalse(isString({}));
+    assertFalse(isString(null));
+    assertFalse(isString(undefined));
+    assertFalse(isString([]));
+    assertFalse(isString(0));
+    assertFalse(isString(NaN));
+    assertFalse(isString(Infinity));
 };

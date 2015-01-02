@@ -12,6 +12,24 @@ function GateColumn(gates) {
 }
 
 /**
+ * @param {object} json
+ * @returns {!GateColumn}
+ * @throws
+ */
+GateColumn.prototype.parse = function(json) {
+    var gates = forceGetProperty(json, "column_gates");
+    if (!Array.isArray(gates)) { throw new Error("column_gates must be an array."); }
+    return gates.map(wrapFuncToPropagateNull(Gate.parse));
+};
+
+/**
+ * @returns {!object}
+ */
+GateColumn.prototype.pack = function() {
+    return { column_gates: this.gates.map(wrapFuncToPropagateNull(arg1(Gate.prototype.pack))) };
+};
+
+/**
  * @returns {!{targetMask: !int, inclusionMask: !int}}
  */
 GateColumn.prototype.masks = function() {
@@ -37,7 +55,7 @@ GateColumn.prototype.isEqualTo = function (other) {
         return true;
     }
     return other instanceof GateColumn &&
-        arraysEqualBy(this.gates, other.gates, STRICT_EQUALITY);
+        this.gates.isEqualToBy(other.gates, STRICT_EQUALITY);
 };
 
 GateColumn.prototype.toString = function() {

@@ -126,56 +126,6 @@ var repeat = function(item, repeatCount) {
 };
 
 /**
- *
- * @param {!Array.<T>} items
- * @returns {T}
- * @template T
- */
-var arrayMax = function(items) {
-    if (items.length === 0) {
-        return -Infinity;
-    }
-
-    var result = items[0];
-    for (var i = 1; i < items.length; i++) {
-        if (result < items[i]) {
-            result = items[i];
-        }
-    }
-    return result;
-};
-
-/**
- * Returns the highest-scoring item in an array, as determined by a scoring function.
- *
- * The array must have at least one item, and the scores must be comparable by the '<' operator.
- *
- * @param {!Array.<T>} items
- * @param {!function(T) : !number} projection
- * @returns {T}
- * @template T
- */
-var maxBy = function(items, projection) {
-    need(items.length > 0, "maxBy: items.length > 0");
-    if (items.length === 1) {
-        return items[0];
-    }
-
-    var curMaxItem = items[0];
-    var curMaxScore = projection(items[0]);
-    for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        var score = projection(item);
-        if (score > curMaxScore) {
-            curMaxItem = item;
-            curMaxScore = score;
-        }
-    }
-
-    return curMaxItem;
-};
-
-/**
  * Returns the base-2 logarithm of the given number.
  *
  * @param {!number} n
@@ -285,42 +235,6 @@ var sum = function(array) {
 };
 
 /**
- * Combines two arrays together by pairing items with the same index and running them through a combining function.
- * If one array is longer than the other, the lonely tail is discarded.
- *
- * @param {!Array.<T1>} array1
- * @param {!Array.<T2>} array2
- * @param {!function(T1, T2) : R} combiner
- *
- * @returns {!Array.<R>}
- *
- * @template T1, T2, R
- */
-var zip = function(array1, array2, combiner) {
-    return range(Math.min(array1.length, array2.length))
-        .map(function(i) { return combiner(array1[i], array2[i]); });
-};
-
-/**
- * Determines if two arrays contain the same items in the same order, as determined by the given equality comparer.
- * Arrays of different lengths are never considered equal.
- *
- * @param {!Array.<T>} array1
- * @param {!Array.<T>} array2
- * @param {!function(T, T) : !boolean} comparer
- *
- * @returns {!boolean}
- *
- * @template T
- */
-var arraysEqualBy = function(array1, array2, comparer) {
-    return Array.isArray(array1) &&
-        Array.isArray(array2) &&
-        array1.length === array2.length &&
-        zip(array1, array2, comparer).indexOf(false) === -1;
-};
-
-/**
  * Determines if the two given values are strictly equal.
  * @param {*} e1
  * @param {*} e2
@@ -371,4 +285,34 @@ var arg2 = function(prototypeFunc1) {
     return function(e1, e2) {
         return prototypeFunc1.bind(e1)(e2);
     };
+};
+
+var forceGetProperty = function(object, key) {
+    if (!object.hasOwnProperty(key)) {
+        throw new Error("Missing property: " + key);
+    }
+    return object[key];
+};
+
+/**
+ * @param {function(T) : R} func
+ * @returns {function(?T) : ?R}
+ * @template {T, R}
+ */
+var wrapFuncToPropagateNull = function(func) {
+    return function(arg) {
+        return arg === null ? null : func(arg);
+    }
+};
+
+var isNumber = function(e) {
+    return typeof e === "number";
+};
+
+var isInt = function(e) {
+    return isNumber(e) && e % 1 === 0;
+};
+
+var isString = function(e) {
+    return typeof e === "string";
 };

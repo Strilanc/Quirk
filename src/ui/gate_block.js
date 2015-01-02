@@ -21,7 +21,7 @@ GateBlock.prototype.isEqualTo = function(other) {
         return true;
     }
     return other instanceof GateBlock &&
-        arraysEqualBy(this.gates, other.gates, STRICT_EQUALITY);
+        this.gates.isEqualToBy(other.gates, STRICT_EQUALITY);
 };
 
 GateBlock.prototype.toString = function() {

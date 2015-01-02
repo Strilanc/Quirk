@@ -183,7 +183,7 @@ QuantumState.prototype.tryFactorAroundMask = function(mask) {
     var self = this;
     var f = function(i) { return self.coefficient(i); };
 
-    var bestCompareIndex = maxBy(range(numStates), function(i) { return f(i).norm2(); });
+    var bestCompareIndex = range(numStates).maxBy(function(i) { return f(i).norm2(); });
     var best_i = bestCompareIndex & mask;
     var best_j = bestCompareIndex & inverseMask;
     var canSeparate = within.every(function(i) {

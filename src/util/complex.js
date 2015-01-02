@@ -12,6 +12,28 @@ function Complex(real, imag) {
 }
 
 /**
+ * @returns {!object}
+ */
+Complex.prototype.pack = function() {
+    return this.real + "+i*" + this.imag;
+};
+
+/**
+ * @param {object} json
+ * @returns {!Complex}
+ * @throws {Error}
+ */
+Complex.parse = function(json) {
+    if (isString(json)) {
+        var s = json.split("+i*");
+        if (s.length === 2) {
+            return new Complex(parseFloat(s[0]), parseFloat(s[1]));
+        }
+    }
+    throw new Error("Not a packed complex string: " + json);
+};
+
+/**
  * The complex number equal to zero.
  * @type {!Complex}
  */
@@ -39,7 +61,7 @@ Complex.prototype.isEqualTo = function (other) {
     if (other instanceof Complex) {
         return this.real === other.real && this.imag === other.imag;
     }
-    if (typeof other === "number") {
+    if (isNumber(other)) {
         return this.real === other && this.imag === 0;
     }
     return false;
@@ -53,7 +75,7 @@ Complex.prototype.isEqualTo = function (other) {
  * @returns {!boolean}
  */
 Complex.prototype.isApproximatelyEqualTo = function (other, epsilon) {
-    if (other instanceof Complex || typeof other === "number") {
+    if (other instanceof Complex || isNumber(other)) {
         return this.minus(Complex.from(other)).norm2() <= epsilon;
     }
     return false;
@@ -68,7 +90,7 @@ Complex.from = function (v) {
     if (v instanceof Complex) {
         return v;
     }
-    if (typeof v === "number") {
+    if (isNumber(v)) {
         return new Complex(v, 0);
     }
     throw "Don't know how create a Complex equal to: " + v;
@@ -83,7 +105,7 @@ Complex.realPartOf = function (v) {
     if (v instanceof Complex) {
         return v.real;
     }
-    if (typeof v === "number") {
+    if (isNumber(v)) {
         return v;
     }
     throw "Don't know how to get real part of: " + v;
@@ -98,7 +120,7 @@ Complex.imagPartOf = function (v) {
     if (v instanceof Complex) {
         return v.imag;
     }
-    if (typeof v === "number") {
+    if (isNumber(v)) {
         return 0;
     }
     throw "Don't know how to get imaginary part of: " + v;

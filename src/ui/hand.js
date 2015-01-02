@@ -17,6 +17,8 @@ function Hand(pos, heldGateBlock, heldGateBlockOffset) {
     this.pos = pos;
 }
 
+Hand.EMPTY = new Hand(null, null, null);
+
 /**
  * @param {!Rect} rect
  * @returns {!boolean}

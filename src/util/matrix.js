@@ -47,7 +47,7 @@ Matrix.prototype.isEqualTo = function (other) {
     }
 
     for (var r = 0; r < h; r++) {
-        if (!arraysEqualBy(this.rows[r], other.rows[r], CUSTOM_IS_EQUAL_TO_EQUALITY)) {
+        if (!this.rows[r].isEqualToBy(other.rows[r], CUSTOM_IS_EQUAL_TO_EQUALITY)) {
             return false;
         }
     }
@@ -66,6 +66,39 @@ Matrix.prototype.isApproximatelyEqualTo = function (other, epsilon) {
         this.width() === other.width() &&
         this.height() === other.height() &&
         this.minus(other).norm2() <= epsilon;
+};
+
+/**
+ * @param {object} json
+ * @returns {!Matrix}
+ * @throws {Error}
+ */
+Matrix.parse = function(json) {
+    var rows = forceGetProperty(json, "rows");
+    if (!Array.isArray(rows)) { throw new Error("rows must be an array"); }
+
+    var complexRows = rows.map(function(row) {
+        if (!Array.isArray(row)) { throw new Error("Each row must be an array."); }
+        return row.map(Complex.parse);
+    });
+
+    var w = complexRows.map(function(e) { return e.length; }).max();
+    if (!complexRows.every(function(e) { return e.length == w; })) {
+        throw new Error("Matrix rows must be the same length.");
+    }
+
+    return new Matrix(complexRows);
+};
+
+/**
+ * @returns {!object}
+ */
+Matrix.prototype.pack = function() {
+    return {rows: this.rows.map(function(row) {
+        return row.map(function(cell) {
+            return cell.pack();
+        });
+    })}
 };
 
 /**

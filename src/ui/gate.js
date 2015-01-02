@@ -712,6 +712,36 @@ Gate.GATE_SET = [
 ];
 
 /**
+ *
+ * @param {object} json
+ * @returns {!Gate}
+ * @throws {Error}
+ */
+Gate.parseGate = function(json) {
+    var symbol = forceGetProperty(json, "symbol");
+    var matrix = forceGetProperty(json, "matrix");
+    var matrixVaries = matrix == "[varies]";
+
+    var match = Gate.GATE_SET.firstMatchElseUndefined(function(g) {
+        return g.symbol === symbol && (matrixVaries || g.matrix.isEqualTo(matrix));
+    });
+    if (matrixVaries) {
+        throw new Error("Don't understand the non-constant gate " + symbol);
+    }
+    return match || new Gate(symbol, matrix, symbol, "An imported gate.");
+};
+
+/**
+ * @returns {object}
+ */
+Gate.prototype.pack = function() {
+    return {
+        symbol: this.symbol,
+        matrix: this.isTimeBased() ? "[varies]" : this.matrix.pack()
+    };
+};
+
+/**
  * @param {!Painter} painter
  * @param {!Rect} areaRect
  * @param {!boolean} isInToolbox

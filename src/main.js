@@ -1,8 +1,3 @@
-//noinspection JSUnusedGlobalSymbols
-var print = function(s) {
-    $(document.getElementById("debugOutput")).val(s);
-};
-
 //noinspection FunctionTooLongJS
 var main = function() {
     var possibleCanvas = document.getElementById("drawCanvas");
@@ -72,6 +67,7 @@ var main = function() {
             return;
         }
         inspector = newInspector;
+        $(document.getElementById("exportTextBox")).val(inspector.exportCircuit());
         redraw();
     };
 
