@@ -18,7 +18,7 @@ Circuit.makeWireLabeller = function (grouping) {
     }
 
     if (typeof grouping === 'number') {
-        need(grouping >= 1, "grouping >= 1");
+        need(grouping >= 1, "grouping >= 1", arguments);
         return function(i) {
             var g = Math.floor(i / grouping);
             var e = i % grouping;
@@ -64,9 +64,9 @@ Circuit.DEFAULT_WIRE_LABELLER = Circuit.makeWireLabeller(1);
  * @constructor
  */
 function Circuit(area, numWires, columns, compressedColumnIndex, wireLabeller) {
-    need(numWires >= 0, "numWires >= 0");
-    need(columns.every(function(e) { return e instanceof GateColumn; }), "columns not columns");
-    need(columns.every(function(e) { return e.gates.length === numWires; }), "columns of correct length");
+    need(numWires >= 0, "numWires >= 0", arguments);
+    need(columns.every(function(e) { return e instanceof GateColumn; }), "columns not columns", arguments);
+    need(columns.every(function(e) { return e.gates.length === numWires; }), "columns of correct length", arguments);
     this.area = area;
     this.numWires = numWires;
     this.columns = columns;
@@ -128,7 +128,7 @@ Circuit.prototype.getWireSpacing = function() {
  * @returns {!Rect}
  */
 Circuit.prototype.wireRect = function (wireIndex) {
-    need(wireIndex >= 0 && wireIndex < this.numWires, "wireIndex out of range");
+    need(wireIndex >= 0 && wireIndex < this.numWires, "wireIndex out of range", arguments);
     var wireHeight = this.getWireSpacing();
     return this.area.skipTop(wireHeight * wireIndex).takeTop(wireHeight);
 };

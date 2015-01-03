@@ -14,8 +14,8 @@ function Complex(real, imag) {
 /**
  * @returns {!object}
  */
-Complex.prototype.pack = function() {
-    return this.real + "+i*" + this.imag;
+Complex.prototype.toJson = function() {
+    return this.toString();
 };
 
 /**
@@ -23,12 +23,10 @@ Complex.prototype.pack = function() {
  * @returns {!Complex}
  * @throws {Error}
  */
-Complex.parse = function(json) {
+Complex.fromJson = function(json) {
     if (isString(json)) {
-        var s = json.split("+i*");
-        if (s.length === 2) {
-            return new Complex(parseFloat(s[0]), parseFloat(s[1]));
-        }
+        //noinspection JSCheckFunctionSignatures
+        return Complex.parse(json);
     }
     throw new Error("Not a packed complex string: " + json);
 };
@@ -133,40 +131,8 @@ Complex.imagPartOf = function (v) {
 Complex.prototype.toString = function () {
     var epsilon = 0.00001;
 
-    var radicalToString = function(v) {
-        var matches = [
-            [1, "1"],
-            [Math.sqrt(0.5), "√½"],
-            [0.5, "½"],
-            [Math.sqrt(0.5)/2, "½√½"],
-            [0.25, "¼"],
-            [Math.sqrt(0.5)/4, "¼√½"],
-            [0.125, "⅛"],
-            [Math.sqrt(0.5)/8, "⅛√½"]
-        ];
-        for (var i = 0; i < matches.length; i++) {
-            if (Math.abs(Math.abs(v) - matches[i][0]) < epsilon) {
-                return (v < 0 ? "-" : "") + matches[i][1];
-            }
-        }
-        for (var n = 1; n < 16; n++) {
-            for (var d = 2; d < 16; d++) {
-                if (n/d % 1 === 0) {
-                    continue;
-                }
-                if (Math.abs(Math.abs(v) - n/d) < epsilon) {
-                    return (v < 0 ? "-" : "") + n + "/" + d;
-                } else if (Math.abs(Math.abs(v) - Math.sqrt(n/d)) < epsilon) {
-                    return (v < 0 ? "-" : "") + "√" + n + "/" + d;
-                }
-            }
-        }
-        if (Math.abs(v).toString().length > 4) { return v.toFixed(2); }
-        return v.toString();
-    };
-
     if (Math.abs(this.imag) < epsilon) {
-        return radicalToString(this.real);
+        return floatToCompactString(this.real);
     }
     if (Math.abs(this.real) < epsilon) {
         if (Math.abs(this.imag - 1) < epsilon) {
@@ -175,11 +141,46 @@ Complex.prototype.toString = function () {
         if (Math.abs(this.imag + 1) < epsilon) {
             return "-i";
         }
-        return radicalToString(this.imag) + "i";
+        return floatToCompactString(this.imag) + "i";
     }
     var separator = this.imag > 0 ? "+" : "-";
-    var imagFactor = Math.abs(Math.abs(this.imag) - 1) < epsilon ? "" : radicalToString(Math.abs(this.imag));
-    return radicalToString(this.real) + separator + imagFactor + "i";
+    var imagFactor = Math.abs(Math.abs(this.imag) - 1) < epsilon ? "" : floatToCompactString(Math.abs(this.imag));
+    return floatToCompactString(this.real) + separator + imagFactor + "i";
+};
+
+/**
+ * Parses a complex number from some text.
+ * @param {!string} text
+ * @returns {!Complex}
+ */
+Complex.parse = function(text) {
+    var sums = text.split("+");
+    var total = Complex.ZERO;
+    for (var i = 0; i < sums.length; i++) {
+        var difs = sums[i].replace("e-", "e_minus").split("-");
+
+        for (var j = 0; j < difs.length; j++) {
+            var dif = difs[j].replace("e_minus", "e-");
+            if (j === 0 && dif === "") {
+                continue;
+            }
+
+            var isImaginaryPart = dif[dif.length - 1] === "i";
+            if (isImaginaryPart) {
+                dif = dif.slice(0, dif.length - 1);
+            }
+
+            var val = dif === "" ? 1 : parseFloatFromCompactString(dif);
+            if (isNaN(val)) {
+                throw "Not a float: '" + dif + "'";
+            }
+            var com = Complex.from(val).
+                times(isImaginaryPart ? Complex.I : 1).
+                times(j === 0 ? 1 : -1);
+            total = total.plus(com);
+        }
+    }
+    return total;
 };
 
 /**

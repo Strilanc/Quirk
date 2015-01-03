@@ -154,3 +154,33 @@ ArrayUtilTest.prototype.testWithItemReplacedAtBy = function() {
     assertThat(r.withItemReplacedAtBy(1, "d")).isEqualTo(["a", "d", "c"]);
     assertThat(r.withItemReplacedAtBy(2, "d")).isEqualTo(["a", "b", "d"]);
 };
+
+ArrayUtilTest.prototype.testDistinctBy = function() {
+    assertThat([].distinctBy(function() { throw "do not call"; })).isEqualTo([]);
+    assertThat(["b"].distinctBy(function() { throw "do not call"; })).isEqualTo(["b"]);
+
+    assertThat([1, 2].distinctBy(function() { return 0; })).isEqualTo([1]);
+    assertThat([1, 2].distinctBy(function(e) { return e % 2; })).isEqualTo([1, 2]);
+    assertThat([0, 2].distinctBy(function(e) { return e % 2; })).isEqualTo([0]);
+    assertThat([1, 2, 3].distinctBy(function(e) { return e % 2; })).isEqualTo([1, 2]);
+
+    assertThat([2, 3, 5, 7, 11, 13, 17, 19].distinctBy(function(e) { return e % 5; })).isEqualTo([2, 3, 5, 11, 19]);
+    assertThat(range(10).distinctBy(function(e) { return e % 5; })).isEqualTo(range(5));
+};
+
+ArrayUtilTest.prototype.testDistinct = function() {
+    assertThat([].distinct()).isEqualTo([]);
+    assertThat(["a"].distinct()).isEqualTo(["a"]);
+    assertThat(["a", "a"].distinct()).isEqualTo(["a"]);
+    assertThat(["a", "b"].distinct()).isEqualTo(["a", "b"]);
+
+    assertThat(["a", 1, "b", 2, 3, 2].distinct()).isEqualTo(["a", 1, "b", 2, 3]);
+    assertThat(range(10).distinct()).isEqualTo(range(10));
+};
+
+ArrayUtilTest.prototype.testSingleElseUndefined = function() {
+    assertThat([].singleElseUndefined()).isEqualTo(undefined);
+    assertThat(["a"].singleElseUndefined()).isEqualTo("a");
+    assertThat(["a", "b"].singleElseUndefined()).isEqualTo(undefined);
+    assertThat(range(10).singleElseUndefined()).isEqualTo(undefined);
+};

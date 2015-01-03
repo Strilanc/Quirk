@@ -62,6 +62,22 @@ MatrixTest.prototype.testToString = function() {
         isEqualTo("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}");
 };
 
+MatrixTest.prototype.testParse = function() {
+    assertThat(Matrix.parse("{{1}}")).isEqualTo(
+        Matrix.square([1]));
+    assertThat(Matrix.parse("{{i}}")).isEqualTo(
+        Matrix.square([Complex.I]));
+    assertThat(Matrix.parse("{{√2}}")).isEqualTo(
+        Matrix.square([Math.sqrt(2)]));
+
+    assertThat(Matrix.parse("{{½-½i, 5}, {-i, 0}}")).isEqualTo(
+        Matrix.square([new Complex(0.5, -0.5), 5, new Complex(0, -1), 0]));
+    assertThat(Matrix.parse("{{1, 2, i}}")).isEqualTo(
+        Matrix.row([1, 2, Complex.I]));
+    assertThat(Matrix.parse("{{1}, {2}, {i}}")).isEqualTo(
+        Matrix.col([1, 2, Complex.I]));
+};
+
 MatrixTest.prototype.testGenerate = function() {
     assertThat(Matrix.generate(3, 2, function(r, c) { return r + 10* c; }).toString()).
         isEqualTo("{{0, 10, 20}, {1, 11, 21}}");

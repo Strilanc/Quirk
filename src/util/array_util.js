@@ -234,3 +234,47 @@ Array.prototype.withItemReplacedAtBy = function(index, item) {
     result[index] = item;
     return result;
 };
+
+/**
+ * Returns an array with the same items, except later items with the same key as earlier items get skipped.
+ *
+ * @param {!function(T) : K} keySelector Must return values of a type that can be indexed (e.g. ints or strings).
+ * @returns {!Array.<T>}
+ * @template T, K
+ */
+Array.prototype.distinctBy = function(keySelector) {
+    if (this.length <= 1) {
+        return this.clone();
+    }
+
+    var keySet = {};
+    return this.filter(function(e) {
+        var key = keySelector(e);
+        if (keySet.hasOwnProperty(key)) {
+            return false;
+        }
+        keySet[key] = true;
+        return true;
+    });
+};
+
+/**
+ * Returns an array with the same items, except duplicate items are omitted. The array items must be usable as property
+ * keys.
+ *
+ * @returns {!Array.<T>}
+ * @template T
+ */
+Array.prototype.distinct = function() {
+    return this.distinctBy(function(e) { return e; });
+};
+
+/**
+ * Returns the single item in the receiving array, or else returns undefined.
+ *
+ * @returns {T}
+ * @template T
+ */
+Array.prototype.singleElseUndefined = function() {
+    return this.length === 1 ? this[0] : undefined;
+};

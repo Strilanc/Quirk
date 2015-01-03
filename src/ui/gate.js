@@ -72,18 +72,18 @@ function GateDrawParams(isInToolbox, isHighlighted, rect, gate, circuitContext) 
 
 /**
  * @param {!GateColumn} gateColumn
- * @param {!int} rowIndex
+ * @param {!int} wireIndex
  * @param {!QuantumState} state
  *
  * @property {!GateColumn} gateColumn
- * @property {!int} rowIndex
+ * @property {!int} wireIndex
  * @property {!QuantumState} state
  *
  * @constructor
  */
-function CircuitContext(gateColumn, rowIndex, state) {
+function CircuitContext(gateColumn, wireIndex, state) {
     this.gateColumn = gateColumn;
-    this.rowIndex = rowIndex;
+    this.wireIndex = wireIndex;
     this.state = state;
 }
 
@@ -186,7 +186,7 @@ Gate.PEEK_SYMBOL_DRAWER = function(painter, params) {
 
     var p = measureGateColumnProbabilityOn(
         params.circuitContext.gateColumn,
-        params.circuitContext.rowIndex,
+        params.circuitContext.wireIndex,
         params.circuitContext.state);
     if (p.canDiffer) {
         painter.paintConditionalProbabilityBox(
@@ -633,9 +633,11 @@ Gate.SILLY_GATES = [
  * @returns {!Gate}
  */
 Gate.fromTargetedRotation = function(p, fractionLabel, fractionSymbol) {
-    need(p >= -1 && p <= 1);
+    need(p >= -1 && p <= 1, arguments);
     var c = Math.sqrt(1 - Math.abs(p));
     var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
+    c = roundToNearbyFractionOrRoot(c, 0.00000000001);
+    s = roundToNearbyFractionOrRoot(s, 0.00000000001);
     return new Gate(
         "∠" + (fractionSymbol || fractionLabel),
         Matrix.square([c, -s, s, c]),
@@ -734,10 +736,10 @@ Gate.parseGate = function(json) {
 /**
  * @returns {object}
  */
-Gate.prototype.pack = function() {
+Gate.prototype.toJson = function() {
     return {
         symbol: this.symbol,
-        matrix: this.isTimeBased() ? "[varies]" : this.matrix.pack()
+        matrix: this.isTimeBased() ? "[varies]" : this.matrix.toJson()
     };
 };
 

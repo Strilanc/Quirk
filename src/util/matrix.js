@@ -5,23 +5,12 @@
  * @class
  */
 function Matrix(rows) {
-    if (!(rows instanceof Array)) {
-        throw "need(rows instanceof Array): " + rows;
-    }
-    if (rows.length === 0) {
-        throw "need(rows.length > 0): " + rows;
-    }
+    need(Array.isArray(rows) && rows.every(Array.isArray), "array rows", arguments);
+    need(rows.length > 0, "non-zero height", arguments);
 
-    if (rows.any(function(row) { return !(row instanceof Array); })) {
-        throw "need(rows.all(_.length == cols.length)): " + rows;
-    }
-    var w = rows[0].length;
-    if (w === 0 || rows.any(function(row) { return row.length !== w; })) {
-        throw "need(rows.map(e -> e.length).single() > 0): " + rows;
-    }
-    if (rows.flatten().any(function(e) { return !(e instanceof Complex); })) {
-        throw "need(rows.flatten().all(_ instanceof Complex)): " + rows;
-    }
+    var w = rows.map(function(e) { return e.length; }).distinct().singleElseUndefined();
+    need(w !== undefined && w > 0, "consistent non-zero width", arguments);
+    need(rows.flatten().every(function(e) { return e instanceof Complex; }), "complex entries", arguments);
 
     this.rows = rows;
 }
@@ -36,23 +25,11 @@ Matrix.prototype.isEqualTo = function (other) {
     if (this === other) {
         return true;
     }
-    if (!(other instanceof Matrix)) {
-        return false;
-    }
 
-    var w = this.width();
-    var h = other.height();
-    if (other.width() !== w || other.height() !== h) {
-        return false;
-    }
-
-    for (var r = 0; r < h; r++) {
-        if (!this.rows[r].isEqualToBy(other.rows[r], CUSTOM_IS_EQUAL_TO_EQUALITY)) {
-            return false;
-        }
-    }
-
-    return true;
+    return other instanceof Matrix &&
+        this.rows.isEqualToBy(other.rows, function(thisRow, otherRow) {
+            return thisRow.isEqualToBy(otherRow, CUSTOM_IS_EQUAL_TO_EQUALITY);
+        });
 };
 
 /**
@@ -73,32 +50,19 @@ Matrix.prototype.isApproximatelyEqualTo = function (other, epsilon) {
  * @returns {!Matrix}
  * @throws {Error}
  */
-Matrix.parse = function(json) {
-    var rows = forceGetProperty(json, "rows");
-    if (!Array.isArray(rows)) { throw new Error("rows must be an array"); }
-
-    var complexRows = rows.map(function(row) {
-        if (!Array.isArray(row)) { throw new Error("Each row must be an array."); }
-        return row.map(Complex.parse);
-    });
-
-    var w = complexRows.map(function(e) { return e.length; }).max();
-    if (complexRows.any(function(e) { return e.length !== w; })) {
-        throw new Error("Matrix rows must be the same length.");
+Matrix.fromJson = function(json) {
+    if (!isString(json)) {
+        throw new Error("Not a packed matrix string: " + json);
     }
-
-    return new Matrix(complexRows);
+    //noinspection JSCheckFunctionSignatures
+    return this.parse(json);
 };
 
 /**
  * @returns {!object}
  */
-Matrix.prototype.pack = function() {
-    return {rows: this.rows.map(function(row) {
-        return row.map(function(cell) {
-            return cell.pack();
-        });
-    })}
+Matrix.prototype.toJson = function() {
+    return this.toString();
 };
 
 /**
@@ -114,6 +78,24 @@ Matrix.prototype.toString = function () {
         return rowData.join(", ");
     }).join("}, {");
     return "{{" + data + "}}";
+};
+
+/**
+ * @param {!string} text
+ * @returns {!Matrix}
+ * @throws
+ */
+Matrix.parse = function(text) {
+    text = text.replace(/\s/g, "");
+
+    if (text.length < 4 || text.substr(0, 2) !== "{{" || text.substr(text.length - 2, 2) !== "}}") {
+        throw new Error("Not surrounded by {{}}.");
+    }
+
+    // Some kind of recursive descent parser would be a better idea, but here we are.
+    return new Matrix(text.substr(2, text.length - 4).split("},{").map(function(row) {
+        return row.split(",").map(Complex.parse);
+    }));
 };
 
 /**
@@ -143,13 +125,10 @@ Matrix.generate = function (width, height, coefficientRowColGenerator) {
  * @returns {!Matrix}
  */
 Matrix.square = function (coefs) {
-    if (coefs instanceof Array) {
-        var n = Math.round(Math.sqrt(coefs.length));
-        if (n * n !== coefs.length) { throw "Not square: " + coefs; }
-        return Matrix.generate(n, n, function(r, c) { return coefs[r * n + c]; });
-    }
-
-    throw "Don't know how to convert value into matrix: " + coefs;
+    need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
+    var n = Math.round(Math.sqrt(coefs.length));
+    need(n * n === coefs.length, "Matrix.square: non-square number of arguments");
+    return Matrix.generate(n, n, function(r, c) { return coefs[r * n + c]; });
 };
 
 /**
@@ -158,6 +137,7 @@ Matrix.square = function (coefs) {
  * @returns {!Matrix}
  */
 Matrix.col = function (coefs) {
+    need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
     return Matrix.generate(1, coefs.length, function(r) { return coefs[r]; });
 };
 
@@ -167,6 +147,7 @@ Matrix.col = function (coefs) {
  * @returns {!Matrix}
  */
 Matrix.row = function (coefs) {
+    need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
     return Matrix.generate(coefs.length, 1, function(r, c) { return coefs[c]; });
 };
 
@@ -231,7 +212,7 @@ Matrix.prototype.plus = function (other) {
     var m = this;
     var w = this.width();
     var h = this.height();
-    if (other.width() !== w || other.height() !== h) { throw "Incompatible matrices: " + this + " + " + other; }
+    need(other.width() === w && other.height() === h, "Matrix.plus: compatible sizes");
     return Matrix.generate(w, h, function(r, c) {
         return m.rows[r][c].plus(other.rows[r][c]);
     });
@@ -246,7 +227,7 @@ Matrix.prototype.minus = function (other) {
     var m = this;
     var w = this.width();
     var h = this.height();
-    if (other.width() !== w || other.height() !== h) { throw "Incompatible matrices: " + this + " - " + other; }
+    need(other.width() === w && other.height() === h, "Matrix.minus: compatible sizes");
     return Matrix.generate(w, h, function(r, c) {
         return m.rows[r][c].minus(other.rows[r][c]);
     });
@@ -262,7 +243,7 @@ Matrix.prototype.times = function (other) {
     var w = other.width();
     var h = this.height();
     var n = this.width();
-    if (other.height() !== n) { throw "Incompatible matrices: " + this + " * " + other; }
+    need(other.height() === n, "Matrix.times: compatible sizes");
     return Matrix.generate(w, h, function(r, c) {
         var t = Complex.ZERO;
         for (var i = 0; i < n; i++) {
@@ -371,7 +352,22 @@ Matrix.fromPauliRotation = function (x, y, z) {
     var ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
     var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
 
-    return Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
+    var m = Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
+    var expectNiceValuesCorrection = function(v) { return roundToNearbyFractionOrRoot(v, 0.0000000000001);};
+    return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
+};
+
+/**
+ * @param {!function(!number) : !number} func
+ * @returns {!Matrix}
+ * @private
+ */
+Matrix.prototype.transformRealAndImagComponentsWith = function(func) {
+    return new Matrix(this.rows.map(function(row) {
+        return row.map(function(cell) {
+            return new Complex(func(cell.real), func(cell.imag));
+        });
+    }));
 };
 
 /**

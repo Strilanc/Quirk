@@ -16,17 +16,17 @@ function GateColumn(gates) {
  * @returns {!GateColumn}
  * @throws
  */
-GateColumn.prototype.parse = function(json) {
+GateColumn.prototype.fromJson = function(json) {
     var gates = forceGetProperty(json, "column_gates");
     if (!Array.isArray(gates)) { throw new Error("column_gates must be an array."); }
-    return gates.map(wrapFuncToPropagateNull(Gate.parse));
+    return gates.map(wrapFuncToPropagateNull(Gate.fromJson));
 };
 
 /**
  * @returns {!object}
  */
-GateColumn.prototype.pack = function() {
-    return { column_gates: this.gates.map(wrapFuncToPropagateNull(arg1(Gate.prototype.pack))) };
+GateColumn.prototype.toJson = function() {
+    return { column_gates: this.gates.map(wrapFuncToPropagateNull(arg1(Gate.prototype.toJson))) };
 };
 
 /**

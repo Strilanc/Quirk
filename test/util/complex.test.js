@@ -73,6 +73,26 @@ ComplexTest.prototype.testToString = function() {
     assertThat(new Complex(2, 2).toString()).isEqualTo("2+2i");
 
     assertThat(new Complex(2, -3).toString()).isEqualTo("2-3i");
+    assertThat(new Complex(Math.sqrt(1/2), -1/3).toString()).isEqualTo("√½-⅓i");
+};
+
+ComplexTest.prototype.testParse = function() {
+    assertThat(Complex.parse("0")).isEqualTo(new Complex(0, 0));
+    assertThat(Complex.parse("1")).isEqualTo(new Complex(1, 0));
+    assertThat(Complex.parse("-1")).isEqualTo(new Complex(-1, 0));
+    assertThat(Complex.parse("i")).isEqualTo(new Complex(0, 1));
+    assertThat(Complex.parse("-i")).isEqualTo(new Complex(0, -1));
+    assertThat(Complex.parse("2")).isEqualTo(new Complex(2, 0));
+    assertThat(Complex.parse("2i")).isEqualTo(new Complex(0, 2));
+    assertThat(Complex.parse("-2i")).isEqualTo(new Complex(0, -2));
+
+    assertThat(Complex.parse("3-2i")).isEqualTo(new Complex(3, -2));
+    assertThat(Complex.parse("1-i")).isEqualTo(new Complex(1, -1));
+    assertThat(Complex.parse("1+i")).isEqualTo(new Complex(1, 1));
+    assertThat(Complex.parse("-5+2i")).isEqualTo(new Complex(-5, 2));
+    assertThat(Complex.parse("-5-2i")).isEqualTo(new Complex(-5, -2));
+
+    assertThat(Complex.parse("√2-⅓i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
 };
 
 ComplexTest.prototype.testNorm2 = function() {

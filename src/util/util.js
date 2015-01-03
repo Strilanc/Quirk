@@ -3,10 +3,16 @@
  *
  * @param {!boolean|*} expression
  * @param {=string} message
+ * @param {=Array} args
  */
-var need = function(expression, message) {
+var need = function(expression, message, args) {
     if (expression !== true) {
-        throw "Precondition failed: " + (message || "(no message provided)");
+        var msg = "Precondition failed" +
+            "\n\nMessage: " + (message === undefined ? "(not provided)" : message) +
+            "\n\nStack Trace: " + new Error("").stack.replace(/\(http:.+\/src\//g, '(') +
+            "\n\nArgs: " + (args === undefined ? "(not provided)" : Array.prototype.slice.call(args).toArrayString());
+        console.log(msg);
+        throw new Error(msg);
     }
 };
 
@@ -218,4 +224,118 @@ var isInt = function(e) {
  */
 var isString = function(e) {
     return typeof e === "string";
+};
+
+/**
+ * @type {!Array.<!{char: !string, expanded: !string, value: !number}>}
+ */
+var UNICODE_FRACTIONS = [
+    {char: "½", expanded: "1/2", value: 1/2},
+    {char: "¼", expanded: "1/4", value: 1/4},
+    {char: "¾", expanded: "3/4", value: 3/4},
+    {char: "⅓", expanded: "1/3", value: 1/3},
+    {char: "⅔", expanded: "2/3", value: 2/3},
+    {char: "⅕", expanded: "1/5", value: 1/5},
+    {char: "⅖", expanded: "2/5", value: 2/5},
+    {char: "⅗", expanded: "3/5", value: 3/5},
+    {char: "⅘", expanded: "4/5", value: 4/5},
+    {char: "⅙", expanded: "1/6", value: 1/6},
+    {char: "⅚", expanded: "5/6", value: 5/6},
+    {char: "⅐", expanded: "1/7", value: 1/7},
+    {char: "⅛", expanded: "1/8", value: 1/8},
+    {char: "⅜", expanded: "3/8", value: 3/8},
+    {char: "⅝", expanded: "5/8", value: 5/8},
+    {char: "⅞", expanded: "7/8", value: 7/8},
+    {char: "⅑", expanded: "1/9", value: 1/9},
+    {char: "⅒", expanded: "1/10",  value:1/10}
+];
+
+/**
+ * Corrects a value to a nearby simple fraction or root thereof, such as sqrt(1/2).
+ * @param {!number} value
+ * @param {!number} epsilon
+ */
+var roundToNearbyFractionOrRoot = function(value, epsilon) {
+    if (value < 0) {
+        return -roundToNearbyFractionOrRoot(-value, epsilon);
+    }
+
+    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
+        return Math.abs(e.value - value) <= epsilon;
+    });
+    if (fraction !== undefined) {
+        return fraction.value;
+    }
+
+    var rootFraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
+        return Math.abs(Math.sqrt(e.value) - value) <= epsilon;
+    });
+    if (rootFraction !== undefined) {
+        return Math.sqrt(rootFraction.value);
+    }
+
+    return value;
+};
+
+/**
+ * Returns a string representation of a float, taking advantage of unicode fractions and square roots.
+ *
+ * @param {!number} value The value to represent as a string.
+ * @param {=number} epsilon The maximum error introduced by using an expression.
+ * @param {=number} digits The number of digits to use if no expression matches.
+ * @returns {!string}
+ */
+var floatToCompactString = function(value, epsilon, digits) {
+    epsilon = epsilon || 0;
+
+    if (value < 0) {
+        return "-" + floatToCompactString(-value, epsilon);
+    }
+
+    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
+        return Math.abs(e.value - value) <= epsilon;
+    });
+    if (fraction !== undefined) {
+        return fraction.char;
+    }
+
+    var rootFraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
+        return Math.abs(Math.sqrt(e.value) - value) <= epsilon;
+    });
+    if (rootFraction !== undefined) {
+        return "√" + rootFraction.char;
+    }
+
+    if (value % 1 !== 0 && digits !== undefined) {
+        return value.toFixed(digits);
+    }
+
+    return value.toString();
+};
+
+/**
+ * Parses the output of floatToCompactString back into a float.
+ * @param {!string} text
+ * @throws
+ * @returns {!number}
+ */
+var parseFloatFromCompactString = function(text) {
+    if (text.length === 0) {
+        throw new Error("Not a float");
+    }
+    if (text[0] === "-") {
+        return -parseFloatFromCompactString(text.substr(1));
+    }
+    if (text[0] === "√") {
+        return Math.sqrt(parseFloatFromCompactString(text.substr(1)));
+    }
+
+    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
+        return e.char === text;
+    });
+    if (fraction !== undefined) {
+        return fraction.value;
+    }
+
+    return parseFloat(text);
 };

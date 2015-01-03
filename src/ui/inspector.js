@@ -300,7 +300,7 @@ Inspector.prototype.exportCircuit = function() {
     return JSON.stringify({
         custom_gates: [],
         wire_count: this.circuit.numWires,
-        circuit_columns: this.circuit.columns.map(arg1(GateColumn.prototype.pack))
+        circuit_columns: this.circuit.columns.map(arg1(GateColumn.prototype.toJson))
     }, null, '  ');
 };
 
@@ -309,7 +309,7 @@ Inspector.prototype.exportCircuit = function() {
  * @returns {!Inspector}
  */
 Inspector.prototype.withImportedCircuit = function(text) {
-    var circuit = JSON.parse(text);
+    var circuit = JSON.fromJson(text);
     var wireCount = forceGetProperty(circuit, "wire_count");
     if (!isInt(wireCount) || wireCount < 1 || wireCount > Config.MAX_WIRE_COUNT) {
         throw new Error("wire_count must be an int between 1 and " + Config.MAX_WIRE_COUNT);
@@ -320,7 +320,7 @@ Inspector.prototype.withImportedCircuit = function(text) {
         throw new Error("circuit_columns must be an array.");
     }
 
-    var gateCols = columns.map(GateColumn.parse);
+    var gateCols = columns.map(GateColumn.fromJson);
     if (gateCols.any(function(e) { return e.gates.length !== wireCount; })) {
         throw new Error("Number of gates in circuit columns must match wire count.");
     }
