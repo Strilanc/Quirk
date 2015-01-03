@@ -9,7 +9,7 @@ var need = function(expression, message, args) {
     if (expression !== true) {
         var msg = "Precondition failed" +
             "\n\nMessage: " + (message === undefined ? "(not provided)" : message) +
-            "\n\nStack Trace: " + new Error("").stack.replace(/\(http:.+\/src\//g, '(') +
+            "\n\nStack Trace: " + new Error("").stack.replace(/\(http.+\/src\//g, '(') +
             "\n\nArgs: " + (args === undefined ? "(not provided)" : Array.prototype.slice.call(args).toArrayString());
         console.log(msg);
         throw new Error(msg);
@@ -230,24 +230,26 @@ var isString = function(e) {
  * @type {!Array.<!{char: !string, expanded: !string, value: !number}>}
  */
 var UNICODE_FRACTIONS = [
-    {char: "½", expanded: "1/2", value: 1/2},
-    {char: "¼", expanded: "1/4", value: 1/4},
-    {char: "¾", expanded: "3/4", value: 3/4},
-    {char: "⅓", expanded: "1/3", value: 1/3},
-    {char: "⅔", expanded: "2/3", value: 2/3},
-    {char: "⅕", expanded: "1/5", value: 1/5},
-    {char: "⅖", expanded: "2/5", value: 2/5},
-    {char: "⅗", expanded: "3/5", value: 3/5},
-    {char: "⅘", expanded: "4/5", value: 4/5},
-    {char: "⅙", expanded: "1/6", value: 1/6},
-    {char: "⅚", expanded: "5/6", value: 5/6},
-    {char: "⅐", expanded: "1/7", value: 1/7},
-    {char: "⅛", expanded: "1/8", value: 1/8},
-    {char: "⅜", expanded: "3/8", value: 3/8},
-    {char: "⅝", expanded: "5/8", value: 5/8},
-    {char: "⅞", expanded: "7/8", value: 7/8},
-    {char: "⅑", expanded: "1/9", value: 1/9},
-    {char: "⅒", expanded: "1/10",  value:1/10}
+    // jsTestDriver+phantomJS seem to like turning the inline characters into nothing.
+    // So the ref value is just for visual reference; it's not reliable in tests.
+    {char: "\u00BD", ref: "½", expanded: "1/2", value: 1/2},
+    {char: "\u00BC", ref: "¼", expanded: "1/4", value: 1/4},
+    {char: "\u00BE", ref: "¾", expanded: "3/4", value: 3/4},
+    {char: "\u2153", ref: "⅓", expanded: "1/3", value: 1/3},
+    {char: "\u2154", ref: "⅔", expanded: "2/3", value: 2/3},
+    {char: "\u2155", ref: "⅕", expanded: "1/5", value: 1/5},
+    {char: "\u2156", ref: "⅖", expanded: "2/5", value: 2/5},
+    {char: "\u2157", ref: "⅗", expanded: "3/5", value: 3/5},
+    {char: "\u2158", ref: "⅘", expanded: "4/5", value: 4/5},
+    {char: "\u2159", ref: "⅙", expanded: "1/6", value: 1/6},
+    {char: "\u215A", ref: "⅚", expanded: "5/6", value: 5/6},
+    {char: "\u2150", ref: "⅐", expanded: "1/7", value: 1/7},
+    {char: "\u215B", ref: "⅛", expanded: "1/8", value: 1/8},
+    {char: "\u215C", ref: "⅜", expanded: "3/8", value: 3/8},
+    {char: "\u215D", ref: "⅝", expanded: "5/8", value: 5/8},
+    {char: "\u215E", ref: "⅞", expanded: "7/8", value: 7/8},
+    {char: "\u2151", ref: "⅑", expanded: "1/9", value: 1/9},
+    {char: "\u2152", ref: "⅒", expanded: "1/10",  value:1/10}
 ];
 
 /**
@@ -321,7 +323,7 @@ var floatToCompactString = function(value, epsilon, digits) {
  */
 var parseFloatFromCompactString = function(text) {
     if (text.length === 0) {
-        throw new Error("Not a float");
+        throw new Error("Not a number: '" + text + "'");
     }
     if (text[0] === "-") {
         return -parseFloatFromCompactString(text.substr(1));
@@ -337,5 +339,9 @@ var parseFloatFromCompactString = function(text) {
         return fraction.value;
     }
 
-    return parseFloat(text);
+    var result = parseFloat(text);
+    if (isNaN(result)) {
+        throw new Error("Not a number: '" + text + "'")
+    }
+    return result;
 };

@@ -70,7 +70,7 @@ MatrixTest.prototype.testParse = function() {
     assertThat(Matrix.parse("{{√2}}")).isEqualTo(
         Matrix.square([Math.sqrt(2)]));
 
-    assertThat(Matrix.parse("{{½-½i, 5}, {-i, 0}}")).isEqualTo(
+    assertThat(Matrix.parse("{{\u00BD-\u00BDi, 5}, {-i, 0}}")).isEqualTo(
         Matrix.square([new Complex(0.5, -0.5), 5, new Complex(0, -1), 0]));
     assertThat(Matrix.parse("{{1, 2, i}}")).isEqualTo(
         Matrix.row([1, 2, Complex.I]));
