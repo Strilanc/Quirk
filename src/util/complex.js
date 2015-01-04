@@ -126,26 +126,30 @@ Complex.imagPartOf = function (v) {
 
 /**
  * Returns a compact text representation of the receiving complex value.
+ * @param {=number} epsilon
+ * @param {=number} digits
  * @returns {!string}
  */
-Complex.prototype.toString = function () {
-    var epsilon = 0.00001;
+Complex.prototype.toString = function (epsilon, digits) {
+    epsilon = epsilon || 0;
 
-    if (Math.abs(this.imag) < epsilon) {
+    if (Math.abs(this.imag) <= epsilon) {
         return floatToCompactString(this.real);
     }
-    if (Math.abs(this.real) < epsilon) {
-        if (Math.abs(this.imag - 1) < epsilon) {
+    if (Math.abs(this.real) <= epsilon) {
+        if (Math.abs(this.imag - 1) <= epsilon) {
             return "i";
         }
-        if (Math.abs(this.imag + 1) < epsilon) {
+        if (Math.abs(this.imag + 1) <= epsilon) {
             return "-i";
         }
-        return floatToCompactString(this.imag) + "i";
+        return floatToCompactString(this.imag, epsilon, digits) + "i";
     }
     var separator = this.imag > 0 ? "+" : "-";
-    var imagFactor = Math.abs(Math.abs(this.imag) - 1) < epsilon ? "" : floatToCompactString(Math.abs(this.imag));
-    return floatToCompactString(this.real) + separator + imagFactor + "i";
+    var imagFactor = Math.abs(Math.abs(this.imag) - 1) <= epsilon ?
+        "" :
+        floatToCompactString(Math.abs(this.imag), epsilon, digits);
+    return floatToCompactString(this.real, epsilon, digits) + separator + imagFactor + "i";
 };
 
 /**

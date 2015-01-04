@@ -29,7 +29,6 @@ var main = function() {
             ticker = setInterval(function() {
                 ts += 0.01;
                 ts %= 1;
-                Gate.updateTimeGates(ts);
                 redraw();
             }, 50);
         } else {
@@ -39,6 +38,7 @@ var main = function() {
     };
 
     redraw = function () {
+        Gate.updateTimeGates(ts);
         var painter = new Painter(canvas);
 
         // Clear
@@ -68,8 +68,20 @@ var main = function() {
         }
         inspector = newInspector;
         $(document.getElementById("exportTextBox")).val(inspector.exportCircuit());
+        $(document.getElementById("exportTextBox")).css("background-color", "white");
         redraw();
     };
+
+    $(document.getElementById("exportTextBox")).bind('input propertychange', function(e) {
+        try {
+            var v = $(document.getElementById("exportTextBox")).val();
+            update(inspector.withImportedCircuit(v));
+            $(document.getElementById("exportTextBox")).css("background-color", "white");
+        } catch (ex) {
+            $(document.getElementById("exportTextBox")).css("background-color", "pink");
+            alert(ex);
+        }
+    });
 
     //noinspection JSUnresolvedFunction
     $(canvas).mousedown(function (p) {

@@ -297,6 +297,7 @@ Inspector.prototype.move = function(p) {
 };
 
 Inspector.prototype.exportCircuit = function() {
+    Gate.updateTimeGates(0);
     return JSON.stringify({
         custom_gates: [],
         wire_count: this.circuit.numWires,
@@ -309,21 +310,26 @@ Inspector.prototype.exportCircuit = function() {
  * @returns {!Inspector}
  */
 Inspector.prototype.withImportedCircuit = function(text) {
-    var circuit = JSON.fromJson(text);
-    var wireCount = forceGetProperty(circuit, "wire_count");
+    var json = JSON.parse(text);
+    var wireCount = forceGetProperty(json, "wire_count");
     if (!isInt(wireCount) || wireCount < 1 || wireCount > Config.MAX_WIRE_COUNT) {
         throw new Error("wire_count must be an int between 1 and " + Config.MAX_WIRE_COUNT);
     }
 
-    var columns = forceGetProperty(circuit, "circuit_columns");
+    var columns = forceGetProperty(json, "circuit_columns");
     if (!Array.isArray(columns)) {
         throw new Error("circuit_columns must be an array.");
     }
 
-    var gateCols = columns.map(GateColumn.fromJson);
-    if (gateCols.any(function(e) { return e.gates.length !== wireCount; })) {
-        throw new Error("Number of gates in circuit columns must match wire count.");
-    }
+    var gateCols = columns.map(GateColumn.fromJson).map(function(e) {
+        if (e.gates.length < wireCount) {
+            return new GateColumn(e.gates.paddedWithTo(null, wireCount));
+        }
+        if (e.gates.length > wireCount) {
+            return new GateColumn(e.gates.slice(0, wireCount));
+        }
+        return e;
+    });
 
     return new Inspector(
         this.drawArea,

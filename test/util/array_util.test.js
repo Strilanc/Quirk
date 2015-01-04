@@ -184,3 +184,20 @@ ArrayUtilTest.prototype.testSingleElseUndefined = function() {
     assertThat(["a", "b"].singleElseUndefined()).isEqualTo(undefined);
     assertThat(range(10).singleElseUndefined()).isEqualTo(undefined);
 };
+
+ArrayUtilTest.prototype.testPaddedWithTo = function() {
+    assertThat([].paddedWithTo("a", 0)).isEqualTo([]);
+    assertThat([].paddedWithTo("a", 1)).isEqualTo(["a"]);
+    assertThat([].paddedWithTo("a", 2)).isEqualTo(["a", "a"]);
+
+    //noinspection JSCheckFunctionSignatures
+    assertThat(["b"].paddedWithTo("a", 0)).isEqualTo(["b"]);
+    //noinspection JSCheckFunctionSignatures
+    assertThat(["b"].paddedWithTo("a", 1)).isEqualTo(["b"]);
+    //noinspection JSCheckFunctionSignatures
+    assertThat(["b"].paddedWithTo("a", 2)).isEqualTo(["b", "a"]);
+
+    assertThat(["b", "c"].paddedWithTo("a", 0)).isEqualTo(["b", "c"]);
+    assertThat(["b", "c"].paddedWithTo("a", 1)).isEqualTo(["b", "c"]);
+    assertThat(["b", "c"].paddedWithTo("a", 2)).isEqualTo(["b", "c"]);
+};

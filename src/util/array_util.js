@@ -278,3 +278,20 @@ Array.prototype.distinct = function() {
 Array.prototype.singleElseUndefined = function() {
     return this.length === 1 ? this[0] : undefined;
 };
+
+/**
+ * Returns an array starting with the same items, but padded up to the given length with the given item. If the array
+ * is already past the length, the returned array is equivalent.
+ * @param {T} item
+ * @param {!int} minimumLength
+ * @returns {!Array.<T>}
+ * @template T
+ */
+Array.prototype.paddedWithTo = function(item, minimumLength) {
+    need(isInt(minimumLength) && minimumLength >= 0, "non-negative min length", arguments);
+    var result = this.clone();
+    while (result.length < minimumLength) {
+        result.push(item);
+    }
+    return result;
+};

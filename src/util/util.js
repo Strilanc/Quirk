@@ -9,7 +9,6 @@ var need = function(expression, message, args) {
     if (expression !== true) {
         var msg = "Precondition failed" +
             "\n\nMessage: " + (message === undefined ? "(not provided)" : message) +
-            "\n\nStack Trace: " + new Error("").stack.replace(/\(http.+\/src\//g, '(') +
             "\n\nArgs: " + (args === undefined ? "(not provided)" : Array.prototype.slice.call(args).toArrayString());
         console.log(msg);
         throw new Error(msg);
@@ -227,29 +226,27 @@ var isString = function(e) {
 };
 
 /**
- * @type {!Array.<!{char: !string, expanded: !string, value: !number}>}
+ * @type {!Array.<!{character: !string, expanded: !string, value: !number}>}
  */
 var UNICODE_FRACTIONS = [
-    // jsTestDriver+phantomJS seem to like turning the inline characters into nothing.
-    // So the ref value is just for visual reference; it's not reliable in tests.
-    {char: "\u00BD", ref: "½", expanded: "1/2", value: 1/2},
-    {char: "\u00BC", ref: "¼", expanded: "1/4", value: 1/4},
-    {char: "\u00BE", ref: "¾", expanded: "3/4", value: 3/4},
-    {char: "\u2153", ref: "⅓", expanded: "1/3", value: 1/3},
-    {char: "\u2154", ref: "⅔", expanded: "2/3", value: 2/3},
-    {char: "\u2155", ref: "⅕", expanded: "1/5", value: 1/5},
-    {char: "\u2156", ref: "⅖", expanded: "2/5", value: 2/5},
-    {char: "\u2157", ref: "⅗", expanded: "3/5", value: 3/5},
-    {char: "\u2158", ref: "⅘", expanded: "4/5", value: 4/5},
-    {char: "\u2159", ref: "⅙", expanded: "1/6", value: 1/6},
-    {char: "\u215A", ref: "⅚", expanded: "5/6", value: 5/6},
-    {char: "\u2150", ref: "⅐", expanded: "1/7", value: 1/7},
-    {char: "\u215B", ref: "⅛", expanded: "1/8", value: 1/8},
-    {char: "\u215C", ref: "⅜", expanded: "3/8", value: 3/8},
-    {char: "\u215D", ref: "⅝", expanded: "5/8", value: 5/8},
-    {char: "\u215E", ref: "⅞", expanded: "7/8", value: 7/8},
-    {char: "\u2151", ref: "⅑", expanded: "1/9", value: 1/9},
-    {char: "\u2152", ref: "⅒", expanded: "1/10",  value:1/10}
+    {character: "\u00BD", ref: "½", expanded: "1/2", value: 1/2},
+    {character: "\u00BC", ref: "¼", expanded: "1/4", value: 1/4},
+    {character: "\u00BE", ref: "¾", expanded: "3/4", value: 3/4},
+    {character: "\u2153", ref: "⅓", expanded: "1/3", value: 1/3},
+    {character: "\u2154", ref: "⅔", expanded: "2/3", value: 2/3},
+    {character: "\u2155", ref: "⅕", expanded: "1/5", value: 1/5},
+    {character: "\u2156", ref: "⅖", expanded: "2/5", value: 2/5},
+    {character: "\u2157", ref: "⅗", expanded: "3/5", value: 3/5},
+    {character: "\u2158", ref: "⅘", expanded: "4/5", value: 4/5},
+    {character: "\u2159", ref: "⅙", expanded: "1/6", value: 1/6},
+    {character: "\u215A", ref: "⅚", expanded: "5/6", value: 5/6},
+    {character: "\u2150", ref: "⅐", expanded: "1/7", value: 1/7},
+    {character: "\u215B", ref: "⅛", expanded: "1/8", value: 1/8},
+    {character: "\u215C", ref: "⅜", expanded: "3/8", value: 3/8},
+    {character: "\u215D", ref: "⅝", expanded: "5/8", value: 5/8},
+    {character: "\u215E", ref: "⅞", expanded: "7/8", value: 7/8},
+    {character: "\u2151", ref: "⅑", expanded: "1/9", value: 1/9},
+    {character: "\u2152", ref: "⅒", expanded: "1/10",  value:1/10}
 ];
 
 /**
@@ -260,6 +257,11 @@ var UNICODE_FRACTIONS = [
 var roundToNearbyFractionOrRoot = function(value, epsilon) {
     if (value < 0) {
         return -roundToNearbyFractionOrRoot(-value, epsilon);
+    }
+
+    var r = value % 1;
+    if (r <= epsilon || 1 - r <= epsilon) {
+        return Math.round(value);
     }
 
     var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
@@ -298,14 +300,14 @@ var floatToCompactString = function(value, epsilon, digits) {
         return Math.abs(e.value - value) <= epsilon;
     });
     if (fraction !== undefined) {
-        return fraction.char;
+        return fraction.character;
     }
 
     var rootFraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
         return Math.abs(Math.sqrt(e.value) - value) <= epsilon;
     });
     if (rootFraction !== undefined) {
-        return "√" + rootFraction.char;
+        return "√" + rootFraction.character;
     }
 
     if (value % 1 !== 0 && digits !== undefined) {
@@ -333,7 +335,7 @@ var parseFloatFromCompactString = function(text) {
     }
 
     var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
-        return e.char === text;
+        return e.character === text;
     });
     if (fraction !== undefined) {
         return fraction.value;

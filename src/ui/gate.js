@@ -23,30 +23,6 @@ function Gate(symbol, matrix, name, description, symbolDrawer) {
     this.symbolDrawer = symbolDrawer || Gate.DEFAULT_SYMBOL_DRAWER;
 }
 
-Gate.prototype.toString = function() {
-    return this.symbol;
-};
-
-/**
- * Returns the probability of controls on a column being satisfied and a wire being ON,
- * if that was measured.
- *
- * @param {!GateColumn} gateColumn
- * @param {!int} targetWire
- * @param {!QuantumState} columnState
- * @returns {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number, canDiffer: !boolean}}
- */
-var measureGateColumnProbabilityOn = function (gateColumn, targetWire, columnState) {
-    var colMasks = gateColumn.masks();
-    var wireMask = 1 << targetWire;
-    var p = columnState.conditionalProbability(colMasks.targetMask | wireMask, wireMask, colMasks.inclusionMask);
-    return {
-        probabilityOfCondition: p.probabilityOfCondition,
-        probabilityOfHitGivenCondition: p.probabilityOfHitGivenCondition,
-        canDiffer: colMasks.inclusionMask !== 0
-    };
-};
-
 /**
  * @param {!boolean} isInToolbox
  * @param {!boolean} isHighlighted
@@ -184,8 +160,7 @@ Gate.PEEK_SYMBOL_DRAWER = function(painter, params) {
         return;
     }
 
-    var p = measureGateColumnProbabilityOn(
-        params.circuitContext.gateColumn,
+    var p = params.circuitContext.gateColumn.measureProbabilityOn(
         params.circuitContext.wireIndex,
         params.circuitContext.state);
     if (p.canDiffer) {
@@ -483,7 +458,7 @@ Gate.fromPauliRotation = function(x, y, z, symbol) {
     var n = Math.sqrt(x*x + y*y + z*z);
     var deg = n*360;
     return new Gate(
-        symbol || "", // special character that means "render the matrix"
+        symbol || ("R(" + [x, y, z].map(floatToCompactString).toString() + ")"),
         Matrix.fromPauliRotation(x, y, z),
         deg +  "° around <" + x/n + ", " + y/n + ", " + z/n + ">",
         "A custom operation based on a rotation.",
@@ -719,18 +694,18 @@ Gate.GATE_SET = [
  * @returns {!Gate}
  * @throws {Error}
  */
-Gate.parseGate = function(json) {
+Gate.fromJson = function(json) {
     var symbol = forceGetProperty(json, "symbol");
-    var matrix = forceGetProperty(json, "matrix");
-    var matrixVaries = matrix == "[varies]";
+    var matrix = Matrix.fromJson(forceGetProperty(json, "matrix"));
 
-    var match = Gate.GATE_SET.firstMatchElseUndefined(function(g) {
-        return g.symbol === symbol && (matrixVaries || g.matrix.isEqualTo(matrix));
+    var gates = Gate.GATE_SET.map(function(e) { return e.gates; }).flatten();
+    var match = gates.firstMatchElseUndefined(function(g) {
+        return g !== null && g.symbol === symbol;
     });
-    if (matrixVaries) {
-        throw new Error("Don't understand the non-constant gate " + symbol);
+    if (match !== undefined && (match.isTimeBased() || match.matrix.isEqualTo(matrix))) {
+        return match;
     }
-    return match || new Gate(symbol, matrix, symbol, "An imported gate.");
+    return new Gate(symbol, matrix, symbol, "An imported gate.");
 };
 
 /**
@@ -739,7 +714,7 @@ Gate.parseGate = function(json) {
 Gate.prototype.toJson = function() {
     return {
         symbol: this.symbol,
-        matrix: this.isTimeBased() ? "[varies]" : this.matrix.toJson()
+        matrix: this.matrix.toJson()
     };
 };
 

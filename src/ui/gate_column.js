@@ -16,10 +16,10 @@ function GateColumn(gates) {
  * @returns {!GateColumn}
  * @throws
  */
-GateColumn.prototype.fromJson = function(json) {
+GateColumn.fromJson = function(json) {
     var gates = forceGetProperty(json, "column_gates");
     if (!Array.isArray(gates)) { throw new Error("column_gates must be an array."); }
-    return gates.map(wrapFuncToPropagateNull(Gate.fromJson));
+    return new GateColumn(gates.map(wrapFuncToPropagateNull(Gate.fromJson)));
 };
 
 /**
@@ -125,4 +125,24 @@ GateColumn.prototype.withGateAdded = function(startIndex, gateBlock) {
         gates[startIndex + i] = gateBlock.gates[i];
     }
     return new GateColumn(gates);
+};
+
+/**
+ * Returns the probability of controls on a column being satisfied and a wire being ON,
+ * if that was measured.
+ *
+ * @param {!GateColumn} gateColumn
+ * @param {!int} targetWire
+ * @param {!QuantumState} columnState
+ * @returns {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number, canDiffer: !boolean}}
+ */
+GateColumn.prototype.measureProbabilityOn = function (targetWire, columnState) {
+    var colMasks = gateColumn.masks();
+    var wireMask = 1 << targetWire;
+    var p = columnState.conditionalProbability(colMasks.targetMask | wireMask, wireMask, colMasks.inclusionMask);
+    return {
+        probabilityOfCondition: p.probabilityOfCondition,
+        probabilityOfHitGivenCondition: p.probabilityOfHitGivenCondition,
+        canDiffer: colMasks.inclusionMask !== 0
+    };
 };

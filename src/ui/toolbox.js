@@ -80,10 +80,14 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
         "                            ON output\n" +
         "\n" +
         "\n" +
-        gate.matrix.toString(), new Point(this.area.x + 55, gateRect.bottom() + 25));
+        gate.matrix.toString(0, 3), new Point(this.area.x + 55, gateRect.bottom() + 25));
     painter.paintMatrix(
         gate.matrix,
-        new Rect(this.area.x + 55, hintRect.bottom() - 4 * Config.GATE_RADIUS, 4 * Config.GATE_RADIUS, 4 * Config.GATE_RADIUS));
+        new Rect(
+            this.area.x + 55,
+            hintRect.bottom() - 4 * Config.GATE_RADIUS,
+            4 * Config.GATE_RADIUS,
+            4 * Config.GATE_RADIUS));
     painter.strokeRect(hintRect);
 
     gate.paint(painter, gateRect, true, true, null);

@@ -68,12 +68,14 @@ Matrix.prototype.toJson = function() {
 /**
  * Returns a text representation of the receiving matrix.
  * (It uses curly braces so you can paste it into wolfram alpha.)
+ * @param {=number} epsilon
+ * @param {=number} digits
  * @returns {!string}
  */
-Matrix.prototype.toString = function () {
+Matrix.prototype.toString = function (epsilon, digits) {
     var data = this.rows.map(function(row) {
         var rowData = row.map(function(e) {
-            return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString();
+            return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(epsilon, digits);
         });
         return rowData.join(", ");
     }).join("}, {");
@@ -94,7 +96,11 @@ Matrix.parse = function(text) {
 
     // Some kind of recursive descent parser would be a better idea, but here we are.
     return new Matrix(text.substr(2, text.length - 4).split("},{").map(function(row) {
-        return row.split(",").map(Complex.parse);
+        return row.split(",").map(function(e) {
+            return e === "C" ?
+                Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE :
+                Complex.parse(e);
+        });
     }));
 };
 
