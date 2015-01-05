@@ -38,13 +38,12 @@ var main = function() {
     };
 
     redraw = function () {
-        Gate.updateTimeGates(ts);
         var painter = new Painter(canvas);
 
         // Clear
         painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), Config.BACKGROUND_COLOR);
 
-        inspector.previewDrop().paint(painter);
+        inspector.previewDrop().paint(painter, ts);
 
         tickWhenAppropriate();
     };
@@ -72,7 +71,7 @@ var main = function() {
         redraw();
     };
 
-    $(document.getElementById("exportTextBox")).bind('input propertychange', function(e) {
+    $(document.getElementById("exportTextBox")).bind('input propertychange', function() {
         try {
             var v = $(document.getElementById("exportTextBox")).val();
             update(inspector.withImportedCircuit(v));

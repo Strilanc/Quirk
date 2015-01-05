@@ -2,32 +2,41 @@
  * A named single-qubit quantum operation.
  *
  * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
- * @param {!Matrix} matrix The operation the gate applies.
+ * @param {!Matrix|!function(!number): !Matrix} matrixOrFunc The operation the gate applies.
  * @param {!string} name A helpful human-readable name for the operation.
  * @param {!string} description A helpful description of what the operation does.
  * @param {=function} symbolDrawer
  *
  * @property {!string} symbol
- * @property {!Matrix} matrix
+ * @property {!Matrix|!function(!number): !Matrix} matrixOrFunc
  * @property {!string} name
  * @property {!string} description
  * @property {!function} symbolDrawer
  *
  * @constructor
  */
-function Gate(symbol, matrix, name, description, symbolDrawer) {
+function Gate(symbol, matrixOrFunc, name, description, symbolDrawer) {
     this.symbol = symbol;
-    this.matrix = matrix;
+    this.matrixOrFunc = matrixOrFunc;
     this.name = name;
     this.description = description;
     this.symbolDrawer = symbolDrawer || Gate.DEFAULT_SYMBOL_DRAWER;
 }
 
 /**
+ * @param {!number} time
+ * @returns {!Matrix}
+ */
+Gate.prototype.matrixAt = function(time) {
+    return this.matrixOrFunc instanceof Matrix ? this.matrixOrFunc : this.matrixOrFunc(time);
+};
+
+/**
  * @param {!boolean} isInToolbox
  * @param {!boolean} isHighlighted
  * @param {!Rect} rect
  * @param {!Gate} gate
+ * @param {!number} time
  * @param {?CircuitContext} circuitContext
  *
  * @property {!boolean} isInToolbox
@@ -38,11 +47,12 @@ function Gate(symbol, matrix, name, description, symbolDrawer) {
  *
  * @constructor
  */
-function GateDrawParams(isInToolbox, isHighlighted, rect, gate, circuitContext) {
+function GateDrawParams(isInToolbox, isHighlighted, rect, gate, time, circuitContext) {
     this.isInToolbox = isInToolbox;
     this.isHighlighted = isHighlighted;
     this.rect = rect;
     this.gate = gate;
+    this.time = time;
     this.circuitContext = circuitContext;
 }
 
@@ -69,7 +79,7 @@ function CircuitContext(gateColumn, wireIndex, state) {
  */
 Gate.DEFAULT_SYMBOL_DRAWER = function(painter, params) {
     var backColor = Config.GATE_FILL_COLOR;
-    if (!params.isInToolbox && !params.gate.matrix.isApproximatelyUnitary(0.001)) {
+    if (!params.isInToolbox && !params.gate.matrixAt(params.time).isApproximatelyUnitary(0.001)) {
         backColor = Config.BROKEN_COLOR_GATE;
     }
     if (params.isHighlighted) {
@@ -105,7 +115,7 @@ Gate.NOT_SYMBOL_DRAWER = function(painter, params) {
 Gate.MATRIX_SYMBOL_DRAWER = function (painter, params) {
     painter.fillRect(params.rect, params.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
     painter.paintMatrix(
-        params.gate.matrix,
+        params.gate.matrixAt(params.time),
         params.rect);
     if (params.isHighlighted) {
         painter.ctx.globalAlpha = 0.9;
@@ -198,7 +208,7 @@ Gate.prototype.toString = function() {
 };
 
 Gate.prototype.isTimeBased = function() {
-    return Gate.EVOLVING_GATES.indexOf(this) !== -1;
+    return !(this.matrixOrFunc instanceof Matrix);
 };
 
 Gate.prototype.isControlModifier = function() {
@@ -481,71 +491,56 @@ Gate.fromCustom = function(matrix) {
 /** @type {!Gate} */
 Gate.EVOLVING_R = new Gate(
     "R(t)",
-    Matrix.identity(2),
+    function(t) {
+        var r = (t % 1) * Math.PI * 2;
+        var c = Math.cos(r);
+        var s = Math.sin(r);
+        return Matrix.square([c, -s, s, c]);
+    },
     "Evolving Rotation Gate",
     "A rotation gate where the angle of rotation increases and cycles over\n" +
     "time.");
 /** @type {!Gate} */
 Gate.EVOLVING_H = new Gate(
     "H(t)",
-    Matrix.identity(2),
+    function(t) {
+        var r = (t % 1) / Math.sqrt(2);
+        return Matrix.fromPauliRotation(r, 0, r);
+    },
     "Evolving Hadamard Gate",
     "Smoothly interpolates from no-op to the Hadamard gate and back over\n" +
     "time. A continuous rotation around the X+Z axis of the Block Sphere.");
 /** @type {!Gate} */
 Gate.EVOLVING_X = new Gate(
     "X(t)",
-    Matrix.identity(2),
+    function(t) { return Matrix.fromPauliRotation(t % 1, 0, 0); },
     "Evolving X Gate",
     "Smoothly interpolates from no-op to the Pauli X gate and back over\n" +
     "time. A continuous rotation around the X axis of the Block Sphere.");
 /** @type {!Gate} */
 Gate.EVOLVING_Y = new Gate(
     "Y(t)",
-    Matrix.identity(2),
+    function(t) { return Matrix.fromPauliRotation(0, t % 1, 0); },
     "Evolving Y Gate",
     "Smoothly interpolates from no-op to the Pauli Y gate and back over\n" +
     "time. A continuous rotation around the Y axis of the Block Sphere.");
 /** @type {!Gate} */
 Gate.EVOLVING_Z = new Gate(
     "Z(t)",
-    Matrix.identity(2),
+    function(t) { return Matrix.fromPauliRotation(0, 0, t % 1); },
     "Evolving Z Gate",
     "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
     "time. A phase gate where the phase angle increases and cycles over\n" +
     "time. A continuous rotation around the Z axis of the Block Sphere.");
-/** @type {!Gate} */
-Gate.EVOLVING_NOISE = new Gate(
-    "Err(t)",
-    Matrix.identity(2),
-    "Evolving Noise Gate",
-    "Jitters around randomly.");
+
 /** @type {!Array.<!Gate>} */
-Gate.EVOLVING_GATES = [
+Gate.TIME_BASED_GATES = [
     Gate.EVOLVING_X,
     Gate.EVOLVING_Y,
     Gate.EVOLVING_Z,
     Gate.EVOLVING_R,
-    Gate.EVOLVING_H,
-    Gate.EVOLVING_NOISE
+    Gate.EVOLVING_H
 ];
-
-Gate.updateTimeGates = function (t) {
-    var r = t % 1;
-    var u = t;
-    var u2 = u / Math.sqrt(2);
-    var c = Math.cos(r * Math.PI * 2);
-    var s = Math.sin(r * Math.PI * 2);
-
-    Gate.EVOLVING_R.matrix = Matrix.square([c, -s, s, c]);
-    Gate.EVOLVING_X.matrix = Matrix.fromPauliRotation(u, 0, 0);
-    Gate.EVOLVING_Y.matrix = Matrix.fromPauliRotation(0, u, 0);
-    Gate.EVOLVING_Z.matrix = Matrix.fromPauliRotation(0, 0, u);
-    Gate.EVOLVING_H.matrix = Matrix.fromPauliRotation(u2, 0, u2);
-
-    var drift = function() { return new Complex(Math.random()/10-0.05, Math.random()/10-0.05); };
-    Gate.EVOLVING_NOISE.matrix = Matrix.square([drift().plus(1), drift(), drift(), drift().plus(1)]).closestUnitary();
-};
 
 Gate.makeFuzzGate = function () {
     return new Gate(
@@ -665,7 +660,7 @@ Gate.GATE_SET = [
     },
     {
         hint: "Evolving",
-        gates: Gate.EVOLVING_GATES
+        gates: Gate.TIME_BASED_GATES
     },
     {
         hint: "Targeted",
@@ -714,7 +709,7 @@ Gate.fromJson = function(json) {
 Gate.prototype.toJson = function() {
     return {
         symbol: this.symbol,
-        matrix: this.matrix.toJson()
+        matrix: this.matrixAt(0.25).toJson()
     };
 };
 
@@ -723,8 +718,9 @@ Gate.prototype.toJson = function() {
  * @param {!Rect} areaRect
  * @param {!boolean} isInToolbox
  * @param {!boolean} isHighlighted
+ * @param {!number} time
  * @param {?CircuitContext} circuitContext
  */
-Gate.prototype.paint = function(painter, areaRect, isInToolbox, isHighlighted, circuitContext) {
-    this.symbolDrawer(painter, new GateDrawParams(isInToolbox, isHighlighted, areaRect, this, circuitContext));
+Gate.prototype.paint = function(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
+    this.symbolDrawer(painter, new GateDrawParams(isInToolbox, isHighlighted, areaRect, this, time, circuitContext));
 };

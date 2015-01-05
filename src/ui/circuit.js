@@ -96,11 +96,12 @@ Circuit.prototype.toString = function() {
 
 /**
  * Returns the circuit's initial, intermediate, and final states.
+ * @param {!number} time
  * @returns {!Array.<!QuantumState>}
  */
-Circuit.prototype.scanStates = function() {
+Circuit.prototype.scanStates = function(time) {
     return this.columns.
-        map(arg1(GateColumn.prototype.matrix)).
+        map(function(e) { return e.matrixAt(time); }).
         scan(
             QuantumState.zero(this.numWires),
             arg2(QuantumState.prototype.transformedBy));
@@ -108,11 +109,12 @@ Circuit.prototype.scanStates = function() {
 
 /**
  * @param {!int} columnIndex
+ * @param {!number} time
  * @returns {!Matrix}
  */
-Circuit.prototype.getCumulativeOperationUpToBefore = function(columnIndex) {
+Circuit.prototype.getCumulativeOperationUpToBefore = function(columnIndex, time) {
     return this.columns.slice(0, columnIndex).
-        map(function(e) { return e.matrix(); }).
+        map(function(e) { return e.matrixAt(time); }).
         reduce(function(a, e) { return e.times(a); }, Matrix.identity(1 << this.numWires));
 };
 
@@ -277,11 +279,12 @@ Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
 
 /**
  * Returns the per-wire probabilities before and after each operation.
+ * @param {!number} time
  * @returns {!Array.<!number>}
  */
-Circuit.prototype.scanProbabilities = function() {
+Circuit.prototype.scanProbabilities = function(time) {
     var wireRange = range(this.numWires);
-    return this.scanStates().map(function(s) {
+    return this.scanStates(time).map(function(s) {
         return wireRange.map(function(i) {
             return s.probability(1 << i, 1 << i);
         });
@@ -290,9 +293,10 @@ Circuit.prototype.scanProbabilities = function() {
 
 /**
  * Returns a per-wire measure of entanglement before and after each operation.
+ * @param {!number} time
  * @returns {!Array.<!number>}
  */
-Circuit.prototype.scanPerWireEntanglementMeasure = function() {
+Circuit.prototype.scanPerWireEntanglementMeasure = function(time) {
     var maxRatio = function(a, b) {
         var min = Math.min(a, b);
         var max = Math.max(a, b);
@@ -306,7 +310,7 @@ Circuit.prototype.scanPerWireEntanglementMeasure = function() {
     };
 
     var n = this.numWires;
-    return this.scanStates().map(function(s) {
+    return this.scanStates(time).map(function(s) {
         return range(n).map(function(i) {
             var otherWiresMask = (1 << n) - (1 << i) - 1;
             var p = s.probability(1 << i, 1 << i);
@@ -320,12 +324,13 @@ Circuit.prototype.scanPerWireEntanglementMeasure = function() {
 };
 
 /**
+ * @param {!number} time
  * @param {!Painter} painter
  * @param {!Hand} hand
  */
-Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
-    var probabilities = this.scanProbabilities();
-    var entanglementMeasures = this.scanPerWireEntanglementMeasure();
+Circuit.prototype.paintWireProbabilityCurves = function(painter, hand, time) {
+    var probabilities = this.scanProbabilities(time);
+    var entanglementMeasures = this.scanPerWireEntanglementMeasure(time);
     for (var r = 0; r < this.numWires; r++) {
         for (var c = 0; c <= this.columns.length; c++) {
             var x1 = c === 0 ? this.area.x + 30 : this.gateRect(r, c - 1).center().x;
@@ -352,13 +357,13 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand) {
 };
 
 /**
- *
  * @param {!Painter} painter
  * @param {!Hand} hand
+ * @param {!number} time
  */
-Circuit.prototype.paint = function(painter, hand) {
+Circuit.prototype.paint = function(painter, hand, time) {
     painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
-    var states = this.scanStates();
+    var states = this.scanStates(time);
 
     // Draw labelled wires
     for (var i = 0; i < this.numWires; i++) {
@@ -367,11 +372,11 @@ Circuit.prototype.paint = function(painter, hand) {
         painter.strokeLine(new Point(this.area.x + 30, wireY), new Point(this.area.x + this.area.w, wireY));
     }
 
-    this.paintWireProbabilityCurves(painter, hand);
+    this.paintWireProbabilityCurves(painter, hand, time);
 
     // Draw operations
     for (var i2 = 0; i2 < this.columns.length; i2++) {
-        this.drawCircuitOperation(painter, this.columns[i2], i2, states[i2 + 1], hand);
+        this.drawCircuitOperation(painter, this.columns[i2], i2, states[i2 + 1], hand, time);
     }
 };
 
@@ -381,8 +386,9 @@ Circuit.prototype.paint = function(painter, hand) {
  * @param {!int} columnIndex
  * @param {!QuantumState} state A complex column vector.
  * @param {!Hand} hand
+ * @param {!number} time
  */
-Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, state, hand) {
+Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIndex, state, hand, time) {
 
     this.drawColumnControlWires(painter, gateColumn, columnIndex, state);
 
@@ -398,7 +404,7 @@ Circuit.prototype.drawCircuitOperation = function (painter, gateColumn, columnIn
 
         //var isHolding = hand.pos !== null && hand.col === columnIndex && hand.row === i;
         var canGrab = hand.isHoveringIn(b);
-        gate.paint(painter, b, false, canGrab, new CircuitContext(gateColumn, i, state));
+        gate.paint(painter, b, false, canGrab, time, new CircuitContext(gateColumn, i, state));
     }
 };
 
@@ -541,11 +547,12 @@ Circuit.prototype.hasTimeBasedGates = function () {
 };
 
 /**
+ * @param {!number} time
  * @returns {!QuantumState}
  */
-Circuit.prototype.getOutput = function() {
+Circuit.prototype.getOutput = function(time) {
     return this.columns
-        .map(arg1(GateColumn.prototype.matrix))
+        .map(function(e) { return e.matrixAt(time); })
         .reduce(
             arg2(QuantumState.prototype.transformedBy),
             QuantumState.zero(this.numWires));
@@ -555,10 +562,11 @@ Circuit.prototype.getOutput = function() {
  * Draws a peek gate on each wire at the right-hand side of the circuit.
  *
  * @param {!Painter} painter
+ * @param {!number} time
  */
-Circuit.prototype.drawRightHandPeekGates = function (painter) {
+Circuit.prototype.drawRightHandPeekGates = function (painter, time) {
     var left = this.area.x + this.area.w - Config.GATE_RADIUS*2 - CIRCUIT_OP_RIGHT_SPACING;
-    var out = this.getOutput();
+    var out = this.getOutput(time);
     for (var i = 0; i < this.numWires; i++) {
         painter.paintProbabilityBox(
             out.probability(1 << i, 1 << i),

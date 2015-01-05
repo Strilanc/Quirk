@@ -69,12 +69,13 @@ Inspector.prototype.toString = function() {
 };
 
 /**
+ * @param {!number} time
  * @param {!Painter} painter
  * @private
  */
-Inspector.prototype.paintOutput = function(painter) {
+Inspector.prototype.paintOutput = function(painter, time) {
     // Wire probabilities
-    this.circuit.drawRightHandPeekGates(painter);
+    this.circuit.drawRightHandPeekGates(painter, time);
 
     //var factors = this.circuit.getOutput().contiguousFactorization();
     //for (var i = 0; i < factors.length; i++) {
@@ -83,12 +84,12 @@ Inspector.prototype.paintOutput = function(painter) {
 
     // State amplitudes
     painter.paintQuantumStateAsLabelledGrid(
-        this.circuit.getOutput(),
+        this.circuit.getOutput(time),
         this.outputStateHintArea,
         this.circuit.getLabels());
 
     painter.paintMatrix(
-        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length),
+        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length, time),
         this.cumulativeOperationHintArea,
         this.hand);
 
@@ -122,9 +123,10 @@ Inspector.prototype.paintOutput = function(painter) {
 
 /**
  * @param {!Painter} painter
+ * @param {!number} time
  * @private
  */
-Inspector.prototype.paintFocus = function(painter) {
+Inspector.prototype.paintFocus = function(painter, time) {
     if (this.hand.pos === null) {
         return;
     }
@@ -142,24 +144,28 @@ Inspector.prototype.paintFocus = function(painter) {
     painter.ctx.globalAlpha = 1;
 
     painter.paintQuantumStateAsLabelledGrid(
-        this.circuit.scanStates()[c + 1],
+        this.circuit.scanStates(time)[c + 1],
         this.focusedStateHintArea,
         this.circuit.getLabels());
 
     painter.paintMatrix(
-        this.circuit.columns[c].matrix(),
+        this.circuit.columns[c].matrixAt(time),
         this.focusedOperationHintArea);
 
     painter.paintMatrix(
-        this.circuit.getCumulativeOperationUpToBefore(c + 1),
+        this.circuit.getCumulativeOperationUpToBefore(c + 1, time),
         this.cumulativeFocusedOperationHintArea);
 };
 
-Inspector.prototype.paint = function(painter) {
-    this.paintFocus(painter);
-    this.circuit.paint(painter, this.hand);
-    this.paintOutput(painter);
-    this.toolbox.paint(painter, this.hand);
+/**
+ * @param {!Painter} painter
+ * @param {!number} time
+ */
+Inspector.prototype.paint = function(painter, time) {
+    this.paintFocus(painter, time);
+    this.circuit.paint(painter, this.hand, time);
+    this.paintOutput(painter, time);
+    this.toolbox.paint(painter, this.hand, time);
     this.paintHand(painter);
 };
 
@@ -194,8 +200,7 @@ Inspector.prototype.captureCycle = function(painter, progressCallback, urlCallba
         quality: 10
     });
     for (var t = 0.001; t < 1; t += 0.02) {
-        Gate.updateTimeGates(t);
-        this.paint(painter);
+        this.paint(painter, t);
         gif.addFrame(painter.canvas,  {copy: true, delay: 50});
         if (!this.needsContinuousRedraw()) {
             break;
@@ -297,7 +302,6 @@ Inspector.prototype.move = function(p) {
 };
 
 Inspector.prototype.exportCircuit = function() {
-    Gate.updateTimeGates(0);
     return JSON.stringify({
         custom_gates: [],
         wire_count: this.circuit.numWires,

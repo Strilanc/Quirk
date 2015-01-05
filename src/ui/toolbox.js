@@ -53,9 +53,10 @@ Toolbox.prototype.groupLabelCenter = function(groupIndex) {
  * @param {!Painter} painter
  * @param {!int} groupIndex
  * @param {!int} gateIndex
+ * @param {!number} time
  * @private
  */
-Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
+Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex, time) {
     var gateRect = this.groupedGateRect(groupIndex, gateIndex);
     var gate = Gate.GATE_SET[groupIndex].gates[gateIndex];
     var paragraphHeight = (gate.description.split("\n").length + 5) * 16;
@@ -80,9 +81,9 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
         "                            ON output\n" +
         "\n" +
         "\n" +
-        gate.matrix.toString(0, 3), new Point(this.area.x + 55, gateRect.bottom() + 25));
+        gate.matrixAt(time).toString(0, 3), new Point(this.area.x + 55, gateRect.bottom() + 25));
     painter.paintMatrix(
-        gate.matrix,
+        gate.matrixAt(time),
         new Rect(
             this.area.x + 55,
             hintRect.bottom() - 4 * Config.GATE_RADIUS,
@@ -90,7 +91,7 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex) {
             4 * Config.GATE_RADIUS));
     painter.strokeRect(hintRect);
 
-    gate.paint(painter, gateRect, true, true, null);
+    gate.paint(painter, gateRect, true, true, time, null);
 };
 
 /**
@@ -115,8 +116,9 @@ Toolbox.prototype.findGateAt = function(p) {
 /**
  * @param {!Painter} painter
  * @param {!Hand} hand
+ * @param {!number} time
  */
-Toolbox.prototype.paint = function (painter, hand) {
+Toolbox.prototype.paint = function (painter, hand, time) {
     painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
     for (var groupIndex = 0; groupIndex < Gate.GATE_SET.length; groupIndex++) {
@@ -126,7 +128,7 @@ Toolbox.prototype.paint = function (painter, hand) {
         for (var gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
             var gate = group.gates[gateIndex];
             if (gate !== null) {
-                gate.paint(painter, this.groupedGateRect(groupIndex, gateIndex), true, false, null);
+                gate.paint(painter, this.groupedGateRect(groupIndex, gateIndex), true, false, time, null);
             }
         }
     }
@@ -134,7 +136,7 @@ Toolbox.prototype.paint = function (painter, hand) {
     if (hand.heldGateBlock === null && hand.pos !== null) {
         var f = this.findGateAt(notNull(hand.pos));
         if (f !== null) {
-            this.paintHint(painter, f.groupIndex, f.gateIndex);
+            this.paintHint(painter, f.groupIndex, f.gateIndex, time);
         }
     }
 };

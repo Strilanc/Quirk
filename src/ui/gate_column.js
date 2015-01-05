@@ -79,9 +79,10 @@ GateColumn.prototype.isEmpty = function() {
 
 /**
  * Returns the matrix corresponding to the parallel applications of the operations in this circuit column.
+ * @param {!number} time
  * @returns {!Matrix}
  */
-GateColumn.prototype.matrix = function() {
+GateColumn.prototype.matrixAt = function(time) {
     var ops = [];
     var swapIndices = [];
     for (var i = 0; i < this.gates.length; i++) {
@@ -92,7 +93,7 @@ GateColumn.prototype.matrix = function() {
             swapIndices.push(i);
             op = Matrix.identity(2);
         } else {
-            op = this.gates[i].matrix;
+            op = this.gates[i].matrixAt(time);
         }
         ops.push(op);
     }
@@ -102,15 +103,6 @@ GateColumn.prototype.matrix = function() {
         result = Matrix.fromWireSwap(this.gates.length, swapIndices[0], swapIndices[1]).times(result);
     }
     return result;
-};
-
-/**
- * Returns the result of applying this circuit column to the given state.
- * @param {!QuantumState} state A column matrix of the correct size.
- * @returns {!QuantumState}
- */
-GateColumn.prototype.transform = function(state) {
-    return new QuantumState(this.matrix().times(state.columnVector));
 };
 
 /**
@@ -131,13 +123,12 @@ GateColumn.prototype.withGateAdded = function(startIndex, gateBlock) {
  * Returns the probability of controls on a column being satisfied and a wire being ON,
  * if that was measured.
  *
- * @param {!GateColumn} gateColumn
  * @param {!int} targetWire
  * @param {!QuantumState} columnState
  * @returns {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number, canDiffer: !boolean}}
  */
 GateColumn.prototype.measureProbabilityOn = function (targetWire, columnState) {
-    var colMasks = gateColumn.masks();
+    var colMasks = this.masks();
     var wireMask = 1 << targetWire;
     var p = columnState.conditionalProbability(colMasks.targetMask | wireMask, wireMask, colMasks.inclusionMask);
     return {
