@@ -20,7 +20,7 @@ GateTest.prototype.testIsEqualTo = function() {
 
 GateTest.prototype.testFromPhaseRotation = function() {
     var g = Gate.fromPhaseRotation(0.25, "Quart");
-    assertThat(g.matrix).isEqualTo(Matrix.square([1, 0, 0, Complex.I]));
+    assertThat(g.matrixAt(0)).isEqualTo(Matrix.square([1, 0, 0, Complex.I]));
     assertThat(g.symbol).isEqualTo("Quart");
     assertThat(g.name).isEqualTo("90° Phase Gate");
 };
@@ -31,27 +31,21 @@ GateTest.prototype.testFromPauliRotation = function() {
     assertThat(Gate.fromPauliRotation(0, 0, 0.5).matrix).isEqualTo(Gate.Z.matrix);
 
     var g = Gate.fromPauliRotation(1/3, 0, 0, "Third");
-    assertThat(g.matrix.times(g.matrix).times(g.matrix)).isApproximatelyEqualTo(Matrix.identity(2));
+    assertThat(g.matrixAt(0).times(g.matrixAt(0)).times(g.matrixAt(0))).isApproximatelyEqualTo(Matrix.identity(2));
     assertThat(g.symbol).isEqualTo("Third");
 };
 
 GateTest.prototype.testFromCustom = function() {
-    assertThat(Gate.fromCustom(Matrix.identity(2)).matrix).isEqualTo(Matrix.identity(2));
-};
-
-GateTest.prototype.testUpdateTimeGates = function() {
-    // TODO: more than just "doesn't throw"
-    Gate.updateTimeGates(0);
-    Gate.updateTimeGates(0.5);
+    assertThat(Gate.fromCustom(Matrix.identity(2)).matrixAt(0)).isEqualTo(Matrix.identity(2));
 };
 
 GateTest.prototype.testMakeFuzzGate = function() {
-    assertTrue(Gate.makeFuzzGate().matrix.isApproximatelyUnitary(0.00000001));
+    assertTrue(Gate.makeFuzzGate().matrixAt(0).isApproximatelyUnitary(0.00000001));
 };
 
 GateTest.prototype.testFromTargetedRotation = function() {
     var g = Gate.fromTargetedRotation(0.4, "4/10", "2/5");
-    assertThat(QuantumState.SINGLE_ZERO.transformedBy(g.matrix).probability(1, 1)).isApproximatelyEqualTo(0.4);
+    assertThat(QuantumState.SINGLE_ZERO.transformedBy(g.matrixAt(0)).probability(1, 1)).isApproximatelyEqualTo(0.4);
     assertThat(g.symbol).isEqualTo("∠2/5");
     assertThat(g.name).isEqualTo("4/10 Target Rotation Gate");
 };
@@ -80,12 +74,12 @@ GateTest.prototype.testFromJson = function() {
     assertThat(Gate.fromJson({
         symbol: "X",
         matrix: "{{0, 1}, {i, 0}}"
-    }).matrix).isEqualTo(Matrix.square([0, 1, Complex.I, 0]));
+    }).matrixAt(0)).isEqualTo(Matrix.square([0, 1, Complex.I, 0]));
 
     // round trip keeps certain details
     var a = new Gate("A", Matrix.identity(2), "Alpha", "Desc");
     var a2 = Gate.fromJson(a.toJson());
     assertThat(a2.symbol).isEqualTo(a.symbol);
-    assertThat(a2.matrix).isEqualTo(a.matrix);
+    assertThat(a2.matrixAt(0)).isEqualTo(a.matrixAt(0));
     assertThat(Gate.fromJson(a2.toJson())).isEqualTo(a2);
 };

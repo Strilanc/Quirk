@@ -181,10 +181,10 @@ QuantumStateTest.prototype.testTryFactorAroundMask = function() {
     });
 
     var p = new Complex(1, -1).unit();
-    assertThat(QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrix).concat(h(3)).tryFactorAroundMask(6))
+    assertThat(QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrixAt(0)).concat(h(3)).tryFactorAroundMask(6))
         .isApproximatelyEqualTo({
             inside: h(2).phasedBy(p),
-            outside: QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrix).concat(h(1)).phasedBy(p.conjugate())
+            outside: QuantumState.SINGLE_ZERO.transformedBy(Gate.UP.matrixAt(0)).concat(h(1)).phasedBy(p.conjugate())
         });
 };
 
