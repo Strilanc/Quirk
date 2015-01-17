@@ -314,11 +314,25 @@ Circuit.prototype.scanPerWireEntanglementMeasure = function(time) {
         return range(n).map(function(i) {
             var otherWiresMask = (1 << n) - (1 << i) - 1;
             var p = s.probability(1 << i, 1 << i);
-            return Math.log(maskCandidates(otherWiresMask).map(function(e) {
-                return maxRatio(
-                    s.coefficient(e).norm2() * p + 0.001,
-                    s.coefficient(e | (1 << i)).norm2() * (1-p) + 0.001);
-            }).max()) * Math.sqrt(p * (1-p));
+            var pairs = maskCandidates(otherWiresMask).map(function(e) {
+                return {off: s.coefficient(e), on: s.coefficient(e | (1 << i))};
+            });
+            var bestPair = pairs.maxBy(function(e) { return e.off.norm2() + e.on.norm2(); });
+            var consistency = pairs.map(function(e) {
+                return bestPair.off.times(e.on).minus(e.off.times(bestPair.on)).norm2();
+            }).max();
+            return consistency * p * (1 - p);
+            //var dependencies = maskCandidates(otherWiresMask).map(function(e) {
+            //    // assuming that the ratio should stay consistent
+            //    // so aOff/aOn = c
+            //    // thus aOff = c * aOn
+            //    var aOff = s.coefficient(e);
+            //    var aOn = s.coefficient(e | (1 << i));
+            //    return maxRatio(
+            //        aOff.norm2() * p + 0.001,
+            //        aOn.norm2() * (1-p) + 0.001);
+            //});
+            //return Math.log(f.max()) * Math.sqrt(p * (1-p));
         });
     });
 };

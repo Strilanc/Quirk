@@ -166,14 +166,15 @@ Inspector.prototype.paint = function(painter, time) {
     this.circuit.paint(painter, this.hand, time);
     this.paintOutput(painter, time);
     this.toolbox.paint(painter, this.hand, time);
-    this.paintHand(painter);
+    this.paintHand(painter, time);
 };
 
 /**
  * @param {!Painter} painter
+ * @param {!number} time
  * @private
  */
-Inspector.prototype.paintHand = function(painter) {
+Inspector.prototype.paintHand = function(painter, time) {
     if (this.hand.pos === null || this.hand.heldGateBlock === null) {
         return;
     }
@@ -183,7 +184,7 @@ Inspector.prototype.paintHand = function(painter) {
         var p = this.hand.pos.offsetBy(0, dh * (k - this.hand.heldGateBlockOffset));
         var r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
         var g = this.hand.heldGateBlock.gates[k];
-        g.paint(painter, r, false, true, null);
+        g.paint(painter, r, false, true, time, null);
     }
 };
 

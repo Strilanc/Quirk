@@ -143,7 +143,37 @@ var main = function() {
         update(inspector.move(null));
     });
 
+    var params = getSearchParameters();
+    if (params.hasOwnProperty("load")) {
+        $(document.getElementById("exportTextBox")).val(params["load"]);
+        try {
+            update(inspector.withImportedCircuit(params["load"]));
+            $(document.getElementById("exportTextBox")).css("background-color", "white");
+        } catch (ex) {
+            $(document.getElementById("exportTextBox")).css("background-color", "pink");
+            alert("Failed to load circuit: " + ex);
+        }
+    }
+
     redraw();
 };
+
+function getSearchParameters() {
+    var paramsText = window.location.search.substr(1);
+    var paramsObject = {};
+    if (paramsText !== null && paramsText !== "") {
+        var paramsKeyVal = paramsText.split("&");
+        for (var i = 0; i < paramsKeyVal.length; i++) {
+            var keyVal = paramsKeyVal[i];
+            var eq = keyVal.indexOf("=");
+            if (eq === -1) {
+                continue;
+            }
+            var key = decodeURIComponent(keyVal.substring(0, eq));
+            paramsObject[key] = decodeURIComponent(keyVal.substring(eq + 1));
+        }
+    }
+    return paramsObject;
+}
 
 main();

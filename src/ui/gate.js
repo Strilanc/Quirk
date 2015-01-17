@@ -697,7 +697,7 @@ Gate.fromJson = function(json) {
     var match = gates.firstMatchElseUndefined(function(g) {
         return g !== null && g.symbol === symbol;
     });
-    if (match !== undefined && (match.isTimeBased() || match.matrix.isEqualTo(matrix))) {
+    if (match !== undefined && (match.isTimeBased() || match.matrixAt(0).isEqualTo(matrix))) {
         return match;
     }
     return new Gate(symbol, matrix, symbol, "An imported gate.");
