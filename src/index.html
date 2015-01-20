@@ -3,6 +3,9 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Quantum Circuit Inspector</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
     <script src="debug/alert_on_error.js"></script>
     <script src="config.js"></script>
     <script src="gif.worker.js"></script>
@@ -13,8 +16,10 @@
     <script src="util/array_util.js"></script>
     <script src="util/point.js"></script>
     <script src="util/complex.js"></script>
+    <script src="util/control_mask.js"></script>
     <script src="util/matrix.js"></script>
     <script src="util/quantum_state.js"></script>
+    <script src="util/quantum_texture.js"></script>
     <script src="ui/painter.js"></script>
     <script src="ui/gate.js"></script>
     <script src="ui/gate_block.js"></script>
@@ -23,9 +28,9 @@
     <script src="ui/toolbox.js"></script>
     <script src="ui/circuit.js"></script>
     <script src="ui/inspector.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 </head>
 <body>
+
     <canvas id="drawCanvas" width="1200px" height="600px" style="border:1px solid #000000;"></canvas>
 
     <br/>

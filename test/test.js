@@ -104,7 +104,7 @@ AssertionSubject.describe = function(e) {
         return "undefined";
     }
     if (Array.isArray(e)) {
-        return e.toArrayString();
+        return "[" + range(e.length).map(function(i) { return AssertionSubject.describe(e[i]); }).join(", ") + "]";
     }
     var result = e.toString();
     if (result === "[object Object]") {

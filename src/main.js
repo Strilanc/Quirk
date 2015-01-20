@@ -176,4 +176,4 @@ function getSearchParameters() {
     return paramsObject;
 }
 
-main();
+initQuantumTexture(main);
