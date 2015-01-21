@@ -6,6 +6,7 @@
  * @property {!THREE.WebGLRenderTarget} texture
  *
  * @constructor
+ * @private
  */
 function QuantumTexture(qubitCount, texture) {
     this.qubitCount = qubitCount;
@@ -16,9 +17,11 @@ function QuantumTexture(qubitCount, texture) {
 }
 
 /**
- * @param {function()} callback
+ * @param {!string} root
+ * @param {function()} successCallback
+ * @param {function(!string)} failCallback
  */
-var initQuantumTexture = function(callback) {
+QuantumTexture.loadThen = function(root, successCallback, failCallback) {
     QuantumTexture.renderer = new THREE.WebGLRenderer();
     QuantumTexture.camera = new THREE.Camera();
     QuantumTexture.camera.position.z = 1;
@@ -48,29 +51,31 @@ var initQuantumTexture = function(callback) {
         "applyCustomQubitOperation.frag"
     ];
     var remaining = shaderFileNames.length;
-    var beginLoading = function(j) {
-        var loc = "shaders/" + shaderFileNames[j];
-        $.get(loc).then(
-            function(src) {
-                QuantumTexture.shaders[shaderFileNames[j].replace(".", "_")] = src;
-                remaining -= 1;
-                if (remaining === 0) {
-                    callback();
-                }
-            },
-            function() {
-                throw new Error("Failed to load shader at shaders/" + shaderFileNames[j]);
-            });
+    var beginLoading = function(fileName) {
+        var loc = root + "shaders/" + fileName;
+        $.get(loc).then(function(src) {
+            QuantumTexture.shaders[fileName.replace(".", "_")] = src;
+            remaining -= 1;
+            if (remaining === 0) {
+                successCallback();
+            }
+        }, function() {
+            if (remaining > 0) {
+                remaining = -1;
+                failCallback("Failed to load: " + loc);
+            }
+        });
     };
 
     for (var i = 0; i < shaderFileNames.length; i++) {
-        beginLoading(i);
+        beginLoading(shaderFileNames[i]);
     }
 };
 
 /**
  * @param {!int} qubitCount
  * @returns {!QuantumTexture}
+ * @private
  */
 QuantumTexture.fromBlankFor = function(qubitCount) {
     return new QuantumTexture(qubitCount, QuantumTexture.makeTextureForQubitCount(qubitCount));
@@ -79,6 +84,7 @@ QuantumTexture.fromBlankFor = function(qubitCount) {
 /**
  * @param {!int} qubitCount
  * @returns {!{type: !string, value: !THREE.Vector2}}
+ * @private
  */
 QuantumTexture.qubitCountToTextureSize = function(qubitCount) {
     return {
@@ -93,6 +99,7 @@ QuantumTexture.qubitCountToTextureSize = function(qubitCount) {
  * @param {!THREE.ShaderMaterial} shader
  * @param {!THREE.WebGLRenderTarget} destTexture
  * @returns {*}
+ * @private
  */
 QuantumTexture.renderWithShaderTo = function(shader, destTexture) {
     QuantumTexture.meshForMaterial.material = shader;
@@ -106,6 +113,7 @@ QuantumTexture.renderWithShaderTo = function(shader, destTexture) {
  * @param {!int} qubitCount
  * @param {!THREE.ShaderMaterial} shader
  * @returns {!QuantumTexture}
+ * @private
  */
 QuantumTexture.createWithShader = function(qubitCount, shader) {
     var destTexture = QuantumTexture.makeTextureForQubitCount(qubitCount);
@@ -116,6 +124,7 @@ QuantumTexture.createWithShader = function(qubitCount, shader) {
 /**
  * @param {!int} qubitCount
  * @returns {!THREE.WebGLRenderTarget}
+ * @private
  */
 QuantumTexture.makeTextureForQubitCount = function(qubitCount) {
     var size = QuantumTexture.qubitCountToTextureSize(qubitCount);
@@ -135,6 +144,7 @@ QuantumTexture.makeTextureForQubitCount = function(qubitCount) {
 
 /**
  * @returns {!QuantumTexture}
+ * @private
  */
 QuantumTexture.prototype.blankClone = function() {
     return new QuantumTexture(this.qubitCount, QuantumTexture.makeTextureForQubitCount(this.qubitCount));
@@ -142,6 +152,7 @@ QuantumTexture.prototype.blankClone = function() {
 
 /**
  * @returns {!QuantumTexture}
+ * @private
  */
 QuantumTexture.prototype.clone = function() {
     var result = this.blankClone();
@@ -151,6 +162,7 @@ QuantumTexture.prototype.clone = function() {
 
 /**
  * @param {!THREE.ShaderMaterial} shader
+ * @private
  */
 QuantumTexture.prototype.overwriteTextureWithShaderRendering = function(shader) {
     QuantumTexture.renderWithShaderTo(shader, this.texture);
@@ -158,6 +170,7 @@ QuantumTexture.prototype.overwriteTextureWithShaderRendering = function(shader) 
 
 /**
  * @param {!QuantumTexture} other
+ * @private
  */
 QuantumTexture.prototype.overwriteTextureWithTextureFrom = function(other) {
     need(this.qubitCount === other.qubitCount, "this.qubitCount === other.qubitCount");
@@ -166,6 +179,7 @@ QuantumTexture.prototype.overwriteTextureWithTextureFrom = function(other) {
 
 /**
  * @param {!Object} srcTexture
+ * @private
  */
 QuantumTexture.prototype.overwriteTexture = function(srcTexture) {
     QuantumTexture.renderWithShaderTo(new THREE.ShaderMaterial({
@@ -178,6 +192,9 @@ QuantumTexture.prototype.overwriteTexture = function(srcTexture) {
     }), this.texture);
 };
 
+/**
+ * @private
+ */
 QuantumTexture.prototype.tryReleaseForReuse = function() {
 };
 
@@ -185,6 +202,7 @@ QuantumTexture.prototype.tryReleaseForReuse = function() {
  * @param {!ControlMask} controlMask
  * @param {!int} qubitCount
  * @returns {!QuantumTexture}
+ * @private
  */
 QuantumTexture.makeControlMaskTexture = function(controlMask, qubitCount) {
     var fromSingleControl = function(index, value) {
@@ -200,7 +218,7 @@ QuantumTexture.makeControlMaskTexture = function(controlMask, qubitCount) {
     };
 
     // If higher bits need to be on, assume the control is simply unsatisfiable.
-    if (controlMask.desiredValueMask >= (1 << (qubitCount + 1))) {
+    if (controlMask.desiredValueMask >= (1 << qubitCount)) {
         return fromSingleControl(qubitCount, true).texture;
     }
 
@@ -265,10 +283,18 @@ QuantumTexture.prototype.withQubitOperationApplied = function(qubitIndex, operat
 
 /**
  * @param {!int} qubitCount
+ * @returns {!QuantumTexture}
+ */
+QuantumTexture.fromZeroes = function(qubitCount) {
+    return QuantumTexture.fromClassicalStateInRegisterOfSize(0, qubitCount);
+};
+
+/**
+ * @param {!int} qubitCount
  * @param {!int} stateMask
  * @returns {!QuantumTexture}
  */
-QuantumTexture.fromClassicalState = function(qubitCount, stateMask) {
+QuantumTexture.fromClassicalStateInRegisterOfSize = function(stateMask, qubitCount) {
     need(qubitCount >= 0, "qubitCount >= 0");
     need(stateMask >= 0 && stateMask < (1 << qubitCount), "stateMask >= 0 && stateMask < (1 << qubitCount)");
 
@@ -300,6 +326,7 @@ QuantumTexture.fromClassicalState = function(qubitCount, stateMask) {
  * There is some precision loss due to the need to pack the values into bytes as an intermediate step.
  * @param {!int} componentIndex Which component should be converted (R=0, G=1,...).
  * @returns {!Float32Array}
+ * @private
  */
 QuantumTexture.prototype.textureComponentToFloatArray = function(componentIndex) {
     var dummyTexture = QuantumTexture.makeTextureForQubitCount(this.qubitCount);
@@ -335,11 +362,10 @@ QuantumTexture.prototype.textureComponentToFloatArray = function(componentIndex)
 };
 
 /**
- * @returns {!QuantumState}
+ * @returns {!Array.<!Complex>}
  */
-QuantumTexture.prototype.toQuantumState = function() {
+QuantumTexture.prototype.toAmplitudes = function() {
     var real = this.textureComponentToFloatArray(0);
     var imag = this.textureComponentToFloatArray(1);
-    var coefs = range(real.length).map(function(i) { return new Complex(real[i], imag[i]); });
-    return new QuantumState(Matrix.col(coefs));
+    return range(real.length).map(function(i) { return new Complex(real[i], imag[i]); });
 };

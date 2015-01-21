@@ -166,7 +166,7 @@ AssertionSubject.prototype.isNotApproximatelyEqualTo = function(other, epsilon) 
 };
 
 /**
- *
+ * Returns an assertion subject for the given value, which can be fluently extended with conditions like "isEqualTo".
  * @param {*} subject
  * @param {=undefined} extraArgCatcher
  * returns {!AssertionSubject}
@@ -177,4 +177,23 @@ var assertThat = function(subject, extraArgCatcher) {
         fail('Extra assertThat arg');
     }
     return new AssertionSubject(subject);
+};
+
+/**
+ * Invokes a function, requiring it to throw an exception. Returns the exception wrapped in an assertion subject.
+ * @param {function()} func
+ * @param {=undefined} extraArgCatcher
+ * returns {!AssertionSubject}
+ */
+var assertThrows = function(func, extraArgCatcher) {
+    if (extraArgCatcher !== undefined) {
+        fail('Extra assertThat arg');
+    }
+    try {
+        func();
+    } catch(ex) {
+        return assertThat(ex);
+    }
+    fail('Expected an exception to be thrown by ' + func);
+    return undefined;
 };

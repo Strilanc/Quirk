@@ -1,14 +1,11 @@
 //noinspection FunctionTooLongJS
 var main = function() {
-    var possibleCanvas = document.getElementById("drawCanvas");
-    if (!(possibleCanvas instanceof HTMLCanvasElement)) {
-        // Probably running the tests.
-        return;
-    }
-
     //noinspection JSValidateTypes
     /** @type {!HTMLCanvasElement} */
-    var canvas = possibleCanvas;
+    var canvas = document.getElementById("drawCanvas");
+    if (canvas === null) {
+        throw new Error("Couldn't find 'drawCanvas'");
+    }
 
     /** @type {!Inspector} */
     var inspector = Inspector.empty(Config.NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
@@ -176,4 +173,4 @@ function getSearchParameters() {
     return paramsObject;
 }
 
-initQuantumTexture(main);
+QuantumTexture.loadThen("", main, function(reason) { throw new Error(reason); });

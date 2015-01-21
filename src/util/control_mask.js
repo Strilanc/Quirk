@@ -20,7 +20,7 @@ ControlMask.NO_CONTROLS = new ControlMask(0, 0);
  * @returns {!boolean}
  */
 ControlMask.prototype.allowsState = function(stateIndex) {
-    return (this.inclusionMask & stateIndex) === (this.desiredValueMask & stateIndex);
+    return (this.inclusionMask & stateIndex) === this.desiredValueMask;
 };
 
 /**
