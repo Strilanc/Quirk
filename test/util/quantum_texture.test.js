@@ -1,28 +1,4 @@
-QuantumTextureTest = AsyncTestCase("QuantumTextureTest");
-
-//noinspection JSUnusedGlobalSymbols
-QuantumTextureTest.prototype.setUp = function(queue) {
-    assertTrue(THREE !== undefined);
-
-    var loadedElseReason = false;
-    queue.call(function(callbacks) {
-        var done = callbacks.add(function() {});
-        QuantumTexture.loadThen(
-            "/test/src/",
-            function() {
-                done();
-                loadedElseReason = true;
-            },
-            function(s) {
-                done();
-                loadedElseReason = s;
-            });
-    });
-
-    queue.call(function() {
-        assertThat(loadedElseReason).isEqualTo(true);
-    });
-};
+QuantumTextureTest = TestCase("QuantumTextureTest");
 
 QuantumTextureTest.prototype.testFromZeroes = function() {
     assertThrows(function() { QuantumTexture.fromZeroes(-1); });

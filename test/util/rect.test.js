@@ -172,6 +172,18 @@ RectTest.prototype.testTakeLeftProportion = function() {
     assertThat(new Rect(2, 3, 5, 7).takeLeftProportion(0.25)).isEqualTo(new Rect(2, 3, 1.25, 7));
 };
 
+RectTest.prototype.testTakeRightProportion = function() {
+    assertThat(new Rect(2, 3, 5, 7).takeRightProportion(0.25)).isEqualTo(new Rect(5.75, 3, 1.25, 7));
+};
+
+RectTest.prototype.testTakeTopProportion = function() {
+    assertThat(new Rect(2, 3, 5, 7).takeTopProportion(0.25)).isEqualTo(new Rect(2, 3, 5, 1.75));
+};
+
+RectTest.prototype.testTakeBottomProportion = function() {
+    assertThat(new Rect(2, 3, 5, 7).takeBottomProportion(0.25)).isEqualTo(new Rect(2, 8.25, 5, 1.75));
+};
+
 RectTest.prototype.testLeftHalf = function() {
     assertThat(new Rect(2, 3, 5, 7).leftHalf()).isEqualTo(new Rect(2, 3, 2.5, 7));
 };
@@ -200,6 +212,20 @@ RectTest.prototype.testWithX = function() {
     assertThat(new Rect(2, 3, 5, 7).withX(11)).isEqualTo(new Rect(11, 3, 5, 7));
 };
 
+RectTest.prototype.testWithY = function() {
+    assertThat(new Rect(2, 3, 5, 7).withY(11)).isEqualTo(new Rect(2, 11, 5, 7));
+};
+
 RectTest.prototype.testWithW = function() {
     assertThat(new Rect(2, 3, 5, 7).withW(11)).isEqualTo(new Rect(2, 3, 11, 7));
+};
+
+RectTest.prototype.testWithH = function() {
+    assertThat(new Rect(2, 3, 5, 7).withH(11)).isEqualTo(new Rect(2, 3, 5, 11));
+};
+
+RectTest.prototype.testScaledOutwardBy = function() {
+    assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0)).isEqualTo(new Rect(4.5, 6.5, 0, 0));
+    assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0.5)).isEqualTo(new Rect(3.25, 4.75, 2.5, 3.5));
+    assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(2)).isEqualTo(new Rect(-0.5, -0.5, 10, 14));
 };

@@ -236,7 +236,7 @@ Rect.prototype.scaledOutwardBy = function(factor) {
     var c = this.center();
     var w2 = this.w * factor;
     var h2 = this.h * factor;
-    return new Rect(c.x - w2/2, c.y - w2/2, w2, h2);
+    return new Rect(c.x - w2/2, c.y - h2/2, w2, h2);
 };
 
 /**
