@@ -46,46 +46,81 @@ QuantumTextureTest.prototype.testWithQubitOperationApplied = skipTestIfWebGlNotA
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 1); });
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 4); });
 
-    var q = QuantumTexture.fromZeroes(2);
+    var z2 = QuantumTexture.fromZeroes(2);
     var s = Math.sqrt(0.5);
 
+    // Column extraction
+    var m = Matrix.square([
+        new Complex(1/2, 1/3), new Complex(1/5, 1/7),
+        new Complex(1/11, 1/13), new Complex(1/17, 1/19)
+    ]);
+    assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(0x0, 1)
+        .withQubitOperationApplied(0, m, ControlMask.NO_CONTROLS)
+        .toAmplitudes())
+        .isApproximatelyEqualTo([new Complex(1/2, 1/3), new Complex(1/11, 1/13)]);
+    assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(0x1, 1)
+        .withQubitOperationApplied(0, m, ControlMask.NO_CONTROLS)
+        .toAmplitudes())
+        .isApproximatelyEqualTo([new Complex(1/5, 1/7), new Complex(1/17, 1/19)]);
+
+    // Single-qubit Hadamard
+    assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(0x0, 1)
+        .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .toAmplitudes())
+        .isApproximatelyEqualTo([s, s]);
+    assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(0x1, 1)
+        .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .toAmplitudes())
+        .isApproximatelyEqualTo([s, -s]);
+
+    // Interference
+    assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(0x0, 1)
+        .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(0, m, ControlMask.NO_CONTROLS)
+        .toAmplitudes())
+        .isApproximatelyEqualTo([new Complex(s/2 + s/5, s/3 + s/7), new Complex(s/11 + s/17, s/13 + s/19)]);
+    assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(0x1, 1)
+        .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(0, m, ControlMask.NO_CONTROLS)
+        .toAmplitudes())
+        .isApproximatelyEqualTo([new Complex(s/2 - s/5, s/3 - s/7), new Complex(s/11 - s/17, s/13 - s/19)]);
+
     // Results from application to a classical state
-    assertThat(q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS).toAmplitudes())
         .isApproximatelyEqualTo([s, s, 0, 0]);
-    assertThat(q.withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.NO_CONTROLS).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.NO_CONTROLS).toAmplitudes())
         .isApproximatelyEqualTo([s, 0, s, 0]);
-    assertThat(q.withQubitOperationApplied(0, Gate.UP.matrixAt(0), ControlMask.NO_CONTROLS).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Gate.UP.matrixAt(0), ControlMask.NO_CONTROLS).toAmplitudes())
         .isApproximatelyEqualTo([new Complex(0.5, -0.5), new Complex(0.5, 0.5), 0, 0]);
 
     // Chained
-    assertThat(q.withQubitOperationApplied(0, Gate.UP.matrixAt(0), ControlMask.NO_CONTROLS)
-                .withQubitOperationApplied(1, Gate.UP.matrixAt(0), ControlMask.NO_CONTROLS)
-                .toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Gate.UP.matrixAt(0), ControlMask.NO_CONTROLS)
+                 .withQubitOperationApplied(1, Gate.UP.matrixAt(0), ControlMask.NO_CONTROLS)
+                 .toAmplitudes())
         .isApproximatelyEqualTo([new Complex(0, -0.5), 0.5, 0.5, new Complex(0, 0.5)]);
 
     // Controls not allowed on the qubit being operated on.
-    assertThrows(function() { q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(0, true)); });
-    assertThrows(function() { q.withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.fromBitIs(1, true)); });
+    assertThrows(function() { z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(0, true)); });
+    assertThrows(function() { z2.withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.fromBitIs(1, true)); });
 
     // Controlled
-    assertThat(q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(1, false)).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(1, false)).toAmplitudes())
         .isApproximatelyEqualTo([Math.sqrt(0.5), Math.sqrt(0.5), 0, 0]);
-    assertThat(q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(1, true)).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(1, true)).toAmplitudes())
         .isApproximatelyEqualTo([1, 0, 0, 0]);
-    assertThat(q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+    assertThat(z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
                 .withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.fromBitIs(0, true))
                 .toAmplitudes())
         .isApproximatelyEqualTo([s, 0.5, 0, 0.5]);
 
     // Qubits outside of register default to zero w.r.t. controls
-    assertThat(q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(2, false)).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(2, false)).toAmplitudes())
         .isApproximatelyEqualTo([Math.sqrt(0.5), Math.sqrt(0.5), 0, 0]);
-    assertThat(q.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(2, true)).toAmplitudes())
+    assertThat(z2.withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.fromBitIs(2, true)).toAmplitudes())
         .isApproximatelyEqualTo([1, 0, 0, 0]);
 
     // Multi-controlled
-    var q4 = QuantumTexture.fromZeroes(4);
-    var h4 = q4.
+    var h4 = QuantumTexture.fromZeroes(4).
         withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS).
         withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.NO_CONTROLS).
         withQubitOperationApplied(2, Matrix.HADAMARD, ControlMask.NO_CONTROLS).

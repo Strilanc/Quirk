@@ -8,7 +8,7 @@
  * A texture holding the complex coefficients of the superposition to operate on.
  * The real components are in the red component, and the imaginary components are in the green component.
  */
-uniform sampler2D texture;
+uniform sampler2D inputTexture;
 
 /**
  * A texture with flags that determine which states get affected by the operation.
@@ -27,55 +27,57 @@ uniform vec2 textureSize;
 uniform float qubitIndexMask;
 
 /**
- * Vectors containing real and imaginary components of the coefficients from the 2x2 unitary matrix representing
- * the operation to apply. The components are laid out so that dot-producting them against a vector of the form
- * {inputOff.real, inputOff.imag, inputOn.real, inputOn.imag} gives the named output component.
+ * The row-wise complex coefficients of the matrix to apply. Laid out normally, they would be:
+ * M = |a b|
+ *     |c d|
  */
-uniform vec4 dotProductCoefficients_RealOff,
-             dotProductCoefficients_ImagOff,
-             dotProductCoefficients_RealOn,
-             dotProductCoefficients_ImagOn;
+uniform vec2 matrix_a, matrix_b, matrix_c, matrix_d;
 
 vec2 stateIndexToColRow(float s) {
-    vec2 xy;
-    xy.x = mod(s, textureSize.x);
-    xy.y = floor(s / textureSize.x);
-    return xy;
+    float c = s + 0.5;
+    return vec2(
+        mod(c, textureSize.x) - 0.5,
+        floor(c / textureSize.x));
 }
 
 void main() {
     vec2 colRow = gl_FragCoord.xy - vec2(0.5, 0.5);
     vec2 uv = colRow.xy / textureSize.xy;
 
+    // Check if this part of the superposition is not changing due to not matching a control bit.
     bool doesNotMatchControls = texture2D(controlTexture, uv).x == 0.0;
     if (doesNotMatchControls) {
-        gl_FragColor = texture2D(texture, uv);
+        gl_FragColor = texture2D(inputTexture, uv);
         return;
     }
 
+    // Determine the value of the operated-on bit for the output pixel we're working on
     float stateIndex = colRow.y * textureSize.x + colRow.x;
-    bool stateBitValue = mod(stateIndex, qubitIndexMask / 0.5) > qubitIndexMask - 0.5;
+    float stateBitScalar = mod(stateIndex, qubitIndexMask * 2.0) - mod(stateIndex, qubitIndexMask);
+    bool stateBitBool = 2.0 * stateBitScalar > qubitIndexMask;
 
-    vec4 dotVectorReal, dotVectorImag;
-    vec2 uvOff, uvOn;
-    if (stateBitValue) {
-        uvOff = stateIndexToColRow(stateIndex - qubitIndexMask) / textureSize.xy;
-        uvOn = uv;
-        dotVectorReal = dotProductCoefficients_RealOn;
-        dotVectorImag = dotProductCoefficients_ImagOn;
+    // The row we operate against is determined by the output pixel's operated-on-bit's value
+    vec2 r, s;
+    if (stateBitBool) {
+        r = matrix_d;
+        s = matrix_c;
     } else {
-        uvOff = uv;
-        uvOn = stateIndexToColRow(stateIndex + qubitIndexMask) / textureSize.xy;
-        dotVectorReal = dotProductCoefficients_RealOff;
-        dotVectorImag = dotProductCoefficients_ImagOff;
+        r = matrix_a;
+        s = matrix_b;
     }
 
-    vec2 amplitudeOff = texture2D(texture, uvOff).xy;
-    vec2 amplitudeOn = texture2D(texture, uvOn).xy;
-    vec4 amplitudeCombo = vec4(amplitudeOff.r, amplitudeOff.g, amplitudeOn.r, amplitudeOn.g);
+    // Grab the amplitude of the opposing state (the one you get by flipping the operated-on bit)
+    float otherStateIndex = stateIndex + qubitIndexMask - 2.0 * stateBitScalar;
+    vec2 uvOther = stateIndexToColRow(otherStateIndex) / textureSize.xy;
 
-    vec2 stateAmplitudeAfter = vec2(
-        dot(amplitudeCombo, dotVectorReal),
-        dot(amplitudeCombo, dotVectorImag));
-    gl_FragColor = vec4(stateAmplitudeAfter, 0, 1);
+    // Do (part of) the matrix multiplication
+    vec4 amplitudeCombo = vec4(texture2D(inputTexture, uv).xy,
+                               texture2D(inputTexture, uvOther).xy);
+    vec4 dotReal = vec4(r.x, -r.y,
+                        s.x, -s.y);
+    vec4 dotImag = vec4(r.y, r.x,
+                        s.y, s.x);
+    vec2 outputAmplitude = vec2(dot(amplitudeCombo, dotReal), dot(amplitudeCombo, dotImag));
+
+    gl_FragColor = vec4(outputAmplitude, 0, 0);
 }
