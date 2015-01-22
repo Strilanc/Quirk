@@ -1,6 +1,6 @@
 QuantumTextureTest = TestCase("QuantumTextureTest");
 
-QuantumTextureTest.prototype.testFromZeroes = function() {
+QuantumTextureTest.prototype.testFromZeroes = skipTestIfWebGlNotAvailable(function() {
     assertThrows(function() { QuantumTexture.fromZeroes(-1); });
     assertThat(QuantumTexture.fromZeroes(0).toAmplitudes()).isEqualTo([1]);
     assertThat(QuantumTexture.fromZeroes(1).toAmplitudes()).isEqualTo([1, 0]);
@@ -8,9 +8,9 @@ QuantumTextureTest.prototype.testFromZeroes = function() {
     assertThat(QuantumTexture.fromZeroes(3).toAmplitudes()).isEqualTo([1, 0, 0, 0, 0, 0, 0, 0]);
     assertThat(QuantumTexture.fromZeroes(9).toAmplitudes())
         .isEqualTo(repeat(Complex.ZERO, 512).withItemReplacedAtBy(0, Complex.ONE));
-};
+});
 
-QuantumTextureTest.prototype.testFromClassicalStateInRegisterOfSize = function() {
+QuantumTextureTest.prototype.testFromClassicalStateInRegisterOfSize = skipTestIfWebGlNotAvailable(function() {
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 0); });
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 1); });
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 4); });
@@ -39,9 +39,9 @@ QuantumTextureTest.prototype.testFromClassicalStateInRegisterOfSize = function()
         .isEqualTo(repeat(Complex.ZERO, 1024).withItemReplacedAtBy(0, Complex.ONE));
     assertThat(QuantumTexture.fromClassicalStateInRegisterOfSize(217, 10).toAmplitudes())
         .isEqualTo(repeat(Complex.ZERO, 1024).withItemReplacedAtBy(217, Complex.ONE));
-};
+});
 
-QuantumTextureTest.prototype.testWithQubitOperationApplied = function() {
+QuantumTextureTest.prototype.testWithQubitOperationApplied = skipTestIfWebGlNotAvailable(function() {
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 0); });
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 1); });
     assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 4); });
@@ -98,4 +98,4 @@ QuantumTextureTest.prototype.testWithQubitOperationApplied = function() {
         0.25, -0.25, 0.25, -0.25,
         0.25, 0.25, 0.25, 0.25
     ]);
-};
+});

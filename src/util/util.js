@@ -307,7 +307,7 @@ var floatToCompactString = function(value, epsilon, digits) {
         return Math.abs(Math.sqrt(e.value) - value) <= epsilon;
     });
     if (rootFraction !== undefined) {
-        return "√" + rootFraction.character;
+        return "\u221A" + rootFraction.character;
     }
 
     if (value % 1 !== 0 && digits !== undefined) {
@@ -330,7 +330,7 @@ var parseFloatFromCompactString = function(text) {
     if (text[0] === "-") {
         return -parseFloatFromCompactString(text.substr(1));
     }
-    if (text[0] === "√") {
+    if (text[0] === "\u221A") {
         return Math.sqrt(parseFloatFromCompactString(text.substr(1)));
     }
 

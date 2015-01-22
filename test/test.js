@@ -197,3 +197,13 @@ var assertThrows = function(func, extraArgCatcher) {
     fail('Expected an exception to be thrown by ' + func);
     return undefined;
 };
+
+var skipTestIfWebGlNotAvailable = function(func) {
+    //noinspection JSUnresolvedVariable
+    if (window.WebGLRenderingContext === undefined) {
+        return function() {
+            jstestdriver.console.log("JsTestDriver", "Skipping test due to lack of WebGL: " + func);
+        }
+    }
+    return func;
+};

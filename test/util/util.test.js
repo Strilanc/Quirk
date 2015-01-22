@@ -144,13 +144,13 @@ UtilTest.prototype.testFloatToCompactString = function() {
     assertThat(floatToCompactString(0.5)).isEqualTo("\u00BD");
     assertThat(floatToCompactString(2)).isEqualTo("2");
     assertThat(floatToCompactString(-1/3)).isEqualTo("-\u2153");
-    assertThat(floatToCompactString(Math.sqrt(1/2))).isEqualTo("√\u00BD");
+    assertThat(floatToCompactString(Math.sqrt(1/2))).isEqualTo("\u221A\u00BD");
 
-    assertThat(floatToCompactString(1/Math.sqrt(2))).isNotEqualTo("√\u00BD");
+    assertThat(floatToCompactString(1/Math.sqrt(2))).isNotEqualTo("\u221A\u00BD");
     assertThat(floatToCompactString(1/Math.sqrt(2), 0)).isEqualTo("0.7071067811865475");
-    assertThat(floatToCompactString(1/Math.sqrt(2), 0.00000001)).isEqualTo("√\u00BD");
-    assertThat(floatToCompactString(1/Math.sqrt(2)+0.0001, 0.001)).isEqualTo("√\u00BD");
-    assertThat(floatToCompactString(1/Math.sqrt(2)+0.0001, 0.00000001)).isNotEqualTo("√\u00BD");
+    assertThat(floatToCompactString(1/Math.sqrt(2), 0.00000001)).isEqualTo("\u221A\u00BD");
+    assertThat(floatToCompactString(1/Math.sqrt(2)+0.0001, 0.001)).isEqualTo("\u221A\u00BD");
+    assertThat(floatToCompactString(1/Math.sqrt(2)+0.0001, 0.00000001)).isNotEqualTo("\u221A\u00BD");
 
     assertThat(floatToCompactString(0.342123)).isEqualTo("0.342123");
     assertThat(floatToCompactString(0.342123, undefined, 2)).isEqualTo("0.34");
@@ -166,12 +166,12 @@ UtilTest.prototype.testParseFloatFromCompactString = function() {
     assertThat(parseFloatFromCompactString("\u00BD")).isEqualTo(0.5);
     assertThat(parseFloatFromCompactString("2")).isEqualTo(2);
     assertThat(parseFloatFromCompactString("501")).isEqualTo(501);
-    assertThat(parseFloatFromCompactString("√2")).isEqualTo(Math.sqrt(2));
-    assertThat(parseFloatFromCompactString("-√3")).isEqualTo(-Math.sqrt(3));
+    assertThat(parseFloatFromCompactString("\u221A2")).isEqualTo(Math.sqrt(2));
+    assertThat(parseFloatFromCompactString("-\u221A3")).isEqualTo(-Math.sqrt(3));
 
     assertThat(parseFloatFromCompactString("0.7071067811865475")).isEqualTo(1/Math.sqrt(2));
     assertThat(parseFloatFromCompactString("0.7071067811865476")).isEqualTo(Math.sqrt(1/2));
-    assertThat(parseFloatFromCompactString("√\u00BD")).isEqualTo(Math.sqrt(1/2));
+    assertThat(parseFloatFromCompactString("\u221A\u00BD")).isEqualTo(Math.sqrt(1/2));
     assertThat(parseFloatFromCompactString("-\u2153")).isEqualTo(-1/3);
 
     assertThat(parseFloatFromCompactString("0.34")).isEqualTo(0.34);

@@ -73,7 +73,7 @@ ComplexTest.prototype.testToString = function() {
     assertThat(new Complex(2, 2).toString()).isEqualTo("2+2i");
 
     assertThat(new Complex(2, -3).toString()).isEqualTo("2-3i");
-    assertThat(new Complex(Math.sqrt(1/2), -1/3).toString()).isEqualTo("√\u00BD-\u2153i");
+    assertThat(new Complex(Math.sqrt(1/2), -1/3).toString()).isEqualTo("\u221A\u00BD-\u2153i");
 };
 
 ComplexTest.prototype.testParse = function() {
@@ -92,7 +92,7 @@ ComplexTest.prototype.testParse = function() {
     assertThat(Complex.parse("-5+2i")).isEqualTo(new Complex(-5, 2));
     assertThat(Complex.parse("-5-2i")).isEqualTo(new Complex(-5, -2));
 
-    assertThat(Complex.parse("√2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
+    assertThat(Complex.parse("\u221A2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
 };
 
 ComplexTest.prototype.testNorm2 = function() {

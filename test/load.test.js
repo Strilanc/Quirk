@@ -1,6 +1,6 @@
 LoadTest = AsyncTestCase("LoadTest");
 
-LoadTest.prototype.testLoad = function(queue) {
+LoadTest.prototype.testLoad = skipTestIfWebGlNotAvailable(function(queue) {
     // JQuery
     assertTrue($ !== undefined);
     // Three.js
@@ -24,4 +24,4 @@ LoadTest.prototype.testLoad = function(queue) {
     queue.call(function() {
         assertThat(loadedElseReason).isEqualTo(true);
     });
-};
+});

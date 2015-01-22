@@ -67,7 +67,7 @@ MatrixTest.prototype.testParse = function() {
         Matrix.square([1]));
     assertThat(Matrix.parse("{{i}}")).isEqualTo(
         Matrix.square([Complex.I]));
-    assertThat(Matrix.parse("{{√2}}")).isEqualTo(
+    assertThat(Matrix.parse("{{\u221A2}}")).isEqualTo(
         Matrix.square([Math.sqrt(2)]));
 
     assertThat(Matrix.parse("{{\u00BD-\u00BDi, 5}, {-i, 0}}")).isEqualTo(
