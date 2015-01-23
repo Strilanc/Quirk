@@ -26,7 +26,7 @@ uniform sampler2D controlTexture2;
  * when both are satisfied.
  */
 void main() {
-    vec2 uv = (gl_FragCoord.xy - vec2(0.5, 0.5)) / textureSize.xy;
+    vec2 uv = gl_FragCoord.xy / textureSize.xy;
     float c1 = texture2D(controlTexture1, uv).x;
     float c2 = texture2D(controlTexture2, uv).x;
     gl_FragColor = vec4(c1 * c2, 0, 0, 0);

@@ -156,3 +156,34 @@ QuantumTextureTest.prototype.testWithQubitOperationApplied = skipTestIfWebGlNotA
         0.25, 0.25, 0.25, 0.25
     ]);
 });
+
+QuantumTextureTest.prototype.testProbabilities = function() {
+    var t0 = QuantumTexture.fromAmplitudes(Matrix.row(
+        [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80]).rows[0]);
+    assertThat(t0.perQubitProbabilities()).isEqualTo([1 - 0x1111, 1 - 0x0505, 1 - 0x55]);
+
+    var t1 = QuantumTexture.fromZeroes(4)
+        .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(2, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(3, Matrix.HADAMARD, ControlMask.NO_CONTROLS);
+    assertThat(t1.perQubitProbabilities()).isApproximatelyEqualTo([0.5, 0.5, 0.5, 0.5]);
+
+    var m = Matrix.square([new Complex(0.5, 0.5), new Complex(0.5, -0.5),
+                           new Complex(0.5, -0.5), new Complex(0.5, 0.5)]);
+    var t2 = QuantumTexture.fromZeroes(4)
+        .withQubitOperationApplied(0, m, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(1, m, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(2, m, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(3, m, ControlMask.NO_CONTROLS);
+    assertThat(t2.perQubitProbabilities()).isEqualTo([0.5, 0.5, 0.5, 0.5]);
+
+    var t3 = QuantumTexture.fromZeroes(3)
+        .withQubitOperationApplied(1, Matrix.fromTargetedRotation(1/21), ControlMask.NO_CONTROLS);
+    assertThat(t3.perQubitProbabilities()).isApproximatelyEqualTo([0, 1/21, 0]);
+
+    var t4 = QuantumTexture.fromZeroes(3)
+        .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
+        .withQubitOperationApplied(1, Matrix.fromTargetedRotation(1/21), ControlMask.fromBitIs(0, true));
+    assertThat(t4.perQubitProbabilities()).isApproximatelyEqualTo([0.5, 1/42, 0]);
+};

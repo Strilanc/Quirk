@@ -190,53 +190,72 @@ UtilTest.prototype.testRoundToNearbyFractionOrRoot = function() {
 
 UtilTest.prototype.testCacheFunc1 = function() {
     var calls = [];
-    var func = cacheFunc1("a", function(i) {
+    var func = cacheFunc1(function(i) {
         calls.push(i);
-        return [this, i];
+        return [i];
     });
 
     assertThat(calls).isEqualTo([]);
 
-    assertThat(func(1)).isEqualTo(["a", 1]);
+    assertThat(func(1)).isEqualTo([1]);
     assertThat(calls).isEqualTo([1]);
 
-    assertThat(func(3)).isEqualTo(["a", 3]);
+    assertThat(func(3)).isEqualTo([3]);
     assertThat(calls).isEqualTo([1, 3]);
 
-    assertThat(func(1)).isEqualTo(["a", 1]);
+    assertThat(func(1)).isEqualTo([1]);
     assertThat(calls).isEqualTo([1, 3]);
 
-    assertThat(func(1)).isEqualTo(["a", 1]);
+    assertThat(func(1)).isEqualTo([1]);
     assertThat(calls).isEqualTo([1, 3]);
 
-    assertThat(func(2)).isEqualTo(["a", 2]);
+    assertThat(func(2)).isEqualTo([2]);
     assertThat(calls).isEqualTo([1, 3, 2]);
 };
 
 UtilTest.prototype.testCacheFunc2 = function() {
     var calls = [];
-    var func = cacheFunc2("a", function(i, j) {
+    var func = cacheFunc2(function(i, j) {
         calls.push([i, j]);
-        return [this, i, j];
+        return [i, j];
     });
 
     assertThat(calls).isEqualTo([]);
 
-    assertThat(func(1, 2)).isEqualTo(["a", 1, 2]);
+    assertThat(func(1, 2)).isEqualTo([1, 2]);
     assertThat(calls).isEqualTo([[1, 2]]);
 
-    assertThat(func(2, 1)).isEqualTo(["a", 2, 1]);
+    assertThat(func(2, 1)).isEqualTo([2, 1]);
     assertThat(calls).isEqualTo([[1, 2], [2, 1]]);
 
-    assertThat(func(2, 2)).isEqualTo(["a", 2, 2]);
+    assertThat(func(2, 2)).isEqualTo([2, 2]);
     assertThat(calls).isEqualTo([[1, 2], [2, 1], [2, 2]]);
 
-    assertThat(func(2, 1)).isEqualTo(["a", 2, 1]);
+    assertThat(func(2, 1)).isEqualTo([2, 1]);
     assertThat(calls).isEqualTo([[1, 2], [2, 1], [2, 2]]);
 
-    assertThat(func(100, -2)).isEqualTo(["a", 100, -2]);
+    assertThat(func(100, -2)).isEqualTo([100, -2]);
     assertThat(calls).isEqualTo([[1, 2], [2, 1], [2, 2], [100, -2]]);
 
-    assertThat(func(1, 2)).isEqualTo(["a", 1, 2]);
+    assertThat(func(1, 2)).isEqualTo([1, 2]);
     assertThat(calls).isEqualTo([[1, 2], [2, 1], [2, 2], [100, -2]]);
+};
+
+UtilTest.prototype.testCacheFunc3 = function() {
+    var calls = [];
+    var func = cacheFunc3(function(i, j, k) {
+        calls.push([i, j, k]);
+        return [i, j, k];
+    });
+
+    assertThat(calls).isEqualTo([]);
+
+    assertThat(func(1, 2, 3)).isEqualTo([1, 2, 3]);
+    assertThat(calls).isEqualTo([[1, 2, 3]]);
+
+    assertThat(func(2, 1, 4)).isEqualTo([2, 1, 4]);
+    assertThat(calls).isEqualTo([[1, 2, 3], [2, 1, 4]]);
+
+    assertThat(func(1, 2, 3)).isEqualTo([1, 2, 3]);
+    assertThat(calls).isEqualTo([[1, 2, 3], [2, 1, 4]]);
 };

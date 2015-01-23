@@ -604,13 +604,9 @@ Gate.SILLY_GATES = [
  */
 Gate.fromTargetedRotation = function(p, fractionLabel, fractionSymbol) {
     need(p >= -1 && p <= 1, arguments);
-    var c = Math.sqrt(1 - Math.abs(p));
-    var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
-    c = roundToNearbyFractionOrRoot(c, 0.00000000001);
-    s = roundToNearbyFractionOrRoot(s, 0.00000000001);
     return new Gate(
         "∠" + (fractionSymbol || fractionLabel),
-        Matrix.square([c, -s, s, c]),
+        Matrix.fromTargetedRotation(p),
         "" + fractionLabel + " Target Rotation Gate",
         "A rotation gate tuned to transition an initially-OFF qubit to\n" +
         "having a " + fractionLabel + "s probability of being ON.\n\n" +

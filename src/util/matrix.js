@@ -363,6 +363,15 @@ Matrix.fromPauliRotation = function (x, y, z) {
     return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
 };
 
+Matrix.fromTargetedRotation = function(p) {
+    need(p >= -1 && p <= 1, arguments);
+    var c = Math.sqrt(1 - Math.abs(p));
+    var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
+    c = roundToNearbyFractionOrRoot(c, 0.00000000001);
+    s = roundToNearbyFractionOrRoot(s, 0.00000000001);
+    return Matrix.square([c, -s, s, c]);
+}
+
 /**
  * @param {!function(!number) : !number} func
  * @returns {!Matrix}

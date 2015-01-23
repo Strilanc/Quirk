@@ -351,16 +351,15 @@ var parseFloatFromCompactString = function(text) {
 /**
  * Wraps a caching layer around a function.
  * The arguments must be usable as keys.
- * @param {*} bindThis
  * @param {!function(T) : R} func
  * @returns {!function(T) : R}
  * @template T, R
  */
-var cacheFunc1 = function(bindThis, func) {
+var cacheFunc1 = function(func) {
     var cacheObject = {};
     return function(arg) {
         if (!cacheObject.hasOwnProperty(arg)) {
-            cacheObject[arg] = func.bind(bindThis)(arg);
+            cacheObject[arg] = func(arg);
         }
         return cacheObject[arg];
     };
@@ -369,18 +368,35 @@ var cacheFunc1 = function(bindThis, func) {
 /**
  * Wraps a caching layer around a function.
  * The arguments must be usable as keys.
- * @param {*} bindThis
  * @param {!function(T1, T2) : R} func
  * @returns {!function(T1, T2) : R}
  * @template T1, T2, R
  */
-var cacheFunc2 = function(bindThis, func) {
-    var partial = cacheFunc1(null, function(arg1) {
-        return cacheFunc1(null, function(arg2) {
-            return func.bind(bindThis)(arg1, arg2);
+var cacheFunc2 = function(func) {
+    var partial = cacheFunc1(function(arg1) {
+        return cacheFunc1(function(arg2) {
+            return func(arg1, arg2);
         })
     });
     return function(arg1, arg2) {
         return partial(arg1)(arg2);
+    };
+};
+
+/**
+ * Wraps a caching layer around a function.
+ * The arguments must be usable as keys.
+ * @param {!function(T1, T2, T3) : R} func
+ * @returns {!function(T1, T2, T3) : R}
+ * @template T1, T2, T3, R
+ */
+var cacheFunc3 = function(func) {
+    var partial = cacheFunc1(function(arg1) {
+        return cacheFunc2(function(arg2, arg3) {
+            return func(arg1, arg2, arg3);
+        })
+    });
+    return function(arg1, arg2, arg3) {
+        return partial(arg1)(arg2, arg3);
     };
 };
