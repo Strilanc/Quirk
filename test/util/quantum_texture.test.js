@@ -13,6 +13,13 @@ QuantumTextureTest.prototype.testMaintainsAmplitudes = skipTestIfWebGlNotAvailab
     var roundTripped = QuantumTexture.fromAmplitudes(precisionAmps).toAmplitudes();
     assertThat(roundTripped).isApproximatelyEqualTo(precisionAmps, Math.pow(2, -23));
     assertThat(roundTripped).isApproximatelyEqualTo(precisionAmps, 0.0000001);
+
+    assertThat(QuantumTexture.fromAmplitudes([Complex.from(1.1)]).toAmplitudes())
+        .isApproximatelyEqualTo([1.1], Math.pow(2, -25));
+    assertThat(QuantumTexture.fromAmplitudes([Complex.from(100.1)]).toAmplitudes())
+        .isApproximatelyEqualTo([100.1], Math.pow(2, -19));
+    assertThat(QuantumTexture.fromAmplitudes([Complex.from(110100100010001)]).toAmplitudes())
+        .isApproximatelyEqualTo([110100100010001], Math.pow(2, 22));
 });
 
 QuantumTextureTest.prototype.testFromZeroes = skipTestIfWebGlNotAvailable(function() {
