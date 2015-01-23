@@ -48,7 +48,7 @@ QuantumTexture.loadThen = function(root, successCallback, failCallback) {
     QuantumTexture._sharedCamera = new THREE.Camera();
     QuantumTexture._sharedCamera.position.z = 1;
     QuantumTexture._sharedMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(2, 2),
+        new THREE.PlaneBufferGeometry(2, 2),
         new THREE.MeshBasicMaterial({color: 0}));
     QuantumTexture._sharedScene = new THREE.Scene();
     QuantumTexture._sharedScene.add(QuantumTexture._sharedMesh);
@@ -111,6 +111,40 @@ QuantumTexture._blank = function(qubitCount) {
             depthBuffer: false
         });
     return new QuantumTexture(qubitCount, texture);
+};
+
+/**
+ * @param {!Array.<!Complex>} amplitudes
+ * @returns {!QuantumTexture}
+ */
+QuantumTexture.fromAmplitudes = function(amplitudes) {
+    need(isPowerOf2(amplitudes.length));
+    var qubitCount = Math.round(lg(amplitudes.length));
+
+    var dataArray = new Float32Array(amplitudes.length * 4);
+    for (var i = 0; i < amplitudes.length; i++) {
+        dataArray[i*4] = amplitudes[i].real;
+        dataArray[i*4 + 1] = amplitudes[i].imag;
+    }
+
+    var s = QuantumTexture._textureSize(qubitCount);
+    var dataTexture = new THREE.DataTexture(
+        dataArray,
+        s.value.x,
+        s.value.y,
+        THREE.RGBAFormat,
+        THREE.FloatType,
+        THREE.UVMapping,
+        THREE.ClampToEdgeWrapping,
+        THREE.ClampToEdgeWrapping,
+        THREE.NearestFilter,
+        THREE.NearestFilter);
+    dataTexture.needsUpdate = true;
+    dataTexture.flipY = false;
+
+    var result = QuantumTexture._blank(qubitCount);
+    result._overwrite(dataTexture);
+    return result;
 };
 
 /**
@@ -302,10 +336,15 @@ QuantumTexture.prototype._extractColorComponent = function(componentIndex) {
     var words = new Uint32Array(bytes.buffer);
 
     var intToFloat = function(v) {
-        if ((v & (1 << 24)) !== 0) {
-            return -((v & 0xffffff) / 1048576);
+        var sign = v >> 31 == 0 ? +1 : -1;
+        var exponent = ((v >> 23) & 0xFF) - 64;
+        var mantissa = (1 << 23) | (v & ((1 << 23) - 1));
+
+        if (exponent == -64 && mantissa == 1 << 23) {
+            return 0;
         }
-        return v / 1048576;
+
+        return mantissa * Math.pow(2, exponent - 23) * sign;
     };
 
     var result = new Float32Array(words.length);
@@ -316,7 +355,7 @@ QuantumTexture.prototype._extractColorComponent = function(componentIndex) {
 };
 
 /**
- * Converts the receinv QuantumTexture's state into an array of amplitudes corresponding to each possible state.
+ * Converts the receiving QuantumTexture's state into an array of amplitudes corresponding to each possible state.
  * @returns {!Array.<!Complex>}
  */
 QuantumTexture.prototype.toAmplitudes = function() {

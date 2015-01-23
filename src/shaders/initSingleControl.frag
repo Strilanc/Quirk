@@ -20,10 +20,10 @@ uniform float qubitIndexMask;
 uniform float targetValue;
 
 void main() {
-    vec2 rowCol = gl_FragCoord.xy - vec2(0.5, 0.5);
-    float stateIndex = rowCol.y * textureSize.x + rowCol.x;
-    float stateBitValue = float(mod(stateIndex, qubitIndexMask / 0.5) > qubitIndexMask - 0.5);
+    vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+    float state = pixelXy.y * textureSize.x + pixelXy.x;
+    bool targetBitIsOn = mod(state, qubitIndexMask * 2.0) > qubitIndexMask - 0.5;
 
-    float match = mod(stateBitValue + targetValue + 1.0, 2.0);
+    float match = mod(float(targetBitIsOn) + targetValue + 1.0, 2.0);
     gl_FragColor = vec4(match, 0, 0, 0);
 }

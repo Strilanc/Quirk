@@ -1,5 +1,20 @@
 QuantumTextureTest = TestCase("QuantumTextureTest");
 
+QuantumTextureTest.prototype.testMaintainsAmplitudes = skipTestIfWebGlNotAvailable(function() {
+    var simpleAmps = [
+        new Complex(0, 1),
+        new Complex(2, 3),
+        new Complex(0.5, -1),
+        new Complex(0.125, 532)];
+    assertThat(QuantumTexture.fromAmplitudes(simpleAmps).toAmplitudes()).isEqualTo(simpleAmps);
+
+    // The floats have to be coded into bytes to get them out, but should maintain 23 bits (~7 digits) of precision
+    var precisionAmps = [new Complex(0.1, -1/3)];
+    var roundTripped = QuantumTexture.fromAmplitudes(precisionAmps).toAmplitudes();
+    assertThat(roundTripped).isApproximatelyEqualTo(precisionAmps, Math.pow(2, -23));
+    assertThat(roundTripped).isApproximatelyEqualTo(precisionAmps, 0.0000001);
+});
+
 QuantumTextureTest.prototype.testFromZeroes = skipTestIfWebGlNotAvailable(function() {
     assertThrows(function() { QuantumTexture.fromZeroes(-1); });
     assertThat(QuantumTexture.fromZeroes(0).toAmplitudes()).isEqualTo([1]);

@@ -147,7 +147,10 @@ AssertionSubject.prototype.isNotEqualTo = function(other) {
  * @returns {undefined}
  */
 AssertionSubject.prototype.isApproximatelyEqualTo = function(other, epsilon) {
-    if (!AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon || 0.000001)) {
+    if (epsilon === undefined) {
+        epsilon = 0.000001;
+    }
+    if (!AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
         fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to approximately equal <' +
             AssertionSubject.describe(other) + '>');
     }
@@ -159,7 +162,10 @@ AssertionSubject.prototype.isApproximatelyEqualTo = function(other, epsilon) {
  * @returns {undefined}
  */
 AssertionSubject.prototype.isNotApproximatelyEqualTo = function(other, epsilon) {
-    if (AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon || 0.000001)) {
+    if (epsilon === undefined) {
+        epsilon = 0.000001;
+    }
+    if (AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
         fail('Expected <' + AssertionSubject.describe(this.subject) + '> but expected it to NOT approximately equal <' +
             AssertionSubject.describe(other) + '>');
     }

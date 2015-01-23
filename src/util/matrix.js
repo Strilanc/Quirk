@@ -42,7 +42,7 @@ Matrix.prototype.isApproximatelyEqualTo = function (other, epsilon) {
     return other instanceof Matrix &&
         this.width() === other.width() &&
         this.height() === other.height() &&
-        this.minus(other).norm2() <= epsilon;
+        Math.sqrt(this.minus(other).norm2()) <= epsilon;
 };
 
 /**

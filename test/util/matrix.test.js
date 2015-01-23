@@ -35,11 +35,11 @@ MatrixTest.prototype.testIsApproximatelyEqualTo = function() {
 
     // Error bound matters
     assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 0);
-    assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 1/16);
-    assertThat(Matrix.row([1.25])).isApproximatelyEqualTo(Matrix.row([1]), 1/16);
-    assertThat(Matrix.row([0.75])).isApproximatelyEqualTo(Matrix.row([1]), 1/16);
-    assertThat(Matrix.row([1.26])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/16);
-    assertThat(Matrix.row([0.74])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/16);
+    assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 1/4);
+    assertThat(Matrix.row([1.25])).isApproximatelyEqualTo(Matrix.row([1]), 1/4);
+    assertThat(Matrix.row([0.75])).isApproximatelyEqualTo(Matrix.row([1]), 1/4);
+    assertThat(Matrix.row([1.26])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/4);
+    assertThat(Matrix.row([0.74])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/4);
 
     // Error bound spreads
     assertThat(Matrix.row([0, 0])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
@@ -347,7 +347,7 @@ MatrixTest.prototype.testSingularValueDecomposition_2x2 = function() {
     var am = Matrix.square([1, Complex.I.times(2), 3, 4]);
     var ad = am.singularValueDecomposition();
     assertThat(ad.u.times(ad.s).times(ad.v)).isApproximatelyEqualTo(am);
-    assertThat(ad.s).isApproximatelyEqualTo(Matrix.square([5.30594, 0, 0, 1.35906]));
+    assertThat(ad.s).isApproximatelyEqualTo(Matrix.square([5.305935, 0, 0, 1.359063]));
 };
 
 MatrixTest.prototype.testClosestUnitary_2x2 = function() {

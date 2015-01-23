@@ -33,51 +33,68 @@ uniform float qubitIndexMask;
  */
 uniform vec2 matrix_a, matrix_b, matrix_c, matrix_d;
 
-vec2 stateIndexToColRow(float s) {
-    float c = s + 0.5;
-    return vec2(
-        mod(c, textureSize.x) - 0.5,
-        floor(c / textureSize.x));
+/**
+ * Does a bitwise-and of the given integer value against a single-bit bit mask.
+ * @param value The (approximate) integer to extract a bit from.
+ * @param singleBitMask A power of two corresponding to the bit to retain (all others get masked out).
+ */
+float scalarBit(float value, float bit) {
+    value += 0.5;
+    return mod(value, bit * 2.0) - mod(value, bit);
+}
+
+/**
+ * Does a bitwise-xor of the given integer value against a single-bit bit mask.
+ * @param value The (approximate) integer to toggle a bit in.
+ * @param singleBitMask A power of two corresponding to the bit to toggle (all others get left alone).
+ */
+float toggleBit(float value, float bit) {
+    float hasBit = scalarBit(value, bit);
+    return value + bit - 2.0 * hasBit;
+}
+
+vec2 stateToPixelUv(float state) {
+    float c = state + 0.5;
+    float r = mod(c, textureSize.x);
+    float d = floor(c / textureSize.x) + 0.5;
+    return vec2(r, d) / textureSize.xy;
 }
 
 void main() {
-    vec2 colRow = gl_FragCoord.xy - vec2(0.5, 0.5);
-    vec2 uv = colRow.xy / textureSize.xy;
+    // Which part of the multiplication are we doing?
+    vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+    vec2 pixelUv = gl_FragCoord.xy / textureSize;
+    float state = pixelXy.y * textureSize.x + pixelXy.x;
+    float opposingState = toggleBit(state, qubitIndexMask);
+    vec2 opposingPixelUv = stateToPixelUv(opposingState);
+    bool targetBitIsOff = state < opposingState;
 
-    // Check if this part of the superposition is not changing due to not matching a control bit.
-    bool doesNotMatchControls = texture2D(controlTexture, uv).x == 0.0;
-    if (doesNotMatchControls) {
-        gl_FragColor = texture2D(inputTexture, uv);
+    // Does this part of the superposition match the controls?
+    bool blockedByControls = texture2D(controlTexture, pixelUv).x == 0.0;
+    if (blockedByControls) {
+        gl_FragColor = texture2D(inputTexture, pixelUv);
         return;
     }
 
-    // Determine the value of the operated-on bit for the output pixel we're working on
-    float stateIndex = colRow.y * textureSize.x + colRow.x;
-    float stateBitScalar = mod(stateIndex, qubitIndexMask * 2.0) - mod(stateIndex, qubitIndexMask);
-    bool stateBitBool = 2.0 * stateBitScalar > qubitIndexMask;
-
     // The row we operate against is determined by the output pixel's operated-on-bit's value
-    vec2 r, s;
-    if (stateBitBool) {
-        r = matrix_d;
-        s = matrix_c;
+    vec2 c1, c2;
+    if (targetBitIsOff) {
+        c1 = matrix_a;
+        c2 = matrix_b;
     } else {
-        r = matrix_a;
-        s = matrix_b;
+        c1 = matrix_d;
+        c2 = matrix_c;
     }
 
-    // Grab the amplitude of the opposing state (the one you get by flipping the operated-on bit)
-    float otherStateIndex = stateIndex + qubitIndexMask - 2.0 * stateBitScalar;
-    vec2 uvOther = stateIndexToColRow(otherStateIndex) / textureSize.xy;
-
-    // Do (part of) the matrix multiplication
-    vec4 amplitudeCombo = vec4(texture2D(inputTexture, uv).xy,
-                               texture2D(inputTexture, uvOther).xy);
-    vec4 dotReal = vec4(r.x, -r.y,
-                        s.x, -s.y);
-    vec4 dotImag = vec4(r.y, r.x,
-                        s.y, s.x);
-    vec2 outputAmplitude = vec2(dot(amplitudeCombo, dotReal), dot(amplitudeCombo, dotImag));
+    // Do (our part of) the matrix multiplication
+    vec4 amplitudeCombo = vec4(texture2D(inputTexture, pixelUv).xy,
+                               texture2D(inputTexture, opposingPixelUv).xy);
+    vec4 dotReal = vec4(c1.x, -c1.y,
+                        c2.x, -c2.y);
+    vec4 dotImag = vec4(c1.y, c1.x,
+                        c2.y, c2.x);
+    vec2 outputAmplitude = vec2(dot(amplitudeCombo, dotReal),
+                                dot(amplitudeCombo, dotImag));
 
     gl_FragColor = vec4(outputAmplitude, 0, 0);
 }

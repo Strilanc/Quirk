@@ -74,7 +74,10 @@ Complex.prototype.isEqualTo = function (other) {
  */
 Complex.prototype.isApproximatelyEqualTo = function (other, epsilon) {
     if (other instanceof Complex || isNumber(other)) {
-        return this.minus(Complex.from(other)).norm2() <= epsilon;
+        var d = this.minus(Complex.from(other));
+        return Math.abs(d.real) <= epsilon &&
+            Math.abs(d.imag) <= epsilon &&
+            d.abs() <= epsilon;
     }
     return false;
 };
