@@ -11,6 +11,7 @@
 uniform vec2 textureSize;
 uniform sampler2D inputTexture;
 uniform float stepPower;
+uniform bool conditionValue;
 
 vec2 stateToPixelUv(float state) {
     float c = state + 0.5;
@@ -31,8 +32,9 @@ void main() {
 
     float hasBit = filterBit(state, stepPower);
     vec4 probability = texture2D(inputTexture, pixelUv);
-    if (hasBit == 0.0) {
-        probability += texture2D(inputTexture, stateToPixelUv(state + stepPower));
+    if ((hasBit == 0.0) == conditionValue) {
+        float toggleSign = float(conditionValue)*2.0 - 1.0;
+        probability += texture2D(inputTexture, stateToPixelUv(state + stepPower * toggleSign));
     }
     gl_FragColor = probability;
 }

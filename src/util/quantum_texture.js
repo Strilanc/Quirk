@@ -22,7 +22,7 @@ QuantumTexture._shaderFileNames = [
     "combineControls.frag",
     "applyCustomQubitOperation.frag",
     "toProbabilities.frag",
-    "wireProbabilitiesPipeline.frag"
+    "conditionProbabilitiesPipeline.frag"
 ];
 
 /**
@@ -34,7 +34,7 @@ QuantumTexture._shaderFileNames = [
  *   combineControls_frag: !string,
  *   applyCustomQubitOperation_frag: !string,
  *   toProbabilities_frag: !string,
- *   wireProbabilitiesPipeline_frag: !string
+ *   conditionProbabilitiesPipeline_frag: !string
  * }}
  */
 QuantumTexture._shaders = {};
@@ -427,15 +427,16 @@ QuantumTexture.prototype.toAmplitudes = function() {
  * @returns {!Array.<!float>}
  */
 QuantumTexture.prototype.perQubitProbabilities = function() {
-    var p = this.controlProbabilities();
+    var p = this.controlProbabilities(-1);
     return range(this.qubitCount).map(function(i) { return p[1 << i]; });
 };
 
 /**
  * Returns the probability that the qubits would match a must-be-on control mask if measured, for each possible mask.
+ * @param {!int} mask Determines whether controls are must-be-true or must-be-false, bit by bit.
  * @returns {!Float32Array}
  */
-QuantumTexture.prototype.controlProbabilities = function() {
+QuantumTexture.prototype.controlProbabilities = function(mask) {
     var size = QuantumTexture._textureSize(this.qubitCount);
     var acc = QuantumTexture._fromRender(
         this.qubitCount,
@@ -449,11 +450,12 @@ QuantumTexture.prototype.controlProbabilities = function() {
         var oldAcc = acc;
         acc = QuantumTexture._fromRender(
             this.qubitCount,
-            QuantumTexture._shaders.wireProbabilitiesPipeline_frag,
+            QuantumTexture._shaders.conditionProbabilitiesPipeline_frag,
             {
                 textureSize: size,
                 stepPower: {type: 'f', value: 1 << i},
-                inputTexture: {type: 't', value: acc.texture}
+                inputTexture: {type: 't', value: acc.texture},
+                conditionValue: {type: 'f', value: (mask & (1 << i)) !== 0}
             });
         oldAcc._recycle();
     }

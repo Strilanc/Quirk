@@ -191,15 +191,19 @@ QuantumTextureTest.prototype.testPerQubitProbabilities = function() {
 QuantumTextureTest.prototype.testControlProbabilities = function() {
     var t0 = QuantumTexture.fromAmplitudes(Matrix.row(
         [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80]).rows[0]);
-    assertThat(t0.controlProbabilities().toArray()).isEqualTo(
+    assertThat(t0.controlProbabilities(-1).toArray()).isEqualTo(
         [0x5555, 0x4444, 0x5050, 0x4040, 0x5500, 0x4400, 0x5000, 0x4000]);
+    assertThat(t0.controlProbabilities(0xE).toArray()).isEqualTo(
+        [0x1111, 0x5555, 0x1010, 0x5050, 0x1100, 0x5500, 0x1000, 0x5000]);
 
     var t1 = QuantumTexture.fromZeroes(4)
         .withQubitOperationApplied(0, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
         .withQubitOperationApplied(1, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
         .withQubitOperationApplied(2, Matrix.HADAMARD, ControlMask.NO_CONTROLS)
         .withQubitOperationApplied(3, Matrix.HADAMARD, ControlMask.NO_CONTROLS);
-    assertThat(t1.controlProbabilities().toArray()).isApproximatelyEqualTo(
+    assertThat(t1.controlProbabilities(-1).toArray()).isApproximatelyEqualTo(
         //0 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111
         [1, 1/2, 1/2, 1/4, 1/2, 1/4, 1/4, 1/8, 1/2, 1/4, 1/4, 1/8, 1/4, 1/8, 1/8, 1/16]);
+    assertThat(t1.controlProbabilities(0xE).toArray()).isApproximatelyEqualTo(
+        [1/2, 1, 1/4, 1/2, 1/4, 1/2, 1/8, 1/4, 1/4, 1/2, 1/8, 1/4, 1/8, 1/4, 1/16, 1/8]);
 };
