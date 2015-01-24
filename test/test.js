@@ -106,6 +106,9 @@ AssertionSubject.describe = function(e) {
     if (Array.isArray(e)) {
         return "[" + range(e.length).map(function(i) { return AssertionSubject.describe(e[i]); }).join(", ") + "]";
     }
+    if (e instanceof Float32Array) {
+        return "Float32Array([" + e.toArray().join(", ") + "])";
+    }
     var result = e.toString();
     if (result === "[object Object]") {
         var entries = [];

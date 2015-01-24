@@ -21,6 +21,7 @@ QuantumTexture._shaderFileNames = [
     "initSingleControl.frag",
     "combineControls.frag",
     "applyCustomQubitOperation.frag",
+    "toProbabilities.frag",
     "wireProbabilitiesPipeline.frag"
 ];
 
@@ -32,6 +33,7 @@ QuantumTexture._shaderFileNames = [
  *   initSingleControl_frag: !string,
  *   combineControls_frag: !string,
  *   applyCustomQubitOperation_frag: !string,
+ *   toProbabilities_frag: !string,
  *   wireProbabilitiesPipeline_frag: !string
  * }}
  */
@@ -183,13 +185,14 @@ QuantumTexture._controlBitTexture = function(qubitIndex, targetQubitValue, qubit
     need(qubitIndex >= 0, "qubitIndex >= 0");
     need(targetQubitValue === false || targetQubitValue === true);
     need(qubitCount >= 0, "qubitCount >= 0");
-    return QuantumTexture._blank(qubitCount)._render(QuantumTexture._cachedShader(
+    return QuantumTexture._fromRender(
+        qubitCount,
         QuantumTexture._shaders.initSingleControl_frag,
         {
             textureSize: QuantumTexture._textureSize(qubitCount),
             qubitIndexMask: { type: 'f', value: 1 << qubitIndex },
             targetValue: { type: 'f', value: targetQubitValue ? 1 : 0 }
-        }))._markCached();
+        })._markCached();
 };
 QuantumTexture._controlBitTexture = cacheFunc3(QuantumTexture._controlBitTexture);
 
@@ -219,13 +222,14 @@ QuantumTexture._controlMaskTexture = function(controlMask, qubitCount) {
                 return a;
             }
             var c = QuantumTexture._controlBitTexture(i, notNull(v), qubitCount);
-            var result = QuantumTexture._blank(qubitCount)._render(QuantumTexture._cachedShader(
+            var result = QuantumTexture._fromRender(
+                qubitCount,
                 QuantumTexture._shaders.combineControls_frag,
                 {
                     textureSize: QuantumTexture._textureSize(qubitCount),
                     controlTexture1: { type: 't', value: a.texture },
                     controlTexture2: { type: 't', value: c.texture }
-                }));
+                });
             a._recycle();
             return result;
         }, noControl);
@@ -269,6 +273,10 @@ QuantumTexture._cachedShader = function(shaderText, uniforms) {
     return shader;
 };
 
+QuantumTexture._fromRender = function(qubitCount, shaderScript, uniforms) {
+    return QuantumTexture._blank(qubitCount)._render(QuantumTexture._cachedShader(shaderScript, uniforms));
+};
+
 /**
  * Overwrites the receiving instance's texture with the contents of the given texture.
  * Returns the receiving instance, to allow chaining.
@@ -296,13 +304,14 @@ QuantumTexture.prototype._overwrite = function(srcTexture) {
 QuantumTexture.prototype._extractColorComponent = function(componentIndex, rect) {
     rect = rect || new Rect(0, 0, this.texture.width, this.texture.height);
     // Trigger rendering without explicitly storing the result. We'll access the result indirectly.
-    QuantumTexture._blank(this.qubitCount)._render(QuantumTexture._cachedShader(
+    QuantumTexture._fromRender(
+        this.qubitCount,
         QuantumTexture._shaders.packComponentFloatIntoBytes_frag,
         {
             textureSize: QuantumTexture._textureSize(this.qubitCount),
             selector: {type: 'i', value: componentIndex},
             texture: {type: 't', value: this.texture}
-        }))._recycle();
+        })._recycle();
 
     var bytes = new Uint8Array(rect.w * rect.h * 4);
     var ctx = QuantumTexture._sharedRenderer.getContext();
@@ -387,7 +396,8 @@ QuantumTexture.prototype.withQubitOperationApplied = function(qubitIndex, operat
     var c = operation.rows[1][0];
     var d = operation.rows[1][1];
 
-    return QuantumTexture._blank(this.qubitCount)._render(QuantumTexture._cachedShader(
+    return QuantumTexture._fromRender(
+        this.qubitCount,
         QuantumTexture._shaders.applyCustomQubitOperation_frag,
         {
             textureSize: QuantumTexture._textureSize(this.qubitCount),
@@ -398,7 +408,7 @@ QuantumTexture.prototype.withQubitOperationApplied = function(qubitIndex, operat
             matrix_b: { type: 'v2', value: new THREE.Vector2(b.real, b.imag) },
             matrix_c: { type: 'v2', value: new THREE.Vector2(c.real, c.imag) },
             matrix_d: { type: 'v2', value: new THREE.Vector2(d.real, d.imag) }
-        }));
+        });
 };
 
 /**
@@ -417,27 +427,41 @@ QuantumTexture.prototype.toAmplitudes = function() {
  * @returns {!Array.<!float>}
  */
 QuantumTexture.prototype.perQubitProbabilities = function() {
-    var acc = QuantumTexture._zeroTexture(this.qubitCount);
-    var size = QuantumTexture._textureSize(this.qubitCount);
-    for (var i = 0; i < this.qubitCount * 2; i++) {
-        var oldAcc = acc;
+    var p = this.controlProbabilities();
+    return range(this.qubitCount).map(function(i) { return p[1 << i]; });
+};
 
-        acc = QuantumTexture._blank(this.qubitCount)._render(QuantumTexture._cachedShader(
+/**
+ * Returns the probability that the qubits would match a must-be-on control mask if measured, for each possible mask.
+ * @returns {!Float32Array}
+ */
+QuantumTexture.prototype.controlProbabilities = function() {
+    var size = QuantumTexture._textureSize(this.qubitCount);
+    var acc = QuantumTexture._fromRender(
+        this.qubitCount,
+        QuantumTexture._shaders.toProbabilities_frag,
+        {
+            textureSize: size,
+            inputTexture: {type: 't', value: this.texture}
+        });
+
+    for (var i = 0; i < this.qubitCount; i++) {
+        var oldAcc = acc;
+        acc = QuantumTexture._fromRender(
+            this.qubitCount,
             QuantumTexture._shaders.wireProbabilitiesPipeline_frag,
             {
                 textureSize: size,
                 stepPower: {type: 'f', value: 1 << i},
-                stateTexture: {type: 't', value: this.texture},
-                accumulatorTexture: {type: 't', value: acc.texture}
-            }));
+                inputTexture: {type: 't', value: acc.texture}
+            });
         oldAcc._recycle();
     }
-    var lastRow = size.value.y - 1;
-    var resultArea = acc._extractColorComponent(0, new Rect(0, lastRow, this.qubitCount, 1));
-    acc._recycle();
 
-    var n = this.qubitCount;
-    return range(n).map(function(i) { return 1 - resultArea[n - i - 1]; });
+
+    var ps = acc._extractColorComponent(0);
+    acc._recycle();
+    return ps;
 };
 
 /**

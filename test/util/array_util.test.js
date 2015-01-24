@@ -201,3 +201,7 @@ ArrayUtilTest.prototype.testPaddedWithTo = function() {
     assertThat(["b", "c"].paddedWithTo("a", 1)).isEqualTo(["b", "c"]);
     assertThat(["b", "c"].paddedWithTo("a", 2)).isEqualTo(["b", "c"]);
 };
+
+ArrayUtilTest.prototype.testToArray_Float32 = function() {
+    assertThat(new Float32Array([1, 2, 3]).toArray()).isEqualTo([1, 2, 3]);
+};

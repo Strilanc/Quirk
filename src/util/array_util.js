@@ -295,3 +295,7 @@ Array.prototype.paddedWithTo = function(item, minimumLength) {
     }
     return result;
 };
+
+Float32Array.prototype.toArray = Float32Array.prototype.toArray || function() {
+    return Array.prototype.slice.call(this);
+};
