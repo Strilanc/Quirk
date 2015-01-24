@@ -1,3 +1,7 @@
+/**
+ * Renders a control texture that prevents operations in states where the given bit is equal to the given value.
+ */
+
 #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
 #else

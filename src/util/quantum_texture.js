@@ -280,8 +280,8 @@ QuantumTexture.prototype._overwrite = function(srcTexture) {
     return this._render(QuantumTexture._cachedShader(
         QuantumTexture._shaders.passThrough_frag,
         {
-            resolution: QuantumTexture._textureSize(this.qubitCount),
-            texture: { type: 't', value: srcTexture }
+            textureSize: QuantumTexture._textureSize(this.qubitCount),
+            inputTexture: { type: 't', value: srcTexture }
         }));
 };
 
@@ -299,7 +299,7 @@ QuantumTexture.prototype._extractColorComponent = function(componentIndex, rect)
     QuantumTexture._blank(this.qubitCount)._render(QuantumTexture._cachedShader(
         QuantumTexture._shaders.packComponentFloatIntoBytes_frag,
         {
-            resolution: QuantumTexture._textureSize(this.qubitCount),
+            textureSize: QuantumTexture._textureSize(this.qubitCount),
             selector: {type: 'i', value: componentIndex},
             texture: {type: 't', value: this.texture}
         }))._recycle();

@@ -1,3 +1,8 @@
+/**
+ * Renders a control texture equal to the intersection of two input control textures. The output texture prevents any
+ * operation prevented by either of the input textures.
+ */
+
 #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
 #else
@@ -21,10 +26,6 @@ uniform sampler2D controlTexture1;
  */
 uniform sampler2D controlTexture2;
 
-/**
- * The destination texture will be the intersection of the two given controls, only allowing an operation to apply
- * when both are satisfied.
- */
 void main() {
     vec2 uv = gl_FragCoord.xy / textureSize.xy;
     float c1 = texture2D(controlTexture1, uv).x;

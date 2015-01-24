@@ -1,10 +1,15 @@
+/**
+ * Encodes the red, green, blue, or alpha floating point components of the texture so that, when read as bytes, the
+ * output holds (roughly) IEEE single-precision float data.
+ */
+
 #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
 #else
     precision mediump float;
 #endif
 
-uniform vec2 resolution;
+uniform vec2 textureSize;
 uniform int selector;
 uniform sampler2D texture;
 
@@ -39,7 +44,7 @@ vec4 encode_float(float val) {
 }
 
 void main() {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec2 uv = gl_FragCoord.xy / textureSize.xy;
     vec4 data = texture2D(texture, uv);
     float f;
     if (selector == 0) {

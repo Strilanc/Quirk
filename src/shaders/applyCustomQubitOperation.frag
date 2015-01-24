@@ -1,3 +1,7 @@
+/**
+ * Renders the result of applying a custom optionally-controlled single-qubit operation to a superposition.
+ */
+
 #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
 #else
@@ -38,7 +42,7 @@ uniform vec2 matrix_a, matrix_b, matrix_c, matrix_d;
  * @param value The (approximate) integer to extract a bit from.
  * @param singleBitMask A power of two corresponding to the bit to retain (all others get masked out).
  */
-float scalarBit(float value, float bit) {
+float filterBit(float value, float bit) {
     value += 0.5;
     return mod(value, bit * 2.0) - mod(value, bit);
 }
@@ -49,7 +53,7 @@ float scalarBit(float value, float bit) {
  * @param singleBitMask A power of two corresponding to the bit to toggle (all others get left alone).
  */
 float toggleBit(float value, float bit) {
-    float hasBit = scalarBit(value, bit);
+    float hasBit = filterBit(value, bit);
     return value + bit - 2.0 * hasBit;
 }
 
