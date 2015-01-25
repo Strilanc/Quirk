@@ -83,6 +83,13 @@ MatrixTest.prototype.testGenerate = function() {
         isEqualTo("{{0, 10, 20}, {1, 11, 21}}");
 };
 
+MatrixTest.prototype.testGetColumn = function() {
+    var m = Matrix.square([2, 3, 5, 7]);
+    assertThat(m.getColumn(0)).isEqualTo([2, 5]);
+    assertThat(m.getColumn(1)).isEqualTo([3, 7]);
+    assertThat(Matrix.col([1, 2, 3]).getColumn(0)).isEqualTo([1, 2, 3]);
+};
+
 MatrixTest.prototype.testSquare = function() {
     var m = Matrix.square([1, new Complex(2, 3), -5.5, 0]);
     assertThat(m.rows[0][0]).isEqualTo(1);

@@ -12,12 +12,18 @@ LoadTest.prototype.testLoad = skipTestIfWebGlNotAvailable(function(queue) {
         QuantumTexture.loadThen(
             "/test/src/",
             function() {
-                done();
-                loadedElseReason = true;
+                try {
+                    runInitializationFunctions();
+                    loadedElseReason = true;
+                } catch (ex) {
+                    loadedElseReason = ex;
+                } finally {
+                    done();
+                }
             },
             function(s) {
-                done();
                 loadedElseReason = s;
+                done();
             });
     });
 

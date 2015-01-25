@@ -526,6 +526,11 @@ Matrix.prototype.singularValueDecomposition = function () {
     return svd_2x2(this);
 };
 
+Matrix.prototype.getColumn = function(colIndex) {
+    need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
+    return this.rows.map(function(r) { return r[colIndex]; });
+};
+
 /**
  * Returns the unitary matrix closest to the receiving matrix, "repairing" it into a unitary form.
  * @returns {!Matrix}

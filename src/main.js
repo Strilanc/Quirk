@@ -1,5 +1,7 @@
 //noinspection FunctionTooLongJS
 var main = function() {
+    runInitializationFunctions();
+
     //noinspection JSValidateTypes
     /** @type {!HTMLCanvasElement} */
     var canvas = document.getElementById("drawCanvas");

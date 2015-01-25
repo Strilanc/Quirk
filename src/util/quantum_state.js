@@ -33,14 +33,16 @@ QuantumState.prototype.toString = function() {
     return "QuantumState(" + this.columnVector + ")";
 };
 
-/** @type {!QuantumState}  */
-QuantumState.EMPTY = new QuantumState(Matrix.col([1]));
+addInitializationFunction(function() {
+    /** @type {!QuantumState}  */
+    QuantumState.EMPTY = new QuantumState(Matrix.col([1]));
 
-/** @type {!QuantumState}  */
-QuantumState.SINGLE_ZERO = new QuantumState(Matrix.col([1, 0]));
+    /** @type {!QuantumState}  */
+    QuantumState.SINGLE_ZERO = new QuantumState(Matrix.col([1, 0]));
 
-/** @type {!QuantumState}  */
-QuantumState.SINGLE_ONE = new QuantumState(Matrix.col([0, 1]));
+    /** @type {!QuantumState}  */
+    QuantumState.SINGLE_ONE = new QuantumState(Matrix.col([0, 1]));
+});
 
 /**
  * @param {!boolean} bit
@@ -67,7 +69,7 @@ QuantumState.zero = function(qubitCount) {
 QuantumState.classical = function(qubitCount, value) {
     need(qubitCount >= 0);
     need(value >= 0 && value < (1 << qubitCount));
-    return new QuantumState(Matrix.generate(1, 1 << qubitCount, function(r, c) { return r === value ? 1 : 0 }));
+    return new QuantumState(Matrix.generate(1, 1 << qubitCount, function(r) { return r === value ? 1 : 0 }));
 };
 
 /**

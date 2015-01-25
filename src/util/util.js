@@ -400,3 +400,23 @@ var cacheFunc3 = function(func) {
         return partial(arg1)(arg2, arg3);
     };
 };
+
+var _isInitialized = false;
+var _initializationFunctions = [];
+
+/**
+ * @param {!function()} func
+ */
+var addInitializationFunction = function(func) {
+    need(!_isInitialized, "addInitializationFunction: !_isInitialized");
+    _initializationFunctions.push(func);
+};
+
+var runInitializationFunctions = function() {
+    need(!_isInitialized, "runInitializationFunctions: !_isInitialized");
+    _isInitialized = true;
+    for (var i = 0; i < _initializationFunctions.length; i++) {
+        _initializationFunctions[i]();
+    }
+    _initializationFunctions = null;
+};
