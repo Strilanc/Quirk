@@ -31,16 +31,17 @@
 </head>
 <body>
 
-    <canvas id="drawCanvas" width="1200px" height="600px" style="border:1px solid #000000;"></canvas>
+    <canvas id="drawCanvas" width="400px" height="600px" style="border:1px solid #000000;"></canvas>
 
     <br/>
+    <br/>
+    <a id="currentCircuitLink" href="">Link to Current Circuit</a>
+    <br/>
+    <br/>
     <button type="button" id="captureButton">Capture</button>
-    <button type="button" id="importExportButton">Import / Export</button>
     <br/>
-    <img src="" id="captureImage"/>
-    <br/>
-    <label for="exportTextBox">Copy / replace the text below to save / restore your circuit.</label>
-    <textarea rows="80" cols="100" id="exportTextBox"></textarea>
+    <a id="captureImageAnchor" href=""><img src="" id="captureImage"/></a>
+
     <script src="main.js"></script>
 </body>
 </html>

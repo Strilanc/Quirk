@@ -162,6 +162,9 @@ Inspector.prototype.paintFocus = function(painter, time) {
  * @param {!number} time
  */
 Inspector.prototype.paint = function(painter, time) {
+    // Clear
+    painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
+
     this.paintFocus(painter, time);
     this.circuit.paint(painter, this.hand, time);
     this.paintOutput(painter, time);
@@ -303,11 +306,11 @@ Inspector.prototype.move = function(p) {
 };
 
 Inspector.prototype.exportCircuit = function() {
-    return JSON.stringify({
+    return {
         custom_gates: [],
         wire_count: this.circuit.numWires,
         circuit_columns: this.circuit.columns.map(arg1(GateColumn.prototype.toJson))
-    }, null, '  ');
+    };
 };
 
 /**

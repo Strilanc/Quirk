@@ -1,13 +1,34 @@
+var init = function() {
+    QuantumTexture.loadThen("", main, function(reason) { throw new Error(reason); });
+};
+
+//noinspection JSValidateTypes
+/** @type {!HTMLCanvasElement} */
+var canvas = document.getElementById("drawCanvas");
+//noinspection JSValidateTypes
+if (canvas === null) {
+    throw new Error("Couldn't find 'drawCanvas'");
+}
+
+//noinspection JSValidateTypes
+/** @type {!HTMLAnchorElement} */
+var currentCircuitLink = document.getElementById("currentCircuitLink");
+
+//noinspection JSValidateTypes
+/** @type {!HTMLButtonElement} */
+var captureButton = document.getElementById("captureButton");
+$(captureButton).hide();
+
+//noinspection JSValidateTypes
+/** @type {!HTMLImageElement} */
+var captureImage = document.getElementById("captureImage");
+//noinspection JSValidateTypes
+/** @type {!HTMLImageElement} */
+var captureImageAnchor = document.getElementById("captureImageAnchor");
+
 //noinspection FunctionTooLongJS
 var main = function() {
     runInitializationFunctions();
-
-    //noinspection JSValidateTypes
-    /** @type {!HTMLCanvasElement} */
-    var canvas = document.getElementById("drawCanvas");
-    if (canvas === null) {
-        throw new Error("Couldn't find 'drawCanvas'");
-    }
 
     /** @type {!Inspector} */
     var inspector = Inspector.empty(Config.NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
@@ -16,10 +37,15 @@ var main = function() {
     var ticker = null;
     var redraw;
 
-    /**
-     */
     var tickWhenAppropriate = function() {
         var shouldBeTicking = inspector.needsContinuousRedraw();
+
+        if (shouldBeTicking) {
+            $(captureButton).show();
+        } else {
+            $(captureButton).hide();
+        }
+
         var isTicking = ticker !== null;
         if (isTicking === shouldBeTicking) {
             return;
@@ -38,9 +64,6 @@ var main = function() {
 
     redraw = function () {
         var painter = new Painter(canvas);
-
-        // Clear
-        painter.fillRect(new Rect(0, 0, canvas.width, canvas.height), Config.BACKGROUND_COLOR);
 
         inspector.previewDrop().paint(painter, ts);
 
@@ -65,21 +88,10 @@ var main = function() {
             return;
         }
         inspector = newInspector;
-        $(document.getElementById("exportTextBox")).val(inspector.exportCircuit());
-        $(document.getElementById("exportTextBox")).css("background-color", "white");
+        var json = inspector.exportCircuit();
+        $(currentCircuitLink).attr("href", "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + JSON.stringify(json, null, 0));
         redraw();
     };
-
-    $(document.getElementById("exportTextBox")).bind('input propertychange', function() {
-        try {
-            var v = $(document.getElementById("exportTextBox")).val();
-            update(inspector.withImportedCircuit(v));
-            $(document.getElementById("exportTextBox")).css("background-color", "white");
-        } catch (ex) {
-            $(document.getElementById("exportTextBox")).css("background-color", "pink");
-            alert(ex);
-        }
-    });
 
     //noinspection JSUnresolvedFunction
     $(canvas).mousedown(function (p) {
@@ -117,14 +129,6 @@ var main = function() {
         update(inspector.move(mousePosToInspectorPos(p)));
     });
 
-    //noinspection JSValidateTypes
-    /** @type {!HTMLButtonElement} */
-    var captureButton = document.getElementById("captureButton");
-
-    //noinspection JSValidateTypes
-    /** @type {!HTMLImageElement} */
-    var captureImage = document.getElementById("captureImage");
-
     $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
     $(captureButton).click(function() {
         $(captureButton).attr('disabled','disabled');
@@ -132,6 +136,8 @@ var main = function() {
             $(captureButton).text("Encoding... " + Math.round(p*100) + "%");
         }, function(url) {
             captureImage.src = url;
+            $(captureImageAnchor).attr("href", url);
+            $(captureImage).height("150px");
             $(captureButton).removeAttr('disabled');
             $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
         });
@@ -143,10 +149,10 @@ var main = function() {
     });
 
     var params = getSearchParameters();
-    if (params.hasOwnProperty("load")) {
-        $(document.getElementById("exportTextBox")).val(params["load"]);
+    if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
+        $(document.getElementById("exportTextBox")).val(params[Config.URL_CIRCUIT_PARAM_KEY]);
         try {
-            update(inspector.withImportedCircuit(params["load"]));
+            update(inspector.withImportedCircuit(params[Config.URL_CIRCUIT_PARAM_KEY]));
             $(document.getElementById("exportTextBox")).css("background-color", "white");
         } catch (ex) {
             $(document.getElementById("exportTextBox")).css("background-color", "pink");
@@ -175,4 +181,4 @@ function getSearchParameters() {
     return paramsObject;
 }
 
-QuantumTexture.loadThen("", main, function(reason) { throw new Error(reason); });
+init();

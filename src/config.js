@@ -5,7 +5,7 @@ function Config() {
 }
 
 Config.NUM_INITIAL_WIRES = 4;
-Config.CAPTURE_BUTTON_CAPTION = "Capture Screenshot / Animation Cycle and Encode as GIF";
+Config.CAPTURE_BUTTON_CAPTION = "Create GIF of Animation Cycle";
 
 Config.CHART_COLORS = [
     "#3366CC",
@@ -66,3 +66,5 @@ Config.BROKEN_COLOR_GATE = "red";
 Config.TOOLTIP_HIGHLIGHT_STROKE_COLOR = "red";
 Config.CONTROL_WIRE_ACTIVE_GLOW_ALPHA = 0.6;
 Config.CONTROL_WIRE_ACTIVE_GLOW_COLOR = "gray";
+
+Config.URL_CIRCUIT_PARAM_KEY = "initialCircuit";
