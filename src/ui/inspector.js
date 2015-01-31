@@ -324,11 +324,10 @@ Inspector.prototype.exportCircuit = function() {
 };
 
 /**
- * @param {!string} text
+ * @param {!object} json
  * @returns {!Inspector}
  */
-Inspector.prototype.withImportedCircuit = function(text) {
-    var json = JSON.parse(text);
+Inspector.prototype.withImportedCircuit = function(json) {
     var wireCount = forceGetProperty(json, "wires");
     if (!isInt(wireCount) || wireCount < 1 || wireCount > Config.MAX_WIRE_COUNT) {
         throw new Error("wires must be an int between 1 and " + Config.MAX_WIRE_COUNT);

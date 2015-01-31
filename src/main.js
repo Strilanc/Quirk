@@ -14,6 +14,10 @@ if (canvas === null) {
 }
 
 //noinspection JSValidateTypes
+/** @type {!HTMLDivElement} */
+var inspectorDiv = document.getElementById("inspectorDiv");
+
+//noinspection JSValidateTypes
 /** @type {!HTMLAnchorElement} */
 var currentCircuitLink = document.getElementById("currentCircuitLink");
 
@@ -28,6 +32,9 @@ var captureImage = document.getElementById("captureImage");
 //noinspection JSValidateTypes
 /** @type {!HTMLImageElement} */
 var captureImageAnchor = document.getElementById("captureImageAnchor");
+
+var undoHistory = [];
+var redoHistory = [];
 
 //noinspection FunctionTooLongJS
 var main = function() {
@@ -89,13 +96,25 @@ var main = function() {
         return p.which === 1;
     };
 
-    var update = function(newInspector) {
+    var update = function(newInspector, keepInHistory) {
         if (inspector.isEqualTo(newInspector)) {
             return;
         }
+        var oldSnapshot = snapshot();
         inspector = newInspector;
-        var json = inspector.exportCircuit();
-        $(currentCircuitLink).attr("href", "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + JSON.stringify(json, null, 0));
+        var jsonText = snapshot();
+        $(currentCircuitLink).attr("href", "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText);
+        if (keepInHistory && oldSnapshot !== jsonText) {
+            undoHistory.push(oldSnapshot);
+            redoHistory = [];
+        }
+
+        redraw();
+    };
+
+    var restore = function(jsonText) {
+        inspector = inspector.withImportedCircuit(JSON.parse(jsonText));
+        $(currentCircuitLink).attr("href", "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText);
         redraw();
     };
 
@@ -103,8 +122,7 @@ var main = function() {
     $(canvas).mousedown(function (p) {
         if (!isClicking(p)) { return; }
 
-        inspector = inspector.move(mousePosToInspectorPos(p)).grab();
-        redraw();
+        update(inspector.move(mousePosToInspectorPos(p)).grab(), true);
     });
 
     //noinspection JSUnresolvedFunction
@@ -113,7 +131,7 @@ var main = function() {
             return;
         }
 
-        update(inspector.move(mousePosToInspectorPos(p)).drop());
+        update(inspector.move(mousePosToInspectorPos(p)).drop(), true);
     });
 
     //noinspection JSUnresolvedFunction
@@ -122,7 +140,7 @@ var main = function() {
             return;
         }
 
-        update(inspector.move(mousePosToInspectorPos(p)));
+        update(inspector.move(mousePosToInspectorPos(p)), false);
     });
 
     //noinspection JSUnresolvedFunction
@@ -132,7 +150,7 @@ var main = function() {
             return;
         }
 
-        update(inspector.move(mousePosToInspectorPos(p)));
+        update(inspector.move(mousePosToInspectorPos(p)), false);
     });
 
     $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
@@ -151,14 +169,14 @@ var main = function() {
 
     //noinspection JSUnresolvedFunction
     $(canvas).mouseleave(function () {
-        update(inspector.move(null));
+        update(inspector.move(null), false);
     });
 
     var params = getSearchParameters();
     if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
         $(document.getElementById("exportTextBox")).val(params[Config.URL_CIRCUIT_PARAM_KEY]);
         try {
-            update(inspector.withImportedCircuit(params[Config.URL_CIRCUIT_PARAM_KEY]));
+            update(inspector.withImportedCircuit(JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY])), false);
             $(document.getElementById("exportTextBox")).css("background-color", "white");
         } catch (ex) {
             $(document.getElementById("exportTextBox")).css("background-color", "pink");
@@ -168,8 +186,38 @@ var main = function() {
 
     window.addEventListener('resize', redraw, false);
 
+    var snapshot = function() {
+        return JSON.stringify(inspector.exportCircuit(), null, 0);
+    };
+    var undo = function() {
+        if (undoHistory.length === 0) {
+            return;
+        }
+        redoHistory.push(snapshot());
+        restore(undoHistory.pop());
+    };
+    var redo = function() {
+        if (redoHistory.length === 0) {
+            return;
+        }
+        undoHistory.push(snapshot());
+        restore(redoHistory.pop());
+    };
+
+    $(inspectorDiv).keydown(function(e) {
+        var isUndo = e.keyCode == 90 && e.ctrlKey && !e.shiftKey;
+        var isRedo = e.keyCode == 90 && e.ctrlKey && e.shiftKey;
+        if (isUndo) {
+            undo();
+        }
+        if (isRedo) {
+            redo();
+        }
+    });
+
     redraw();
 };
+
 
 function getSearchParameters() {
     var paramsText = window.location.search.substr(1);

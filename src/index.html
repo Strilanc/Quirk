@@ -31,20 +31,22 @@
     <script src="ui/inspector.js"></script>
 </head>
 <body style="margin: 0">
-    <div id="canvasDiv" style="width: 100%; height: 600px;">
-        <canvas id="drawCanvas"></canvas>
+    <div id="inspectorDiv">
+        <div id="canvasDiv" style="width: 100%; height: 600px;" tabindex="1">
+            <canvas id="drawCanvas"></canvas>
+        </div>
+
+
+        <br/>
+        <br/>
+        <a id="currentCircuitLink" href="">Link to Current Circuit</a>
+        <br/>
+        <br/>
+        <button type="button" id="captureButton">Capture</button>
+        <br/>
+        <a target="_blank" id="captureImageAnchor" href=""><img src="" id="captureImage"/></a>
+
+        <script src="main.js"></script>
     </div>
-
-
-    <br/>
-    <br/>
-    <a id="currentCircuitLink" href="">Link to Current Circuit</a>
-    <br/>
-    <br/>
-    <button type="button" id="captureButton">Capture</button>
-    <br/>
-    <a target="_blank" id="captureImageAnchor" href=""><img src="" id="captureImage"/></a>
-
-    <script src="main.js"></script>
 </body>
 </html>
