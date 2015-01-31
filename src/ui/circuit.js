@@ -372,7 +372,7 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand, time) {
             hand.paintToolTipIfHoveringIn(
                 painter,
                 curveWrapper.withX(hand.pos !== null ? hand.pos.x : 0).withW(1),
-                "P(ON) = " + (p * 100).toFixed(1) + "%");
+                "P(ON) = " + describeProbability(p, 1));
         }
     }
 };

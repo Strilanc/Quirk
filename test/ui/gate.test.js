@@ -52,12 +52,14 @@ GateTest.prototype.testFromTargetedRotation = function() {
 
 GateTest.prototype.testToJson = function() {
     assertThat(Gate.X.toJson()).isEqualTo({
-        symbol: "X",
-        matrix: "{{0, 1}, {1, 0}}"
+        id: "X"
     });
-    assertThat(new Gate("A", Matrix.identity(2), "Alpha", "Desc").toJson()).isEqualTo({
-        symbol: "A",
-        matrix: "{{1, 0}, {0, 1}}"
+    assertThat(new Gate("A", Matrix.identity(2), "Alpha", "Desc", true).toJson()).isEqualTo({
+        id: "A",
+        matrix: "{{1,0},{0,1}}"
+    });
+    assertThat(new Gate("A", Matrix.identity(2), "Alpha", "Desc", false).toJson()).isEqualTo({
+        id: "A"
     });
 };
 
@@ -66,18 +68,26 @@ GateTest.prototype.testFromJson = function() {
     assertThat(Gate.fromJson(Gate.X.toJson())).isEqualTo(Gate.X);
     assertThat(Gate.fromJson(Gate.Y.toJson())).isEqualTo(Gate.Y);
 
+    assertTrue(Gate.fromJson({
+        id: "X",
+        matrix: "{{0, 1}, {1, 0}}"
+    }) === Gate.X);
+    assertTrue(Gate.fromJson({
+        id: "X"
+    }) === Gate.X);
+
     // if matrix differs, doesn't use existing gate
     assertThat(Gate.fromJson({
-        symbol: "X",
+        id: "X",
         matrix: "{{0, 1}, {i, 0}}"
     })).isNotEqualTo(Gate.X);
     assertThat(Gate.fromJson({
-        symbol: "X",
+        id: "X",
         matrix: "{{0, 1}, {i, 0}}"
     }).matrixAt(0)).isEqualTo(Matrix.square([0, 1, Complex.I, 0]));
 
     // round trip keeps certain details
-    var a = new Gate("A", Matrix.identity(2), "Alpha", "Desc");
+    var a = new Gate("A", Matrix.identity(2), "Alpha", "Desc", true);
     var a2 = Gate.fromJson(a.toJson());
     assertThat(a2.symbol).isEqualTo(a.symbol);
     assertThat(a2.matrixAt(0)).isEqualTo(a.matrixAt(0));

@@ -519,7 +519,7 @@ Gate.fromCustom = function(matrix) {
     return new Gate(
         "",
         matrix,
-        matrix.toString(),
+        matrix.toString(Format.SIMPLIFIED),
         "A custom operation.",
         true,
         Gate.MATRIX_SYMBOL_DRAWER);
@@ -750,8 +750,11 @@ Gate.fromJson = function(json) {
         r.matrixOrFunc = matrix;
         return r;
     }
-    if (match !== undefined && (!match.needMatrixToRecover || match.matrixAt(0).isEqualTo(matrix))) {
-        return match;
+    if (match !== undefined) {
+        var noMatchedNeeded = matrix === undefined && !match.needMatrixToRecover;
+        if (noMatchedNeeded || match.matrixAt(0).isEqualTo(matrix)) {
+            return match;
+        }
     }
     return new Gate(symbol, matrix, symbol, "An imported gate.", true);
 };

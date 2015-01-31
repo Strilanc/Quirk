@@ -62,23 +62,23 @@ Matrix.fromJson = function(json) {
  * @returns {!object}
  */
 Matrix.prototype.toJson = function() {
-    return this.toString();
+    return this.toString(Format.MINIFIED);
 };
 
 /**
  * Returns a text representation of the receiving matrix.
  * (It uses curly braces so you can paste it into wolfram alpha.)
- * @param {=number} epsilon
- * @param {=number} digits
+ * @param {=Format} format
  * @returns {!string}
  */
-Matrix.prototype.toString = function (epsilon, digits) {
+Matrix.prototype.toString = function (format) {
+    format = format || Format.EXACT;
     var data = this.rows.map(function(row) {
         var rowData = row.map(function(e) {
-            return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(epsilon, digits);
+            return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(format);
         });
-        return rowData.join(", ");
-    }).join("}, {");
+        return rowData.join(format.itemSeparator);
+    }).join("}" + format.itemSeparator + "{");
     return "{{" + data + "}}";
 };
 

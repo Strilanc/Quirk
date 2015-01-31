@@ -15,7 +15,7 @@ function Complex(real, imag) {
  * @returns {!object}
  */
 Complex.prototype.toJson = function() {
-    return this.toString();
+    return this.toString(Complex.MINIFIED);
 };
 
 /**
@@ -129,30 +129,32 @@ Complex.imagPartOf = function (v) {
 
 /**
  * Returns a compact text representation of the receiving complex value.
- * @param {=number} epsilon
- * @param {=number} digits
+ * @param {=Format} format
  * @returns {!string}
  */
-Complex.prototype.toString = function (epsilon, digits) {
-    epsilon = epsilon || 0;
+Complex.prototype.toString = function (format) {
+    format = format || Format.EXACT;
 
-    if (Math.abs(this.imag) <= epsilon) {
-        return floatToCompactString(this.real);
-    }
-    if (Math.abs(this.real) <= epsilon) {
-        if (Math.abs(this.imag - 1) <= epsilon) {
-            return "i";
+    if (format.allowAbbreviation) {
+        if (Math.abs(this.imag) <= format.maxAbbreviationError) {
+            return format.formatFloat(this.real);
         }
-        if (Math.abs(this.imag + 1) <= epsilon) {
-            return "-i";
+        if (Math.abs(this.real) <= format.maxAbbreviationError) {
+            if (Math.abs(this.imag - 1) <= format.maxAbbreviationError) {
+                return "i";
+            }
+            if (Math.abs(this.imag + 1) <= format.maxAbbreviationError) {
+                return "-i";
+            }
+            return format.formatFloat(this.imag) + "i";
         }
-        return floatToCompactString(this.imag, epsilon, digits) + "i";
     }
-    var separator = this.imag > 0 ? "+" : "-";
-    var imagFactor = Math.abs(Math.abs(this.imag) - 1) <= epsilon ?
+
+    var separator = this.imag >= 0 ? "+" : "-";
+    var imagFactor = format.allowAbbreviation && Math.abs(Math.abs(this.imag) - 1) <= format.maxAbbreviationError ?
         "" :
-        floatToCompactString(Math.abs(this.imag), epsilon, digits);
-    return floatToCompactString(this.real, epsilon, digits) + separator + imagFactor + "i";
+        format.formatFloat(Math.abs(this.imag));
+    return format.formatFloat(this.real) + separator + imagFactor + "i";
 };
 
 /**

@@ -74,6 +74,26 @@ ComplexTest.prototype.testToString = function() {
 
     assertThat(new Complex(2, -3).toString()).isEqualTo("2-3i");
     assertThat(new Complex(Math.sqrt(1/2), -1/3).toString()).isEqualTo("\u221A\u00BD-\u2153i");
+
+    assertThat(new Complex(2, -3).toString(Format.CONSISTENT)).isEqualTo("2.000-3.000i");
+    assertThat(new Complex(2, -3).toString(Format.EXACT)).isEqualTo("2-3i");
+    assertThat(new Complex(2, -3).toString(Format.MINIFIED)).isEqualTo("2-3i");
+    assertThat(new Complex(2, -3).toString(Format.SIMPLIFIED)).isEqualTo("2-3i");
+
+    assertThat(new Complex(0, -1).toString(Format.CONSISTENT)).isEqualTo("0.000-1.000i");
+    assertThat(new Complex(0, -1).toString(Format.EXACT)).isEqualTo("-i");
+    assertThat(new Complex(0, -1).toString(Format.MINIFIED)).isEqualTo("-i");
+    assertThat(new Complex(0, -1).toString(Format.SIMPLIFIED)).isEqualTo("-i");
+
+    assertThat(new Complex(1/3, 0).toString(Format.CONSISTENT)).isEqualTo("0.333+0.000i");
+    assertThat(new Complex(1/3, 0).toString(Format.EXACT)).isEqualTo("\u2153");
+    assertThat(new Complex(1/3, 0).toString(Format.MINIFIED)).isEqualTo("\u2153");
+    assertThat(new Complex(1/3, 0).toString(Format.SIMPLIFIED)).isEqualTo("\u2153");
+
+    assertThat(new Complex(1/3+0.00001, 0).toString(Format.CONSISTENT)).isEqualTo("0.333+0.000i");
+    assertThat(new Complex(1/3+0.00001, 0).toString(Format.EXACT)).isEqualTo("0.3333433333333333");
+    assertThat(new Complex(1/3+0.00001, 0).toString(Format.MINIFIED)).isEqualTo("0.3333433333333333");
+    assertThat(new Complex(1/3+0.00001, 0).toString(Format.SIMPLIFIED)).isEqualTo("\u2153");
 };
 
 ComplexTest.prototype.testParse = function() {

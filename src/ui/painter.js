@@ -265,7 +265,7 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, hand) {
         };
 
         var tip = stater(focus_c) + " → " + stater(focus_r) +
-            "\n= " + matrix.rows[focus_r][focus_c].toString();
+            "\n= " + matrix.rows[focus_r][focus_c].toString(Format.CONSISTENT);
 
         hand.paintToolTipIfHoveringIn(this,  cell,  tip);
     }
@@ -383,8 +383,8 @@ Painter.prototype.paintProbabilityBox = function (probability, drawArea, highlig
     var w = drawArea.w * probability;
     this.fillRect(drawArea, highlightColor);
     this.fillRect(drawArea.takeLeft(w), Config.PROBABILITY_BOX_FILL_UP_COLOR);
+    this.printCenteredText(describeProbability(probability, 1), drawArea.center());
     this.strokeRect(drawArea);
-    this.printCenteredText((probability*100).toFixed(1) + "%", drawArea.center());
 };
 
 /**
@@ -439,7 +439,6 @@ Painter.prototype.paintConditionalProbabilityBox = function(probabilityOfConditi
                                                             drawArea,
                                                             highlightColor) {
     this.fillRect(drawArea, highlightColor);
-    this.strokeRect(drawArea);
     var topPrintPos = new Point(drawArea.x, drawArea.y + 15);
     var s;
     if (probabilityOfCondition === 0) {
@@ -450,21 +449,22 @@ Painter.prototype.paintConditionalProbabilityBox = function(probabilityOfConditi
         this.ctx.lineTo(ps[1].x, ps[1].y);
         this.ctx.lineTo(ps[2].x, ps[2].y);
         this.ctx.lineTo(ps[0].x, ps[0].y);
-        this.ctx.fillStyle = "gray";
+        this.ctx.fillStyle = Config.PROBABILITY_BOX_FILL_UP_COLOR;
         this.ctx.fill();
         s = "0/0";
     } else {
         this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityOfHitGivenCondition),
             Config.PROBABILITY_BOX_FILL_UP_COLOR);
-        s = Math.round(probabilityOfHitGivenCondition*100) + "%";
+        s = describeProbability(probabilityOfHitGivenCondition, 0);
     }
 
     var probabilityOfHit = probabilityOfCondition * probabilityOfHitGivenCondition;
     this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityOfHit), Config.PROBABILITY_BOX_FILL_UP_COLOR);
     this.printText(
         "|:" + s,
-        topPrintPos.offsetBy(7, 0));
+        topPrintPos.offsetBy(3, 0));
     this.printText(
-        "∧:" + Math.round(probabilityOfHit*100) + "%",
-        topPrintPos.offsetBy(0, drawArea.h/2));
+        "∧" + describeProbability(probabilityOfHit, 0),
+        topPrintPos.offsetBy(-1, drawArea.h/2));
+    this.strokeRect(drawArea);
 };

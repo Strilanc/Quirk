@@ -64,29 +64,28 @@ Toolbox.prototype.paintHint = function(painter, groupIndex, gateIndex, time) {
         this.area.x + 50,
         gateRect.bottom() + 10,
         400,
-        paragraphHeight + 4 * Config.GATE_RADIUS + 35);
+        paragraphHeight + 4 * Config.GATE_RADIUS + 25);
 
+    var matFormat = gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED;
     painter.fillRect(hintRect);
     painter.printText(
         gate.name +
         "\n\n" +
         gate.description +
         "\n\n" +
-        "Transition Matrix (input chooses column(s)):\n" +
-        "  if OFF   if ON\n" +
-        "\n" +
-        "                            OFF output\n" +
+        "Transition Matrix:\n" +
         "\n" +
         "\n" +
-        "                            ON output\n" +
         "\n" +
         "\n" +
-        gate.matrixAt(time).toString(0, 3), new Point(this.area.x + 55, gateRect.bottom() + 25));
+        "\n" +
+        "\n" +
+        gate.matrixAt(time).toString(matFormat), new Point(this.area.x + 55, gateRect.bottom() + 25));
     painter.paintMatrix(
         gate.matrixAt(time),
         new Rect(
             this.area.x + 55,
-            hintRect.bottom() - 4 * Config.GATE_RADIUS,
+            hintRect.bottom() - 6 * Config.GATE_RADIUS + 10,
             4 * Config.GATE_RADIUS,
             4 * Config.GATE_RADIUS));
     painter.strokeRect(hintRect);

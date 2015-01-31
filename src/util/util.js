@@ -348,6 +348,19 @@ var parseFloatFromCompactString = function(text) {
     return result;
 };
 
+var describeProbability = function(p, fractionalDigits) {
+    if (p >= 1) {
+        return "100%";
+    }
+    if (p <= 0) {
+        return "0%";
+    }
+
+    var v = p * 100;
+    var e = Math.pow(10, -fractionalDigits);
+    return Math.min(Math.max(v, e), 100 - e).toFixed(fractionalDigits) + "%";
+};
+
 /**
  * Wraps a caching layer around a function.
  * The arguments must be usable as keys.
@@ -401,22 +414,18 @@ var cacheFunc3 = function(func) {
     };
 };
 
-var _isInitialized = false;
 var _initializationFunctions = [];
 
 /**
  * @param {!function()} func
  */
 var addInitializationFunction = function(func) {
-    need(!_isInitialized, "addInitializationFunction: !_isInitialized");
     _initializationFunctions.push(func);
 };
 
 var runInitializationFunctions = function() {
-    need(!_isInitialized, "runInitializationFunctions: !_isInitialized");
-    _isInitialized = true;
     for (var i = 0; i < _initializationFunctions.length; i++) {
         _initializationFunctions[i]();
     }
-    _initializationFunctions = null;
+    _initializationFunctions = [];
 };
