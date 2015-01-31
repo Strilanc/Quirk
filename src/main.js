@@ -6,6 +6,9 @@ var init = function() {
 /** @type {!HTMLCanvasElement} */
 var canvas = document.getElementById("drawCanvas");
 //noinspection JSValidateTypes
+/** @type {!HTMLDivElement} */
+var canvasDiv = document.getElementById("canvasDiv");
+//noinspection JSValidateTypes
 if (canvas === null) {
     throw new Error("Couldn't find 'drawCanvas'");
 }
@@ -63,6 +66,9 @@ var main = function() {
     };
 
     redraw = function () {
+        canvas.width = canvasDiv.clientWidth;
+        canvas.height = canvasDiv.clientHeight;
+        inspector.updateArea(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
         var painter = new Painter(canvas);
 
         inspector.previewDrop().paint(painter, ts);
@@ -159,6 +165,8 @@ var main = function() {
             alert("Failed to load circuit: " + ex);
         }
     }
+
+    window.addEventListener('resize', redraw, false);
 
     redraw();
 };

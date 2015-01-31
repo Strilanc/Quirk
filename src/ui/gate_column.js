@@ -17,8 +17,8 @@ function GateColumn(gates) {
  * @throws
  */
 GateColumn.fromJson = function(json) {
-    var gates = forceGetProperty(json, "column_gates");
-    if (!Array.isArray(gates)) { throw new Error("column_gates must be an array."); }
+    var gates = forceGetProperty(json, "gates");
+    if (!Array.isArray(gates)) { throw new Error("gates must be an array."); }
     return new GateColumn(gates.map(wrapFuncToPropagateNull(Gate.fromJson)));
 };
 
@@ -26,7 +26,7 @@ GateColumn.fromJson = function(json) {
  * @returns {!object}
  */
 GateColumn.prototype.toJson = function() {
-    return { column_gates: this.gates.map(wrapFuncToPropagateNull(arg1(Gate.prototype.toJson))) };
+    return { gates: this.gates.map(wrapFuncToPropagateNull(arg1(Gate.prototype.toJson))) };
 };
 
 /**

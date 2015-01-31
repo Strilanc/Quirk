@@ -8,8 +8,8 @@
     <script src="external/three.js"></script>
     <script src="debug/alert_on_error.js"></script>
     <script src="config.js"></script>
-    <script src="gif.worker.js"></script>
-    <script src="gif.js"></script>
+    <script src="external/gif.worker.js"></script>
+    <script src="external/gif.js"></script>
     <script src="util/point.js"></script>
     <script src="util/rect.js"></script>
     <script src="util/util.js"></script>
@@ -29,9 +29,11 @@
     <script src="ui/circuit.js"></script>
     <script src="ui/inspector.js"></script>
 </head>
-<body>
+<body style="margin: 0">
+    <div id="canvasDiv" style="width: 100%; height: 600px;">
+        <canvas id="drawCanvas"></canvas>
+    </div>
 
-    <canvas id="drawCanvas" width="400px" height="600px" style="border:1px solid #000000;"></canvas>
 
     <br/>
     <br/>
@@ -40,7 +42,7 @@
     <br/>
     <button type="button" id="captureButton">Capture</button>
     <br/>
-    <a id="captureImageAnchor" href=""><img src="" id="captureImage"/></a>
+    <a target="_blank" id="captureImageAnchor" href=""><img src="" id="captureImage"/></a>
 
     <script src="main.js"></script>
 </body>

@@ -17,10 +17,17 @@
  * @constructor
  */
 function Inspector(drawArea, circuit, toolbox, hand) {
-    this.drawArea = drawArea;
     this.hand = hand;
     this.toolbox = toolbox;
     this.circuit = circuit;
+    this.updateArea(drawArea);
+}
+
+/**
+ * @param {!Rect} drawArea
+ */
+Inspector.prototype.updateArea = function(drawArea) {
+    this.drawArea = drawArea;
 
     var remainder = drawArea.skipTop(this.circuit.area.bottom());
     this.outputStateHintArea = remainder.takeRight(remainder.h);
@@ -29,7 +36,11 @@ function Inspector(drawArea, circuit, toolbox, hand) {
     this.focusedOperationHintArea = remainder.takeLeft(remainder.h);
     this.focusedStateHintArea = this.focusedOperationHintArea.withX(this.focusedOperationHintArea.right() + 5);
     this.cumulativeFocusedOperationHintArea = this.focusedStateHintArea.withX(this.focusedStateHintArea.right() + 5);
-}
+
+    var toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+    this.toolbox.updateArea(drawArea.takeTop(toolboxHeight));
+    this.circuit.updateArea(drawArea.skipTop(toolboxHeight).takeTop(250));
+};
 
 /**
  * @param {!int} numWires
@@ -307,9 +318,8 @@ Inspector.prototype.move = function(p) {
 
 Inspector.prototype.exportCircuit = function() {
     return {
-        custom_gates: [],
-        wire_count: this.circuit.numWires,
-        circuit_columns: this.circuit.columns.map(arg1(GateColumn.prototype.toJson))
+        wires: this.circuit.numWires,
+        cols: this.circuit.columns.map(arg1(GateColumn.prototype.toJson))
     };
 };
 
@@ -319,14 +329,14 @@ Inspector.prototype.exportCircuit = function() {
  */
 Inspector.prototype.withImportedCircuit = function(text) {
     var json = JSON.parse(text);
-    var wireCount = forceGetProperty(json, "wire_count");
+    var wireCount = forceGetProperty(json, "wires");
     if (!isInt(wireCount) || wireCount < 1 || wireCount > Config.MAX_WIRE_COUNT) {
-        throw new Error("wire_count must be an int between 1 and " + Config.MAX_WIRE_COUNT);
+        throw new Error("wires must be an int between 1 and " + Config.MAX_WIRE_COUNT);
     }
 
-    var columns = forceGetProperty(json, "circuit_columns");
+    var columns = forceGetProperty(json, "cols");
     if (!Array.isArray(columns)) {
-        throw new Error("circuit_columns must be an array.");
+        throw new Error("cols must be an array.");
     }
 
     var gateCols = columns.map(GateColumn.fromJson).map(function(e) {

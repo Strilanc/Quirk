@@ -74,6 +74,13 @@ function Circuit(area, numWires, columns, compressedColumnIndex, wireLabeller) {
     this.wireLabeller = wireLabeller || Circuit.DEFAULT_WIRE_LABELLER;
 }
 
+/**
+ * @param {!Rect} drawArea
+ */
+Circuit.prototype.updateArea = function(drawArea) {
+    this.area = drawArea;
+};
+
 Circuit.prototype.isEqualTo = function(other) {
     if (this === other) {
         return true;

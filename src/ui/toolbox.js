@@ -114,6 +114,13 @@ Toolbox.prototype.findGateAt = function(p) {
 };
 
 /**
+ * @param {!Rect} drawArea
+ */
+Toolbox.prototype.updateArea = function(drawArea) {
+    this.area = drawArea;
+};
+
+/**
  * @param {!Painter} painter
  * @param {!Hand} hand
  * @param {!number} time
