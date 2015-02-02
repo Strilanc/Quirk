@@ -1,88 +1,5 @@
 var THREE = {REVISION: '70'};
 
-//noinspection JSUnusedGlobalSymbols
-/**
- * @type {{
- *   texParameteri: function,
- *   deleteTexture: function,
- *   uniform1i: function,
- *   uniform1f: function,
- *   uniform2f: function,
- *   getExtension: function,
- *   deleteShader: function,
- *   getProgramInfoLog: function,
- *   getError: function,
- *   readPixels: function,
- *   getProgramParameter: function,
- *   createShader: function,
- *   shaderSource: function,
- *   compileShader: function,
- *   getShaderParameter: function,
- *   getShaderInfoLog: function,
- *   deleteProgram: function,
- *   bindRenderbuffer: function,
- *   bindFramebuffer: function,
- *   framebufferRenderbuffer: function,
- *   attachShader: function,
- *   bindAttribLocation: function,
- *   linkProgram: function,
- *   getProgramParameter: function,
- *   createTexture: function,
- *   createFramebuffer: function,
- *   createRenderbuffer: function,
- *   pixelStorei: function,
- *   activeTexture: function,
- *   generateMipmap: function,
- *   getUniformLocation: function,
- *   getAttribLocation: function,
- *   createProgram: function,
- *   bindBuffer: function,
- *   enableVertexAttribArray: function,
- *   vertexAttribPointer: function,
- *   bufferData: function,
- *   useProgram: function,
- *   createBuffer: function,
- *   drawElements: function,
- *   framebufferTexture2D: function,
- *   renderbufferStorage: function,
- *   getShaderPrecisionFormat: function,
- *   blendEquation: function,
- *   blendFunc: function,
- *   viewport: function,
- *   deleteBuffer: function,
- *   bindTexture: function,
- *   texImage2D: function
- *   MAX_TEXTURE_IMAGE_UNITS: *,
- *   MAX_TEXTURE_SIZE: *,
- *   VERTEX_SHADER: *,
- *   HIGH_FLOAT: *,
- *   MEDIUM_FLOAT: *,
- *   FRAGMENT_SHADER: *,
- *   TEXTURE_2D: *,
- *   RENDERBUFFER: *,
- *   FRAMEBUFFER: *,
- *   NEAREST: *,
- *   FLOAT: *,
- *   STATIC_DRAW: *,
- *   RGBA: *,
- *   UNSIGNED_INT: *,
- *   UNSIGNED_SHORT: *,
- *   TRIANGLES: *,
- *   ARRAY_BUFFER: *,
- *   COLOR_ATTACHMENT0: *,
- *   RGBA4: *,
- *   LINK_STATUS: *,
- *   TEXTURE0: *,
- *   ELEMENT_ARRAY_BUFFER: *,
- *   TEXTURE_MAG_FILTER: *,
- *   UNSIGNED_BYTE: *,
- *   TEXTURE_MIN_FILTER: *,
- *   COMPILE_STATUS: *,
- *   VALIDATE_STATUS: *
- * }}
- */
-var WebGLContext2d;
-
 /**
  *
  * @param {!string} fragmentShaderSource
@@ -123,9 +40,11 @@ THREE.Context = function () {
     this.canvas = document.createElement('canvas');
 
     /**
+     * @type {!WebGLRenderingContext}
      * @private
      */
     this.g = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
+    //noinspection JSValidateTypes
     if (this.g === null) {
         throw 'Error creating WebGL context.';
     }
@@ -166,10 +85,11 @@ THREE.Context = function () {
  * @param {!THREE.Target} renderTarget
  */
 THREE.Context.prototype.render = function (shader, uniformArguments, renderTarget) {
-    this.g.bindFramebuffer(this.g.FRAMEBUFFER, renderTarget.grab(this).framebuffer);
+    var s = WebGLRenderingContext;
+    this.g.bindFramebuffer(s.FRAMEBUFFER, renderTarget.grab(this).framebuffer);
     this.ensureAttributesAreBound();
     shader.bindAsProgramInto(this, uniformArguments);
-    this.g.drawElements(this.g.TRIANGLES, 6, this.g.UNSIGNED_SHORT, 0);
+    this.g.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
 };
 
 /**
@@ -178,12 +98,13 @@ THREE.Context.prototype.render = function (shader, uniformArguments, renderTarge
  * @param {!Uint8Array} bytes
  */
 THREE.Context.prototype.readPixels = function(renderTarget, rect, bytes) {
-    this.g.bindFramebuffer(this.g.FRAMEBUFFER, renderTarget.grab(this).framebuffer);
-    this.g.readPixels(rect.x, rect.y, rect.w, rect.h, this.g.RGBA, this.g.UNSIGNED_BYTE, bytes);
+    var s = WebGLRenderingContext;
+    this.g.bindFramebuffer(s.FRAMEBUFFER, renderTarget.grab(this).framebuffer);
+    this.g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, bytes);
 };
 
 /**
- * @returns {*}
+ * @returns {!WebGLRenderingContext}
  */
 THREE.Context.prototype.getContext = function() {
     return this.g;
@@ -201,13 +122,16 @@ THREE.Context.prototype.ensureAttributesAreBound = function() {
             +1, +1,
             -1, -1,
             +1, -1]);
-        g.bindBuffer(g.ARRAY_BUFFER, result.positionBuffer);
-        g.bufferData(g.ARRAY_BUFFER, positions, g.STATIC_DRAW);
+        var s = WebGLRenderingContext;
+        g.bindBuffer(s.ARRAY_BUFFER, result.positionBuffer);
+        g.bufferData(s.ARRAY_BUFFER, positions, s.STATIC_DRAW);
+        // Note: should not be rebound anywhere else
 
         var indices = new Uint16Array([0, 2, 1,
             2, 3, 1]);
-        g.bindBuffer(g.ELEMENT_ARRAY_BUFFER, result.indexBuffer);
-        g.bufferData(g.ELEMENT_ARRAY_BUFFER, indices, g.STATIC_DRAW);
+        g.bindBuffer(s.ELEMENT_ARRAY_BUFFER, result.indexBuffer);
+        g.bufferData(s.ELEMENT_ARRAY_BUFFER, indices, s.STATIC_DRAW);
+        // Note: should not be rebound anywhere else
 
         return undefined;
     });
@@ -238,19 +162,20 @@ THREE.Context.prototype.grabHelper = function(contextStashObject, initializer) {
 };
 
 THREE.Context.prototype.getMaximumShaderFloatPrecision = function() {
-    var gl = this.getContext();
+    var g = this.getContext();
+    var s = WebGLRenderingContext;
 
     var isHighPrecisionAvailable =
-        gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0;
+        g.getShaderPrecisionFormat(s.VERTEX_SHADER, s.HIGH_FLOAT).precision > 0 &&
+        g.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.HIGH_FLOAT).precision > 0;
     if (isHighPrecisionAvailable) {
         return 'highp';
     }
 
     console.warn('WebGL high precision not available.');
     var isMediumPrecisionAvailable =
-        gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0;
+        g.getShaderPrecisionFormat(s.VERTEX_SHADER, s.MEDIUM_FLOAT).precision > 0 &&
+        g.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.MEDIUM_FLOAT).precision > 0;
     if (isMediumPrecisionAvailable) {
         return 'mediump';
     }
@@ -289,19 +214,20 @@ THREE.Target.prototype.grab = function(context) {
             renderbuffer: g.createRenderbuffer()
         };
 
-        g.bindTexture(g.TEXTURE_2D, result.texture);
-        g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
-        g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST);
-        g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, self.width, self.height, 0, g.RGBA, g.FLOAT, null);
-        g.bindTexture(g.TEXTURE_2D, null);
+        var s = WebGLRenderingContext;
+        g.bindTexture(s.TEXTURE_2D, result.texture);
+        g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
+        g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
+        g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, self.width, self.height, 0, s.RGBA, s.FLOAT, null);
+        g.bindTexture(s.TEXTURE_2D, null);
 
-        g.bindFramebuffer(g.FRAMEBUFFER, result.framebuffer);
-        g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, result.texture, 0);
-        g.bindFramebuffer(g.FRAMEBUFFER, null);
+        g.bindFramebuffer(s.FRAMEBUFFER, result.framebuffer);
+        g.framebufferTexture2D(s.FRAMEBUFFER, s.COLOR_ATTACHMENT0, s.TEXTURE_2D, result.texture, 0);
+        g.bindFramebuffer(s.FRAMEBUFFER, null);
 
-        g.bindRenderbuffer(g.RENDERBUFFER, result.renderbuffer);
-        g.renderbufferStorage(g.RENDERBUFFER, g.RGBA4, self.width, self.height);
-        g.bindRenderbuffer(g.RENDERBUFFER, null);
+        g.bindRenderbuffer(s.RENDERBUFFER, result.renderbuffer);
+        g.renderbufferStorage(s.RENDERBUFFER, s.RGBA4, self.width, self.height);
+        g.bindRenderbuffer(s.RENDERBUFFER, null);
 
         return result;
     });
@@ -332,8 +258,9 @@ THREE.WebGLProgram = function(renderer, fragmentShaderSource, uniformParameterNa
         fragmentShaderSource
     ].join('\n');
 
-    var glVertexShader = THREE.WebGLProgram.compileShader(g, g.VERTEX_SHADER, vertexShader);
-    var glFragmentShader = THREE.WebGLProgram.compileShader(g, g.FRAGMENT_SHADER, fullFragmentShader);
+    var s = WebGLRenderingContext;
+    var glVertexShader = THREE.WebGLProgram.compileShader(g, s.VERTEX_SHADER, vertexShader);
+    var glFragmentShader = THREE.WebGLProgram.compileShader(g, s.FRAGMENT_SHADER, fullFragmentShader);
 
     var program = g.createProgram();
     g.attachShader(program, glVertexShader);
@@ -344,12 +271,12 @@ THREE.WebGLProgram = function(renderer, fragmentShaderSource, uniformParameterNa
         console.warn('gl.getProgramInfoLog()', g.getProgramInfoLog(program));
     }
 
-    if (g.getProgramParameter(program, g.LINK_STATUS) === false) {
+    if (g.getProgramParameter(program, s.LINK_STATUS) === false) {
         throw new Error(
             "Failed to link shader program." +
             "\n" +
             "\n" +
-            "gl.VALIDATE_STATUS: " + g.getProgramParameter(program, g.VALIDATE_STATUS) +
+            "gl.VALIDATE_STATUS: " + g.getProgramParameter(program, s.VALIDATE_STATUS) +
             "\n" +
             "gl.getError(): " + g.getError());
     }
@@ -373,8 +300,8 @@ THREE.WebGLProgram = function(renderer, fragmentShaderSource, uniformParameterNa
  */
 THREE.WebGLProgram.prototype.loadInto = function(context, uniformArgs) {
     var g = context.getContext();
-    var maxTextureUnits = g.getParameter(g.MAX_TEXTURE_IMAGE_UNITS);
-    var maxTextureDiameter = g.getParameter(g.MAX_TEXTURE_SIZE);
+    var maxTextureUnits = g.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
+    var maxTextureDiameter = g.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
 
     var nextTextureUnitIndex = 0;
     var getNextTextureUnitIndex = function() {
@@ -391,18 +318,18 @@ THREE.WebGLProgram.prototype.loadInto = function(context, uniformArgs) {
         v2: function(loc, val) { g.uniform2f(loc, val.x, val.y); },
 
         /**
-         * @param {!string} loc
+         * @param {*} loc
          * @param {!THREE.Target} val
          */
         renderTarget_t: function(loc, val) {
             var textureUnit = getNextTextureUnitIndex();
             g.uniform1i(loc, textureUnit);
-            g.activeTexture(g.TEXTURE0 + textureUnit);
-            g.bindTexture(g.TEXTURE_2D, val.grab(context).texture);
+            g.activeTexture(WebGLRenderingContext.TEXTURE0 + textureUnit);
+            g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.grab(context).texture);
         },
 
         /**
-         * @param {!string} loc
+         * @param {*} loc
          * @param {!{data: !Float32Array, width: int, height: int}} val
          */
         data_t: function(loc, val) {
@@ -411,15 +338,16 @@ THREE.WebGLProgram.prototype.loadInto = function(context, uniformArgs) {
                     ") exceeds maximum diameter (" + maxTextureDiameter + ").");
             }
 
+            var s = WebGLRenderingContext;
             var textureUnit = getNextTextureUnitIndex();
             g.uniform1i(loc, textureUnit);
-            g.activeTexture(g.TEXTURE0 + textureUnit);
+            g.activeTexture(s.TEXTURE0 + textureUnit);
 
             var texture = g.createTexture();
-            g.bindTexture(g.TEXTURE_2D, texture);
-            g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
-            g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST);
-            g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, val.width, val.height, 0, g.RGBA, g.FLOAT, val.data);
+            g.bindTexture(s.TEXTURE_2D, texture);
+            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
+            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
+            g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, val.width, val.height, 0, s.RGBA, s.FLOAT, val.data);
         }
     };
 
@@ -434,7 +362,7 @@ THREE.WebGLProgram.prototype.loadInto = function(context, uniformArgs) {
     }
 
     g.enableVertexAttribArray(this.positionAttributeLocation);
-    g.vertexAttribPointer(this.positionAttributeLocation, 2, g.FLOAT, false, 0, 0);
+    g.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
 };
 
 /**
