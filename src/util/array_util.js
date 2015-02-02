@@ -299,3 +299,17 @@ Array.prototype.paddedWithTo = function(item, minimumLength) {
 Float32Array.prototype.toArray = Float32Array.prototype.toArray || function() {
     return Array.prototype.slice.call(this);
 };
+
+/**
+ * @param {!function(T): R} valueSelector
+ * @returns {!object}
+ * @template T, R
+ */
+Array.prototype.mapKeysTo = function(valueSelector) {
+    var map = {};
+    for (var i = 0; i < this.length; i++) {
+        var key = this[i];
+        map[key] = valueSelector(key);
+    }
+    return map;
+};

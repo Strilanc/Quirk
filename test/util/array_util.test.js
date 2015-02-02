@@ -205,3 +205,9 @@ ArrayUtilTest.prototype.testPaddedWithTo = function() {
 ArrayUtilTest.prototype.testToArray_Float32 = function() {
     assertThat(new Float32Array([1, 2, 3]).toArray()).isEqualTo([1, 2, 3]);
 };
+
+ArrayUtilTest.prototype.testMapKeysTo = function() {
+    assertThat([].mapKeysTo(function() { throw "do not call"; })).isEqualTo({});
+    assertThat(["a", "b", "c"].mapKeysTo(function(e) { return e + "x"; })).isEqualTo(
+        {"a": "ax", "b": "bx", "c": "cx"});
+};

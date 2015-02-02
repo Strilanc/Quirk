@@ -284,6 +284,29 @@ Circuit.prototype.gateRect = function (wireIndex, operationIndex) {
     return Rect.centeredSquareWithRadius(new Point(op.x + Config.GATE_RADIUS, wire.center().y), Config.GATE_RADIUS);
 };
 
+Circuit.prototype.scanStateTextures = function(time) {
+    if (this.__cacheTime__scanStateTextures === time) {
+        return this.__cache__scanStateTextures;
+    }
+
+    var currentState = QuantumTexture.fromZeroes(this.numWires);
+    var states = [currentState];
+    for (var i = 0; i < this.columns.length; i++) {
+        var c = this.columns[i];
+        var control = c.fullControlMask();
+        for (var j = 0; j < c.gates.length; j++) {
+            var g = c.gates[j];
+            if (g !== Gate.CONTROL && g !== Gate.ANTI_CONTROL && g !== Gate.PEEK && g !== null) {
+                currentState = currentState.withQubitOperationApplied(j, g.matrixAt(time), control);
+            }
+        }
+        states.push(currentState);
+    }
+    this.__cache__scanStateTextures = states;
+    this.__cacheTime__scanStateTextures = time;
+    return states;
+};
+
 /**
  * Returns the per-wire probabilities before and after each operation.
  * @param {!number} time
@@ -372,7 +395,7 @@ Circuit.prototype.paintWireProbabilityCurves = function(painter, hand, time) {
             hand.paintToolTipIfHoveringIn(
                 painter,
                 curveWrapper.withX(hand.pos !== null ? hand.pos.x : 0).withW(1),
-                "P(ON) = " + describeProbability(p, 1));
+                describeProbability(p, 1));
         }
     }
 };
@@ -572,6 +595,10 @@ Circuit.prototype.hasTimeBasedGates = function () {
  * @returns {!QuantumState}
  */
 Circuit.prototype.getOutput = function(time) {
+    var states = this.scanStateTextures(time);
+    var amps = states[states.length - 1].toAmplitudes();
+    return new QuantumState(Matrix.col(amps));
+
     return this.columns
         .map(function(e) { return e.matrixAt(time); })
         .reduce(

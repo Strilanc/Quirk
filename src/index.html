@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <title>Quantum Circuit Inspector</title>
 
-    <script src="external/jquery.js"></script>
-    <script src="external/three.js"></script>
     <script src="debug/alert_on_error.js"></script>
     <script src="config.js"></script>
+    <script src="shaders/fragment_shaders.js"></script>
+    <script src="external/jquery.js"></script>
+    <script src="external/three.js"></script>
     <script src="external/gif.worker.js"></script>
     <script src="external/gif.js"></script>
     <script src="util/format.js"></script>
@@ -34,16 +35,13 @@
     <div id="inspectorDiv">
         <div id="canvasDiv" style="width: 100%; height: 600px;" tabindex="1">
             <canvas id="drawCanvas"></canvas>
-        </div>
+        </div><br/>
+        <br/>
 
+        <a id="currentCircuitLink" href="">Link to Current Circuit</a><br/>
+        <br/>
 
-        <br/>
-        <br/>
-        <a id="currentCircuitLink" href="">Link to Current Circuit</a>
-        <br/>
-        <br/>
-        <button type="button" id="captureButton">Capture</button>
-        <br/>
+        <button type="button" id="captureButton">Capture</button><br/>
         <a target="_blank" id="captureImageAnchor" href=""><img src="" id="captureImage"/></a>
 
         <script src="main.js"></script>

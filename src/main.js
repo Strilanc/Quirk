@@ -1,7 +1,3 @@
-var init = function() {
-    QuantumTexture.loadThen("", main, function(reason) { throw new Error(reason); });
-};
-
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
 var canvas = document.getElementById("drawCanvas");
@@ -38,8 +34,6 @@ var redoHistory = [];
 
 //noinspection FunctionTooLongJS
 var main = function() {
-    runInitializationFunctions();
-
     /** @type {!Inspector} */
     var inspector = Inspector.empty(Config.NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
 
@@ -121,6 +115,7 @@ var main = function() {
     //noinspection JSUnresolvedFunction
     $(canvas).mousedown(function (p) {
         if (!isClicking(p)) { return; }
+        p.preventDefault();
 
         update(inspector.move(mousePosToInspectorPos(p)).grab(), true);
     });
@@ -130,6 +125,7 @@ var main = function() {
         if (!isClicking(p) || inspector.hand.heldGateBlock === null ) {
             return;
         }
+        p.preventDefault();
 
         update(inspector.move(mousePosToInspectorPos(p)).drop(), true);
     });
@@ -139,6 +135,7 @@ var main = function() {
         if (!isClicking(p) || inspector.hand.heldGateBlock === null ) {
             return;
         }
+        p.preventDefault();
 
         update(inspector.move(mousePosToInspectorPos(p)), false);
     });
@@ -172,18 +169,6 @@ var main = function() {
         update(inspector.move(null), false);
     });
 
-    var params = getSearchParameters();
-    if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
-        $(document.getElementById("exportTextBox")).val(params[Config.URL_CIRCUIT_PARAM_KEY]);
-        try {
-            update(inspector.withImportedCircuit(JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY])), false);
-            $(document.getElementById("exportTextBox")).css("background-color", "white");
-        } catch (ex) {
-            $(document.getElementById("exportTextBox")).css("background-color", "pink");
-            alert("Failed to load circuit: " + ex);
-        }
-    }
-
     window.addEventListener('resize', redraw, false);
 
     var snapshot = function() {
@@ -215,6 +200,16 @@ var main = function() {
         }
     });
 
+    var params = getSearchParameters();
+    if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
+        try {
+            var json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
+            update(inspector.withImportedCircuit(json), false);
+        } catch (ex) {
+            alert("Failed to load circuit: " + ex);
+        }
+    }
+
     redraw();
 };
 
@@ -237,4 +232,4 @@ function getSearchParameters() {
     return paramsObject;
 }
 
-init();
+main();

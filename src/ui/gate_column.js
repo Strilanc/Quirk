@@ -106,6 +106,22 @@ GateColumn.prototype.matrixAt = function(time) {
 };
 
 /**
+ * @returns {!ControlMask}
+ */
+GateColumn.prototype.fullControlMask = function() {
+    var mask = ControlMask.NO_CONTROLS;
+    for (var i = 0; i < this.gates.length; i++) {
+        var g = this.gates[i];
+        if (g === Gate.CONTROL) {
+            mask = mask.combine(ControlMask.fromBitIs(i, true));
+        } else if (g === Gate.ANTI_CONTROL) {
+            mask = mask.combine(ControlMask.fromBitIs(i, false));
+        }
+    }
+    return mask;
+};
+
+/**
  * @param {!int} startIndex
  * @param {!GateBlock} gateBlock
  * @returns {!GateColumn}

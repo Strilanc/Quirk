@@ -413,19 +413,3 @@ var cacheFunc3 = function(func) {
         return partial(arg1)(arg2, arg3);
     };
 };
-
-var _initializationFunctions = [];
-
-/**
- * @param {!function()} func
- */
-var addInitializationFunction = function(func) {
-    _initializationFunctions.push(func);
-};
-
-var runInitializationFunctions = function() {
-    for (var i = 0; i < _initializationFunctions.length; i++) {
-        _initializationFunctions[i]();
-    }
-    _initializationFunctions = [];
-};
