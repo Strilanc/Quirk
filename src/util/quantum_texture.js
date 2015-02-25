@@ -177,6 +177,7 @@ QuantumTexture.SHADERS = {
     toProbabilities: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.FROM_AMPLITUDES_TO_PROBABILITIES),
     singleControl: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.INIT_SINGLE_CONTROL),
     combineControls: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.COMBINE_CONTROLS),
+    overlay: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.OVERLAY),
     packFloats: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.PACK_COMPONENT_FLOAT_INTO_BYTES),
     passThrough: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.PASS_THROUGH)
 };
@@ -314,6 +315,18 @@ QuantumTexture.prototype.toAmplitudes = function() {
     var real = realPrep();
     var imag = imagPrep();
     return range(real.length).map(function(i) { return new Complex(real[i], imag[i]); });
+};
+
+QuantumTexture.prototype.toAmplitudesPrep = function() {
+    var realPrep = this._prepareExtractColorComponent(0);
+    var imagPrep = this._prepareExtractColorComponent(1);
+    return function() {
+        var real = realPrep();
+        var imag = imagPrep();
+        return range(real.length).map(function (i) {
+            return new Complex(real[i], imag[i]);
+        });
+    };
 };
 
 /**

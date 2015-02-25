@@ -293,7 +293,7 @@ var floatToCompactString = function(value, epsilon, digits) {
     epsilon = epsilon || 0;
 
     if (value < 0) {
-        return "-" + floatToCompactString(-value, epsilon);
+        return "-" + floatToCompactString(-value, epsilon, digits);
     }
 
     var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {

@@ -77,6 +77,9 @@ THREE.Context = function () {
             self.lifetimeCounter++;
         },
         false);
+
+    this.maxTextureUnits = this.g.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
+    this.maxTextureDiameter = this.g.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
 };
 
 /**
@@ -85,11 +88,29 @@ THREE.Context = function () {
  * @param {!THREE.Target} renderTarget
  */
 THREE.Context.prototype.render = function (shader, uniformArguments, renderTarget) {
+    this.ensureAttributesAreBound();
+
     var s = WebGLRenderingContext;
     this.g.bindFramebuffer(s.FRAMEBUFFER, renderTarget.grab(this).framebuffer);
-    this.ensureAttributesAreBound();
     shader.bindAsProgramInto(this, uniformArguments);
+
     this.g.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
+};
+
+THREE.Context.prototype.checkError = function(previousOp) {
+    var e = this.g.getError();
+    var s = WebGLRenderingContext;
+    if (e !== s.NO_ERROR) {
+        var m = {};
+        m[s.CONTEXT_LOST_WEBGL] = "CONTEXT_LOST_WEBGL";
+        m[s.OUT_OF_MEMORY] = "OUT_OF_MEMORY";
+        m[s.INVALID_ENUM] = "INVALID_ENUM";
+        m[s.INVALID_VALUE] = "INVALID_VALUE";
+        m[s.INVALID_OPERATION] = "INVALID_OPERATION";
+        m[s.INVALID_FRAMEBUFFER_OPERATION] = "INVALID_FRAMEBUFFER_OPERATION";
+        var d = m[e] !== undefined ? m[e] : "?";
+        throw new Error("gl.getError() returned " + e + " (" + d + ") after " + previousOp + ".");
+    }
 };
 
 /**
@@ -216,17 +237,17 @@ THREE.Target.prototype.grab = function(context) {
 
         var s = WebGLRenderingContext;
         g.bindTexture(s.TEXTURE_2D, result.texture);
+        g.bindFramebuffer(s.FRAMEBUFFER, result.framebuffer);
+        g.bindRenderbuffer(s.RENDERBUFFER, result.renderbuffer);
+
         g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
         g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
         g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, self.width, self.height, 0, s.RGBA, s.FLOAT, null);
-        g.bindTexture(s.TEXTURE_2D, null);
-
-        g.bindFramebuffer(s.FRAMEBUFFER, result.framebuffer);
         g.framebufferTexture2D(s.FRAMEBUFFER, s.COLOR_ATTACHMENT0, s.TEXTURE_2D, result.texture, 0);
-        g.bindFramebuffer(s.FRAMEBUFFER, null);
-
-        g.bindRenderbuffer(s.RENDERBUFFER, result.renderbuffer);
         g.renderbufferStorage(s.RENDERBUFFER, s.RGBA4, self.width, self.height);
+
+        g.bindTexture(s.TEXTURE_2D, null);
+        g.bindFramebuffer(s.FRAMEBUFFER, null);
         g.bindRenderbuffer(s.RENDERBUFFER, null);
 
         return result;
@@ -253,10 +274,10 @@ THREE.WebGLProgram = function(renderer, fragmentShaderSource, uniformParameterNa
         '}'
     ].join('\n');
     var fullFragmentShader = [
-        'precision ' + precision + ' float;',
-        'precision ' + precision + ' int;',
+        "precision " + precision + " float;",
+        "precision " + precision + " int;",
         fragmentShaderSource
-    ].join('\n');
+    ].join("\n");
 
     var s = WebGLRenderingContext;
     var glVertexShader = THREE.WebGLProgram.compileShader(g, s.VERTEX_SHADER, vertexShader);
@@ -300,14 +321,12 @@ THREE.WebGLProgram = function(renderer, fragmentShaderSource, uniformParameterNa
  */
 THREE.WebGLProgram.prototype.loadInto = function(context, uniformArgs) {
     var g = context.getContext();
-    var maxTextureUnits = g.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
-    var maxTextureDiameter = g.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
 
     var nextTextureUnitIndex = 0;
     var getNextTextureUnitIndex = function() {
         var textureUnit = nextTextureUnitIndex++;
-        if (textureUnit >= maxTextureUnits) {
-            throw new Error('WebGLRenderer: not enough texture units (' + maxTextureUnits + ')');
+        if (textureUnit >= context.maxTextureUnits) {
+            throw new Error('WebGLRenderer: not enough texture units (' + context.maxTextureUnits + ')');
         }
         return textureUnit;
     };
@@ -333,9 +352,9 @@ THREE.WebGLProgram.prototype.loadInto = function(context, uniformArgs) {
          * @param {!{data: !Float32Array, width: int, height: int}} val
          */
         data_t: function(loc, val) {
-            if (val.width > maxTextureDiameter || val.height > maxTextureDiameter) {
+            if (val.width > context.maxTextureDiameter || val.height > context.maxTextureDiameter) {
                 throw new Error("Texture image (" + val.width + " x " + val.height +
-                    ") exceeds maximum diameter (" + maxTextureDiameter + ").");
+                    ") exceeds maximum diameter (" + context.maxTextureDiameter + ").");
             }
 
             var s = WebGLRenderingContext;
@@ -383,7 +402,7 @@ THREE.WebGLProgram.compileShader = function(gl, type, sourceCode) {
     }
 
     if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) === false) {
-        throw new Error('THREE.WebGLShader: Shader compiled failed: ' + sourceCode + gl.getError());
+        throw new Error('THREE.WebGLShader: Shader compile failed: ' + sourceCode + gl.getError());
     }
 
     return shader;

@@ -299,6 +299,9 @@ Array.prototype.paddedWithTo = function(item, minimumLength) {
 Float32Array.prototype.toArray = Float32Array.prototype.toArray || function() {
     return Array.prototype.slice.call(this);
 };
+Uint8Array.prototype.toArray = Uint8Array.prototype.toArray || function() {
+    return Array.prototype.slice.call(this);
+};
 
 /**
  * @param {!function(T): R} valueSelector

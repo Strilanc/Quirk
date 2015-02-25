@@ -216,6 +216,27 @@ FRAGMENT_SHADER_SRCS.PASS_THROUGH = [
 ].join("\n");
 
 /**
+ * Renders a texture storing the same data as a given texture.
+ */
+FRAGMENT_SHADER_SRCS.OVERLAY = [
+    "uniform vec2 backgroundTextureSize;",
+    "uniform vec2 foregroundTextureSize;",
+    "uniform sampler2D backgroundTexture;",
+    "uniform sampler2D foregroundTexture;",
+    "uniform vec2 xy;",
+
+    "void main() {",
+    "    vec2 uv = (gl_FragCoord.xy - xy) / foregroundTextureSize.xy;",
+    "    if (uv.x >= 0.0 && uv.y >= 0.0 && uv.x < 1.0 && uv.y < 1.0) {",
+    "      gl_FragColor = texture2D(foregroundTexture, uv);",
+    "    } else {",
+    "      uv = gl_FragCoord.xy / backgroundTextureSize;",
+    "      gl_FragColor = texture2D(backgroundTexture, uv);",
+    "    }",
+    "}"
+].join("\n");
+
+/**
  * Renders a control texture equal to the intersection of two input control textures. The output texture prevents any
  * operation prevented by either of the input textures.
  */
