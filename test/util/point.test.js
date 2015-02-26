@@ -1,4 +1,7 @@
-PointTest = TestCase("PointTest");
+import { assertThat } from "test/test.js"
+import Point from "src/util/point.js"
+
+let PointTest = TestCase("PointTest");
 
 PointTest.prototype.testIsEqualTo = function() {
     var p = new Point(2, 3);

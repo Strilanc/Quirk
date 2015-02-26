@@ -1,9 +1,11 @@
+var force6 = e => e;
+
 /**
  * A combined gate.
  *
- * @param {!Array.<!Gate>} gates
+ * @param {!Array<!Gate>} gates
  *
- * @property {!Array.<!Gate>} gates
+ * @property {!Array<!Gate>} gates
  *
  * @constructor
  */

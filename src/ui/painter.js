@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * @param {!HTMLCanvasElement} canvas
  * @property {!HTMLCanvasElement} canvas
@@ -113,7 +115,7 @@ Painter.prototype.printCenteredText = function (text, pos, fontColor, fontSize, 
  * @param {!Point} firstNodePoint
  * @param {!Point} levelDelta
  * @param {!Point} nodeDelta
- * @param {!Array.<!String>} levelLabels
+ * @param {!Array<!String>} levelLabels
  */
 Painter.prototype.paintBinaryTree = function(firstNodePoint, levelDelta, nodeDelta, levelLabels) {
     var makeNodePoint = function(i) {
@@ -290,9 +292,9 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, hand) {
 
 /**
  *
- * @param {!Array.<!QuantumState>} factors
+ * @param {!Array<!QuantumState>} factors
  * @param {!Rect} drawArea
- * @param {!Array.<!string>} labels
+ * @param {!Array<!string>} labels
  */
 //Painter.prototype.paintFactoredQuantumStateAsLabelledGrid = function (factors, drawArea, labels) {
 //    var numWireRows = Math.floor(labels.length / 2);
@@ -314,7 +316,7 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, hand) {
  *
  * @param {!QuantumState} state
  * @param {!Rect} drawArea
- * @param {!Array.<!string>} labels
+ * @param {!Array<!string>} labels
  */
 Painter.prototype.paintQuantumStateAsLabelledGrid = function (state, drawArea, labels) {
     need(state.columnVector.height() === 1 << labels.length, "columnVector.height() === labels.length");

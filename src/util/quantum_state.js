@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * A complex column vector.
  *
@@ -213,7 +215,7 @@ QuantumState.prototype.tryFactorAroundMask = function(mask) {
 /**
  * Attempts to break the state into unentangled sub-states, without re-ordering the qubits.
  *
- * @returns {!Array.<!QuantumState>}
+ * @returns {!Array<!QuantumState>}
  */
 QuantumState.prototype.contiguousFactorization = function() {
     var factors = [];

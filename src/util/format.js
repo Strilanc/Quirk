@@ -1,32 +1,111 @@
+Array.prototype.firstMatchElseUndefined = function(predicate) {
+    for (let item of this) {
+        if (predicate(item)) {
+            return item;
+        }
+    }
+    return undefined;
+};
+
 /**
- * @param {!boolean} allowAbbreviation
- * @param {!number} maxAbbreviationError
- * @param {int|undefined} fixedDigits
- * @param {!string} itemSeparator
- *
- * @property {!boolean} allowAbbreviation
- * @property {!number} maxAbbreviationError
- * @property {int|undefined} fixedDigits
- * @property {!string} itemSeparator
- *
- * @constructor
+ * @type {!Array<!{character: !string, expanded: !string, value: !number}>}
  */
-function Format(allowAbbreviation, maxAbbreviationError, fixedDigits, itemSeparator) {
-    this.allowAbbreviation = allowAbbreviation;
-    this.maxAbbreviationError = maxAbbreviationError;
-    this.fixedDigits = fixedDigits;
-    this.itemSeparator = itemSeparator;
+const UNICODE_FRACTIONS = [
+    {character: "\u00BD", ref: "½", expanded: "1/2", value: 1/2},
+    {character: "\u00BC", ref: "¼", expanded: "1/4", value: 1/4},
+    {character: "\u00BE", ref: "¾", expanded: "3/4", value: 3/4},
+    {character: "\u2153", ref: "⅓", expanded: "1/3", value: 1/3},
+    {character: "\u2154", ref: "⅔", expanded: "2/3", value: 2/3},
+    {character: "\u2155", ref: "⅕", expanded: "1/5", value: 1/5},
+    {character: "\u2156", ref: "⅖", expanded: "2/5", value: 2/5},
+    {character: "\u2157", ref: "⅗", expanded: "3/5", value: 3/5},
+    {character: "\u2158", ref: "⅘", expanded: "4/5", value: 4/5},
+    {character: "\u2159", ref: "⅙", expanded: "1/6", value: 1/6},
+    {character: "\u215A", ref: "⅚", expanded: "5/6", value: 5/6},
+    {character: "\u2150", ref: "⅐", expanded: "1/7", value: 1/7},
+    {character: "\u215B", ref: "⅛", expanded: "1/8", value: 1/8},
+    {character: "\u215C", ref: "⅜", expanded: "3/8", value: 3/8},
+    {character: "\u215D", ref: "⅝", expanded: "5/8", value: 5/8},
+    {character: "\u215E", ref: "⅞", expanded: "7/8", value: 7/8},
+    {character: "\u2151", ref: "⅑", expanded: "1/9", value: 1/9},
+    {character: "\u2152", ref: "⅒", expanded: "1/10",  value:1/10}
+];
+
+/**
+ * Returns a string representation of a float, taking advantage of unicode fractions and square roots.
+ *
+ * @param {!number} value The value to represent as a string.
+ * @param {=number} epsilon The maximum error introduced by using an expression.
+ * @param {=number} digits The number of digits to use if no expression matches.
+ * @returns {!string}
+ */
+function abbreviateFloat(value, epsilon, digits) {
+    epsilon = epsilon || 0;
+
+    if (value < 0) {
+        return "-" + abbreviateFloat(-value, epsilon, digits);
+    }
+
+    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(e => Math.abs(e.value - value) <= epsilon);
+    if (fraction !== undefined) {
+        return fraction.character;
+    }
+
+    var rootFraction = UNICODE_FRACTIONS.firstMatchElseUndefined(e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
+    if (rootFraction !== undefined) {
+        return "\u221A" + rootFraction.character;
+    }
+
+    if (value % 1 !== 0 && digits !== undefined) {
+        return value.toFixed(digits);
+    }
+
+    return value.toString();
 }
 
-Format.prototype.formatFloat = function(f) {
-    if (this.allowAbbreviation) {
-        return floatToCompactString(f, this.maxAbbreviationError, this.fixedDigits);
+/**
+ * Stores formatting options, for determining what string output should look like.
+ */
+export default class Format {
+    /**
+     * @param {!boolean} allowAbbreviation
+     * @param {!number} maxAbbreviationError
+     * @param {int|undefined} fixedDigits
+     * @param {!string} itemSeparator
+     */
+    constructor(allowAbbreviation, maxAbbreviationError, fixedDigits, itemSeparator) {
+        /**
+         * Should outputs be shortened, if possible?
+         * @type {!boolean} allowAbbreviation
+         */
+        this.allowAbbreviation = allowAbbreviation;
+        /**
+         * How much error is abbreviating allowed to introduce?
+         * @type {!number} maxAbbreviationError
+         */
+        this.maxAbbreviationError = maxAbbreviationError;
+        /**
+         * Use toFixed? How many digits?
+         * @type {int|undefined} fixedDigits
+         */
+        this.fixedDigits = fixedDigits;
+        /**
+         * What should list items be separated by?
+         * @type {!string} itemSeparator
+         */
+        this.itemSeparator = itemSeparator;
     }
-    if (this.fixedDigits !== undefined) {
-        return f.toFixed(this.fixedDigits);
-    }
-    return f + "";
-};
+
+    formatFloat(f) {
+        if (this.allowAbbreviation) {
+            return abbreviateFloat(f, this.maxAbbreviationError, this.fixedDigits);
+        }
+        if (this.fixedDigits !== undefined) {
+            return f.toFixed(this.fixedDigits);
+        }
+        return f + "";
+    };
+}
 
 /**
  * Returns an accurate result, but favoring looking nice over being small.

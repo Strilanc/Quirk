@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /** @type {!number} */
 var CIRCUIT_OP_HORIZONTAL_SPACING = 10;
 /** @type {!number} */
@@ -6,7 +8,7 @@ var CIRCUIT_OP_LEFT_SPACING = 35;
 var CIRCUIT_OP_RIGHT_SPACING = 5;
 
 /**
- * @param {!Array.<!int>|!int} grouping
+ * @param {!Array<!int>|!int} grouping
  * @returns {!function() : !string}
  */
 Circuit.makeWireLabeller = function (grouping) {
@@ -51,13 +53,13 @@ Circuit.DEFAULT_WIRE_LABELLER = Circuit.makeWireLabeller(1);
  *
  * @param {!Rect} area
  * @param {!int} numWires
- * @param {!Array.<!GateColumn>} columns
+ * @param {!Array<!GateColumn>} columns
  * @param {?int} compressedColumnIndex
  * @param {undefined|!function(!int) : !string} wireLabeller
  *
  * @property {!Rect} area
  * @property {!int} numWires
- * @property {!Array.<!GateColumn>} columns;
+ * @property {!Array<!GateColumn>} columns;
  * @property {?int} compressedColumnIndex
  * @property {!function(!int) : !string} wireLabeller
  *
@@ -104,7 +106,7 @@ Circuit.prototype.toString = function() {
 /**
  * Returns the circuit's initial, intermediate, and final states.
  * @param {!number} time
- * @returns {!Array.<!QuantumState>}
+ * @returns {!Array<!QuantumState>}
  */
 Circuit.prototype.scanStates = function(time) {
     return this.columns.
@@ -155,7 +157,7 @@ Circuit.prototype.findWireAt = function (p) {
 };
 
 /**
- * @returns {!Array.<!string>}}
+ * @returns {!Array<!string>}}
  */
 Circuit.prototype.getLabels = function() {
     return range(this.numWires).map(this.wireLabeller);
@@ -310,7 +312,7 @@ Circuit.prototype.scanStateTextures = function(time) {
 /**
  * Returns the per-wire probabilities before and after each operation.
  * @param {!number} time
- * @returns {!Array.<!number>}
+ * @returns {!Array<!number>}
  */
 Circuit.prototype.scanProbabilities = function(time) {
     var wireRange = range(this.numWires);
@@ -324,7 +326,7 @@ Circuit.prototype.scanProbabilities = function(time) {
 /**
  * Returns a per-wire measure of entanglement before and after each operation.
  * @param {!number} time
- * @returns {!Array.<!number>}
+ * @returns {!Array<!number>}
  */
 Circuit.prototype.scanPerWireEntanglementMeasure = function(time) {
     var maxRatio = function(a, b) {

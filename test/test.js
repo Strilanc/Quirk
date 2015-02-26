@@ -1,66 +1,6 @@
 // PhantomJS doesn't support bind yet
-Function.prototype.bind = Function.prototype.bind || function (thisp) {
-    var fn = this;
-    return function () {
-        return fn.apply(thisp, arguments);
-    };
-};
-
-/**
- * Checks a precondition, throwing an exception containing the given message in the case of failure.
- *
- * @param {!boolean|*} expression
- * @param {=string} message
- */
-need = function(expression, message) {
-    assertTrue("Precondition failed: " + (message || "(no message provided)"), expression);
-};
-
-/**
- * @param {*} subject
- * @constructor
- */
-function AssertionSubject(subject) {
-    this.subject = subject;
-}
-
-/**
- * @param {*} other
- * @returns {!boolean}
- * @private
- */
-AssertionSubject.prototype.isEqualToHelper = function(other) {
-    if (this.subject instanceof Object && this.subject.constructor.prototype.hasOwnProperty("isEqualTo")) {
-        return this.subject.isEqualTo(other);
-    } else {
-        return compare_(this.subject, other);
-    }
-};
-
-/**
- * @param {!Object} subject
- * @param {!Object} other
- * @param {!number} epsilon
- * @returns {!boolean}
- * @private
- */
-AssertionSubject.isApproximatelyEqualToHelperDestructured = function(subject, other, epsilon) {
-    var keys = [];
-    for (var subjectKey in subject) {
-        if (subject.hasOwnProperty(subjectKey)) {
-            keys.push(subjectKey);
-        }
-    }
-    for (var otherKey in other) {
-        if (other.hasOwnProperty(otherKey) && !subject.hasOwnProperty(otherKey)) {
-            return false;
-        }
-    }
-
-    return keys.every(function(key) {
-        return other.hasOwnProperty(key) &&
-            AssertionSubject.isApproximatelyEqualToHelper(subject[key], other[key], epsilon);
-    });
+Function.prototype.bind = Function.prototype.bind || function(newThis) {
+    return () => this.apply(newThis, arguments);
 };
 
 /**
@@ -70,7 +10,7 @@ AssertionSubject.isApproximatelyEqualToHelperDestructured = function(subject, ot
  * @returns {!boolean}
  * @private
  */
-AssertionSubject.isApproximatelyEqualToHelper = function(subject, other, epsilon) {
+function isApproximatelyEqualToHelper(subject, other, epsilon) {
     if (subject === null) {
         return other === null;
     } else if (subject.isApproximatelyEqualTo !== undefined) {
@@ -81,112 +21,168 @@ AssertionSubject.isApproximatelyEqualToHelper = function(subject, other, epsilon
         if (!Array.isArray(other) || other.length !== subject.length) {
             return false;
         }
-        return range(subject.length).every(function (i) {
-            return AssertionSubject.isApproximatelyEqualToHelper(subject[i], other[i], epsilon);
-        });
+        return subject.keys().every(i => isApproximatelyEqualToHelper(subject[i], other[i], epsilon));
     } else if (subject instanceof Object && subject.toString() === "[object Object]") {
-        return AssertionSubject.isApproximatelyEqualToHelperDestructured(subject, other, epsilon);
+        return isApproximatelyEqualToHelperDestructured(subject, other, epsilon);
     } else {
-        fail('Expected ' + AssertionSubject.describe(subject) + ' to have an isApproximatelyEqualTo method');
+        fail('Expected ' + describe(subject) + ' to have an isApproximatelyEqualTo method');
         return false;
     }
-};
+}
+
+/**
+ * @param {!Object} subject
+ * @param {!Object} other
+ * @param {!number} epsilon
+ * @returns {!boolean}
+ * @private
+ */
+function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
+    let keys = [];
+    for (let subjectKey in subject) {
+        if (subject.hasOwnProperty(subjectKey)) {
+            keys.push(subjectKey);
+        }
+    }
+    for (let otherKey in other) {
+        if (other.hasOwnProperty(otherKey) && !subject.hasOwnProperty(otherKey)) {
+            return false;
+        }
+    }
+
+    //noinspection JSCheckFunctionSignatures
+    return keys.every(key => other.hasOwnProperty(key) &&
+    isApproximatelyEqualToHelper(subject[key], other[key], epsilon));
+}
 
 /**
  * @param {*} e
  * @returns {!string}
  */
-AssertionSubject.describe = function(e) {
+function describe(e) {
     if (e === null) {
         return "null";
     }
     if (e === undefined) {
         return "undefined";
     }
-    if (Array.isArray(e)) {
-        return "[" + range(e.length).map(function(i) { return AssertionSubject.describe(e[i]); }).join(", ") + "]";
+    //noinspection JSUnresolvedVariable
+    if (e[Symbol.iterator] !== undefined) {
+        let array = [];
+        for (let item of e) {
+            if (array.length > 1000) {
+                array.push("[...]");
+            }
+            array.push(item);
+        }
+        return "[" + array.map(describe).join(", ") + "]";
     }
-    if (e instanceof Float32Array) {
-        return "Float32Array([" + e.toArray().join(", ") + "])";
-    }
+
     var result = e.toString();
     if (result === "[object Object]") {
         var entries = [];
         for (var key in e) {
             if (e.hasOwnProperty(key)) {
-                entries.push(AssertionSubject.describe(key) + ": " + AssertionSubject.describe(e[key]));
+                entries.push(describe(key) + ": " + describe(e[key]));
             }
         }
         return (typeof e) + "(\n\t" + entries.join("\n\t") + "\n)";
     }
     return result;
-};
+}
 
-/**
- * @param {*} other
- * @returns {undefined}
- */
-AssertionSubject.prototype.isEqualTo = function(other) {
-    if (!this.isEqualToHelper(other)) {
-        fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to equal <' +
-            AssertionSubject.describe(other) + '>');
+export class AssertionSubject {
+    /**
+     * @param {*} subject
+     */
+    constructor(subject) {
+        /**
+         * The "actual" value, to be compared against expected values.
+         * @type {*}
+         */
+        this.subject = subject;
     }
-};
 
-/**
- * @param {*} other
- * @returns {undefined}
- */
-AssertionSubject.prototype.isNotEqualTo = function(other) {
-    if (this.isEqualToHelper(other)) {
-        fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to NOT equal <' +
-            AssertionSubject.describe(other) + '>');
-    }
-};
+    /**
+     * @param {*} other
+     * @returns {!boolean}
+     * @private
+     */
+    isEqualToHelper(other) {
+        if (this.subject instanceof Object && this.subject.constructor.prototype.hasOwnProperty("isEqualTo")) {
+            return this.subject.isEqualTo(other);
+        } else {
+            return compare_(this.subject, other);
+        }
+    };
 
-/**
- * @param {*} other
- * @param {=number} epsilon
- * @returns {undefined}
- */
-AssertionSubject.prototype.isApproximatelyEqualTo = function(other, epsilon) {
-    if (epsilon === undefined) {
-        epsilon = 0.000001;
-    }
-    if (!AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
-        fail('Got <' + AssertionSubject.describe(this.subject) + '> but expected it to approximately equal <' +
-            AssertionSubject.describe(other) + '>');
-    }
-};
+    iteratesAs(...items) {
+        let actualItems = [];
+        for (let item of this.subject) {
+            if (actualItems.length > items.length * 2 + 100) {
+                actualItems.push("{...}");
+                break;
+            }
+            actualItems.push(item);
+        }
+        assertThat(actualItems).isEqualTo(items);
+    };
 
-/**
- * @param {*} other
- * @param {=number} epsilon
- * @returns {undefined}
- */
-AssertionSubject.prototype.isNotApproximatelyEqualTo = function(other, epsilon) {
-    if (epsilon === undefined) {
-        epsilon = 0.000001;
-    }
-    if (AssertionSubject.isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
-        fail('Expected <' + AssertionSubject.describe(this.subject) + '> but expected it to NOT approximately equal <' +
-            AssertionSubject.describe(other) + '>');
-    }
-};
+    /**
+     * @param {*} other
+     * @returns {undefined}
+     */
+    isEqualTo(other) {
+        if (!this.isEqualToHelper(other)) {
+            fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>`);
+        }
+    };
+
+    /**
+     * @param {*} other
+     * @returns {undefined}
+     */
+    isNotEqualTo(other) {
+        if (this.isEqualToHelper(other)) {
+            fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>`);
+        }
+    };
+
+    /**
+     * @param {*} other
+     * @param {=number} epsilon
+     * @returns {undefined}
+     */
+    isApproximatelyEqualTo(other, epsilon = 0.000001) {
+        if (!isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
+            fail(`Got <${describe(this.subject)}> but expected it to approximately equal <${describe(other)}>`);
+        }
+    };
+
+    /**
+     * @param {*} other
+     * @param {=number} epsilon
+     * @returns {undefined}
+     */
+    isNotApproximatelyEqualTo(other, epsilon = 0.000001) {
+        if (isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
+            fail(`Got <${describe(this.subject)}> but expected it to NOT approximately equal <${describe(other)}>`);
+        }
+    };
+}
 
 /**
  * Returns an assertion subject for the given value, which can be fluently extended with conditions like "isEqualTo".
  * @param {*} subject
  * @param {=undefined} extraArgCatcher
  * returns {!AssertionSubject}
- * @constructor
  */
-var assertThat = function(subject, extraArgCatcher) {
+export function assertThat(subject, extraArgCatcher) {
     if (extraArgCatcher !== undefined) {
         fail('Extra assertThat arg');
     }
     return new AssertionSubject(subject);
-};
+}
 
 /**
  * Invokes a function, requiring it to throw an exception. Returns the exception wrapped in an assertion subject.
@@ -194,7 +190,7 @@ var assertThat = function(subject, extraArgCatcher) {
  * @param {=undefined} extraArgCatcher
  * returns {!AssertionSubject}
  */
-var assertThrows = function(func, extraArgCatcher) {
+export function assertThrows(func, extraArgCatcher) {
     if (extraArgCatcher !== undefined) {
         fail('Extra assertThat arg');
     }
@@ -205,9 +201,9 @@ var assertThrows = function(func, extraArgCatcher) {
     }
     fail('Expected an exception to be thrown by ' + func);
     return undefined;
-};
+}
 
-var skipTestIfWebGlNotAvailable = function(func) {
+export function skipTestIfWebGlNotAvailable(func) {
     //noinspection JSUnresolvedVariable
     if (window.WebGLRenderingContext === undefined) {
         return function() {
@@ -215,4 +211,4 @@ var skipTestIfWebGlNotAvailable = function(func) {
         }
     }
     return func;
-};
+}

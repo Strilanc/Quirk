@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * A 2-d rectangle.
  * @param {!number} x

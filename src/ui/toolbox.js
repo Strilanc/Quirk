@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * That thing showing gates you can grab.
  *

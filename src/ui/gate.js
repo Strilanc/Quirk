@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * A named single-qubit quantum operation.
  *
@@ -503,7 +505,7 @@ Gate.fromPauliRotation = function(x, y, z, symbol) {
     var n = Math.sqrt(x*x + y*y + z*z);
     var deg = n*360;
     return new Gate(
-        symbol || ("R(" + [x, y, z].map(floatToCompactString).toString() + ")"),
+        symbol || ("R(" + [x, y, z].map(Format.SIMPLIFIED.formatFloat).toString() + ")"),
         Matrix.fromPauliRotation(x, y, z),
         deg +  "° around <" + x/n + ", " + y/n + ", " + z/n + ">",
         "A custom operation based on a rotation.",
@@ -580,7 +582,7 @@ Gate.EVOLVING_Z = new Gate(
     false,
     Gate.CYCLE_DRAWER);
 
-/** @type {!Array.<!Gate>} */
+/** @type {!Array<!Gate>} */
 Gate.TIME_BASED_GATES = [
     Gate.EVOLVING_X,
     Gate.EVOLVING_Y,
@@ -679,7 +681,7 @@ Gate.updateIfFuzzGate = function(gate) {
     }
 };
 
-/** @type {!Array.<!{hint: !string, gates: !Array.<?Gate>}>} */
+/** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gate.GATE_SET = [
     {
         hint: "Special",

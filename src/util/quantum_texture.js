@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * @param {!int} qubitCount
  * @param {!THREE.Target} renderTarget
@@ -235,7 +237,7 @@ QuantumTexture.prototype._prepareExtractColorComponent = function(componentIndex
 
 /**
  * Creates a QuantumTexture storing the given amplitudes.
- * @param {!Array.<!Complex>} amplitudes
+ * @param {!Array<!Complex>} amplitudes
  * @returns {!QuantumTexture}
  */
 QuantumTexture.fromAmplitudes = function(amplitudes) {
@@ -307,7 +309,7 @@ QuantumTexture.prototype.withQubitOperationApplied = function(qubitIndex, operat
 
 /**
  * Converts the receiving QuantumTexture's state into an array of amplitudes corresponding to each possible state.
- * @returns {!Array.<!Complex>}
+ * @returns {!Array<!Complex>}
  */
 QuantumTexture.prototype.toAmplitudes = function() {
     var realPrep = this._prepareExtractColorComponent(0);
@@ -332,7 +334,7 @@ QuantumTexture.prototype.toAmplitudesPrep = function() {
 /**
  * Returns the probability that each qubit would end up true, if measured.
  * Note that, when qubits are entangled, some conditional probabilities will not match these probabilities.
- * @returns {!Array.<!float>}
+ * @returns {!Array<!float>}
  */
 QuantumTexture.prototype.perQubitProbabilities = function() {
     var p = this.controlProbabilities(-1);

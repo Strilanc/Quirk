@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 var THREE = {REVISION: '70'};
 
 /**
@@ -257,7 +259,7 @@ THREE.Target.prototype.grab = function(context) {
 /**
  * @param {!THREE.Context} renderer
  * @param {!string} fragmentShaderSource
- * @param {!Array.<!string>} uniformParameterNames
+ * @param {!Array<!string>} uniformParameterNames
  * @returns {!THREE.WebGLProgram}
  * @constructor
  */

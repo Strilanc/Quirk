@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * @param {!Rect} drawArea
  * @param {!Circuit} circuit

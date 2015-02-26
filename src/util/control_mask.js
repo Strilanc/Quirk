@@ -1,3 +1,5 @@
+var force6 = e => e;
+
 /**
  * A set of requirements that a state must meet.
  * @param {!int} inclusionMask.

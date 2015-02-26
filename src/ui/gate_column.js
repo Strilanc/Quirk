@@ -1,10 +1,12 @@
+var force6 = e => e;
+
 /**
  * A column of gates in a circuit with many qubits.
  *
- * @param {!Array.<?Gate>} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
+ * @param {!Array<?Gate>} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
  * Wires without a gate in this column should use null instead.
  *
- * @property {!Array.<?Gate>} gates
+ * @property {!Array<?Gate>} gates
  * @constructor
  */
 function GateColumn(gates) {
