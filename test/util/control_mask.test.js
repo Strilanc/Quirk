@@ -1,5 +1,6 @@
 import { assertThat, assertThrows } from "test/test.js"
 import ControlMask from "src/util/control_mask.js"
+
 let ControlMaskTest = TestCase("ControlMaskTest");
 
 ControlMaskTest.prototype.testIsEqualTo = function() {
