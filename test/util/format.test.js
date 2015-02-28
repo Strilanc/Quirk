@@ -1,5 +1,5 @@
-import { assertThat } from "test/test.js"
-import Format from "src/util/format.js"
+import { assertThat, assertThrows } from "test/test.js"
+import Format from "src/base/format.js"
 
 let FormatTest = TestCase("FormatTest");
 
@@ -28,4 +28,29 @@ FormatTest.prototype.testFormatFloat = function() {
     assertThat(Format.EXACT.formatFloat(1/3 + 0.00001)).isEqualTo("0.3333433333333333");
     assertThat(Format.MINIFIED.formatFloat(1/3 + 0.00001)).isEqualTo("0.3333433333333333");
     assertThat(Format.SIMPLIFIED.formatFloat(1/3 + 0.00001)).isEqualTo("\u2153");
+};
+
+FormatTest.prototype.testParseFloatFromCompactString = function() {
+    assertThrows(() => Format.parseFloat(""));
+    assertThrows(() => Format.parseFloat("a"));
+    assertThrows(() => Format.parseFloat("one"));
+
+    assertThat(Format.parseFloat("0")).isEqualTo(0);
+    assertThat(Format.parseFloat("1")).isEqualTo(1);
+    assertThat(Format.parseFloat("-1")).isEqualTo(-1);
+
+    assertThat(Format.parseFloat("\u00BD")).isEqualTo(0.5);
+    assertThat(Format.parseFloat("2")).isEqualTo(2);
+    assertThat(Format.parseFloat("501")).isEqualTo(501);
+    assertThat(Format.parseFloat("\u221A2")).isEqualTo(Math.sqrt(2));
+    assertThat(Format.parseFloat("-\u221A3")).isEqualTo(-Math.sqrt(3));
+
+    assertThat(Format.parseFloat("0.7071067811865475")).isEqualTo(1/Math.sqrt(2));
+    assertThat(Format.parseFloat("0.7071067811865476")).isEqualTo(Math.sqrt(1/2));
+    assertThat(Format.parseFloat("\u221A\u00BD")).isEqualTo(Math.sqrt(1/2));
+    assertThat(Format.parseFloat("-\u2153")).isEqualTo(-1/3);
+
+    assertThat(Format.parseFloat("0.34")).isEqualTo(0.34);
+    assertThat(Format.parseFloat("0.342123")).isEqualTo(0.342123);
+    assertThat(Format.parseFloat("0.342123000")).isEqualTo(0.342123000);
 };

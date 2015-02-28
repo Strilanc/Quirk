@@ -1,5 +1,5 @@
-Array.prototype.firstMatchElseUndefined = function(predicate) {
-    for (let item of this) {
+const match = function(array, predicate) {
+    for (let item of array) {
         if (predicate(item)) {
             return item;
         }
@@ -46,12 +46,12 @@ function abbreviateFloat(value, epsilon, digits) {
         return "-" + abbreviateFloat(-value, epsilon, digits);
     }
 
-    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(e => Math.abs(e.value - value) <= epsilon);
+    var fraction = match(UNICODE_FRACTIONS, e => Math.abs(e.value - value) <= epsilon);
     if (fraction !== undefined) {
         return fraction.character;
     }
 
-    var rootFraction = UNICODE_FRACTIONS.firstMatchElseUndefined(e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
+    var rootFraction = match(UNICODE_FRACTIONS, e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
     if (rootFraction !== undefined) {
         return "\u221A" + rootFraction.character;
     }
@@ -104,6 +104,35 @@ export default class Format {
             return f.toFixed(this.fixedDigits);
         }
         return f + "";
+    };
+
+    /**
+     * Parses the given text into a float. Works for text created by Format#formatFloat.
+     * @param {!string} text
+     * @throws
+     * @returns {!number}
+     */
+    static parseFloat(text) {
+        if (text.length === 0) {
+            throw new Error("Not a number: '" + text + "'");
+        }
+        if (text[0] === "-") {
+            return -Format.parseFloat(text.substr(1));
+        }
+        if (text[0] === "\u221A") {
+            return Math.sqrt(Format.parseFloat(text.substr(1)));
+        }
+
+        var fraction = match(UNICODE_FRACTIONS, e => e.character === text);
+        if (fraction !== undefined) {
+            return fraction.value;
+        }
+
+        var result = parseFloat(text);
+        if (isNaN(result)) {
+            throw new Error("Not a number: '" + text + "'")
+        }
+        return result;
     };
 }
 

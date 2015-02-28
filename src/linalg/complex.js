@@ -1,4 +1,4 @@
-import * as util from "src/base/util.js"
+import Format from "src/base/format.js"
 
 /**
  * Represents a number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
@@ -21,6 +21,38 @@ export default class Complex {
         this.imag = imag;
     }
 
+    /**
+     * Determines if the receiving complex value is equal to the given complex, integer, or float value.
+     * This method returns false, instead of throwing, when given badly typed arguments.
+     * @param {!number|!Complex|*} other
+     * @returns {!boolean}
+     */
+    isEqualTo(other) {
+        if (other instanceof Complex) {
+            return this.real === other.real && this.imag === other.imag;
+        }
+        if (typeof other === "number") {
+            return this.real === other && this.imag === 0;
+        }
+        return false;
+    };
+
+    /**
+     * Determines if the receiving complex value is near the given complex, integer, or float value.
+     * This method returns false, instead of throwing, when given badly typed arguments.
+     * @param {!number|!Complex|*} other
+     * @param {!number} epsilon
+     * @returns {!boolean}
+     */
+    isApproximatelyEqualTo(other, epsilon) {
+        if (other instanceof Complex || typeof other === "number") {
+            var d = this.minus(Complex.from(other));
+            return Math.abs(d.real) <= epsilon &&
+                Math.abs(d.imag) <= epsilon &&
+                d.abs() <= epsilon;
+        }
+        return false;
+    };
 
     /**
      * @returns {!object}
@@ -35,44 +67,11 @@ export default class Complex {
      * @throws {Error}
      */
     static fromJson(json) {
-        if (isString(json)) {
+        if (typeof json === "string") {
             //noinspection JSCheckFunctionSignatures
             return Complex.parse(json);
         }
         throw new Error("Not a packed complex string: " + json);
-    };
-
-    /**
-     * Determines if the receiving complex value is equal to the given complex, integer, or float value.
-     * This method returns false, instead of throwing, when given badly typed arguments.
-     * @param {!number|!Complex|*} other
-     * @returns {!boolean}
-     */
-    isEqualTo(other) {
-        if (other instanceof Complex) {
-            return this.real === other.real && this.imag === other.imag;
-        }
-        if (util.isNumber(other)) {
-            return this.real === other && this.imag === 0;
-        }
-        return false;
-    };
-
-    /**
-     * Determines if the receiving complex value is near the given complex, integer, or float value.
-     * This method returns false, instead of throwing, when given badly typed arguments.
-     * @param {!number|!Complex|*} other
-     * @param {!number} epsilon
-     * @returns {!boolean}
-     */
-    isApproximatelyEqualTo(other, epsilon) {
-        if (other instanceof Complex || util.isNumber(other)) {
-            var d = this.minus(Complex.from(other));
-            return Math.abs(d.real) <= epsilon &&
-                Math.abs(d.imag) <= epsilon &&
-                d.abs() <= epsilon;
-        }
-        return false;
     };
 
     /**
@@ -84,7 +83,7 @@ export default class Complex {
         if (v instanceof Complex) {
             return v;
         }
-        if (util.isNumber(v)) {
+        if (typeof v === "number") {
             return new Complex(v, 0);
         }
         throw "Don't know how create a Complex equal to: " + v;
@@ -99,7 +98,7 @@ export default class Complex {
         if (v instanceof Complex) {
             return v.real;
         }
-        if (util.isNumber(v)) {
+        if (typeof v === "number") {
             return v;
         }
         throw "Don't know how to get real part of: " + v;
@@ -114,7 +113,7 @@ export default class Complex {
         if (v instanceof Complex) {
             return v.imag;
         }
-        if (util.isNumber(v)) {
+        if (typeof v === "number") {
             return 0;
         }
         throw "Don't know how to get imaginary part of: " + v;
@@ -172,7 +171,7 @@ export default class Complex {
                     dif = dif.slice(0, dif.length - 1);
                 }
 
-                var val = dif === "" ? 1 : parseFloatFromCompactString(dif);
+                var val = dif === "" ? 1 : Format.parseFloat(dif);
                 if (isNaN(val)) {
                     throw "Not a float: '" + dif + "'";
                 }
@@ -272,7 +271,9 @@ export default class Complex {
     dividedBy(v) {
         var c = Complex.from(v);
         var d = c.norm2();
-        need(d !== 0, "Division by Zero");
+        if (d === 0) {
+            throw new Error("Division by Zero");
+        }
 
         var n = this.times(c.conjugate());
         return new Complex(n.real / d, n.imag / d);

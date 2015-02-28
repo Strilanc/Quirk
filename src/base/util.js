@@ -234,37 +234,6 @@ export default class Util {
     //    return value;
     //};
     //
-    ///**
-    // * Parses the output of floatToCompactString back into a float.
-    // * @param {!string} text
-    // * @throws
-    // * @returns {!number}
-    // */
-    //static parseFloatFromCompactString(text) {
-    //    if (text.length === 0) {
-    //        throw new Error("Not a number: '" + text + "'");
-    //    }
-    //    if (text[0] === "-") {
-    //        return -parseFloatFromCompactString(text.substr(1));
-    //    }
-    //    if (text[0] === "\u221A") {
-    //        return Math.sqrt(parseFloatFromCompactString(text.substr(1)));
-    //    }
-    //
-    //    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
-    //        return e.character === text;
-    //    });
-    //    if (fraction !== undefined) {
-    //        return fraction.value;
-    //    }
-    //
-    //    var result = parseFloat(text);
-    //    if (isNaN(result)) {
-    //        throw new Error("Not a number: '" + text + "'")
-    //    }
-    //    return result;
-    //};
-    //
     //static describeProbability(p, fractionalDigits) {
     //    if (p >= 1) {
     //        return "100%";

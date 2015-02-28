@@ -164,27 +164,6 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(floatToCompactString(501, undefined, 8)).isEqualTo("501");
 //};
 //
-//UtilTest.prototype.testParseFloatFromCompactString = function() {
-//    assertThat(parseFloatFromCompactString("0")).isEqualTo(0);
-//    assertThat(parseFloatFromCompactString("1")).isEqualTo(1);
-//    assertThat(parseFloatFromCompactString("-1")).isEqualTo(-1);
-//
-//    assertThat(parseFloatFromCompactString("\u00BD")).isEqualTo(0.5);
-//    assertThat(parseFloatFromCompactString("2")).isEqualTo(2);
-//    assertThat(parseFloatFromCompactString("501")).isEqualTo(501);
-//    assertThat(parseFloatFromCompactString("\u221A2")).isEqualTo(Math.sqrt(2));
-//    assertThat(parseFloatFromCompactString("-\u221A3")).isEqualTo(-Math.sqrt(3));
-//
-//    assertThat(parseFloatFromCompactString("0.7071067811865475")).isEqualTo(1/Math.sqrt(2));
-//    assertThat(parseFloatFromCompactString("0.7071067811865476")).isEqualTo(Math.sqrt(1/2));
-//    assertThat(parseFloatFromCompactString("\u221A\u00BD")).isEqualTo(Math.sqrt(1/2));
-//    assertThat(parseFloatFromCompactString("-\u2153")).isEqualTo(-1/3);
-//
-//    assertThat(parseFloatFromCompactString("0.34")).isEqualTo(0.34);
-//    assertThat(parseFloatFromCompactString("0.342123")).isEqualTo(0.342123);
-//    assertThat(parseFloatFromCompactString("0.342123000")).isEqualTo(0.342123000);
-//};
-//
 //UtilTest.prototype.testRoundToNearbyFractionOrRoot = function() {
 //    assertThat(roundToNearbyFractionOrRoot(1/Math.sqrt(2), 0.0001)).isEqualTo(Math.sqrt(1/2));
 //    assertThat(roundToNearbyFractionOrRoot(-1/3+0.0000001, 0.001)).isEqualTo(-1/3);
