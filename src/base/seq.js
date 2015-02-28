@@ -710,28 +710,33 @@ export default class Seq {
     //        }
     //    });
     //};
-    //
-    ///**
-    // * @param {!function(T): K} keySelector
-    // * @param {!function(T): V} valueSelector
-    // * @returns {!Map<K, V>}
-    // * @template K, V
-    // */
-    //toMap(keySelector, valueSelector) {
-    //    //noinspection JSUnresolvedFunction
-    //    let map = new Map();
-    //    for (let item of this) {
-    //        let key = keySelector(item);
-    //        let val = valueSelector(item);
-    //
-    //        if (map.has(key)) {
-    //            throw new Error(`Duplicate key <${key}>. Came from item <${item}>.`);
-    //        }
-    //        map[key] = val;
-    //    }
-    //    return map;
-    //};
-    //
+
+    /**
+     * Returns a map containing the key/value pairs created by projecting each of the items in the sequence through
+     * key and value selector functions.
+     *
+     * If any duplicate keys are generated, an exception is thrown.
+     *
+     * @param {!function(T): K} keySelector
+     * @param {!function(T): V} valueSelector
+     * @returns {!Map<K, V>}
+     * @template K, V
+     */
+    toMap(keySelector, valueSelector) {
+        //noinspection JSUnresolvedFunction
+        let map = new Map();
+        for (let item of this) {
+            let key = keySelector(item);
+            let val = valueSelector(item);
+
+            if (map.has(key)) {
+                throw new Error(`Duplicate key <${key}>. Came from item <${item}>.`);
+            }
+            map.set(key, val);
+        }
+        return map;
+    };
+
     ///**
     // * @param {!function(T): K} keySelector
     // * @returns {!Map<K, !(T[])>}

@@ -5,6 +5,87 @@ Function.prototype.bind = Function.prototype.bind || function(newThis) {
 
 /**
  * @param {*} subject
+ * @throws
+ */
+function sanityCheck(subject) {
+    //noinspection JSUnresolvedVariable
+    if (subject instanceof Map) {
+        for (let k in subject) {
+            if (subject.hasOwnProperty(k)) {
+                throw new Error(`Map has property 'map[${k}]' instead of entry 'map.get(${k})'. Probably a mistake.`)
+            }
+        }
+    }
+}
+
+/**
+ * @param {!Map} subject
+ * @param {*} other
+ * @returns {!boolean}
+ */
+function isEqualHelper_MapSubject(subject, other) {
+    //noinspection JSUnresolvedVariable
+    if (!(other instanceof Map) || subject.size != other.size) {
+        return false;
+    }
+
+    //noinspection JSUnresolvedFunction
+    for (let k of subject.keys()) {
+        //noinspection JSUnresolvedFunction
+        if (!other.has(k) || !isEqualHelper(subject.get(k), other.get(k))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @param {!Set} subject
+ * @param {*} other
+ * @returns {!boolean}
+ */
+function isEqualHelper_SetSubject(subject, other) {
+    //noinspection JSUnresolvedVariable
+    if (!(other instanceof Set) || subject.size != other.size) {
+        return false;
+    }
+
+    for (let k of subject.keys()) {
+        if (!other.has(k)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @param {*} subject
+ * @param {*} other
+ * @returns {!boolean}
+ */
+function isEqualHelper(subject, other) {
+    if (subject instanceof Object && subject.constructor.prototype.hasOwnProperty("isEqualTo")) {
+        return subject.isEqualTo(other);
+    }
+
+    //noinspection JSUnresolvedVariable
+    if (subject instanceof Map) {
+        return isEqualHelper_MapSubject(subject, other);
+    }
+
+    //noinspection JSUnresolvedVariable
+    if (subject instanceof Set) {
+        return isEqualHelper_SetSubject(subject, other);
+    }
+
+    return compare_(subject, other);
+}
+
+
+/**
+ * @param {*} subject
  * @param {*} other
  * @param {!number} epsilon
  * @returns {!boolean}
@@ -55,6 +136,45 @@ function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
     isApproximatelyEqualToHelper(subject[key], other[key], epsilon));
 }
 
+function describe_mapSubject(map, escape) {
+    var entries = [];
+    for (let [k, v] of map.entries()) {
+        //noinspection JSUnusedAssignment
+        entries.push(describe(k, escape + 1) + ": " + describe(v, escape + 1));
+    }
+    return "Map{" + entries.join(", ") + "}";
+}
+
+function describe_setSubject(set, escape) {
+    var entries = [];
+    for (let e of set) {
+        //noinspection JSUnusedAssignment
+        entries.push(describe(e, escape + 1));
+    }
+    return "Set{" + entries.join(", ") + "}";
+}
+
+function describe_iterableSubject(seq, escape) {
+    let array = [];
+    for (let item of seq) {
+        if (array.length > 1000) {
+            array.push("[...]");
+        }
+        array.push(item);
+    }
+    return "[" + array.map(e => describe(e, escape + 1)).join(", ") + "]";
+}
+
+function describe_customObject(value, escape) {
+    var entries = [];
+    for (let key in value) {
+        if (value.hasOwnProperty(key)) {
+            entries.push(describe(key, escape + 1) + ": " + describe(value[key], escape + 1));
+        }
+    }
+    return (typeof value) + "(\n\t" + entries.join("\n\t") + "\n)";
+}
+
 /**
  * @param {*} value
  * @param {!int=} escape
@@ -75,27 +195,25 @@ function describe(value, escape = 0) {
     }
 
     //noinspection JSUnresolvedVariable
-    if (value[Symbol.iterator] !== undefined) {
-        let array = [];
-        for (let item of value) {
-            if (array.length > 1000) {
-                array.push("[...]");
-            }
-            array.push(item);
-        }
-        return "[" + array.map(e => describe(e, escape + 1)).join(", ") + "]";
+    if (value instanceof Map) {
+        return describe_mapSubject(value, escape);
     }
 
-    var result = value.toString();
-    if (result === "[object Object]") {
-        var entries = [];
-        for (var key in value) {
-            if (value.hasOwnProperty(key)) {
-                entries.push(describe(key, escape + 1) + ": " + describe(value[key], escape + 1));
-            }
-        }
-        return (typeof value) + "(\n\t" + entries.join("\n\t") + "\n)";
+    //noinspection JSUnresolvedVariable
+    if (value instanceof Set) {
+        return describe_setSubject(value, escape);
     }
+
+    //noinspection JSUnresolvedVariable
+    if (value[Symbol.iterator] !== undefined) {
+        return describe_iterableSubject(value, escape);
+    }
+
+    let result = value.toString();
+    if (result === "[object Object]") {
+        return describe_customObject(result, escape);
+    }
+
     return result;
 }
 
@@ -104,25 +222,14 @@ export class AssertionSubject {
      * @param {*} subject
      */
     constructor(subject) {
+        sanityCheck(subject);
+
         /**
          * The "actual" value, to be compared against expected values.
          * @type {*}
          */
         this.subject = subject;
     }
-
-    /**
-     * @param {*} other
-     * @returns {!boolean}
-     * @private
-     */
-    isEqualToHelper(other) {
-        if (this.subject instanceof Object && this.subject.constructor.prototype.hasOwnProperty("isEqualTo")) {
-            return this.subject.isEqualTo(other);
-        } else {
-            return compare_(this.subject, other);
-        }
-    };
 
     iteratesAs(...items) {
         let actualItems = [];
@@ -141,7 +248,7 @@ export class AssertionSubject {
      * @returns {undefined}
      */
     isEqualTo(other) {
-        if (!this.isEqualToHelper(other)) {
+        if (!isEqualHelper(this.subject, other)) {
             fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>`);
         }
     };
@@ -151,7 +258,7 @@ export class AssertionSubject {
      * @returns {undefined}
      */
     isNotEqualTo(other) {
-        if (this.isEqualToHelper(other)) {
+        if (isEqualHelper(this.subject, other)) {
             fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>`);
         }
     };

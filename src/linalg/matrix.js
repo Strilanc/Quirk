@@ -63,7 +63,7 @@ export default class Matrix {
      * @throws {Error}
      */
     static fromJson(json) {
-        if (!typeof json === "string") {
+        if (typeof json !== "string") {
             throw new Error("Not a packed matrix string: " + json);
         }
         //noinspection JSCheckFunctionSignatures
