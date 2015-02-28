@@ -1,5 +1,3 @@
-import U from "src/util/util.js";
-
 //noinspection JSUnresolvedVariable
 const iterSymbol = Symbol.iterator;
 
@@ -41,7 +39,14 @@ export default class Seq {
         } else {
             this.iterable = iterable;
         }
-        this[iterSymbol] = this.iterable[iterSymbol];
+    }
+
+    /**
+     * Iterates over the sequence's items.
+     * @returns {!Iterator<T>}
+     */
+    [iterSymbol]() {
+        return this.iterable[iterSymbol]();
     }
 
     //noinspection JSValidateJSDoc
@@ -119,6 +124,21 @@ export default class Seq {
         return Seq.fromGenerator(function*() {
             for (let i = 0; i < count; i++) {
                 yield i;
+            }
+        })
+    };
+
+    /**
+     * Returns the sequence of natural numbers, starting at 0 and incrementing without bound.
+     * @returns {!Seq<!int>}
+     */
+    static naturals() {
+        return Seq.fromGenerator(function*() {
+            let i = 0;
+            //noinspection InfiniteLoopJS
+            while (true) {
+                yield i;
+                i++;
             }
         })
     };
@@ -394,14 +414,6 @@ export default class Seq {
     };
 
     /**
-     * Combines the items of a sequence into a single result by starting with a seed accumulator and iteratively
-     * applying an aggregation function to the accumulator and next item to get the next accumulator.
-     * @param {A} seed The initial accumulator value.
-     * @param {!function(A, T) : A} aggregator Computes the next accumulator value.
-     * @returns {A}
-     * @template A
-     */
-    /**
      * Accumulates the items of a sequence into a seed, while yielding the results. For example,
      * <code>[1, 2, 3].scan((a, e) => a + e, "a")</code> yields <code>["a", "a1", "a12", "a123"]</code> and
      * <code>[1, 2, 3].scan((e1, e2) => e1 + e2, 0)</code> yields <code>[0, 1, 3, 6]</code<.
@@ -423,6 +435,14 @@ export default class Seq {
             }
         });
     };
+
+    /**
+     * Returns a sequence containing the same items, but in the opposite order.
+     * @returns {!Seq<T>}
+     */
+    reverse() {
+        return new Seq(this.toArray().reverse());
+    }
 
     ///**
     //  * Flattens this sequence of sequences into a concatenated sequence.
@@ -455,50 +475,69 @@ export default class Seq {
     //        }
     //    });
     //};
-    //
-    ///**
-    // * Returns a sequence with one item replaced.
-    // * @param {T} item
-    // * @param {!int} index
-    // * @returns {!Seq<T>}
-    // */
-    //overlayAt(item, index) {
-    //    if (index < 0) {
-    //        throw new Error("needed index >= 0");
-    //    }
-    //    let seq = this.iterable;
-    //    return Seq.fromGenerator(function*() {
-    //        let i = 0;
-    //        for (let e of seq) {
-    //            yield i++ === index ? item : e;
-    //        }
-    //    });
-    //};
-    //
-    ///**
-    // * Returns a sequence with one item replaced.
-    // * @param {!int} maxTakeCount
-    // * @returns {!Seq<T>}
-    // */
-    //take(maxTakeCount) {
-    //    if (maxTakeCount < 0) {
-    //        throw new Error("needed maxTakeCount >= 0");
-    //    }
-    //    if (maxTakeCount === 0) {
-    //        return Seq.empty();
-    //    }
-    //    let seq = this.iterable;
-    //    return Seq.fromGenerator(function*() {
-    //        let i = 0;
-    //        for (let e of seq) {
-    //            yield e;
-    //            i++;
-    //            if (i >= maxTakeCount) {
-    //                break;
-    //            }
-    //        }
-    //    });
-    //};
+
+    /**
+     * Returns a sequence with the same items, except the item at the given index (if reached) is replaced.
+     * @param {T} item
+     * @param {!int} index
+     * @returns {!Seq<T>}
+     */
+    overlayAt(item, index) {
+        if (index < 0) {
+            throw new Error("needed index >= 0");
+        }
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let i = 0;
+            for (let e of seq) {
+                yield i === index ? item : e;
+                i++;
+            }
+        });
+    };
+
+    /**
+     * Returns a sequence with the same items, until one of the items fails to match the given predicate. Then the
+     * sequence is cut short just before yielding that item.
+     * @param {!function(T) : !boolean} predicate
+     * @returns {!Seq<T>}
+     */
+    takeWhile(predicate) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            for (let e of seq) {
+                if (!predicate(e)) {
+                    break;
+                }
+                yield e;
+            }
+        });
+    };
+
+    /**
+     * Returns a sequence with the same items, except cut short if it exceeds the given maximum count.
+     * @param {!int} maxTakeCount
+     * @returns {!Seq<T>}
+     */
+    take(maxTakeCount) {
+        if (maxTakeCount < 0) {
+            throw new Error("needed maxTakeCount >= 0");
+        }
+        if (maxTakeCount === 0) {
+            return new Seq([]);
+        }
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let i = 0;
+            for (let e of seq) {
+                yield e;
+                i++;
+                if (i >= maxTakeCount) {
+                    break;
+                }
+            }
+        });
+    };
     //
     ///**
     // * Returns a sequence with one item replaced.

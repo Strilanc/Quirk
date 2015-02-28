@@ -38,7 +38,7 @@ export default class Point {
      * @returns {!string}
      */
     toString() {
-        return `(x: ${this.x}, y: ${this.y             })`;
+        return `(x: ${this.x}, y: ${this.y})`;
     };
 
     /**

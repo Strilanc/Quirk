@@ -1,5 +1,5 @@
 import { assertThat, assertThrows } from "test/test.js"
-import Seq from "src/util/seq.js"
+import Seq from "src/base/seq.js"
 
 let SeqTest = TestCase("SeqTest");
 
@@ -126,6 +126,17 @@ SeqTest.prototype.testRange = function() {
     assertThat(Seq.range(2)).iteratesAs(0, 1);
     assertThat(Seq.range(3)).iteratesAs(0, 1, 2);
     assertThat(Seq.range(10)).iteratesAs(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+};
+
+SeqTest.prototype.testNaturals = function() {
+    let n = 0;
+    for (let i of Seq.naturals()) {
+        assertThat(i).isEqualTo(n);
+        n++;
+        if (n > 1000) {
+            break;
+        }
+    }
 };
 
 SeqTest.prototype.testRepeat = function() {
@@ -346,4 +357,69 @@ SeqTest.prototype.testScan = function() {
     assertThat(new Seq([1]).scan(10, (a, e) => a + e)).iteratesAs(10, 11);
     assertThat(new Seq([1, 2]).scan(10, (a, e) => a + e)).iteratesAs(10, 11, 13);
     assertThat(new Seq([1, 2, 3]).scan(10, (a, e) => a + e)).iteratesAs(10, 11, 13, 16);
+};
+
+SeqTest.prototype.testOverlayAt = function() {
+    assertThrows(() => new Seq([]).overlayAt(undefined, -1));
+
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([]).overlayAt("abc", 0)).iteratesAs();
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1]).overlayAt("abc", 0)).iteratesAs("abc");
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1, 2]).overlayAt("abc", 0)).iteratesAs("abc", 2);
+
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([]).overlayAt("abc", 1)).iteratesAs();
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1]).overlayAt("abc", 1)).iteratesAs(1);
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1, 2]).overlayAt("abc", 1)).iteratesAs(1, "abc");
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1, 2, 3]).overlayAt("abc", 1)).iteratesAs(1, "abc", 3);
+
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1, 2, 3]).overlayAt("abc", 2)).iteratesAs(1, 2, "abc");
+    //noinspection JSCheckFunctionSignatures
+    assertThat(new Seq([1, 2, 3]).overlayAt("abc", 3)).iteratesAs(1, 2, 3);
+};
+
+SeqTest.prototype.testTakeWhile = function() {
+    assertThat(new Seq([]).takeWhile(() => { throw new Error(); })).iteratesAs();
+
+    assertThat(new Seq([1]).takeWhile(e => e % 2 === 1)).iteratesAs(1);
+    assertThat(new Seq([2]).takeWhile(e => e % 2 === 1)).iteratesAs();
+
+    assertThat(new Seq([1, 3]).takeWhile(e => e % 2 === 1)).iteratesAs(1, 3);
+    assertThat(new Seq([1, 4]).takeWhile(e => e % 2 === 1)).iteratesAs(1);
+    assertThat(new Seq([2, 3]).takeWhile(e => e % 2 === 1)).iteratesAs();
+
+    assertThat(new Seq([1, 3, 5, 2, 4, 7]).takeWhile(e => e % 2 === 1)).iteratesAs(1, 3, 5);
+};
+
+SeqTest.prototype.testTake = function() {
+    assertThrows(() => new Seq([]).take(-1));
+
+    assertThat(new Seq([]).take(0)).iteratesAs();
+    assertThat(new Seq([]).take(1)).iteratesAs();
+    assertThat(new Seq([]).take(2)).iteratesAs();
+    assertThat(new Seq([1]).take(0)).iteratesAs();
+    assertThat(new Seq([1]).take(1)).iteratesAs(1);
+    assertThat(new Seq([1]).take(2)).iteratesAs(1);
+    assertThat(new Seq([1, 2]).take(0)).iteratesAs();
+    assertThat(new Seq([1, 2]).take(1)).iteratesAs(1);
+    assertThat(new Seq([1, 2]).take(2)).iteratesAs(1, 2);
+    assertThat(new Seq([1, 2, 3]).take(0)).iteratesAs();
+    assertThat(new Seq([1, 2, 3]).take(1)).iteratesAs(1);
+    assertThat(new Seq([1, 2, 3]).take(2)).iteratesAs(1, 2);
+    assertThat(new Seq([1, 2, 3]).take(3)).iteratesAs(1, 2, 3);
+    assertThat(new Seq([1, 2, 3]).take(1000)).iteratesAs(1, 2, 3);
+};
+
+SeqTest.prototype.testReverse = function() {
+    assertThat(new Seq([]).reverse()).iteratesAs();
+    assertThat(new Seq([1]).reverse()).iteratesAs(1);
+    assertThat(new Seq([1, 2]).reverse()).iteratesAs(2, 1);
+    assertThat(new Seq(["a", "b", "c"]).reverse()).iteratesAs("c", "b", "a");
+    assertThat(new Seq("12345").reverse()).iteratesAs("5", "4", "3", "2", "1");
 };

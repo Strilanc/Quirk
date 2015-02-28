@@ -1,4 +1,4 @@
-import Point from "../src/util/point.js"
+import Point from "../src/base/point.js"
 alert(new Point(1, 2));
 
 ////noinspection JSValidateTypes

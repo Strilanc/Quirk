@@ -1,5 +1,5 @@
 import { assertThat } from "test/test.js"
-import Point from "src/util/point.js"
+import Point from "src/base/point.js"
 
 let PointTest = TestCase("PointTest");
 

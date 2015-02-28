@@ -1,5 +1,5 @@
 import { assertThat, assertThrows } from "test/test.js"
-import Util from "src/util/util.js"
+import Util from "src/base/util.js"
 
 let UtilTest = TestCase("UtilTest");
 

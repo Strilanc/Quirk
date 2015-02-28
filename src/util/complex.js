@@ -1,4 +1,4 @@
-import * as util from "src/util/util.js"
+import * as util from "src/base/util.js"
 
 /**
  * Represents a number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
