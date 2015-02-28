@@ -1,17 +1,24 @@
+import U from "src/base/util.js"
+import Seq from "src/base/seq.js"
+import Format from "src/base/format.js"
+import Complex from "src/linalg/complex.js"
+
 /**
  * A matrix of complex values.
- * @param rows {!Array<!Array<!Complex>>} The rows of complex coefficients making up the matrix.
- * @property rows {!Array<!Array<!Complex>>}
  * @class
  */
-class Matrix {
+export default class Matrix {
+    /**
+     * @param rows {!(!(!Complex[]))} The rows of complex coefficients making up the matrix.
+     */
     constructor(rows) {
-        need(Array.isArray(rows) && rows.every(Array.isArray), "array rows", arguments);
-        need(rows.length > 0, "non-zero height", arguments);
-    
-        var w = rows.map(function(e) { return e.length; }).distinct().singleElseUndefined();
-        need(w !== undefined && w > 0, "consistent non-zero width", arguments);
-        need(rows.flatten().every(function(e) { return e instanceof Complex; }), "complex entries", arguments);
+        U.need(Array.isArray(rows) && rows.every(Array.isArray), "array rows", rows);
+        U.need(rows.length > 0, "non-zero height", arguments);
+
+        var seqRows = new Seq(rows);
+        var w = seqRows.map(e => e.length).distinct().single(0);
+        U.need(w > 0, "consistent non-zero width", rows);
+        U.need(seqRows.flatten().every(e => e instanceof Complex), "complex entries", rows);
     
         this.rows = rows;
     }
@@ -32,7 +39,9 @@ class Matrix {
 
         /** @type {!Matrix} */
         let other = obj;
-        return this.rows.isEqualToBy(other.rows, (r1, r2) => r1.isEqualToBy(r2, CUSTOM_IS_EQUAL_TO_EQUALITY));
+        return new Seq(this.rows).isEqualTo(
+            other.rows,
+            (r1, r2) => new Seq(r1).isEqualTo(r2, U.CUSTOM_IS_EQUAL_TO_EQUALITY));
     }
     
     /**
@@ -54,7 +63,7 @@ class Matrix {
      * @throws {Error}
      */
     static fromJson(json) {
-        if (!isString(json)) {
+        if (!typeof json === "string") {
             throw new Error("Not a packed matrix string: " + json);
         }
         //noinspection JSCheckFunctionSignatures
@@ -76,12 +85,11 @@ class Matrix {
      */
     toString(format) {
         format = format || Format.EXACT;
-        var data = this.rows.map(function(row) {
-            var rowData = row.map(function(e) {
-                return e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(format);
-            });
-            return rowData.join(format.itemSeparator);
-        }).join("}" + format.itemSeparator + "{");
+        var data = this.rows.
+            map(row => row.
+                map(e => e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(format)).
+                join(format.itemSeparator)).
+            join("}" + format.itemSeparator + "{");
         return "{{" + data + "}}";
     };
     
@@ -98,13 +106,14 @@ class Matrix {
         }
     
         // Some kind of recursive descent parser would be a better idea, but here we are.
-        return new Matrix(text.substr(2, text.length - 4).split("},{").map(function(row) {
-            return row.split(",").map(function(e) {
-                return e === "C" ?
+        return new Matrix(text.
+            substr(2, text.length - 4).
+            split("},{").
+            map(row => row.
+                split(",").
+                map(e => e === "C" ?
                     Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE :
-                    Complex.parse(e);
-            });
-        }));
+                    Complex.parse(e))));
     };
     
     /**
@@ -115,11 +124,11 @@ class Matrix {
      * @returns {!Matrix}
      */
     static generate(width, height, coefficientRowColGenerator) {
-        var rows = [];
-        for (var r = 0; r < height; r++) {
-            var row = [];
+        let rows = [];
+        for (let r = 0; r < height; r++) {
+            let row = [];
             rows.push(row);
-            for (var c = 0; c < width; c++) {
+            for (let c = 0; c < width; c++) {
                 row.push(Complex.from(coefficientRowColGenerator(r, c)));
             }
         }
@@ -134,10 +143,10 @@ class Matrix {
      * @returns {!Matrix}
      */
     static square(coefs) {
-        need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
-        var n = Math.round(Math.sqrt(coefs.length));
-        need(n * n === coefs.length, "Matrix.square: non-square number of arguments");
-        return Matrix.generate(n, n, function(r, c) { return coefs[r * n + c]; });
+        U.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
+        let n = Math.round(Math.sqrt(coefs.length));
+        U.need(n * n === coefs.length, "Matrix.square: non-square number of arguments");
+        return Matrix.generate(n, n, (r, c) => coefs[r * n + c]);
     };
     
     /**
@@ -146,8 +155,8 @@ class Matrix {
      * @returns {!Matrix}
      */
     static col(coefs) {
-        need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
-        return Matrix.generate(1, coefs.length, function(r) { return coefs[r]; });
+        U.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
+        return Matrix.generate(1, coefs.length, r => coefs[r]);
     };
     
     /**
@@ -156,8 +165,8 @@ class Matrix {
      * @returns {!Matrix}
      */
     static row(coefs) {
-        need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
-        return Matrix.generate(coefs.length, 1, function(r, c) { return coefs[c]; });
+        U.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
+        return Matrix.generate(coefs.length, 1, (r, c) => coefs[c]);
     };
     
     /**
@@ -182,7 +191,7 @@ class Matrix {
      * @returns {!boolean}
      */
     isApproximatelyUnitary(epsilon) {
-        var n = this.width();
+        let n = this.width();
         if (this.height() !== n) {
             return false;
         }
@@ -194,10 +203,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     adjoint() {
-        var m = this;
-        return Matrix.generate(this.height(), this.width(), function(r, c) {
-            return m.rows[c][r].conjugate();
-        });
+        return Matrix.generate(this.height(), this.width(), (r, c) => this.rows[c][r].conjugate());
     };
     
     /**
@@ -206,10 +212,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     scaledBy(v) {
-        var m = this;
-        return Matrix.generate(this.width(), this.height(), function(r, c) {
-            return m.rows[r][c].times(v);
-        });
+        return Matrix.generate(this.width(), this.height(), (r, c) => this.rows[r][c].times(v));
     };
     
     /**
@@ -218,13 +221,10 @@ class Matrix {
      * @returns {!Matrix}
      */
     plus(other) {
-        var m = this;
-        var w = this.width();
-        var h = this.height();
-        need(other.width() === w && other.height() === h, "Matrix.plus: compatible sizes");
-        return Matrix.generate(w, h, function(r, c) {
-            return m.rows[r][c].plus(other.rows[r][c]);
-        });
+        let w = this.width();
+        let h = this.height();
+        U.need(other.width() === w && other.height() === h, "Matrix.plus: compatible sizes");
+        return Matrix.generate(w, h, (r, c) => this.rows[r][c].plus(other.rows[r][c]));
     };
     
     /**
@@ -233,13 +233,10 @@ class Matrix {
      * @returns {!Matrix}
      */
     minus(other) {
-        var m = this;
-        var w = this.width();
-        var h = this.height();
-        need(other.width() === w && other.height() === h, "Matrix.minus: compatible sizes");
-        return Matrix.generate(w, h, function(r, c) {
-            return m.rows[r][c].minus(other.rows[r][c]);
-        });
+        let w = this.width();
+        let h = this.height();
+        U.need(other.width() === w && other.height() === h, "Matrix.minus: compatible sizes");
+        return Matrix.generate(w, h, (r, c) => this.rows[r][c].minus(other.rows[r][c]));
     };
     
     /**
@@ -248,18 +245,16 @@ class Matrix {
      * @returns {!Matrix}
      */
     times(other) {
-        var m = this;
-        var w = other.width();
-        var h = this.height();
-        var n = this.width();
-        need(other.height() === n, "Matrix.times: compatible sizes");
-        return Matrix.generate(w, h, function(r, c) {
-            var t = Complex.ZERO;
-            for (var i = 0; i < n; i++) {
-                t = t.plus(m.rows[r][i].times(other.rows[i][c]));
-            }
-            return t;
-        });
+        let m = this;
+        let w = other.width();
+        let h = this.height();
+        let n = this.width();
+        U.need(other.height() === n, "Matrix.times: compatible sizes");
+        //noinspection JSCheckFunctionSignatures
+        return Matrix.generate(w, h, (r, c) => Seq.
+            range(n).
+            map(i => m.rows[r][i].times(other.rows[i][c])).
+            aggregate(Complex.ZERO, (a, e) => a.plus(e)));
     };
     
     /**
@@ -267,14 +262,8 @@ class Matrix {
      * @returns {!number}
      */
     norm2() {
-        var t = 0;
-        for (var r = 0; r < this.rows.length; r++) {
-            var row = this.rows[r];
-            for (var c = 0; c < row.length; c++) {
-                t += row[c].norm2();
-            }
-        }
-        return t;
+        //noinspection JSUnresolvedFunction
+        return new Seq(this.rows).flatten().map(e => e.norm2()).sum();
     };
     
     /**
@@ -288,7 +277,7 @@ class Matrix {
         var w2 = other.width();
         var h1 = this.height();
         var h2 = other.height();
-        return Matrix.generate(w1 * w2, h1 * h2, function(r, c) {
+        return Matrix.generate(w1 * w2, h1 * h2, (r, c) => {
             var r1 = Math.floor(r / h2);
             var c1 = Math.floor(c / w2);
             var r2 = r % h2;
@@ -300,8 +289,8 @@ class Matrix {
             }
             if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE) {
                 return r1 === c1 && r2 === c2 ?
-                    Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE
-                    : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
+                    Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE :
+                    Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
             }
             return v1.times(v2);
         });
@@ -343,7 +332,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     static fromPauliRotation(x, y, z) {
-        var sinc = function(t) {
+        var sinc = t => {
             if (Math.abs(t) < 0.0002) { return 1 - t*t / 6.0; }
             return Math.sin(t) / t;
         };
@@ -362,16 +351,16 @@ class Matrix {
         var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
     
         var m = Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
-        var expectNiceValuesCorrection = function(v) { return roundToNearbyFractionOrRoot(v, 0.0000000000001);};
+        var expectNiceValuesCorrection = v => Format.simplifyByRounding(v, 0.0000000000001);
         return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
     };
     
     static fromTargetedRotation(p) {
-        need(p >= -1 && p <= 1, arguments);
+        U.need(p >= -1 && p <= 1, arguments);
         var c = Math.sqrt(1 - Math.abs(p));
         var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
-        c = roundToNearbyFractionOrRoot(c, 0.00000000001);
-        s = roundToNearbyFractionOrRoot(s, 0.00000000001);
+        c = Format.simplifyByRounding(c, 0.00000000001);
+        s = Format.simplifyByRounding(s, 0.00000000001);
         return Matrix.square([c, -s, s, c]);
     };
 
@@ -381,11 +370,7 @@ class Matrix {
      * @private
      */
     transformRealAndImagComponentsWith(func) {
-        return new Matrix(this.rows.map(function(row) {
-            return row.map(function(cell) {
-                return new Complex(func(cell.real), func(cell.imag));
-            });
-        }));
+        return new Matrix(this.rows.map(row => row.map(cell => new Complex(func(cell.real), func(cell.imag)))));
     };
     
     /**
@@ -395,17 +380,15 @@ class Matrix {
      * @param {!int} swapWire2
      */
     static fromWireSwap(numWires, swapWire1, swapWire2) {
-        return Matrix.generate(1 << numWires, 1 << numWires, function(r, c) {
-            var bitSwap = function(n) {
-                var m1 = 1 << swapWire1;
-                var m2 = 1 << swapWire2;
-                var s = n & ~(m1 | m2);
-                if ((n & m1) !== 0) { s |= m2; }
-                if ((n & m2) !== 0) { s |= m1; }
-                return s;
-            };
-            return bitSwap(r) === c ? 1 : 0;
-        });
+        var bitSwap = n => {
+            var m1 = 1 << swapWire1;
+            var m2 = 1 << swapWire2;
+            var s = n & ~(m1 | m2);
+            if ((n & m1) !== 0) { s |= m2; }
+            if ((n & m2) !== 0) { s |= m1; }
+            return s;
+        };
+        return Matrix.generate(1 << numWires, 1 << numWires, (r, c) => bitSwap(r) === c ? 1 : 0);
     };
     
     /**
@@ -414,9 +397,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     static identity(size) {
-        return Matrix.generate(size, size, function(r, c) {
-            return r === c ? 1 : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
-        });
+        return Matrix.generate(size, size, (r, c) => r === c ? 1 : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO);
     };
     
     /**
@@ -442,7 +423,7 @@ class Matrix {
          * @param {!Complex|!number} q
          * @returns {!Matrix}
          */
-        var phase_cancel_matrix = function (p, q) {
+        var phase_cancel_matrix = (p, q) => {
             return Matrix.square([
                 Complex.from(p).unit().conjugate(), 0,
                 0, Complex.from(q).unit().conjugate()]);
@@ -452,7 +433,7 @@ class Matrix {
          * @param {!Matrix} m
          * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
          */
-        var svd_real_2x2 = function (m) {
+        var svd_real_2x2 = m => {
             var a = Complex.realPartOf(m.rows[0][0]);
             var b = Complex.realPartOf(m.rows[0][1]);
             var c = Complex.realPartOf(m.rows[1][0]);
@@ -480,7 +461,7 @@ class Matrix {
          * @param {!Matrix} m
          * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
          */
-        var svd_2x2 = function (m) {
+        var svd_2x2 = m => {
             // Initially all entries are free.
             // m = | ?+?i  ?+?i |
             //     | ?+?i  ?+?i |
@@ -530,8 +511,8 @@ class Matrix {
     };
     
     getColumn(colIndex) {
-        need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
-        return this.rows.map(function(r) { return r[colIndex]; });
+        U.need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
+        return this.rows.map(r => r[colIndex]);
     };
     
     /**

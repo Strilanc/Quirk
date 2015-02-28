@@ -3,7 +3,7 @@ import Point from "src/base/point.js"
 
 let PointTest = TestCase("PointTest");
 
-PointTest.prototype.testIsEqualTo = function() {
+PointTest.prototype.testIsEqualTo = () => {
     var p = new Point(2, 3);
     assertThat(p).isEqualTo(p);
     assertThat(p).isNotEqualTo(null);
@@ -14,18 +14,18 @@ PointTest.prototype.testIsEqualTo = function() {
     assertThat(p).isNotEqualTo(new Point(1, 3));
 };
 
-PointTest.prototype.testToString = function() {
+PointTest.prototype.testToString = () => {
     assertThat(new Point(2, 3).toString()).isEqualTo("(x: 2, y: 3)");
 };
 
-PointTest.prototype.testOffsetBy = function() {
+PointTest.prototype.testOffsetBy = () => {
     assertThat(new Point(2, 3).offsetBy(5, 7)).isEqualTo(new Point(7, 10));
 };
 
-PointTest.prototype.testPlus = function() {
+PointTest.prototype.testPlus = () => {
     assertThat(new Point(2, 3).plus(new Point(5, 7))).isEqualTo(new Point(7, 10));
 };
 
-PointTest.prototype.testTimes = function() {
+PointTest.prototype.testTimes = () => {
     assertThat(new Point(2, 3).times(5)).isEqualTo(new Point(10, 15));
 };

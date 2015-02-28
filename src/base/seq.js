@@ -60,7 +60,7 @@ export default class Seq {
      * @returns {Seq}
      */
     static fromGenerator(generatorFunction) {
-        return new Seq({ [iterSymbol]: () => generatorFunction()[iterSymbol]() });
+        return new Seq({ [iterSymbol]: generatorFunction });
     };
 
     /**
@@ -444,22 +444,22 @@ export default class Seq {
         return new Seq(this.toArray().reverse());
     }
 
-    ///**
-    //  * Flattens this sequence of sequences into a concatenated sequence.
-    //  * @returns {Seq<C>}
-    //  * @template C
-    //  */
-    //flatten() {
-    //    let seq = this.iterable;
-    //    return Seq.fromGenerator(function*() {
-    //        for (let e of seq) {
-    //            for (let c of e) {
-    //                yield c;
-    //            }
-    //        }
-    //    });
-    //};
-    //
+    /**
+     * Flattens this sequence of iterables into a concatenated sequence.
+     * @returns {Seq<C>}
+     * @template C
+     */
+    flatten() {
+        let seqSeq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            for (let seq of seqSeq) {
+                for (let item of seq) {
+                    yield item;
+                }
+            }
+        });
+    };
+
     ///**
     // * Flattens this sequence of sequences into a concatenated sequence.
     // * @param {*|!!(T[])|!Seq<T>} other
@@ -563,69 +563,68 @@ export default class Seq {
     //        }
     //    });
     //};
-    //
-    //
-    ///**
-    // * Returns a sequence with the same items, except later items with the same key as earlier items get skipped.
-    // *
-    // * @param {!function(T) : K} keySelector Items are considered distinct when their image, through this function, is
-    // * not already in the Set of seen images. The return type must support being inserted into a Set.
-    // * @returns {!Seq<T>}
-    // * @template K
-    // */
-    //distinctBy(keySelector) {
-    //    var seq = this;
-    //    return Seq.fromGenerator(function*() {
-    //        //noinspection JSUnresolvedFunction
-    //        var keySet = new Set();
-    //        return seq.filter(e => {
-    //            var key = keySelector(e);
-    //            if (keySet.has(key)) {
-    //                return false;
-    //            }
-    //            keySet.add(key);
-    //            return true;
-    //        });
-    //    });
-    //};
-    //
-    ///**
-    // * Returns an array with the same items, except duplicate items are omitted.
-    // * The array items must support being inserted into / found in a Set.
-    // * @returns {!Seq<T>}
-    // * @template T
-    // */
-    //distinct() {
-    //    return distinctBy(e => e);
-    //};
-    //
-    ///**
-    // * Returns the single item in the receiving array, or else returns undefined.
-    // *
-    // * @param {=A} emptyManyErrorAlternative The value to return if the sequence is empty. If not provided, an error
-    // * is thrown when the sequence is empty or has more than one value.
-    // * @returns {T|A}
-    // * @template A
-    // */
-    //single(emptyManyErrorAlternative = THROW_IF_EMPTY) {
-    //    let iter = this[iterSymbol]();
-    //
-    //    let first = iter.next();
-    //    if (!first.done && iter.next().done) {
-    //        return first.value;
-    //    }
-    //
-    //    if (emptyManyErrorAlternative === THROW_IF_EMPTY) {
-    //        if (first.done) {
-    //            throw new Error("Empty sequence doesn't contain a single item.")
-    //        } else {
-    //            throw new Error("Sequence contains more than a single item.")
-    //        }
-    //    }
-    //
-    //    return emptyManyErrorAlternative;
-    //};
-    //
+
+    /**
+     * Returns a sequence with the same items, except later items with the same key as earlier items get skipped.
+     *
+     * @param {!function(T) : K} keySelector Items are considered distinct when their image, through this function, is
+     * not already in the Set of seen images. The return type must support being inserted into a Set.
+     * @returns {!Seq<T>}
+     * @template K
+     */
+    distinctBy(keySelector) {
+        let seq = this;
+        return Seq.fromGenerator(function() {
+            //noinspection JSUnresolvedFunction
+            let keySet = new Set();
+            return seq.filter(e => {
+                let key = keySelector(e);
+                if (keySet.has(key)) {
+                    return false;
+                }
+                keySet.add(key);
+                return true;
+            })[iterSymbol]();
+        });
+    };
+
+    /**
+    * Returns a sequence with the same items, except duplicate items are omitted.
+    * The items must support being inserted into / found in a Set.
+    * @returns {!Seq<T>}
+    */
+    distinct() {
+        return this.distinctBy(e => e);
+    };
+
+    /**
+     * Returns the single item in the sequence. If there are no items or multiple items in the sequence, either an error
+     * is thrown or an alternative value is returned.
+     *
+     * @param {=A} emptyManyErrorAlternative The value to return if the sequence is empty. If not provided, an error
+     * is thrown when the sequence is empty or has more than one value.
+     * @returns {T|A}
+     * @template A
+     */
+    single(emptyManyErrorAlternative = THROW_IF_EMPTY) {
+        let iter = this[iterSymbol]();
+
+        let first = iter.next();
+        if (!first.done && iter.next().done) {
+            return first.value;
+        }
+
+        if (emptyManyErrorAlternative === THROW_IF_EMPTY) {
+            if (first.done) {
+                throw new Error("Empty sequence doesn't contain a single item.")
+            } else {
+                throw new Error("Sequence contains more than a single item.")
+            }
+        }
+
+        return emptyManyErrorAlternative;
+    };
+
     ///**
     // * Returns the first item in the sequence.
     // * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
@@ -674,7 +673,7 @@ export default class Seq {
     //};
     //
     //count() {
-    //    var peekCount = this.iterable["length"];
+    //    let peekCount = this.iterable["length"];
     //    if (peekCount !== undefined) {
     //        return peekCount;
     //    }
@@ -720,7 +719,7 @@ export default class Seq {
     // */
     //toMap(keySelector, valueSelector) {
     //    //noinspection JSUnresolvedFunction
-    //    var map = new Map();
+    //    let map = new Map();
     //    for (let item of this) {
     //        let key = keySelector(item);
     //        let val = valueSelector(item);
@@ -740,7 +739,7 @@ export default class Seq {
     // */
     //groupBy(keySelector) {
     //    //noinspection JSUnresolvedFunction
-    //    var map = new Map();
+    //    let map = new Map();
     //    for (let item of this) {
     //        let key = keySelector(item);
     //        if (!map.has(key)) {

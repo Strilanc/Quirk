@@ -202,38 +202,6 @@ export default class Util {
     //    return typeof e === "string";
     //};
     //
-    ///**
-    // * Corrects a value to a nearby simple fraction or root thereof, such as sqrt(1/2).
-    // * @param {!number} value
-    // * @param {!number} epsilon
-    // */
-    //static roundToNearbyFractionOrRoot(value, epsilon) {
-    //    if (value < 0) {
-    //        return -roundToNearbyFractionOrRoot(-value, epsilon);
-    //    }
-    //
-    //    var r = value % 1;
-    //    if (r <= epsilon || 1 - r <= epsilon) {
-    //        return Math.round(value);
-    //    }
-    //
-    //    var fraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
-    //        return Math.abs(e.value - value) <= epsilon;
-    //    });
-    //    if (fraction !== undefined) {
-    //        return fraction.value;
-    //    }
-    //
-    //    var rootFraction = UNICODE_FRACTIONS.firstMatchElseUndefined(function(e) {
-    //        return Math.abs(Math.sqrt(e.value) - value) <= epsilon;
-    //    });
-    //    if (rootFraction !== undefined) {
-    //        return Math.sqrt(rootFraction.value);
-    //    }
-    //
-    //    return value;
-    //};
-    //
     //static describeProbability(p, fractionalDigits) {
     //    if (p >= 1) {
     //        return "100%";

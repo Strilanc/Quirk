@@ -134,6 +134,34 @@ export default class Format {
         }
         return result;
     };
+
+    /**
+     * Corrects a value to a nearby simple fraction or root thereof, such as sqrt(1/2), so it can be printed compactly.
+     * @param {!number} value The value to round.
+     * @param {!number} epsilon The maximum offset error introduced by the rounding.
+     */
+    static simplifyByRounding(value, epsilon) {
+        if (value < 0) {
+            return -Format.simplifyByRounding(-value, epsilon);
+        }
+
+        var r = value % 1;
+        if (r <= epsilon || 1 - r <= epsilon) {
+            return Math.round(value);
+        }
+
+        var fraction = match(UNICODE_FRACTIONS, e => Math.abs(e.value - value) <= epsilon);
+        if (fraction !== undefined) {
+            return fraction.value;
+        }
+
+        var rootFraction = match(UNICODE_FRACTIONS, e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
+        if (rootFraction !== undefined) {
+            return Math.sqrt(rootFraction.value);
+        }
+
+        return value;
+    };
 }
 
 /**

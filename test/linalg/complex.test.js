@@ -4,7 +4,7 @@ import Format from "src/base/format.js"
 
 let ComplexTest = TestCase("ComplexTest");
 
-ComplexTest.prototype.testIsEqualTo = function() {
+ComplexTest.prototype.testIsEqualTo = () => {
     var c = new Complex(5, 7);
     assertThat(c).isEqualTo(c);
     assertThat(c).isNotEqualTo(null);
@@ -23,7 +23,7 @@ ComplexTest.prototype.testIsEqualTo = function() {
     assertThat(new Complex(0, 2.5)).isNotEqualTo(2.5);
 };
 
-ComplexTest.prototype.testIsApproximatelyEqualTo = function() {
+ComplexTest.prototype.testIsApproximatelyEqualTo = () => {
     var c = new Complex(5, 7);
     assertThat(c).isApproximatelyEqualTo(c, 0);
     assertThat(c).isApproximatelyEqualTo(c, 1);
@@ -35,7 +35,7 @@ ComplexTest.prototype.testIsApproximatelyEqualTo = function() {
     assertThat(c).isNotApproximatelyEqualTo("");
 };
 
-ComplexTest.prototype.testToJson = function() {
+ComplexTest.prototype.testToJson = () => {
     assertThat(new Complex(1, 0).toJson()).isEqualTo("1");
     assertThat(new Complex(2, -3).toJson()).isEqualTo("2-3i");
     assertThat(new Complex(0, -1).toJson()).isEqualTo("-i");
@@ -43,7 +43,7 @@ ComplexTest.prototype.testToJson = function() {
     assertThat(new Complex(1/3+0.00001, 0).toJson()).isEqualTo("0.3333433333333333");
 };
 
-ComplexTest.prototype.testFromJson = function() {
+ComplexTest.prototype.testFromJson = () => {
     assertThat(Complex.fromJson("1")).isEqualTo(new Complex(1, 0));
     assertThat(Complex.fromJson("2-3i")).isEqualTo(new Complex(2, -3));
     assertThat(Complex.fromJson("-i")).isEqualTo(new Complex(0, -1));
@@ -51,7 +51,7 @@ ComplexTest.prototype.testFromJson = function() {
     assertThat(Complex.fromJson("0.3333433333333333")).isEqualTo(new Complex(1/3+0.00001, 0))
 };
 
-ComplexTest.prototype.testFrom = function() {
+ComplexTest.prototype.testFrom = () => {
     assertThat(Complex.from(1).real).isEqualTo(1);
     assertThat(Complex.from(1).imag).isEqualTo(0);
     assertThat(Complex.from(-1.5).real).isEqualTo(-1.5);
@@ -60,7 +60,7 @@ ComplexTest.prototype.testFrom = function() {
     assertThat(Complex.from(new Complex(2, 3)).imag).isEqualTo(3);
 };
 
-ComplexTest.prototype.testRealPartOf = function() {
+ComplexTest.prototype.testRealPartOf = () => {
     assertThat(Complex.realPartOf(1)).isEqualTo(1);
     assertThat(Complex.realPartOf(1.5)).isEqualTo(1.5);
     assertThat(Complex.realPartOf(-2)).isEqualTo(-2);
@@ -68,7 +68,7 @@ ComplexTest.prototype.testRealPartOf = function() {
     assertThat(Complex.realPartOf(new Complex(5, 0))).isEqualTo(5);
 };
 
-ComplexTest.prototype.testImagPartOf = function() {
+ComplexTest.prototype.testImagPartOf = () => {
     assertThat(Complex.imagPartOf(1)).isEqualTo(0);
     assertThat(Complex.imagPartOf(1.5)).isEqualTo(0);
     assertThat(Complex.imagPartOf(-2)).isEqualTo(0);
@@ -77,7 +77,7 @@ ComplexTest.prototype.testImagPartOf = function() {
     assertThat(Complex.imagPartOf(new Complex(5, -2))).isEqualTo(-2);
 };
 
-ComplexTest.prototype.testToString = function() {
+ComplexTest.prototype.testToString = () => {
     assertThat(new Complex(0, 0).toString()).isEqualTo("0");
 
     assertThat(new Complex(1, 0).toString()).isEqualTo("1");
@@ -116,7 +116,7 @@ ComplexTest.prototype.testToString = function() {
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.SIMPLIFIED)).isEqualTo("\u2153");
 };
 
-ComplexTest.prototype.testParse = function() {
+ComplexTest.prototype.testParse = () => {
     assertThat(Complex.parse("0")).isEqualTo(new Complex(0, 0));
     assertThat(Complex.parse("1")).isEqualTo(new Complex(1, 0));
     assertThat(Complex.parse("-1")).isEqualTo(new Complex(-1, 0));
@@ -135,7 +135,7 @@ ComplexTest.prototype.testParse = function() {
     assertThat(Complex.parse("\u221A2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
 };
 
-ComplexTest.prototype.testNorm2 = function() {
+ComplexTest.prototype.testNorm2 = () => {
     assertThat(new Complex(0, 0).norm2()).isEqualTo(0);
 
     assertThat(new Complex(1, 0).norm2()).isEqualTo(1);
@@ -152,7 +152,7 @@ ComplexTest.prototype.testNorm2 = function() {
     assertThat(new Complex(-3, -4).norm2()).isEqualTo(25);
 };
 
-ComplexTest.prototype.testAbs = function() {
+ComplexTest.prototype.testAbs = () => {
     assertThat(new Complex(0, 0).abs()).isEqualTo(0);
 
     assertThat(new Complex(1, 0).abs()).isEqualTo(1);
@@ -167,12 +167,12 @@ ComplexTest.prototype.testAbs = function() {
     assertThat(new Complex(-3, -4).abs()).isEqualTo(5);
 };
 
-ComplexTest.prototype.testConjugate = function() {
+ComplexTest.prototype.testConjugate = () => {
     assertThat(new Complex(0, 0).conjugate()).isEqualTo(new Complex(0, 0));
     assertThat(new Complex(2, 3).conjugate()).isEqualTo(new Complex(2, -3));
 };
 
-ComplexTest.prototype.testPhase = function() {
+ComplexTest.prototype.testPhase = () => {
     assertThat(new Complex(0, 0).phase()).isEqualTo(0);
 
     assertThat(new Complex(1, 0).phase()).isEqualTo(0);
@@ -184,7 +184,7 @@ ComplexTest.prototype.testPhase = function() {
     assertThat(new Complex(2, 1).phase()).isApproximatelyEqualTo(Math.PI*0.1475836);
 };
 
-ComplexTest.prototype.testUnit = function() {
+ComplexTest.prototype.testUnit = () => {
     assertThat(new Complex(0, 0).unit().isEqualTo(1));
 
     assertThat(new Complex(0.5, 0).unit().isEqualTo(1));
@@ -206,22 +206,22 @@ ComplexTest.prototype.testUnit = function() {
     assertTrue(new Complex(1, 1).unit().minus(new Complex(Math.sqrt(0.5), Math.sqrt(0.5))).norm2() < 0.0000001);
 };
 
-ComplexTest.prototype.testPlus = function() {
+ComplexTest.prototype.testPlus = () => {
     assertThat(new Complex(2, 3).plus(new Complex(5, 7))).isEqualTo(new Complex(7, 10));
     assertThat(new Complex(2, 3).plus(5)).isEqualTo(new Complex(7, 3));
 };
 
-ComplexTest.prototype.testMinus = function() {
+ComplexTest.prototype.testMinus = () => {
     assertThat(new Complex(2, 3).minus(new Complex(5, 7))).isEqualTo(new Complex(-3, -4));
     assertThat(new Complex(2, 3).minus(5)).isEqualTo(new Complex(-3, 3));
 };
 
-ComplexTest.prototype.testTimes = function() {
+ComplexTest.prototype.testTimes = () => {
     assertThat(new Complex(2, 3).times(new Complex(5, 7))).isEqualTo(new Complex(-11, 29));
     assertThat(new Complex(2, 3).times(5)).isEqualTo(new Complex(10, 15));
 };
 
-ComplexTest.prototype.testDividedBy = function() {
+ComplexTest.prototype.testDividedBy = () => {
     assertThrows(() => new Complex(1, 0).dividedBy(0));
     assertThat(new Complex(2, 3).dividedBy(new Complex(2, 0))).isEqualTo(new Complex(1, 1.5));
     assertThat(new Complex(2, 3).dividedBy(new Complex(0, 2))).isEqualTo(new Complex(1.5, -1));

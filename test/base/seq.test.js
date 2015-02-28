@@ -3,13 +3,13 @@ import Seq from "src/base/seq.js"
 
 let SeqTest = TestCase("SeqTest");
 
-SeqTest.prototype.testWrap_Array = function() {
+SeqTest.prototype.testWrap_Array = () => {
     assertThat(new Seq([])).iteratesAs();
     assertThat(new Seq(["a"])).iteratesAs("a");
     assertThat(new Seq(["a", "b", 3])).iteratesAs("a", "b", 3);
 };
 
-SeqTest.prototype.testWrap_OtherArrays = function() {
+SeqTest.prototype.testWrap_OtherArrays = () => {
     let candidates = [
         new Float32Array([1, 2, 3]),
         new Int16Array([-1, 2, 3]),
@@ -35,7 +35,7 @@ SeqTest.prototype.testWrap_OtherArrays = function() {
     }
 };
 
-SeqTest.prototype.testWrap_RawGeneratorSinglePass = function() {
+SeqTest.prototype.testWrap_RawGeneratorSinglePass = () => {
     let seq = new Seq(function*() {
         yield 1;
         yield 2;
@@ -45,7 +45,7 @@ SeqTest.prototype.testWrap_RawGeneratorSinglePass = function() {
     // now the generator is used up and would iterate as []...
 };
 
-SeqTest.prototype.testFromGenerator_MultipleUses = function() {
+SeqTest.prototype.testFromGenerator_MultipleUses = () => {
     let seq = Seq.fromGenerator(function*() {
         yield 1;
         yield 2;
@@ -56,7 +56,7 @@ SeqTest.prototype.testFromGenerator_MultipleUses = function() {
     assertThat(seq).iteratesAs(1, 2);
 };
 
-SeqTest.prototype.testIsEqualTo = function() {
+SeqTest.prototype.testIsEqualTo = () => {
     // Cases involving other types.
     assertFalse(new Seq([]).isEqualTo(null));
     assertFalse(new Seq([]).isEqualTo("a"));
@@ -94,7 +94,7 @@ SeqTest.prototype.testIsEqualTo = function() {
     assertThat(new Seq(["a"])).isNotEqualTo(new Seq(["b"]));
 };
 
-SeqTest.prototype.testToArray = function() {
+SeqTest.prototype.testToArray = () => {
     let a0 = Seq.fromGenerator(function*() {}).toArray();
     assertTrue(Array.isArray(a0));
     assertThat(a0).isEqualTo([]);
@@ -104,21 +104,21 @@ SeqTest.prototype.testToArray = function() {
     assertThat(a2).isEqualTo([1, "a"]);
 };
 
-SeqTest.prototype.testJoin = function() {
+SeqTest.prototype.testJoin = () => {
     assertThat(new Seq([]).join("||")).isEqualTo("");
     assertThat(new Seq([1]).join("||")).isEqualTo("1");
     assertThat(new Seq([1, 2]).join("||")).isEqualTo("1||2");
     assertThat(new Seq([1, 2, 3]).join("||")).isEqualTo("1||2||3");
 };
 
-SeqTest.prototype.testToString = function() {
+SeqTest.prototype.testToString = () => {
     assertThat(new Seq([]).toString()).isEqualTo("[]");
     assertThat(new Seq([1]).toString()).isEqualTo("[1]");
     assertThat(new Seq([1, 2]).toString()).isEqualTo("[1, 2]");
     assertThat(new Seq([1, 2, 3]).toString()).isEqualTo("[1, 2, 3]");
 };
 
-SeqTest.prototype.testRange = function() {
+SeqTest.prototype.testRange = () => {
     assertThrows(() => Seq.range(-1));
 
     assertThat(Seq.range(0)).iteratesAs();
@@ -128,7 +128,7 @@ SeqTest.prototype.testRange = function() {
     assertThat(Seq.range(10)).iteratesAs(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 };
 
-SeqTest.prototype.testNaturals = function() {
+SeqTest.prototype.testNaturals = () => {
     let n = 0;
     for (let i of Seq.naturals()) {
         assertThat(i).isEqualTo(n);
@@ -139,7 +139,7 @@ SeqTest.prototype.testNaturals = function() {
     }
 };
 
-SeqTest.prototype.testRepeat = function() {
+SeqTest.prototype.testRepeat = () => {
     assertThrows(() => Seq.repeat("a", -1));
 
     assertThat(Seq.repeat("a", 0)).iteratesAs();
@@ -148,7 +148,7 @@ SeqTest.prototype.testRepeat = function() {
     assertThat(Seq.repeat(1.5, 5)).iteratesAs(1.5, 1.5, 1.5, 1.5, 1.5);
 };
 
-SeqTest.prototype.testSolidify = function() {
+SeqTest.prototype.testSolidify = () => {
     let s1 = new Seq([1, 2, 3]);
     let s2 = new Seq(new Float32Array([1, 2, 3]));
     assertTrue(s1 === s1.solidify());
@@ -167,14 +167,14 @@ SeqTest.prototype.testSolidify = function() {
     assertThat(i).isEqualTo(4);
 };
 
-SeqTest.prototype.testMap = function() {
+SeqTest.prototype.testMap = () => {
     assertThat(new Seq([]).map(e => e + 1)).iteratesAs();
     assertThat(new Seq([1]).map(e => e + 1)).iteratesAs(2);
     assertThat(new Seq([1, 2]).map(e => e + 1)).iteratesAs(2, 3);
     assertThat(new Seq([3, 1, 2]).map(e => e * 2)).iteratesAs(6, 2, 4);
 };
 
-SeqTest.prototype.testFilter = function() {
+SeqTest.prototype.testFilter = () => {
     assertThat(new Seq([]).filter(e => e % 2 === 0)).iteratesAs();
     assertThat(new Seq([1]).filter(e => e % 2 === 0)).iteratesAs();
     assertThat(new Seq([2]).filter(e => e % 2 === 0)).iteratesAs(2);
@@ -183,7 +183,7 @@ SeqTest.prototype.testFilter = function() {
     assertThat(new Seq([2, 0, 1, 4]).filter(e => e % 2 === 1)).iteratesAs(1);
 };
 
-SeqTest.prototype.testFold = function() {
+SeqTest.prototype.testFold = () => {
     assertThrows(() => new Seq([]).fold((e1, e2) => undefined));
     assertThat(new Seq([]).fold(() => { throw new Error(); }, "abc")).isEqualTo("abc");
 
@@ -195,7 +195,7 @@ SeqTest.prototype.testFold = function() {
     assertThat(new Seq([1, 2, 3, 4]).fold((e1, e2) => e1 * e2)).isEqualTo(24);
 };
 
-SeqTest.prototype.testAggregate = function() {
+SeqTest.prototype.testAggregate = () => {
     assertThat(new Seq([]).aggregate("abc", () => { throw new Error(); })).isEqualTo("abc");
     assertThat(new Seq([1]).aggregate(-1, (a, e) => a + e)).isEqualTo(0);
     assertThat(new Seq([1, 2]).aggregate(-1, (a, e) => a + e)).isEqualTo(2);
@@ -205,7 +205,7 @@ SeqTest.prototype.testAggregate = function() {
     assertThat(new Seq([1, 2, 3, 4]).aggregate("x", (a, e) => a + "," + e)).isEqualTo("x,1,2,3,4");
 };
 
-SeqTest.prototype.testZip = function() {
+SeqTest.prototype.testZip = () => {
     assertThat(new Seq([]).zip([], () => { throw new Error(); })).iteratesAs();
     assertThat(new Seq([1]).zip([], () => { throw new Error(); })).iteratesAs();
     assertThat(new Seq([]).zip([1], () => { throw new Error(); })).iteratesAs();
@@ -216,7 +216,7 @@ SeqTest.prototype.testZip = function() {
     assertThat(new Seq(["a", "b"]).zip([2, 3], (e1, e2) => e1 + e2)).iteratesAs("a2", "b3");
 };
 
-SeqTest.prototype.testMax = function() {
+SeqTest.prototype.testMax = () => {
     assertThrows(() => new Seq([]).max());
     assertThat(new Seq([]).max("abc")).isEqualTo("abc");
     assertThat(new Seq([1]).max("abc")).isEqualTo(1);
@@ -227,7 +227,7 @@ SeqTest.prototype.testMax = function() {
     assertThat(new Seq(["a", "c", "b"]).max()).isEqualTo("c");
 };
 
-SeqTest.prototype.testMin = function() {
+SeqTest.prototype.testMin = () => {
     assertThrows(() => new Seq([]).min());
     assertThat(new Seq([]).min("abc")).isEqualTo("abc");
     assertThat(new Seq([1]).min("abc")).isEqualTo(1);
@@ -238,7 +238,7 @@ SeqTest.prototype.testMin = function() {
     assertThat(new Seq(["a", "c", "b"]).min()).isEqualTo("a");
 };
 
-SeqTest.prototype.testMaxBy = function() {
+SeqTest.prototype.testMaxBy = () => {
     assertThrows(() => new Seq([]).maxBy(() => undefined));
     assertThat(new Seq([]).maxBy(() => undefined, "abc")).isEqualTo("abc");
     assertThat(new Seq(["abc"]).maxBy(() => { throw new Error(); })).isEqualTo("abc");
@@ -251,7 +251,7 @@ SeqTest.prototype.testMaxBy = function() {
     assertThat(new Seq([-2, -1, 0, 1, 2]).maxBy(e => e*(e - 2))).isEqualTo(-2);
 };
 
-SeqTest.prototype.testMinBy = function() {
+SeqTest.prototype.testMinBy = () => {
     assertThrows(() => new Seq([]).minBy(() => undefined));
     assertThat(new Seq([]).minBy(() => undefined, "abc")).isEqualTo("abc");
     assertThat(new Seq(["abc"]).minBy(() => { throw new Error(); })).isEqualTo("abc");
@@ -264,7 +264,7 @@ SeqTest.prototype.testMinBy = function() {
     assertThat(new Seq([-2, -1, 0, 1, 2]).minBy(e => e*(e - 2))).isEqualTo(1);
 };
 
-SeqTest.prototype.testAny = function() {
+SeqTest.prototype.testAny = () => {
     assertFalse(new Seq([]).any(() => { throw new Error(); }));
 
     assertFalse(new Seq([1]).any(e => e % 3 === 0));
@@ -286,7 +286,7 @@ SeqTest.prototype.testAny = function() {
     assertTrue(new Seq([3, 6, 9, 12]).any(e => e % 3 === 0));
 };
 
-SeqTest.prototype.testEvery = function() {
+SeqTest.prototype.testEvery = () => {
     assertTrue(new Seq([]).every(() => { throw new Error(); }));
 
     assertFalse(new Seq([1]).every(e => e % 3 === 0));
@@ -308,7 +308,7 @@ SeqTest.prototype.testEvery = function() {
     assertTrue(new Seq([3, 6, 9, 12]).every(e => e % 3 === 0));
 };
 
-SeqTest.prototype.testContains = function() {
+SeqTest.prototype.testContains = () => {
     //noinspection JSCheckFunctionSignatures
     assertFalse(new Seq([]).contains(1));
     //noinspection JSCheckFunctionSignatures
@@ -330,7 +330,7 @@ SeqTest.prototype.testContains = function() {
     assertFalse(new Seq([1, 2, 3]).contains(4));
 };
 
-SeqTest.prototype.testSum = function() {
+SeqTest.prototype.testSum = () => {
     assertThat(new Seq([]).sum()).isEqualTo(0);
     assertThat(new Seq([11]).sum()).isEqualTo(11);
     assertThat(new Seq([1, 2]).sum()).isEqualTo(3);
@@ -340,7 +340,7 @@ SeqTest.prototype.testSum = function() {
     assertThat(new Seq(["a", "b"]).sum()).isEqualTo("ab");
 };
 
-SeqTest.prototype.testProduct = function() {
+SeqTest.prototype.testProduct = () => {
     assertThat(new Seq([]).product()).isEqualTo(1);
     assertThat(new Seq([11]).product()).isEqualTo(11);
     assertThat(new Seq([11, 2]).product()).isEqualTo(22);
@@ -349,7 +349,7 @@ SeqTest.prototype.testProduct = function() {
     assertThat(new Seq(["abc"]).product()).isEqualTo("abc");
 };
 
-SeqTest.prototype.testScan = function() {
+SeqTest.prototype.testScan = () => {
     assertThat(new Seq([]).scan("abc", (a, e) => a + e)).iteratesAs("abc");
     assertThat(new Seq([1, 2, 3]).scan("abc", (a, e) => a + e)).iteratesAs("abc", "abc1", "abc12", "abc123");
 
@@ -359,7 +359,7 @@ SeqTest.prototype.testScan = function() {
     assertThat(new Seq([1, 2, 3]).scan(10, (a, e) => a + e)).iteratesAs(10, 11, 13, 16);
 };
 
-SeqTest.prototype.testOverlayAt = function() {
+SeqTest.prototype.testOverlayAt = () => {
     assertThrows(() => new Seq([]).overlayAt(undefined, -1));
 
     //noinspection JSCheckFunctionSignatures
@@ -384,7 +384,7 @@ SeqTest.prototype.testOverlayAt = function() {
     assertThat(new Seq([1, 2, 3]).overlayAt("abc", 3)).iteratesAs(1, 2, 3);
 };
 
-SeqTest.prototype.testTakeWhile = function() {
+SeqTest.prototype.testTakeWhile = () => {
     assertThat(new Seq([]).takeWhile(() => { throw new Error(); })).iteratesAs();
 
     assertThat(new Seq([1]).takeWhile(e => e % 2 === 1)).iteratesAs(1);
@@ -397,7 +397,7 @@ SeqTest.prototype.testTakeWhile = function() {
     assertThat(new Seq([1, 3, 5, 2, 4, 7]).takeWhile(e => e % 2 === 1)).iteratesAs(1, 3, 5);
 };
 
-SeqTest.prototype.testTake = function() {
+SeqTest.prototype.testTake = () => {
     assertThrows(() => new Seq([]).take(-1));
 
     assertThat(new Seq([]).take(0)).iteratesAs();
@@ -416,10 +416,61 @@ SeqTest.prototype.testTake = function() {
     assertThat(new Seq([1, 2, 3]).take(1000)).iteratesAs(1, 2, 3);
 };
 
-SeqTest.prototype.testReverse = function() {
+SeqTest.prototype.testReverse = () => {
     assertThat(new Seq([]).reverse()).iteratesAs();
     assertThat(new Seq([1]).reverse()).iteratesAs(1);
     assertThat(new Seq([1, 2]).reverse()).iteratesAs(2, 1);
     assertThat(new Seq(["a", "b", "c"]).reverse()).iteratesAs("c", "b", "a");
     assertThat(new Seq("12345").reverse()).iteratesAs("5", "4", "3", "2", "1");
+};
+
+SeqTest.prototype.testDistinctBy = () => {
+    assertThat(new Seq([]).distinctBy(() => { throw new Error(); })).iteratesAs();
+    assertThat(new Seq(["abc"]).distinctBy(e => e)).iteratesAs("abc");
+
+    assertThat(new Seq([1, 1]).distinctBy(e => e % 2)).iteratesAs(1);
+    assertThat(new Seq([1, 2]).distinctBy(e => e % 2)).iteratesAs(1, 2);
+    assertThat(new Seq([1, 3]).distinctBy(e => e % 2)).iteratesAs(1);
+    assertThat(new Seq([1, 1]).distinctBy(e => e % 2)).iteratesAs(1);
+    assertThat(new Seq([2, 1]).distinctBy(e => e % 2)).iteratesAs(2, 1);
+    assertThat(new Seq([3, 1]).distinctBy(e => e % 2)).iteratesAs(3);
+
+    assertThat(new Seq([1, 1, 1]).distinctBy(e => e % 2)).iteratesAs(1);
+    assertThat(new Seq([2, 5, 3]).distinctBy(e => e % 2)).iteratesAs(2, 5);
+    assertThat(new Seq([3, 2, 5]).distinctBy(e => e % 2)).iteratesAs(3, 2);
+    assertThat(new Seq([4, 6, 7]).distinctBy(e => e % 2)).iteratesAs(4, 7);
+    assertThat(new Seq([5, 3, 2]).distinctBy(e => e % 2)).iteratesAs(5, 2);
+    assertThat(new Seq([6, 7, 4]).distinctBy(e => e % 2)).iteratesAs(6, 7);
+    assertThat(new Seq([7, 4, 6]).distinctBy(e => e % 2)).iteratesAs(7, 4);
+    assertThat(new Seq([8, 8, 8]).distinctBy(e => e % 2)).iteratesAs(8);
+};
+
+SeqTest.prototype.testDistinct = () => {
+    assertThat(new Seq([]).distinct()).iteratesAs();
+    assertThat(new Seq(["abc"]).distinct()).iteratesAs("abc");
+    assertThat(new Seq(["a", "b", "a"]).distinct()).iteratesAs("a", "b");
+    assertThat(new Seq(["a", "a", "c", "c", "d", "c"]).distinct()).iteratesAs("a", "c", "d");
+};
+
+SeqTest.prototype.testFlatten = () => {
+    assertThat(new Seq([]).flatten()).iteratesAs();
+    assertThat(new Seq([[]]).flatten()).iteratesAs();
+    assertThat(new Seq([[], []]).flatten()).iteratesAs();
+
+    assertThat(new Seq([["a"], []]).flatten()).iteratesAs("a");
+    assertThat(new Seq([[], ["b"]]).flatten()).iteratesAs("b");
+    assertThat(new Seq([["a"], ["b"]]).flatten()).iteratesAs("a", "b");
+
+    assertThat(new Seq([[1, 2, 3], ["a", "b"], "cd"]).flatten()).iteratesAs(1, 2, 3, "a", "b", "c", "d");
+};
+
+SeqTest.prototype.testSingle = () => {
+    assertThrows(() => new Seq([]).single());
+    assertThat(new Seq([]).single("abc")).isEqualTo("abc");
+
+    assertThat(new Seq([11]).single("abc")).isEqualTo(11);
+    assertThat(new Seq([11]).single()).isEqualTo(11);
+
+    assertThrows(() => new Seq([2, 3]).single());
+    assertThat(new Seq([2, 3]).single("abc")).isEqualTo("abc");
 };

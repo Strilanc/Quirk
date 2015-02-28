@@ -3,7 +3,7 @@ import Format from "src/base/format.js"
 
 let FormatTest = TestCase("FormatTest");
 
-FormatTest.prototype.testFormatFloat = function() {
+FormatTest.prototype.testFormatFloat = () => {
     assertThat(Format.CONSISTENT.formatFloat(0)).isEqualTo("0.000");
     assertThat(Format.EXACT.formatFloat(0)).isEqualTo("0");
     assertThat(Format.MINIFIED.formatFloat(0)).isEqualTo("0");
@@ -30,7 +30,7 @@ FormatTest.prototype.testFormatFloat = function() {
     assertThat(Format.SIMPLIFIED.formatFloat(1/3 + 0.00001)).isEqualTo("\u2153");
 };
 
-FormatTest.prototype.testParseFloatFromCompactString = function() {
+FormatTest.prototype.testParseFloatFromCompactString = () => {
     assertThrows(() => Format.parseFloat(""));
     assertThrows(() => Format.parseFloat("a"));
     assertThrows(() => Format.parseFloat("one"));
@@ -53,4 +53,17 @@ FormatTest.prototype.testParseFloatFromCompactString = function() {
     assertThat(Format.parseFloat("0.34")).isEqualTo(0.34);
     assertThat(Format.parseFloat("0.342123")).isEqualTo(0.342123);
     assertThat(Format.parseFloat("0.342123000")).isEqualTo(0.342123000);
+};
+
+FormatTest.prototype.testSimplifyByRounding = () => {
+    assertThat(Format.simplifyByRounding(1, 0.01)).isEqualTo(1);
+    assertThat(Format.simplifyByRounding(1.00001, 0)).isEqualTo(1.00001);
+    assertThat(Format.simplifyByRounding(1.00001, 0.01)).isEqualTo(1);
+    assertThat(Format.simplifyByRounding(Math.sqrt(1/2) + 0.0001, 0.01)).isEqualTo(Math.sqrt(0.5));
+    assertThat(Format.simplifyByRounding(1/Math.sqrt(2), 0.0001)).isEqualTo(Math.sqrt(1/2));
+    assertThat(Format.simplifyByRounding(-1/3+0.0000001, 0.001)).isEqualTo(-1/3);
+    assertThat(Format.simplifyByRounding(1/3+0.0000001, 0.001)).isEqualTo(1/3);
+    assertThat(Format.simplifyByRounding(1/3+0.01, 0.001)).isNotEqualTo(1/3);
+    assertThat(Format.simplifyByRounding(0.1234, 0.0001)).isEqualTo(0.1234);
+    assertThat(Format.simplifyByRounding(0, 0.0001)).isEqualTo(0);
 };

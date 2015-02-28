@@ -1,10 +1,10 @@
 import { assertThat } from "test/test.js"
-import Rect from "src/util/rect.js"
 import Point from "src/base/point.js"
+import Rect from "src/base/rect.js"
 
 let RectTest = TestCase("RectTest");
 
-RectTest.prototype.testIsEqualTo = function() {
+RectTest.prototype.testIsEqualTo = () => {
     var r = new Rect(2, 3, 5, 7);
     assertThat(r).isEqualTo(r);
     assertThat(r).isEqualTo(new Rect(2, 3, 5, 7));
@@ -22,60 +22,60 @@ RectTest.prototype.testIsEqualTo = function() {
     assertThat(r).isNotEqualTo(new Rect(2, 3, 7, 7));
 };
 
-RectTest.prototype.testToString = function() {
+RectTest.prototype.testToString = () => {
     assertThat(new Rect(2, 3, 5, 7).toString()).isEqualTo("[2:7]x[3:10]");
 };
 
-RectTest.prototype.testCenteredSquareWithRadius = function() {
+RectTest.prototype.testCenteredSquareWithRadius = () => {
     assertThat(Rect.centeredSquareWithRadius(new Point(2, 3), 5)).isEqualTo(new Rect(-3, -2, 10, 10));
 };
 
-RectTest.prototype.testCenter = function() {
+RectTest.prototype.testCenter = () => {
     assertThat(new Rect(2, 3, 5, 7).center()).isEqualTo(new Point(4.5, 6.5));
     assertThat(new Rect(2, 3, 5, 6).center()).isEqualTo(new Point(4.5, 6));
 };
 
-RectTest.prototype.testTopLeft = function() {
+RectTest.prototype.testTopLeft = () => {
     assertThat(new Rect(2, 3, 5, 7).topLeft()).isEqualTo(new Point(2, 3));
 };
 
-RectTest.prototype.testTopRight = function() {
+RectTest.prototype.testTopRight = () => {
     assertThat(new Rect(2, 3, 5, 7).topRight()).isEqualTo(new Point(7, 3));
 };
 
-RectTest.prototype.testBottomLeft = function() {
+RectTest.prototype.testBottomLeft = () => {
     assertThat(new Rect(2, 3, 5, 7).bottomLeft()).isEqualTo(new Point(2, 10));
 };
 
-RectTest.prototype.testBottomRight = function() {
+RectTest.prototype.testBottomRight = () => {
     assertThat(new Rect(2, 3, 5, 7).bottomRight()).isEqualTo(new Point(7, 10));
 };
 
-RectTest.prototype.testCenterLeft = function() {
+RectTest.prototype.testCenterLeft = () => {
     assertThat(new Rect(2, 3, 5, 7).centerLeft()).isEqualTo(new Point(2, 6.5));
 };
 
-RectTest.prototype.testCenterRight = function() {
+RectTest.prototype.testCenterRight = () => {
     assertThat(new Rect(2, 3, 5, 7).centerRight()).isEqualTo(new Point(7, 6.5));
 };
 
-RectTest.prototype.testTopCenter = function() {
+RectTest.prototype.testTopCenter = () => {
     assertThat(new Rect(2, 3, 5, 7).topCenter()).isEqualTo(new Point(4.5, 3));
 };
 
-RectTest.prototype.testBottomCenter = function() {
+RectTest.prototype.testBottomCenter = () => {
     assertThat(new Rect(2, 3, 5, 7).bottomCenter()).isEqualTo(new Point(4.5, 10));
 };
 
-RectTest.prototype.testRight = function() {
+RectTest.prototype.testRight = () => {
     assertThat(new Rect(2, 3, 5, 7).right()).isEqualTo(7);
 };
 
-RectTest.prototype.testBottom = function() {
+RectTest.prototype.testBottom = () => {
     assertThat(new Rect(2, 3, 5, 7).bottom()).isEqualTo(10);
 };
 
-RectTest.prototype.testSkipLeft = function() {
+RectTest.prototype.testSkipLeft = () => {
     assertThat(new Rect(2, 3, 5, 7).skipLeft(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipLeft(1)).isEqualTo(new Rect(3, 3, 4, 7));
     assertThat(new Rect(2, 3, 5, 7).skipLeft(4)).isEqualTo(new Rect(6, 3, 1, 7));
@@ -83,7 +83,7 @@ RectTest.prototype.testSkipLeft = function() {
     assertThat(new Rect(2, 3, 5, 7).skipLeft(6)).isEqualTo(new Rect(7, 3, 0, 7));
 };
 
-RectTest.prototype.testSkipRight = function() {
+RectTest.prototype.testSkipRight = () => {
     assertThat(new Rect(2, 3, 5, 7).skipRight(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipRight(1)).isEqualTo(new Rect(2, 3, 4, 7));
     assertThat(new Rect(2, 3, 5, 7).skipRight(4)).isEqualTo(new Rect(2, 3, 1, 7));
@@ -91,7 +91,7 @@ RectTest.prototype.testSkipRight = function() {
     assertThat(new Rect(2, 3, 5, 7).skipRight(6)).isEqualTo(new Rect(2, 3, 0, 7));
 };
 
-RectTest.prototype.testSkipTop = function() {
+RectTest.prototype.testSkipTop = () => {
     assertThat(new Rect(2, 3, 5, 7).skipTop(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipTop(1)).isEqualTo(new Rect(2, 4, 5, 6));
     assertThat(new Rect(2, 3, 5, 7).skipTop(6)).isEqualTo(new Rect(2, 9, 5, 1));
@@ -99,7 +99,7 @@ RectTest.prototype.testSkipTop = function() {
     assertThat(new Rect(2, 3, 5, 7).skipTop(8)).isEqualTo(new Rect(2, 10, 5, 0));
 };
 
-RectTest.prototype.testSkipBottom = function() {
+RectTest.prototype.testSkipBottom = () => {
     assertThat(new Rect(2, 3, 5, 7).skipBottom(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipBottom(1)).isEqualTo(new Rect(2, 3, 5, 6));
     assertThat(new Rect(2, 3, 5, 7).skipBottom(6)).isEqualTo(new Rect(2, 3, 5, 1));
@@ -107,7 +107,7 @@ RectTest.prototype.testSkipBottom = function() {
     assertThat(new Rect(2, 3, 5, 7).skipBottom(8)).isEqualTo(new Rect(2, 3, 5, 0));
 };
 
-RectTest.prototype.testTakeLeft = function() {
+RectTest.prototype.testTakeLeft = () => {
     assertThat(new Rect(2, 3, 5, 7).takeLeft(-1)).isEqualTo(new Rect(2, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeLeft(0)).isEqualTo(new Rect(2, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeLeft(1)).isEqualTo(new Rect(2, 3, 1, 7));
@@ -115,7 +115,7 @@ RectTest.prototype.testTakeLeft = function() {
     assertThat(new Rect(2, 3, 5, 7).takeLeft(5)).isEqualTo(new Rect(2, 3, 5, 7));
 };
 
-RectTest.prototype.testTakeRight = function() {
+RectTest.prototype.testTakeRight = () => {
     assertThat(new Rect(2, 3, 5, 7).takeRight(-1)).isEqualTo(new Rect(7, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeRight(0)).isEqualTo(new Rect(7, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeRight(1)).isEqualTo(new Rect(6, 3, 1, 7));
@@ -123,7 +123,7 @@ RectTest.prototype.testTakeRight = function() {
     assertThat(new Rect(2, 3, 5, 7).takeRight(5)).isEqualTo(new Rect(2, 3, 5, 7));
 };
 
-RectTest.prototype.testTakeTop = function() {
+RectTest.prototype.testTakeTop = () => {
     assertThat(new Rect(2, 3, 5, 7).takeTop(-1)).isEqualTo(new Rect(2, 3, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeTop(0)).isEqualTo(new Rect(2, 3, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeTop(1)).isEqualTo(new Rect(2, 3, 5, 1));
@@ -131,7 +131,7 @@ RectTest.prototype.testTakeTop = function() {
     assertThat(new Rect(2, 3, 5, 7).takeTop(7)).isEqualTo(new Rect(2, 3, 5, 7));
 };
 
-RectTest.prototype.testTakeBottom = function() {
+RectTest.prototype.testTakeBottom = () => {
     assertThat(new Rect(2, 3, 5, 7).takeBottom(-1)).isEqualTo(new Rect(2, 10, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeBottom(0)).isEqualTo(new Rect(2, 10, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeBottom(1)).isEqualTo(new Rect(2, 9, 5, 1));
@@ -139,13 +139,13 @@ RectTest.prototype.testTakeBottom = function() {
     assertThat(new Rect(2, 3, 5, 7).takeBottom(7)).isEqualTo(new Rect(2, 3, 5, 7));
 };
 
-RectTest.prototype.testPaddedBy = function() {
+RectTest.prototype.testPaddedBy = () => {
     assertThat(new Rect(2, 3, 5, 7).paddedBy(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).paddedBy(1)).isEqualTo(new Rect(1, 2, 7, 9));
     assertThat(new Rect(2, 3, 5, 7).paddedBy(2)).isEqualTo(new Rect(0, 1, 9, 11));
 };
 
-RectTest.prototype.testContainsPoint = function() {
+RectTest.prototype.testContainsPoint = () => {
     var r = new Rect(2, 3, 5, 7);
     assertTrue(r.containsPoint(r.center()));
 
@@ -172,63 +172,63 @@ RectTest.prototype.testContainsPoint = function() {
     assertFalse(r.containsPoint(new Point(5, 10+0.001)));
 };
 
-RectTest.prototype.testTakeLeftProportion = function() {
+RectTest.prototype.testTakeLeftProportion = () => {
     assertThat(new Rect(2, 3, 5, 7).takeLeftProportion(0.25)).isEqualTo(new Rect(2, 3, 1.25, 7));
 };
 
-RectTest.prototype.testTakeRightProportion = function() {
+RectTest.prototype.testTakeRightProportion = () => {
     assertThat(new Rect(2, 3, 5, 7).takeRightProportion(0.25)).isEqualTo(new Rect(5.75, 3, 1.25, 7));
 };
 
-RectTest.prototype.testTakeTopProportion = function() {
+RectTest.prototype.testTakeTopProportion = () => {
     assertThat(new Rect(2, 3, 5, 7).takeTopProportion(0.25)).isEqualTo(new Rect(2, 3, 5, 1.75));
 };
 
-RectTest.prototype.testTakeBottomProportion = function() {
+RectTest.prototype.testTakeBottomProportion = () => {
     assertThat(new Rect(2, 3, 5, 7).takeBottomProportion(0.25)).isEqualTo(new Rect(2, 8.25, 5, 1.75));
 };
 
-RectTest.prototype.testLeftHalf = function() {
+RectTest.prototype.testLeftHalf = () => {
     assertThat(new Rect(2, 3, 5, 7).leftHalf()).isEqualTo(new Rect(2, 3, 2.5, 7));
 };
 
-RectTest.prototype.testRightHalf = function() {
+RectTest.prototype.testRightHalf = () => {
     assertThat(new Rect(2, 3, 5, 7).rightHalf()).isEqualTo(new Rect(4.5, 3, 2.5, 7));
 };
 
-RectTest.prototype.testTopHalf = function() {
+RectTest.prototype.testTopHalf = () => {
     assertThat(new Rect(2, 3, 5, 7).topHalf()).isEqualTo(new Rect(2, 3, 5, 3.5));
 };
 
-RectTest.prototype.testBottomHalf = function() {
+RectTest.prototype.testBottomHalf = () => {
     assertThat(new Rect(2, 3, 5, 7).bottomHalf()).isEqualTo(new Rect(2, 6.5, 5, 3.5));
 };
 
-RectTest.prototype.testShiftedBy = function() {
+RectTest.prototype.testShiftedBy = () => {
     assertThat(new Rect(2, 3, 5, 7).shiftedBy(11, 13)).isEqualTo(new Rect(13, 16, 5, 7));
 };
 
-RectTest.prototype.testProportionalShiftedBy = function() {
+RectTest.prototype.testProportionalShiftedBy = () => {
     assertThat(new Rect(2, 3, 5, 7).proportionalShiftedBy(11, 13)).isEqualTo(new Rect(57, 94, 5, 7));
 };
 
-RectTest.prototype.testWithX = function() {
+RectTest.prototype.testWithX = () => {
     assertThat(new Rect(2, 3, 5, 7).withX(11)).isEqualTo(new Rect(11, 3, 5, 7));
 };
 
-RectTest.prototype.testWithY = function() {
+RectTest.prototype.testWithY = () => {
     assertThat(new Rect(2, 3, 5, 7).withY(11)).isEqualTo(new Rect(2, 11, 5, 7));
 };
 
-RectTest.prototype.testWithW = function() {
+RectTest.prototype.testWithW = () => {
     assertThat(new Rect(2, 3, 5, 7).withW(11)).isEqualTo(new Rect(2, 3, 11, 7));
 };
 
-RectTest.prototype.testWithH = function() {
+RectTest.prototype.testWithH = () => {
     assertThat(new Rect(2, 3, 5, 7).withH(11)).isEqualTo(new Rect(2, 3, 5, 11));
 };
 
-RectTest.prototype.testScaledOutwardBy = function() {
+RectTest.prototype.testScaledOutwardBy = () => {
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0)).isEqualTo(new Rect(4.5, 6.5, 0, 0));
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0.5)).isEqualTo(new Rect(3.25, 4.75, 2.5, 3.5));
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(2)).isEqualTo(new Rect(-0.5, -0.5, 10, 14));

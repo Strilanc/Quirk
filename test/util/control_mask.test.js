@@ -3,7 +3,7 @@ import ControlMask from "src/util/control_mask.js"
 
 let ControlMaskTest = TestCase("ControlMaskTest");
 
-ControlMaskTest.prototype.testIsEqualTo = function() {
+ControlMaskTest.prototype.testIsEqualTo = () => {
     let s = new ControlMask(0xF, 0xE);
     assertTrue(s.isEqualTo(s));
     assertFalse(s.isEqualTo(""));
@@ -19,7 +19,7 @@ ControlMaskTest.prototype.testIsEqualTo = function() {
     assertTrue(ControlMask.NO_CONTROLS.isEqualTo(new ControlMask(0, 0)));
 };
 
-ControlMaskTest.prototype.testAllowsState = function() {
+ControlMaskTest.prototype.testAllowsState = () => {
     assertTrue(ControlMask.NO_CONTROLS.allowsState(0));
     assertTrue(ControlMask.NO_CONTROLS.allowsState(1));
 
@@ -36,7 +36,7 @@ ControlMaskTest.prototype.testAllowsState = function() {
     assertTrue(m.allowsState(9));
 };
 
-ControlMaskTest.prototype.testDesiredValueFor = function() {
+ControlMaskTest.prototype.testDesiredValueFor = () => {
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(0)).isEqualTo(null);
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
 
@@ -47,14 +47,14 @@ ControlMaskTest.prototype.testDesiredValueFor = function() {
     assertThat(m.desiredValueFor(3)).isEqualTo(null);
 };
 
-ControlMaskTest.prototype.testFromBitIs = function() {
+ControlMaskTest.prototype.testFromBitIs = () => {
     assertThat(ControlMask.fromBitIs(0, true)).isEqualTo(new ControlMask(0x1, 0x1));
     assertThat(ControlMask.fromBitIs(0, false)).isEqualTo(new ControlMask(0x1, 0x0));
     assertThat(ControlMask.fromBitIs(2, true)).isEqualTo(new ControlMask(0x4, 0x4));
     assertThat(ControlMask.fromBitIs(2, false)).isEqualTo(new ControlMask(0x4, 0x0));
 };
 
-ControlMaskTest.prototype.testCombine = function() {
+ControlMaskTest.prototype.testCombine = () => {
     assertThat(ControlMask.NO_CONTROLS.combine(ControlMask.NO_CONTROLS)).isEqualTo(ControlMask.NO_CONTROLS);
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
 
@@ -64,10 +64,10 @@ ControlMaskTest.prototype.testCombine = function() {
     assertThat(ControlMask.NO_CONTROLS.combine(m)).isEqualTo(m);
     assertThat(m.combine(m)).isEqualTo(m);
 
-    assertThrows(function() { ControlMask.fromBitIs(0, true).combine(ControlMask.fromBitIs(0, false)); });
+    assertThrows(() => ControlMask.fromBitIs(0, true).combine(ControlMask.fromBitIs(0, false)));
 };
 
-ControlMaskTest.prototype.testToString = function() {
+ControlMaskTest.prototype.testToString = () => {
     assertTrue(typeof(ControlMask.NO_CONTROLS.toString()) === "string");
     assertTrue(typeof(new ControlMask(0x5, 0x1).toString()) === "string");
 };

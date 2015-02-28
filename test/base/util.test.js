@@ -3,12 +3,12 @@ import Util from "src/base/util.js"
 
 let UtilTest = TestCase("UtilTest");
 
-UtilTest.prototype.testNotNull = function() {
+UtilTest.prototype.testNotNull = () => {
     assertThat(Util.notNull([])).isEqualTo([]);
     assertThat(Util.notNull("")).isEqualTo("");
 };
 
-UtilTest.prototype.testLg = function() {
+UtilTest.prototype.testLg = () => {
     assertThrows(() => Util.lg(0));
     assertThrows(() => Util.lg(-1));
     assertThat(Util.lg(0.25)).isEqualTo(-2);
@@ -21,7 +21,7 @@ UtilTest.prototype.testLg = function() {
     assertThat(Util.lg(1 << 10)).isEqualTo(10);
 };
 
-//UtilTest.prototype.testMaskCandidates = function() {
+//UtilTest.prototype.testMaskCandidates = () => {
 //    assertThrows(() => Util.maskCandidates(-1));
 //    assertThat(Util.maskCandidates(0)).isEqualTo([0]);
 //    assertThat(Util.maskCandidates(1)).isEqualTo([0, 1]);
@@ -36,7 +36,7 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(Util.maskCandidates((1 << 20) + (1 << 10))).isEqualTo([0, 1 << 10, 1 << 20, (1 << 10) + (1 << 20)]);
 //};
 
-//UtilTest.prototype.testIsPowerOf2 = function() {
+//UtilTest.prototype.testIsPowerOf2 = () => {
 //    assertFalse(isPowerOf2(-1));
 //    assertFalse(isPowerOf2(0));
 //    assertTrue(isPowerOf2(1));
@@ -46,7 +46,7 @@ UtilTest.prototype.testLg = function() {
 //    assertFalse(isPowerOf2(5));
 //};
 //
-//UtilTest.prototype.testBitSize = function() {
+//UtilTest.prototype.testBitSize = () => {
 //    assertThat(bitSize(0)).isEqualTo(0);
 //    assertThat(bitSize(1)).isEqualTo(1);
 //    assertThat(bitSize(2)).isEqualTo(2);
@@ -61,7 +61,7 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(bitSize((1 << 20) + (1 << 19))).isEqualTo(21);
 //};
 //
-//UtilTest.prototype.testEvenPower = function() {
+//UtilTest.prototype.testEvenPower = () => {
 //    assertThat(evenPower(-2)).isEqualTo(1);
 //    assertThat(evenPower(-1)).isEqualTo(0);
 //    assertThat(evenPower(0)).isEqualTo(Math.POSITIVE_INFINITY);
@@ -80,17 +80,17 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(evenPower(2 + (1 << 20))).isEqualTo(1);
 //};
 //
-//UtilTest.prototype.testArg1 = function() {
+//UtilTest.prototype.testArg1 = () => {
 //    assertThat(arg1(Complex.prototype.norm2)(Complex.I)).isEqualTo(1);
 //};
 //
-//UtilTest.prototype.testArg2 = function() {
+//UtilTest.prototype.testArg2 = () => {
 //    assertTrue(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.I));
 //    assertFalse(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.ZERO));
 //    assertTrue(arg2(Complex.prototype.plus)(Complex.I, Complex.I).isEqualTo(new Complex(0, 2)));
 //};
 //
-//UtilTest.prototype.testIsNumber = function() {
+//UtilTest.prototype.testIsNumber = () => {
 //    assertTrue(isNumber(0));
 //    assertTrue(isNumber(1));
 //    assertTrue(isNumber(-1));
@@ -110,7 +110,7 @@ UtilTest.prototype.testLg = function() {
 //    assertFalse(isNumber([]));
 //};
 //
-//UtilTest.prototype.testIsInt = function() {
+//UtilTest.prototype.testIsInt = () => {
 //    assertTrue(isInt(0));
 //    assertTrue(isInt(1));
 //    assertTrue(isInt(-1));
@@ -130,7 +130,7 @@ UtilTest.prototype.testLg = function() {
 //    assertFalse(isInt([]));
 //};
 //
-//UtilTest.prototype.testIsString = function() {
+//UtilTest.prototype.testIsString = () => {
 //    assertTrue(isString(""));
 //    assertTrue(isString("0"));
 //    assertTrue(isString("abc"));
@@ -144,7 +144,7 @@ UtilTest.prototype.testLg = function() {
 //    assertFalse(isString(Infinity));
 //};
 //
-//UtilTest.prototype.testFloatToCompactString = function() {
+//UtilTest.prototype.testFloatToCompactString = () => {
 //    assertThat(floatToCompactString(0)).isEqualTo("0");
 //    assertThat(floatToCompactString(1)).isEqualTo("1");
 //    assertThat(floatToCompactString(0.5)).isEqualTo("\u00BD");
@@ -164,18 +164,9 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(floatToCompactString(501, undefined, 8)).isEqualTo("501");
 //};
 //
-//UtilTest.prototype.testRoundToNearbyFractionOrRoot = function() {
-//    assertThat(roundToNearbyFractionOrRoot(1/Math.sqrt(2), 0.0001)).isEqualTo(Math.sqrt(1/2));
-//    assertThat(roundToNearbyFractionOrRoot(-1/3+0.0000001, 0.001)).isEqualTo(-1/3);
-//    assertThat(roundToNearbyFractionOrRoot(1/3+0.0000001, 0.001)).isEqualTo(1/3);
-//    assertThat(roundToNearbyFractionOrRoot(1/3+0.01, 0.001)).isNotEqualTo(1/3);
-//    assertThat(roundToNearbyFractionOrRoot(0.1234, 0.0001)).isEqualTo(0.1234);
-//    assertThat(roundToNearbyFractionOrRoot(0, 0.0001)).isEqualTo(0);
-//};
-//
-//UtilTest.prototype.testCacheFunc1 = function() {
+//UtilTest.prototype.testCacheFunc1 = () => {
 //    var calls = [];
-//    var func = cacheFunc1(function(i) {
+//    var func = cacheFunc1(i => {
 //        calls.push(i);
 //        return [i];
 //    });
@@ -198,9 +189,9 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(calls).isEqualTo([1, 3, 2]);
 //};
 //
-//UtilTest.prototype.testCacheFunc2 = function() {
+//UtilTest.prototype.testCacheFunc2 = () => {
 //    var calls = [];
-//    var func = cacheFunc2(function(i, j) {
+//    var func = cacheFunc2((i, j) => {
 //        calls.push([i, j]);
 //        return [i, j];
 //    });
@@ -226,9 +217,9 @@ UtilTest.prototype.testLg = function() {
 //    assertThat(calls).isEqualTo([[1, 2], [2, 1], [2, 2], [100, -2]]);
 //};
 //
-//UtilTest.prototype.testCacheFunc3 = function() {
+//UtilTest.prototype.testCacheFunc3 = () => {
 //    var calls = [];
-//    var func = cacheFunc3(function(i, j, k) {
+//    var func = cacheFunc3((i, j, k) => {
 //        calls.push([i, j, k]);
 //        return [i, j, k];
 //    });
