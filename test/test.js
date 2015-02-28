@@ -56,37 +56,45 @@ function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
 }
 
 /**
- * @param {*} e
+ * @param {*} value
+ * @param {!int=} escape
  * @returns {!string}
  */
-function describe(e) {
-    if (e === null) {
+function describe(value, escape = 0) {
+    if (value === null) {
         return "null";
     }
-    if (e === undefined) {
+    if (value === undefined) {
         return "undefined";
     }
+    if (typeof value === "string") {
+        return value;
+    }
+    if (escape > 10) {
+        return `(!! recursion limit hit at ${value} !!)`;
+    }
+
     //noinspection JSUnresolvedVariable
-    if (e[Symbol.iterator] !== undefined) {
+    if (value[Symbol.iterator] !== undefined) {
         let array = [];
-        for (let item of e) {
+        for (let item of value) {
             if (array.length > 1000) {
                 array.push("[...]");
             }
             array.push(item);
         }
-        return "[" + array.map(describe).join(", ") + "]";
+        return "[" + array.map(e => describe(e, escape + 1)).join(", ") + "]";
     }
 
-    var result = e.toString();
+    var result = value.toString();
     if (result === "[object Object]") {
         var entries = [];
-        for (var key in e) {
-            if (e.hasOwnProperty(key)) {
-                entries.push(describe(key) + ": " + describe(e[key]));
+        for (var key in value) {
+            if (value.hasOwnProperty(key)) {
+                entries.push(describe(key, escape + 1) + ": " + describe(value[key], escape + 1));
             }
         }
-        return (typeof e) + "(\n\t" + entries.join("\n\t") + "\n)";
+        return (typeof value) + "(\n\t" + entries.join("\n\t") + "\n)";
     }
     return result;
 }
