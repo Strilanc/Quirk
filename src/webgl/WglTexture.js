@@ -1,4 +1,5 @@
 import WglContext from "src/webgl/WglContext.js"
+import WglArg from "src/webgl/WglArg.js"
 
 /**
  * Stores pixel data for/from/on the gpu... or something along those lines. You can render to and pull data out of it.

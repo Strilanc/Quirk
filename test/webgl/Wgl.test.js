@@ -3,8 +3,6 @@ import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import WglWorkArea from "src/webgl/WglWorkArea.js"
-import FragmentShaders from "src/webgl/fragment_shaders.js"
-import Rect from "src/base/rect.js"
 
 let WglTest = TestCase("WglTest");
 

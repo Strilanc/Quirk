@@ -149,6 +149,9 @@ class WglShaderContext {
 
         for (let arg of uniformArgs) {
             let location = this.uniformLocations.get(arg.name);
+            if (location === undefined) {
+                throw new Error(`Unexpected argument: ${arg}`)
+            }
             typeActionMap[arg.type](location, arg.value);
         }
 

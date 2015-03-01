@@ -3,7 +3,7 @@
  */
 export default class WglArg {
     /**
-     * @param {!Symbol} type
+     * @param {!string} type
      * @param {!string} name
      * @param {*} value
      */
@@ -36,11 +36,12 @@ export default class WglArg {
 
     /**
      * @param {!string} name
-     * @param {!{x: !number, y: !number}} value
+     * @param {!number} x
+     * @param {!number} y
      * @returns {!WglArg}
      */
-    static vec2(name, value) {
-        return new WglArg(WglArg.VEC2_TYPE, name, value);
+    static vec2(name, x, y) {
+        return new WglArg(WglArg.VEC2_TYPE, name, {x: x, y: y});
     }
 
     /**
@@ -54,21 +55,27 @@ export default class WglArg {
 
     /**
      * @param {!string} name
-     * @param {!{data: !Float32Array, width: int, height: int}} value
+     * @param {!Float32Array} data
+     * @param {!int} width
+     * @param {!int} height
      * @returns {!WglArg}
      */
-    static dataTexture(name, value) {
-        return new WglArg(WglArg.DATA_TEXTURE_TYPE, name, value);
+    static dataTexture(name, data, width, height) {
+        return new WglArg(WglArg.DATA_TEXTURE_TYPE, name, {data: data, width: width, height: height});
+    }
+
+    toString() {
+        return `${this.type} ${this.name} = ${JSON.stringify(this.value)}`;
     }
 }
 
 //noinspection JSUnresolvedFunction
-WglArg.FLOAT_TYPE = Symbol("WGL_ARG_FLOAT_TYPE");
+WglArg.FLOAT_TYPE = "float";
 //noinspection JSUnresolvedFunction
-WglArg.INT_TYPE = Symbol("WGL_ARG_INT_TYPE");
+WglArg.INT_TYPE = "int";
 //noinspection JSUnresolvedFunction
-WglArg.VEC2_TYPE = Symbol("WGL_ARG_VEC2_TYPE");
+WglArg.VEC2_TYPE = "vec2";
 //noinspection JSUnresolvedFunction
-WglArg.TEXTURE_TYPE = Symbol("WGL_ARG_TEXTURE_TYPE");
+WglArg.TEXTURE_TYPE = "texture";
 //noinspection JSUnresolvedFunction
-WglArg.DATA_TEXTURE_TYPE = Symbol("WGL_ARG_DATA_TEXTURE_TYPE");
+WglArg.DATA_TEXTURE_TYPE = "data_texture";
