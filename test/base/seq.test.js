@@ -476,10 +476,7 @@ SeqTest.prototype.testSingle = () => {
 };
 
 SeqTest.prototype.testToMap = () => {
-    //noinspection JSUnresolvedFunction
     assertThat(new Seq([]).toMap(() => { throw new Error(); }, () => { throw new Error(); })).isEqualTo(new Map());
-    //noinspection JSUnresolvedFunction
     assertThat(new Seq([2]).toMap(e => e * e, e => e)).isEqualTo(new Map([[4, 2]]));
-    //noinspection JSUnresolvedFunction
     assertThat(new Seq([2, 3, 4]).toMap(e => e, e => e * e)).isEqualTo(new Map([[2, 4], [3, 9], [4, 16]]));
 };

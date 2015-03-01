@@ -49,15 +49,14 @@ export default class Seq {
         return this.iterable[iterSymbol]();
     }
 
-    //noinspection JSValidateJSDoc
     /**
      * Creates a re-usable iterable from a generator function like <code>function*() { yield 1; }</code>.
      *
      * Note that the obvious alternative, <code>new Seq(function*(){yield 1;}()}</code>, stops working after the
      * iterable has been iterated once.
      *
-     * @param {!function*} generatorFunction
-     * @returns {Seq}
+     * @param {!function() : Iterator<T>} generatorFunction
+     * @returns {!Seq<T>}
      */
     static fromGenerator(generatorFunction) {
         return new Seq({ [iterSymbol]: generatorFunction });
@@ -575,7 +574,6 @@ export default class Seq {
     distinctBy(keySelector) {
         let seq = this;
         return Seq.fromGenerator(function() {
-            //noinspection JSUnresolvedFunction
             let keySet = new Set();
             return seq.filter(e => {
                 let key = keySelector(e);
@@ -723,7 +721,6 @@ export default class Seq {
      * @template K, V
      */
     toMap(keySelector, valueSelector) {
-        //noinspection JSUnresolvedFunction
         let map = new Map();
         for (let item of this) {
             let key = keySelector(item);
@@ -743,7 +740,6 @@ export default class Seq {
     // * @template K
     // */
     //groupBy(keySelector) {
-    //    //noinspection JSUnresolvedFunction
     //    let map = new Map();
     //    for (let item of this) {
     //        let key = keySelector(item);

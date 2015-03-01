@@ -1,5 +1,5 @@
 import { assertThat, assertThrows } from "test/test.js"
-import ControlMask from "src/util/control_mask.js"
+import ControlMask from "src/quantum/control_mask.js"
 
 let ControlMaskTest = TestCase("ControlMaskTest");
 

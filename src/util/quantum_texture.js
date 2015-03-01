@@ -174,14 +174,14 @@ QuantumTexture.prototype._render = function(shader, uniformArguments) {
 };
 
 QuantumTexture.SHADERS = {
-    singleQubitOperation: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.APPLY_CUSTOM_QUBIT_OPERATION),
-    conditionalProbabilitiesPipeline: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.CONDITIONAL_PROBABILITIES_PIPELINE),
-    toProbabilities: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.FROM_AMPLITUDES_TO_PROBABILITIES),
-    singleControl: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.INIT_SINGLE_CONTROL),
-    combineControls: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.COMBINE_CONTROLS),
-    overlay: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.OVERLAY),
-    packFloats: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.PACK_COMPONENT_FLOAT_INTO_BYTES),
-    passThrough: new THREE.ShaderMaterial(FRAGMENT_SHADER_SRCS.PASS_THROUGH)
+    singleQubitOperation: new THREE.ShaderMaterial(FragmentShaders.APPLY_CUSTOM_QUBIT_OPERATION),
+    conditionalProbabilitiesPipeline: new THREE.ShaderMaterial(FragmentShaders.CONDITIONAL_PROBABILITIES_PIPELINE),
+    toProbabilities: new THREE.ShaderMaterial(FragmentShaders.FROM_AMPLITUDES_TO_PROBABILITIES),
+    singleControl: new THREE.ShaderMaterial(FragmentShaders.INIT_SINGLE_CONTROL),
+    combineControls: new THREE.ShaderMaterial(FragmentShaders.COMBINE_CONTROLS),
+    overlay: new THREE.ShaderMaterial(FragmentShaders.OVERLAY),
+    packFloats: new THREE.ShaderMaterial(FragmentShaders.PACK_COMPONENT_FLOAT_INTO_BYTES),
+    passThrough: new THREE.ShaderMaterial(FragmentShaders.PASS_THROUGH)
 };
 
 /**
