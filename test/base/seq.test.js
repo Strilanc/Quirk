@@ -1,5 +1,5 @@
-import { assertThat, assertThrows } from "test/test.js"
-import Seq from "src/base/seq.js"
+import { assertThat, assertThrows } from "test/TestUtil.js"
+import Seq from "src/base/Seq.js"
 
 let SeqTest = TestCase("SeqTest");
 

@@ -1,4 +1,4 @@
-import Point from "src/base/point.js"
+import Point from "src/base/Point.js"
 
 /**
  * A 2-d rectangle.

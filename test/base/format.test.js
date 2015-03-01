@@ -1,5 +1,5 @@
-import { assertThat, assertThrows } from "test/test.js"
-import Format from "src/base/format.js"
+import { assertThat, assertThrows } from "test/TestUtil.js"
+import Format from "src/base/Format.js"
 
 let FormatTest = TestCase("FormatTest");
 

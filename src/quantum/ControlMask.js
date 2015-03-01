@@ -1,5 +1,5 @@
-import U from "src/base/util.js"
-import Seq from "src/base/seq.js"
+import U from "src/base/Util.js"
+import Seq from "src/base/Seq.js"
 
 /**
  * Stores a set of requirements that a state's bits must meet.

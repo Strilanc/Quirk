@@ -1,4 +1,4 @@
-import { assertThat, assertThrows } from "test/test.js"
+import { assertThat, assertThrows } from "test/TestUtil.js"
 import ControlMask from "src/quantum/ControlMask.js"
 
 let ControlMaskTest = TestCase("ControlMaskTest");

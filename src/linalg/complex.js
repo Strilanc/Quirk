@@ -1,4 +1,4 @@
-import Format from "src/base/format.js"
+import Format from "src/base/Format.js"
 
 /**
  * Represents a number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.

@@ -1,11 +1,11 @@
-import { skipTestIfWebGlNotAvailable, assertThat, assertThrows } from "test/test.js"
+import { skipTestIfWebGlNotAvailable, assertThat, assertThrows } from "test/TestUtil.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import WglWorkArea from "src/webgl/WglWorkArea.js"
 import Rect from "src/base/rect.js"
 import Shades from "src/quantum/Shades.js"
-import Seq from "src/base/seq.js"
+import Seq from "src/base/Seq.js"
 
 let Test = TestCase("ShadesTest");
 

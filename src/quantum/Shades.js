@@ -1,4 +1,4 @@
-import U from "src/base/util.js"
+import U from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 

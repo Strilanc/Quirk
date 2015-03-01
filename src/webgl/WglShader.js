@@ -1,6 +1,6 @@
 import WglContext from "src/webgl/WglContext.js"
 import WglArg from "src/webgl/WglArg.js"
-import Seq from "src/base/seq.js"
+import Seq from "src/base/Seq.js"
 
 /**
  * A shader program definition, used to render outputs onto textures based on the given GLSL source code.

@@ -1,4 +1,4 @@
-import { skipTestIfWebGlNotAvailable, assertThat } from "test/test.js"
+import { skipTestIfWebGlNotAvailable, assertThat } from "test/TestUtil.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"

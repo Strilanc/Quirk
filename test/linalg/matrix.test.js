@@ -1,7 +1,7 @@
-import { assertThat, assertThrows } from "test/test.js"
+import { assertThat, assertThrows } from "test/TestUtil.js"
 import Matrix from "src/linalg/matrix.js"
-import Complex from "src/linalg/complex.js"
-import Format from "src/base/format.js"
+import Complex from "src/linalg/Complex.js"
+import Format from "src/base/Format.js"
 
 let MatrixTest = TestCase("MatrixTest");
 
