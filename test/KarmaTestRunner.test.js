@@ -8,6 +8,7 @@ __karma__.start = () => {
     __karma__.info({ total: total });
 
     for (let suite of Suite.suites) {
+        let suitePassed = true;
         for (let [name, method] of suite.tests) {
             let result = {
                 description: name,
@@ -24,21 +25,28 @@ __karma__.start = () => {
                 method(status);
                 result.success = true;
                 if (status.warn_only) {
-                    console.warn(`Test ${suite.name}.${name} passed, but is set to warn_only: ${status.warn_only}`);
+                    console.warn(`${suite.name}.${name} passed, but is set to warn_only: ${status.warn_only}`);
                 }
             } catch (ex) {
                 if (status.warn_only) {
-                    console.warn(`Test ${suite.name}.${name} failed, but is set to warn_only: ${status.warn_only}`);
+                    console.warn(`${suite.name}.${name} failed, but is set to warn_only: ${status.warn_only}`);
                     console.warn(`${ex}\n\n${ex.stack}`);
                     result.success = true;
                 } else {
-                    result.log.push(`Test ${suite.name}.${name} failed!\n\n${ex}\n\n${ex.stack}\n`);
+                    suitePassed = false;
+                    result.log.push(`${suite.name}.${name} failed!\n\n${ex}\n\n${ex.stack}\n`);
                 }
             }
             //noinspection JSUnresolvedVariable
             result.time = performance.now() - t0;
 
             __karma__.result(result);
+        }
+
+        if (suitePassed) {
+            console.log(`${suite.name} suite passed`)
+        } else {
+            console.warn(`${suite.name} suite failed`)
         }
     }
 
