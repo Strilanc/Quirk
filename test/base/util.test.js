@@ -1,14 +1,14 @@
 import { assertThat, assertThrows } from "test/TestUtil.js"
 import Util from "src/base/Util.js"
 
-let UtilTest = TestCase("UtilTest");
+let Test = TestCase("UtilTest");
 
-UtilTest.prototype.testNotNull = () => {
+Test.prototype.testNotNull = () => {
     assertThat(Util.notNull([])).isEqualTo([]);
     assertThat(Util.notNull("")).isEqualTo("");
 };
 
-UtilTest.prototype.testLg = () => {
+Test.prototype.testLg = () => {
     assertThrows(() => Util.lg(0));
     assertThrows(() => Util.lg(-1));
     assertThat(Util.lg(0.25)).isEqualTo(-2);

@@ -1,8 +1,3 @@
-// PhantomJS doesn't support bind yet
-Function.prototype.bind = Function.prototype.bind || function(newThis) {
-    return () => this.apply(newThis, arguments);
-};
-
 /**
  * @param {*} subject
  * @throws

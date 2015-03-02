@@ -1,42 +1,58 @@
 module.exports = function(grunt) {
-  grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-    concat: {
-      js : {
-        src : [
-          'src/util/util.js',
-          'src/util/complex.js',
-          'src/util/matrix.js',
-          'src/util/rect.js',
-          'src/util/*.js',
-          'src/ui/*.js',
-          'src/main.js'
-        ],
-        dest : 'out/combined.js'
-      }
-    },
-    watch: {
-      files: ['src/**/*.js'],
-      tasks: ['concat']
-    },
-    jstdPhantom: {
-      options: {
-        useLatest : true,
-        port: 9876
-      },
-      files: ["jsTestDriver.conf"]
-    }
-  });
+    grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
+        jstdPhantom: {
+            options: {
+                useLatest : true,
+                port: 9876
+            },
+            files: ['jsTestDriver.conf']
+        },
+        traceur: {
+            build: {
+                options: {
+                    experimental: true,
+                    copyRuntime: 'out/src/external'
+                },
+                files: [{
+                    expand: true,
+                    cwd: 'src/',
+                    src: ['**/*.js'],
+                    dest: 'out/src/'
+                }]
+            },
+            test_src_inline: {
+                options: {
+                    experimental: true,
+                    copyRuntime: 'out/testsrc/external',
+                    modules: 'inline'
+                },
+                files: [{
+                    expand: true,
+                    cwd: 'src/',
+                    src: ['**/*.js'],
+                    dest: 'out/testsrc/'
+                }]
+            },
+            test_inline: {
+                options: {
+                    experimental: true,
+                    modules: 'inline'
+                },
+                files: [{
+                    expand: true,
+                    cwd: 'test/',
+                    src: ['**/*.js'],
+                    dest: 'out/test/'
+                }]
+            }
+        }
+    });
 
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
-  grunt.registerTask('default', [
-    'jstdPhantom',
-    'concat:js'
-  ]);
-  grunt.registerTask('test', [
-    'jstdPhantom'
-  ]);
+    grunt.loadNpmTasks('grunt-traceur');
+    grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
 
+    grunt.registerTask('build', ['traceur:build']);
+    grunt.registerTask('test_build', ['traceur:test_src_inline', 'traceur:test_inline']);
+    grunt.registerTask('test', ['test_build', 'jstdPhantom']);
 };

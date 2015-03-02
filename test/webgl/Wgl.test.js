@@ -4,9 +4,9 @@ import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import WglWorkArea from "src/webgl/WglWorkArea.js"
 
-let WglTest = TestCase("WglTest");
+let Test = TestCase("WglTest");
 
-WglTest.prototype.testReadPixelColorBytes = skipTestIfWebGlNotAvailable(() => {
+Test.prototype.testReadPixelColorBytes = skipTestIfWebGlNotAvailable(() => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`
@@ -27,7 +27,7 @@ WglTest.prototype.testReadPixelColorBytes = skipTestIfWebGlNotAvailable(() => {
     ]);
 });
 
-WglTest.prototype.testReadPixelColorFloats = skipTestIfWebGlNotAvailable(() => {
+Test.prototype.testReadPixelColorFloats = skipTestIfWebGlNotAvailable(() => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`

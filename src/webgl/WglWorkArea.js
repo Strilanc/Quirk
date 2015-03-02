@@ -1,4 +1,4 @@
-import Rect from "src/base/rect.js"
+import Rect from "src/base/Rect.js"
 import WglContext from "src/webgl/WglContext.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"

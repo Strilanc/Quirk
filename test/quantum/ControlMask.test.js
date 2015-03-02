@@ -1,9 +1,9 @@
 import { assertThat, assertThrows } from "test/TestUtil.js"
 import ControlMask from "src/quantum/ControlMask.js"
 
-let ControlMaskTest = TestCase("ControlMaskTest");
+let Test = TestCase("ControlMaskTest");
 
-ControlMaskTest.prototype.testIsEqualTo = () => {
+Test.prototype.testIsEqualTo = () => {
     let s = new ControlMask(0xF, 0xE);
     assertTrue(s.isEqualTo(s));
     assertFalse(s.isEqualTo(""));
@@ -19,7 +19,7 @@ ControlMaskTest.prototype.testIsEqualTo = () => {
     assertTrue(ControlMask.NO_CONTROLS.isEqualTo(new ControlMask(0, 0)));
 };
 
-ControlMaskTest.prototype.testAllowsState = () => {
+Test.prototype.testAllowsState = () => {
     assertTrue(ControlMask.NO_CONTROLS.allowsState(0));
     assertTrue(ControlMask.NO_CONTROLS.allowsState(1));
 
@@ -36,7 +36,7 @@ ControlMaskTest.prototype.testAllowsState = () => {
     assertTrue(m.allowsState(9));
 };
 
-ControlMaskTest.prototype.testDesiredValueFor = () => {
+Test.prototype.testDesiredValueFor = () => {
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(0)).isEqualTo(null);
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
 
@@ -47,14 +47,14 @@ ControlMaskTest.prototype.testDesiredValueFor = () => {
     assertThat(m.desiredValueFor(3)).isEqualTo(null);
 };
 
-ControlMaskTest.prototype.testFromBitIs = () => {
+Test.prototype.testFromBitIs = () => {
     assertThat(ControlMask.fromBitIs(0, true)).isEqualTo(new ControlMask(0x1, 0x1));
     assertThat(ControlMask.fromBitIs(0, false)).isEqualTo(new ControlMask(0x1, 0x0));
     assertThat(ControlMask.fromBitIs(2, true)).isEqualTo(new ControlMask(0x4, 0x4));
     assertThat(ControlMask.fromBitIs(2, false)).isEqualTo(new ControlMask(0x4, 0x0));
 };
 
-ControlMaskTest.prototype.testCombine = () => {
+Test.prototype.testCombine = () => {
     assertThat(ControlMask.NO_CONTROLS.combine(ControlMask.NO_CONTROLS)).isEqualTo(ControlMask.NO_CONTROLS);
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
 
@@ -67,7 +67,7 @@ ControlMaskTest.prototype.testCombine = () => {
     assertThrows(() => ControlMask.fromBitIs(0, true).combine(ControlMask.fromBitIs(0, false)));
 };
 
-ControlMaskTest.prototype.testToString = () => {
+Test.prototype.testToString = () => {
     assertTrue(typeof(ControlMask.NO_CONTROLS.toString()) === "string");
     assertTrue(typeof(new ControlMask(0x5, 0x1).toString()) === "string");
 };

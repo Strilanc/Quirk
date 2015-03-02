@@ -1,9 +1,9 @@
 import { assertThat } from "test/TestUtil.js"
 import Point from "src/base/Point.js"
 
-let PointTest = TestCase("PointTest");
+let Test = TestCase("PointTest");
 
-PointTest.prototype.testIsEqualTo = () => {
+Test.prototype.testIsEqualTo = () => {
     var p = new Point(2, 3);
     assertThat(p).isEqualTo(p);
     assertThat(p).isNotEqualTo(null);
@@ -14,18 +14,18 @@ PointTest.prototype.testIsEqualTo = () => {
     assertThat(p).isNotEqualTo(new Point(1, 3));
 };
 
-PointTest.prototype.testToString = () => {
+Test.prototype.testToString = () => {
     assertThat(new Point(2, 3).toString()).isEqualTo("(x: 2, y: 3)");
 };
 
-PointTest.prototype.testOffsetBy = () => {
+Test.prototype.testOffsetBy = () => {
     assertThat(new Point(2, 3).offsetBy(5, 7)).isEqualTo(new Point(7, 10));
 };
 
-PointTest.prototype.testPlus = () => {
+Test.prototype.testPlus = () => {
     assertThat(new Point(2, 3).plus(new Point(5, 7))).isEqualTo(new Point(7, 10));
 };
 
-PointTest.prototype.testTimes = () => {
+Test.prototype.testTimes = () => {
     assertThat(new Point(2, 3).times(5)).isEqualTo(new Point(10, 15));
 };
