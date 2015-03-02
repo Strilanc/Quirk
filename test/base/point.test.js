@@ -1,17 +1,21 @@
-import { Suite, assertThat } from "test/TestUtil.js"
+import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
 import Point from "src/base/Point.js"
 
 let suite = new Suite("Point");
 
 suite.test("isEqualTo", () => {
     var p = new Point(2, 3);
-    assertThat(p).isEqualTo(p);
-    assertThat(p).isNotEqualTo(null);
-    assertThat(p).isNotEqualTo("");
+    assertTrue(p.isEqualTo(p));
+    assertFalse(p.isEqualTo(null));
+    assertFalse(p.isEqualTo(""));
 
+    assertTrue(p.isEqualTo(new Point(2, 3)));
+    assertFalse(p.isEqualTo(new Point(2, 4)));
+    assertFalse(p.isEqualTo(new Point(1, 3)));
+
+    // Interops with assertThat.
     assertThat(p).isEqualTo(new Point(2, 3));
     assertThat(p).isNotEqualTo(new Point(2, 4));
-    assertThat(p).isNotEqualTo(new Point(1, 3));
 });
 
 suite.test("toString", () => {

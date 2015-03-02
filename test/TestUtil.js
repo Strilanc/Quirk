@@ -345,10 +345,12 @@ export function assertTrue(subject) {
     assertThat(subject).isEqualTo(true);
 }
 
+//noinspection JSUnusedGlobalSymbols
 export function assertFalse(subject) {
     assertThat(subject).isEqualTo(false);
 }
 
+//noinspection JSUnusedGlobalSymbols
 /**
  * Invokes a function, requiring it to throw an exception. Returns the exception wrapped in an assertion subject.
  * @param {function()} func
@@ -371,6 +373,9 @@ export function assertThrows(func, extraArgCatcher) {
 /** @type {boolean|undefined} */
 let webGLSupportPresent = undefined;
 
+/**
+ * A named collection of tests.
+ */
 export class Suite {
     /**
      * @param {!string} name
@@ -408,7 +413,7 @@ export class Suite {
             }
 
             if (!webGLSupportPresent) {
-                console.warn(`Skipping test '${name}' in suite '${this.name}' due to lack of WebGL.`);
+                console.warn(`Skipping ${this.name}.${name} due to lack of WebGL support.`);
                 return;
             }
 
