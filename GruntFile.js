@@ -9,7 +9,7 @@ module.exports = function(grunt) {
             files: ['jsTestDriver.conf']
         },
         traceur: {
-            build: {
+            build_src: {
                 options: {
                     experimental: true,
                     copyRuntime: 'out/src/external'
@@ -21,23 +21,9 @@ module.exports = function(grunt) {
                     dest: 'out/src/'
                 }]
             },
-            test_src_inline: {
+            build_test: {
                 options: {
                     experimental: true,
-                    copyRuntime: 'out/testsrc/external',
-                    modules: 'inline'
-                },
-                files: [{
-                    expand: true,
-                    cwd: 'src/',
-                    src: ['**/*.js'],
-                    dest: 'out/testsrc/'
-                }]
-            },
-            test_inline: {
-                options: {
-                    experimental: true,
-                    modules: 'inline'
                 },
                 files: [{
                     expand: true,
@@ -46,13 +32,31 @@ module.exports = function(grunt) {
                     dest: 'out/test/'
                 }]
             }
+        },
+        karma: {
+            unit: {
+                configFile: 'karma.conf.js'
+            }
         }
     });
 
-    grunt.loadNpmTasks('grunt-traceur');
-    grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
+    var karmaInterop = function() {
+        //noinspection JSUnresolvedFunction
+        var testFiles = grunt.file.glob.sync("test/**/*.test.js");
+        var getters = testFiles.map(function(e) {
+            return 'System.get("' + e + '");';
+        }).join("\n");
+        grunt.file.write("out/interop/GetTraceurGeneratedTestPackagesForKarmaTestRunner.js", getters);
+    };
+    karmaInterop();
 
-    grunt.registerTask('build', ['traceur:build']);
-    grunt.registerTask('test_build', ['traceur:test_src_inline', 'traceur:test_inline']);
-    grunt.registerTask('test', ['test_build', 'jstdPhantom']);
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-traceur');
+
+    grunt.registerTask('build', ['traceur:build_src']);
+    grunt.registerTask('test', [
+        'traceur:build_src',
+        'traceur:build_test',
+        'karma:unit'
+    ]);
 };

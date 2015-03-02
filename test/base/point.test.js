@@ -1,9 +1,9 @@
-import { assertThat } from "test/TestUtil.js"
+import { Suite, assertThat } from "test/TestUtil.js"
 import Point from "src/base/Point.js"
 
-let Test = TestCase("PointTest");
+let suite = new Suite("Point");
 
-Test.prototype.testIsEqualTo = () => {
+suite.test("isEqualTo", () => {
     var p = new Point(2, 3);
     assertThat(p).isEqualTo(p);
     assertThat(p).isNotEqualTo(null);
@@ -12,20 +12,20 @@ Test.prototype.testIsEqualTo = () => {
     assertThat(p).isEqualTo(new Point(2, 3));
     assertThat(p).isNotEqualTo(new Point(2, 4));
     assertThat(p).isNotEqualTo(new Point(1, 3));
-};
+});
 
-Test.prototype.testToString = () => {
+suite.test("toString", () => {
     assertThat(new Point(2, 3).toString()).isEqualTo("(x: 2, y: 3)");
-};
+});
 
-Test.prototype.testOffsetBy = () => {
+suite.test("offsetBy", () => {
     assertThat(new Point(2, 3).offsetBy(5, 7)).isEqualTo(new Point(7, 10));
-};
+});
 
-Test.prototype.testPlus = () => {
+suite.test("plus", () => {
     assertThat(new Point(2, 3).plus(new Point(5, 7))).isEqualTo(new Point(7, 10));
-};
+});
 
-Test.prototype.testTimes = () => {
+suite.test("times", () => {
     assertThat(new Point(2, 3).times(5)).isEqualTo(new Point(10, 15));
-};
+});

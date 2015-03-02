@@ -1,9 +1,9 @@
-import { assertThat, assertThrows } from "test/TestUtil.js"
+import { assertTrue, assertFalse, assertThat, assertThrows, Suite } from "test/TestUtil.js"
 import ControlMask from "src/quantum/ControlMask.js"
 
-let Test = TestCase("ControlMaskTest");
+let suite = new Suite("ControlMask");
 
-Test.prototype.testIsEqualTo = () => {
+suite.test("isEqualTo", () => {
     let s = new ControlMask(0xF, 0xE);
     assertTrue(s.isEqualTo(s));
     assertFalse(s.isEqualTo(""));
@@ -17,9 +17,9 @@ Test.prototype.testIsEqualTo = () => {
     assertFalse(s.isEqualTo(new ControlMask(0xE, 0xE)));
     assertTrue(new ControlMask(0x3, 0x2).isEqualTo(new ControlMask(0x3, 0x2)));
     assertTrue(ControlMask.NO_CONTROLS.isEqualTo(new ControlMask(0, 0)));
-};
+});
 
-Test.prototype.testAllowsState = () => {
+suite.test("allowsState", () => {
     assertTrue(ControlMask.NO_CONTROLS.allowsState(0));
     assertTrue(ControlMask.NO_CONTROLS.allowsState(1));
 
@@ -34,9 +34,9 @@ Test.prototype.testAllowsState = () => {
     assertFalse(m.allowsState(7));
     assertFalse(m.allowsState(8));
     assertTrue(m.allowsState(9));
-};
+});
 
-Test.prototype.testDesiredValueFor = () => {
+suite.test("desiredValueFor", () => {
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(0)).isEqualTo(null);
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
 
@@ -45,16 +45,16 @@ Test.prototype.testDesiredValueFor = () => {
     assertThat(m.desiredValueFor(1)).isEqualTo(null);
     assertThat(m.desiredValueFor(2)).isEqualTo(false);
     assertThat(m.desiredValueFor(3)).isEqualTo(null);
-};
+});
 
-Test.prototype.testFromBitIs = () => {
+suite.test("fromBitIs", () => {
     assertThat(ControlMask.fromBitIs(0, true)).isEqualTo(new ControlMask(0x1, 0x1));
     assertThat(ControlMask.fromBitIs(0, false)).isEqualTo(new ControlMask(0x1, 0x0));
     assertThat(ControlMask.fromBitIs(2, true)).isEqualTo(new ControlMask(0x4, 0x4));
     assertThat(ControlMask.fromBitIs(2, false)).isEqualTo(new ControlMask(0x4, 0x0));
-};
+});
 
-Test.prototype.testCombine = () => {
+suite.test("combine", () => {
     assertThat(ControlMask.NO_CONTROLS.combine(ControlMask.NO_CONTROLS)).isEqualTo(ControlMask.NO_CONTROLS);
     assertThat(ControlMask.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
 
@@ -65,9 +65,9 @@ Test.prototype.testCombine = () => {
     assertThat(m.combine(m)).isEqualTo(m);
 
     assertThrows(() => ControlMask.fromBitIs(0, true).combine(ControlMask.fromBitIs(0, false)));
-};
+});
 
-Test.prototype.testToString = () => {
+suite.test("toString", () => {
     assertTrue(typeof(ControlMask.NO_CONTROLS.toString()) === "string");
     assertTrue(typeof(new ControlMask(0x5, 0x1).toString()) === "string");
-};
+});

@@ -8,8 +8,11 @@
   },
   "devDependencies": {
     "grunt": "0.4.4",
-    "grunt-jstestdriver-phantomjs": "0.0.7",
-    "grunt-traceur": "0.5.1"
+    "grunt-karma": "^0.10.1",
+    "grunt-traceur": "0.5.1",
+    "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-firefox-launcher": "^0.1.4"
   },
   "scripts": {
     "test": "grunt test"

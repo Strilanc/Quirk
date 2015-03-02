@@ -1,10 +1,10 @@
-import { assertThat, assertThrows } from "test/TestUtil.js"
+import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Complex from "src/linalg/Complex.js"
 import Format from "src/base/Format.js"
 
-let Test = TestCase("ComplexTest");
+let suite = new Suite("Complex");
 
-Test.prototype.testIsEqualTo = () => {
+suite.test("isEqualTo", () => {
     var c = new Complex(5, 7);
     assertThat(c).isEqualTo(c);
     assertThat(c).isNotEqualTo(null);
@@ -21,9 +21,9 @@ Test.prototype.testIsEqualTo = () => {
     assertThat(new Complex(0, 1)).isNotEqualTo(1);
     assertThat(new Complex(2.5, 0)).isEqualTo(2.5);
     assertThat(new Complex(0, 2.5)).isNotEqualTo(2.5);
-};
+});
 
-Test.prototype.testIsApproximatelyEqualTo = () => {
+suite.test("isApproximatelyEqualTo", () => {
     var c = new Complex(5, 7);
     assertThat(c).isApproximatelyEqualTo(c, 0);
     assertThat(c).isApproximatelyEqualTo(c, 1);
@@ -33,51 +33,51 @@ Test.prototype.testIsApproximatelyEqualTo = () => {
 
     assertThat(c).isNotApproximatelyEqualTo(null);
     assertThat(c).isNotApproximatelyEqualTo("");
-};
+});
 
-Test.prototype.testToJson = () => {
+suite.test("toJson", () => {
     assertThat(new Complex(1, 0).toJson()).isEqualTo("1");
     assertThat(new Complex(2, -3).toJson()).isEqualTo("2-3i");
     assertThat(new Complex(0, -1).toJson()).isEqualTo("-i");
     assertThat(new Complex(1/3, 0).toJson()).isEqualTo("\u2153");
     assertThat(new Complex(1/3+0.00001, 0).toJson()).isEqualTo("0.3333433333333333");
-};
+});
 
-Test.prototype.testFromJson = () => {
+suite.test("fromJson", () => {
     assertThat(Complex.fromJson("1")).isEqualTo(new Complex(1, 0));
     assertThat(Complex.fromJson("2-3i")).isEqualTo(new Complex(2, -3));
     assertThat(Complex.fromJson("-i")).isEqualTo(new Complex(0, -1));
     assertThat(Complex.fromJson("\u2153")).isEqualTo(new Complex(1/3, 0));
     assertThat(Complex.fromJson("0.3333433333333333")).isEqualTo(new Complex(1/3+0.00001, 0))
-};
+});
 
-Test.prototype.testFrom = () => {
+suite.test("from", () => {
     assertThat(Complex.from(1).real).isEqualTo(1);
     assertThat(Complex.from(1).imag).isEqualTo(0);
     assertThat(Complex.from(-1.5).real).isEqualTo(-1.5);
     assertThat(Complex.from(-1.5).imag).isEqualTo(0);
     assertThat(Complex.from(new Complex(2, 3)).real).isEqualTo(2);
     assertThat(Complex.from(new Complex(2, 3)).imag).isEqualTo(3);
-};
+});
 
-Test.prototype.testRealPartOf = () => {
+suite.test("realPartOf", () => {
     assertThat(Complex.realPartOf(1)).isEqualTo(1);
     assertThat(Complex.realPartOf(1.5)).isEqualTo(1.5);
     assertThat(Complex.realPartOf(-2)).isEqualTo(-2);
     assertThat(Complex.realPartOf(new Complex(3, 1))).isEqualTo(3);
     assertThat(Complex.realPartOf(new Complex(5, 0))).isEqualTo(5);
-};
+});
 
-Test.prototype.testImagPartOf = () => {
+suite.test("imagPartOf", () => {
     assertThat(Complex.imagPartOf(1)).isEqualTo(0);
     assertThat(Complex.imagPartOf(1.5)).isEqualTo(0);
     assertThat(Complex.imagPartOf(-2)).isEqualTo(0);
     assertThat(Complex.imagPartOf(new Complex(3, 0))).isEqualTo(0);
     assertThat(Complex.imagPartOf(new Complex(3, 1))).isEqualTo(1);
     assertThat(Complex.imagPartOf(new Complex(5, -2))).isEqualTo(-2);
-};
+});
 
-Test.prototype.testToString = () => {
+suite.test("toString", () => {
     assertThat(new Complex(0, 0).toString()).isEqualTo("0");
 
     assertThat(new Complex(1, 0).toString()).isEqualTo("1");
@@ -114,9 +114,9 @@ Test.prototype.testToString = () => {
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.EXACT)).isEqualTo("0.3333433333333333");
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.MINIFIED)).isEqualTo("0.3333433333333333");
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.SIMPLIFIED)).isEqualTo("\u2153");
-};
+});
 
-Test.prototype.testParse = () => {
+suite.test("parse", () => {
     assertThat(Complex.parse("0")).isEqualTo(new Complex(0, 0));
     assertThat(Complex.parse("1")).isEqualTo(new Complex(1, 0));
     assertThat(Complex.parse("-1")).isEqualTo(new Complex(-1, 0));
@@ -133,9 +133,9 @@ Test.prototype.testParse = () => {
     assertThat(Complex.parse("-5-2i")).isEqualTo(new Complex(-5, -2));
 
     assertThat(Complex.parse("\u221A2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
-};
+});
 
-Test.prototype.testNorm2 = () => {
+suite.test("norm2", () => {
     assertThat(new Complex(0, 0).norm2()).isEqualTo(0);
 
     assertThat(new Complex(1, 0).norm2()).isEqualTo(1);
@@ -150,9 +150,9 @@ Test.prototype.testNorm2 = () => {
 
     assertThat(new Complex(2, 3).norm2()).isEqualTo(13);
     assertThat(new Complex(-3, -4).norm2()).isEqualTo(25);
-};
+});
 
-Test.prototype.testAbs = () => {
+suite.test("abs", () => {
     assertThat(new Complex(0, 0).abs()).isEqualTo(0);
 
     assertThat(new Complex(1, 0).abs()).isEqualTo(1);
@@ -165,14 +165,14 @@ Test.prototype.testAbs = () => {
 
     assertThat(new Complex(2, 3).abs()).isApproximatelyEqualTo(Math.sqrt(13));
     assertThat(new Complex(-3, -4).abs()).isEqualTo(5);
-};
+});
 
-Test.prototype.testConjugate = () => {
+suite.test("conjugate", () => {
     assertThat(new Complex(0, 0).conjugate()).isEqualTo(new Complex(0, 0));
     assertThat(new Complex(2, 3).conjugate()).isEqualTo(new Complex(2, -3));
-};
+});
 
-Test.prototype.testPhase = () => {
+suite.test("phase", () => {
     assertThat(new Complex(0, 0).phase()).isEqualTo(0);
 
     assertThat(new Complex(1, 0).phase()).isEqualTo(0);
@@ -182,9 +182,9 @@ Test.prototype.testPhase = () => {
 
     assertThat(new Complex(1, 1).phase()).isApproximatelyEqualTo(Math.PI/4);
     assertThat(new Complex(2, 1).phase()).isApproximatelyEqualTo(Math.PI*0.1475836);
-};
+});
 
-Test.prototype.testUnit = () => {
+suite.test("unit", () => {
     assertThat(new Complex(0, 0).unit().isEqualTo(1));
 
     assertThat(new Complex(0.5, 0).unit().isEqualTo(1));
@@ -204,26 +204,26 @@ Test.prototype.testUnit = () => {
     assertThat(new Complex(0, -2).unit().isEqualTo(Complex.I.times(-1)));
 
     assertTrue(new Complex(1, 1).unit().minus(new Complex(Math.sqrt(0.5), Math.sqrt(0.5))).norm2() < 0.0000001);
-};
+});
 
-Test.prototype.testPlus = () => {
+suite.test("plus", () => {
     assertThat(new Complex(2, 3).plus(new Complex(5, 7))).isEqualTo(new Complex(7, 10));
     assertThat(new Complex(2, 3).plus(5)).isEqualTo(new Complex(7, 3));
-};
+});
 
-Test.prototype.testMinus = () => {
+suite.test("minus", () => {
     assertThat(new Complex(2, 3).minus(new Complex(5, 7))).isEqualTo(new Complex(-3, -4));
     assertThat(new Complex(2, 3).minus(5)).isEqualTo(new Complex(-3, 3));
-};
+});
 
-Test.prototype.testTimes = () => {
+suite.test("times", () => {
     assertThat(new Complex(2, 3).times(new Complex(5, 7))).isEqualTo(new Complex(-11, 29));
     assertThat(new Complex(2, 3).times(5)).isEqualTo(new Complex(10, 15));
-};
+});
 
-Test.prototype.testDividedBy = () => {
+suite.test("dividedBy", () => {
     assertThrows(() => new Complex(1, 0).dividedBy(0));
     assertThat(new Complex(2, 3).dividedBy(new Complex(2, 0))).isEqualTo(new Complex(1, 1.5));
     assertThat(new Complex(2, 3).dividedBy(new Complex(0, 2))).isEqualTo(new Complex(1.5, -1));
     assertThat(new Complex(2, -2).dividedBy(new Complex(1, 1))).isEqualTo(new Complex(0, -2));
-};
+});

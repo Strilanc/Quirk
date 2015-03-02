@@ -1,11 +1,11 @@
-import { assertThat, assertThrows } from "test/TestUtil.js"
+import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Matrix from "src/linalg/Matrix.js"
 import Complex from "src/linalg/Complex.js"
 import Format from "src/base/Format.js"
 
-let Test = TestCase("MatrixTest");
+let suite = new Suite("Matrix");
 
-Test.prototype.testIsEqualTo = () => {
+suite.test("isEqualTo", () => {
     var m = new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]);
     assertThat(m).isEqualTo(m);
     assertThat(m).isNotEqualTo(null);
@@ -29,9 +29,9 @@ Test.prototype.testIsEqualTo = () => {
     assertThat(col).isEqualTo(col);
     assertThat(row).isEqualTo(row);
     assertThat(row).isNotEqualTo(col);
-};
+});
 
-Test.prototype.testIsApproximatelyEqualTo = () => {
+suite.test("isApproximatelyEqualTo", () => {
     // Size must match
     assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.col([1, 1]), 0);
     assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.square([1, 1, 1, 1]), 0);
@@ -54,9 +54,9 @@ Test.prototype.testIsApproximatelyEqualTo = () => {
 
     assertThat(Matrix.row([0])).isNotApproximatelyEqualTo(null);
     assertThat(Matrix.row([0])).isNotApproximatelyEqualTo("");
-};
+});
 
-Test.prototype.testToString = () => {
+suite.test("toString", () => {
     assertThat(Matrix.square([2]).toString()).
         isEqualTo("{{2}}");
     assertThat(Matrix.square([1, 0, new Complex(0, -1), new Complex(2, -3)]).toString()).
@@ -74,9 +74,9 @@ Test.prototype.testToString = () => {
         isEqualTo("{{0,1},{\u2153+i,0.3333334333333333i}}");
     assertThat(Matrix.square([0, 1, new Complex(1/3, 1), new Complex(0, 1/3 + 0.0000001)]).toString(Format.CONSISTENT)).
         isEqualTo("{{0.000+0.000i, 1.000+0.000i}, {0.333+1.000i, 0.000+0.333i}}");
-};
+});
 
-Test.prototype.testParse = () => {
+suite.test("parse", () => {
     assertThat(Matrix.parse("{{1}}")).isEqualTo(
         Matrix.square([1]));
     assertThat(Matrix.parse("{{i}}")).isEqualTo(
@@ -90,21 +90,21 @@ Test.prototype.testParse = () => {
         Matrix.row([1, 2, Complex.I]));
     assertThat(Matrix.parse("{{1}, {2}, {i}}")).isEqualTo(
         Matrix.col([1, 2, Complex.I]));
-};
+});
 
-Test.prototype.testGenerate = () => {
+suite.test("generate", () => {
     assertThat(Matrix.generate(3, 2, (r, c) => r + 10* c).toString()).
         isEqualTo("{{0, 10, 20}, {1, 11, 21}}");
-};
+});
 
-Test.prototype.testGetColumn = () => {
+suite.test("getColumn", () => {
     var m = Matrix.square([2, 3, 5, 7]);
     assertThat(m.getColumn(0)).isEqualTo([2, 5]);
     assertThat(m.getColumn(1)).isEqualTo([3, 7]);
     assertThat(Matrix.col([1, 2, 3]).getColumn(0)).isEqualTo([1, 2, 3]);
-};
+});
 
-Test.prototype.testSquare = () => {
+suite.test("square", () => {
     var m = Matrix.square([1, new Complex(2, 3), -5.5, 0]);
     assertThat(m.rows[0][0]).isEqualTo(1);
     assertThat(m.rows[0][1]).isEqualTo(new Complex(2, 3));
@@ -113,17 +113,17 @@ Test.prototype.testSquare = () => {
     assertThat(m.rows.length).isEqualTo(2);
 
     assertThat(Matrix.square([1]).rows[0][0]).isEqualTo(1);
-};
+});
 
-Test.prototype.testCol = () => {
+suite.test("col", () => {
     assertThat(Matrix.col([2, 3, new Complex(0, 5)]).toString()).isEqualTo("{{2}, {3}, {5i}}");
-};
+});
 
-Test.prototype.testRow = () => {
+suite.test("row", () => {
     assertThat(Matrix.row([2, 3, new Complex(0, 5)]).toString()).isEqualTo("{{2, 3, 5i}}");
-};
+});
 
-Test.prototype.testSize = () => {
+suite.test("size", () => {
     assertThat(Matrix.row([1, 1]).width()).isEqualTo(2);
     assertThat(Matrix.row([1, 1]).height()).isEqualTo(1);
 
@@ -135,9 +135,9 @@ Test.prototype.testSize = () => {
 
     assertThat(Matrix.col([1, 1, 3]).width()).isEqualTo(1);
     assertThat(Matrix.col([1, 1, 3]).height()).isEqualTo(3);
-};
+});
 
-Test.prototype.testIsApproximatelyUnitary = () => {
+suite.test("isApproximatelyUnitary", () => {
     assertFalse(Matrix.row([1, 1]).isApproximatelyUnitary(999));
     assertFalse(Matrix.col([1, 1]).isApproximatelyUnitary(999));
 
@@ -154,17 +154,17 @@ Test.prototype.testIsApproximatelyUnitary = () => {
     assertTrue(Matrix.PAULI_Y.isApproximatelyUnitary(0));
     assertTrue(Matrix.PAULI_Z.isApproximatelyUnitary(0));
     assertTrue(Matrix.HADAMARD.isApproximatelyUnitary(0.001));
-};
+});
 
-Test.prototype.testAdjoint = () => {
+suite.test("adjoint", () => {
     var v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);
     var a = Matrix.square([new Complex(2, -3), new Complex(11, -13),
                           new Complex(5, -7), new Complex(17, -19)]);
     assertThat(v.adjoint()).isEqualTo(a);
-};
+});
 
-Test.prototype.testScaledBy = () => {
+suite.test("scaledBy", () => {
     var v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);
     var a = Matrix.square([new Complex(-2, -3), new Complex(-5, -7),
@@ -175,19 +175,19 @@ Test.prototype.testScaledBy = () => {
 
     assertThat(Matrix.col([2, 3]).scaledBy(5)).isEqualTo(Matrix.col([10, 15]));
     assertThat(Matrix.row([2, 3]).scaledBy(5)).isEqualTo(Matrix.row([10, 15]));
-};
+});
 
-Test.prototype.testPlus = () => {
+suite.test("plus", () => {
     assertTrue(Matrix.square([2, 3, 5, 7]).plus(Matrix.square([11, 13, 17, 19]))
         .isEqualTo(Matrix.square([13, 16, 22, 26])));
-};
+});
 
-Test.prototype.testMinus = () => {
+suite.test("minus", () => {
     assertTrue(Matrix.square([2, 3, 5, 7]).minus(Matrix.square([11, 13, 17, 19]))
         .isEqualTo(Matrix.square([-9, -10, -12, -12])));
-};
+});
 
-Test.prototype.testTimes = () => {
+suite.test("times", () => {
     assertTrue(Matrix.square([2, 3, 5, 7]).times(Matrix.square([11, 13, 17, 19]))
         .isEqualTo(Matrix.square([73, 83, 174, 198])));
 
@@ -196,9 +196,9 @@ Test.prototype.testTimes = () => {
     assertTrue(x.times(x.adjoint()).isEqualTo(Matrix.identity(2)));
     assertTrue(Matrix.PAULI_X.times(Matrix.PAULI_Y).times(Matrix.PAULI_Z).scaledBy(new Complex(0, -1))
         .isEqualTo(Matrix.identity(2)));
-};
+});
 
-Test.prototype.testTimes_ColRow = () => {
+suite.test("times_ColRow", () => {
     // When one is a column vector and the other is a row vector...
     var r = Matrix.row([2, 3, 5]);
     var c = Matrix.col([11, 13, 17]);
@@ -214,17 +214,17 @@ Test.prototype.testTimes_ColRow = () => {
 
     // Tensor product is order independent (in this case)
     assertThat(r.tensorProduct(c)).isEqualTo(c.tensorProduct(r));
-};
+});
 
-Test.prototype.testNorm2 = () => {
+suite.test("norm2", () => {
     assertThat(Matrix.row([1]).norm2()).isEqualTo(1);
     assertThat(Matrix.row([2]).norm2()).isEqualTo(4);
     assertThat(Matrix.row([1, 1]).norm2()).isEqualTo(2);
     assertThat(Matrix.col([1, 1]).norm2()).isEqualTo(2);
     assertThat(Matrix.square([1, 2, 3, 4]).norm2()).isEqualTo(30);
-};
+});
 
-Test.prototype.testTensorProduct = () => {
+suite.test("tensorProduct", () => {
     assertThat(Matrix.square([2]).tensorProduct(Matrix.square([3]))).
         isEqualTo(Matrix.square([6]));
     assertThat(Matrix.square([2]).tensorProduct(Matrix.square([3]))).
@@ -242,16 +242,17 @@ Test.prototype.testTensorProduct = () => {
             55, 65, 77, 91,
             85, 95, 119, 133
         ]));
-};
+});
 
-Test.prototype.testTensorPower = () => {
-    assertEquals("{{1}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(0));
-    assertEquals("{{1, i}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(1));
-    assertEquals("{{1, i, i, -1}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(2));
-    assertEquals("{{1, i, i, -1, i, -1, -1, -i}}", Matrix.row([1, new Complex(0, 1)]).tensorPower(3));
-};
+suite.test("tensorPower", () => {
+    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(0).toString()).isEqualTo("{{1}}");
+    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(1).toString()).isEqualTo("{{1, i}}");
+    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(2).toString()).isEqualTo("{{1, i, i, -1}}");
+    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(3).toString()).
+        isEqualTo("{{1, i, i, -1, i, -1, -1, -i}}");
+});
 
-Test.prototype.testTensorProduct_Controlled = () => {
+suite.test("tensorProduct_Controlled", () => {
     assertThat(Matrix.CONTROL.tensorProduct(Matrix.square([2, 3, 5, 7]))).isEqualTo(Matrix.square([
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -264,9 +265,9 @@ Test.prototype.testTensorProduct_Controlled = () => {
         0, 0, 1, 0,
         0, 5, 0, 7
     ]));
-};
+});
 
-Test.prototype.testFromPauliRotation = () => {
+suite.test("fromPauliRotation", () => {
     // No turn gives no-op
     assertThat(Matrix.fromPauliRotation(0, 0, 0)).isApproximatelyEqualTo(Matrix.identity(2));
 
@@ -303,9 +304,9 @@ Test.prototype.testFromPauliRotation = () => {
     var s1 = Matrix.fromPauliRotation(0.1, 0.15, 0.25);
     var s2 = Matrix.fromPauliRotation(0.2, 0.3, 0.5);
     assertThat(s1.times(s1)).isApproximatelyEqualTo(s2);
-};
+});
 
-Test.prototype.testFromWireSwap = () => {
+suite.test("fromWireSwap", () => {
     assertThat(Matrix.fromWireSwap(2, 0, 1).toString()).
         isEqualTo("{{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}");
     var _ = 0;
@@ -327,9 +328,9 @@ Test.prototype.testFromWireSwap = () => {
         _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1, _, //111_
         _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1 //1111
     ])).isEqualTo(Matrix.fromWireSwap(4, 1, 3));
-};
+});
 
-Test.prototype.testIdentity = () => {
+suite.test("identity", () => {
     assertThat(Matrix.identity(1).toString()).
         isEqualTo("{{1}}");
     assertThat(Matrix.identity(2).toString()).
@@ -338,9 +339,9 @@ Test.prototype.testIdentity = () => {
         isEqualTo("{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}");
     assertThat(Matrix.identity(4).toString()).
         isEqualTo("{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}");
-};
+});
 
-Test.prototype.testRotation = () => {
+suite.test("rotation", () => {
     var s = Math.sqrt(0.5);
     var t = Math.PI * 2;
     assertThat(Matrix.rotation(0)).isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
@@ -352,9 +353,9 @@ Test.prototype.testRotation = () => {
     assertThat(Matrix.rotation(t * 6 / 8)).isApproximatelyEqualTo(Matrix.square([0, 1, -1, 0]));
     assertThat(Matrix.rotation(t * 7 / 8)).isApproximatelyEqualTo(Matrix.square([s, s, -s, s]));
     assertThat(Matrix.rotation(t)).isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
-};
+});
 
-Test.prototype.testSingularValueDecomposition_2x2 = () => {
+suite.test("singularValueDecomposition_2x2", () => {
     var z = Matrix.square([0, 0, 0, 0]).singularValueDecomposition();
     assertThat(z.u).isApproximatelyEqualTo(Matrix.identity(2));
     assertThat(z.s).isApproximatelyEqualTo(Matrix.square([0, 0, 0, 0]));
@@ -369,9 +370,9 @@ Test.prototype.testSingularValueDecomposition_2x2 = () => {
     var ad = am.singularValueDecomposition();
     assertThat(ad.u.times(ad.s).times(ad.v)).isApproximatelyEqualTo(am);
     assertThat(ad.s).isApproximatelyEqualTo(Matrix.square([5.305935, 0, 0, 1.359063]));
-};
+});
 
-Test.prototype.testClosestUnitary_2x2 = () => {
+suite.test("closestUnitary_2x2", () => {
     assertThat(Matrix.square([0, 0, 0, 0]).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
     assertThat(Matrix.square([2, 0, 0, 0.0001]).closestUnitary()).
@@ -380,4 +381,4 @@ Test.prototype.testClosestUnitary_2x2 = () => {
         isApproximatelyEqualTo(Matrix.square([0, 1, 1, 0]));
     assertThat(Matrix.square([1, Complex.I, -1, Complex.I.times(-1)]).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square([1, 0, 0, Complex.I.times(-1)]));
-};
+});

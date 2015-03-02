@@ -1,10 +1,10 @@
-import { assertThat } from "test/TestUtil.js"
+import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
 import Point from "src/base/Point.js"
 import Rect from "src/base/Rect.js"
 
-let Test = TestCase("RectTest");
+let suite = new Suite("Rect");
 
-Test.prototype.testIsEqualTo = () => {
+suite.test("isEqualTo", () => {
     var r = new Rect(2, 3, 5, 7);
     assertThat(r).isEqualTo(r);
     assertThat(r).isEqualTo(new Rect(2, 3, 5, 7));
@@ -20,132 +20,132 @@ Test.prototype.testIsEqualTo = () => {
     assertThat(r).isNotEqualTo(new Rect(3, 3, 5, 7));
     assertThat(r).isNotEqualTo(new Rect(2, 3, 5, 5));
     assertThat(r).isNotEqualTo(new Rect(2, 3, 7, 7));
-};
+});
 
-Test.prototype.testToString = () => {
+suite.test("toString", () => {
     assertThat(new Rect(2, 3, 5, 7).toString()).isEqualTo("[2:7]x[3:10]");
-};
+});
 
-Test.prototype.testCenteredSquareWithRadius = () => {
+suite.test("centeredSquareWithRadius", () => {
     assertThat(Rect.centeredSquareWithRadius(new Point(2, 3), 5)).isEqualTo(new Rect(-3, -2, 10, 10));
-};
+});
 
-Test.prototype.testCenter = () => {
+suite.test("center", () => {
     assertThat(new Rect(2, 3, 5, 7).center()).isEqualTo(new Point(4.5, 6.5));
     assertThat(new Rect(2, 3, 5, 6).center()).isEqualTo(new Point(4.5, 6));
-};
+});
 
-Test.prototype.testTopLeft = () => {
+suite.test("topLeft", () => {
     assertThat(new Rect(2, 3, 5, 7).topLeft()).isEqualTo(new Point(2, 3));
-};
+});
 
-Test.prototype.testTopRight = () => {
+suite.test("topRight", () => {
     assertThat(new Rect(2, 3, 5, 7).topRight()).isEqualTo(new Point(7, 3));
-};
+});
 
-Test.prototype.testBottomLeft = () => {
+suite.test("bottomLeft", () => {
     assertThat(new Rect(2, 3, 5, 7).bottomLeft()).isEqualTo(new Point(2, 10));
-};
+});
 
-Test.prototype.testBottomRight = () => {
+suite.test("bottomRight", () => {
     assertThat(new Rect(2, 3, 5, 7).bottomRight()).isEqualTo(new Point(7, 10));
-};
+});
 
-Test.prototype.testCenterLeft = () => {
+suite.test("centerLeft", () => {
     assertThat(new Rect(2, 3, 5, 7).centerLeft()).isEqualTo(new Point(2, 6.5));
-};
+});
 
-Test.prototype.testCenterRight = () => {
+suite.test("centerRight", () => {
     assertThat(new Rect(2, 3, 5, 7).centerRight()).isEqualTo(new Point(7, 6.5));
-};
+});
 
-Test.prototype.testTopCenter = () => {
+suite.test("topCenter", () => {
     assertThat(new Rect(2, 3, 5, 7).topCenter()).isEqualTo(new Point(4.5, 3));
-};
+});
 
-Test.prototype.testBottomCenter = () => {
+suite.test("bottomCenter", () => {
     assertThat(new Rect(2, 3, 5, 7).bottomCenter()).isEqualTo(new Point(4.5, 10));
-};
+});
 
-Test.prototype.testRight = () => {
+suite.test("right", () => {
     assertThat(new Rect(2, 3, 5, 7).right()).isEqualTo(7);
-};
+});
 
-Test.prototype.testBottom = () => {
+suite.test("bottom", () => {
     assertThat(new Rect(2, 3, 5, 7).bottom()).isEqualTo(10);
-};
+});
 
-Test.prototype.testSkipLeft = () => {
+suite.test("skipLeft", () => {
     assertThat(new Rect(2, 3, 5, 7).skipLeft(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipLeft(1)).isEqualTo(new Rect(3, 3, 4, 7));
     assertThat(new Rect(2, 3, 5, 7).skipLeft(4)).isEqualTo(new Rect(6, 3, 1, 7));
     assertThat(new Rect(2, 3, 5, 7).skipLeft(5)).isEqualTo(new Rect(7, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).skipLeft(6)).isEqualTo(new Rect(7, 3, 0, 7));
-};
+});
 
-Test.prototype.testSkipRight = () => {
+suite.test("skipRight", () => {
     assertThat(new Rect(2, 3, 5, 7).skipRight(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipRight(1)).isEqualTo(new Rect(2, 3, 4, 7));
     assertThat(new Rect(2, 3, 5, 7).skipRight(4)).isEqualTo(new Rect(2, 3, 1, 7));
     assertThat(new Rect(2, 3, 5, 7).skipRight(5)).isEqualTo(new Rect(2, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).skipRight(6)).isEqualTo(new Rect(2, 3, 0, 7));
-};
+});
 
-Test.prototype.testSkipTop = () => {
+suite.test("skipTop", () => {
     assertThat(new Rect(2, 3, 5, 7).skipTop(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipTop(1)).isEqualTo(new Rect(2, 4, 5, 6));
     assertThat(new Rect(2, 3, 5, 7).skipTop(6)).isEqualTo(new Rect(2, 9, 5, 1));
     assertThat(new Rect(2, 3, 5, 7).skipTop(7)).isEqualTo(new Rect(2, 10, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).skipTop(8)).isEqualTo(new Rect(2, 10, 5, 0));
-};
+});
 
-Test.prototype.testSkipBottom = () => {
+suite.test("skipBottom", () => {
     assertThat(new Rect(2, 3, 5, 7).skipBottom(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).skipBottom(1)).isEqualTo(new Rect(2, 3, 5, 6));
     assertThat(new Rect(2, 3, 5, 7).skipBottom(6)).isEqualTo(new Rect(2, 3, 5, 1));
     assertThat(new Rect(2, 3, 5, 7).skipBottom(7)).isEqualTo(new Rect(2, 3, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).skipBottom(8)).isEqualTo(new Rect(2, 3, 5, 0));
-};
+});
 
-Test.prototype.testTakeLeft = () => {
+suite.test("takeLeft", () => {
     assertThat(new Rect(2, 3, 5, 7).takeLeft(-1)).isEqualTo(new Rect(2, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeLeft(0)).isEqualTo(new Rect(2, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeLeft(1)).isEqualTo(new Rect(2, 3, 1, 7));
     assertThat(new Rect(2, 3, 5, 7).takeLeft(4)).isEqualTo(new Rect(2, 3, 4, 7));
     assertThat(new Rect(2, 3, 5, 7).takeLeft(5)).isEqualTo(new Rect(2, 3, 5, 7));
-};
+});
 
-Test.prototype.testTakeRight = () => {
+suite.test("takeRight", () => {
     assertThat(new Rect(2, 3, 5, 7).takeRight(-1)).isEqualTo(new Rect(7, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeRight(0)).isEqualTo(new Rect(7, 3, 0, 7));
     assertThat(new Rect(2, 3, 5, 7).takeRight(1)).isEqualTo(new Rect(6, 3, 1, 7));
     assertThat(new Rect(2, 3, 5, 7).takeRight(4)).isEqualTo(new Rect(3, 3, 4, 7));
     assertThat(new Rect(2, 3, 5, 7).takeRight(5)).isEqualTo(new Rect(2, 3, 5, 7));
-};
+});
 
-Test.prototype.testTakeTop = () => {
+suite.test("TakeTop", () => {
     assertThat(new Rect(2, 3, 5, 7).takeTop(-1)).isEqualTo(new Rect(2, 3, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeTop(0)).isEqualTo(new Rect(2, 3, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeTop(1)).isEqualTo(new Rect(2, 3, 5, 1));
     assertThat(new Rect(2, 3, 5, 7).takeTop(6)).isEqualTo(new Rect(2, 3, 5, 6));
     assertThat(new Rect(2, 3, 5, 7).takeTop(7)).isEqualTo(new Rect(2, 3, 5, 7));
-};
+});
 
-Test.prototype.testTakeBottom = () => {
+suite.test("takeBottom", () => {
     assertThat(new Rect(2, 3, 5, 7).takeBottom(-1)).isEqualTo(new Rect(2, 10, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeBottom(0)).isEqualTo(new Rect(2, 10, 5, 0));
     assertThat(new Rect(2, 3, 5, 7).takeBottom(1)).isEqualTo(new Rect(2, 9, 5, 1));
     assertThat(new Rect(2, 3, 5, 7).takeBottom(6)).isEqualTo(new Rect(2, 4, 5, 6));
     assertThat(new Rect(2, 3, 5, 7).takeBottom(7)).isEqualTo(new Rect(2, 3, 5, 7));
-};
+});
 
-Test.prototype.testPaddedBy = () => {
+suite.test("paddedBy", () => {
     assertThat(new Rect(2, 3, 5, 7).paddedBy(0)).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(2, 3, 5, 7).paddedBy(1)).isEqualTo(new Rect(1, 2, 7, 9));
     assertThat(new Rect(2, 3, 5, 7).paddedBy(2)).isEqualTo(new Rect(0, 1, 9, 11));
-};
+});
 
-Test.prototype.testContainsPoint = () => {
+suite.test("containsPoint", () => {
     var r = new Rect(2, 3, 5, 7);
     assertTrue(r.containsPoint(r.center()));
 
@@ -170,66 +170,66 @@ Test.prototype.testContainsPoint = () => {
     // Bottom
     assertTrue(r.containsPoint(new Point(5, 10-0.001)));
     assertFalse(r.containsPoint(new Point(5, 10+0.001)));
-};
+});
 
-Test.prototype.testTakeLeftProportion = () => {
+suite.test("takeLeftProportion", () => {
     assertThat(new Rect(2, 3, 5, 7).takeLeftProportion(0.25)).isEqualTo(new Rect(2, 3, 1.25, 7));
-};
+});
 
-Test.prototype.testTakeRightProportion = () => {
+suite.test("takeRightProportion", () => {
     assertThat(new Rect(2, 3, 5, 7).takeRightProportion(0.25)).isEqualTo(new Rect(5.75, 3, 1.25, 7));
-};
+});
 
-Test.prototype.testTakeTopProportion = () => {
+suite.test("takeTopProportion", () => {
     assertThat(new Rect(2, 3, 5, 7).takeTopProportion(0.25)).isEqualTo(new Rect(2, 3, 5, 1.75));
-};
+});
 
-Test.prototype.testTakeBottomProportion = () => {
+suite.test("takeBottomProportion", () => {
     assertThat(new Rect(2, 3, 5, 7).takeBottomProportion(0.25)).isEqualTo(new Rect(2, 8.25, 5, 1.75));
-};
+});
 
-Test.prototype.testLeftHalf = () => {
+suite.test("leftHalf", () => {
     assertThat(new Rect(2, 3, 5, 7).leftHalf()).isEqualTo(new Rect(2, 3, 2.5, 7));
-};
+});
 
-Test.prototype.testRightHalf = () => {
+suite.test("rightHalf", () => {
     assertThat(new Rect(2, 3, 5, 7).rightHalf()).isEqualTo(new Rect(4.5, 3, 2.5, 7));
-};
+});
 
-Test.prototype.testTopHalf = () => {
+suite.test("topHalf", () => {
     assertThat(new Rect(2, 3, 5, 7).topHalf()).isEqualTo(new Rect(2, 3, 5, 3.5));
-};
+});
 
-Test.prototype.testBottomHalf = () => {
+suite.test("bottomHalf", () => {
     assertThat(new Rect(2, 3, 5, 7).bottomHalf()).isEqualTo(new Rect(2, 6.5, 5, 3.5));
-};
+});
 
-Test.prototype.testShiftedBy = () => {
+suite.test("shiftedBy", () => {
     assertThat(new Rect(2, 3, 5, 7).shiftedBy(11, 13)).isEqualTo(new Rect(13, 16, 5, 7));
-};
+});
 
-Test.prototype.testProportionalShiftedBy = () => {
+suite.test("proportionalShiftedBy", () => {
     assertThat(new Rect(2, 3, 5, 7).proportionalShiftedBy(11, 13)).isEqualTo(new Rect(57, 94, 5, 7));
-};
+});
 
-Test.prototype.testWithX = () => {
+suite.test("withX", () => {
     assertThat(new Rect(2, 3, 5, 7).withX(11)).isEqualTo(new Rect(11, 3, 5, 7));
-};
+});
 
-Test.prototype.testWithY = () => {
+suite.test("withY", () => {
     assertThat(new Rect(2, 3, 5, 7).withY(11)).isEqualTo(new Rect(2, 11, 5, 7));
-};
+});
 
-Test.prototype.testWithW = () => {
+suite.test("withW", () => {
     assertThat(new Rect(2, 3, 5, 7).withW(11)).isEqualTo(new Rect(2, 3, 11, 7));
-};
+});
 
-Test.prototype.testWithH = () => {
+suite.test("withH", () => {
     assertThat(new Rect(2, 3, 5, 7).withH(11)).isEqualTo(new Rect(2, 3, 5, 11));
-};
+});
 
-Test.prototype.testScaledOutwardBy = () => {
+suite.test("scaledOutwardBy", () => {
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0)).isEqualTo(new Rect(4.5, 6.5, 0, 0));
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0.5)).isEqualTo(new Rect(3.25, 4.75, 2.5, 3.5));
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(2)).isEqualTo(new Rect(-0.5, -0.5, 10, 14));
-};
+});

@@ -1,6 +1,6 @@
 //GateTest = TestCase("GateTest");
 //
-//GateTest.prototype.testIsEqualTo = function() {
+//Gatesuite.test("IsEqualTo = function() {
 //    var g1 = new Gate("A", Matrix.identity(2), "Alpha", "Desc", Gate.DEFAULT_SYMBOL_DRAWER);
 //    var g2 = new Gate("A", Matrix.identity(2), "Alpha", "Desc", Gate.DEFAULT_SYMBOL_DRAWER);
 //    var h1 = new Gate("B", Matrix.identity(2), "Alpha", "Desc", Gate.DEFAULT_SYMBOL_DRAWER);
@@ -18,14 +18,14 @@
 //    assertThat(g1).isNotEqualTo(h5);
 //};
 //
-//GateTest.prototype.testFromPhaseRotation = function() {
+//Gatesuite.test("FromPhaseRotation = function() {
 //    var g = Gate.fromPhaseRotation(0.25, "Quart");
 //    assertThat(g.matrixAt(0)).isEqualTo(Matrix.square([1, 0, 0, Complex.I]));
 //    assertThat(g.symbol).isEqualTo("Quart");
 //    assertThat(g.name).isEqualTo("90° Phase Gate");
 //};
 //
-//GateTest.prototype.testFromPauliRotation = function() {
+//Gatesuite.test("FromPauliRotation = function() {
 //    assertThat(Gate.fromPauliRotation(0.5, 0, 0).matrix).isEqualTo(Gate.X.matrix);
 //    assertThat(Gate.fromPauliRotation(0, 0.5, 0).matrix).isEqualTo(Gate.Y.matrix);
 //    assertThat(Gate.fromPauliRotation(0, 0, 0.5).matrix).isEqualTo(Gate.Z.matrix);
@@ -35,22 +35,22 @@
 //    assertThat(g.symbol).isEqualTo("Third");
 //};
 //
-//GateTest.prototype.testFromCustom = function() {
+//Gatesuite.test("FromCustom = function() {
 //    assertThat(Gate.fromCustom(Matrix.identity(2)).matrixAt(0)).isEqualTo(Matrix.identity(2));
 //};
 //
-//GateTest.prototype.testMakeFuzzGate = function() {
+//Gatesuite.test("MakeFuzzGate = function() {
 //    assertTrue(Gate.makeFuzzGate().matrixAt(0).isApproximatelyUnitary(0.00000001));
 //};
 //
-//GateTest.prototype.testFromTargetedRotation = function() {
+//Gatesuite.test("FromTargetedRotation = function() {
 //    var g = Gate.fromTargetedRotation(0.4, "4/10", "2/5");
 //    assertThat(QuantumState.SINGLE_ZERO.transformedBy(g.matrixAt(0)).probability(1, 1)).isApproximatelyEqualTo(0.4);
 //    assertThat(g.symbol).isEqualTo("∠2/5");
 //    assertThat(g.name).isEqualTo("4/10 Target Rotation Gate");
 //};
 //
-//GateTest.prototype.testToJson = function() {
+//Gatesuite.test("ToJson = function() {
 //    assertThat(Gate.X.toJson()).isEqualTo({
 //        id: "X"
 //    });
@@ -63,7 +63,7 @@
 //    });
 //};
 //
-//GateTest.prototype.testFromJson = function() {
+//Gatesuite.test("FromJson = function() {
 //    // checks against existing gate set
 //    assertThat(Gate.fromJson(Gate.X.toJson())).isEqualTo(Gate.X);
 //    assertThat(Gate.fromJson(Gate.Y.toJson())).isEqualTo(Gate.Y);

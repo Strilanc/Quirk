@@ -1,4 +1,23 @@
 /**
+ * @param {!string} message
+ */
+function fail(message) {
+    throw new Error(message);
+}
+
+function isArrayIsh(value) {
+    return Array.isArray(value) ||
+        value instanceof Float32Array ||
+        value instanceof Float64Array ||
+        value instanceof Int8Array ||
+        value instanceof Int16Array ||
+        value instanceof Int32Array ||
+        value instanceof Uint8Array ||
+        value instanceof Uint16Array ||
+        value instanceof Uint32Array;
+}
+
+/**
  * @param {*} subject
  * @throws
  */
@@ -11,6 +30,27 @@ function sanityCheck(subject) {
             }
         }
     }
+}
+
+/**
+ * @param {!(T[])} subject
+ * @param {*} other
+ * @returns {!boolean}
+ * @template T
+ */
+function isEqualHelper_ArraySubject(subject, other) {
+    //noinspection JSUnresolvedVariable
+    if (!isArrayIsh(other) || other.length !== subject.length) {
+        return false;
+    }
+
+    for (let i = 0; i < subject.length; i++) {
+        if (!isEqualHelper(subject[i], other[i])) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -65,6 +105,10 @@ function isEqualHelper(subject, other) {
         return subject.isEqualTo(other);
     }
 
+    if (subject === other) {
+        return true;
+    }
+
     //noinspection JSUnresolvedVariable
     if (subject instanceof Map) {
         return isEqualHelper_MapSubject(subject, other);
@@ -75,9 +119,12 @@ function isEqualHelper(subject, other) {
         return isEqualHelper_SetSubject(subject, other);
     }
 
-    return compare_(subject, other);
-}
+    if (isArrayIsh(subject)) {
+        return isEqualHelper_ArraySubject(subject, other);
+    }
 
+    return false;
+}
 
 /**
  * @param {*} subject
@@ -183,7 +230,7 @@ function describe(value, escape = 0) {
         return "undefined";
     }
     if (typeof value === "string") {
-        return value;
+        return '"' + value + '"';
     }
     if (escape > 10) {
         return `(!! recursion limit hit at ${value} !!)`;
@@ -294,6 +341,14 @@ export function assertThat(subject, extraArgCatcher) {
     return new AssertionSubject(subject);
 }
 
+export function assertTrue(subject) {
+    assertThat(subject).isEqualTo(true);
+}
+
+export function assertFalse(subject) {
+    assertThat(subject).isEqualTo(false);
+}
+
 /**
  * Invokes a function, requiring it to throw an exception. Returns the exception wrapped in an assertion subject.
  * @param {function()} func
@@ -313,12 +368,27 @@ export function assertThrows(func, extraArgCatcher) {
     return undefined;
 }
 
-export function skipTestIfWebGlNotAvailable(func) {
-    //noinspection JSUnresolvedVariable
+function skipTestIfWebGlNotAvailable(func) {
     if (window.WebGLRenderingContext === undefined) {
-        return function() {
-            jstestdriver.console.log("JsTestDriver", "Skipping test due to lack of WebGL: " + func);
-        }
+        return () => console.warn("Skipping test due to lack of WebGL: " + func);
     }
     return func;
 }
+
+export class Suite {
+    constructor(name) {
+        Suite.suites.push(this);
+        this.tests = [];
+        this.name = name;
+    }
+
+    test(name, method) {
+        this.tests.push([name, method]);
+    }
+
+    webGlTest(name, method) {
+        this.test(name, skipTestIfWebGlNotAvailable(method));
+    }
+}
+
+Suite.suites = [];

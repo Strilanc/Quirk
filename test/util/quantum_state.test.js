@@ -1,6 +1,6 @@
 //QuantumStateTest = TestCase("QuantumStateTest");
 //
-//QuantumStateTest.prototype.testIsEqualTo = function() {
+//QuantumStatesuite.test("IsEqualTo = function() {
 //    var s = new QuantumState(Matrix.col([1, 0]));
 //    assertTrue(s.isEqualTo(s));
 //    assertFalse(s.isEqualTo(""));
@@ -11,18 +11,18 @@
 //    assertFalse(s.isEqualTo(new QuantumState(Matrix.col([-1, 0]))));
 //};
 //
-//QuantumStateTest.prototype.testBit = function() {
+//QuantumStatesuite.test("Bit = function() {
 //    assertTrue(QuantumState.bit(false).isEqualTo(QuantumState.SINGLE_ZERO));
 //    assertTrue(QuantumState.bit(true).isEqualTo(QuantumState.SINGLE_ONE));
 //};
 //
-//QuantumStateTest.prototype.testZero = function() {
+//QuantumStatesuite.test("Zero = function() {
 //    assertTrue(QuantumState.zero(0).isEqualTo(new QuantumState(Matrix.col([1]))));
 //    assertTrue(QuantumState.zero(1).isEqualTo(new QuantumState(Matrix.col([1, 0]))));
 //    assertTrue(QuantumState.zero(2).isEqualTo(new QuantumState(Matrix.col([1, 0, 0, 0]))));
 //};
 //
-//QuantumStateTest.prototype.testClassical = function() {
+//QuantumStatesuite.test("Classical = function() {
 //    assertThat(QuantumState.classical(0, 0)).isEqualTo(new QuantumState(Matrix.col([1])));
 //
 //    assertThat(QuantumState.classical(1, 0)).isEqualTo(new QuantumState(Matrix.col([1, 0])));
@@ -34,7 +34,7 @@
 //    assertThat(QuantumState.classical(2, 3)).isEqualTo(new QuantumState(Matrix.col([0, 0, 0, 1])));
 //};
 //
-//QuantumStateTest.prototype.testProbability = function() {
+//QuantumStatesuite.test("Probability = function() {
 //    assertEquals(1, QuantumState.zero(10).probability(0x0, 0x0));
 //    assertEquals(1, QuantumState.zero(10).probability(0x0, 0x1));
 //    assertEquals(0, QuantumState.zero(10).probability(0x1, 0x1));
@@ -45,7 +45,7 @@
 //    assertTrue(Math.abs(0.5 - new QuantumState(Matrix.col([s, s])).probability(0x1, 0x1)) < 0.0000001);
 //};
 //
-//QuantumStateTest.prototype.testConditionalProbability = function() {
+//QuantumStatesuite.test("ConditionalProbability = function() {
 //    var z10 = QuantumState.zero(10);
 //    assertThat(z10.conditionalProbability(0x0, 0x0, 0x0)).isEqualTo({
 //        probabilityOfCondition: 1,
@@ -107,14 +107,14 @@
 //    });
 //};
 //
-//QuantumStateTest.prototype.testUniform = function() {
+//QuantumStatesuite.test("Uniform = function() {
 //    assertThat(QuantumState.uniform(0)).isEqualTo(new QuantumState(Matrix.col([1])));
 //    assertThat(QuantumState.uniform(1)).isEqualTo(new QuantumState(Matrix.col([Math.sqrt(0.5), Math.sqrt(0.5)])));
 //    assertThat(QuantumState.uniform(2)).isEqualTo(new QuantumState(Matrix.col([0.5, 0.5, 0.5, 0.5])));
 //    assertThat(QuantumState.uniform(3)).isEqualTo(new QuantumState(Matrix.col(repeat(Math.sqrt(0.5)/2, 8))));
 //};
 //
-//QuantumStateTest.prototype.testTransformedBy = function() {
+//QuantumStatesuite.test("TransformedBy = function() {
 //    var m = Matrix.square([
 //        new Complex(0.5, -0.5), new Complex(0.5, 0.5),
 //        new Complex(0.5, 0.5), new Complex(0.5, -0.5)]);
@@ -124,7 +124,7 @@
 //        isEqualTo(QuantumState.SINGLE_ONE);
 //};
 //
-//QuantumStateTest.prototype.testCountStates = function() {
+//QuantumStatesuite.test("CountStates = function() {
 //    assertThat(QuantumState.zero(0).countStates()).isEqualTo(1);
 //    assertThat(QuantumState.zero(1).countStates()).isEqualTo(2);
 //    assertThat(QuantumState.zero(2).countStates()).isEqualTo(4);
@@ -133,7 +133,7 @@
 //    assertThat(QuantumState.zero(5).countStates()).isEqualTo(32);
 //};
 //
-//QuantumStateTest.prototype.testCountQubits = function() {
+//QuantumStatesuite.test("CountQubits = function() {
 //    assertThat(QuantumState.zero(0).countQubits()).isEqualTo(0);
 //    assertThat(QuantumState.zero(1).countQubits()).isEqualTo(1);
 //    assertThat(QuantumState.zero(2).countQubits()).isEqualTo(2);
@@ -142,7 +142,7 @@
 //    assertThat(QuantumState.zero(5).countQubits()).isEqualTo(5);
 //};
 //
-//QuantumStateTest.prototype.testConcat = function() {
+//QuantumStatesuite.test("Concat = function() {
 //    assertThat(QuantumState.SINGLE_ZERO.concat(QuantumState.SINGLE_ZERO)).isEqualTo(QuantumState.classical(2, 0));
 //    assertThat(QuantumState.SINGLE_ONE.concat(QuantumState.SINGLE_ZERO)).isEqualTo(QuantumState.classical(2, 1));
 //    assertThat(QuantumState.SINGLE_ZERO.concat(QuantumState.SINGLE_ONE)).isEqualTo(QuantumState.classical(2, 2));
@@ -157,14 +157,14 @@
 //    assertThat(h(5).concat(h(5))).isApproximatelyEqualTo(h(10));
 //};
 //
-//QuantumStateTest.prototype.testCoefficient = function() {
+//QuantumStatesuite.test("Coefficient = function() {
 //    assertThat(QuantumState.SINGLE_ZERO.coefficient(0)).isEqualTo(1);
 //    assertThat(QuantumState.SINGLE_ZERO.coefficient(1)).isEqualTo(0);
 //    assertThat(QuantumState.SINGLE_ONE.coefficient(0)).isEqualTo(0);
 //    assertThat(QuantumState.SINGLE_ONE.coefficient(1)).isEqualTo(1);
 //};
 //
-//QuantumStateTest.prototype.testTryFactorAroundMask = function() {
+//QuantumStatesuite.test("TryFactorAroundMask = function() {
 //    assertThat(QuantumState.SINGLE_ONE.concat(QuantumState.SINGLE_ZERO).tryFactorAroundMask(1)).isEqualTo({
 //        inside: QuantumState.SINGLE_ONE,
 //        outside: QuantumState.SINGLE_ZERO
@@ -188,7 +188,7 @@
 //        });
 //};
 //
-//QuantumStateTest.prototype.testContiguousFactorization = function() {
+//QuantumStatesuite.test("ContiguousFactorization = function() {
 //    var h = QuantumState.uniform;
 //    var z = QuantumState.zero;
 //

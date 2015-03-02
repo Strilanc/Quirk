@@ -69,6 +69,9 @@ export default class WglWorkArea {
         t.webGLRenderingContext.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
     };
 
+    /**
+     * @param {!string} previousOp
+     */
     checkError(previousOp) {
         var e = this.tempContext.webGLRenderingContext.getError();
         var s = WebGLRenderingContext;
@@ -103,6 +106,7 @@ export default class WglWorkArea {
         let g = t.webGLRenderingContext;
         g.bindFramebuffer(s.FRAMEBUFFER, texture.instanceFor(t).framebuffer);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, destinationBuffer);
+        this.checkError("readPixels(..., UNSIGNED_BYTE, ...)");
 
         return destinationBuffer;
     };
@@ -122,6 +126,7 @@ export default class WglWorkArea {
         let g = t.webGLRenderingContext;
         g.bindFramebuffer(s.FRAMEBUFFER, texture.instanceFor(t).framebuffer);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.FLOAT, destinationBuffer);
+        this.checkError("readPixels(..., FLOAT, ...)");
 
         return destinationBuffer;
     };

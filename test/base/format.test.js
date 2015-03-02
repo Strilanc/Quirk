@@ -1,9 +1,9 @@
-import { assertThat, assertThrows } from "test/TestUtil.js"
+import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
 import Format from "src/base/Format.js"
 
-let Test = TestCase("FormatTest");
+let suite = new Suite("Format");
 
-Test.prototype.testFormatFloat = () => {
+suite.test("formatFloat", () => {
     assertThat(Format.CONSISTENT.formatFloat(0)).isEqualTo("0.000");
     assertThat(Format.EXACT.formatFloat(0)).isEqualTo("0");
     assertThat(Format.MINIFIED.formatFloat(0)).isEqualTo("0");
@@ -28,9 +28,9 @@ Test.prototype.testFormatFloat = () => {
     assertThat(Format.EXACT.formatFloat(1/3 + 0.00001)).isEqualTo("0.3333433333333333");
     assertThat(Format.MINIFIED.formatFloat(1/3 + 0.00001)).isEqualTo("0.3333433333333333");
     assertThat(Format.SIMPLIFIED.formatFloat(1/3 + 0.00001)).isEqualTo("\u2153");
-};
+});
 
-Test.prototype.testParseFloatFromCompactString = () => {
+suite.test("parseFloatFromCompactString", () => {
     assertThrows(() => Format.parseFloat(""));
     assertThrows(() => Format.parseFloat("a"));
     assertThrows(() => Format.parseFloat("one"));
@@ -53,9 +53,9 @@ Test.prototype.testParseFloatFromCompactString = () => {
     assertThat(Format.parseFloat("0.34")).isEqualTo(0.34);
     assertThat(Format.parseFloat("0.342123")).isEqualTo(0.342123);
     assertThat(Format.parseFloat("0.342123000")).isEqualTo(0.342123000);
-};
+});
 
-Test.prototype.testSimplifyByRounding = () => {
+suite.test("simplifyByRounding", () => {
     assertThat(Format.simplifyByRounding(1, 0.01)).isEqualTo(1);
     assertThat(Format.simplifyByRounding(1.00001, 0)).isEqualTo(1.00001);
     assertThat(Format.simplifyByRounding(1.00001, 0.01)).isEqualTo(1);
@@ -66,4 +66,4 @@ Test.prototype.testSimplifyByRounding = () => {
     assertThat(Format.simplifyByRounding(1/3+0.01, 0.001)).isNotEqualTo(1/3);
     assertThat(Format.simplifyByRounding(0.1234, 0.0001)).isEqualTo(0.1234);
     assertThat(Format.simplifyByRounding(0, 0.0001)).isEqualTo(0);
-};
+});

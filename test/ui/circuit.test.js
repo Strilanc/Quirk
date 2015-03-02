@@ -1,6 +1,6 @@
 //CircuitTest = TestCase("CircuitTest");
 //
-//CircuitTest.prototype.testFindOpHalfColumnAt = function() {
+//Circuitsuite.test("FindOpHalfColumnAt = function() {
 //    var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null, undefined);
 //    var w = Config.GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
 //    var x = CIRCUIT_OP_LEFT_SPACING + 11;
@@ -15,7 +15,7 @@
 //    assertEquals(null, c.findOpHalfColumnAt(new Point(x, 0)));
 //};
 //
-//CircuitTest.prototype.testOpRect = function() {
+//Circuitsuite.test("OpRect = function() {
 //    var c = new Circuit(new Rect(10, 10, 200, 100), 9, [], null, undefined);
 //    var w = Config.GATE_RADIUS*2 + CIRCUIT_OP_HORIZONTAL_SPACING;
 //    var x = CIRCUIT_OP_LEFT_SPACING + 10;
@@ -32,7 +32,7 @@
 //    assertEquals(x + Config.GATE_RADIUS + w, d.opRect(2).center().x);
 //};
 //
-//CircuitTest.prototype.testFindExistingOpColumnAt = function() {
+//Circuitsuite.test("FindExistingOpColumnAt = function() {
 //    var col = new GateColumn(repeat(null, 9));
 //    var c0 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 0), null, undefined);
 //    var c1 = new Circuit(new Rect(10, 10, 200, 100), 9, repeat(col, 1), null, undefined);
@@ -62,7 +62,7 @@
 //    assertEquals(null, c3.findExistingOpColumnAt(new Point(x, 0)));
 //};
 //
-//CircuitTest.prototype.testTryGrab = function() {
+//Circuitsuite.test("TryGrab = function() {
 //    var gates = repeat(null, 9);
 //
 //    gates[1] = Gate.X;

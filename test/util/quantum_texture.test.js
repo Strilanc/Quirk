@@ -1,6 +1,6 @@
 //QuantumTextureTest = TestCase("QuantumTextureTest");
 //
-//QuantumTextureTest.prototype.testMaintainsAmplitudes = skipTestIfWebGlNotAvailable(function() {
+//QuantumTexturesuite.test("MaintainsAmplitudes = skipTestIfWebGlNotAvailable(function() {
 //    var simpleAmps = [
 //        new Complex(0, 1),
 //        new Complex(2, 3),
@@ -22,7 +22,7 @@
 //        .isApproximatelyEqualTo([110100100010001], Math.pow(2, 22));
 //});
 //
-//QuantumTextureTest.prototype.testFromZeroes = skipTestIfWebGlNotAvailable(function() {
+//QuantumTexturesuite.test("FromZeroes = skipTestIfWebGlNotAvailable(function() {
 //    assertThrows(function() { QuantumTexture.fromZeroes(-1); });
 //    assertThat(QuantumTexture.fromZeroes(0).toAmplitudes()).isEqualTo([1]);
 //    assertThat(QuantumTexture.fromZeroes(1).toAmplitudes()).isEqualTo([1, 0]);
@@ -32,7 +32,7 @@
 //        .isEqualTo(repeat(Complex.ZERO, 512).withItemReplacedAtBy(0, Complex.ONE));
 //});
 //
-//QuantumTextureTest.prototype.testFromClassicalStateInRegisterOfSize = skipTestIfWebGlNotAvailable(function() {
+//QuantumTexturesuite.test("FromClassicalStateInRegisterOfSize = skipTestIfWebGlNotAvailable(function() {
 //    assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 0); });
 //    assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 1); });
 //    assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 4); });
@@ -63,7 +63,7 @@
 //        .isEqualTo(repeat(Complex.ZERO, 1024).withItemReplacedAtBy(217, Complex.ONE));
 //});
 //
-//QuantumTextureTest.prototype.testWithQubitOperationApplied = skipTestIfWebGlNotAvailable(function() {
+//QuantumTexturesuite.test("WithQubitOperationApplied = skipTestIfWebGlNotAvailable(function() {
 //    assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 0); });
 //    assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 1); });
 //    assertThrows(function() { QuantumTexture.fromClassicalStateInRegisterOfSize(-1, 4); });
@@ -157,7 +157,7 @@
 //    ]);
 //});
 //
-//QuantumTextureTest.prototype.testPerQubitProbabilities = function() {
+//QuantumTexturesuite.test("PerQubitProbabilities = function() {
 //    var t0 = QuantumTexture.fromAmplitudes(Matrix.row(
 //        [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80]).rows[0]);
 //    assertThat(t0.perQubitProbabilities()).isEqualTo([0x4444, 0x5050, 0x5500]);
@@ -188,7 +188,7 @@
 //    assertThat(t4.perQubitProbabilities()).isApproximatelyEqualTo([0.5, 1/42, 0]);
 //};
 //
-//QuantumTextureTest.prototype.testControlProbabilities = function() {
+//QuantumTexturesuite.test("ControlProbabilities = function() {
 //    var t0 = QuantumTexture.fromAmplitudes(Matrix.row(
 //        [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80]).rows[0]);
 //    assertThat(t0.controlProbabilities(-1).toArray()).isEqualTo(

@@ -1,4 +1,4 @@
-import { skipTestIfWebGlNotAvailable, assertThat, assertThrows } from "test/TestUtil.js"
+import { Suite, skipTestIfWebGlNotAvailable, assertThat, assertThrows } from "test/TestUtil.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
@@ -7,9 +7,9 @@ import Rect from "src/base/Rect.js"
 import Shades from "src/quantum/Shades.js"
 import Seq from "src/base/Seq.js"
 
-let Test = TestCase("ShadesTest");
+let suite = new Suite("Shades");
 
-Test.prototype.testRenderPixelColorData = skipTestIfWebGlNotAvailable(() => {
+suite.webGlTest("renderPixelColorData", () => {
     let workArea = new WglWorkArea();
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
@@ -25,53 +25,53 @@ Test.prototype.testRenderPixelColorData = skipTestIfWebGlNotAvailable(() => {
     assertThrows(() => Shades.renderPixelColorData(workArea, texture2x2, data2x4));
 });
 
-Test.prototype.testRenderSingleBitConstraintControlMask = skipTestIfWebGlNotAvailable(() => {
+suite.webGlTest("renderSingleBitConstraintControlMask", () => {
     let workArea = new WglWorkArea();
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x2, 0, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x2, 0, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0
+        1, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x2, 1, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
-        255, 0, 0, 0,
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
+        1, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x2, 1, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0
+        1, 0, 0, 0,
+        1, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x2, 2, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
-        255, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
+        1, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x2, 2, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -79,35 +79,35 @@ Test.prototype.testRenderSingleBitConstraintControlMask = skipTestIfWebGlNotAvai
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x4, 0, false);
-    assertThat(workArea.readPixelColorBytes(texture2x4)).isEqualTo([
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x4)).isEqualTo([
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x4, 1, false);
-    assertThat(workArea.readPixelColorBytes(texture2x4)).isEqualTo([
-        255, 0, 0, 0,
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x4)).isEqualTo([
+        1, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]);
 
     Shades.renderSingleBitConstraintControlMask(workArea, texture2x4, 2, false);
-    assertThat(workArea.readPixelColorBytes(texture2x4)).isEqualTo([
-        255, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x4)).isEqualTo([
+        1, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -115,54 +115,54 @@ Test.prototype.testRenderSingleBitConstraintControlMask = skipTestIfWebGlNotAvai
     ]);
 });
 
-Test.prototype.testRenderAddBitConstraintToControlMask_fromTrivialMask = skipTestIfWebGlNotAvailable(() => {
+suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
     let workArea = new WglWorkArea();
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let noControl = new WglTexture(1 << 1, 1 << 1);
     Shades.renderSingleBitConstraintControlMask(workArea, noControl, 2, false);
 
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, noControl, 0, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0
     ]);
 
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, noControl, 0, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0
+        1, 0, 0, 0
     ]);
 
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, noControl, 1, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
-        255, 0, 0, 0,
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
+        1, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]);
 
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, noControl, 1, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0
+        1, 0, 0, 0,
+        1, 0, 0, 0
     ]);
 
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, noControl, 2, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
-        255, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0,
-        255, 0, 0, 0
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
+        1, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0
     ]);
 
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, noControl, 2, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -173,14 +173,14 @@ Test.prototype.testRenderAddBitConstraintToControlMask_fromTrivialMask = skipTes
     let allControl = new WglTexture(1 << 1, 1 << 1);
     Shades.renderSingleBitConstraintControlMask(workArea, allControl, 2, true);
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, allControl, 0, false);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]);
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x2, allControl, 0, true);
-    assertThat(workArea.readPixelColorBytes(texture2x2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -188,7 +188,7 @@ Test.prototype.testRenderAddBitConstraintToControlMask_fromTrivialMask = skipTes
     ]);
 });
 
-Test.prototype.testRenderAddBitConstraintToControlMask_buildup = skipTestIfWebGlNotAvailable(() => {
+suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
     let workArea = new WglWorkArea();
     let texture2x4_0 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_1 = new WglTexture(1 << 2, 1 << 1);
@@ -198,37 +198,37 @@ Test.prototype.testRenderAddBitConstraintToControlMask_buildup = skipTestIfWebGl
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x4_1, texture2x4_0, 1, true);
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x4_2, texture2x4_1, 2, true);
     Shades.renderAddBitConstraintToControlMask(workArea, texture2x4_3, texture2x4_2, 1, false);
-    assertThat(workArea.readPixelColorBytes(texture2x4_0)).isEqualTo([
-        255, 0, 0, 0,
+    assertThat(workArea.readPixelColorFloats(texture2x4_0)).isEqualTo([
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0
     ]);
-    assertThat(workArea.readPixelColorBytes(texture2x4_1)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x4_1)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0
     ]);
-    assertThat(workArea.readPixelColorBytes(texture2x4_2)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x4_2)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
-        255, 0, 0, 0,
+        1, 0, 0, 0,
         0, 0, 0, 0
     ]);
-    assertThat(workArea.readPixelColorBytes(texture2x4_3)).isEqualTo([
+    assertThat(workArea.readPixelColorFloats(texture2x4_3)).isEqualTo([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
