@@ -36,6 +36,10 @@ module.exports = function(grunt) {
         karma: {
             unit: {
                 configFile: 'karma.conf.js'
+            },
+            cross_unit: {
+                configFile: 'karma.conf.js',
+                browsers: ['Firefox', 'Chrome']
             }
         }
     });
@@ -54,9 +58,16 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-traceur');
 
     grunt.registerTask('build', ['traceur:build_src']);
+
     grunt.registerTask('test', [
         'traceur:build_src',
         'traceur:build_test',
         'karma:unit'
+    ]);
+
+    grunt.registerTask('cross_test', [
+        'traceur:build_src',
+        'traceur:build_test',
+        'karma:cross_unit'
     ]);
 };
