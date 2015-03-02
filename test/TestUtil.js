@@ -403,7 +403,7 @@ export class Suite {
                 } else {
                     let canvas = document.createElement('canvas');
                     let context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                    webGLSupportPresent = context !== undefined;
+                    webGLSupportPresent = context instanceof WebGLRenderingContext;
                 }
             }
 

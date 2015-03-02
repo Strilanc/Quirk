@@ -29,9 +29,9 @@ export default class Seq {
      * @template T
      */
     constructor(iterable) {
-        //if (iterable[iterSymbol] === undefined) {
-        //    throw new Error(`Not iterable: ${iterable}`);
-        //}
+        if (iterable[iterSymbol] === undefined) {
+            throw new Error(`Not iterable: ${iterable}`);
+        }
 
         if (iterable instanceof Seq) {
             // Avoid double-wrapping.
