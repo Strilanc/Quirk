@@ -368,26 +368,54 @@ export function assertThrows(func, extraArgCatcher) {
     return undefined;
 }
 
-function skipTestIfWebGlNotAvailable(func) {
-    if (window.WebGLRenderingContext === undefined) {
-        return () => console.warn("Skipping test due to lack of WebGL: " + func);
-    }
-    return func;
-}
+/** @type {boolean|undefined} */
+let webGLSupportPresent = undefined;
 
 export class Suite {
+    /**
+     * @param {!string} name
+     */
     constructor(name) {
         Suite.suites.push(this);
+        /** @type {!(!function(!{ warn_only: boolean|!string })[])} */
         this.tests = [];
+         /** @type {!string} name */
         this.name = name;
     }
 
+    /**
+     * @param {!string} name
+     * @param {!function(!{ warn_only: boolean|!string })} method
+     */
     test(name, method) {
         this.tests.push([name, method]);
     }
 
+    /**
+     * @param {!string} name
+     * @param {!function(!{ warn_only: boolean|!string })} method
+     */
     webGlTest(name, method) {
-        this.test(name, skipTestIfWebGlNotAvailable(method));
+        let wrappedMethod = (status) => {
+            if (webGLSupportPresent === undefined) {
+                if (window.WebGLRenderingContext === undefined) {
+                    webGLSupportPresent = false;
+                } else {
+                    let canvas = document.createElement('canvas');
+                    let context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    webGLSupportPresent = context !== undefined;
+                }
+            }
+
+            if (!webGLSupportPresent) {
+                console.warn(`Skipping test '${name}' in suite '${this.name}' due to lack of WebGL.`);
+                return;
+            }
+
+            method(status);
+        };
+
+        this.test(name, wrappedMethod);
     }
 }
 

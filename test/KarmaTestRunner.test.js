@@ -16,14 +16,24 @@ __karma__.start = () => {
                 log: [],
                 time: undefined
             };
+            let status = { warn_only: false };
 
             //noinspection JSUnresolvedVariable
             let t0 = performance.now();
             try {
-                method();
+                method(status);
                 result.success = true;
+                if (status.warn_only) {
+                    console.warn(`Test ${suite.name}.${name} passed, but is set to warn_only: ${status.warn_only}`);
+                }
             } catch (ex) {
-                result.log.push("Test failed: " + ex + "\n\n" + ex.stack);
+                if (status.warn_only) {
+                    console.warn(`Test ${suite.name}.${name} failed, but is set to warn_only: ${status.warn_only}`);
+                    console.warn(`${ex}\n\n${ex.stack}`);
+                    result.success = true;
+                } else {
+                    result.log.push(`Test ${suite.name}.${name} failed!\n\n${ex}\n\n${ex.stack}\n`);
+                }
             }
             //noinspection JSUnresolvedVariable
             result.time = performance.now() - t0;

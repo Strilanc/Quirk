@@ -6,7 +6,10 @@ import WglWorkArea from "src/webgl/WglWorkArea.js"
 
 let suite = new Suite("Wgl");
 
-suite.webGlTest("readPixelColorBytes", () => {
+suite.webGlTest("readPixelColorBytes", (status) => {
+    // TODO: remove when firefox fixes problem.
+    status.warn_only = "WebGL regression in firefox (https://bugzilla.mozilla.org/show_bug.cgi?id=1135949)";
+
     let w = 2;
     let h = 2;
     let shader = new WglShader(`
@@ -19,17 +22,12 @@ suite.webGlTest("readPixelColorBytes", () => {
 
     let workArea = new WglWorkArea();
     workArea.render(texture, shader, [WglArg.float("v", 10/255)]);
-    // TODO: remove when firefox fixes problem
-    try {
-        assertThat(workArea.readPixelColorBytes(texture)).isEqualTo([
-            1, 1, 10, 128,
-            2, 1, 10, 128,
-            1, 2, 10, 128,
-            2, 2, 10, 128
-        ]);
-    } catch (ex) {
-        console.warn("Allowed test failure due to WebGL regression in firefox. " + ex + "\n");
-    }
+    assertThat(workArea.readPixelColorBytes(texture)).isEqualTo([
+        1, 1, 10, 128,
+        2, 1, 10, 128,
+        1, 2, 10, 128,
+        2, 2, 10, 128
+    ]);
 });
 
 suite.webGlTest("readPixelColorFloats", () => {

@@ -22,7 +22,7 @@ export default class WglWorkArea {
         let g = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
         //noinspection JSValidateTypes
         if (g === null) {
-            throw 'Error creating WebGL context.';
+            throw new Error('Error creating WebGL context.');
         }
         if (g.getExtension('OES_texture_float') === undefined) {
             throw new Error("WebGL support for 32-bit floats not present.")
