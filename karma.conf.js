@@ -3,7 +3,7 @@ module.exports = function(config) {
         basePath: '',
         frameworks: [],
         files: [
-            'out/src/external/traceur_runtime.js',
+            'out/lib/**/*.js',
             'out/src/**/*.js',
             'out/test/**/*.js',
             'out/interop/GetTraceurGeneratedTestPackagesForKarmaTestRunner.js'

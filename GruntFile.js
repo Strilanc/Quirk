@@ -12,7 +12,7 @@ module.exports = function(grunt) {
             build_src: {
                 options: {
                     experimental: true,
-                    copyRuntime: 'out/src/external'
+                    copyRuntime: 'out/lib'
                 },
                 files: [{
                     expand: true,
@@ -23,7 +23,7 @@ module.exports = function(grunt) {
             },
             build_test: {
                 options: {
-                    experimental: true,
+                    experimental: true
                 },
                 files: [{
                     expand: true,
@@ -59,15 +59,18 @@ module.exports = function(grunt) {
 
     grunt.registerTask('build', ['traceur:build_src']);
 
-    grunt.registerTask('test', [
+    grunt.registerTask('build_all', [
         'traceur:build_src',
-        'traceur:build_test',
+        'traceur:build_test'
+    ]);
+
+    grunt.registerTask('test', [
+        'build_all',
         'karma:unit'
     ]);
 
     grunt.registerTask('cross_test', [
-        'traceur:build_src',
-        'traceur:build_test',
+        'build_all',
         'karma:cross_unit'
     ]);
 };

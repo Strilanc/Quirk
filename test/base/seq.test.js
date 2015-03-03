@@ -365,6 +365,14 @@ suite.test("scan", () => {
     assertThat(new Seq([1, 2, 3]).scan(10, (a, e) => a + e)).iteratesAs(10, 11, 13, 16);
 });
 
+suite.test("concat", () => {
+    assertThat(new Seq([]).concat([])).iteratesAs();
+    assertThat(new Seq([1]).concat([])).iteratesAs(1);
+    assertThat(new Seq([]).concat([2])).iteratesAs(2);
+    assertThat(new Seq([3]).concat([4])).iteratesAs(3, 4);
+    assertThat(new Seq([5, 6]).concat([7, 8])).iteratesAs(5, 6, 7, 8);
+});
+
 suite.test("overlayAt", () => {
     assertThrows(() => new Seq([]).overlayAt(undefined, -1));
 
@@ -420,6 +428,25 @@ suite.test("take", () => {
     assertThat(new Seq([1, 2, 3]).take(2)).iteratesAs(1, 2);
     assertThat(new Seq([1, 2, 3]).take(3)).iteratesAs(1, 2, 3);
     assertThat(new Seq([1, 2, 3]).take(1000)).iteratesAs(1, 2, 3);
+});
+
+suite.test("concat", () => {
+    assertThrows(() => new Seq([]).skip(-1));
+
+    assertThat(new Seq([]).skip(0)).iteratesAs();
+    assertThat(new Seq([3]).skip(0)).iteratesAs(3);
+    assertThat(new Seq([4, 5]).skip(0)).iteratesAs(4, 5);
+    assertThat(new Seq([6, 7, 8]).skip(0)).iteratesAs(6, 7, 8);
+
+    assertThat(new Seq([]).skip(1)).iteratesAs();
+    assertThat(new Seq([3]).skip(1)).iteratesAs();
+    assertThat(new Seq([4, 5]).skip(1)).iteratesAs(5);
+    assertThat(new Seq([6, 7, 8]).skip(1)).iteratesAs(7, 8);
+
+    assertThat(new Seq([]).skip(2)).iteratesAs();
+    assertThat(new Seq([3]).skip(2)).iteratesAs();
+    assertThat(new Seq([4, 5]).skip(2)).iteratesAs();
+    assertThat(new Seq([6, 7, 8]).skip(2)).iteratesAs(8);
 });
 
 suite.test("reverse", () => {
@@ -481,8 +508,81 @@ suite.test("single", () => {
     assertThat(new Seq([2, 3]).single("abc")).isEqualTo("abc");
 });
 
+suite.test("first", () => {
+    assertThrows(() => new Seq([]).first());
+    assertThat(new Seq([]).first("abc")).isEqualTo("abc");
+
+    assertThat(new Seq([11]).first("abc")).isEqualTo(11);
+    assertThat(new Seq([11]).first()).isEqualTo(11);
+
+    assertThat(new Seq([2, 3]).first()).isEqualTo(2);
+    assertThat(new Seq([2, 3]).first("abc")).isEqualTo(2);
+});
+
+suite.test("last", () => {
+    assertThrows(() => new Seq([]).last());
+    assertThat(new Seq([]).last("abc")).isEqualTo("abc");
+
+    assertThat(new Seq([11]).last("abc")).isEqualTo(11);
+    assertThat(new Seq([11]).last()).isEqualTo(11);
+
+    assertThat(new Seq([2, 3]).last()).isEqualTo(3);
+    assertThat(new Seq([2, 3]).last("abc")).isEqualTo(3);
+});
+
+suite.test("count", () => {
+    assertThat(new Seq([]).count()).isEqualTo(0);
+    assertThat(new Seq([11]).count()).isEqualTo(1);
+    assertThat(new Seq([11, 12]).count()).isEqualTo(2);
+    assertThat(new Seq([11, 12, 13]).count()).isEqualTo(3);
+    assertThat(new Seq([11, 12, 13, 4, 5, 6]).count()).isEqualTo(6);
+
+    assertThat(Seq.fromGenerator(function*() {}).count()).isEqualTo(0);
+    assertThat(Seq.fromGenerator(function*() { yield "a"; }).count()).isEqualTo(1);
+    assertThat(Seq.fromGenerator(function*() { yield "a"; yield "b"; }).count()).isEqualTo(2);
+});
+
+suite.test("paddedWithTo", () => {
+    assertThat(new Seq([]).paddedWithTo("a", 0)).iteratesAs();
+    assertThat(new Seq([]).paddedWithTo("a", 1)).iteratesAs("a");
+    assertThat(new Seq([]).paddedWithTo("a", 2)).iteratesAs("a", "a");
+    assertThat(new Seq([]).paddedWithTo("a", 3)).iteratesAs("a", "a", "a");
+
+    assertThat(new Seq([2]).paddedWithTo("a", 0)).iteratesAs(2);
+    assertThat(new Seq([2]).paddedWithTo("a", 1)).iteratesAs(2);
+    assertThat(new Seq([2]).paddedWithTo("a", 2)).iteratesAs(2, "a");
+    assertThat(new Seq([2]).paddedWithTo("a", 3)).iteratesAs(2, "a", "a");
+
+    assertThat(new Seq([2, 3]).paddedWithTo("a", 0)).iteratesAs(2, 3);
+    assertThat(new Seq([2, 3]).paddedWithTo("a", 1)).iteratesAs(2, 3);
+    assertThat(new Seq([2, 3]).paddedWithTo("a", 2)).iteratesAs(2, 3);
+    assertThat(new Seq([2, 3]).paddedWithTo("a", 3)).iteratesAs(2, 3, "a");
+
+    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 0)).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 1)).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 2)).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 3)).iteratesAs(2, 3, 5);
+});
+
 suite.test("toMap", () => {
     assertThat(new Seq([]).toMap(() => { throw new Error(); }, () => { throw new Error(); })).isEqualTo(new Map());
     assertThat(new Seq([2]).toMap(e => e * e, e => e)).isEqualTo(new Map([[4, 2]]));
     assertThat(new Seq([2, 3, 4]).toMap(e => e, e => e * e)).isEqualTo(new Map([[2, 4], [3, 9], [4, 16]]));
+});
+
+suite.test("groupBy", () => {
+    assertThat(new Seq([]).groupBy(() => { throw new Error(); })).isEqualTo(new Map());
+
+    assertThat(new Seq([32]).groupBy(e => e % 3)).isEqualTo(new Map([[2, [32]]]));
+    assertThat(new Seq([32, 2]).groupBy(e => e % 3)).isEqualTo(new Map([[2, [32, 2]]]));
+    assertThat(new Seq([32, 2, 62]).groupBy(e => e % 3)).isEqualTo(new Map([[2, [32, 2, 62]]]));
+
+    assertThat(new Seq([32, 3]).groupBy(e => e % 3)).isEqualTo(new Map([[0, [3]], [2, [32]]]));
+    assertThat(new Seq([32, 3, 63]).groupBy(e => e % 3)).isEqualTo(new Map([[0, [3, 63]], [2, [32]]]));
+
+    assertThat(new Seq([1, 2, 3]).groupBy(e => e % 3)).isEqualTo(new Map([[0, [3]], [1, [1]], [2, [2]]]));
+    assertThat(new Seq([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).groupBy(e => e % 3)).isEqualTo(new Map([
+        [0, [0, 3, 6, 9]],
+        [1, [1, 4, 7, 10]],
+        [2, [2, 5, 8]]]));
 });

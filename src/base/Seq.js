@@ -445,7 +445,7 @@ export default class Seq {
 
     /**
      * Flattens this sequence of iterables into a concatenated sequence.
-     * @returns {Seq<C>}
+     * @returns {!Seq<C>}
      * @template C
      */
     flatten() {
@@ -459,21 +459,23 @@ export default class Seq {
         });
     };
 
-    ///**
-    // * Flattens this sequence of sequences into a concatenated sequence.
-    // * @param {*|!!(T[])|!Seq<T>} other
-    // */
-    //concat(other) {
-    //    let seq = this.iterable;
-    //    return Seq.fromGenerator(function*() {
-    //        for (let e of seq) {
-    //            yield e;
-    //        }
-    //        for (let e of other) {
-    //            yield e;
-    //        }
-    //    });
-    //};
+    /**
+     * Returns a sequence that iterates the receiving sequence's items and then the given iterable's items.
+     * @param {*|!(A[])|!Seq<A>} other
+     * @returns {!Seq<T|A>}
+     * @template A
+     */
+    concat(other) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            for (let e of seq) {
+                yield e;
+            }
+            for (let e2 of other) {
+                yield e2;
+            }
+        });
+    };
 
     /**
      * Returns a sequence with the same items, except the item at the given index (if reached) is replaced.
@@ -537,31 +539,31 @@ export default class Seq {
             }
         });
     };
-    //
-    ///**
-    // * Returns a sequence with one item replaced.
-    // * @param {!int} maxSkipCount
-    // * @returns {!Seq<T>}
-    // */
-    //skip(maxSkipCount) {
-    //    if (maxSkipCount < 0) {
-    //        throw new Error("needed maxSkipCount >= 0");
-    //    }
-    //    if (maxSkipCount === 0) {
-    //        return this;
-    //    }
-    //
-    //    let seq = this.iterable;
-    //    return Seq.fromGenerator(function*() {
-    //        let i = 0;
-    //        for (let e of seq) {
-    //            if (i >= maxSkipCount) {
-    //                yield e;
-    //            }
-    //            i++;
-    //        }
-    //    });
-    //};
+
+    /**
+     * Returns a sequence with the same items, except the give number are skipped at the start.
+     * @param {!int} maxSkipCount
+     * @returns {!Seq<T>}
+     */
+    skip(maxSkipCount) {
+        if (maxSkipCount < 0) {
+            throw new Error("needed maxSkipCount >= 0");
+        }
+        if (maxSkipCount === 0) {
+            return this;
+        }
+
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let i = 0;
+            for (let e of seq) {
+                if (i >= maxSkipCount) {
+                    yield e;
+                }
+                i++;
+            }
+        });
+    };
 
     /**
      * Returns a sequence with the same items, except later items with the same key as earlier items get skipped.
@@ -623,91 +625,95 @@ export default class Seq {
         return emptyManyErrorAlternative;
     };
 
-    ///**
-    // * Returns the first item in the sequence.
-    // * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
-    // * is thrown when the sequence is empty.
-    // * @returns {T|A}
-    // * @template A
-    // */
-    //first(emptyErrorAlternative = THROW_IF_EMPTY) {
-    //    let iter = this[iterSymbol]();
-    //
-    //    let first = iter.next();
-    //    if (!first.done) {
-    //        return first.value;
-    //    }
-    //
-    //    if (emptyErrorAlternative === THROW_IF_EMPTY) {
-    //        throw new Error("Empty sequence has no first item.")
-    //    }
-    //
-    //    return emptyErrorAlternative;
-    //};
-    //
-    ///**
-    // * Returns the last item in the sequence.
-    // * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
-    // * is thrown when the sequence is empty.
-    // * @returns {T|A}
-    // * @template A
-    // */
-    //last(emptyErrorAlternative = THROW_IF_EMPTY) {
-    //    //noinspection JSUnusedAssignment
-    //    let result = SYGIL;
-    //    for (let e of this) {
-    //        result = e;
-    //    }
-    //
-    //    if (result !== SYGIL) {
-    //        return result;
-    //    }
-    //
-    //    if (emptyErrorAlternative === THROW_IF_EMPTY) {
-    //        throw new Error("Empty sequence has no last item.")
-    //    }
-    //
-    //    return emptyErrorAlternative;
-    //};
-    //
-    //count() {
-    //    let peekCount = this.iterable["length"];
-    //    if (peekCount !== undefined) {
-    //        return peekCount;
-    //    }
-    //
-    //    let n = 0;
-    //    for (let e in this) {
-    //        n++;
-    //    }
-    //    return n;
-    //}
-    //
-    ///**
-    // * Returns a sequence starting with the same items, but padded up to the given length with the given item. If the
-    // * sequence already exceeds the given length, no items are added.
-    // * @param {A} paddingItem
-    // * @param {!int} minCount
-    // * @returns {!Seq<T|A>}
-    // * @template A
-    // */
-    //paddedWithTo(paddingItem, minCount) {
-    //    if (minCount < 0) {
-    //        throw new Error("needed minCount >= 0");
-    //    }
-    //    let seq = this.iterable;
-    //    return Seq.fromGenerator(function*() {
-    //        let remaining = minCount;
-    //        for (let e of seq) {
-    //            yield e;
-    //            remaining -= 1;
-    //        }
-    //        while (remaining > 0) {
-    //            yield paddingItem;
-    //            remaining -= 1;
-    //        }
-    //    });
-    //};
+    /**
+     * Returns the first item in the sequence.
+     * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
+     * is thrown when the sequence is empty.
+     * @returns {T|A}
+     * @template A
+     */
+    first(emptyErrorAlternative = THROW_IF_EMPTY) {
+        let iter = this[iterSymbol]();
+
+        let first = iter.next();
+        if (!first.done) {
+            return first.value;
+        }
+
+        if (emptyErrorAlternative === THROW_IF_EMPTY) {
+            throw new Error("Empty sequence has no first item.")
+        }
+
+        return emptyErrorAlternative;
+    };
+
+    /**
+     * Returns the last item in the sequence.
+     * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
+     * is thrown when the sequence is empty.
+     * @returns {T|A}
+     * @template A
+     */
+    last(emptyErrorAlternative = THROW_IF_EMPTY) {
+        //noinspection JSUnusedAssignment
+        let result = EMPTY_SYGIL;
+        for (let e of this) {
+            result = e;
+        }
+
+        if (result !== EMPTY_SYGIL) {
+            return result;
+        }
+
+        if (emptyErrorAlternative === THROW_IF_EMPTY) {
+            throw new Error("Empty sequence has no last item.")
+        }
+
+        return emptyErrorAlternative;
+    };
+
+    /**
+     * Determines the number of items in the sequence.
+     * Gets stuck in a loop if the sequence is unbounded.
+     */
+    count() {
+        if (Array.isArray(this.iterable)) {
+            return this.iterable.length;
+        }
+
+        let n = 0;
+        //noinspection JSUnusedLocalSymbols
+        for (let _ of this.iterable) {
+            n++;
+        }
+        return n;
+    }
+
+    /**
+     * Returns a sequence starting with the same items, but padded up to the given length with the given item. If the
+     * sequence already exceeds the given length, no items are added.
+     * @param {A} paddingItem
+     * @param {!int} minCount
+     * @returns {!Seq<T|A>}
+     * @template A
+     */
+    paddedWithTo(paddingItem, minCount) {
+        if (minCount < 0) {
+            throw new Error("needed minCount >= 0");
+        }
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let remaining = minCount;
+            for (let e of seq) {
+                yield e;
+                remaining -= 1;
+            }
+            while (remaining > 0) {
+                yield paddingItem;
+                remaining -= 1;
+            }
+        });
+    };
 
     /**
      * Returns a map containing the key/value pairs created by projecting each of the items in the sequence through
@@ -731,23 +737,27 @@ export default class Seq {
             }
             map.set(key, val);
         }
+        //noinspection JSValidateTypes
         return map;
     };
 
-    ///**
-    // * @param {!function(T): K} keySelector
-    // * @returns {!Map<K, !(T[])>}
-    // * @template K
-    // */
-    //groupBy(keySelector) {
-    //    let map = new Map();
-    //    for (let item of this) {
-    //        let key = keySelector(item);
-    //        if (!map.has(key)) {
-    //            map[key] = [];
-    //        }
-    //        map[key].push(item);
-    //    }
-    //    return map;
-    //};
+    /**
+     * Returns a map, with keys generated by passing the sequence's items through the given key selector, where each key
+     * maps to an array of the items (from the sequence) that mapped to said key.
+     * @param {!function(T): K} keySelector
+     * @returns {!Map<K, !(T[])>}
+     * @template K
+     */
+    groupBy(keySelector) {
+        let map = new Map();
+        for (let item of this) {
+            let key = keySelector(item);
+            if (!map.has(key)) {
+                map.set(key, []);
+            }
+            map.get(key).push(item);
+        }
+        //noinspection JSValidateTypes
+        return map;
+    };
 }
