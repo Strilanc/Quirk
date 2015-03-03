@@ -1,9 +1,10 @@
 /**
- * Stores information about the current web gl rendering context.
+ * Stores information about the current web gl rendering context, and associated resources for shaders and textures and
+ * such.
  *
  * @typedef {!Map<!int, !Map<!string, *>>} ContextStash
  */
-export default class WglContext {
+export default class WglCache {
     /**
      * @param {!WebGLRenderingContext} webGLRenderingContext
      * @param {!int} permanentIdentifier
@@ -21,6 +22,9 @@ export default class WglContext {
         this.maxTextureUnits = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
         /** @type {Number} */
         this.maxTextureDiameter = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
+
+        /** @type {!ContextStash} */
+        this._attributesStash = new Map();
     };
 
     /**
@@ -46,6 +50,9 @@ export default class WglContext {
         return stash.value;
     };
 
+    /**
+     * @returns {!string}
+     */
     getMaximumShaderFloatPrecision() {
         var g = this.webGLRenderingContext;
         var s = WebGLRenderingContext;
@@ -67,5 +74,34 @@ export default class WglContext {
 
         console.warn('WebGL medium precision not available.');
         return 'lowp';
+    };
+
+    ensureAttributesAreBound() {
+        this.retrieveOrCreateAssociatedData(this._attributesStash, () => {
+            var g = this.webGLRenderingContext;
+            var result = {
+                positionBuffer: g.createBuffer(),
+                indexBuffer: g.createBuffer()
+            };
+
+            var positions = new Float32Array([
+                -1, +1,
+                +1, +1,
+                -1, -1,
+                +1, -1]);
+            var s = WebGLRenderingContext;
+            g.bindBuffer(s.ARRAY_BUFFER, result.positionBuffer);
+            g.bufferData(s.ARRAY_BUFFER, positions, s.STATIC_DRAW);
+            // Note: if ARRAY_BUFFER should not be rebound anywhere else.
+
+            var indices = new Uint16Array([
+                0, 2, 1,
+                2, 3, 1]);
+            g.bindBuffer(s.ELEMENT_ARRAY_BUFFER, result.indexBuffer);
+            g.bufferData(s.ELEMENT_ARRAY_BUFFER, indices, s.STATIC_DRAW);
+            // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
+
+            return undefined;
+        });
     };
 }

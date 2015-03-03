@@ -1,13 +1,14 @@
 import Rect from "src/base/Rect.js"
-import WglContext from "src/webgl/WglContext.js"
+import WglCache from "src/webgl/WglCache.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
-let nextUniqueContextId = 0;
+let nextUniqueId = 0;
 
 /**
+ * A context for telling webgl to do useful things with shaders and textures, like rendering.
  */
-export default class WglWorkArea {
+export default class WglDirector {
     constructor() {
         /**
          * @type {!HTMLCanvasElement}
@@ -28,19 +29,13 @@ export default class WglWorkArea {
             throw new Error("WebGL support for 32-bit floats not present.")
         }
 
-        this.tempContext = new WglContext(g, nextUniqueContextId++, 0);
-
-        /**
-         * @private
-         * @type {!ContextStash}
-         */
-        this._renderStash = new Map();
+        this.cache = new WglCache(g, nextUniqueId++, 0);
 
         this.canvas.addEventListener(
             "webglcontextrestored",
             event => {
                 event.preventDefault();
-                this.tempContext.temporaryIdentifier++;
+                this.cache.temporaryIdentifier++;
             },
             false);
 
@@ -48,32 +43,33 @@ export default class WglWorkArea {
             'webglcontextlost',
             event => {
                 event.preventDefault();
-                this.tempContext.temporaryIdentifier++;
+                this.cache.temporaryIdentifier++;
             },
             false);
     };
 
     /**
+     * Overwrites the given texture with the output of the given shader when given the given uniform arguments.
      * @param {!WglTexture} texture
      * @param {!WglShader} shader
      * @param {!(!WglArg[])} uniformArguments
      */
     render(texture, shader, uniformArguments) {
-        this.ensureAttributesAreBound();
+        let c = this.cache;
+        c.ensureAttributesAreBound();
+        texture.bindFramebufferFor(c);
+        shader.bindInstanceFor(c, uniformArguments);
 
         let s = WebGLRenderingContext;
-        let t = this.tempContext;
-        t.webGLRenderingContext.bindFramebuffer(s.FRAMEBUFFER, texture.instanceFor(t).framebuffer);
-        shader.bindInstanceFor(t, uniformArguments);
-
-        t.webGLRenderingContext.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
+        c.webGLRenderingContext.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
     };
 
     /**
-     * @param {!string} previousOp
+     * Checks if the underlying webgl context has flagged an error, throwing an Error describing the issue if so.
+     * @param {!string} previousOperationDescription
      */
-    checkError(previousOp) {
-        var e = this.tempContext.webGLRenderingContext.getError();
+    checkForError(previousOperationDescription) {
+        var e = this.cache.webGLRenderingContext.getError();
         var s = WebGLRenderingContext;
         if (e === s.NO_ERROR) {
             return;
@@ -88,7 +84,7 @@ export default class WglWorkArea {
             [s.INVALID_FRAMEBUFFER_OPERATION]: "INVALID_FRAMEBUFFER_OPERATION"
         };
         var d = m[e] !== undefined ? m[e] : "?";
-        throw new Error(`gl.getError() returned ${e} (${d}) after ${previousOp}.`);
+        throw new Error(`gl.getError() returned ${e} (${d}) after ${previousOperationDescription}.`);
     };
 
     /**
@@ -102,11 +98,11 @@ export default class WglWorkArea {
         destinationBuffer = destinationBuffer || new Uint8Array(rect.w * rect.h * 4);
 
         let s = WebGLRenderingContext;
-        let t = this.tempContext;
-        let g = t.webGLRenderingContext;
-        g.bindFramebuffer(s.FRAMEBUFFER, texture.instanceFor(t).framebuffer);
+        let c = this.cache;
+        let g = c.webGLRenderingContext;
+        texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, destinationBuffer);
-        this.checkError("readPixels(..., UNSIGNED_BYTE, ...)");
+        this.checkForError("readPixels(..., UNSIGNED_BYTE, ...)");
 
         return destinationBuffer;
     };
@@ -122,41 +118,12 @@ export default class WglWorkArea {
         destinationBuffer = destinationBuffer || new Float32Array(rect.w * rect.h * 4);
 
         let s = WebGLRenderingContext;
-        let t = this.tempContext;
-        let g = t.webGLRenderingContext;
-        g.bindFramebuffer(s.FRAMEBUFFER, texture.instanceFor(t).framebuffer);
+        let c = this.cache;
+        let g = c.webGLRenderingContext;
+        texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.FLOAT, destinationBuffer);
-        this.checkError("readPixels(..., FLOAT, ...)");
+        this.checkForError("readPixels(..., FLOAT, ...)");
 
         return destinationBuffer;
-    };
-
-    ensureAttributesAreBound() {
-        this.tempContext.retrieveOrCreateAssociatedData(this._renderStash, () => {
-            var g = this.tempContext.webGLRenderingContext;
-            var result = {
-                positionBuffer: g.createBuffer(),
-                indexBuffer: g.createBuffer()
-            };
-
-            var positions = new Float32Array([
-                -1, +1,
-                +1, +1,
-                -1, -1,
-                +1, -1]);
-            var s = WebGLRenderingContext;
-            g.bindBuffer(s.ARRAY_BUFFER, result.positionBuffer);
-            g.bufferData(s.ARRAY_BUFFER, positions, s.STATIC_DRAW);
-            // Note: if ARRAY_BUFFER should not be rebound anywhere else.
-
-            var indices = new Uint16Array([
-                0, 2, 1,
-                2, 3, 1]);
-            g.bindBuffer(s.ELEMENT_ARRAY_BUFFER, result.indexBuffer);
-            g.bufferData(s.ELEMENT_ARRAY_BUFFER, indices, s.STATIC_DRAW);
-            // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
-
-            return undefined;
-        });
     };
 }

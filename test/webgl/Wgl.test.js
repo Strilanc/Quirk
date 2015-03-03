@@ -2,7 +2,7 @@ import { Suite, assertThat } from "test/TestUtil.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
-import WglWorkArea from "src/webgl/WglWorkArea.js"
+import WglDirector from "src/webgl/WglDirector.js"
 
 let suite = new Suite("Wgl");
 
@@ -20,9 +20,9 @@ suite.webGlTest("readPixelColorBytes", (status) => {
 
     let texture = new WglTexture(w, h);
 
-    let workArea = new WglWorkArea();
-    workArea.render(texture, shader, [WglArg.float("v", 10/255)]);
-    assertThat(workArea.readPixelColorBytes(texture)).isEqualTo([
+    let director = new WglDirector();
+    director.render(texture, shader, [WglArg.float("v", 10/255)]);
+    assertThat(director.readPixelColorBytes(texture)).isEqualTo([
         1, 1, 10, 128,
         2, 1, 10, 128,
         1, 2, 10, 128,
@@ -41,9 +41,9 @@ suite.webGlTest("readPixelColorFloats", () => {
 
     let texture = new WglTexture(w, h);
 
-    let workArea = new WglWorkArea();
-    workArea.render(texture, shader, [WglArg.float("v", 192.25)]);
-    assertThat(workArea.readPixelColorFloats(texture)).isEqualTo([
+    let director = new WglDirector();
+    director.render(texture, shader, [WglArg.float("v", 192.25)]);
+    assertThat(director.readPixelColorFloats(texture)).isEqualTo([
         0.5, 0.5, 192.25, 254.5,
         1.5, 0.5, 192.25, 254.5,
         0.5, 1.5, 192.25, 254.5,

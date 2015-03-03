@@ -1,4 +1,4 @@
-import WglContext from "src/webgl/WglContext.js"
+import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
 
 /**
@@ -20,12 +20,12 @@ export default class WglTexture {
 
     /**
      * Returns, after initializing if necessary, the resources representing this texture bound to the given context.
-     * @param {!WglContext} context
-     * @result {!{texture:!WebGLTexture, framebuffer:!WebGLFramebuffer, renderbuffer:!WebGLRenderbuffer}}
+     * @param {!WglCache} cache
+     * @returns {!{texture:*, framebuffer:*, renderbuffer:*}}
      */
-    instanceFor(context) {
-        return context.retrieveOrCreateAssociatedData(this.contextStash, () => {
-            var g = context.webGLRenderingContext;
+    instanceFor(cache) {
+        return cache.retrieveOrCreateAssociatedData(this.contextStash, () => {
+            var g = cache.webGLRenderingContext;
 
             var result = {
                 texture: g.createTexture(),
@@ -50,5 +50,16 @@ export default class WglTexture {
 
             return result;
         });
+    }
+
+    /**
+     * Binds, after initializing if necessary, the frame buffer representing this texture to the webgl context related
+     * to the given cache.
+     * @param {!WglCache} cache
+     */
+    bindFramebufferFor(cache) {
+        cache.webGLRenderingContext.bindFramebuffer(
+            WebGLRenderingContext.FRAMEBUFFER,
+            this.instanceFor(cache).framebuffer);
     };
 }

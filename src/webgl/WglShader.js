@@ -1,4 +1,4 @@
-import WglContext from "src/webgl/WglContext.js"
+import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
 import Seq from "src/base/Seq.js"
 
@@ -20,7 +20,7 @@ export default class WglShader {
     /**
      * Sets the active shader, for the given context, to a compiled version of this shader with the given uniform
      * arguments.
-     * @param {!WglContext} context
+     * @param {!WglCache} context
      * @param {!(!WglArg[])} uniformArguments
      */
     bindInstanceFor(context, uniformArguments) {
@@ -37,7 +37,7 @@ export default class WglShader {
  */
 class WglShaderContext {
     /**
-     * @param {!WglContext} context
+     * @param {!WglCache} context
      * @param {!string} fragmentShaderSource
      * @param {!Iterable<!string>} uniformParameterNames
      */
@@ -89,7 +89,7 @@ class WglShaderContext {
     };
 
     /**
-     * @param {!WglContext} context
+     * @param {!WglCache} context
      * @param {!(!WglArg[])} uniformArgs
      */
     load(context, uniformArgs) {

@@ -1,6 +1,7 @@
 import U from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
+import WglDirector from "src/webgl/WglDirector.js"
 
 const snippets = {
     /**
@@ -48,6 +49,35 @@ const GLSL_PASS_THROUGH = new WglShader(`
     void main() {
         vec2 uv = gl_FragCoord.xy / textureSize.xy;
         gl_FragColor = texture2D(inputTexture, uv);
+    }`);
+
+/**
+ * Renders a texture storing the same data as a given texture.
+ */
+const GLSL_OVERLAY = new WglShader(`
+    /** The size of the covered texture. */
+    uniform vec2 backgroundTextureSize;
+
+    /** The size of the covering texture. */
+    uniform vec2 foregroundTextureSize;
+
+    /** The larger covered texture. */
+    uniform sampler2D backgroundTexture;
+
+    /** The smaller covering texture that can be positioned. */
+    uniform sampler2D foregroundTexture;
+
+    /** The top-left corner of the area where the foreground is overlaid over the background. */
+    uniform vec2 foregroundOffset;
+
+    void main() {
+        vec2 uv = (gl_FragCoord.xy - foregroundOffset) / foregroundTextureSize.xy;
+        if (uv.x >= 0.0 && uv.y >= 0.0 && uv.x < 1.0 && uv.y < 1.0) {
+          gl_FragColor = texture2D(foregroundTexture, uv);
+        } else {
+          uv = gl_FragCoord.xy / backgroundTextureSize;
+          gl_FragColor = texture2D(backgroundTexture, uv);
+        }
     }`);
 
 const GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT = new WglShader(`
@@ -256,26 +286,6 @@ const GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT = new WglShader(`
 //    }`);
 
 ///**
-// * Renders a texture storing the same data as a given texture.
-// */
-//const GLSL_OVERLAY = new WglShader(`
-//    uniform vec2 backgroundTextureSize;
-//    uniform vec2 foregroundTextureSize;
-//    uniform sampler2D backgroundTexture;
-//    uniform sampler2D foregroundTexture;
-//    uniform vec2 xy;
-//
-//    void main() {
-//        vec2 uv = (gl_FragCoord.xy - xy) / foregroundTextureSize.xy;
-//        if (uv.x >= 0.0 && uv.y >= 0.0 && uv.x < 1.0 && uv.y < 1.0) {
-//          gl_FragColor = texture2D(foregroundTexture, uv);
-//        } else {
-//          uv = gl_FragCoord.xy / backgroundTextureSize;
-//          gl_FragColor = texture2D(backgroundTexture, uv);
-//        }
-//    }`);
-
-///**
 // * Turns the amplitude stored at each pixel into a probability.
 // */
 //const GLSL_FROM_AMPLITUDES_TO_PROBABILITIES = new WglShader(`
@@ -320,30 +330,51 @@ export default class Shades {
     /**
      * Renders the given color data onto the destination texture.
      *
-     * @param {!WglWorkArea} workArea
+     * @param {!WglDirector} director
      * @param {!WglTexture} destinationTexture
      * @param {!Float32Array} pixelColorData
      */
-    static renderPixelColorData(workArea, destinationTexture, pixelColorData) {
+    static renderPixelColorData(director, destinationTexture, pixelColorData) {
         U.need(pixelColorData.length === destinationTexture.width * destinationTexture.height * 4);
-        workArea.render(destinationTexture, GLSL_PASS_THROUGH, [
+        director.render(destinationTexture, GLSL_PASS_THROUGH, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
             WglArg.dataTexture("sourceTexture", pixelColorData, destinationTexture.width, destinationTexture.height)
         ]);
     };
 
     /**
+     * Renders a texture by, effectively, drawing the given background texture then overlaying the given foreground
+     * texture over the background using the given offset.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!int} foregroundX
+     * @param {!int} foregroundY
+     * @param {!WglTexture} foregroundTexture
+     * @param {!WglTexture} backgroundTexture
+     */
+    static renderOverlayed(director, destinationTexture, foregroundX, foregroundY, foregroundTexture, backgroundTexture) {
+        director.render(destinationTexture, GLSL_OVERLAY, [
+            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
+            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
+            WglArg.texture("backgroundTexture", backgroundTexture),
+            WglArg.texture("foregroundTexture", foregroundTexture),
+            WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
+        ]);
+    }
+
+    /**
      * Renders a control mask onto the destination texture, used elsewhere for determining whether or not an operation
      * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
      * blocked.
      *
-     * @param {!WglWorkArea} workArea
+     * @param {!WglDirector} director
      * @param {!WglTexture} destinationTexture
      * @param {!int} targetBit
      * @param {!boolean} desiredBitValue
      */
-    static renderSingleBitConstraintControlMask(workArea, destinationTexture, targetBit, desiredBitValue) {
-        workArea.render(destinationTexture, GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT, [
+    static renderSingleBitConstraintControlMask(director, destinationTexture, targetBit, desiredBitValue) {
+        director.render(destinationTexture, GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
             WglArg.float("targetBitPositionMask", 1 << targetBit),
             WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
@@ -354,14 +385,14 @@ export default class Shades {
      * Renders a combined control mask onto the destination texture, augmenting the given control mask with a new bit
      * constraint.
      *
-     * @param {!WglWorkArea} workArea
+     * @param {!WglDirector} director
      * @param {!WglTexture} destinationTexture
      * @param {!WglTexture} controlMask
      * @param {!int} targetBit
      * @param {!boolean} desiredBitValue
      */
-    static renderAddBitConstraintToControlMask(workArea, destinationTexture, controlMask, targetBit, desiredBitValue) {
-        workArea.render(destinationTexture, GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT, [
+    static renderAddBitConstraintToControlMask(director, destinationTexture, controlMask, targetBit, desiredBitValue) {
+        director.render(destinationTexture, GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
             WglArg.texture("oldControlMaskTexture", controlMask),
             WglArg.float("targetBitPositionMask", 1 << targetBit),
