@@ -105,6 +105,7 @@ class WglShaderContext {
         };
 
         let typeActionMap = {
+            [WglArg.BOOL_TYPE]: (loc, val) => g.uniform1f(loc, val ? 1 : 0),
             [WglArg.INT_TYPE]: (loc, val) => g.uniform1i(loc, val),
             [WglArg.FLOAT_TYPE]: (loc, val) => g.uniform1f(loc, val),
             [WglArg.VEC2_TYPE]: (loc, val) => g.uniform2f(loc, val.x, val.y),

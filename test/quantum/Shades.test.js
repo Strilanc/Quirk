@@ -289,3 +289,121 @@ suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
         0, 0, 0, 0
     ]);
 });
+
+suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
+    let director = new WglDirector();
+    let amps = new WglTexture(4, 2);
+    Shades.renderPixelColorData(director, amps, new Float32Array([
+        2, 3, 0, 0,
+        0.5, 0.5, 0, 0,
+        1, 2, 3, 4,
+        0.25, 0.5, 0, 0,
+        Math.sqrt(1/2), 0, 0, 0,
+        0, Math.sqrt(1/3), 0, 0,
+        3/5, 4/5, 0, 0,
+        1, 0, 0, 0
+    ]));
+
+    let out = new WglTexture(4, 2);
+    Shades.renderProbabilitiesFromAmplitudes(director, out, amps);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        13, 0, 0, 0,
+        0.5, 0, 0, 0,
+        30, 0, 0, 0,
+        0.3125, 0, 0, 0,
+        0.5, 0, 0, 0,
+        1/3, 0, 0, 0,
+        1, 0, 0, 0,
+        1, 0, 0, 0
+    ]);
+});
+
+suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
+    let director = new WglDirector();
+    let inp = new WglTexture(4, 2);
+    Shades.renderPixelColorData(director, inp, new Float32Array([
+        2, 0, 0, 0,
+        3, 0, 0, 0,
+        5, 0, 0, 0,
+        7, 0, 0, 0,
+        11, 0, 0, 0,
+        13, 0, 0, 0,
+        17, 0, 0, 0,
+        19, 0, 0, 0
+    ]));
+
+    let mid1 = new WglTexture(4, 2);
+    Shades.renderConditionalProbabilitiesPipeline(director, mid1, inp, 0, true);
+    assertThat(director.readPixelColorFloats(mid1)).isApproximatelyEqualTo([
+        5, 0, 0, 0,
+        3, 0, 0, 0,
+        12, 0, 0, 0,
+        7, 0, 0, 0,
+        24, 0, 0, 0,
+        13, 0, 0, 0,
+        36, 0, 0, 0,
+        19, 0, 0, 0
+    ]);
+
+    Shades.renderConditionalProbabilitiesPipeline(director, mid1, inp, 0, false);
+    assertThat(director.readPixelColorFloats(mid1)).isApproximatelyEqualTo([
+        5, 0, 0, 0,
+        2, 0, 0, 0,
+        12, 0, 0, 0,
+        5, 0, 0, 0,
+        24, 0, 0, 0,
+        11, 0, 0, 0,
+        36, 0, 0, 0,
+        17, 0, 0, 0
+    ]);
+
+    let mid2 = new WglTexture(4, 2);
+    Shades.renderConditionalProbabilitiesPipeline(director, mid2, mid1, 1, false);
+    assertThat(director.readPixelColorFloats(mid2)).isApproximatelyEqualTo([
+        17, 0, 0, 0,
+        7, 0, 0, 0,
+        5, 0, 0, 0,
+        2, 0, 0, 0,
+        60, 0, 0, 0,
+        28, 0, 0, 0,
+        24, 0, 0, 0,
+        11, 0, 0, 0
+    ]);
+
+    Shades.renderConditionalProbabilitiesPipeline(director, mid2, mid1, 1, true);
+    assertThat(director.readPixelColorFloats(mid2)).isApproximatelyEqualTo([
+        17, 0, 0, 0,
+        7, 0, 0, 0,
+        12, 0, 0, 0,
+        5, 0, 0, 0,
+        60, 0, 0, 0,
+        28, 0, 0, 0,
+        36, 0, 0, 0,
+        17, 0, 0, 0
+    ]);
+
+    let mid3 = new WglTexture(4, 2);
+    Shades.renderConditionalProbabilitiesPipeline(director, mid3, mid2, 2, false);
+    assertThat(director.readPixelColorFloats(mid3)).isApproximatelyEqualTo([
+        77, 0, 0, 0,
+        35, 0, 0, 0,
+        48, 0, 0, 0,
+        22, 0, 0, 0,
+        17, 0, 0, 0,
+        7, 0, 0, 0,
+        12, 0, 0, 0,
+        5, 0, 0, 0
+    ]);
+
+    Shades.renderConditionalProbabilitiesPipeline(director, mid3, mid2, 2, true);
+    assertThat(director.readPixelColorFloats(mid3)).isApproximatelyEqualTo([
+        77, 0, 0, 0,
+        35, 0, 0, 0,
+        48, 0, 0, 0,
+        22, 0, 0, 0,
+        60, 0, 0, 0,
+        28, 0, 0, 0,
+        36, 0, 0, 0,
+        17, 0, 0, 0
+    ]);
+});

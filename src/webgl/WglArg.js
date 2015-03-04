@@ -18,6 +18,15 @@ export default class WglArg {
 
     /**
      * @param {!string} name
+     * @param {!boolean} value
+     * @returns {!WglArg}
+     */
+    static bool(name, value) {
+        return new WglArg(WglArg.BOOL_TYPE, name, value);
+    }
+
+    /**
+     * @param {!string} name
      * @param {!number} value
      * @returns {!WglArg}
      */
@@ -69,6 +78,8 @@ export default class WglArg {
     }
 }
 
+//noinspection JSUnresolvedFunction
+WglArg.BOOL_TYPE = "bool";
 //noinspection JSUnresolvedFunction
 WglArg.FLOAT_TYPE = "float";
 //noinspection JSUnresolvedFunction

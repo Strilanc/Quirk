@@ -36,6 +36,16 @@ const snippets = {
             float r = mod(c, textureSize.x);
             float d = floor(c / textureSize.x) + 0.5;
             return vec2(r, d) / textureSize.xy;
+        }`,
+
+    /**
+     * Returns the uv difference between a bit's off and on states.
+     */
+    bitMaskToPixelDeltaUv: `
+        vec2 bitMaskToPixelDeltaUv(float bitMask) {
+            float r = mod(bitMask, textureSize.x);
+            float d = floor(bitMask / textureSize.x);
+            return vec2(r, d) / textureSize.xy;
         }`
 };
 
@@ -122,6 +132,52 @@ const GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT = new WglShader(`
         float oldMatch = texture2D(controlTexture, uv).x;
 
         gl_FragColor = vec4(match * oldMatch, 0, 0, 0);
+    }`);
+
+const GLSL_FROM_AMPLITUDES_TO_PROBABILITIES = new WglShader(`
+    /** The width and height of the textures being operated on. */
+    uniform vec2 textureSize;
+
+    /** The texture of amplitudes, to be converted into probabilities. */
+    uniform sampler2D inputTexture;
+
+    void main() {
+        vec2 uv = gl_FragCoord.xy / textureSize.xy;
+        vec4 amps = texture2D(inputTexture, uv);
+        float p = dot(amps, amps);
+        gl_FragColor = vec4(p, 0, 0, 0);
+    }`);
+
+const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
+    /** The width and height of the textures being operated on. */
+    uniform vec2 textureSize;
+
+    /** The input texture, or output of the previous step. */
+    uniform sampler2D inputTexture;
+
+    /** A mask with the qubit being operated on in this step of the pipeline set. */
+    uniform float stepPower;
+
+    /** The desired value of this step's qubit. */
+    uniform bool conditionValue;
+
+    ${snippets.bitMaskToPixelDeltaUv}
+    ${snippets.filterBit}
+
+    void main() {
+        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 pixelUv = gl_FragCoord.xy / textureSize;
+        float state = pixelXy.y * textureSize.x + pixelXy.x;
+
+        float hasBit = filterBit(state, stepPower);
+        vec2 duv = bitMaskToPixelDeltaUv(stepPower);
+        if (hasBit == 0.0) {
+            gl_FragColor = texture2D(inputTexture, pixelUv) + texture2D(inputTexture, pixelUv + duv);
+        } else if (conditionValue) {
+            gl_FragColor = texture2D(inputTexture, pixelUv);
+        } else {
+            gl_FragColor = texture2D(inputTexture, pixelUv - duv);
+        }
     }`);
 
 ///**
@@ -285,47 +341,6 @@ const GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT = new WglShader(`
 //
 //    }`);
 
-///**
-// * Turns the amplitude stored at each pixel into a probability.
-// */
-//const GLSL_FROM_AMPLITUDES_TO_PROBABILITIES = new WglShader(`
-//    uniform vec2 textureSize;",
-//    uniform sampler2D inputTexture;",
-//
-//    void main() {
-//        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-//        vec4 amps = texture2D(inputTexture, uv);
-//        float p = dot(amps, amps);
-//        gl_FragColor = vec4(p, 0, 0, 0);
-//    }`);
-
-///**
-// * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the sum
-// * of all probabilities matching the mask.
-// */
-//const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
-//    uniform vec2 textureSize;
-//    uniform sampler2D inputTexture;
-//    uniform float stepPower;
-//    uniform bool conditionValue;
-//
-//    ${snippets.stateToPixelUv}
-//    ${snippets.filterBit}
-//
-//    void main() {
-//        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-//        vec2 pixelUv = gl_FragCoord.xy / textureSize;
-//        float state = pixelXy.y * textureSize.x + pixelXy.x;
-//
-//        float hasBit = filterBit(state, stepPower);
-//        vec4 probability = texture2D(inputTexture, pixelUv);
-//        if ((hasBit == 0.0) == conditionValue) {
-//            float toggleSign = float(conditionValue)*2.0 - 1.0;
-//            probability += texture2D(inputTexture, stateToPixelUv(state + stepPower * toggleSign));
-//        }
-//        gl_FragColor = probability;
-//    }`);
-
 export default class Shades {
     /**
      * Renders the given color data onto the destination texture.
@@ -397,6 +412,43 @@ export default class Shades {
             WglArg.texture("oldControlMaskTexture", controlMask),
             WglArg.float("targetBitPositionMask", 1 << targetBit),
             WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
+        ]);
+    };
+
+    /**
+     * Turns the amplitude stored at each pixel into a probability by self-dot-producting.
+     */
+    /**
+     * Renders a texture with each pixel storing the probability associated with the amplitude from the corresponding
+     * pixel in the input texture.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputAmplitudeTexture
+     */
+    static renderProbabilitiesFromAmplitudes(director, destinationTexture, inputAmplitudeTexture) {
+        director.render(destinationTexture, GLSL_FROM_AMPLITUDES_TO_PROBABILITIES, [
+            WglArg.vec2("textureSize", inputAmplitudeTexture.width, inputAmplitudeTexture.height),
+            WglArg.texture("inputTexture", inputAmplitudeTexture)
+        ]);
+    };
+
+    /**
+     * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
+     * sum of all probabilities matching a mask.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!int} step
+     * @param {!boolean} requiredBitValue
+     */
+    static renderConditionalProbabilitiesPipeline(director, destinationTexture, inputTexture, step, requiredBitValue) {
+        director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_PIPELINE, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture),
+            WglArg.float("stepPower", 1 << step),
+            WglArg.bool("conditionValue", requiredBitValue)
         ]);
     };
 }
