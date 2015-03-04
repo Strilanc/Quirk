@@ -2,6 +2,144 @@ import U from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglDirector from "src/webgl/WglDirector.js"
+import Matrix from "src/linalg/Matrix.js"
+
+export default class Shades {
+    /**
+     * Renders the given color data onto the destination texture.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!Float32Array} pixelColorData
+     */
+    static renderPixelColorData(director, destinationTexture, pixelColorData) {
+        U.need(pixelColorData.length === destinationTexture.width * destinationTexture.height * 4);
+        director.render(destinationTexture, GLSL_PASS_THROUGH, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.dataTexture("sourceTexture", pixelColorData, destinationTexture.width, destinationTexture.height)
+        ]);
+    };
+
+    /**
+     * Renders a texture by, effectively, drawing the given background texture then overlaying the given foreground
+     * texture over the background using the given offset.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!int} foregroundX
+     * @param {!int} foregroundY
+     * @param {!WglTexture} foregroundTexture
+     * @param {!WglTexture} backgroundTexture
+     */
+    static renderOverlayed(director, destinationTexture, foregroundX, foregroundY, foregroundTexture, backgroundTexture) {
+        director.render(destinationTexture, GLSL_OVERLAY, [
+            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
+            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
+            WglArg.texture("backgroundTexture", backgroundTexture),
+            WglArg.texture("foregroundTexture", foregroundTexture),
+            WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
+        ]);
+    }
+
+    /**
+     * Renders a control mask onto the destination texture, used elsewhere for determining whether or not an operation
+     * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
+     * blocked.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!int} targetBit
+     * @param {!boolean} desiredBitValue
+     */
+    static renderSingleBitConstraintControlMask(director, destinationTexture, targetBit, desiredBitValue) {
+        director.render(destinationTexture, GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.float("targetBitPositionMask", 1 << targetBit),
+            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
+        ]);
+    };
+
+    /**
+     * Renders a combined control mask onto the destination texture, augmenting the given control mask with a new bit
+     * constraint.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} controlMask
+     * @param {!int} targetBit
+     * @param {!boolean} desiredBitValue
+     */
+    static renderAddBitConstraintToControlMask(director, destinationTexture, controlMask, targetBit, desiredBitValue) {
+        director.render(destinationTexture, GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("oldControlMaskTexture", controlMask),
+            WglArg.float("targetBitPositionMask", 1 << targetBit),
+            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
+        ]);
+    };
+
+    /**
+     * Turns the amplitude stored at each pixel into a probability by self-dot-producting.
+     */
+    /**
+     * Renders a texture with each pixel storing the probability associated with the amplitude from the corresponding
+     * pixel in the input texture.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputAmplitudeTexture
+     */
+    static renderProbabilitiesFromAmplitudes(director, destinationTexture, inputAmplitudeTexture) {
+        director.render(destinationTexture, GLSL_FROM_AMPLITUDES_TO_PROBABILITIES, [
+            WglArg.vec2("textureSize", inputAmplitudeTexture.width, inputAmplitudeTexture.height),
+            WglArg.texture("inputTexture", inputAmplitudeTexture)
+        ]);
+    };
+
+    /**
+     * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
+     * sum of all probabilities matching a mask.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!int} step
+     * @param {!boolean} requiredBitValue
+     */
+    static renderConditionalProbabilitiesPipeline(director, destinationTexture, inputTexture, step, requiredBitValue) {
+        director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_PIPELINE, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture),
+            WglArg.float("stepPower", 1 << step),
+            WglArg.bool("conditionValue", requiredBitValue)
+        ]);
+    };
+
+    /**
+     * Renders the result of applying a custom controlled single-qubit operation to a superposition.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!Matrix} operation
+     * @param {!int} qubitIndex
+     * @param {!WglTexture} controlTexture
+     */
+    static renderQubitOperation(director, destinationTexture, inputTexture, operation, qubitIndex, controlTexture) {
+        U.need(operation.width() === 2 && operation.height() === 2);
+        let [[a, b], [c, d]] = operation.rows;
+        director.render(destinationTexture, GLSL_APPLY_CUSTOM_QUBIT_OPERATION, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture),
+            WglArg.float("qubitIndexMask", 1 << qubitIndex),
+            WglArg.texture("controlTexture", controlTexture),
+            WglArg.vec2("matrix_a", a.real, a.imag),
+            WglArg.vec2("matrix_b", b.real, b.imag),
+            WglArg.vec2("matrix_c", c.real, c.imag),
+            WglArg.vec2("matrix_d", d.real, d.imag)
+        ]);
+    };
+}
 
 const snippets = {
     /**
@@ -180,6 +318,81 @@ const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
         }
     }`);
 
+const GLSL_APPLY_CUSTOM_QUBIT_OPERATION = new WglShader(`
+    /**
+     * A texture holding the complex coefficients of the superposition to operate on.
+     * The real components are in the red component, and the imaginary components are in the green component.
+     */
+    uniform sampler2D inputTexture;
+
+    /**
+     * A texture with flags that determine which states get affected by the operation.
+     * The red component is 1 for states that should participate, and 0 otherwise.
+     */
+    uniform sampler2D controlTexture;
+
+    /**
+     * The width and height of the textures being operated on.
+     */
+    uniform vec2 textureSize;
+
+    /**
+     * A power of two (2^n) with the exponent n determined by the index of the qubit to operate on.
+     */
+    uniform float qubitIndexMask;
+
+    /**
+     * The row-wise complex coefficients of the matrix to apply. Laid out normally, they would be:
+     * M = |a b|
+     *     |c d|
+     */
+    uniform vec2 matrix_a, matrix_b, matrix_c, matrix_d;
+
+    ${snippets.filterBit}
+    ${snippets.toggleBit}
+    ${snippets.stateToPixelUv}
+
+    void main() {
+
+        // Which part of the multiplication are we doing?
+        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 pixelUv = gl_FragCoord.xy / textureSize;
+        float state = pixelXy.y * textureSize.x + pixelXy.x;
+        float opposingState = toggleBit(state, qubitIndexMask);
+        vec2 opposingPixelUv = stateToPixelUv(opposingState);
+        bool targetBitIsOff = state < opposingState;
+
+        // Does this part of the superposition match the controls?
+        bool blockedByControls = texture2D(controlTexture, pixelUv).x == 0.0;
+        if (blockedByControls) {
+            gl_FragColor = texture2D(inputTexture, pixelUv);
+            return;
+        }
+
+        // The row we operate against is determined by the output pixel's operated-on-bit's value
+        vec2 c1, c2;
+        if (targetBitIsOff) {
+            c1 = matrix_a;
+            c2 = matrix_b;
+        } else {
+            c1 = matrix_d;
+            c2 = matrix_c;
+        }
+
+        // Do (our part of) the matrix multiplication
+        vec4 amplitudeCombo = vec4(texture2D(inputTexture, pixelUv).xy,
+                                   texture2D(inputTexture, opposingPixelUv).xy);
+        vec4 dotReal = vec4(c1.x, -c1.y,
+                            c2.x, -c2.y);
+        vec4 dotImag = vec4(c1.y, c1.x,
+                            c2.y, c2.x);
+        vec2 outputAmplitude = vec2(dot(amplitudeCombo, dotReal),
+                                    dot(amplitudeCombo, dotImag));
+
+        gl_FragColor = vec4(outputAmplitude, 0, 0);
+
+    }`);
+
 ///**
 //* Renders a control texture equal to the intersection of two input control textures. The output texture prevents any
 //* operation prevented by either of the input textures.
@@ -262,193 +475,3 @@ const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
 //        }
 //        gl_FragColor = encode_float(f);
 //    }`);
-
-///**
-// * Renders the result of applying a custom optionally-controlled single-qubit operation to a superposition.
-// */
-//const GLSL_APPLY_CUSTOM_QUBIT_OPERATION = new WglShader(`
-//    /**
-//     * A texture holding the complex coefficients of the superposition to operate on.
-//     * The real components are in the red component, and the imaginary components are in the green component.
-//     */
-//    uniform sampler2D inputTexture;
-//
-//    /**
-//     * A texture with flags that determine which states get affected by the operation.
-//     * The red component is 1 for states that should participate, and 0 otherwise.
-//     */
-//    uniform sampler2D controlTexture;
-//
-//    /**
-//     * The width and height of the textures being operated on.
-//     */
-//    uniform vec2 textureSize;
-//
-//    /**
-//     * A power of two (2^n) with the exponent n determined by the index of the qubit to operate on.
-//     */
-//    uniform float qubitIndexMask;
-//
-//    /**
-//     * The row-wise complex coefficients of the matrix to apply. Laid out normally, they would be:
-//     * M = |a b|
-//     *     |c d|
-//     */
-//    uniform vec2 matrix_a, matrix_b, matrix_c, matrix_d;
-//
-//    ${snippets.filterBit}
-//    ${snippets.toggleBit}
-//    ${snippets.stateToPixelUv}
-//
-//    void main() {
-//
-//        // Which part of the multiplication are we doing?
-//        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-//        vec2 pixelUv = gl_FragCoord.xy / textureSize;
-//        float state = pixelXy.y * textureSize.x + pixelXy.x;
-//        float opposingState = toggleBit(state, qubitIndexMask);
-//        vec2 opposingPixelUv = stateToPixelUv(opposingState);
-//        bool targetBitIsOff = state < opposingState;
-//
-//        // Does this part of the superposition match the controls?
-//        bool blockedByControls = texture2D(controlTexture, pixelUv).x == 0.0;
-//        if (blockedByControls) {
-//            gl_FragColor = texture2D(inputTexture, pixelUv);
-//            return;
-//        }
-//
-//        // The row we operate against is determined by the output pixel's operated-on-bit's value
-//        vec2 c1, c2;
-//        if (targetBitIsOff) {
-//            c1 = matrix_a;
-//            c2 = matrix_b;
-//        } else {
-//            c1 = matrix_d;
-//            c2 = matrix_c;
-//        }
-//
-//        // Do (our part of) the matrix multiplication
-//        vec4 amplitudeCombo = vec4(texture2D(inputTexture, pixelUv).xy,
-//                                   texture2D(inputTexture, opposingPixelUv).xy);
-//        vec4 dotReal = vec4(c1.x, -c1.y,
-//                            c2.x, -c2.y);
-//        vec4 dotImag = vec4(c1.y, c1.x,
-//                            c2.y, c2.x);
-//        vec2 outputAmplitude = vec2(dot(amplitudeCombo, dotReal),
-//                                    dot(amplitudeCombo, dotImag));
-//
-//        gl_FragColor = vec4(outputAmplitude, 0, 0);
-//
-//    }`);
-
-export default class Shades {
-    /**
-     * Renders the given color data onto the destination texture.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!Float32Array} pixelColorData
-     */
-    static renderPixelColorData(director, destinationTexture, pixelColorData) {
-        U.need(pixelColorData.length === destinationTexture.width * destinationTexture.height * 4);
-        director.render(destinationTexture, GLSL_PASS_THROUGH, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.dataTexture("sourceTexture", pixelColorData, destinationTexture.width, destinationTexture.height)
-        ]);
-    };
-
-    /**
-     * Renders a texture by, effectively, drawing the given background texture then overlaying the given foreground
-     * texture over the background using the given offset.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!int} foregroundX
-     * @param {!int} foregroundY
-     * @param {!WglTexture} foregroundTexture
-     * @param {!WglTexture} backgroundTexture
-     */
-    static renderOverlayed(director, destinationTexture, foregroundX, foregroundY, foregroundTexture, backgroundTexture) {
-        director.render(destinationTexture, GLSL_OVERLAY, [
-            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
-            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-            WglArg.texture("backgroundTexture", backgroundTexture),
-            WglArg.texture("foregroundTexture", foregroundTexture),
-            WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
-        ]);
-    }
-
-    /**
-     * Renders a control mask onto the destination texture, used elsewhere for determining whether or not an operation
-     * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
-     * blocked.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!int} targetBit
-     * @param {!boolean} desiredBitValue
-     */
-    static renderSingleBitConstraintControlMask(director, destinationTexture, targetBit, desiredBitValue) {
-        director.render(destinationTexture, GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.float("targetBitPositionMask", 1 << targetBit),
-            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ]);
-    };
-
-    /**
-     * Renders a combined control mask onto the destination texture, augmenting the given control mask with a new bit
-     * constraint.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} controlMask
-     * @param {!int} targetBit
-     * @param {!boolean} desiredBitValue
-     */
-    static renderAddBitConstraintToControlMask(director, destinationTexture, controlMask, targetBit, desiredBitValue) {
-        director.render(destinationTexture, GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("oldControlMaskTexture", controlMask),
-            WglArg.float("targetBitPositionMask", 1 << targetBit),
-            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ]);
-    };
-
-    /**
-     * Turns the amplitude stored at each pixel into a probability by self-dot-producting.
-     */
-    /**
-     * Renders a texture with each pixel storing the probability associated with the amplitude from the corresponding
-     * pixel in the input texture.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputAmplitudeTexture
-     */
-    static renderProbabilitiesFromAmplitudes(director, destinationTexture, inputAmplitudeTexture) {
-        director.render(destinationTexture, GLSL_FROM_AMPLITUDES_TO_PROBABILITIES, [
-            WglArg.vec2("textureSize", inputAmplitudeTexture.width, inputAmplitudeTexture.height),
-            WglArg.texture("inputTexture", inputAmplitudeTexture)
-        ]);
-    };
-
-    /**
-     * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
-     * sum of all probabilities matching a mask.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!int} step
-     * @param {!boolean} requiredBitValue
-     */
-    static renderConditionalProbabilitiesPipeline(director, destinationTexture, inputTexture, step, requiredBitValue) {
-        director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_PIPELINE, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture),
-            WglArg.float("stepPower", 1 << step),
-            WglArg.bool("conditionValue", requiredBitValue)
-        ]);
-    };
-}

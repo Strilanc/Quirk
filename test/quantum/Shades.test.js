@@ -6,6 +6,8 @@ import WglDirector from "src/webgl/WglDirector.js"
 import Rect from "src/base/Rect.js"
 import Shades from "src/quantum/Shades.js"
 import Seq from "src/base/Seq.js"
+import Complex from "src/linalg/Complex.js"
+import Matrix from "src/linalg/Matrix.js"
 
 let suite = new Suite("Shades");
 
@@ -405,5 +407,129 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
         28, 0, 0, 0,
         36, 0, 0, 0,
         17, 0, 0, 0
+    ]);
+});
+
+suite.webGlTest("renderQubitOperation", () => {
+    let director = new WglDirector();
+    let cnt = new WglTexture(4, 2);
+    let out = new WglTexture(4, 2);
+    let inp = new WglTexture(4, 2);
+    Shades.renderPixelColorData(director, inp, new Float32Array([
+        2, 3, 0, 0,
+        4, 5, 0, 0,
+        6, 7, 0, 0,
+        8, 9, 0, 0,
+        2, 3, 0, 0,
+        5, 7, 0, 0,
+        11, 13, 0, 0,
+        17, 19, 0, 0
+    ]));
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 3, false);
+    Shades.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        7, -1, 0, 0,
+        -7, -3, 0, 0,
+        15, -1, 0, 0,
+        -15, -3, 0, 0,
+        9, -2, 0, 0,
+        -8, -5, 0, 0,
+        30, -4, 0, 0,
+        -30, -8, 0, 0
+    ]);
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 1, false);
+    Shades.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        7, -1, 0, 0,
+        -7, -3, 0, 0,
+        6, 7, 0, 0,
+        8, 9, 0, 0,
+        9, -2, 0, 0,
+        -8, -5, 0, 0,
+        11, 13, 0, 0,
+        17, 19, 0, 0
+    ]);
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 1, true);
+    Shades.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        2, 3, 0, 0,
+        4, 5, 0, 0,
+        15, -1, 0, 0,
+        -15, -3, 0, 0,
+        2, 3, 0, 0,
+        5, 7, 0, 0,
+        30, -4, 0, 0,
+        -30, -8, 0, 0
+    ]);
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 2, false);
+    Shades.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        7, -1, 0, 0,
+        -7, -3, 0, 0,
+        15, -1, 0, 0,
+        -15, -3, 0, 0,
+        2, 3, 0, 0,
+        5, 7, 0, 0,
+        11, 13, 0, 0,
+        17, 19, 0, 0
+    ]);
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 3, false);
+    Shades.renderQubitOperation(director, out, inp, Matrix.square([0, 0, 0, 0]), 0, cnt);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+    ]);
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 3, false);
+    Shades.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 1, cnt);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo([
+        9, -3, 0, 0,
+        13, -3, 0, 0,
+        -9, -5, 0, 0,
+        -13, -5, 0, 0,
+        15, -8, 0, 0,
+        24, -10, 0, 0,
+        -14, -11, 0, 0,
+        -24, -14, 0, 0
+    ]);
+
+    let out1 = new WglTexture(2, 1);
+    let inp1 = new WglTexture(2, 1);
+    let cnt1 = new WglTexture(2, 1);
+    Shades.renderPixelColorData(director, inp1, new Float32Array([
+        1, 2, 0, 0,
+        3, 27, 0, 0
+    ]));
+    Shades.renderSingleBitConstraintControlMask(director, cnt1, 1, false);
+    Shades.renderQubitOperation(director, out1, inp1, Matrix.square([1, 0, 0, 0]), 0, cnt1);
+    assertThat(director.readPixelColorFloats(out1)).isApproximatelyEqualTo([
+        1, 2, 0, 0,
+        0, 0, 0, 0
+    ]);
+    Shades.renderQubitOperation(director, out1, inp1, Matrix.square([0, 1, 0, 0]), 0, cnt1);
+    assertThat(director.readPixelColorFloats(out1)).isApproximatelyEqualTo([
+        3, 27, 0, 0,
+        0, 0, 0, 0
+    ]);
+    Shades.renderQubitOperation(director, out1, inp1, Matrix.square([0, 0, 1, 0]), 0, cnt1);
+    assertThat(director.readPixelColorFloats(out1)).isApproximatelyEqualTo([
+        0, 0, 0, 0,
+        1, 2, 0, 0
+    ]);
+    Shades.renderQubitOperation(director, out1, inp1, Matrix.square([0, 0, 0, 1]), 0, cnt1);
+    assertThat(director.readPixelColorFloats(out1)).isApproximatelyEqualTo([
+        0, 0, 0, 0,
+        3, 27, 0, 0
     ]);
 });
