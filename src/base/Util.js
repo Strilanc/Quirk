@@ -1,11 +1,13 @@
 /**
- * Checks a precondition, throwing an exception containing the given message in the case of failure.
- *
- * @param {!boolean|*} expression
- * @param {=string} message
- * @param {=Array} args
+ * Miscellaneous utility methods.
  */
 export default class Util {
+    /**
+     * Checks a precondition, throwing an exception containing the given message in the case of failure.
+     * @param {!boolean|*} expression
+     * @param {=string} message
+     * @param {=Array} args
+     */
     static need(expression, message, args) {
         if (expression !== true) {
             let argDesc = args === undefined ?
@@ -21,10 +23,8 @@ export default class Util {
 
     /**
     * Forced cast from nullable to non-nullable, throwing an exception on failure.
-    *
     * @param {?T} v
     * @returns {!T}
-    *
     * @template T
     */
     static notNull(v) {
@@ -35,13 +35,35 @@ export default class Util {
 
     /**
     * Returns the base-2 logarithm of the given number.
-    *
     * @param {!number} n
     * @returns {!number}
     */
     static lg(n) {
         Util.need(n > 0, "lg: n > 0");
         return Math.log(n) / Math.log(2);
+    };
+
+    /**
+     * Determines if there is an integer p such that 2^p equals the given integer.
+     * @param {!int} i
+     * @returns {!boolean}
+     */
+    static isPowerOf2(i) {
+        return i > 0 && ((i - 1) & i) === 0;
+    };
+
+    /**
+     * Returns the number of bits needed to uniquely encode all integers up to and including the given value.
+     * A discrete off-by-one version of log_2(n).
+     * @param {!int} n
+     * @returns {!int}
+     */
+    static bitSize(n) {
+        Util.need(n >= 0, "bitSize: n >= 0");
+        if (n === 0) {
+            return 0;
+        }
+        return Math.floor(Util.lg(n)  + 0.001) + 1;
     };
 
     ///**
@@ -69,31 +91,6 @@ export default class Util {
     //    });
     //};
 
-    ///**
-    // * Determines if there is an integer p such that 2^p equals the given integer.
-    // * @param {!int} i
-    // * @returns {!boolean}
-    // */
-    //static isPowerOf2(i) {
-    //    return i > 0 && ((i - 1) & i) === 0;
-    //};
-    //
-    ///**
-    // * Returns the number of bits needed to uniquely encode all integers up to and including the given value.
-    // *
-    // * A discrete off-by-one version of log_2(n).
-    // *
-    // * @param {!int} n
-    // * @returns {!int}
-    // */
-    //static bitSize(n) {
-    //    need(n >= 0, "bitSize: n >= 0");
-    //    if (n === 0) {
-    //        return 0;
-    //    }
-    //    return Math.floor(lg(n)  + 0.001) + 1;
-    //};
-    //
     ///**
     // * Determines how even a number is, with results like:
     // * 0 means 'odd',

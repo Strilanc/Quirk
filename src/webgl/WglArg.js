@@ -50,7 +50,19 @@ export default class WglArg {
      * @returns {!WglArg}
      */
     static vec2(name, x, y) {
-        return new WglArg(WglArg.VEC2_TYPE, name, {x: x, y: y});
+        return new WglArg(WglArg.VEC2_TYPE, name, [x, y]);
+    }
+
+    /**
+     * @param {!string} name
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} z
+     * @param {!number} t
+     * @returns {!WglArg}
+     */
+    static vec4(name, x, y, z, t) {
+        return new WglArg(WglArg.VEC4_TYPE, name, [x, y, z, t]);
     }
 
     /**
@@ -86,6 +98,8 @@ WglArg.FLOAT_TYPE = "float";
 WglArg.INT_TYPE = "int";
 //noinspection JSUnresolvedFunction
 WglArg.VEC2_TYPE = "vec2";
+//noinspection JSUnresolvedFunction
+WglArg.VEC4_TYPE = "vec4";
 //noinspection JSUnresolvedFunction
 WglArg.TEXTURE_TYPE = "texture";
 //noinspection JSUnresolvedFunction

@@ -1,4 +1,4 @@
-import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
+import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Util from "src/base/Util.js"
 
 let suite = new Suite("Util");
@@ -27,7 +27,32 @@ suite.test("lg", () => {
     assertThat(Util.lg(1 << 10)).isEqualTo(10);
 });
 
-//Utilsuite.test("MaskCandidates", () => {
+suite.test("isPowerOf2", () => {
+    assertFalse(Util.isPowerOf2(-1));
+    assertFalse(Util.isPowerOf2(0));
+    assertTrue(Util.isPowerOf2(1));
+    assertTrue(Util.isPowerOf2(2));
+    assertFalse(Util.isPowerOf2(3));
+    assertTrue(Util.isPowerOf2(4));
+    assertFalse(Util.isPowerOf2(5));
+});
+
+suite.test("bitSize", () => {
+    assertThat(Util.bitSize(0)).isEqualTo(0);
+    assertThat(Util.bitSize(1)).isEqualTo(1);
+    assertThat(Util.bitSize(2)).isEqualTo(2);
+    assertThat(Util.bitSize(3)).isEqualTo(2);
+    assertThat(Util.bitSize(4)).isEqualTo(3);
+    assertThat(Util.bitSize(5)).isEqualTo(3);
+    assertThat(Util.bitSize(6)).isEqualTo(3);
+    assertThat(Util.bitSize(7)).isEqualTo(3);
+    assertThat(Util.bitSize(8)).isEqualTo(4);
+    assertThat(Util.bitSize(9)).isEqualTo(4);
+    assertThat(Util.bitSize(1 << 20)).isEqualTo(21);
+    assertThat(Util.bitSize((1 << 20) + (1 << 19))).isEqualTo(21);
+});
+
+//suite.test("MaskCandidates", () => {
 //    assertThrows(() => Util.maskCandidates(-1));
 //    assertThat(Util.maskCandidates(0)).isEqualTo([0]);
 //    assertThat(Util.maskCandidates(1)).isEqualTo([0, 1]);
@@ -42,32 +67,7 @@ suite.test("lg", () => {
 //    assertThat(Util.maskCandidates((1 << 20) + (1 << 10))).isEqualTo([0, 1 << 10, 1 << 20, (1 << 10) + (1 << 20)]);
 //};
 
-//Utilsuite.test("IsPowerOf2", () => {
-//    assertFalse(isPowerOf2(-1));
-//    assertFalse(isPowerOf2(0));
-//    assertTrue(isPowerOf2(1));
-//    assertTrue(isPowerOf2(2));
-//    assertFalse(isPowerOf2(3));
-//    assertTrue(isPowerOf2(4));
-//    assertFalse(isPowerOf2(5));
-//};
-//
-//Utilsuite.test("BitSize", () => {
-//    assertThat(bitSize(0)).isEqualTo(0);
-//    assertThat(bitSize(1)).isEqualTo(1);
-//    assertThat(bitSize(2)).isEqualTo(2);
-//    assertThat(bitSize(3)).isEqualTo(2);
-//    assertThat(bitSize(4)).isEqualTo(3);
-//    assertThat(bitSize(5)).isEqualTo(3);
-//    assertThat(bitSize(6)).isEqualTo(3);
-//    assertThat(bitSize(7)).isEqualTo(3);
-//    assertThat(bitSize(8)).isEqualTo(4);
-//    assertThat(bitSize(9)).isEqualTo(4);
-//    assertThat(bitSize(1 << 20)).isEqualTo(21);
-//    assertThat(bitSize((1 << 20) + (1 << 19))).isEqualTo(21);
-//};
-//
-//Utilsuite.test("EvenPower", () => {
+//suite.test("EvenPower", () => {
 //    assertThat(evenPower(-2)).isEqualTo(1);
 //    assertThat(evenPower(-1)).isEqualTo(0);
 //    assertThat(evenPower(0)).isEqualTo(Math.POSITIVE_INFINITY);
@@ -86,17 +86,17 @@ suite.test("lg", () => {
 //    assertThat(evenPower(2 + (1 << 20))).isEqualTo(1);
 //};
 //
-//Utilsuite.test("Arg1", () => {
+//suite.test("Arg1", () => {
 //    assertThat(arg1(Complex.prototype.norm2)(Complex.I)).isEqualTo(1);
 //};
 //
-//Utilsuite.test("Arg2", () => {
+//suite.test("Arg2", () => {
 //    assertTrue(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.I));
 //    assertFalse(arg2(Complex.prototype.isEqualTo)(Complex.I, Complex.ZERO));
 //    assertTrue(arg2(Complex.prototype.plus)(Complex.I, Complex.I).isEqualTo(new Complex(0, 2)));
 //};
 //
-//Utilsuite.test("IsNumber", () => {
+//suite.test("IsNumber", () => {
 //    assertTrue(isNumber(0));
 //    assertTrue(isNumber(1));
 //    assertTrue(isNumber(-1));
@@ -116,7 +116,7 @@ suite.test("lg", () => {
 //    assertFalse(isNumber([]));
 //};
 //
-//Utilsuite.test("IsInt", () => {
+//suite.test("IsInt", () => {
 //    assertTrue(isInt(0));
 //    assertTrue(isInt(1));
 //    assertTrue(isInt(-1));
@@ -136,7 +136,7 @@ suite.test("lg", () => {
 //    assertFalse(isInt([]));
 //};
 //
-//Utilsuite.test("IsString", () => {
+//suite.test("IsString", () => {
 //    assertTrue(isString(""));
 //    assertTrue(isString("0"));
 //    assertTrue(isString("abc"));
@@ -150,7 +150,7 @@ suite.test("lg", () => {
 //    assertFalse(isString(Infinity));
 //};
 //
-//Utilsuite.test("FloatToCompactString", () => {
+//suite.test("FloatToCompactString", () => {
 //    assertThat(floatToCompactString(0)).isEqualTo("0");
 //    assertThat(floatToCompactString(1)).isEqualTo("1");
 //    assertThat(floatToCompactString(0.5)).isEqualTo("\u00BD");
@@ -170,7 +170,7 @@ suite.test("lg", () => {
 //    assertThat(floatToCompactString(501, undefined, 8)).isEqualTo("501");
 //};
 //
-//Utilsuite.test("CacheFunc1", () => {
+//suite.test("CacheFunc1", () => {
 //    var calls = [];
 //    var func = cacheFunc1(i => {
 //        calls.push(i);
@@ -195,7 +195,7 @@ suite.test("lg", () => {
 //    assertThat(calls).isEqualTo([1, 3, 2]);
 //};
 //
-//Utilsuite.test("CacheFunc2", () => {
+//suite.test("CacheFunc2", () => {
 //    var calls = [];
 //    var func = cacheFunc2((i, j) => {
 //        calls.push([i, j]);
@@ -223,7 +223,7 @@ suite.test("lg", () => {
 //    assertThat(calls).isEqualTo([[1, 2], [2, 1], [2, 2], [100, -2]]);
 //};
 //
-//Utilsuite.test("CacheFunc3", () => {
+//suite.test("CacheFunc3", () => {
 //    var calls = [];
 //    var func = cacheFunc3((i, j, k) => {
 //        calls.push([i, j, k]);

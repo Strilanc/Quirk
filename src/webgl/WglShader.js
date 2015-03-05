@@ -108,7 +108,8 @@ class WglShaderContext {
             [WglArg.BOOL_TYPE]: (loc, val) => g.uniform1f(loc, val ? 1 : 0),
             [WglArg.INT_TYPE]: (loc, val) => g.uniform1i(loc, val),
             [WglArg.FLOAT_TYPE]: (loc, val) => g.uniform1f(loc, val),
-            [WglArg.VEC2_TYPE]: (loc, val) => g.uniform2f(loc, val.x, val.y),
+            [WglArg.VEC2_TYPE]: (loc, val) => g.uniform2f(loc, val[0], val[1]),
+            [WglArg.VEC4_TYPE]: (loc, val) => g.uniform4f(loc, val[0], val[1], val[2], val[3]),
 
             /**
              * @param {*} loc

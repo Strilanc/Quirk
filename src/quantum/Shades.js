@@ -3,8 +3,25 @@ import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglDirector from "src/webgl/WglDirector.js"
 import Matrix from "src/linalg/Matrix.js"
+import ControlMask from "src/quantum/ControlMask.js"
 
 export default class Shades {
+    /**
+     * Renders the given color components onto the entire destination texture.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!number} r
+     * @param {!number} g
+     * @param {!number} b
+     * @param {!number} a
+     */
+    static renderUniformColor(director, destinationTexture, r, g, b, a) {
+        director.render(destinationTexture, GLSL_UNIFORM_COLOR, [
+            WglArg.vec4("color", r, g, b, a)
+        ]);
+    };
+
     /**
      * Renders the given color data onto the destination texture.
      *
@@ -79,9 +96,6 @@ export default class Shades {
     };
 
     /**
-     * Turns the amplitude stored at each pixel into a probability by self-dot-producting.
-     */
-    /**
      * Renders a texture with each pixel storing the probability associated with the amplitude from the corresponding
      * pixel in the input texture.
      *
@@ -116,6 +130,69 @@ export default class Shades {
     };
 
     /**
+     * Renders a control mask texture corresponding to the given control mask.
+     * Two workspace textures are needed in order to build up the result; the result of the method indicates which one
+     * contains the final result.
+     *
+     * @param {!WglDirector} director
+     * @param {!ControlMask} controlMask
+     * @param {!WglTexture} workspace1
+     * @param {!WglTexture} workspace2
+     * @returns {!{result: !WglTexture, available: !WglTexture}}
+     */
+    static renderControlMask(director, controlMask, workspace1, workspace2) {
+        // Special case: no constraints.
+        if (controlMask.inclusionMask === 0) {
+            Shades.renderUniformColor(director, workspace1, 1, 0, 0, 0);
+            return {result: workspace1, available: workspace2};
+        }
+
+        let hasFirst = false;
+        for (let i = 0; (1 << i) <= controlMask.inclusionMask; i++) {
+            let c = controlMask.desiredValueFor(i);
+            if (c === null) {
+                continue;
+            }
+            //noinspection JSValidateTypes
+            /** @type {!boolean} */
+            let b = c;
+            if (hasFirst) {
+                Shades.renderAddBitConstraintToControlMask(director, workspace2, workspace1, i, b);
+                let t = workspace2;
+                workspace2 = workspace1;
+                workspace1 = t;
+            } else {
+                Shades.renderSingleBitConstraintControlMask(director, workspace1, i, b);
+                hasFirst = true;
+            }
+        }
+
+        return {result: workspace1, available: workspace2};
+    };
+
+    /**
+     * Renders a texture with probability sums corresponding to states matching various combinations of controls.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} workspace1
+     * @param {!WglTexture} workspace2
+     * @param {!int} mask Each bit in the mask determines whether the control is must-be-on (1) or must-be-off (0)
+     * @param {!WglTexture} amplitudes
+     * @returns {!{result: !WglTexture, available: !WglTexture}}
+     */
+    static renderControlCombinationProbabilities(director, workspace1, workspace2, mask, amplitudes) {
+        Shades.renderProbabilitiesFromAmplitudes(director, workspace1, amplitudes);
+        let n = amplitudes.width * amplitudes.height;
+        for (let i = 0; (1 << i) < n; i++) {
+            Shades.renderConditionalProbabilitiesPipeline(director, workspace2, workspace1, i, (mask & (1 << i)) !== 0);
+            let t = workspace2;
+            workspace2 = workspace1;
+            workspace1 = t;
+        }
+        return {result: workspace1, available: workspace2};
+    };
+
+    /**
      * Renders the result of applying a custom controlled single-qubit operation to a superposition.
      *
      * @param {!WglDirector} director
@@ -139,6 +216,8 @@ export default class Shades {
             WglArg.vec2("matrix_d", d.real, d.imag)
         ]);
     };
+
+
 }
 
 const snippets = {
@@ -197,6 +276,14 @@ const GLSL_PASS_THROUGH = new WglShader(`
     void main() {
         vec2 uv = gl_FragCoord.xy / textureSize.xy;
         gl_FragColor = texture2D(inputTexture, uv);
+    }`);
+
+const GLSL_UNIFORM_COLOR = new WglShader(`
+    /** The uniform color to render. */
+    uniform vec4 color;
+
+    void main() {
+        gl_FragColor = color;
     }`);
 
 /**
