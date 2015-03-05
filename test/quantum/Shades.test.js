@@ -37,6 +37,68 @@ suite.webGlTest("renderUniformColor", () => {
     ]));
 });
 
+suite.webGlTest("renderClassicalState", () => {
+    let director = new WglDirector();
+    let texture2x2 = new WglTexture(1 << 1, 1 << 1);
+    let texture2x4 = new WglTexture(1 << 2, 1 << 1);
+
+    Shades.renderClassicalState(director, texture2x2, 0);
+    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+        1, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+    ]));
+
+    Shades.renderClassicalState(director, texture2x2, 1);
+    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+        0, 0, 0, 0,
+        1, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+    ]));
+
+    Shades.renderClassicalState(director, texture2x2, 2);
+    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        1, 0, 0, 0,
+        0, 0, 0, 0
+    ]));
+
+    Shades.renderClassicalState(director, texture2x2, 3);
+    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        1, 0, 0, 0
+    ]));
+
+    Shades.renderClassicalState(director, texture2x4, 0);
+    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+        1, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+    ]));
+
+    Shades.renderClassicalState(director, texture2x4, 5);
+    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        1, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+    ]));
+});
+
 suite.webGlTest("renderPixelColorData", () => {
     let director = new WglDirector();
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);

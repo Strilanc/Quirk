@@ -74,15 +74,14 @@ export default class WglArg {
         return new WglArg(WglArg.TEXTURE_TYPE, name, value);
     }
 
+    //noinspection JSValidateJSDoc
     /**
      * @param {!string} name
-     * @param {!Float32Array} data
-     * @param {!int} width
-     * @param {!int} height
+     * @param {!WebGLTexture} value
      * @returns {!WglArg}
      */
-    static dataTexture(name, data, width, height) {
-        return new WglArg(WglArg.DATA_TEXTURE_TYPE, name, {data: data, width: width, height: height});
+    static rawTexture(name, value) {
+        return new WglArg(WglArg.RAW_TEXTURE_TYPE, name, value);
     }
 
     toString() {
@@ -103,4 +102,4 @@ WglArg.VEC4_TYPE = "vec4";
 //noinspection JSUnresolvedFunction
 WglArg.TEXTURE_TYPE = "texture";
 //noinspection JSUnresolvedFunction
-WglArg.DATA_TEXTURE_TYPE = "data_texture";
+WglArg.RAW_TEXTURE_TYPE = "raw_texture";

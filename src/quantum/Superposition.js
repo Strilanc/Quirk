@@ -168,6 +168,10 @@ let free = texture => {
     pool.push(texture);
 };
 
+/**
+ * @param {!WglTexture} texture
+ * @returns {!int}
+ */
 let countQubits = texture => {
     return Util.bitSize(texture.width * texture.height - 1)
 };

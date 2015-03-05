@@ -1,5 +1,6 @@
 import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
+import WglTexture from "src/webgl/WglTexture.js"
 import Seq from "src/base/Seq.js"
 
 /**
@@ -96,12 +97,19 @@ class WglShaderContext {
         let g = context.webGLRenderingContext;
 
         let nextTextureUnitIndex = 0;
-        let getNextTextureUnitIndex = () => {
+        //noinspection JSValidateJSDoc
+        /**
+         * @param {*} loc
+         * @param {!WebGLTexture} val
+         */
+        let rawTextureAction = (loc, val) => {
             let textureUnit = nextTextureUnitIndex++;
             if (textureUnit >= context.maxTextureUnits) {
                 throw new Error(`WebGLRenderer: not enough texture units (${context.maxTextureUnits})`);
             }
-            return textureUnit;
+            g.uniform1i(loc, textureUnit);
+            g.activeTexture(WebGLRenderingContext.TEXTURE0 + textureUnit);
+            g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val);
         };
 
         let typeActionMap = {
@@ -110,41 +118,8 @@ class WglShaderContext {
             [WglArg.FLOAT_TYPE]: (loc, val) => g.uniform1f(loc, val),
             [WglArg.VEC2_TYPE]: (loc, val) => g.uniform2f(loc, val[0], val[1]),
             [WglArg.VEC4_TYPE]: (loc, val) => g.uniform4f(loc, val[0], val[1], val[2], val[3]),
-
-            /**
-             * @param {*} loc
-             * @param {!WglTexture} val
-             */
-            [WglArg.TEXTURE_TYPE]: (loc, val) => {
-                let textureUnit = getNextTextureUnitIndex();
-                g.uniform1i(loc, textureUnit);
-                g.activeTexture(WebGLRenderingContext.TEXTURE0 + textureUnit);
-                //noinspection JSCheckFunctionSignatures
-                g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.instanceFor(context).texture);
-            },
-
-            /**
-             * @param {*} loc
-             * @param {!{data: !Float32Array, width: int, height: int}} val
-             */
-            [WglArg.DATA_TEXTURE_TYPE]: (loc, val) => {
-                if (val.width > context.maxTextureDiameter || val.height > context.maxTextureDiameter) {
-                    throw new Error(
-                        `Texture size (${val.width} x ${val.height}) exceeds ` +
-                        `maximum diameter (${context.maxTextureDiameter}).`);
-                }
-
-                let s = WebGLRenderingContext;
-                let textureUnit = getNextTextureUnitIndex();
-                g.uniform1i(loc, textureUnit);
-                g.activeTexture(s.TEXTURE0 + textureUnit);
-
-                let texture = g.createTexture();
-                g.bindTexture(s.TEXTURE_2D, texture);
-                g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
-                g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
-                g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, val.width, val.height, 0, s.RGBA, s.FLOAT, val.data);
-            }
+            [WglArg.TEXTURE_TYPE]: (loc, val) => rawTextureAction(loc, val.instanceFor(context).texture),
+            [WglArg.RAW_TEXTURE_TYPE]: rawTextureAction
         };
 
         g.useProgram(this.program);

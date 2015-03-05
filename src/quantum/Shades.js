@@ -23,6 +23,21 @@ export default class Shades {
     };
 
     /**
+     * Renders the given color components onto the entire destination texture.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!int} state
+     */
+    static renderClassicalState(director, destinationTexture, state) {
+        let x = state % destinationTexture.width;
+        let y = (state - x) / destinationTexture.width;
+        director.render(destinationTexture, GLSL_SET_SINGLE_PIXEL, [
+            WglArg.vec2("pixel", x, y)
+        ]);
+    };
+
+    /**
      * Renders the given color data onto the destination texture.
      *
      * @param {!WglDirector} director
@@ -30,11 +45,15 @@ export default class Shades {
      * @param {!Float32Array} pixelColorData
      */
     static renderPixelColorData(director, destinationTexture, pixelColorData) {
-        U.need(pixelColorData.length === destinationTexture.width * destinationTexture.height * 4);
-        director.render(destinationTexture, GLSL_PASS_THROUGH, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.dataTexture("sourceTexture", pixelColorData, destinationTexture.width, destinationTexture.height)
-        ]);
+        let [w, h] = [destinationTexture.width, destinationTexture.height];
+        U.need(pixelColorData.length === w * h * 4);
+
+        director.useRawDataTextureIn(w, h, pixelColorData, texture => {
+            director.render(destinationTexture, GLSL_PASS_THROUGH, [
+                WglArg.vec2("textureSize", w, h),
+                WglArg.rawTexture("sourceTexture", texture)
+            ]);
+        });
     };
 
     /**
@@ -266,6 +285,24 @@ const snippets = {
         }`
 };
 
+const GLSL_UNIFORM_COLOR = new WglShader(`
+    /** The uniform color to render. */
+    uniform vec4 color;
+
+    void main() {
+        gl_FragColor = color;
+    }`);
+
+const GLSL_SET_SINGLE_PIXEL = new WglShader(`
+    /** The location of the single pixel to set. */
+    uniform vec2 pixel;
+
+    void main() {
+        vec2 d = gl_FragCoord.xy - vec2(0.5, 0.5) - pixel;
+        float f = float(d == vec2(0, 0));
+        gl_FragColor = vec4(f, 0, 0, 0);
+    }`);
+
 const GLSL_PASS_THROUGH = new WglShader(`
     /** The width and height of the textures being operated on. */
     uniform vec2 textureSize;
@@ -276,14 +313,6 @@ const GLSL_PASS_THROUGH = new WglShader(`
     void main() {
         vec2 uv = gl_FragCoord.xy / textureSize.xy;
         gl_FragColor = texture2D(inputTexture, uv);
-    }`);
-
-const GLSL_UNIFORM_COLOR = new WglShader(`
-    /** The uniform color to render. */
-    uniform vec4 color;
-
-    void main() {
-        gl_FragColor = color;
     }`);
 
 /**

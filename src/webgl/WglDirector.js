@@ -48,6 +48,29 @@ export default class WglDirector {
             false);
     };
 
+    //noinspection JSValidateJSDoc
+    /**
+     * Creates an image texture with the given size and pixel data, passes it into the given function, then deletes it.
+     * @param {!function(!WebGLTexture)} func
+     * @param {!int} width
+     * @param {!int} height
+     * @param {!Float32Array} pixelColorData
+     */
+    useRawDataTextureIn(width, height, pixelColorData, func) {
+        let s = WebGLRenderingContext;
+        let g = this.cache.webGLRenderingContext;
+        let t = g.createTexture();
+        try {
+            g.bindTexture(WebGLRenderingContext.TEXTURE_2D, t);
+            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
+            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
+            g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, width, height, 0, s.RGBA, s.FLOAT, pixelColorData);
+            func(t);
+        } finally {
+            g.deleteTexture(t);
+        }
+    }
+
     /**
      * Overwrites the given texture with the output of the given shader when given the given uniform arguments.
      * @param {!WglTexture} texture
