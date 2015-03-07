@@ -108,6 +108,17 @@ suite.test("toArray", () => {
     assertThat(a2).isEqualTo([1, "a"]);
 });
 
+suite.test("toSet", () => {
+    assertThat(Seq.fromGenerator(function*() {}).toSet()).isEqualTo(new Set());
+    assertThat(Seq.fromGenerator(function*() { yield 1; yield "a"; }).toSet()).isEqualTo(new Set([1, "a"]));
+    assertThat(Seq.fromGenerator(function*() { yield "a"; yield 1; yield "a"; }).toSet()).isEqualTo(new Set([1, "a"]));
+
+    assertThat(new Seq([]).toSet()).isEqualTo(new Set());
+    assertThat(new Seq([1]).toSet()).isEqualTo(new Set([1]));
+    assertThat(new Seq([1, 2]).toSet()).isEqualTo(new Set([1, 2]));
+    assertThat(new Seq([1, 2, 1, 3]).toSet()).isEqualTo(new Set([3, 1, 2]));
+});
+
 suite.test("join", () => {
     assertThat(new Seq([]).join("||")).isEqualTo("");
     assertThat(new Seq([1]).join("||")).isEqualTo("1");

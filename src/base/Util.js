@@ -70,12 +70,22 @@ export default class Util {
      * Converts from Map.<K, V[]> to Map.<V, K[]> in the "obvious" way, by having each value map to the group of keys that
      * mapped to a group containing said value in the original map.
      * @param {!Map.<K, !(V[])>} groupMap
+     * @param {!boolean=} includeGroupsForOriginalKeysEvenIfEmpty
      * @returns {!Map.<V, !(K[])>}
      * @template K, V
      */
-    static reverseGroupMap(groupMap) {
+    static reverseGroupMap(groupMap, includeGroupsForOriginalKeysEvenIfEmpty = false) {
         let result = new Map();
+
+        if (includeGroupsForOriginalKeysEvenIfEmpty) {
+            //noinspection JSDuplicatedDeclaration
+            for (let k of groupMap.keys()) {
+                result.set(k, []);
+            }
+        }
+
         for (let [k, g] of groupMap) {
+            //noinspection JSUnusedAssignment
             for (let e of g) {
                 if (!result.has(e)) {
                     result.set(e, []);
@@ -83,6 +93,7 @@ export default class Util {
                 result.get(e).push(k);
             }
         }
+
         return result;
     };
 

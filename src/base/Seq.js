@@ -80,6 +80,14 @@ export default class Seq {
     };
 
     /**
+     * Returns a set containing the distinct items of this sequence.
+     * @returns {!Set.<T>)
+     */
+    toSet() {
+        return new Set(this.iterable);
+    };
+
+    /**
      * Returns a string representation of the receiving sequence's items, separated by the given joiner.
      * @param {!string} joiner
      * @returns {!string}

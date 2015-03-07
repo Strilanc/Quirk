@@ -78,6 +78,29 @@ suite.test("reverseGroupMap", () => {
         [4, ["b", "c"]],
         [5, ["c"]]
     ]));
+
+    assertThat(Util.reverseGroupMap(new Map([
+        ["a", [1, 2, 3]],
+        ["b", [2, 3, 4]],
+        ["c", [3, 4, 5]]
+    ]), true)).isEqualTo(new Map([
+        [1, ["a"]],
+        [2, ["a", "b"]],
+        [3, ["a", "b", "c"]],
+        [4, ["b", "c"]],
+        [5, ["c"]],
+        ["a", []],
+        ["b", []],
+        ["c", []]
+    ]));
+    assertThat(Util.reverseGroupMap(new Map([
+        [3, [1, 2]],
+        [2, [1]]
+    ]), true)).isEqualTo(new Map([
+        [1, [3, 2]],
+        [2, [3]],
+        [3, []]
+    ]));
 });
 
 //suite.test("MaskCandidates", () => {

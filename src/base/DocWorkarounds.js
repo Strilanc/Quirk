@@ -11,7 +11,6 @@ class Map {
      * @property {!function(K, V) : !Map.<K, V>} set
      * @property {!function(K)} delete
      * @property {!Iterator.<!((K|V)[])>} entries
-     * @property {!function() : !Iterator.<K>} keys
      * @property {!function() : !Iterator.<V>} values
      * @template K, V
      */
@@ -25,6 +24,13 @@ class Map {
      */
     get(key) {
         throw new Error("Just a doc class " + key + this)
+    }
+
+    /**
+     * @returns {!Iterator.<K>}
+     */
+    keys() {
+        throw new Error("Just a doc class " + this);
     }
 }
 
@@ -89,7 +95,8 @@ class Iterable {
  *
  * This class is just a JSDoc hack to make WebStorm understand the Symbol "type", and should not be used.
  */
-class Symbol {
+function Symbol(key) {
+    throw new Error("Just a doc class " + key);
 }
 Symbol.iterator = {};
 

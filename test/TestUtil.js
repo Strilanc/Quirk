@@ -1,3 +1,6 @@
+// Cheat a little bit on the testing library being independent from what it tests
+import describe from "src/base/Describe.js"
+
 /**
  * @param {!string} message
  */
@@ -181,87 +184,6 @@ function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
     //noinspection JSCheckFunctionSignatures
     return keys.every(key => other.hasOwnProperty(key) &&
     isApproximatelyEqualToHelper(subject[key], other[key], epsilon));
-}
-
-function describe_mapSubject(map, escape) {
-    var entries = [];
-    for (let [k, v] of map.entries()) {
-        //noinspection JSUnusedAssignment
-        entries.push(describe(k, escape + 1) + ": " + describe(v, escape + 1));
-    }
-    return "Map{" + entries.join(", ") + "}";
-}
-
-function describe_setSubject(set, escape) {
-    var entries = [];
-    for (let e of set) {
-        //noinspection JSUnusedAssignment
-        entries.push(describe(e, escape + 1));
-    }
-    return "Set{" + entries.join(", ") + "}";
-}
-
-function describe_iterableSubject(seq, escape) {
-    let array = [];
-    for (let item of seq) {
-        if (array.length > 1000) {
-            array.push("[...]");
-        }
-        array.push(item);
-    }
-    return "[" + array.map(e => describe(e, escape + 1)).join(", ") + "]";
-}
-
-function describe_customObject(value, escape) {
-    var entries = [];
-    for (let key in value) {
-        if (value.hasOwnProperty(key)) {
-            entries.push(describe(key, escape + 1) + ": " + describe(value[key], escape + 1));
-        }
-    }
-    return (typeof value) + "(\n\t" + entries.join("\n\t") + "\n)";
-}
-
-/**
- * @param {*} value
- * @param {!int=} escape
- * @returns {!string}
- */
-function describe(value, escape = 0) {
-    if (value === null) {
-        return "null";
-    }
-    if (value === undefined) {
-        return "undefined";
-    }
-    if (typeof value === "string") {
-        return '"' + value + '"';
-    }
-    if (escape > 10) {
-        return `(!! recursion limit hit at ${value} !!)`;
-    }
-
-    //noinspection JSUnresolvedVariable
-    if (value instanceof Map) {
-        return describe_mapSubject(value, escape);
-    }
-
-    //noinspection JSUnresolvedVariable
-    if (value instanceof Set) {
-        return describe_setSubject(value, escape);
-    }
-
-    //noinspection JSUnresolvedVariable
-    if (value[Symbol.iterator] !== undefined) {
-        return describe_iterableSubject(value, escape);
-    }
-
-    let result = value.toString();
-    if (result === "[object Object]") {
-        return describe_customObject(result, escape);
-    }
-
-    return result;
 }
 
 export class AssertionSubject {
