@@ -291,7 +291,7 @@ Circuit.prototype.scanStateTextures = function(time) {
         return this.__cache__scanStateTextures;
     }
 
-    var currentState = Superposition.fromZeroes(this.numWires);
+    var currentState = PipelineTexture.fromZeroes(this.numWires);
     var states = [currentState];
     for (var i = 0; i < this.columns.length; i++) {
         var c = this.columns[i];
