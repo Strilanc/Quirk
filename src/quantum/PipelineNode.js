@@ -7,19 +7,29 @@ import describe from "src/base/Describe.js"
 
 let nextUniqueId = 0;
 
+/**
+ * An operation with dependencies and dependents, that can be computed while automatically managing resources via a
+ * graph exploration.
+ */
 export default class PipelineNode {
     /**
-     * @param {!(!PipelineNode[])} inputNodes
-     * @param {!function(!(*[])) : *} operation
+     * @param {!(!PipelineNode[])} inputNodes Nodes whose results are needed to compute this node's result.
+     * @param {!function(!(*[])) : T} operation Computes this node's result, when given the input nodes' results.
+     * @param {!function(T)=} cleanupIntermediate Cleans up this node's result when it's only used as an intermediary.
      *
      * @property {!(!PipelineNode[])} inputNodes
-     * @property {!function(!(*[])) : *} operation
+     * @property {!function(!(*[])) : T} operation
      * @property {!int} id
+     * @property {!function(T)} cleanup
+     *
+     * @template T
      */
-    constructor(inputNodes, operation) {
+    constructor(inputNodes, operation, cleanupIntermediate = () => {}) {
+        Util.need(inputNodes.every(e => e instanceof PipelineNode), "inputNodes.every(e => e instanceof PipelineNode)");
         this.id = nextUniqueId++;
         this.inputNodes = inputNodes;
         this.operation = operation;
+        this.cleanup = cleanupIntermediate;
     }
 
     isEqualTo(other) {
@@ -80,10 +90,9 @@ export default class PipelineNode {
 
     /**
      * @param {!(!PipelineNode[])} nodesWithDesiredOutputs
-     * @param {!function(*)} unusedOutputCleanupFunction
      * @returns {!Map<!int, *>}
      */
-    static computePipeline(nodesWithDesiredOutputs, unusedOutputCleanupFunction = () => {}) {
+    static computePipeline(nodesWithDesiredOutputs) {
         //noinspection JSUnresolvedVariable
         let outputIdSet = new Seq(nodesWithDesiredOutputs).map(e => e.id).toSet();
         let graph = PipelineNode.prepareGraph(nodesWithDesiredOutputs);
@@ -103,7 +112,7 @@ export default class PipelineNode {
                 inputNode.unsatisfiedOutputCount--;
                 if (inputNode.unsatisfiedOutputCount === 0) {
                     if (!outputIdSet.has(inputNode.pipelineNode.id)) {
-                        unusedOutputCleanupFunction(inputNode.cachedResult);
+                        inputNode.pipelineNode.cleanup(inputNode.cachedResult);
                     }
                     inputNode.cachedResult = undefined;
                 }
@@ -117,7 +126,7 @@ export default class PipelineNode {
             // Cleanup output textures that are not needed (... how?).
             if (node.unsatisfiedOutputCount === 0) {
                 if (!outputIdSet.has(node.pipelineNode.id)) {
-                    unusedOutputCleanupFunction(node.cachedResult);
+                    node.pipelineNode.cleanup(node.cachedResult);
                 }
                 node.cachedResult = undefined;
             }
@@ -136,5 +145,12 @@ export default class PipelineNode {
         for (let _ of computation){}
 
         return result;
+    }
+
+    /**
+     * @returns {T}
+     */
+    compute() {
+        return PipelineNode.computePipeline([this]).get(this.id);
     }
 }
