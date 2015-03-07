@@ -10,7 +10,7 @@ const DEFAULT_RECURSION_LIMIT = 10;
  * @param {!int=} recursionLimit
  * @returns {!string}
  */
-export default function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
+function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
     if (value === null) {
         return "null";
     }
@@ -27,17 +27,14 @@ export default function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT
         return RECURSE_LIMIT_DESCRIPTION;
     }
 
-    //noinspection JSUnresolvedVariable
     if (value instanceof Map) {
         return describe_Map(value, recursionLimit);
     }
 
-    //noinspection JSUnresolvedVariable
     if (value instanceof Set) {
         return describe_Set(value, recursionLimit);
     }
 
-    //noinspection JSUnresolvedVariable
     if (value[Symbol.iterator] !== undefined) {
         return describe_Iterable(value, recursionLimit);
     }
@@ -49,7 +46,13 @@ export default function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT
 
     return describe_Object(value, recursionLimit);
 }
+export default describe;
 
+    /**
+ * @param {!Map} map
+ * @param {!int} limit
+ * @returns {!string}
+ */
 function describe_Map(map, limit) {
     var entries = [];
     for (let [k, v] of map.entries()) {
@@ -59,12 +62,18 @@ function describe_Map(map, limit) {
         }
         //noinspection JSUnusedAssignment
         let keyDesc = describe(k, limit - 1);
+        //noinspection JSUnusedAssignment
         let valDesc = describe(v, limit - 1);
         entries.push(`${keyDesc}: ${valDesc}`);
     }
     return `Map{${entries.join(", ")}}`;
 }
 
+/**
+ * @param {!Set} set
+ * @param {!int} limit
+ * @returns {!string}
+ */
 function describe_Set(set, limit) {
     var entries = [];
     for (let e of set) {
@@ -77,6 +86,11 @@ function describe_Set(set, limit) {
     return `Set{${entries.join(", ")}}`;
 }
 
+/**
+ * @param {!Iterable} seq
+ * @param {!int} limit
+ * @returns {!string}
+ */
 function describe_Iterable(seq, limit) {
     let entries = [];
     for (let e of seq) {
@@ -90,6 +104,11 @@ function describe_Iterable(seq, limit) {
     return `${prefix}[${entries.join(", ")}]`;
 }
 
+/**
+ * @param {*} value
+ * @param {!int} limit
+ * @returns {!string}
+ */
 function describe_Object(value, limit) {
     var entries = [];
     for (let k in value) {

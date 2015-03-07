@@ -1,12 +1,6 @@
 // Cheat a little bit on the testing library being independent from what it tests
 import describe from "src/base/Describe.js"
-
-/**
- * @param {!string} message
- */
-function fail(message) {
-    throw new Error(message);
-}
+import equate from "src/base/Equate.js"
 
 function isArrayIsh(value) {
     return Array.isArray(value) ||
@@ -18,6 +12,13 @@ function isArrayIsh(value) {
         value instanceof Uint8Array ||
         value instanceof Uint16Array ||
         value instanceof Uint32Array;
+}
+
+/**
+ * @param {!string} message
+ */
+export function fail(message) {
+    throw new Error(message);
 }
 
 /**
@@ -33,100 +34,6 @@ function sanityCheck(subject) {
             }
         }
     }
-}
-
-/**
- * @param {!(T[])} subject
- * @param {*} other
- * @returns {!boolean}
- * @template T
- */
-function isEqualHelper_ArraySubject(subject, other) {
-    //noinspection JSUnresolvedVariable
-    if (!isArrayIsh(other) || other.length !== subject.length) {
-        return false;
-    }
-
-    for (let i = 0; i < subject.length; i++) {
-        if (!isEqualHelper(subject[i], other[i])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * @param {!Map} subject
- * @param {*} other
- * @returns {!boolean}
- */
-function isEqualHelper_MapSubject(subject, other) {
-    //noinspection JSUnresolvedVariable
-    if (!(other instanceof Map) || subject.size != other.size) {
-        return false;
-    }
-
-    //noinspection JSUnresolvedFunction
-    for (let k of subject.keys()) {
-        //noinspection JSUnresolvedFunction
-        if (!other.has(k) || !isEqualHelper(subject.get(k), other.get(k))) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * @param {!Set} subject
- * @param {*} other
- * @returns {!boolean}
- */
-function isEqualHelper_SetSubject(subject, other) {
-    //noinspection JSUnresolvedVariable
-    if (!(other instanceof Set) || subject.size != other.size) {
-        return false;
-    }
-
-    for (let k of subject.keys()) {
-        if (!other.has(k)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * @param {*} subject
- * @param {*} other
- * @returns {!boolean}
- */
-function isEqualHelper(subject, other) {
-    if (subject instanceof Object && subject.constructor.prototype.hasOwnProperty("isEqualTo")) {
-        return subject.isEqualTo(other);
-    }
-
-    if (subject === other) {
-        return true;
-    }
-
-    //noinspection JSUnresolvedVariable
-    if (subject instanceof Map) {
-        return isEqualHelper_MapSubject(subject, other);
-    }
-
-    //noinspection JSUnresolvedVariable
-    if (subject instanceof Set) {
-        return isEqualHelper_SetSubject(subject, other);
-    }
-
-    if (isArrayIsh(subject)) {
-        return isEqualHelper_ArraySubject(subject, other);
-    }
-
-    return false;
 }
 
 /**
@@ -217,7 +124,7 @@ export class AssertionSubject {
      * @returns {undefined}
      */
     isEqualTo(other) {
-        if (!isEqualHelper(this.subject, other)) {
+        if (!equate(this.subject, other)) {
             fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>`);
         }
     };
@@ -227,7 +134,7 @@ export class AssertionSubject {
      * @returns {undefined}
      */
     isNotEqualTo(other) {
-        if (isEqualHelper(this.subject, other)) {
+        if (equate(this.subject, other)) {
             fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>`);
         }
     };

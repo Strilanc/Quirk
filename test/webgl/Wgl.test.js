@@ -22,12 +22,12 @@ suite.webGlTest("readPixelColorBytes", (status) => {
 
     let director = new WglDirector();
     director.render(texture, shader, [WglArg.float("v", 10/255)]);
-    assertThat(director.readPixelColorBytes(texture)).isEqualTo([
+    assertThat(director.readPixelColorBytes(texture)).isEqualTo(new Float32Array([
         1, 1, 10, 128,
         2, 1, 10, 128,
         1, 2, 10, 128,
         2, 2, 10, 128
-    ]);
+    ]));
 });
 
 suite.webGlTest("readPixelColorFloats", () => {
@@ -43,10 +43,10 @@ suite.webGlTest("readPixelColorFloats", () => {
 
     let director = new WglDirector();
     director.render(texture, shader, [WglArg.float("v", 192.25)]);
-    assertThat(director.readPixelColorFloats(texture)).isEqualTo([
+    assertThat(director.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
         0.5, 0.5, 192.25, 254.5,
         1.5, 0.5, 192.25, 254.5,
         0.5, 1.5, 192.25, 254.5,
         1.5, 1.5, 192.25, 254.5
-    ]);
+    ]));
 });
