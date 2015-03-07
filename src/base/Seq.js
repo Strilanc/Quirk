@@ -1,6 +1,3 @@
-//noinspection JSUnresolvedVariable
-const iterSymbol = Symbol.iterator;
-
 export const THROW_IF_EMPTY = { if_same_instance_as_this_then_throw: true };
 
 /**
@@ -11,25 +8,15 @@ const EMPTY_SYGIL = { not_a_normal_value: true };
 
 /**
  * A fluent wrapper for iterable sequences of values, exposing useful methods and properties.
- *
- * @typedef {!{
- *   next: !function() : !{
- *     value: (T|undefined),
- *     done: !boolean
- *   }
- * }} Iterator<T>
- * @typedef {!{
- *   [iterSymbol]: !function(): !Iterator<T>
- * }} Iterable<T>
  */
 export default class Seq {
     /**
      * Wraps the given iterable.
-     * @param {*|!(T[])|!Seq<T>|!Iterable<T>} iterable
+     * @param {!(T[])|!Seq<T>|!Iterable<T>|*} iterable
      * @template T
      */
     constructor(iterable) {
-        if (iterable[iterSymbol] === undefined) {
+        if (iterable[Symbol.iterator] === undefined) {
             throw new Error(`Not iterable: ${iterable}`);
         }
 
@@ -45,8 +32,8 @@ export default class Seq {
      * Iterates over the sequence's items.
      * @returns {!Iterator<T>}
      */
-    [iterSymbol]() {
-        return this.iterable[iterSymbol]();
+    [Symbol.iterator]() {
+        return this.iterable[Symbol.iterator]();
     }
 
     /**
@@ -59,7 +46,7 @@ export default class Seq {
      * @returns {!Seq<T>}
      */
     static fromGenerator(generatorFunction) {
-        return new Seq({ [iterSymbol]: generatorFunction });
+        return new Seq({ [Symbol.iterator]: generatorFunction });
     };
 
     /**
@@ -68,13 +55,13 @@ export default class Seq {
     * @param {!function(T, T|*) : !boolean} comparator
     */
     isEqualTo(other, comparator = (e1, e2) => e1 === e2) {
-        if (other === undefined || other === null || other[iterSymbol] === undefined) {
+        if (other === undefined || other === null || other[Symbol.iterator] === undefined) {
             return false;
         }
         if (other === this) {
             return true;
         }
-        var iter2 = other[iterSymbol]();
+        var iter2 = other[Symbol.iterator]();
         for (let e1 of this) {
             var e2 = iter2.next();
             if (e2.done || !comparator(e1, e2.value)) {
@@ -274,7 +261,7 @@ export default class Seq {
     zip(other, combiner) {
         let seq = this.iterable;
         return Seq.fromGenerator(function*() {
-            let iter2 = other[iterSymbol]();
+            let iter2 = other[Symbol.iterator]();
             for (let item1 of seq) {
                 let item2 = iter2.next();
                 if (item2.done) {
@@ -584,7 +571,7 @@ export default class Seq {
                 }
                 keySet.add(key);
                 return true;
-            })[iterSymbol]();
+            })[Symbol.iterator]();
         });
     };
 
@@ -607,7 +594,7 @@ export default class Seq {
      * @template A
      */
     single(emptyManyErrorAlternative = THROW_IF_EMPTY) {
-        let iter = this[iterSymbol]();
+        let iter = this[Symbol.iterator]();
 
         let first = iter.next();
         if (!first.done && iter.next().done) {
@@ -633,7 +620,7 @@ export default class Seq {
      * @template A
      */
     first(emptyErrorAlternative = THROW_IF_EMPTY) {
-        let iter = this[iterSymbol]();
+        let iter = this[Symbol.iterator]();
 
         let first = iter.next();
         if (!first.done) {
@@ -759,5 +746,33 @@ export default class Seq {
         }
         //noinspection JSValidateTypes
         return map;
+    };
+
+    /**
+     * Iterates elements reachable by starting from the given sequence and applying the given neighbor yielding function
+     * to known nodes.
+     * @param {!function(T) : !(T[])} neighborSelector
+     * @param {!function(T) : K} keySelector
+     * @returns {!Seq<T>}
+     * @template K
+     */
+    breadthFirstSearch(neighborSelector, keySelector = e => e) {
+        let seq = this;
+        return Seq.fromGenerator(function*() {
+            let visited = new Set();
+            let schedule = seq.toArray();
+            for (let i = 0; i < schedule.length; i++) {
+                let e = schedule[i];
+                let k = keySelector(e);
+                if (visited.has(k)) {
+                    continue;
+                }
+                visited.add(k);
+                for (let neighbor of neighborSelector(e)) {
+                    schedule.push(neighbor);
+                }
+                yield e;
+            }
+        });
     };
 }

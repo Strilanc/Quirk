@@ -52,6 +52,34 @@ suite.test("bitSize", () => {
     assertThat(Util.bitSize((1 << 20) + (1 << 19))).isEqualTo(21);
 });
 
+suite.test("reverseGroupMap", () => {
+    assertThat(Util.reverseGroupMap(new Map())).isEqualTo(new Map());
+    assertThat(Util.reverseGroupMap(new Map([["a", ["b"]]]))).isEqualTo(new Map([["b", ["a"]]]));
+    assertThat(Util.reverseGroupMap(new Map([
+        ["a", ["b", "c"]]
+    ]))).isEqualTo(new Map([
+        ["b", ["a"]],
+        ["c", ["a"]]
+    ]));
+    assertThat(Util.reverseGroupMap(new Map([
+        ["a", ["b"]],
+        ["c", ["b"]]
+    ]))).isEqualTo(new Map([
+        ["b", ["a", "c"]]
+    ]));
+    assertThat(Util.reverseGroupMap(new Map([
+        ["a", [1, 2, 3]],
+        ["b", [2, 3, 4]],
+        ["c", [3, 4, 5]]
+    ]))).isEqualTo(new Map([
+        [1, ["a"]],
+        [2, ["a", "b"]],
+        [3, ["a", "b", "c"]],
+        [4, ["b", "c"]],
+        [5, ["c"]]
+    ]));
+});
+
 //suite.test("MaskCandidates", () => {
 //    assertThrows(() => Util.maskCandidates(-1));
 //    assertThat(Util.maskCandidates(0)).isEqualTo([0]);

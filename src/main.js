@@ -1,36 +1,6 @@
 import Point from "../src/base/point.js"
 alert(new Point(1, 2));
 
-/**
- * @typedef {!{
- *   size: !int,
- *   clear: !function(),
- *   has: !function(K): !boolean,
- *   get: !function(K) : V,
- *   set: !function(K, V) : !Map<K, V>,
- *   delete: !function(K),
- *   entries: !Iterator<!((K|V)[])>,
- *   keys: !function() : !Iterator<K>,
- *   values: !function() : !Iterator<V>
- * }} Map<K, V>
- * @template K, V
- */
-
-/**
- * @typedef {!{
- *   size: !int,
- *   clear: !function(),
- *   has: !function(T): !boolean,
- *   add: !function(T) : !Set<T>,
- *   delete: !function(T),
- *   entries: !Iterator<!((T|T)[])>,
- *   keys: !function() : !Iterator<T>,
- *   values: !function() : !Iterator<T>
- * }} Set<T>
- * @template T
- */
-class f {}
-
 ////noinspection JSValidateTypes
 ///** @type {!HTMLCanvasElement} */
 //var canvas = document.getElementById("drawCanvas");

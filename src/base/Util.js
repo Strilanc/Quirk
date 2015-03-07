@@ -66,6 +66,26 @@ export default class Util {
         return Math.floor(Util.lg(n)  + 0.001) + 1;
     };
 
+    /**
+     * Converts from Map<K, V[]> to Map<V, K[]> in the "obvious" way, by having each value map to the group of keys that
+     * mapped to a group containing said value in the original map.
+     * @param {!Map<K, !(V[])>} groupMap
+     * @returns {!Map<V, !(K[])>}
+     * @template K, V
+     */
+    static reverseGroupMap(groupMap) {
+        let result = new Map();
+        for (let [k, g] of groupMap) {
+            for (let e of g) {
+                if (!result.has(e)) {
+                    result.set(e, []);
+                }
+                result.get(e).push(k);
+            }
+        }
+        return result;
+    };
+
     ///**
     //* Returns all of the integers that are unchanged by and-ing them against a bitwise mask.
     //* @param {!int} mask

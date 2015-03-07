@@ -586,3 +586,15 @@ suite.test("groupBy", () => {
         [1, [1, 4, 7, 10]],
         [2, [2, 5, 8]]]));
 });
+
+suite.test("breadthFirstSearch", () => {
+    assertThat(new Seq([]).breadthFirstSearch(() => { throw new Error(); }, () => { throw new Error(); })).iteratesAs();
+    assertThat(new Seq([1, 4]).breadthFirstSearch(e => [])).iteratesAs(
+        1, 4);
+    assertThat(new Seq([1, 4]).breadthFirstSearch(e => e >= 5 ? [] : [e*2, e*2+1])).iteratesAs(
+        1, 4, 2, 3, 8, 9, 5, 6, 7);
+    assertThat(new Seq([1, 4]).breadthFirstSearch(e => e >= 10 ? [] : [e*2, e*2+1])).iteratesAs(
+        1, 4, 2, 3, 8, 9, 5, 6, 7, 16, 17, 18, 19, 10, 11, 12, 13, 14, 15);
+    assertThat(new Seq([1, 4]).breadthFirstSearch(e => e >= 10 ? [] : [e*2, e*2+1], e => e % 3)).iteratesAs(
+        1, 2, 3);
+});
