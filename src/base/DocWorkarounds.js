@@ -8,16 +8,23 @@ class Map {
      * @property {!int} size
      * @property {!function()} clear
      * @property {!function(K): !boolean} has
-     * @property {!function(K) : V} get
-     * @property {!function(K, V) : !Map<K, V>} set
+     * @property {!function(K, V) : !Map.<K, V>} set
      * @property {!function(K)} delete
-     * @property {!Iterator<!((K|V)[])>} entries
-     * @property {!function() : !Iterator<K>} keys
-     * @property {!function() : !Iterator<V>} values
+     * @property {!Iterator.<!((K|V)[])>} entries
+     * @property {!function() : !Iterator.<K>} keys
+     * @property {!function() : !Iterator.<V>} values
      * @template K, V
      */
     constructor() {
         throw new Error("Just a doc class")
+    }
+
+    /**
+     * @param {K|*} key
+     * @returns {V|undefined}
+     */
+    get(key) {
+        throw new Error("Just a doc class " + key + this)
     }
 }
 
@@ -31,11 +38,11 @@ class Set {
      * @property {!int} size
      * @property {!function()} clear
      * @property {!function(T): !boolean} has
-     * @property {!function(T) : !Set<T>} add
+     * @property {!function(T) : !Set.<T>} add
      * @property {!function(T)} delete
-     * @property {!Iterator<!(T[])>} entries
-     * @property {!function() : !Iterator<T>} keys
-     * @property {!function() : !Iterator<T>} values
+     * @property {!Iterator.<!(T[])>} entries
+     * @property {!function() : !Iterator.<T>} keys
+     * @property {!function() : !Iterator.<T>} values
      * @template T
      */
     constructor() {
@@ -69,7 +76,7 @@ class Iterator {
  */
 class Iterable {
     /**
-     * @property {!function(): !Iterator<T>} [Symbol.iterator]
+     * @property {!function(): !Iterator.<T>} [Symbol.iterator]
      * @template T
      */
     constructor() {
@@ -84,5 +91,11 @@ class Iterable {
  */
 class Symbol {
 }
-
 Symbol.iterator = {};
+
+/**
+ * A WebGL texture.
+ *
+ * This class is just a JSDoc hack to make WebStorm understand the webgl type, and should not be used.
+ */
+class WebGLTexture {}

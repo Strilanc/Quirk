@@ -13,7 +13,6 @@ export default class WglShader {
     constructor(fragmentShaderSource) {
         /** @type {!string} */
         this.fragmentShaderSource = fragmentShaderSource;
-        //noinspection JSUnresolvedFunction
         /** @type {!ContextStash} */
         this.contextStash = new Map();
     };
@@ -40,7 +39,7 @@ class WglShaderContext {
     /**
      * @param {!WglCache} context
      * @param {!string} fragmentShaderSource
-     * @param {!Iterable<!string>} uniformParameterNames
+     * @param {!Iterable.<!string>} uniformParameterNames
      */
     constructor(context, fragmentShaderSource, uniformParameterNames) {
         let precision = context.getMaximumShaderFloatPrecision();
@@ -97,7 +96,6 @@ class WglShaderContext {
         let g = context.webGLRenderingContext;
 
         let nextTextureUnitIndex = 0;
-        //noinspection JSValidateJSDoc
         /**
          * @param {*} loc
          * @param {!WebGLTexture} val

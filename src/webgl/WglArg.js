@@ -74,7 +74,6 @@ export default class WglArg {
         return new WglArg(WglArg.TEXTURE_TYPE, name, value);
     }
 
-    //noinspection JSValidateJSDoc
     /**
      * @param {!string} name
      * @param {!WebGLTexture} value
@@ -89,17 +88,10 @@ export default class WglArg {
     }
 }
 
-//noinspection JSUnresolvedFunction
 WglArg.BOOL_TYPE = "bool";
-//noinspection JSUnresolvedFunction
 WglArg.FLOAT_TYPE = "float";
-//noinspection JSUnresolvedFunction
 WglArg.INT_TYPE = "int";
-//noinspection JSUnresolvedFunction
 WglArg.VEC2_TYPE = "vec2";
-//noinspection JSUnresolvedFunction
 WglArg.VEC4_TYPE = "vec4";
-//noinspection JSUnresolvedFunction
 WglArg.TEXTURE_TYPE = "texture";
-//noinspection JSUnresolvedFunction
 WglArg.RAW_TEXTURE_TYPE = "raw_texture";

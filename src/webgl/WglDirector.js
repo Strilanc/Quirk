@@ -48,7 +48,6 @@ export default class WglDirector {
             false);
     };
 
-    //noinspection JSValidateJSDoc
     /**
      * Creates an image texture with the given size and pixel data, passes it into the given function, then deletes it.
      * @param {!function(!WebGLTexture)} func

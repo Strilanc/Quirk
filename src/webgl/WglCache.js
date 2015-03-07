@@ -2,7 +2,7 @@
  * Stores information about the current web gl rendering context, and associated resources for shaders and textures and
  * such.
  *
- * @typedef {!Map<!int, !Map<!string, *>>} ContextStash
+ * @typedef {!Map.<!int, !Map.<!string, *>>} ContextStash
  */
 export default class WglCache {
     /**

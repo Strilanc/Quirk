@@ -315,24 +315,15 @@ suite.test("every", () => {
 });
 
 suite.test("contains", () => {
-    //noinspection JSCheckFunctionSignatures
     assertFalse(new Seq([]).contains(1));
-    //noinspection JSCheckFunctionSignatures
     assertFalse(new Seq([0]).contains(1));
-    //noinspection JSCheckFunctionSignatures
     assertFalse(new Seq([0]).contains(""));
-    //noinspection JSCheckFunctionSignatures
     assertTrue(new Seq([1]).contains(1));
-    //noinspection JSCheckFunctionSignatures
     assertFalse(new Seq([[]]).contains([]));
 
-    //noinspection JSCheckFunctionSignatures
     assertTrue(new Seq([1, 2, 3]).contains(1));
-    //noinspection JSCheckFunctionSignatures
     assertTrue(new Seq([1, 2, 3]).contains(2));
-    //noinspection JSCheckFunctionSignatures
     assertTrue(new Seq([1, 2, 3]).contains(3));
-    //noinspection JSCheckFunctionSignatures
     assertFalse(new Seq([1, 2, 3]).contains(4));
 });
 
@@ -376,25 +367,16 @@ suite.test("concat", () => {
 suite.test("overlayAt", () => {
     assertThrows(() => new Seq([]).overlayAt(undefined, -1));
 
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([]).overlayAt("abc", 0)).iteratesAs();
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1]).overlayAt("abc", 0)).iteratesAs("abc");
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1, 2]).overlayAt("abc", 0)).iteratesAs("abc", 2);
 
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([]).overlayAt("abc", 1)).iteratesAs();
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1]).overlayAt("abc", 1)).iteratesAs(1);
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1, 2]).overlayAt("abc", 1)).iteratesAs(1, "abc");
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1, 2, 3]).overlayAt("abc", 1)).iteratesAs(1, "abc", 3);
 
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1, 2, 3]).overlayAt("abc", 2)).iteratesAs(1, 2, "abc");
-    //noinspection JSCheckFunctionSignatures
     assertThat(new Seq([1, 2, 3]).overlayAt("abc", 3)).iteratesAs(1, 2, 3);
 });
 

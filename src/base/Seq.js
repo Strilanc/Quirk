@@ -12,7 +12,7 @@ const EMPTY_SYGIL = { not_a_normal_value: true };
 export default class Seq {
     /**
      * Wraps the given iterable.
-     * @param {!(T[])|!Seq<T>|!Iterable<T>|*} iterable
+     * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
      * @template T
      */
     constructor(iterable) {
@@ -30,7 +30,7 @@ export default class Seq {
 
     /**
      * Iterates over the sequence's items.
-     * @returns {!Iterator<T>}
+     * @returns {!Iterator.<T>}
      */
     [Symbol.iterator]() {
         return this.iterable[Symbol.iterator]();
@@ -42,8 +42,8 @@ export default class Seq {
      * Note that the obvious alternative, <code>new Seq(function*(){yield 1;}()}</code>, stops working after the
      * iterable has been iterated once.
      *
-     * @param {!function() : Iterator<T>} generatorFunction
-     * @returns {!Seq<T>}
+     * @param {!function() : Iterator.<T>} generatorFunction
+     * @returns {!Seq.<T>}
      */
     static fromGenerator(generatorFunction) {
         return new Seq({ [Symbol.iterator]: generatorFunction });
@@ -51,7 +51,7 @@ export default class Seq {
 
     /**
     * Determines if the given iterable contains the same items as this sequence.
-    * @param {*|!(T[])|!Seq<T>|!Iterable<T>} other
+    * @param {*|!(T[])|!Seq.<T>|!Iterable.<T>} other
     * @param {!function(T, T|*) : !boolean} comparator
     */
     isEqualTo(other, comparator = (e1, e2) => e1 === e2) {
@@ -100,7 +100,7 @@ export default class Seq {
     /**
      * Returns a sequence of natural numbers, starting at 0 and incrementing until just before the given count.
      * @param {!int} count
-     * @returns {!Seq<!int>}
+     * @returns {!Seq.<!int>}
      */
     static range(count) {
         if (count < 0) {
@@ -116,7 +116,7 @@ export default class Seq {
 
     /**
      * Returns the sequence of natural numbers, starting at 0 and incrementing without bound.
-     * @returns {!Seq<!int>}
+     * @returns {!Seq.<!int>}
      */
     static naturals() {
         return Seq.fromGenerator(function*() {
@@ -133,7 +133,7 @@ export default class Seq {
      * Returns a sequence of the same item repeated the given number of times.
      * @param {T} item
      * @param {!int} repeatCount
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      * @template T
      */
     static repeat(item, repeatCount) {
@@ -151,7 +151,7 @@ export default class Seq {
     /**
      * Returns a sequence with the same items, but precomputed and stored. If the sequence is already solid, e.g. it is
      * backed by an array, then it is returned directly (and unchanged).
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      */
     solidify() {
         let knownSolidTypes = [
@@ -179,7 +179,7 @@ export default class Seq {
     /**
      * Returns a sequence iterating the results of applying a transformation to the items of the receiving sequence.
      * @param {!function(T): R} projection
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      * @template R
      */
     map(projection) {
@@ -195,7 +195,7 @@ export default class Seq {
      * Returns a sequence iterating the items of the receiving sequence that match a predicate. Items that don't match
      * the predicate, by causing it to return a falsy value, are skipped.
      * @param {!function(T) : !boolean} predicate
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      */
     filter(predicate) {
         let seq = this.iterable;
@@ -251,10 +251,10 @@ export default class Seq {
      * Combines this sequence with another by passing items with the same index through a combining function.
      * If one sequence is longer than the other, the lonely tail is discarded.
      *
-     * @param {!(T2[])|!Seq<T2>|!Iterable<T2>} other
+     * @param {!(T2[])|!Seq.<T2>|!Iterable.<T2>} other
      * @param {!function(T, T2) : R} combiner
      *
-     * @returns {!Seq<R>}
+     * @returns {!Seq.<R>}
      *
      * @template T2, R
      */
@@ -374,7 +374,7 @@ export default class Seq {
 
     /**
      * Determines if the sequence contains a given value or not, as determined by the <code>===</code> operator.
-     * @param {T} value
+     * @param {T|*} value
      * @returns {!boolean}
      */
     contains(value) {
@@ -406,7 +406,7 @@ export default class Seq {
      *
      * @param {A} seed
      * @param {!function(A, T) : A} aggregator
-     * @returns {!Seq<A>}
+     * @returns {!Seq.<A>}
      * @template A
      */
     scan(seed, aggregator) {
@@ -424,7 +424,7 @@ export default class Seq {
 
     /**
      * Returns a sequence containing the same items, but in the opposite order.
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      */
     reverse() {
         return new Seq(this.toArray().reverse());
@@ -432,7 +432,7 @@ export default class Seq {
 
     /**
      * Flattens this sequence of iterables into a concatenated sequence.
-     * @returns {!Seq<C>}
+     * @returns {!Seq.<C>}
      * @template C
      */
     flatten() {
@@ -448,8 +448,8 @@ export default class Seq {
 
     /**
      * Returns a sequence that iterates the receiving sequence's items and then the given iterable's items.
-     * @param {*|!(A[])|!Seq<A>} other
-     * @returns {!Seq<T|A>}
+     * @param {*|!(A[])|!Seq.<A>} other
+     * @returns {!Seq.<T|A>}
      * @template A
      */
     concat(other) {
@@ -466,9 +466,10 @@ export default class Seq {
 
     /**
      * Returns a sequence with the same items, except the item at the given index (if reached) is replaced.
-     * @param {T} item
+     * @param {A} item
      * @param {!int} index
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T|A>}
+     * @template A
      */
     overlayAt(item, index) {
         if (index < 0) {
@@ -488,7 +489,7 @@ export default class Seq {
      * Returns a sequence with the same items, until one of the items fails to match the given predicate. Then the
      * sequence is cut short just before yielding that item.
      * @param {!function(T) : !boolean} predicate
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      */
     takeWhile(predicate) {
         let seq = this.iterable;
@@ -505,7 +506,7 @@ export default class Seq {
     /**
      * Returns a sequence with the same items, except cut short if it exceeds the given maximum count.
      * @param {!int} maxTakeCount
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      */
     take(maxTakeCount) {
         if (maxTakeCount < 0) {
@@ -530,7 +531,7 @@ export default class Seq {
     /**
      * Returns a sequence with the same items, except the give number are skipped at the start.
      * @param {!int} maxSkipCount
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      */
     skip(maxSkipCount) {
         if (maxSkipCount < 0) {
@@ -557,7 +558,7 @@ export default class Seq {
      *
      * @param {!function(T) : K} keySelector Items are considered distinct when their image, through this function, is
      * not already in the Set of seen images. The return type must support being inserted into a Set.
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      * @template K
      */
     distinctBy(keySelector) {
@@ -578,7 +579,7 @@ export default class Seq {
     /**
     * Returns a sequence with the same items, except duplicate items are omitted.
     * The items must support being inserted into / found in a Set.
-    * @returns {!Seq<T>}
+    * @returns {!Seq.<T>}
     */
     distinct() {
         return this.distinctBy(e => e);
@@ -681,7 +682,7 @@ export default class Seq {
      * sequence already exceeds the given length, no items are added.
      * @param {A} paddingItem
      * @param {!int} minCount
-     * @returns {!Seq<T|A>}
+     * @returns {!Seq.<T|A>}
      * @template A
      */
     paddedWithTo(paddingItem, minCount) {
@@ -710,7 +711,7 @@ export default class Seq {
      *
      * @param {!function(T): K} keySelector
      * @param {!function(T): V} valueSelector
-     * @returns {!Map<K, V>}
+     * @returns {!Map.<K, V>}
      * @template K, V
      */
     toMap(keySelector, valueSelector) {
@@ -724,7 +725,6 @@ export default class Seq {
             }
             map.set(key, val);
         }
-        //noinspection JSValidateTypes
         return map;
     };
 
@@ -732,7 +732,7 @@ export default class Seq {
      * Returns a map, with keys generated by passing the sequence's items through the given key selector, where each key
      * maps to an array of the items (from the sequence) that mapped to said key.
      * @param {!function(T): K} keySelector
-     * @returns {!Map<K, !(T[])>}
+     * @returns {!Map.<K, !(T[])>}
      * @template K
      */
     groupBy(keySelector) {
@@ -744,7 +744,6 @@ export default class Seq {
             }
             map.get(key).push(item);
         }
-        //noinspection JSValidateTypes
         return map;
     };
 
@@ -753,7 +752,7 @@ export default class Seq {
      * to known nodes.
      * @param {!function(T) : !(T[])} neighborSelector
      * @param {!function(T) : K} keySelector
-     * @returns {!Seq<T>}
+     * @returns {!Seq.<T>}
      * @template K
      */
     breadthFirstSearch(neighborSelector, keySelector = e => e) {

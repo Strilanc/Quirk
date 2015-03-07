@@ -67,10 +67,10 @@ export default class Util {
     };
 
     /**
-     * Converts from Map<K, V[]> to Map<V, K[]> in the "obvious" way, by having each value map to the group of keys that
+     * Converts from Map.<K, V[]> to Map.<V, K[]> in the "obvious" way, by having each value map to the group of keys that
      * mapped to a group containing said value in the original map.
-     * @param {!Map<K, !(V[])>} groupMap
-     * @returns {!Map<V, !(K[])>}
+     * @param {!Map.<K, !(V[])>} groupMap
+     * @returns {!Map.<V, !(K[])>}
      * @template K, V
      */
     static reverseGroupMap(groupMap) {
