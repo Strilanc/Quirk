@@ -102,7 +102,7 @@ export default class Seq {
      * @returns {!string}
      */
     toString() {
-        return `[${this.join(", ")}]`;
+        return `Seq[${this.join(", ")}]`;
     };
 
     /**

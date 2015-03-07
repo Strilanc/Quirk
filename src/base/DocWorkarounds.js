@@ -43,7 +43,6 @@ class Set {
     /**
      * @property {!int} size
      * @property {!function()} clear
-     * @property {!function(T): !boolean} has
      * @property {!function(T) : !Set.<T>} add
      * @property {!function(T)} delete
      * @property {!Iterator.<!(T[])>} entries
@@ -53,6 +52,14 @@ class Set {
      */
     constructor() {
         throw new Error("Just a doc class")
+    }
+
+    /**
+     * @param {T} key
+     * @returns {!boolean}
+     */
+    has(key) {
+        throw new Error("Just a doc class " + key + this)
     }
 }
 

@@ -127,10 +127,10 @@ suite.test("join", () => {
 });
 
 suite.test("toString", () => {
-    assertThat(new Seq([]).toString()).isEqualTo("[]");
-    assertThat(new Seq([1]).toString()).isEqualTo("[1]");
-    assertThat(new Seq([1, 2]).toString()).isEqualTo("[1, 2]");
-    assertThat(new Seq([1, 2, 3]).toString()).isEqualTo("[1, 2, 3]");
+    assertThat(new Seq([]).toString()).isEqualTo("Seq[]");
+    assertThat(new Seq([1]).toString()).isEqualTo("Seq[1]");
+    assertThat(new Seq([1, 2]).toString()).isEqualTo("Seq[1, 2]");
+    assertThat(new Seq([1, 2, 3]).toString()).isEqualTo("Seq[1, 2, 3]");
 });
 
 suite.test("range", () => {

@@ -22,7 +22,7 @@ suite.webGlTest("readPixelColorBytes", (status) => {
 
     let director = new WglDirector();
     director.render(texture, shader, [WglArg.float("v", 10/255)]);
-    assertThat(director.readPixelColorBytes(texture)).isEqualTo(new Float32Array([
+    assertThat(director.readPixelColorBytes(texture)).isEqualTo(new Uint8Array([
         1, 1, 10, 128,
         2, 1, 10, 128,
         1, 2, 10, 128,
