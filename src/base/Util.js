@@ -1,3 +1,6 @@
+import Seq from "src/base/Seq.js"
+import Rect from "src/base/Rect.js"
+
 /**
  * Miscellaneous utility methods.
  */
@@ -34,16 +37,6 @@ export default class Util {
     }
 
     /**
-    * Returns the base-2 logarithm of the given number.
-    * @param {!number} n
-    * @returns {!number}
-    */
-    static lg(n) {
-        Util.need(n > 0, "lg: n > 0");
-        return Math.log(n) / Math.log(2);
-    };
-
-    /**
      * Determines if there is an integer p such that 2^p equals the given integer.
      * @param {!int} i
      * @returns {!boolean}
@@ -63,8 +56,36 @@ export default class Util {
         if (n === 0) {
             return 0;
         }
-        return Math.floor(Util.lg(n)  + 0.001) + 1;
+        return Math.floor(Math.log2(n) + 0.000001) + 1;
     };
+
+    /**
+     * Returns the smallest power of 2 that is equal to or larger than the given integer.
+     * @param {!int} i
+     * @returns {!int}
+     */
+    static ceilingPowerOf2(i) {
+        if (i <= 1) {
+            return 1;
+        }
+        return 1 << Util.bitSize(i - 1);
+    };
+
+    /**
+     * Returns the flattened items at indexes corresponding to a rectangle in a 2-dimensional array, after the array was
+     * flattened.
+     * @param {!int} rowWidth
+     * @param {!(T[])} items
+     * @param {!Rect} rect
+     * @returns {!(T[])}
+     * @template T
+     */
+    static sliceRectFromFlattenedArray(rowWidth, items, rect) {
+        return Seq.range(rect.h).
+            map(dy => (rect.y + dy) * rowWidth).
+            flatMap(dy => Seq.range(rect.w).map(dx => items[dx + rect.x + dy])).
+            toArray();
+    }
 
     /**
      * Converts from Map.<K, V[]> to Map.<V, K[]> in the "obvious" way, by having each value map to the group of keys that

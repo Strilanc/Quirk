@@ -3,8 +3,10 @@ import WglTexture from "src/webgl/WglTexture.js"
 import Shades from "src/quantum/Shades.js"
 import Util from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
+import Rect from "src/base/Rect.js"
 import Complex from "src/linalg/Complex.js"
-import PipelineNode from "src/quantum/PipelineNode.js";
+import PipelineNode from "src/quantum/PipelineNode.js"
+import describe from "src/base/Describe.js"
 
 /**
  * Has a pipeline node computing a texture containing amplitudes (or probabilities), and methods for operation on it.
@@ -118,7 +120,6 @@ export default class SuperpositionNode {
         });
     };
 
-
     /**
      * Returns a texture containing probabilities that the superposition would match various control masks if measured.
      *
@@ -138,56 +139,168 @@ export default class SuperpositionNode {
         });
     };
 
-    ///**
-    // * Returns the probability that each qubit would end up true, if measured.
-    // * Note that, when qubits are entangled, some conditional probabilities will not match these probabilities.
-    // * @returns {!(!float[])}
-    // */
-    //perQubitProbabilities() {
-    //    let p = controlProbabilities(-1);
-    //    return range(this.qubitCount).map(function(i) { return p[4 << i]; });
-    //};
-
     /**
      * Forces evaluation of the pipeline, to compute this texture's color components.
-     * @returns {!PipelineNode.<!Float32Array>}
+     * @returns {!SuperpositionReadNode}
      */
-    readFloats() {
-        return new PipelineNode([this.pipelineNode], inputs => getSharedDirector().readPixelColorFloats(inputs[0]));
+    read() {
+        return new SuperpositionReadNode(new PipelineNode(
+            [this.pipelineNode],
+            inputs => getSharedDirector().readPixelColorFloats(inputs[0])));
     };
 
     /**
-     * Treats this texture's color components as encoded amplitudes, extracting them.
+     * Performs a (very) naive bin packing of the given sizes of boxes into a bin with power-of-2 width and height.
+     *
+     * Current strategy is to greedily choose to grow a new row or column, then greedily place new rects along it until
+     * the new col/row extends along the whole shape so far. Definitely not optimal, unless the shapes are all the same
+     * size.
+     *
+     * @param {!Map.<K, !{width: !int, height: !int}>} sizeMap
+     * @returns {!{width: !int, height: !int, placeMap: !Map.<K, !Rect>}}
+     * @template K
+     */
+    static packRects(sizeMap) {
+        let width = 0;
+        let height = 0;
+        let growingNewColumnElseRow = false;
+        let growRootOffset = 0;
+        let grownLength = 0;
+
+        let placeMap = new Map();
+        for (let [key, size] of sizeMap) {
+            //noinspection JSUnusedAssignment
+            let {width: w, height: h} = size;
+            let x, y, rechoose;
+            if (growingNewColumnElseRow) {
+                x = growRootOffset;
+                y = grownLength;
+                grownLength += h;
+                rechoose = grownLength >= height;
+            } else {
+                x = grownLength;
+                y = growRootOffset;
+                grownLength += w;
+                rechoose = grownLength >= width;
+            }
+
+            //noinspection JSUnusedAssignment
+            var r = new Rect(x, y, w, h);
+            placeMap.set(key, r);
+            width = Math.max(width, r.right());
+            height = Math.max(height, r.bottom());
+
+            if (rechoose) {
+                growingNewColumnElseRow = width <= height;
+                grownLength = 0;
+                growRootOffset = growingNewColumnElseRow ? width : height;
+            }
+        }
+
+        width = Util.ceilingPowerOf2(width);
+        height = Util.ceilingPowerOf2(height);
+
+        //noinspection JSValidateTypes
+        return {width, height, placeMap};
+    };
+
+    /**
+     * @param {!(!SuperpositionNode[])} superpositionNodes
+     * @returns {!Map.<!int, !SuperpositionReadNode>}
+     */
+    static mergedReadFloats(superpositionNodes) {
+        //noinspection JSUnresolvedVariable
+        let pack = SuperpositionNode.packRects(new Seq(superpositionNodes).toMap(
+            e => e.pipelineNode.id,
+            e => e));
+
+        let seedCombined = new SuperpositionNode(pack.width, pack.height, [], () => {
+            let t = allocTexture(pack.width, pack.height);
+            Shades.renderUniformColor(getSharedDirector(), t, 0, 0, 0, 0);
+            return t;
+        });
+        let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
+            pack.width,
+            pack.height,
+            [aNode.pipelineNode, eNode.pipelineNode],
+            textures => {
+                let [a, e] = textures;
+                let t = allocTexture(pack.width, pack.height);
+                let r = pack.placeMap.get(eNode.pipelineNode.id);
+                Shades.renderOverlayed(getSharedDirector(), t, r.x, r.y, e, a);
+                return t;
+            });
+
+        // Hope they're in the right order (as opposed to doing a topological sort)...
+        let combined = new Seq(superpositionNodes).aggregate(seedCombined, accumulateCombined).read();
+
+        //noinspection JSUnresolvedVariable
+        return new Seq(superpositionNodes).toMap(
+            e => e.pipelineNode.id,
+            e => new SuperpositionReadNode(new PipelineNode([combined.floatsNode], inputs => {
+                let floats = inputs[0];
+                //noinspection JSUnresolvedVariable
+                let pixelRect = pack.placeMap.get(e.pipelineNode.id);
+                let floatRect = pixelRect.withX(pixelRect.x * 4).withW(pixelRect.w * 4);
+                return Util.sliceRectFromFlattenedArray(pack.width * 4, floats, floatRect);
+            })));
+    }
+}
+
+export class SuperpositionReadNode {
+    /**
+     * @param {!PipelineNode<!(!number[])|!Float32Array>} floatsNode
+     * @property {!PipelineNode<!(!number[])|!Float32Array>} floatsNode
+     */
+    constructor(floatsNode) {
+        this.floatsNode = floatsNode;
+    }
+
+    /**
+     * Just the read texture's color component float data.
      * @returns {!PipelineNode<!(!Complex[])>}
      */
-    readAsAmplitudes() {
-        return new PipelineNode([this.readFloats()], inputs => {
+    raw() {
+        return this.floatsNode;
+    };
+
+    /**
+     * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
+     * @returns {!PipelineNode<!(!Complex[])>}
+     */
+    asAmplitudes() {
+        return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
             return Seq.range(floats.length/4).map(i => new Complex(floats[i*4], floats[i*4+1])).toArray();
         });
     };
 
     /**
-     * Treats this texture's color components as encoded probabilities, extracting them.
+     * Reads the probabilities associated with the texture data (just the red component).
      * @returns {!PipelineNode.<!(!number[])>}
      */
-    readAsProbabilities() {
-        return new PipelineNode([this.readFloats()], inputs => {
+    asProbabilities() {
+        return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
             return Seq.range(floats.length/4).map(i => floats[i*4]).toArray();
         });
     };
 
     /**
-     * @param {!(!SuperpositionNode[])} textureNodes
-     * @returns {!(!PipelineNode[])}
+     * Reads the probability that each qubit would end up true, if measured, based on the texture data being
+     * control combination data.
+     * @returns {!PipelineNode.<!(!number[])>}
      */
-    static readAll(textureNodes) {
-
-        let mergeNode = new PipelineNode(textureNodes.map(e => e.pipelineNode), textures => {
-
+    asPerQubitProbabilities() {
+        return new PipelineNode([this.floatsNode], inputs => {
+            let floats = inputs[0];
+            return Seq.naturals().
+                map(i => 4 << i).
+                takeWhile(i => i < floats.length).
+                map(i => floats[4 << i]).
+                toArray();
         });
-    }
+    };
 }
 
 /** @type {undefined|!WglDirector} */

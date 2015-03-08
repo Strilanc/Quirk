@@ -191,6 +191,16 @@ suite.test("map", () => {
     assertThat(new Seq([3, 1, 2]).map(e => e * 2)).iteratesAs(6, 2, 4);
 });
 
+suite.test("flatMap", () => {
+    assertThat(new Seq([]).flatMap(e => [])).iteratesAs();
+    assertThat(new Seq([]).flatMap(e => [1, 2, 3])).iteratesAs();
+    assertThat(new Seq([1, 2, 3]).flatMap(e => [])).iteratesAs();
+
+    assertThat(new Seq([1]).flatMap(e => [e * 2, e * 2 + 1])).iteratesAs(2, 3);
+    assertThat(new Seq([1, 2, 3]).flatMap(e => [e * 2, e * 2 + 1])).iteratesAs(2, 3, 4, 5, 6, 7);
+    assertThat(new Seq([1, 2, 3]).flatMap(Seq.range)).iteratesAs(0, 0, 1, 0, 1, 2);
+});
+
 suite.test("filter", () => {
     assertThat(new Seq([]).filter(e => e % 2 === 0)).iteratesAs();
     assertThat(new Seq([1]).filter(e => e % 2 === 0)).iteratesAs();

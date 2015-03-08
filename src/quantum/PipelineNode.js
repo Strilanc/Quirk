@@ -90,7 +90,7 @@ export default class PipelineNode {
 
     /**
      * @param {!(!PipelineNode[])} nodesWithDesiredOutputs
-     * @returns {!Map<!int, *>}
+     * @returns {!(*[])}
      */
     static computePipeline(nodesWithDesiredOutputs) {
         //noinspection JSUnresolvedVariable
@@ -144,13 +144,13 @@ export default class PipelineNode {
         //noinspection JSUnusedLocalSymbols
         for (let _ of computation){}
 
-        return result;
+        return new Seq(nodesWithDesiredOutputs).map(e => result.get(e.id)).toArray();
     }
 
     /**
      * @returns {T}
      */
     compute() {
-        return PipelineNode.computePipeline([this]).get(this.id);
+        return PipelineNode.computePipeline([this])[0];
     }
 }

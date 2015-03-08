@@ -200,6 +200,25 @@ export default class Seq {
     };
 
     /**
+     * Returns a sequence iterating the concatenated results of applying an iterable-returning transformation to the
+     * items of the receiving sequence.
+     * @param {!function(T): !Iterable<R>} sequenceProjection
+     * @returns {!Seq.<T>}
+     * @template R
+     */
+    flatMap(sequenceProjection) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            for (let e of seq) {
+                let s = sequenceProjection(e);
+                for (let f of s) {
+                    yield f;
+                }
+            }
+        });
+    };
+
+    /**
      * Returns a sequence iterating the items of the receiving sequence that match a predicate. Items that don't match
      * the predicate, by causing it to return a falsy value, are skipped.
      * @param {!function(T) : !boolean} predicate

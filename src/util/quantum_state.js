@@ -145,7 +145,7 @@ QuantumState.prototype.phasedBy = function(phase) {
  * @returns {!int}
  */
 QuantumState.prototype.countQubits = function() {
-    return Math.round(lg(this.columnVector.height()));
+    return Math.round(Math.log2(this.columnVector.height()));
 };
 
 /**

@@ -1,5 +1,7 @@
 import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Util from "src/base/Util.js"
+import Rect from "src/base/Rect.js"
+import Seq from "src/base/Seq.js"
 
 let suite = new Suite("Util");
 
@@ -12,19 +14,6 @@ suite.test("notNull", () => {
     assertThrows(() => Util.notNull(null));
     assertThat(Util.notNull([])).isEqualTo([]);
     assertThat(Util.notNull("")).isEqualTo("");
-});
-
-suite.test("lg", () => {
-    assertThrows(() => Util.lg(0));
-    assertThrows(() => Util.lg(-1));
-    assertThat(Util.lg(0.25)).isEqualTo(-2);
-    assertThat(Util.lg(0.5)).isEqualTo(-1);
-    assertThat(Util.lg(1)).isEqualTo(0);
-    assertThat(Util.lg(2)).isEqualTo(1);
-    assertThat(Util.lg(4)).isEqualTo(2);
-    assertThat(Util.lg(8)).isEqualTo(3);
-    assertThat(Util.lg(12345)).isApproximatelyEqualTo(13.5916392160301442);
-    assertThat(Util.lg(1 << 10)).isEqualTo(10);
 });
 
 suite.test("isPowerOf2", () => {
@@ -50,6 +39,57 @@ suite.test("bitSize", () => {
     assertThat(Util.bitSize(9)).isEqualTo(4);
     assertThat(Util.bitSize(1 << 20)).isEqualTo(21);
     assertThat(Util.bitSize((1 << 20) + (1 << 19))).isEqualTo(21);
+});
+
+suite.test("ceilingPowerOf2", () => {
+    assertThat(Util.ceilingPowerOf2(-1)).isEqualTo(1);
+    assertThat(Util.ceilingPowerOf2(0)).isEqualTo(1);
+    assertThat(Util.ceilingPowerOf2(1)).isEqualTo(1);
+    assertThat(Util.ceilingPowerOf2(2)).isEqualTo(2);
+    assertThat(Util.ceilingPowerOf2(3)).isEqualTo(4);
+    assertThat(Util.ceilingPowerOf2(4)).isEqualTo(4);
+    assertThat(Util.ceilingPowerOf2(5)).isEqualTo(8);
+    assertThat(Util.ceilingPowerOf2(6)).isEqualTo(8);
+    assertThat(Util.ceilingPowerOf2(7)).isEqualTo(8);
+    assertThat(Util.ceilingPowerOf2(8)).isEqualTo(8);
+    assertThat(Util.ceilingPowerOf2(9)).isEqualTo(16);
+    assertThat(Util.ceilingPowerOf2((1 << 20) - 1)).isEqualTo(1 << 20);
+    assertThat(Util.ceilingPowerOf2(1 << 20)).isEqualTo(1 << 20);
+    assertThat(Util.ceilingPowerOf2((1 << 20) + 1)).isEqualTo(1 << 21);
+});
+
+suite.test("sliceRectFromFlattenedArray", () => {
+    assertThat(Util.sliceRectFromFlattenedArray(4, [], new Rect(0, 0, 0, 0))).isEqualTo([]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(2, 2, 2, 2))).isEqualTo([
+        10, 11,
+        14, 15
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 2, 2, 2))).isEqualTo([
+        8, 9,
+        12, 13
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 1, 2, 2))).isEqualTo([
+        4, 5,
+        8, 9
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 0, 2, 2))).isEqualTo([
+        0, 1,
+        4, 5
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 0, 3, 3))).isEqualTo([
+        0, 1, 2,
+        4, 5, 6,
+        8, 9, 10
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(20).toArray(), new Rect(0, 0, 1, 4))).isEqualTo([
+        0, 4, 8, 12
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(20).toArray(), new Rect(1, 2, 1, 3))).isEqualTo([
+        9, 13, 17
+    ]);
+    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(20).toArray(), new Rect(1, 2, 3, 1))).isEqualTo([
+        9, 10, 11
+    ]);
 });
 
 suite.test("reverseGroupMap", () => {

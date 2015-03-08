@@ -105,7 +105,7 @@ suite.test("runPipelineGraph_singleton", () => {
     let free = e => { history.push("free " + e); };
 
     let singleton = new PipelineNode([], maker("s"), free);
-    assertThat(PipelineNode.computePipeline([singleton])).isEqualTo(new Map([[singleton.id, "s"]]));
+    assertThat(PipelineNode.computePipeline([singleton])).isEqualTo(["s"]);
     assertThat(history).isEqualTo(["make s"]);
 
 });
@@ -120,9 +120,7 @@ suite.test("runPipelineGraph_line", () => {
     let line3 = new PipelineNode([line2], maker(3), free);
 
     history = [];
-    assertThat(PipelineNode.computePipeline([line3])).isEqualTo(new Map([
-        [line3.id, "3"]
-    ]));
+    assertThat(PipelineNode.computePipeline([line3])).isEqualTo(["3"]);
     assertThat(history).isEqualTo([
         "make 1",
         "make 2",
@@ -131,10 +129,7 @@ suite.test("runPipelineGraph_line", () => {
         "free 2"]);
 
     history = [];
-    assertThat(PipelineNode.computePipeline([line1, line3])).isEqualTo(new Map([
-        [line1.id, "1"],
-        [line3.id, "3"]
-    ]));
+    assertThat(PipelineNode.computePipeline([line1, line3])).isEqualTo(["1", "3"]);
     assertThat(history).isEqualTo([
         "make 1",
         "make 2",
@@ -154,10 +149,7 @@ suite.test("runPipelineGraph_cross", () => {
     let cross5 = new PipelineNode([cross3], maker(5), free);
 
     history = [];
-    assertThat(PipelineNode.computePipeline([cross4, cross5])).isEqualTo(new Map([
-        [cross4.id, "4"],
-        [cross5.id, "5"]
-    ]));
+    assertThat(PipelineNode.computePipeline([cross4, cross5])).isEqualTo(["4", "5"]);
     assertThat(history).isEqualTo([
         "make 1",
         "make 2",
@@ -169,10 +161,7 @@ suite.test("runPipelineGraph_cross", () => {
         "free 3"]);
 
     history = [];
-    assertThat(PipelineNode.computePipeline([cross3, cross5])).isEqualTo(new Map([
-        [cross3.id, "3"],
-        [cross5.id, "5"]
-    ]));
+    assertThat(PipelineNode.computePipeline([cross3, cross5])).isEqualTo(["3", "5"]);
     assertThat(history).isEqualTo([
         "make 1",
         "make 2",
@@ -194,9 +183,7 @@ suite.test("runPipelineGraph_race", () => {
     let race4 = new PipelineNode([race3b, race2a3a], maker(4), free);
     let race5 = new PipelineNode([race4], maker(5), free);
 
-    assertThat(PipelineNode.computePipeline([race5])).isEqualTo(new Map([
-        [race5.id, "5"]
-    ]));
+    assertThat(PipelineNode.computePipeline([race5])).isEqualTo(["5"]);
     assertThat(history).isEqualTo([
         "make 1",
         "make 2a3a",

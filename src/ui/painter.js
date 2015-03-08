@@ -259,7 +259,7 @@ Painter.prototype.paintMatrix = function(matrix, drawArea, hand) {
 
     if (focus_c !== null) {
         cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
-        var numWires = lg(Math.max(matrix.width(), matrix.height()));
+        var numWires = Math.log2(Math.max(matrix.width(), matrix.height()));
         var stater = function(bitMask) {
             return range(numWires).map(function(i) {
                 return ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0";
