@@ -9,7 +9,8 @@
   "devDependencies": {
     "grunt": "0.4.4",
     "grunt-karma": "^0.10.1",
-    "grunt-traceur": "0.5.1",
+    "grunt-traceur": "^0.5.1",
+    "traceur": "^0.0.86",
     "karma": "^0.12.31",
     "karma-chrome-launcher": "^0.1.7",
     "karma-firefox-launcher": "^0.1.4"
