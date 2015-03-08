@@ -8,6 +8,8 @@ export default class ControlMask {
     /**
      * @param {!int} inclusionMask.
      * @param {!int} desiredValueMask
+     * @property {!int} inclusionMask.
+     * @property {!int} desiredValueMask
      */
     constructor(inclusionMask, desiredValueMask) {
         U.need((desiredValueMask & ~inclusionMask) === 0, "Desired non-zero values but didn't include them.");
@@ -32,6 +34,7 @@ export default class ControlMask {
      * @returns {!boolean}
      */
     isEqualTo(other) {
+        //noinspection JSUnresolvedVariable
         return other instanceof ControlMask &&
             this.inclusionMask == other.inclusionMask &&
             this.desiredValueMask == other.desiredValueMask;

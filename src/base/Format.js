@@ -8,27 +8,16 @@ export default class Format {
      * @param {!number} maxAbbreviationError
      * @param {int|undefined} fixedDigits
      * @param {!string} itemSeparator
+     *
+     * @property {!boolean} allowAbbreviation Should outputs be shortened, if possible?
+     * @property {!number} maxAbbreviationError How much error is abbreviating allowed to introduce?
+     * @property {int|undefined} fixedDigits Use toFixed? How many digits?
+     * @property {!string} itemSeparator What should list items be separated by?
      */
     constructor(allowAbbreviation, maxAbbreviationError, fixedDigits, itemSeparator) {
-        /**
-         * Should outputs be shortened, if possible?
-         * @type {!boolean} allowAbbreviation
-         */
         this.allowAbbreviation = allowAbbreviation;
-        /**
-         * How much error is abbreviating allowed to introduce?
-         * @type {!number} maxAbbreviationError
-         */
         this.maxAbbreviationError = maxAbbreviationError;
-        /**
-         * Use toFixed? How many digits?
-         * @type {int|undefined} fixedDigits
-         */
         this.fixedDigits = fixedDigits;
-        /**
-         * What should list items be separated by?
-         * @type {!string} itemSeparator
-         */
         this.itemSeparator = itemSeparator;
     }
 

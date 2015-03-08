@@ -39,12 +39,22 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
     [WglArg.VEC2_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform2f(loc, val[0], val[1]),
     [WglArg.VEC4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform4f(loc, val[0], val[1], val[2], val[3]),
     [WglArg.TEXTURE_TYPE]: (c, loc, val) => {
+        if (val.unit >= c.maxTextureUnits) {
+            throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
+        }
+        if (val.texture.width >= c.maxTextureDiameter || val.texture.height >= c.maxTextureDiameter) {
+            throw new Error(`Uniform texture argument is ${val.texture.width}x${val.texture.height}, but max ` +
+                `diameter is ${c.maxTextureDiameter}.`);
+        }
         let g = c.webGLRenderingContext;
         g.uniform1i(loc, val.unit);
         g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
         g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.instanceFor(c).texture);
     },
     [WglArg.RAW_TEXTURE_TYPE]: (c, loc, val) => {
+        if (val.unit >= c.maxTextureUnits) {
+            throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
+        }
         let g = c.webGLRenderingContext;
         g.uniform1i(loc, val.unit);
         g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
@@ -60,6 +70,10 @@ class WglShaderContext {
      * @param {!WglCache} context
      * @param {!string} fragmentShaderSource
      * @param {!Iterable.<!string>} uniformParameterNames
+     *
+     * @property {!Map} uniformLocations
+     * @property {*} positionAttributeLocation
+     * @property {*} program
      */
     constructor(context, fragmentShaderSource, uniformParameterNames) {
         let precision = context.getMaximumShaderFloatPrecision();

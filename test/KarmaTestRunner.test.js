@@ -20,7 +20,6 @@ __karma__.start = () => {
             };
             let status = { warn_only: false };
 
-            //noinspection JSUnresolvedVariable
             let t0 = performance.now();
             try {
                 //noinspection JSUnusedAssignment
@@ -42,7 +41,6 @@ __karma__.start = () => {
                     result.log.push(`${suite.name}.${name} failed!\n\n${ex}\n\n${ex.stack}\n`);
                 }
             }
-            //noinspection JSUnresolvedVariable
             result.time = performance.now() - t0;
 
             __karma__.result(result);

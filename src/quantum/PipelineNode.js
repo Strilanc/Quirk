@@ -144,6 +144,7 @@ export default class PipelineNode {
         //noinspection JSUnusedLocalSymbols
         for (let _ of computation){}
 
+        //noinspection JSUnresolvedVariable
         return new Seq(nodesWithDesiredOutputs).map(e => result.get(e.id)).toArray();
     }
 

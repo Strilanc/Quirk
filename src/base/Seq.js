@@ -9,10 +9,12 @@ const EMPTY_SYGIL = { not_a_normal_value: true };
 /**
  * A fluent wrapper for iterable sequences of values, exposing useful methods and properties.
  */
-export default class Seq {
+export default //noinspection JSUnusedGlobalSymbols
+class Seq {
     /**
      * Wraps the given iterable.
      * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
+     * @property {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
      * @template T
      */
     constructor(iterable) {
@@ -22,6 +24,7 @@ export default class Seq {
 
         if (iterable instanceof Seq) {
             // Avoid double-wrapping.
+            //noinspection JSUnresolvedVariable
             this.iterable = iterable.iterable;
         } else {
             this.iterable = iterable;

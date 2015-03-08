@@ -9,6 +9,12 @@ export default class WglCache {
      * @param {!WebGLRenderingContext} webGLRenderingContext
      * @param {!int} permanentIdentifier
      * @param {!int} temporaryIdentifier
+     *
+     * @property {!WebGLRenderingContext} webGLRenderingContext
+     * @property {!int} permanentIdentifier
+     * @property {!int} temporaryIdentifier
+     * @property {!int} maxTextureUnits
+     * @property {!int} maxTextureDiameter
      */
     constructor(webGLRenderingContext, permanentIdentifier, temporaryIdentifier) {
         /** @type {!WebGLRenderingContext} */

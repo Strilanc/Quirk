@@ -8,6 +8,9 @@ export default class WglTexture {
     /**
      * @param {!int} width
      * @param {!int} height
+     * @property {!int} width
+     * @property {!int} height
+     * @property {!ContextStash} contextStash
      */
     constructor(width, height) {
         /** @type {!int} */

@@ -7,6 +7,8 @@ export default class Complex {
     /**
      * @param {!number} real The real part of the Complex number. The 'a' in a + bi.
      * @param {!number} imag The imaginary part of the Complex number. The 'b' in a + bi.
+     * @property {!number} real
+     * @property {!number} imag
      */
     constructor(real, imag) {
         /**
@@ -29,6 +31,7 @@ export default class Complex {
      */
     isEqualTo(other) {
         if (other instanceof Complex) {
+            //noinspection JSUnresolvedVariable
             return this.real === other.real && this.imag === other.imag;
         }
         if (typeof other === "number") {
@@ -96,6 +99,7 @@ export default class Complex {
      */
     static realPartOf(v) {
         if (v instanceof Complex) {
+            //noinspection JSUnresolvedVariable
             return v.real;
         }
         if (typeof v === "number") {
@@ -111,6 +115,7 @@ export default class Complex {
      */
     static imagPartOf(v) {
         if (v instanceof Complex) {
+            //noinspection JSUnresolvedVariable
             return v.imag;
         }
         if (typeof v === "number") {

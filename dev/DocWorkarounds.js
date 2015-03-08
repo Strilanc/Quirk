@@ -7,8 +7,6 @@ class Map {
     /**
      * @property {!int} size
      * @property {!function()} clear
-     * @property {!function(K): !boolean} has
-     * @property {!function(K, V) : !Map.<K, V>} set
      * @property {!function(K)} delete
      * @property {!Iterator.<!((K|V)[])>} entries
      * @property {!function() : !Iterator.<V>} values
@@ -23,6 +21,23 @@ class Map {
      * @returns {V|undefined}
      */
     get(key) {
+        throw new Error("Just a doc class " + key + this)
+    }
+
+    /**
+     * @param {K|*} key
+     * @param {V|*} val
+     * @returns {Map.<K, T>|undefined}
+     */
+    set(key, val) {
+        throw new Error("Just a doc class " + key + val + this)
+    }
+
+    /**
+     * @param {K|*} key
+     * @returns {!boolean}
+     */
+    has(key) {
         throw new Error("Just a doc class " + key + this)
     }
 
@@ -55,7 +70,7 @@ class Set {
     }
 
     /**
-     * @param {T} key
+     * @param {T|*} key
      * @returns {!boolean}
      */
     has(key) {
@@ -113,3 +128,12 @@ Symbol.iterator = {};
  * This class is just a JSDoc hack to make WebStorm understand the webgl type, and should not be used.
  */
 class WebGLTexture {}
+
+class performance {
+    /**
+     * @returns {!number}
+     */
+    static now() {
+        throw new Error("Just a doc class")
+    }
+}
