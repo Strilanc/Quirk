@@ -31,7 +31,7 @@ let ops = [
 ];
 
 let stateNodes = new Seq(ops).scan(
-    SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 10),
+    SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 4),
     (a, e) => a.withQubitOperationApplied(e[0], e[1], e[2])
 ).toArray();
 let desiredNodes = [stateNodes[3], stateNodes[stateNodes.length - 1]];

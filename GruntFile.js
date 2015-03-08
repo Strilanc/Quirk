@@ -3,27 +3,20 @@ module.exports = function(grunt) {
     //noinspection JSUnresolvedFunction
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        jstdPhantom: {
-            options: {
-                useLatest : true,
-                port: 9876
-            },
-            files: ['jsTestDriver.conf']
-        },
         traceur: {
-            build_src: {
+            translate_src: {
                 options: {
                     experimental: true,
-                    copyRuntime: 'out/lib'
+                    copyRuntime: 'out/tmp/traceur/bootstrap_pre_src'
                 },
                 files: [{
                     expand: true,
                     cwd: 'src/',
                     src: ['**/*.js'],
-                    dest: 'out/src/'
+                    dest: 'out/tmp/traceur/src/'
                 }]
             },
-            build_test: {
+            translate_test: {
                 options: {
                     experimental: true
                 },
@@ -31,7 +24,7 @@ module.exports = function(grunt) {
                     expand: true,
                     cwd: 'test/',
                     src: ['**/*.js'],
-                    dest: 'out/test/'
+                    dest: 'out/tmp/traceur/test/'
                 }]
             }
         },
@@ -39,40 +32,79 @@ module.exports = function(grunt) {
             unit: {
                 configFile: 'karma.conf.js'
             },
-            cross_unit: {
+            unit_just_firefox_for_travis: {
                 configFile: 'karma.conf.js',
-                browsers: ['Firefox', 'Chrome']
+                browsers: ['Firefox']
+            }
+        },
+        concat: {
+            concat_traceur_src: {
+                options: {
+                    separator: ';'
+                },
+                src: [
+                    'out/tmp/traceur/bootstrap_pre_src/**/*.js',
+                    'out/tmp/traceur/src/**/*.js',
+                    'out/tmp/traceur/bootstrap_post_src/**/*.js'
+                ],
+                dest: 'out/all_src.js'
+            },
+            concat_traceur_test: {
+                options: {
+                    separator: ';'
+                },
+                src: [
+                    'out/tmp/traceur/bootstrap_pre_src/**/*.js',
+                    'out/tmp/traceur/bootstrap_pre_test/**/*.js',
+                    'out/tmp/traceur/src/**/*.js',
+                    'out/tmp/traceur/test/**/*.js',
+                    'out/tmp/traceur/bootstrap_post_test/**/*.js'
+                ],
+                dest: 'out/all_tests.js'
+            }
+        },
+        clean: {
+            clean_out_tmp: ["out/tmp"]
+        },
+        makeTestPostBootstrap: {
+            options: {
+                from: null,
+                to: null
             }
         }
     });
 
-    var karmaInterop = function() {
+    grunt.registerTask('bootstrap_get_packages', function(src, dst) {
         //noinspection JSUnresolvedFunction
-        var testFiles = grunt.file.glob.sync("test/**/*.test.js");
+        var testFiles = grunt.file.glob.sync(src);
         var getters = testFiles.map(function(e) {
             return 'System.get("' + e + '");';
         }).join("\n");
-        grunt.file.write("out/interop/GetTraceurGeneratedTestPackagesForKarmaTestRunner.js", getters);
-    };
-    karmaInterop();
+        grunt.file.write(dst, getters);
+    });
 
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-traceur');
 
-    grunt.registerTask('build', ['traceur:build_src']);
-
-    grunt.registerTask('build_all', [
-        'traceur:build_src',
-        'traceur:build_test'
+    grunt.registerTask('build_src', [
+        'clean:clean_out_tmp',
+        'traceur:translate_src',
+        'bootstrap_get_packages:src/**/*.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
+        'concat:concat_traceur_src',
+        'clean:clean_out_tmp'
     ]);
-
-    grunt.registerTask('test', [
-        'build_all',
-        'karma:unit'
+    grunt.registerTask('build_test', [
+        'clean:clean_out_tmp',
+        'traceur:translate_src',
+        'traceur:translate_test',
+        'bootstrap_get_packages:test/**/*.test.js:out/tmp/traceur/bootstrap_post_test/run_tests.js',
+        'concat:concat_traceur_test',
+        'clean:clean_out_tmp'
     ]);
+    grunt.registerTask('build', ['build_src', 'build_test']);
 
-    grunt.registerTask('cross_test', [
-        'build_all',
-        'karma:cross_unit'
-    ]);
+    grunt.registerTask('test', ['build_test', 'karma:unit_just_firefox_for_travis']);
+    grunt.registerTask('test_more', ['build_test', 'karma:unit']);
 };

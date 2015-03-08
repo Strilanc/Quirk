@@ -48,9 +48,7 @@ __karma__.start = () => {
             __karma__.result(result);
         }
 
-        if (suitePassed) {
-            console.log(`${suite.name} suite passed`)
-        } else {
+        if (!suitePassed) {
             console.warn(`${suite.name} suite failed`)
         }
     }

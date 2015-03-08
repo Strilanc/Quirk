@@ -315,9 +315,6 @@ const GLSL_PASS_THROUGH = new WglShader(`
         gl_FragColor = texture2D(inputTexture, uv);
     }`);
 
-/**
- * Renders a texture storing the same data as a given texture.
- */
 const GLSL_OVERLAY = new WglShader(`
     /** The size of the covered texture. */
     uniform vec2 backgroundTextureSize;

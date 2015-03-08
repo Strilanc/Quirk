@@ -186,6 +186,7 @@ export default class SuperpositionNode {
 
             //noinspection JSUnusedAssignment
             var r = new Rect(x, y, w, h);
+            //noinspection JSUnusedAssignment
             placeMap.set(key, r);
             width = Math.max(width, r.right());
             height = Math.max(height, r.bottom());

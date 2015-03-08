@@ -8,6 +8,8 @@
   },
   "devDependencies": {
     "grunt": "0.4.4",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-concat": "^0.5.1",
     "grunt-karma": "^0.10.1",
     "grunt-traceur": "^0.5.1",
     "traceur": "^0.0.86",
