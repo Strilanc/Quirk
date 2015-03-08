@@ -51,7 +51,7 @@ export default class Shades {
         director.useRawDataTextureIn(w, h, pixelColorData, texture => {
             director.render(destinationTexture, GLSL_PASS_THROUGH, [
                 WglArg.vec2("textureSize", w, h),
-                WglArg.rawTexture("sourceTexture", texture)
+                WglArg.rawTexture("sourceTexture", texture, 0)
             ]);
         });
     };
@@ -71,8 +71,8 @@ export default class Shades {
         director.render(destinationTexture, GLSL_OVERLAY, [
             WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
             WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-            WglArg.texture("backgroundTexture", backgroundTexture),
-            WglArg.texture("foregroundTexture", foregroundTexture),
+            WglArg.texture("backgroundTexture", backgroundTexture, 0),
+            WglArg.texture("foregroundTexture", foregroundTexture, 1),
             WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
         ]);
     }
@@ -108,7 +108,7 @@ export default class Shades {
     static renderAddBitConstraintToControlMask(director, destinationTexture, controlMask, targetBit, desiredBitValue) {
         director.render(destinationTexture, GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("oldControlMaskTexture", controlMask),
+            WglArg.texture("oldControlMaskTexture", controlMask, 0),
             WglArg.float("targetBitPositionMask", 1 << targetBit),
             WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
         ]);
@@ -125,7 +125,7 @@ export default class Shades {
     static renderProbabilitiesFromAmplitudes(director, destinationTexture, inputAmplitudeTexture) {
         director.render(destinationTexture, GLSL_FROM_AMPLITUDES_TO_PROBABILITIES, [
             WglArg.vec2("textureSize", inputAmplitudeTexture.width, inputAmplitudeTexture.height),
-            WglArg.texture("inputTexture", inputAmplitudeTexture)
+            WglArg.texture("inputTexture", inputAmplitudeTexture, 0)
         ]);
     };
 
@@ -142,7 +142,7 @@ export default class Shades {
     static renderConditionalProbabilitiesPipeline(director, destinationTexture, inputTexture, step, requiredBitValue) {
         director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_PIPELINE, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture),
+            WglArg.texture("inputTexture", inputTexture, 0),
             WglArg.float("stepPower", 1 << step),
             WglArg.bool("conditionValue", requiredBitValue)
         ]);
@@ -226,9 +226,9 @@ export default class Shades {
         let [[a, b], [c, d]] = operation.rows;
         director.render(destinationTexture, GLSL_APPLY_CUSTOM_QUBIT_OPERATION, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture),
+            WglArg.texture("inputTexture", inputTexture, 0),
             WglArg.float("qubitIndexMask", 1 << qubitIndex),
-            WglArg.texture("controlTexture", controlTexture),
+            WglArg.texture("controlTexture", controlTexture, 1),
             WglArg.vec2("matrix_a", a.real, a.imag),
             WglArg.vec2("matrix_b", b.real, b.imag),
             WglArg.vec2("matrix_c", c.real, c.imag),

@@ -67,20 +67,22 @@ export default class WglArg {
 
     /**
      * @param {!string} name
-     * @param {!WglTexture} value
+     * @param {!WglTexture} texture
+     * @param {!int} unit
      * @returns {!WglArg}
      */
-    static texture(name, value) {
-        return new WglArg(WglArg.TEXTURE_TYPE, name, value);
+    static texture(name, texture, unit) {
+        return new WglArg(WglArg.TEXTURE_TYPE, name, {texture, unit});
     }
 
     /**
      * @param {!string} name
-     * @param {!WebGLTexture} value
+     * @param {!WebGLTexture} texture
+     * @param {!int} unit
      * @returns {!WglArg}
      */
-    static rawTexture(name, value) {
-        return new WglArg(WglArg.RAW_TEXTURE_TYPE, name, value);
+    static rawTexture(name, texture, unit) {
+        return new WglArg(WglArg.RAW_TEXTURE_TYPE, name, {texture, unit});
     }
 
     toString() {

@@ -81,10 +81,13 @@ export default class Util {
      * @template T
      */
     static sliceRectFromFlattenedArray(rowWidth, items, rect) {
-        return Seq.range(rect.h).
-            map(dy => (rect.y + dy) * rowWidth).
-            flatMap(dy => Seq.range(rect.w).map(dx => items[dx + rect.x + dy])).
-            toArray();
+        let result = [];
+        for (let j = 0; j < rect.h; j++) {
+            for (let i = 0; i < rect.w; i++) {
+                result.push(items[(j+rect.y)*rowWidth + i + rect.x]);
+            }
+        }
+        return result;
     }
 
     /**

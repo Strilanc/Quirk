@@ -1,5 +1,59 @@
-import Point from "../src/base/point.js"
-alert(new Point(1, 2));
+import ControlMask from "src/quantum/ControlMask.js"
+import Seq from "src/base/Seq.js"
+import Complex from "src/linalg/Complex.js"
+import Matrix from "src/linalg/Matrix.js"
+import SuperpositionNode from "src/quantum/SuperpositionNode.js"
+import PipelineNode from "src/quantum/PipelineNode.js"
+import Rect from "src/base/Rect.js"
+import describe from "src/base/Describe.js"
+
+let ops = [
+    [0, Matrix.HADAMARD, ControlMask.NO_CONTROLS],
+    [1, Matrix.HADAMARD, ControlMask.NO_CONTROLS],
+    [2, Matrix.HADAMARD, ControlMask.NO_CONTROLS],
+    [0, Matrix.PAULI_X, ControlMask.fromBitIs(1, true)],
+    [1, Matrix.HADAMARD, ControlMask.fromBitIs(0, true)],
+    [1, Matrix.PAULI_X, new ControlMask(5, 5)],
+    [0, Matrix.PAULI_X, ControlMask.fromBitIs(2, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+    [2, Matrix.fromTargetedRotation(-2/3), ControlMask.fromBitIs(1, true)]
+];
+
+let stateNodes = new Seq(ops).scan(
+    SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 10),
+    (a, e) => a.withQubitOperationApplied(e[0], e[1], e[2])
+).toArray();
+let desiredNodes = [stateNodes[3], stateNodes[stateNodes.length - 1]];
+
+//noinspection JSCheckFunctionSignatures
+let readNodes = SuperpositionNode.mergedReadFloats(desiredNodes).values();
+//noinspection JSUnresolvedFunction
+let amplitudeNodes = new Seq(readNodes).map(e => e.asAmplitudes()).toArray();
+
+PipelineNode.computePipeline(amplitudeNodes);
+
+alert("Starting2");
+let t0 = performance.now();
+let n = 100;
+let amplitudeArrays;
+for (let i = 0; i < n; i++) {
+    amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
+}
+let t1 = performance.now();
+let dt = (t1 - t0) / n;
+alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
+
 
 ////noinspection JSValidateTypes
 ///** @type {!HTMLCanvasElement} */

@@ -32,6 +32,26 @@ export default class WglShader {
     };
 }
 
+const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
+    [WglArg.BOOL_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val ? 1 : 0),
+    [WglArg.INT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1i(loc, val),
+    [WglArg.FLOAT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val),
+    [WglArg.VEC2_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform2f(loc, val[0], val[1]),
+    [WglArg.VEC4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform4f(loc, val[0], val[1], val[2], val[3]),
+    [WglArg.TEXTURE_TYPE]: (c, loc, val) => {
+        let g = c.webGLRenderingContext;
+        g.uniform1i(loc, val.unit);
+        g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
+        g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.instanceFor(c).texture);
+    },
+    [WglArg.RAW_TEXTURE_TYPE]: (c, loc, val) => {
+        let g = c.webGLRenderingContext;
+        g.uniform1i(loc, val.unit);
+        g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
+        g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture);
+    }
+};
+
 /**
  * A compiled shader program definition that can be bound to / used by a webgl context.
  */
@@ -94,32 +114,6 @@ class WglShaderContext {
      */
     load(context, uniformArgs) {
         let g = context.webGLRenderingContext;
-
-        let nextTextureUnitIndex = 0;
-        /**
-         * @param {*} loc
-         * @param {!WebGLTexture} val
-         */
-        let rawTextureAction = (loc, val) => {
-            let textureUnit = nextTextureUnitIndex++;
-            if (textureUnit >= context.maxTextureUnits) {
-                throw new Error(`WebGLRenderer: not enough texture units (${context.maxTextureUnits})`);
-            }
-            g.uniform1i(loc, textureUnit);
-            g.activeTexture(WebGLRenderingContext.TEXTURE0 + textureUnit);
-            g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val);
-        };
-
-        let typeActionMap = {
-            [WglArg.BOOL_TYPE]: (loc, val) => g.uniform1f(loc, val ? 1 : 0),
-            [WglArg.INT_TYPE]: (loc, val) => g.uniform1i(loc, val),
-            [WglArg.FLOAT_TYPE]: (loc, val) => g.uniform1f(loc, val),
-            [WglArg.VEC2_TYPE]: (loc, val) => g.uniform2f(loc, val[0], val[1]),
-            [WglArg.VEC4_TYPE]: (loc, val) => g.uniform4f(loc, val[0], val[1], val[2], val[3]),
-            [WglArg.TEXTURE_TYPE]: (loc, val) => rawTextureAction(loc, val.instanceFor(context).texture),
-            [WglArg.RAW_TEXTURE_TYPE]: rawTextureAction
-        };
-
         g.useProgram(this.program);
 
         for (let arg of uniformArgs) {
@@ -127,7 +121,7 @@ class WglShaderContext {
             if (location === undefined) {
                 throw new Error(`Unexpected argument: ${arg}`)
             }
-            typeActionMap[arg.type](location, arg.value);
+            WGL_ARG_TYPE_UNIFORM_ACTION_MAP[arg.type](context, location, arg.value);
         }
 
         g.enableVertexAttribArray(this.positionAttributeLocation);

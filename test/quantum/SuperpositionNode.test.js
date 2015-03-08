@@ -197,3 +197,41 @@ suite.webGlTest("mergedReadFloats", () => {
         [0, 0, 0, 0, 0, 0, 0, 1]
     ]);
 });
+
+suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
+    let ops = [
+        [0, Matrix.HADAMARD, ControlMask.NO_CONTROLS],
+        [1, Matrix.HADAMARD, ControlMask.NO_CONTROLS],
+        [2, Matrix.HADAMARD, ControlMask.NO_CONTROLS],
+        [0, Matrix.PAULI_X, ControlMask.fromBitIs(1, true)],
+        [1, Matrix.HADAMARD, ControlMask.fromBitIs(0, true)],
+        [1, Matrix.PAULI_X, new ControlMask(5, 5)],
+        [0, Matrix.PAULI_X, ControlMask.fromBitIs(2, true)],
+        [2, Matrix.fromTargetedRotation(-1/3), ControlMask.fromBitIs(0, true)],
+        [2, Matrix.fromTargetedRotation(-2/3), ControlMask.fromBitIs(1, true)]
+    ];
+
+    let stateNodes = new Seq(ops).scan(
+        SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 3),
+        (a, e) => a.withQubitOperationApplied(e[0], e[1], e[2])
+    ).toArray();
+
+    //noinspection JSCheckFunctionSignatures
+    let readNodes = SuperpositionNode.mergedReadFloats(stateNodes).values();
+    //noinspection JSUnresolvedFunction
+    let amplitudeNodes = new Seq(readNodes).map(e => e.asAmplitudes()).toArray();
+    let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
+    let s = Math.sqrt(0.5);
+    assertThat(amplitudeArrays).isApproximatelyEqualTo([
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [s, s, 0, 0, 0, 0, 0, 0],
+        [0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0],
+        [s/2, s/2, s/2, s/2, s/2, s/2, s/2, s/2],
+        [s/2, s/2, s/2, s/2, s/2, s/2, s/2, s/2],
+        [s/2, 0.5, s/2, 0, s/2, 0.5, s/2, 0],
+        [s/2, 0.5, s/2, 0, s/2, 0, s/2, 0.5],
+        [s/2, 0.5, s/2, 0, 0, s/2, 0.5, s/2],
+        [s/2, Math.sqrt(3/8), s/2, 0.20412412285804749, 0, 0, 0.5, 0.28867512941360474],
+        [Math.sqrt(1/8), Math.sqrt(3/8), Math.sqrt(3/8), Math.sqrt(1/8), 0, 0, 0, 0]
+    ]);
+});
