@@ -1,4 +1,6 @@
+//noinspection JSUnresolvedVariable
 module.exports = function(grunt) {
+    //noinspection JSUnresolvedFunction
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jstdPhantom: {
