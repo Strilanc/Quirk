@@ -90,7 +90,7 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //var redoHistory = [];
 //
 ////noinspection FunctionTooLongJS
-//var main = function() {
+//var main = () => {
 //    /** @type {!Inspector} */
 //    var inspector = Inspector.empty(Config.NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
 //
@@ -147,7 +147,7 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //        return p.which === 1;
 //    };
 //
-//    var update = function(newInspector, keepInHistory) {
+//    var update = (newInspector, keepInHistory) => {
 //        if (inspector.isEqualTo(newInspector)) {
 //            return;
 //        }
@@ -163,14 +163,14 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //        redraw();
 //    };
 //
-//    var restore = function(jsonText) {
+//    var restore = jsonText => {
 //        inspector = inspector.withImportedCircuit(JSON.parse(jsonText));
 //        $(currentCircuitLink).attr("href", "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText);
 //        redraw();
 //    };
 //
 //    //noinspection JSUnresolvedFunction
-//    $(canvas).mousedown(function (p) {
+//    $(canvas).mousedown(p => {
 //        if (!isClicking(p)) { return; }
 //        p.preventDefault();
 //
@@ -178,7 +178,7 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //    });
 //
 //    //noinspection JSUnresolvedFunction
-//    $(document).mouseup(function (p) {
+//    $(document).mouseup(p => {
 //        if (!isClicking(p) || inspector.hand.heldGateBlock === null ) {
 //            return;
 //        }
@@ -188,7 +188,7 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //    });
 //
 //    //noinspection JSUnresolvedFunction
-//    $(document).mousemove(function (p) {
+//    $(document).mousemove(p => {
 //        if (!isClicking(p) || inspector.hand.heldGateBlock === null ) {
 //            return;
 //        }
@@ -198,7 +198,7 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //    });
 //
 //    //noinspection JSUnresolvedFunction
-//    $(canvas).mousemove(function (p) {
+//    $(canvas).mousemove(p => {
 //        if (inspector.hand.heldGateBlock !== null) {
 //            // being handled by document mouse move
 //            return;
@@ -208,37 +208,34 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //    });
 //
 //    $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
-//    $(captureButton).click(function() {
+//    $(captureButton).click(() => {
 //        $(captureButton).attr('disabled','disabled');
-//        inspector.captureCycle(new Painter(canvas), function(p) {
-//            $(captureButton).text("Encoding... " + Math.round(p*100) + "%");
-//        }, function(url) {
-//            captureImage.src = url;
-//            $(captureImageAnchor).attr("href", url);
-//            $(captureImage).height("150px");
-//            $(captureButton).removeAttr('disabled');
-//            $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
-//        });
+//        inspector.captureCycle(
+//            new Painter(canvas),
+//            p => $(captureButton).text("Encoding... " + Math.round(p*100) + "%"),
+//            url => {
+//                captureImage.src = url;
+//                $(captureImageAnchor).attr("href", url);
+//                $(captureImage).height("150px");
+//                $(captureButton).removeAttr('disabled');
+//                $(captureButton).text(Config.CAPTURE_BUTTON_CAPTION);
+//            });
 //    });
 //
 //    //noinspection JSUnresolvedFunction
-//    $(canvas).mouseleave(function () {
-//        update(inspector.move(null), false);
-//    });
+//    $(canvas).mouseleave(() => update(inspector.move(null), false));
 //
 //    window.addEventListener('resize', redraw, false);
 //
-//    var snapshot = function() {
-//        return JSON.stringify(inspector.exportCircuit(), null, 0);
-//    };
-//    var undo = function() {
+//    var snapshot = () => JSON.stringify(inspector.exportCircuit(), null, 0);
+//    var undo = () => {
 //        if (undoHistory.length === 0) {
 //            return;
 //        }
 //        redoHistory.push(snapshot());
 //        restore(undoHistory.pop());
 //    };
-//    var redo = function() {
+//    var redo = () => {
 //        if (redoHistory.length === 0) {
 //            return;
 //        }
@@ -246,7 +243,7 @@ alert(dt + "ms\n" + describe(amplitudeArrays.join("\n")));
 //        restore(redoHistory.pop());
 //    };
 //
-//    $(inspectorDiv).keydown(function(e) {
+//    $(inspectorDiv).keydown(e => {
 //        var isUndo = e.keyCode == 90 && e.ctrlKey && !e.shiftKey;
 //        var isRedo = e.keyCode == 90 && e.ctrlKey && e.shiftKey;
 //        if (isUndo) {

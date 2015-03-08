@@ -1,4 +1,3 @@
-
 /**
  * Stores formatting options, for determining what string output should look like.
  */

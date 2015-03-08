@@ -1,4 +1,3 @@
-import Seq from "src/base/Seq.js"
 import Rect from "src/base/Rect.js"
 
 /**
@@ -69,6 +68,28 @@ export default class Util {
             return 1;
         }
         return 1 << Util.bitSize(i - 1);
+    };
+
+    /**
+     * Determines how multiply-even a number is; how many times you can divide it by 2 before getting an odd result.
+     * Odd numbers have 0 power-of-two-ness, multiples of 2 that aren't multiples of 4 have 1 power-of-two-ness,
+     * multiples of 4 that aren't multiples of 8 have 3 power-of-two-ness, and so forth.
+     *
+     * Note that zero has infinite power-of-two-ness.
+     *
+     * @param {!int} i
+     * @returns {!int}
+     */
+    static powerOfTwoness(i) {
+        if (i === 0) {
+            return Math.POSITIVE_INFINITY;
+        }
+        if (i < 0) {
+            return Util.powerOfTwoness(-i);
+        }
+        var lowMask = i ^ (i - 1);
+        var lowBit = i & lowMask;
+        return Math.round(Math.log2(lowBit));
     };
 
     /**
@@ -147,30 +168,6 @@ export default class Util {
     //    });
     //};
 
-    ///**
-    // * Determines how even a number is, with results like:
-    // * 0 means 'odd',
-    // * 1 means 'multiple of 2 but not 4'
-    // * 2 means 'multiple of 4 but not 8'
-    // * etc
-    // *
-    // * Note that 0 is infinitely even.
-    // *
-    // * @param {!int} i
-    // * @returns {!int}
-    // */
-    //static evenPower(i) {
-    //    if (i === 0) {
-    //        return Math.POSITIVE_INFINITY;
-    //    }
-    //    if (i < 0) {
-    //        return evenPower(-i);
-    //    }
-    //    var lowMask = i ^ (i - 1);
-    //    var lowBit = i & lowMask;
-    //    return Math.round(Math.log(lowBit) / Math.log(2));
-    //};
-    //
     ///**
     // * Converts a zero-argument instance method into a one-argument function.
     // *

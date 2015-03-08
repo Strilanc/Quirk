@@ -58,6 +58,25 @@ suite.test("ceilingPowerOf2", () => {
     assertThat(Util.ceilingPowerOf2((1 << 20) + 1)).isEqualTo(1 << 21);
 });
 
+suite.test("powerOfTwoness", () => {
+    assertThat(Util.powerOfTwoness(-2)).isEqualTo(1);
+    assertThat(Util.powerOfTwoness(-1)).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(0)).isEqualTo(Math.POSITIVE_INFINITY);
+    assertThat(Util.powerOfTwoness(1)).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(2)).isEqualTo(1);
+    assertThat(Util.powerOfTwoness(3)).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(4)).isEqualTo(2);
+    assertThat(Util.powerOfTwoness(5)).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(6)).isEqualTo(1);
+    assertThat(Util.powerOfTwoness(7)).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(8)).isEqualTo(3);
+    assertThat(Util.powerOfTwoness(9)).isEqualTo(0);
+
+    assertThat(Util.powerOfTwoness(1 << 20)).isEqualTo(20);
+    assertThat(Util.powerOfTwoness(1 + (1 << 20))).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(2 + (1 << 20))).isEqualTo(1);
+});
+
 suite.test("sliceRectFromFlattenedArray", () => {
     assertThat(Util.sliceRectFromFlattenedArray(4, [], new Rect(0, 0, 0, 0))).isEqualTo([]);
     assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(2, 2, 2, 2))).isEqualTo([
@@ -158,25 +177,6 @@ suite.test("reverseGroupMap", () => {
 //    assertThat(Util.maskCandidates((1 << 20) + (1 << 10))).isEqualTo([0, 1 << 10, 1 << 20, (1 << 10) + (1 << 20)]);
 //};
 
-//suite.test("EvenPower", () => {
-//    assertThat(evenPower(-2)).isEqualTo(1);
-//    assertThat(evenPower(-1)).isEqualTo(0);
-//    assertThat(evenPower(0)).isEqualTo(Math.POSITIVE_INFINITY);
-//    assertThat(evenPower(1)).isEqualTo(0);
-//    assertThat(evenPower(2)).isEqualTo(1);
-//    assertThat(evenPower(3)).isEqualTo(0);
-//    assertThat(evenPower(4)).isEqualTo(2);
-//    assertThat(evenPower(5)).isEqualTo(0);
-//    assertThat(evenPower(6)).isEqualTo(1);
-//    assertThat(evenPower(7)).isEqualTo(0);
-//    assertThat(evenPower(8)).isEqualTo(3);
-//    assertThat(evenPower(9)).isEqualTo(0);
-//
-//    assertThat(evenPower(1 << 20)).isEqualTo(20);
-//    assertThat(evenPower(1 + (1 << 20))).isEqualTo(0);
-//    assertThat(evenPower(2 + (1 << 20))).isEqualTo(1);
-//};
-//
 //suite.test("Arg1", () => {
 //    assertThat(arg1(Complex.prototype.norm2)(Complex.I)).isEqualTo(1);
 //};
