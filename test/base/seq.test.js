@@ -9,9 +9,7 @@ suite.test("constructor_Array", () => {
     assertThat(new Seq(["a", "b", 3])).iteratesAs("a", "b", 3);
 });
 
-suite.test("constructor_OtherArrays", (status) => {
-    status.warn_only = "travis-ci's version of firefox can't iterate Float32Array";
-
+suite.test("constructor_OtherArrays", () => {
     let candidates = [
         new Float32Array([1, 2, 3]),
         new Int16Array([-1, 2, 3]),
@@ -58,9 +56,7 @@ suite.test("fromGenerator_MultipleUses", () => {
     assertThat(seq).iteratesAs(1, 2);
 });
 
-suite.test("isEqualTo", (status) => {
-    status.warn_only = "travis-ci's version of firefox can't iterate Float32Array";
-
+suite.test("isEqualTo", () => {
     // Cases involving other types.
     assertFalse(new Seq([]).isEqualTo(null));
     assertFalse(new Seq([]).isEqualTo("a"));
@@ -163,9 +159,7 @@ suite.test("repeat", () => {
     assertThat(Seq.repeat(1.5, 5)).iteratesAs(1.5, 1.5, 1.5, 1.5, 1.5);
 });
 
-suite.test("solidify", (status) => {
-    status.warn_only = "travis-ci's version of firefox can't iterate Float32Array";
-
+suite.test("solidify", () => {
     let s1 = new Seq([1, 2, 3]);
     let s2 = new Seq(new Float32Array([1, 2, 3]));
     assertTrue(s1 === s1.solidify());
