@@ -62,7 +62,8 @@ suite.canvasAppearanceTest("printText", 40, 40, canvas => {
 '0DdAA4DPoW/x3HjL4yIVMKSjEYcrF+PzMx/um4j4mxXhWgqZiUIBJApoPVKhOvkt/AVw2oFxAvoarB0DqHkqu1DXDXbQI41qWa/Eb7iGsFwFrmqRe4Y4' +
 '1N4szuWCnes0I4WGKazEiwG0OOwEmBJhrqVBiESDBDf8Jxc0DlOCoz/lsor4ZASy9D66/KSADsQzOO5zmWGoRbDNAAhvcgQxoFCJ/pLGV1q6t4HZAIUl' +
 'Weg4OKFq4wc/aeGtAi35ccgWd0k75W1PA4PnLQtvjKjoESK73EqqVHVawl6GLt6Al7zVlTRM1EQHsFCdJ8m7j9yDra5IwXwGVSiIBji1KZNLFOZWEjal' +
-'3ZjGgUzCsDFol6a4gdzFXTVPlDDE4sZobVZKuWRw8T2cXYKldgKV2AZbaKQHfHQUyx/sw+H8AAAAASUVORK5CYII=', 2000);
+'3ZjGgUzCsDFol6a4gdzFXTVPlDDE4sZobVZKuWRw8T2cXYKldgKV2AZbaKQHfHQUyx/sw+H8AAAAASUVORK5CYII=',
+    3000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
 suite.canvasAppearanceTest("printCenteredText", 40, 40, canvas => {
     let painter = new Painter(canvas);
@@ -87,7 +88,8 @@ suite.canvasAppearanceTest("printCenteredText", 40, 40, canvas => {
 'bujjW6d/8lee9Khn/BX7Z0LubJX+jRroyw8hUntmGgu26JXDJacB3DjxyWQPGbhIvz2zjMq9+UCNdia9RJeNXyfgmE2VyTYfPxGJJAo6IHhT9TdG5KJN' +
 'r1khXBGydjZABAZEqGV/A+/0B0v7eh4Qjh08I0TdedBPAFO8v6wzazMkMI1M10pX4Gmoux2TiB15aVNeK5Ci3NGCZXFPfkVd4ca1GunKSM5VJTvk6GwK' +
 'ywa6GuqJkhpEpgCoZXx0XT0DWeHxVjfFylFsaML5GlYxfZHTRZELvyqhRTlRgdS2DTtHtqnXm+PCvb6x4qv9OMXdco4tJ7dLeSjn4r3UvMiVKlChRokS' +
-'JEv1P9ScqOR/fADuUiwAAAABJRU5ErkJggg==', 2000);
+'JEv1P9ScqOR/fADuUiwAAAABJRU5ErkJggg==',
+    3000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
 suite.canvasAppearanceTest("strokeGrid", 40, 40, canvas => {
     let painter = new Painter(canvas);
