@@ -293,7 +293,7 @@ export class Suite {
      * @param {!string} expectedSrc Either the location of an accessible image, or a 'data:image/' link.
      * @param {!int=} tolerance
      */
-    canvasAppearanceTest(name, width, height, method, expectedSrc, tolerance = 200) {
+    canvasAppearanceTest(name, width, height, method, expectedSrc, tolerance = 256) {
         this.test(name, status => {
             let actualCanvas = document.createElement("canvas");
             actualCanvas.width = width;
