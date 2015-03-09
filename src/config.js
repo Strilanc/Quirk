@@ -1,8 +1,4 @@
-/**
- * @constructor
- */
-function Config() {
-}
+export default class Config {}
 
 Config.NUM_INITIAL_WIRES = 4;
 Config.CAPTURE_BUTTON_CAPTION = "Create GIF of Animation Cycle";

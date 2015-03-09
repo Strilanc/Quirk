@@ -207,6 +207,19 @@ export function assertThrows(func, extraArgCatcher) {
 /** @type {boolean|undefined} */
 let webGLSupportPresent = undefined;
 
+let promiseImageDataFromSrc = src => {
+    let img = document.createElement('img');
+    img.src = src;
+    return new Promise(resolve => { img.onload = resolve; }).then(() => {
+        let canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    });
+};
+
 /**
  * A named collection of tests.
  */
@@ -255,6 +268,39 @@ export class Suite {
         };
 
         this.test(name, wrappedMethod);
+    }
+
+    /**
+     * @param {!string} name
+     * @param {!int} width
+     * @param {!int} height
+     * @param {!function(!HTMLCanvasElement, !{ warn_only: boolean|!string })} method
+     * @param {!string} expectedPngSrc
+     */
+    canvasAppearanceTest(name, width, height, method, expectedPngSrc) {
+        this.test(name, status => {
+            let actualCanvas = document.createElement("canvas");
+            actualCanvas.width = width;
+            actualCanvas.height = height;
+            method(actualCanvas, status);
+            let actualSrc = actualCanvas.toDataURL("image/png");
+
+            // Recreate the actual image from its source, so any defects introduced during that process occur to both
+            // and don't cause false-negatives. This should not be necessary... but it fails without it.
+            let act = promiseImageDataFromSrc(actualSrc);
+            let exp = promiseImageDataFromSrc(expectedPngSrc);
+
+            return Promise.all([act, exp]).then(values => {
+                let [actualData, expectedData] = values;
+
+                if (expectedData.width !== actualData.width ||
+                    expectedData.height !== actualData.height ||
+                    !equate(actualData.data, expectedData.data)) {
+
+                    fail(`Expected drawn image <\n${actualSrc}\n> to match expected image <\n${expectedPngSrc}\n>.`);
+                }
+            });
+        });
     }
 }
 

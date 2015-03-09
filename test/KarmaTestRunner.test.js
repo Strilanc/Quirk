@@ -1,5 +1,50 @@
 import { Suite } from "test/TestUtil.js";
 
+let tryPromiseRun = method => {
+    try {
+        return Promise.resolve(method());
+    } catch (ex) {
+        return Promise.reject(ex);
+    }
+};
+
+let promiseRunTest = (suite, name, method) => {
+    let result = {
+        description: name,
+        suite: [suite.name],
+        success: false,
+        log: [],
+        time: undefined
+    };
+    let status = {warn_only: false};
+
+    let t0 = performance.now();
+    let promise = tryPromiseRun(() => method(status));
+    let finish = () => {
+        result.time = performance.now() - t0;
+        __karma__.result(result);
+        return result;
+    };
+
+    return promise.then(() => {
+        result.success = true;
+        if (status.warn_only) {
+            console.warn(`${suite.name}.${name} passed, but is set to warn_only (${status.warn_only})`)
+        }
+        return finish();
+    }, ex => {
+        result.log.push(String(ex));
+        if (ex.stack !== undefined) {
+            result.log.push(ex.stack);
+        }
+        if (status.warn_only) {
+            console.warn(`${suite.name}.${name} FAILED, but is set to warn_only (${status.warn_only})`)
+        }
+        result.success = status.warn_only;
+        return finish();
+    });
+};
+
 __karma__.start = () => {
     let total = 0;
     for (let suite of Suite.suites) {
@@ -7,49 +52,13 @@ __karma__.start = () => {
     }
     __karma__.info({ total: total });
 
-    for (let suite of Suite.suites) {
-        let suitePassed = true;
-        for (let [name, method] of suite.tests) {
-            //noinspection JSUnusedAssignment
-            let result = {
-                description: name,
-                suite: [suite.name],
-                success: false,
-                log: [],
-                time: undefined
-            };
-            let status = { warn_only: false };
+    let all = Promise.all(Suite.suites.map(suite => {
+        //noinspection JSUnresolvedVariable
+        let suiteResult = Promise.all(suite.tests.map(e => promiseRunTest(suite, e[0], e[1])));
+        //noinspection JSUnresolvedVariable
+        suiteResult.catch(() => console.error(`${suite.name} suite failed`));
+        return suiteResult;
+    }));
 
-            let t0 = performance.now();
-            try {
-                //noinspection JSUnusedAssignment
-                method(status);
-                result.success = true;
-                if (status.warn_only) {
-                    //noinspection JSUnusedAssignment
-                    console.warn(`${suite.name}.${name} passed, but is set to warn_only: ${status.warn_only}`);
-                }
-            } catch (ex) {
-                if (status.warn_only) {
-                    //noinspection JSUnusedAssignment
-                    console.warn(`${suite.name}.${name} failed, but is set to warn_only: ${status.warn_only}`);
-                    console.warn(`${ex}\n\n${ex.stack}`);
-                    result.success = true;
-                } else {
-                    suitePassed = false;
-                    //noinspection JSUnusedAssignment
-                    result.log.push(`${suite.name}.${name} failed!\n\n${ex}\n\n${ex.stack}\n`);
-                }
-            }
-            result.time = performance.now() - t0;
-
-            __karma__.result(result);
-        }
-
-        if (!suitePassed) {
-            console.warn(`${suite.name} suite failed`)
-        }
-    }
-
-    __karma__.complete();
+    all.then(() => __karma__.complete());
 };

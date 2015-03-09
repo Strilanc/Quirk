@@ -41,6 +41,7 @@ function equate(subject, other) {
 }
 export default equate;
 
+//noinspection JSUnresolvedVariable
 const GENERIC_ARRAY_TYPES = [
     Float32Array,
     Float64Array,
@@ -49,7 +50,8 @@ const GENERIC_ARRAY_TYPES = [
     Int32Array,
     Uint8Array,
     Uint16Array,
-    Uint32Array
+    Uint32Array,
+    Uint8ClampedArray
 ];
 
 /**

@@ -16,6 +16,7 @@ export default class WglDirector {
          */
         this.canvas = document.createElement('canvas');
 
+        //noinspection JSValidateTypes
         /**
          * @type {!WebGLRenderingContext}
          * @private
