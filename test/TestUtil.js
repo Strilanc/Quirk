@@ -284,14 +284,16 @@ export class Suite {
     }
 
     /**
+     * A test that compares the drawing, performed by the test method on the given canvas, to the given expected image
+     * or data.
      * @param {!string} name
      * @param {!int} width
      * @param {!int} height
      * @param {!function(!HTMLCanvasElement, !{ warn_only: boolean|!string })} method
-     * @param {!string} expectedPngSrc
+     * @param {!string} expectedSrc Either the location of an accessible image, or a 'data:image/' link.
      * @param {!int=} tolerance
      */
-    canvasAppearanceTest(name, width, height, method, expectedPngSrc, tolerance = 200) {
+    canvasAppearanceTest(name, width, height, method, expectedSrc, tolerance = 200) {
         this.test(name, status => {
             let actualCanvas = document.createElement("canvas");
             actualCanvas.width = width;
@@ -299,14 +301,14 @@ export class Suite {
             method(actualCanvas, status);
             let actualData = actualCanvas.getContext("2d").getImageData(0, 0, actualCanvas.width, actualCanvas.height);
 
-            return promiseImageDataFromSrc(expectedPngSrc).then(expectedData => {
+            return promiseImageDataFromSrc(expectedSrc).then(expectedData => {
                 let mse = meanSquaredError(actualData.data, expectedData.data);
                 if (expectedData.width !== actualData.width ||
                     expectedData.height !== actualData.height ||
                     mse > tolerance) {
 
                     let actualSrc = actualCanvas.toDataURL("image/png");
-                    fail(`Drawn image <\n\n${actualSrc}\n\n> differed with MSE=${mse} from <\n${expectedPngSrc}\n>.`);
+                    fail(`Drawn image <\n\n${actualSrc}\n\n> differed with MSE=${mse} from <\n${expectedSrc}\n>.`);
                 }
                 if (mse > 0) {
                     console.warn(`${this.name}.${name} image differed, but within tolerance (MSE=${mse}).`);
