@@ -1,7 +1,7 @@
 //import Format from "src/base/Format.js"
 //import Util from "src/base/Util.js"
 //import Seq from "src/base/Seq.js"
-//import Config from "src/Config.js"
+import Config from "src/Config.js"
 import Rect from "src/base/Rect.js"
 
 export default class Painter {
