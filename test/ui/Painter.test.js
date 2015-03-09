@@ -1,10 +1,10 @@
-//import { Suite, assertThat, fail } from "test/TestUtil.js"
-//import Painter from "src/ui/Painter.js"
+import { Suite, assertThat, fail } from "test/TestUtil.js"
+import Painter from "src/ui/Painter.js"
 //import Point from "src/base/Point.js"
 //import Rect from "src/base/Rect.js"
 //import equate from "src/base/Equate.js"
 //
-//let suite = new Suite("Painter");
+let suite = new Suite("Painter");
 //
 //suite.canvasAppearanceTest("clear", 20, 20, canvas => {
 //    let painter = new Painter(canvas);

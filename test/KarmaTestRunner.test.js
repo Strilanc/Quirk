@@ -54,6 +54,11 @@ __karma__.start = () => {
 
     let all = Promise.all(Suite.suites.map(suite => {
         //noinspection JSUnresolvedVariable
+        if (suite.tests.length === 0) {
+            //noinspection JSUnresolvedVariable
+            console.warn(`Empty test suite: ${suite.name}`);
+        }
+        //noinspection JSUnresolvedVariable
         let suiteResult = Promise.all(suite.tests.map(e => promiseRunTest(suite, e[0], e[1])));
         //noinspection JSUnresolvedVariable
         suiteResult.catch(() => console.error(`${suite.name} suite failed`));

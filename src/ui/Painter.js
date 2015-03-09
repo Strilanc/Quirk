@@ -3,7 +3,7 @@
 //import Seq from "src/base/Seq.js"
 //import Config from "src/Config.js"
 //
-//export default class Painter {
+export default class Painter {
 //    /**
 //     * @param {!HTMLCanvasElement} canvas
 //     * @property {!HTMLCanvasElement} canvas
@@ -164,4 +164,4 @@
 //        this.ctx.lineWidth = strokeThickness || Config.DEFAULT_STROKE_THICKNESS;
 //        this.ctx.stroke();
 //    };
-//}
+}
