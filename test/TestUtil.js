@@ -300,16 +300,16 @@ export class Suite {
             let actualData = actualCanvas.getContext("2d").getImageData(0, 0, actualCanvas.width, actualCanvas.height);
 
             return promiseImageDataFromSrc(expectedPngSrc).then(expectedData => {
-                let deviation = meanSquaredError(actualData.data, expectedData.data);
+                let mse = meanSquaredError(actualData.data, expectedData.data);
                 if (expectedData.width !== actualData.width ||
                     expectedData.height !== actualData.height ||
-                    deviation > tolerance) {
+                    mse > tolerance) {
 
                     let actualSrc = actualCanvas.toDataURL("image/png");
-                    fail(`Expected drawn image <\n\n${actualSrc}\n\n> to roughly match <\n${expectedPngSrc}\n>.`);
+                    fail(`Drawn image <\n\n${actualSrc}\n\n> differed with MSE=${mse} from <\n${expectedPngSrc}\n>.`);
                 }
-                if (deviation > 0) {
-                    console.warn(`${this.name}.${name} image differed, but within tolerance (MSE=${deviation}).`);
+                if (mse > 0) {
+                    console.warn(`${this.name}.${name} image differed, but within tolerance (MSE=${mse}).`);
                 }
             });
         });

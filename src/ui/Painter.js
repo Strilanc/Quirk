@@ -2,18 +2,19 @@
 //import Util from "src/base/Util.js"
 //import Seq from "src/base/Seq.js"
 //import Config from "src/Config.js"
-//
+import Rect from "src/base/Rect.js"
+
 export default class Painter {
-//    /**
-//     * @param {!HTMLCanvasElement} canvas
-//     * @property {!HTMLCanvasElement} canvas
-//     * @property {!CanvasRenderingContext2D} ctx
-//     */
-//    constructor(canvas) {
-//        this.canvas = canvas;
-//        this.ctx = canvas.getContext("2d");
-//    }
-//
+    /**
+     * @param {!HTMLCanvasElement} canvas
+     * @property {!HTMLCanvasElement} canvas
+     * @property {!CanvasRenderingContext2D} ctx
+     */
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+    }
+
 //    clear(color = Config.DEFAULT_FILL_COLOR) {
 //        this.ctx.fillStyle = color;
 //        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -35,18 +36,18 @@ export default class Painter {
 //        this.ctx.lineWidth = thickness;
 //        this.ctx.stroke();
 //    };
-//
-//    /**
-//     * Draws the outside of a rectangle.
-//     * @param {!Rect} rect The rectangular perimeter to stroke.
-//     * @param {!string=} color The stroke color.
-//     * @param {!number=} thickness The stroke thickness.
-//     */
-//    strokeRect(rect, color = "black", thickness = 1) {
-//        this.ctx.strokeStyle = color;
-//        this.ctx.lineWidth = thickness;
-//        this.ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
-//    }
+
+    /**
+     * Draws the outside of a rectangle.
+     * @param {!Rect} rect The rectangular perimeter to stroke.
+     * @param {!string=} color The stroke color.
+     * @param {!number=} thickness The stroke thickness.
+     */
+    strokeRect(rect, color = "black", thickness = 1) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = thickness;
+        this.ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    }
 //
 //    /**
 //     * Draws the inside of a rectangle.
