@@ -96,6 +96,7 @@ function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
 export class AssertionSubject {
     /**
      * @param {*} subject
+     * @property {*} subject
      */
     constructor(subject) {
         sanityCheck(subject);
@@ -220,6 +221,18 @@ let promiseImageDataFromSrc = src => {
     });
 };
 
+let meanSquaredError = (data1, data2) => {
+    if (data1.length !== data2.length) {
+        return false;
+    }
+    let err = 0;
+    for (let i = 0; i < data1.length; i++) {
+        let e = data1[i] - data2[i];
+        err += e*e;
+    }
+    return err / data1.length;
+};
+
 /**
  * A named collection of tests.
  */
@@ -276,28 +289,27 @@ export class Suite {
      * @param {!int} height
      * @param {!function(!HTMLCanvasElement, !{ warn_only: boolean|!string })} method
      * @param {!string} expectedPngSrc
+     * @param {!int=} tolerance
      */
-    canvasAppearanceTest(name, width, height, method, expectedPngSrc) {
+    canvasAppearanceTest(name, width, height, method, expectedPngSrc, tolerance = 200) {
         this.test(name, status => {
             let actualCanvas = document.createElement("canvas");
             actualCanvas.width = width;
             actualCanvas.height = height;
             method(actualCanvas, status);
-            let actualSrc = actualCanvas.toDataURL("image/png");
+            let actualData = actualCanvas.getContext("2d").getImageData(0, 0, actualCanvas.width, actualCanvas.height);
 
-            // Recreate the actual image from its source, so any defects introduced during that process occur to both
-            // and don't cause false-negatives. This should not be necessary... but it fails without it.
-            let act = promiseImageDataFromSrc(actualSrc);
-            let exp = promiseImageDataFromSrc(expectedPngSrc);
-
-            return Promise.all([act, exp]).then(values => {
-                let [actualData, expectedData] = values;
-
+            return promiseImageDataFromSrc(expectedPngSrc).then(expectedData => {
+                let deviation = meanSquaredError(actualData.data, expectedData.data);
                 if (expectedData.width !== actualData.width ||
                     expectedData.height !== actualData.height ||
-                    !equate(actualData.data, expectedData.data)) {
+                    deviation > tolerance) {
 
-                    fail(`Expected drawn image <\n${actualSrc}\n> to match expected image <\n${expectedPngSrc}\n>.`);
+                    let actualSrc = actualCanvas.toDataURL("image/png");
+                    fail(`Expected drawn image <\n\n${actualSrc}\n\n> to roughly match <\n${expectedPngSrc}\n>.`);
+                }
+                if (deviation > 0) {
+                    console.warn(`${this.name}.${name} image differed, but within tolerance (MSE=${deviation}).`);
                 }
             });
         });
