@@ -123,10 +123,10 @@ export default class Painter {
      */
     printCenteredText(text,
                       pos,
+                      centerPointProportion = new Point(0.5, 0.5),
                       fontColor = Config.DEFAULT_TEXT_COLOR,
                       fontSize = Config.DEFAULT_FONT_SIZE,
-                      fontFamily = Config.DEFAULT_FONT_FAMILY,
-                      centerPointProportion = new Point(0.5, 0.5)) {
+                      fontFamily = Config.DEFAULT_FONT_FAMILY) {
         this.ctx.fillStyle = fontColor;
         this.ctx.font = fontSize + "px " + fontFamily;
         let s = this.ctx.measureText(text);
@@ -145,7 +145,11 @@ export default class Painter {
      * @param {=string} strokeColor
      * @param {=number} strokeThickness
      */
-    strokeGrid(topLeftCell, cols, rows, strokeColor, strokeThickness) {
+    strokeGrid(topLeftCell,
+               cols,
+               rows,
+               strokeColor = Config.DEFAULT_STROKE_COLOR,
+               strokeThickness = Config.DEFAULT_STROKE_THICKNESS) {
         let x = topLeftCell.x;
         let y = topLeftCell.y;
         let dw = topLeftCell.w;
@@ -162,8 +166,51 @@ export default class Painter {
             this.ctx.lineTo(x2, y + r * dh);
         }
 
-        this.ctx.strokeStyle = strokeColor || Config.DEFAULT_STROKE_COLOR;
-        this.ctx.lineWidth = strokeThickness || Config.DEFAULT_STROKE_THICKNESS;
+        this.ctx.strokeStyle = strokeColor;
+        this.ctx.lineWidth = strokeThickness;
         this.ctx.stroke();
     };
+
+    /**
+     * Draws the outside of a polygon.
+     * @param {!(!Point[])} vertices
+     * @param {!string=} strokeColor The stroke color.
+     * @param {!number=} strokeThickness The stroke thickness.
+     */
+    strokePolygon(vertices,
+                  strokeColor = Config.DEFAULT_STROKE_COLOR,
+                  strokeThickness = Config.DEFAULT_STROKE_THICKNESS) {
+        if (vertices.length === 0) {
+            return;
+        }
+        let last = vertices[vertices.length - 1];
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(last.x, last.y);
+        for (let p of vertices) {
+            this.ctx.lineTo(p.x, p.y);
+        }
+
+        this.ctx.strokeStyle = strokeColor;
+        this.ctx.lineWidth = strokeThickness;
+        this.ctx.stroke();
+    }
+
+    /**
+     * Draws the inside of a polygon.
+     * @param {!(!Point[])} vertices
+     * @param {!string} fillColor
+     */
+    fillPolygon(vertices, fillColor) {
+        let last = vertices[vertices.length - 1];
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(last.x, last.y);
+        for (let p of vertices) {
+            this.ctx.lineTo(p.x, p.y);
+        }
+
+        this.ctx.fillStyle = fillColor;
+        this.ctx.fill();
+    }
 }

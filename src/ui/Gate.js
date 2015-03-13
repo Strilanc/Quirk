@@ -15,6 +15,7 @@
 //     * @property {!string} name
 //     * @property {!string} description
 //     * @property {!function} symbolDrawer
+//     * @property {!boolean} needMatrixToRecover
 //     */
 //    constructor(symbol, matrixOrFunc, name, description, needMatrixToRecover, symbolDrawer) {
 //        this.symbol = symbol;
@@ -39,11 +40,11 @@
 //     * @returns {!Gate}
 //     */
 //    static fromPhaseRotation(fraction, symbol) {
-//        var mod = (n, d) => ((n % d) + d) % d;
-//        var dif_mod = (n, d) => mod(n + d/2, d) - d/2;
-//        var deg = dif_mod(fraction, 1) * 360;
-//        var deg_desc = (Math.round(deg*64)/64).toString();
-//        var name_desc =
+//        let mod = (n, d) => ((n % d) + d) % d;
+//        let dif_mod = (n, d) => mod(n + d/2, d) - d/2;
+//        let deg = dif_mod(fraction, 1) * 360;
+//        let deg_desc = (Math.round(deg*64)/64).toString();
+//        let name_desc =
 //            fraction === 1/3 ? "/3"
 //                : fraction === -1/3 ? "-/3"
 //                : fraction === 1/8 ? "/8"
@@ -74,8 +75,8 @@
 //            return Gate.fromPhaseRotation(z, symbol);
 //        }
 //
-//        var n = Math.sqrt(x * x + y * y + z * z);
-//        var deg = n * 360;
+//        let n = Math.sqrt(x * x + y * y + z * z);
+//        let deg = n * 360;
 //        return new Gate(
 //            symbol || ("R(" + [x, y, z].map(Format.SIMPLIFIED.formatFloat).toString() + ")"),
 //            Matrix.fromPauliRotation(x, y, z),
@@ -100,11 +101,11 @@
 //    };
 //
 //    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
+//     * @param {!Painter} painter
+//     * @param {!GateDrawParams} params
+//     */
 //    static DEFAULT_SYMBOL_DRAWER(painter, params) {
-//        var backColor = Config.GATE_FILL_COLOR;
+//        let backColor = Config.GATE_FILL_COLOR;
 //        if (!params.isInToolbox && !params.gate.matrixAt(params.time).isApproximatelyUnitary(0.001)) {
 //            backColor = Config.BROKEN_COLOR_GATE;
 //        }
@@ -117,128 +118,14 @@
 //    };
 //
 //    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static NOT_SYMBOL_DRAWER(painter, params) {
-//        var isNotControl = e => e === null || !e.isControlModifier();
-//        if (params.circuitContext === null || params.circuitContext.gateColumn.gates.every(isNotControl)
-//                || params.isHighlighted) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//        } else {
-//            var drawArea = params.rect.scaledOutwardBy(0.6);
-//            painter.fillCircle(drawArea.center(), drawArea.w/2);
-//            painter.strokeCircle(drawArea.center(), drawArea.w/2);
-//            painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
-//            painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
-//        }
-//    };
-//
-//    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static MATRIX_SYMBOL_DRAWER = function (painter, params) {
-//        painter.fillRect(params.rect, params.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
-//        painter.paintMatrix(
-//            params.gate.matrixAt(params.time),
-//            params.rect);
-//        if (params.isHighlighted) {
-//            painter.ctx.globalAlpha = 0.9;
-//            painter.fillRect(params.rect, Config.HIGHLIGHT_COLOR_GATE);
-//            painter.ctx.globalAlpha = 1;
-//        }
-//    };
-//
-//    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static CYCLE_DRAWER(painter, params) {
-//        if (params.isInToolbox) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//            return;
-//        }
-//        var t = params.time * 2 * Math.PI;
-//        var d = new Point(
-//            Math.cos(t) * 0.75 * params.rect.w/2,
-//            -Math.sin(t) * 0.75 * params.rect.h/2);
-//        var p = params.rect.center().plus(d);
-//        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//        painter.fillCircle(p, 3, "gray");
-//    };
-//
-//    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX(painter, params) {
-//        if (params.isInToolbox) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//            return;
-//        }
-//        Gate.MATRIX_SYMBOL_DRAWER(painter, params);
-//    };
-//
-//    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static DRAW_CONTROL_SYMBOL(painter, params) {
-//        if (params.isInToolbox || params.isHighlighted) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//        }
-//        painter.fillCircle(params.rect.center(), 5, "black");
-//    };
-//
-//    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static DRAW_ANTI_CONTROL_SYMBOL(painter, params) {
-//        if (params.isInToolbox || params.isHighlighted) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//        }
-//        var p = params.rect.center();
-//        painter.fillCircle(p, 5);
-//        painter.strokeCircle(p, 5);
-//    };
-//
-//    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
-//    static PEEK_SYMBOL_DRAWER(painter, params) {
-//        if (params.circuitContext === null || params.isHighlighted) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//            return;
-//        }
-//
-//        var p = params.circuitContext.gateColumn.measureProbabilityOn(
-//            params.circuitContext.wireIndex,
-//            params.circuitContext.state);
-//        if (p.canDiffer) {
-//            painter.paintConditionalProbabilityBox(
-//                p.probabilityOfCondition,
-//                p.probabilityOfHitGivenCondition,
-//                params.rect);
-//        } else {
-//            painter.paintProbabilityBox(
-//                p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
-//                params.rect);
-//        }
-//    };
-//
-//
-//    /**
 //     *
 //     * @param {!number} p
 //     * @param {!string} fractionLabel
 //     * @param {=string} fractionSymbol
 //     * @returns {!Gate}
 //     */
-//    static fromTargetedRotation = function(p, fractionLabel, fractionSymbol) {
-//        need(p >= -1 && p <= 1, arguments);
+//    static fromTargetedRotation(p, fractionLabel, fractionSymbol) {
+//        Util.need(p >= -1 && p <= 1, arguments);
 //        return new Gate(
 //            "∠" + (fractionSymbol || fractionLabel),
 //            Matrix.fromTargetedRotation(p),
@@ -250,23 +137,23 @@
 //    };
 //
 //    /**
-//    * @param {!Painter} painter
-//    * @param {!GateDrawParams} params
-//    */
+//     * @param {!Painter} painter
+//     * @param {!GateDrawParams} params
+//     */
 //    static SWAP_SYMBOL_DRAWER(painter, params) {
 //        if (params.isInToolbox || params.isHighlighted) {
 //            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
 //            return;
 //        }
 //
-//        var swapRect = Rect.centeredSquareWithRadius(params.rect.center(), params.rect.w/6);
+//        let swapRect = Rect.centeredSquareWithRadius(params.rect.center(), params.rect.w/6);
 //        painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
 //        painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
 //    };
 //
 //    /**
-//    * @returns {!string}
-//    */
+//     * @returns {!string}
+//     */
 //    toString() {
 //        return this.name;
 //    };
@@ -281,17 +168,17 @@
 //
 //
 //    /**
-//    * @param {!Gate} gate
-//    */
-//    Gate.updateIfFuzzGate = function(gate) {
+//     * @param {!Gate} gate
+//     */
+//    static updateIfFuzzGate = gate => {
 //        if (gate === Gate.SILLY_GATES[0]) {
 //            Gate.SILLY_GATES[0] = Gate.makeFuzzGate();
 //        }
 //    };
 //
 //    /**
-//    * @returns {object}
-//    */
+//     * @returns {object}
+//     */
 //    toJson() {
 //        if (!this.needMatrixToRecover) {
 //            return {id: this.symbol}
@@ -310,22 +197,24 @@
 //     * @throws {Error}
 //     */
 //    static fromJson(json) {
-//        var symbol = forceGetProperty(json, "id");
-//        var matrixProp = json["matrix"];
-//        var matrix = matrixProp === undefined ? undefined : Matrix.fromJson(matrixProp);
-//
-//        var gates = Gate.GATE_SET.map(function(e) { return e.gates; }).flatten();
-//        var match = gates.firstMatchElseUndefined(function(g) {
-//            return g !== null && g.symbol === symbol;
-//        });
+//        let symbol = forceGetProperty(json, "id");
+//        let matrixProp = json["matrix"];
+//        let matrix = matrixProp === undefined ? undefined : Matrix.fromJson(matrixProp);
 //
 //        if (symbol === Gate.FUZZ_SYMBOL && matrix !== undefined) {
-//            var r = Gate.makeFuzzGate();
+//            let r = Gate.makeFuzzGate();
 //            r.matrixOrFunc = matrix;
 //            return r;
 //        }
-//        if (match !== undefined) {
-//            var noMatchedNeeded = matrix === undefined && !match.needMatrixToRecover;
+//
+//        let match = new Seq(Gate.GATE_SET).
+//            map(e => e.gates).
+//            flatten().
+//            filter(g => g !== null && g.symbol === symbol).
+//            first(null);
+//
+//        if (match !== null) {
+//            let noMatchedNeeded = matrix === undefined && !match.needMatrixToRecover;
 //            if (noMatchedNeeded || match.matrixAt(0).isEqualTo(matrix)) {
 //                return match;
 //            }
@@ -334,17 +223,63 @@
 //    };
 //
 //    /**
-//    * @param {!Painter} painter
-//    * @param {!Rect} areaRect
-//    * @param {!boolean} isInToolbox
-//    * @param {!boolean} isHighlighted
-//    * @param {!number} time
-//    * @param {?CircuitContext} circuitContext
-//    */
+//     * @param {!Painter} painter
+//     * @param {!Rect} areaRect
+//     * @param {!boolean} isInToolbox
+//     * @param {!boolean} isHighlighted
+//     * @param {!number} time
+//     * @param {?CircuitContext} circuitContext
+//     */
 //    paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
 //        this.symbolDrawer(painter, new GateDrawParams(isInToolbox, isHighlighted, areaRect, this, time, circuitContext));
 //    };
 //}
+//
+///**
+// * @param {!Painter} painter
+// * @param {!GateDrawParams} params
+// */
+//Gate.MATRIX_SYMBOL_DRAWER = (painter, params) => {
+//    painter.fillRect(params.rect, params.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
+//    painter.paintMatrix(
+//        params.gate.matrixAt(params.time),
+//        params.rect);
+//    if (params.isHighlighted) {
+//        painter.ctx.globalAlpha = 0.9;
+//        painter.fillRect(params.rect, Config.HIGHLIGHT_COLOR_GATE);
+//        painter.ctx.globalAlpha = 1;
+//    }
+//};
+//
+///**
+// * @param {!Painter} painter
+// * @param {!GateDrawParams} params
+// */
+//Gate.CYCLE_DRAWER = (painter, params) => {
+//    if (params.isInToolbox) {
+//        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//        return;
+//    }
+//    let t = params.time * 2 * Math.PI;
+//    let d = new Point(
+//        Math.cos(t) * 0.75 * params.rect.w/2,
+//        -Math.sin(t) * 0.75 * params.rect.h/2);
+//    let p = params.rect.center().plus(d);
+//    Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//    painter.fillCircle(p, 3, "gray");
+//};
+//
+///**
+// * @param {!Painter} painter
+// * @param {!GateDrawParams} params
+// */
+//Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = (painter, params) => {
+//    if (params.isInToolbox) {
+//        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//        return;
+//    }
+//    Gate.MATRIX_SYMBOL_DRAWER(painter, params);
+//};
 //
 ///**
 // * @type {!Gate}
@@ -361,7 +296,12 @@
 //    "ON and OFF, the other operations only apply in the parts of the\n" +
 //    "superposition control qubit is on.",
 //    false,
-//    Gate.DRAW_CONTROL_SYMBOL);
+//    (painter, params) => {
+//        if (params.isInToolbox || params.isHighlighted) {
+//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//        }
+//        painter.fillCircle(params.rect.center(), 5, "black");
+//    });
 //
 ///**
 // * @type {!Gate}
@@ -376,7 +316,14 @@
 //    "conditions on OFF instead of ON. Linked operations will only apply\n" +
 //    "to parts of the superposition where the control qubit is OFF.",
 //    false,
-//    Gate.DRAW_ANTI_CONTROL_SYMBOL);
+//    (painter, params) => {
+//        if (params.isInToolbox || params.isHighlighted) {
+//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//        }
+//        let p = params.rect.center();
+//        painter.fillCircle(p, 5);
+//        painter.strokeCircle(p, 5);
+//    });
 //
 ///**
 // * A visualization gate with no effect.
@@ -398,7 +345,26 @@
 //    "re-running the computation many times. Here we get to be more\n" +
 //    "convenient.)",
 //    false,
-//    Gate.PEEK_SYMBOL_DRAWER);
+//    (painter, params) => {
+//        if (params.circuitContext === null || params.isHighlighted) {
+//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//            return;
+//        }
+//
+//        let p = params.circuitContext.gateColumn.measureProbabilityOn(
+//            params.circuitContext.wireIndex,
+//            params.circuitContext.state);
+//        if (p.canDiffer) {
+//            painter.paintConditionalProbabilityBox(
+//                p.probabilityOfCondition,
+//                p.probabilityOfHitGivenCondition,
+//                params.rect);
+//        } else {
+//            painter.paintProbabilityBox(
+//                p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
+//                params.rect);
+//        }
+//    });
 //
 ///**
 // * @type {!Gate}
@@ -430,7 +396,7 @@
 //    "the four square roots of the Pauli X gate (so applying it twice is\n" +
 //    "equivalent to a NOT). The Up gate is the inverse of the Down gate.",
 //    false,
-//    function(painter, params) {
+//    (painter, params) => {
 //        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
 //        painter.ctx.globalAlpha = 0.25;
 //        painter.strokeLine(params.rect.topLeft(), params.rect.bottomRight());
@@ -451,7 +417,19 @@
 //    "that agree on everything except the value of target qubit, and swaps\n" +
 //    "the amplitudes within each pair.",
 //    false,
-//    Gate.NOT_SYMBOL_DRAWER);
+//    (painter, params) => {
+//        let isNotControl = e => e === null || !e.isControlModifier();
+//        if (params.circuitContext === null || params.circuitContext.gateColumn.gates.every(isNotControl)
+//            || params.isHighlighted) {
+//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//        } else {
+//            let drawArea = params.rect.scaledOutwardBy(0.6);
+//            painter.fillCircle(drawArea.center(), drawArea.w/2);
+//            painter.strokeCircle(drawArea.center(), drawArea.w/2);
+//            painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
+//            painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
+//        }
+//    });
 //
 ///**
 // * @type {!Gate}
@@ -574,10 +552,10 @@
 ///** @type {!Gate} */
 //Gate.EVOLVING_R = new Gate(
 //    "R(t)",
-//    function(t) {
-//        var r = (t % 1) * Math.PI * 2;
-//        var c = Math.cos(r);
-//        var s = Math.sin(r);
+//    t => {
+//        let r = (t % 1) * Math.PI * 2;
+//        let c = Math.cos(r);
+//        let s = Math.sin(r);
 //        return Matrix.square([c, -s, s, c]);
 //    },
 //    "Evolving Rotation Gate",
@@ -588,8 +566,8 @@
 ///** @type {!Gate} */
 //Gate.EVOLVING_H = new Gate(
 //    "H(t)",
-//    function(t) {
-//        var r = (t % 1) / Math.sqrt(2);
+//    t => {
+//        let r = (t % 1) / Math.sqrt(2);
 //        return Matrix.fromPauliRotation(r, 0, r);
 //    },
 //    "Evolving Hadamard Gate",
@@ -600,7 +578,7 @@
 ///** @type {!Gate} */
 //Gate.EVOLVING_X = new Gate(
 //    "X(t)",
-//    function(t) { return Matrix.fromPauliRotation(t % 1, 0, 0); },
+//    t => Matrix.fromPauliRotation(t % 1, 0, 0),
 //    "Evolving X Gate",
 //    "Smoothly interpolates from no-op to the Pauli X gate and back over\n" +
 //    "time. A continuous rotation around the X axis of the Block Sphere.",
@@ -609,7 +587,7 @@
 ///** @type {!Gate} */
 //Gate.EVOLVING_Y = new Gate(
 //    "Y(t)",
-//    function(t) { return Matrix.fromPauliRotation(0, t % 1, 0); },
+//    t => Matrix.fromPauliRotation(0, t % 1, 0),
 //    "Evolving Y Gate",
 //    "Smoothly interpolates from no-op to the Pauli Y gate and back over\n" +
 //    "time. A continuous rotation around the Y axis of the Block Sphere.",
@@ -618,7 +596,7 @@
 ///** @type {!Gate} */
 //Gate.EVOLVING_Z = new Gate(
 //    "Z(t)",
-//    function(t) { return Matrix.fromPauliRotation(0, 0, t % 1); },
+//    t => Matrix.fromPauliRotation(0, 0, t % 1),
 //    "Evolving Z Gate",
 //    "Smoothly interpolates from no-op to the Pauli Z gate and back over\n" +
 //    "time. A phase gate where the phase angle increases and cycles over\n" +
@@ -636,7 +614,7 @@
 //];
 //
 //Gate.FUZZ_SYMBOL = "Fuzz";
-//Gate.makeFuzzGate = function () {
+//Gate.makeFuzzGate = () => {
 //    return new Gate(
 //        Gate.FUZZ_SYMBOL,
 //        Matrix.square([

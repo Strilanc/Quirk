@@ -67,14 +67,14 @@ suite.canvasAppearanceTest("printText", 40, 40, canvas => {
 
 suite.canvasAppearanceTest("printCenteredText", 40, 40, canvas => {
     let painter = new Painter(canvas);
-    painter.printCenteredText("amanaplanaXanalpanama", new Point(20, 20), "blue", 10, "Helvetica", new Point(0.5, 0.5));
-    painter.printCenteredText("amanaplanaXanalpanama", new Point(20, 20), "red", 8, "Helvetica", new Point(0.5, 0.5));
+    painter.printCenteredText("amanaplanaXanalpanama", new Point(20, 20), new Point(0.5, 0.5), "blue", 10, "Helvetica");
+    painter.printCenteredText("amanaplanaXanalpanama", new Point(20, 20), new Point(0.5, 0.5), "red", 8, "Helvetica");
     painter.fillCircle(new Point(20, 20), 2, "green"); // visual guide
 
-    painter.printCenteredText("racecar", new Point(20, 10), "red", 8, "Helvetica", new Point(0, 0.5));
-    painter.printCenteredText("racecar", new Point(20, 10), "green", 8, "Helvetica", new Point(1, 0.5));
-    painter.printCenteredText("racecar", new Point(20, 10), "blue", 8, "Helvetica", new Point(0.5, 0));
-    painter.printCenteredText("racecar", new Point(20, 10), "black", 8, "Helvetica", new Point(0.5, 1));
+    painter.printCenteredText("racecar", new Point(20, 10), new Point(0, 0.5), "red", 8, "Helvetica");
+    painter.printCenteredText("racecar", new Point(20, 10), new Point(1, 0.5), "green", 8, "Helvetica");
+    painter.printCenteredText("racecar", new Point(20, 10), new Point(0.5, 0), "blue", 8, "Helvetica");
+    painter.printCenteredText("racecar", new Point(20, 10), new Point(0.5, 1), "black", 8, "Helvetica");
     painter.fillCircle(new Point(20, 10), 2, "yellow"); // visual guide
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAD4klEQVRYhe2WXWgcVRTHfw8FUZC+CFXwg661ShQaRhY' +
 'f0lAEq8VdpDBiw0aUbpEQKnYgfjR9KJOHWCXTFTSsoRAG2S4ONlDXbiFRaFCGKluTzUvZfQokFAysUFIQ+nZ8mHt3745bJaZCkfnDZefcc8+9v3v2zrk' +
@@ -98,3 +98,45 @@ suite.canvasAppearanceTest("strokeGrid", 40, 40, canvas => {
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAYklEQVRYhe3WsQkAIAxE0dt/KUeLC1h5pyTwH6QJFr8' +
 'KSkATJa2S6nLWj8BK7uIIdBHoGhHozJfA5C6OQBeBrgmBvX8zOdY5PUzruGeByXdRBLoIdBHoGhPY9lC/iAQAtLYBSqaxXIyuGfwAAAAASUVORK5CYII' +
 '=');
+
+suite.canvasAppearanceTest("strokePolygon", 40, 40, canvas => {
+    let painter = new Painter(canvas);
+    painter.strokePolygon([
+        new Point(2.5, 4.5),
+        new Point(22.5, 4.5),
+        new Point(14.5, 13),
+        new Point(4, 13)
+    ], "red", 1);
+    painter.strokePolygon([
+        new Point(12, 10),
+        new Point(39, 34),
+        new Point(10, 33)
+    ], "blue", 3);
+}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAACYElEQVRYhe2XPWgUURSFv0IJAUGMXYIWUfEHixSJKQT' +
+'TRYjiDyRgoeBWoqlE2EJSJCCIRFtjJYtNEAkIajCNiLFxIzbBYmGRoBERCStoLNIci3kJl5fMuJt5M7HYC6/Zd++539y9c9iFZjTjPwjBNoEyOP0hIec' +
+'FXQF0jgt+C86H4LLCk4JLCRnddWh0Cb4LLoZkWxW/KbiTkDEAKibUHxB8ElwJDucanBG8SMi47FZrfIPadrci1zOBc006BZ8TMopm/0umbqfgnWAkMzj' +
+'T7Kdgd8ztXe8lnT7F812CV4LbmcM5wLeCvpjbR76LHKRSK3OslAucA3wgeCwY9c8RPlZj7G4B1Jsn5Do4wWg7X76tQg3y5LUHuQw6nRtkDPqiAdoTAWn' +
+'ZAy1sJeCKAWlxn/W6r9hCxnpllnBtBqDm3XWC5jzIdV6ZNeBh07yywf0O0LQHWcoTsM80nk3IK/leGcFnDzhkmk79I3fcg5yL1iBbwGHTcKKO/KIHuZC' +
+'xV2rMNBurs6aQo1dqwjQabqAuL6/UlGkw1GBtHl6pWSMe82MisT5rr1TFCB/apEaWXqmaEW1LqVUK7JVqMWIr6eDWNEN6pfYaocUwgBDQK9VtRD6EA4R' +
+'AXqkBI/AyLCAE8Mq1v5sCvQdddU9+AXQW1A86AeoBHQXtA3VEL5Na6+yRxis1CPrlFTd6/oCWQF9BVdA8qAx6A5oBPQU9A/3YpFdqe0rAFKfu0C3QPdB' +
+'90EPQpHvyGTeJsptM1U1qyU0uL8A0oVa3kx2g/W5Xe9zungSdcztdAF0D3QCNRENpRjO2Nv4CO0/DOtNuBZYAAAAASUVORK5CYII=');
+
+suite.canvasAppearanceTest("fillPolygon", 40, 40, canvas => {
+    let painter = new Painter(canvas);
+    painter.fillPolygon([
+        new Point(2.5, 4.5),
+        new Point(22.5, 4.5),
+        new Point(14.5, 13),
+        new Point(4, 13)
+    ], "red");
+    painter.fillPolygon([
+        new Point(12, 10),
+        new Point(39, 34),
+        new Point(10, 33)
+    ], "blue");
+}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABgklEQVRYhe3VIUgDUQDG8X9YGKIYjIIOBBHB4owTjKJ' +
+'YxKIomATBMLAIKwvK4ppjRcPQIpoc2AazCoLBOlZETBYxLHyWQx5Dz2333jvDffCFu/Tj7vE9SJLkn0SQExQtdsY2cFMgSy0JUraBWUu4smDYKi4Ajgh' +
+'eIuIqgjHrOAPZiIA7E4w7wwXA6oC4S8GUU1wAPAyDfJJWnnL3+xvBrHNcAFwLA7bICKQNrtQhJUFdMO8FFwCnw4BNFr8fV6i/HlPY8YbrLVrvMt+CcnG' +
+'rjGjvhw97D1qNWxZEhV/+/hNoK24doHLIEW2D9uMG1v6YxHfQUZzAux63uwQajQP40McFcwqa8A1s93kLXoDmfOGGQB8DXNW+tlKTA+B8bqWyEYA+tlL' +
+'LEYGut1LbFoAut1J5S0BXW6kTy0DbW6mqA6Cwt5W6dgQUdrZSTYdAEX0r9ewYKKJtpd48AEW0rVQalDG6AFoyumv0AFQ0WgGdB62BGkYfQS2jHVB+QGS' +
+'SJEn+Vb4Ae+TXYBV8z6IAAAAASUVORK5CYII=');
