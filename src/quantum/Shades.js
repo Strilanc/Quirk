@@ -2,7 +2,7 @@ import U from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglDirector from "src/webgl/WglDirector.js"
-import Matrix from "src/linalg/Matrix.js"
+import Matrix from "src/math/Matrix.js"
 import ControlMask from "src/quantum/ControlMask.js"
 
 export default class Shades {

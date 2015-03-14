@@ -86,6 +86,31 @@ export default class ControlMask {
             this.inclusionMask | other.inclusionMask,
             this.desiredValueMask | other.desiredValueMask);
     };
+
+    ///**
+    //* Returns all of the integers that are unchanged by and-ing them against a bitwise mask.
+    //* @param {!int} mask
+    //* @returns {!Array<!int>}
+    //*/
+    //static maskCandidates(mask) {
+    //    Util.need(mask >= 0, "maskCandidates: mask >= 0");
+    //    let bits = [];
+    //    while (mask > 0) {
+    //        let prevMask = mask;
+    //        mask &= mask - 1;
+    //        bits.push(Math.round(lg(prevMask - mask)));
+    //    }
+    //
+    //    return Au.range(1 << bits.length).map(function(e) {
+    //        let r = 0;
+    //        for (let i = 0; i < bits.length; i++) {
+    //            if (((1 << i) & e) !== 0) {
+    //                r |= 1 << bits[i];
+    //            }
+    //        }
+    //        return r;
+    //    });
+    //};
 }
 
 /** @type {!ControlMask} */

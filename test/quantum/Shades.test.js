@@ -4,8 +4,8 @@ import WglDirector from "src/webgl/WglDirector.js"
 import Shades from "src/quantum/Shades.js"
 import ControlMask from "src/quantum/ControlMask.js"
 import Seq from "src/base/Seq.js"
-import Complex from "src/linalg/Complex.js"
-import Matrix from "src/linalg/Matrix.js"
+import Complex from "src/math/Complex.js"
+import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("Shades");
 

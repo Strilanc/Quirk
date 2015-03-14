@@ -1,7 +1,7 @@
 import U from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
 import Format from "src/base/Format.js"
-import Complex from "src/linalg/Complex.js"
+import Complex from "src/math/Complex.js"
 
 /**
  * A matrix of complex values.

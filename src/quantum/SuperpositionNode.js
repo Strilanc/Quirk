@@ -4,7 +4,7 @@ import Shades from "src/quantum/Shades.js"
 import Util from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
 import Rect from "src/base/Rect.js"
-import Complex from "src/linalg/Complex.js"
+import Complex from "src/math/Complex.js"
 import PipelineNode from "src/quantum/PipelineNode.js"
 import describe from "src/base/Describe.js"
 
