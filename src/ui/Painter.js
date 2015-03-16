@@ -89,55 +89,6 @@ export default class Painter {
     }
 
     /**
-     * Draws a string. Handles multi-line strings.
-     *
-     * @param {!string} text The string to draw.
-     * @param {!Point} pos The top-left position of the drawn string.
-     * @param {=string} fontColor The text color.
-     * @param {=number} fontSize The text size.
-     * @param {=string} fontFamily The text font family.
-     */
-    printText(text,
-              pos,
-              fontColor = Config.DEFAULT_TEXT_COLOR,
-              fontSize = Config.DEFAULT_FONT_SIZE,
-              fontFamily = Config.DEFAULT_FONT_FAMILY) {
-        this.ctx.fillStyle = fontColor;
-        this.ctx.font = fontSize + "px " + fontFamily;
-
-        let lines = text.split("\n");
-        for (let i = 0; i < lines.length; i++) {
-            this.ctx.fillText(lines[i], pos.x, pos.y + ((i + 2/3) * fontSize));
-        }
-    }
-
-    /**
-     * Draws a string centered around the given point. Does NOT handle multi-line strings.
-     *
-     * @param {!string} text The string to draw.
-     * @param {!Point} pos The center position of the drawn string.
-     * @param {!string=} fontColor The text color.
-     * @param {!number=} fontSize The text size.
-     * @param {!string=} fontFamily The text font family.
-     * @param {!Point=} centerPointProportion The porportional point to center on.
-     */
-    printCenteredText(text,
-                      pos,
-                      centerPointProportion = new Point(0.5, 0.5),
-                      fontColor = Config.DEFAULT_TEXT_COLOR,
-                      fontSize = Config.DEFAULT_FONT_SIZE,
-                      fontFamily = Config.DEFAULT_FONT_FAMILY) {
-        this.ctx.fillStyle = fontColor;
-        this.ctx.font = fontSize + "px " + fontFamily;
-        let s = this.ctx.measureText(text);
-
-        this.ctx.fillText(
-            text,
-            pos.x - s.width * centerPointProportion.x,
-            pos.y + fontSize * 0.8 * (1 - centerPointProportion.y));
-    }
-
-    /**
      * Draws some text within the given rectangular area, aligned based on the given proportional center, with
      * line breaking and (if line breaking isn't enough) font size reduction to make things fit.
      *

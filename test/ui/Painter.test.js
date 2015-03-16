@@ -51,46 +51,6 @@ suite.canvasAppearanceTest("fillCircle", 40, 40, canvas => {
 'pqo0vAk0CJTvA3J94/xCBwxkTyN8e+NY5hktmeFtgtDyFSybtcacAPo/OAwe0HPh/jxiJStvwJUnWTK26trtmdtMjUIqXtLFFbfzBavrJ/wt6vDLuYuB' +
 '3Bn/uIuAC1ANFGeEANAVtTqA28UX4BOUyhO0h86AXUB3Uj6cOKu++eZ7neZ7neXfaFuFxi8XufliHAAAAAElFTkSuQmCC');
 
-suite.canvasAppearanceTest("printText", 40, 40, canvas => {
-    let painter = new Painter(canvas);
-    painter.strokeRect(new Rect(4.5, 2.5, 100, 100), "black", 1); // visual guide
-    painter.strokeRect(new Rect(2.5, 14.5, 100, 100), "black", 1); // visual guide
-    painter.printText("Blye", new Point(5, 3), "blue", 14, "monospace");
-    painter.printText("Key\nReD", new Point(3, 15), "red", 10, "Helvetica");
-}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABqUlEQVRYhe2Vu7WDMAyGNVM6z+E+MzBARmCBuwF9VqB' +
-'mCJqMoRTIRLYlx8GPS4HO8QH8/PglWQCX1Tc8WRMBc/7jDoBI7ZH9+xWMDtwP580ooL0BAQgyOBhfwvSzAKIBwEWYrgDiy3c//tE328PzjrD3d8DAxeJ' +
-'0DdAA4DPoW/x3HjL4yIVMKSjEYcrF+PzMx/um4j4mxXhWgqZiUIBJApoPVKhOvkt/AVw2oFxAvoarB0DqHkqu1DXDXbQI41qWa/Eb7iGsFwFrmqRe4Y4' +
-'1N4szuWCnes0I4WGKazEiwG0OOwEmBJhrqVBiESDBDf8Jxc0DlOCoz/lsor4ZASy9D66/KSADsQzOO5zmWGoRbDNAAhvcgQxoFCJ/pLGV1q6t4HZAIUl' +
-'Weg4OKFq4wc/aeGtAi35ccgWd0k75W1PA4PnLQtvjKjoESK73EqqVHVawl6GLt6Al7zVlTRM1EQHsFCdJ8m7j9yDra5IwXwGVSiIBji1KZNLFOZWEjal' +
-'3ZjGgUzCsDFol6a4gdzFXTVPlDDE4sZobVZKuWRw8T2cXYKldgKV2AZbaKQHfHQUyx/sw+H8AAAAASUVORK5CYII=',
-    3000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
-
-suite.canvasAppearanceTest("printCenteredText", 40, 40, canvas => {
-    let painter = new Painter(canvas);
-    painter.printCenteredText("amanaplanaXanalpanama", new Point(20, 20), new Point(0.5, 0.5), "blue", 10, "Helvetica");
-    painter.printCenteredText("amanaplanaXanalpanama", new Point(20, 20), new Point(0.5, 0.5), "red", 8, "Helvetica");
-    painter.fillCircle(new Point(20, 20), 2, "green"); // visual guide
-
-    painter.printCenteredText("racecar", new Point(20, 10), new Point(0, 0.5), "red", 8, "Helvetica");
-    painter.printCenteredText("racecar", new Point(20, 10), new Point(1, 0.5), "green", 8, "Helvetica");
-    painter.printCenteredText("racecar", new Point(20, 10), new Point(0.5, 0), "blue", 8, "Helvetica");
-    painter.printCenteredText("racecar", new Point(20, 10), new Point(0.5, 1), "black", 8, "Helvetica");
-    painter.fillCircle(new Point(20, 10), 2, "yellow"); // visual guide
-}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAD4klEQVRYhe2WXWgcVRTHfw8FUZC+CFXwg661ShQaRhY' +
-'f0lAEq8VdpDBiw0aUbpEQKnYgfjR9KJOHWCXTFTSsoRAG2S4ONlDXbiFRaFCGKluTzUvZfQokFAysUFIQ+nZ8mHt3745bJaZCkfnDZefcc8+9v3v2zrk' +
-'DiRIl2paGgHlA1LMYzynD3h+zUz388Xhz7m0BFtVzSv3uBz5U/RpsXtkarNjDH483594W4JABqDOgAVPG2HnDP9/DH4835/4buTi4WLgILsIEdtt+HSH' +
-'FOC4We5TfosCzfEcaIY/g4nA/rR37+C17DpHTnBMIR0GK8LmAPAnyFDQErK9BPgU5CoWXYVxAVLNU07Yt4ICLh0tggIW4BLhYpBjnFa7iErCHEiA8xk1' +
-'2ckFtL8rIAF8531AXQUSQ6WNsmP6jUDgGPwLyKNSfgAtfQrMAVw2wQDVb2aGA1QF0sYyshu2MmsAdv2X4PVycsz9T0oBylpKiMzPiKYD2PApC+8Mefqs' +
-'7g9Hi6x0gcUBCEGFv1W/PdWBiFcRq24OT/n1vDBWy2UuSzV6S8wx7pv8Uk/4oxcUOizif8NHNPq63IrsNFAgRh8C6QAgugQLTGemcyUOOsPvKGgAjVuQ' +
-'fnPR55ttrPBcIr+UbvHVwgZ1rqzy8sgxinWfY28fKMkhwhpOVJSzpp775PQcXAOawZQxP3qR0cRcbC0YGAwWmbUfA+4c3SJyoQVfGEA8kiPraY0PDH/b' +
-'wx+ONuf+1ugBDo08D2qpvvQdQ3B+Pv+uAXnd2wDxTsQz18sfi7wrgPSh1OLe4M/EucvgPfagFvGmO39pqhnqureqTrke2HqRa1xsVr/Kmnx23C6WnH7z' +
-'93iE+vk5fC2TLcxitzUSZXNNjTCyWpE7/poBTJeMP8tMKiNjMyTTHb6kg512+CPV4kFAt5DHBsC5VfQNvh2rzFoCO8RiTCU6vCtg10pUeazgCjsnELPk' +
-'bujjW6d/8lee9Khn/BX7Z0LubJX+jRroyw8hUntmGgu26JXDJacB3DjxyWQPGbhIvz2zjMq9+UCNdia9RJeNXyfgmE2VyTYfPxGJJAo6IHhT9TdG5KJN' +
-'r1khXBGydjZABAZEqGV/A+/0B0v7eh4Qjh08I0TdedBPAFO8v6wzazMkMI1M10pX4Gmoux2TiB15aVNeK5Ci3NGCZXFPfkVd4ca1GunKSM5VJTvk6GwK' +
-'ywa6GuqJkhpEpgCoZXx0XT0DWeHxVjfFylFsaML5GlYxfZHTRZELvyqhRTlRgdS2DTtHtqnXm+PCvb6x4qv9OMXdco4tJ7dLeSjn4r3UvMiVKlChRokS' +
-'JEv1P9ScqOR/fADuUiwAAAABJRU5ErkJggg==',
-    3000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
-
 suite.canvasAppearanceTest("print_simple", 40, 40, canvas => {
     let painter = new Painter(canvas);
     let r = new Rect(5, 5, 30, 30);
