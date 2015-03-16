@@ -1,7 +1,7 @@
 ///**
-// * A named and described single-qubit quantum operation.
-// */
-//class Gate {
+//* A named and described single-qubit quantum operation.
+//*/
+//export default class Gate {
 //    /**
 //     * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
 //     * @param {!Matrix|!function(!number): !Matrix} matrixOrFunc The operation the gate applies.
@@ -101,23 +101,6 @@
 //    };
 //
 //    /**
-//     * @param {!Painter} painter
-//     * @param {!GateDrawParams} params
-//     */
-//    static DEFAULT_SYMBOL_DRAWER(painter, params) {
-//        let backColor = Config.GATE_FILL_COLOR;
-//        if (!params.isInToolbox && !params.gate.matrixAt(params.time).isApproximatelyUnitary(0.001)) {
-//            backColor = Config.BROKEN_COLOR_GATE;
-//        }
-//        if (params.isHighlighted) {
-//            backColor = Config.HIGHLIGHT_COLOR_GATE;
-//        }
-//        painter.fillRect(params.rect, backColor);
-//        painter.strokeRect(params.rect);
-//        painter.printCenteredText(params.gate.symbol, params.rect.center());
-//    };
-//
-//    /**
 //     *
 //     * @param {!number} p
 //     * @param {!string} fractionLabel
@@ -134,21 +117,6 @@
 //            "having a " + fractionLabel + "s probability of being ON.\n\n" +
 //            "Equivalent to R(acos(√(" + fractionLabel + "))).",
 //            true);
-//    };
-//
-//    /**
-//     * @param {!Painter} painter
-//     * @param {!GateDrawParams} params
-//     */
-//    static SWAP_SYMBOL_DRAWER(painter, params) {
-//        if (params.isInToolbox || params.isHighlighted) {
-//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
-//            return;
-//        }
-//
-//        let swapRect = Rect.centeredSquareWithRadius(params.rect.center(), params.rect.w/6);
-//        painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
-//        painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
 //    };
 //
 //    /**
@@ -239,6 +207,23 @@
 // * @param {!Painter} painter
 // * @param {!GateDrawParams} params
 // */
+//Gate.DEFAULT_SYMBOL_DRAWER = (painter, params) => {
+//    let backColor = Config.GATE_FILL_COLOR;
+//    if (!params.isInToolbox && !params.gate.matrixAt(params.time).isApproximatelyUnitary(0.001)) {
+//        backColor = Config.BROKEN_COLOR_GATE;
+//    }
+//    if (params.isHighlighted) {
+//        backColor = Config.HIGHLIGHT_COLOR_GATE;
+//    }
+//    painter.fillRect(params.rect, backColor);
+//    painter.strokeRect(params.rect);
+//    painter.printCenteredText(params.gate.symbol, params.rect.center());
+//};
+//
+///**
+//* @param {!Painter} painter
+//* @param {!GateDrawParams} params
+//*/
 //Gate.MATRIX_SYMBOL_DRAWER = (painter, params) => {
 //    painter.fillRect(params.rect, params.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
 //    painter.paintMatrix(
@@ -252,9 +237,9 @@
 //};
 //
 ///**
-// * @param {!Painter} painter
-// * @param {!GateDrawParams} params
-// */
+//* @param {!Painter} painter
+//* @param {!GateDrawParams} params
+//*/
 //Gate.CYCLE_DRAWER = (painter, params) => {
 //    if (params.isInToolbox) {
 //        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
@@ -270,9 +255,9 @@
 //};
 //
 ///**
-// * @param {!Painter} painter
-// * @param {!GateDrawParams} params
-// */
+//* @param {!Painter} painter
+//* @param {!GateDrawParams} params
+//*/
 //Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = (painter, params) => {
 //    if (params.isInToolbox) {
 //        Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
@@ -282,8 +267,8 @@
 //};
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.CONTROL = new Gate(
 //    "•",
 //    Matrix.CONTROL,
@@ -304,8 +289,8 @@
 //    });
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.ANTI_CONTROL = new Gate(
 //    "◦",
 //    Matrix.ANTI_CONTROL,
@@ -326,10 +311,10 @@
 //    });
 //
 ///**
-// * A visualization gate with no effect.
-// *
-// * @type {!Gate}
-// */
+//* A visualization gate with no effect.
+//*
+//* @type {!Gate}
+//*/
 //Gate.PEEK = new Gate(
 //    "Peek",
 //    Matrix.identity(2),
@@ -367,8 +352,8 @@
 //    });
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.DOWN = new Gate(
 //    "↓",
 //    Matrix.fromPauliRotation(0.25, 0, 0),
@@ -382,8 +367,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.UP = new Gate(
 //    "↑",
 //    Matrix.fromPauliRotation(0.75, 0, 0),
@@ -404,8 +389,8 @@
 //    });
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.X = new Gate(
 //    "X",
 //    Matrix.PAULI_X,
@@ -432,8 +417,8 @@
 //    });
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.RIGHT = new Gate(
 //    "→",
 //    Matrix.fromPauliRotation(0, 0.25, 0),
@@ -446,8 +431,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.LEFT = new Gate(
 //    "←",
 //    Matrix.fromPauliRotation(0, 0.75, 0),
@@ -460,8 +445,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.Y = new Gate(
 //    "Y",
 //    Matrix.PAULI_Y,
@@ -474,8 +459,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.COUNTER_CLOCKWISE = new Gate(
 //    "↺",
 //    Matrix.fromPauliRotation(0, 0, 0.25),
@@ -488,8 +473,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.CLOCKWISE = new Gate(
 //    "↻",
 //    Matrix.fromPauliRotation(0, 0, 0.75),
@@ -501,8 +486,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.Z = new Gate(
 //    "Z",
 //    Matrix.PAULI_Z,
@@ -515,8 +500,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.H = new Gate(
 //    "H",
 //    Matrix.HADAMARD,
@@ -533,8 +518,8 @@
 //    false);
 //
 ///**
-// * @type {!Gate}
-// */
+//* @type {!Gate}
+//*/
 //Gate.SWAP_HALF = new Gate(
 //    "Swap",
 //    Matrix.square([1, 0, 0, 0,
@@ -546,7 +531,16 @@
 //    "\n" +
 //    "(You must place two swap gate halves in a column to do a swap.)",
 //    true,
-//    Gate.SWAP_SYMBOL_DRAWER);
+//    (painter, params) => {
+//        if (params.isInToolbox || params.isHighlighted) {
+//            Gate.DEFAULT_SYMBOL_DRAWER(painter, params);
+//            return;
+//        }
+//
+//        let swapRect = Rect.centeredSquareWithRadius(params.rect.center(), params.rect.w/6);
+//        painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
+//        painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
+//    });
 //
 //
 ///** @type {!Gate} */
@@ -728,16 +722,16 @@
 //
 //
 ///**
-// * @param {!GateColumn} gateColumn
-// * @param {!int} wireIndex
-// * @param {!QuantumState} state
-// *
-// * @property {!GateColumn} gateColumn
-// * @property {!int} wireIndex
-// * @property {!QuantumState} state
-// *
-// * @constructor
-// */
+//* @param {!GateColumn} gateColumn
+//* @param {!int} wireIndex
+//* @param {!QuantumState} state
+//*
+//* @property {!GateColumn} gateColumn
+//* @property {!int} wireIndex
+//* @property {!QuantumState} state
+//*
+//* @constructor
+//*/
 //class CircuitContext {
 //    constructor(gateColumn, wireIndex, state) {
 //        this.gateColumn = gateColumn;

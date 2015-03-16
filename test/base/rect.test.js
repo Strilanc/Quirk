@@ -22,6 +22,38 @@ suite.test("isEqualTo", () => {
     assertThat(r).isNotEqualTo(new Rect(2, 3, 7, 7));
 });
 
+suite.test("isApproximatelyEqualTo", () => {
+    var r = new Rect(2, 3, 5, 7);
+
+    assertFalse(r.isApproximatelyEqualTo(null, 0));
+    assertFalse(r.isApproximatelyEqualTo("", 0));
+    assertFalse(r.isApproximatelyEqualTo([], 0));
+
+    assertTrue(r.isApproximatelyEqualTo(new Rect(2, 3, 5, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2.1, 3, 5, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3.1, 5, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3, 5.1, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3, 5, 7.1), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2.3, 3, 5, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3.3, 5, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3, 5.3, 7), 0));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3, 5, 7.3), 0));
+
+    assertTrue(r.isApproximatelyEqualTo(new Rect(2, 3, 5, 7), 0.2));
+    assertTrue(r.isApproximatelyEqualTo(new Rect(2.1, 3, 5, 7), 0.2));
+    assertTrue(r.isApproximatelyEqualTo(new Rect(2, 3.1, 5, 7), 0.2));
+    assertTrue(r.isApproximatelyEqualTo(new Rect(2, 3, 5.1, 7), 0.2));
+    assertTrue(r.isApproximatelyEqualTo(new Rect(2, 3, 5, 7.1), 0.2));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2.3, 3, 5, 7), 0.2));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3.3, 5, 7), 0.2));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3, 5.3, 7), 0.2));
+    assertFalse(r.isApproximatelyEqualTo(new Rect(2, 3, 5, 7.3), 0.2));
+
+    // Interops with testing utils.
+    assertThat(r).isApproximatelyEqualTo(new Rect(2, 3, 5, 7));
+    assertThat(r).isNotApproximatelyEqualTo(new Rect(3, 3, 5, 7));
+});
+
 suite.test("toString", () => {
     assertThat(new Rect(2, 3, 5, 7).toString()).isEqualTo("[2:7]x[3:10]");
 });

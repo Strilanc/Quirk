@@ -162,6 +162,117 @@ suite.test("reverseGroupMap", () => {
     ]));
 });
 
+suite.test("binarySearchForTransitionFromTrueToFalse", () => {
+    let r = ["axe", "cat", "def", "g"];
+    assertThat(Util.binarySearchForTransitionFromTrueToFalse(r.length, i => r[i] < "a")).isEqualTo(0);
+    assertThat(Util.binarySearchForTransitionFromTrueToFalse(r.length, i => r[i] < "b")).isEqualTo(1);
+    assertThat(Util.binarySearchForTransitionFromTrueToFalse(r.length, i => r[i] < "d")).isEqualTo(2);
+    assertThat(Util.binarySearchForTransitionFromTrueToFalse(r.length, i => r[i] < "e")).isEqualTo(3);
+
+    for (let n = 0; n < 10; n++) {
+        for (let t = 0; t <= n; t++) {
+            assertThat(Util.binarySearchForTransitionFromTrueToFalse(n, i => i < t)).isEqualTo(t);
+            assertThat(Util.binarySearchForTransitionFromTrueToFalse(n, i => i <= t)).isEqualTo(Math.min(n, t + 1));
+        }
+    }
+});
+
+suite.test("breakLine", () => {
+    assertThat(Util.breakLine("a long line can be broken between words", 21, e => e.length)).isEqualTo([
+        "a long line can be",
+        "broken between words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 20, e => e.length)).isEqualTo([
+        "a long line can be",
+        "broken between words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 19, e => e.length)).isEqualTo([
+        "a long line can be",
+        "broken between",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 11, e => e.length)).isEqualTo([
+        "a long line",
+        "can be",
+        "broken",
+        "between",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 10, e => e.length)).isEqualTo([
+        "a long",
+        "line can",
+        "be broken",
+        "between",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 9, e => e.length)).isEqualTo([
+        "a long",
+        "line can",
+        "be broken",
+        "between",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 8, e => e.length)).isEqualTo([
+        "a long",
+        "line can",
+        "be",
+        "broken",
+        "between",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 7, e => e.length)).isEqualTo([
+        "a long",
+        "line",
+        "can be",
+        "broken",
+        "between",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 6, e => e.length)).isEqualTo([
+        "a long",
+        "line",
+        "can be",
+        "broken",
+        "betwee",
+        "n",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("a long line can be broken between words", 5, e => e.length)).isEqualTo([
+        "a",
+        "long",
+        "line",
+        "can",
+        "be",
+        "broke",
+        "n",
+        "betwe",
+        "en",
+        "words"
+    ]);
+
+    assertThat(Util.breakLine("multiple     spaces       can get         \t\tcollapsed", 10, e => e.length)).isEqualTo([
+        "multiple",
+        "spaces",
+        "can get",
+        "collapsed"
+    ]);
+
+    assertThat(Util.breakLine("Wide Wide narrow narrow", 13, e => (e.match(/W/)||[]).length*8 + e.length)).isEqualTo([
+        "Wide",
+        "Wide",
+        "narrow narrow"
+    ]);
+});
+
 //suite.test("MaskCandidates", () => {
 //    assertThrows(() => Util.maskCandidates(-1));
 //    assertThat(Util.maskCandidates(0)).isEqualTo([0]);

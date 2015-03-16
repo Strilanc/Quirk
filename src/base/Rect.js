@@ -38,6 +38,23 @@ export default class Rect {
             other.h === this.h;
     };
 
+    /**
+     * @param {!Rect|*} obj
+     * @param {!number} epsilon
+     * @returns {!boolean}
+     */
+    isApproximatelyEqualTo(obj, epsilon) {
+        if (!(obj instanceof Rect)) {
+            return false;
+        }
+        /** @type {Rect!} */
+        var other = obj;
+        return Math.abs(other.x - this.x) <= epsilon &&
+            Math.abs(other.y - this.y) <= epsilon &&
+            Math.abs(other.right() - this.right()) <= epsilon &&
+            Math.abs(other.bottom() - this.bottom()) <= epsilon;
+    };
+
     toString() {
         return `[${this.x}:${this.right()}]x[${this.y}:${this.bottom()}]`;
     };

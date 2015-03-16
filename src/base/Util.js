@@ -143,6 +143,73 @@ export default class Util {
         return result;
     };
 
+    /**
+     * Performs a binary search, looking for the first index to return false under the constraint that the given
+     * function returns true for all arguments less than some index and false afterwards.
+     *
+     * @param {!int} max Determines the range to search over. Valid inputs to the query function are non-negative
+     * integers up to this maximum than this count.
+     * @param {!function(!int) : !boolean} argIsBeforeTransitionFunc Determines if the transition happens before or
+     * after the given index.
+     * @returns {!int}
+     */
+    static binarySearchForTransitionFromTrueToFalse(max, argIsBeforeTransitionFunc) {
+        let min = 0;
+        while (max > min) {
+            let med = min + Math.floor((max - min) / 2);
+            if (argIsBeforeTransitionFunc(med)) {
+                min = med + 1;
+            } else {
+                max = med;
+            }
+        }
+        return min;
+    }
+
+    /**
+     * Breaks a single line of characters into several lines, when forced to by a width boundary.
+     * @param {!string} text A single unbroken line of text, without any newline characters.
+     * @param {!number} maxWidth The maximum width that lines can grow to before they must be broken.
+     * @param {!function(!string) : !number} measureWidth Measure the width of a substring.
+     * @returns {!(!string[])}
+     */
+    static breakLine(text, maxWidth, measureWidth) {
+        let lines = [];
+        let p = 0;
+        while (p < text.length) {
+            // How many characters will fit on this line?
+            let maxKeepLength = Util.binarySearchForTransitionFromTrueToFalse(
+                text.length - p + 1,
+                i => measureWidth(text.substr(p, i)) <= maxWidth) - 1;
+            maxKeepLength = Math.max(1, maxKeepLength);
+            let maxChunk = text.substr(p, maxKeepLength);
+
+            let hitBoundary = p + maxKeepLength === text.length ||
+                text.substr(p + maxKeepLength, 1).match(/\s/) !== null;
+            if (!hitBoundary) {
+                // If some of the chunk words fit, defer the split word into the next line.
+                let niceRegex = /^(.*\S)(\s+)\S*$/;
+                let niceChunkMatch = niceRegex.exec(maxChunk);
+                if (niceChunkMatch !== null) {
+                    let keepChunk = niceChunkMatch[1];
+                    let skipChunk = niceChunkMatch[2];
+                    lines.push(keepChunk.trim());
+                    p += keepChunk.length + skipChunk.length;
+                    continue;
+                }
+            }
+
+            // Taking the entire chunk, either due to a lucky break in the right place or an unavoidable word split.
+            lines.push(maxChunk.trim());
+            p += maxChunk.length;
+
+            // Skip starting whitespace
+            p += text.substr(p).match(/^\s*/)[0].length;
+        }
+        return lines;
+    }
+
+
     ///**
     // * Returns an object's property, or else throws an exception when the object doesn't have that property.
     // * @param {*} object

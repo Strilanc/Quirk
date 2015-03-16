@@ -138,6 +138,77 @@ export default class Painter {
     }
 
     /**
+     * Draws some text within the given rectangular area, aligned based on the given proportional center, with
+     * line breaking and (if line breaking isn't enough) font size reduction to make things fit.
+     *
+     * @param {!string} text
+     * @param {!Rect} area
+     * @param {!Point} proportionalCenterOfAlignment
+     * @param {!string} fontColor
+     * @param {!int} maxFontSize
+     * @param {!string} fontFamily
+     * @returns {!Rect} A minimal bounding rectangle containing the pixels affected by the text printing.
+     */
+    print(text,
+          area,
+          proportionalCenterOfAlignment = new Point(0, 0),
+          fontColor = Config.DEFAULT_TEXT_COLOR,
+          maxFontSize = Config.DEFAULT_FONT_SIZE,
+          fontFamily = Config.DEFAULT_FONT_FAMILY) {
+
+        let fontSize;
+        let ascendingHeightOf = metric => {
+            //noinspection JSUnresolvedVariable
+            let d = metric.fontBoundingBoxAscent;
+            return d === undefined ? fontSize * 0.75 : d;
+        };
+        let descendingHeightOf = metric => {
+            //noinspection JSUnresolvedVariable
+            let d = metric.fontBoundingBoxDescent;
+            return d === undefined ? fontSize * 0.25 : d;
+        };
+        let heightOf = metric => ascendingHeightOf(metric) + descendingHeightOf(metric);
+
+        let lines;
+        let measures;
+        let height;
+        let forcedLines = new Seq(text.split("\n"));
+        for (let df = 0; ; df++) { // Note: potential for quadratic behavior.
+            fontSize = maxFontSize - df;
+            this.ctx.font = fontSize + "px " + fontFamily;
+            //noinspection JSCheckFunctionSignatures
+            lines = forcedLines.
+                flatMap(line => Util.breakLine(line, area.w, s => this.ctx.measureText(s).width)).
+                toArray();
+            //noinspection JSCheckFunctionSignatures
+            measures = lines.map(e => this.ctx.measureText(e));
+            //noinspection JSUnresolvedVariable
+            height = new Seq(measures).map(heightOf).sum();
+            if (height <= area.h || fontSize <= 6) {
+                break;
+            }
+        }
+
+        let f = (offset, full, used, proportion) => offset + (full - used) * proportion;
+        let fx = w => f(area.x, area.w, w, proportionalCenterOfAlignment.x);
+        let fy = h => f(area.y, area.h, h, proportionalCenterOfAlignment.y);
+        let y = fy(height);
+
+        this.ctx.fillStyle = fontColor;
+
+        let dy = 0;
+        for (let i = 0; i < lines.length; i++) {
+            dy += ascendingHeightOf(measures[i]);
+            this.ctx.fillText(lines[i], fx(measures[i].width), y + dy);
+            dy += descendingHeightOf(measures[i]);
+        }
+
+        //noinspection JSUnresolvedVariable
+        let maxWidth = new Seq(measures).map(e => e.width).max(0);
+        return new Rect(fx(maxWidth), y, maxWidth, height);
+    }
+
+    /**
      * Draws a grid.
      * @param {!Rect} topLeftCell
      * @param {!number} cols

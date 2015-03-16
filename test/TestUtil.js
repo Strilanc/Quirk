@@ -122,7 +122,6 @@ export class AssertionSubject {
 
     /**
      * @param {*} other
-     * @returns {undefined}
      */
     isEqualTo(other) {
         if (!equate(this.subject, other)) {
@@ -132,7 +131,24 @@ export class AssertionSubject {
 
     /**
      * @param {*} other
-     * @returns {undefined}
+     */
+    isGreaterThan(other) {
+        if (!(this.subject > other)) {
+            fail(`Got <${describe(this.subject)}> but expected it to be greater than <${describe(other)}>`);
+        }
+    };
+
+    /**
+     * @param {*} other
+     */
+    isLessThan(other) {
+        if (!(this.subject < other)) {
+            fail(`Got <${describe(this.subject)}> but expected it to be less than <${describe(other)}>`);
+        }
+    };
+
+    /**
+     * @param {*} other
      */
     isNotEqualTo(other) {
         if (equate(this.subject, other)) {
@@ -143,7 +159,6 @@ export class AssertionSubject {
     /**
      * @param {*} other
      * @param {=number} epsilon
-     * @returns {undefined}
      */
     isApproximatelyEqualTo(other, epsilon = 0.000001) {
         if (!isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
@@ -154,7 +169,6 @@ export class AssertionSubject {
     /**
      * @param {*} other
      * @param {=number} epsilon
-     * @returns {undefined}
      */
     isNotApproximatelyEqualTo(other, epsilon = 0.000001) {
         if (isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
