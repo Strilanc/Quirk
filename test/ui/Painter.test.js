@@ -51,11 +51,11 @@ suite.canvasAppearanceTest("fillCircle", 40, 40, canvas => {
 'pqo0vAk0CJTvA3J94/xCBwxkTyN8e+NY5hktmeFtgtDyFSybtcacAPo/OAwe0HPh/jxiJStvwJUnWTK26trtmdtMjUIqXtLFFbfzBavrJ/wt6vDLuYuB' +
 '3Bn/uIuAC1ANFGeEANAVtTqA28UX4BOUyhO0h86AXUB3Uj6cOKu++eZ7neZ7neXfaFuFxi8XufliHAAAAAElFTkSuQmCC');
 
-suite.canvasAppearanceTest("print_simple", 40, 40, canvas => {
+suite.canvasAppearanceTest("printParagraph_simple", 40, 40, canvas => {
     let painter = new Painter(canvas);
     let r = new Rect(5, 5, 30, 30);
     painter.strokeRect(r, "red");
-    let used = painter.print(
+    let used = painter.printParagraph(
         "test",
         r,
         new Point(0, 0),
@@ -69,11 +69,11 @@ suite.canvasAppearanceTest("print_simple", 40, 40, canvas => {
 'MoyCkMXf7Qp9U6VYPkQAAAABJRU5ErkJggg==',
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
-suite.canvasAppearanceTest("print_centered", 40, 40, canvas => {
+suite.canvasAppearanceTest("printParagraph_centered", 40, 40, canvas => {
     let painter = new Painter(canvas);
     let r = new Rect(5, 5, 30, 30);
     painter.fillRect(r, "red");
-    let used = painter.print(
+    let used = painter.printParagraph(
         "test",
         r,
         new Point(0.5, 0.5),
@@ -86,10 +86,10 @@ suite.canvasAppearanceTest("print_centered", 40, 40, canvas => {
 'WAOy55NkF6NWqdGp2jWKG1lZc8uwC/LMABBBAAAEEEECEkNUFySzIisHOsCQAAAAASUVORK5CYII=',
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
-suite.canvasAppearanceTest("print_multiline", 40, 40, canvas => {
+suite.canvasAppearanceTest("printParagraph_multiline", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.clear("gray");
-    let used = painter.print(
+    let used = painter.printParagraph(
         "rest\ntea the clasp",
         new Rect(0, 0, 40, 40),
         new Point(0.5, 0),
@@ -105,10 +105,10 @@ suite.canvasAppearanceTest("print_multiline", 40, 40, canvas => {
 'kq7q8gpYSuT0oK8UvnjNN9uZieTf8qgd5IG8Xe5pszcUcUPpOAd5lZ+eTBfhXW4AL8G37APVGBLviHNC8AAAAAElFTkSuQmCC',
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
-suite.canvasAppearanceTest("print_shrink", 40, 40, canvas => {
+suite.canvasAppearanceTest("printParagraph_shrink", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.clear("gray");
-    let used = painter.print(
+    let used = painter.printParagraph(
         "clambering wolverines taking tamberines to latrines",
         new Rect(0, 0, 40, 40),
         new Point(0.5, 0),
@@ -124,7 +124,52 @@ suite.canvasAppearanceTest("print_shrink", 40, 40, canvas => {
 'adwkwhGBGAk+b1hyajFmv90gGvUckIjssq17vMUD0iERkJ37V6z0C6D2iZlAXXvF6twJiD4IeUWvQ/+7OeL1bAe8a6PU+A7jn9ZYAV3rb1eev6KMB7un' +
 'ck73wjCfcZPDNXnjGEw4B3+qFZzzhBvDNXnjGEwYMONK5J3vhGU/4isxcGX8P8Ezf9jRtNO8Of7gBVD30GuUX9XqJOnpXT3yYQd/NecCRXuqfn3f1xIe' +
 'Avh8eAY708s6e+FIG9/Tyzp54CKj1dFaDXi+9JzwCnO2Jh4BfG58H/AGLFlmv6qB4yAAAAABJRU5ErkJggg==',
+    1500); // Text rendering differs quite a bit from system to system... hard to test it effectively.
+
+suite.canvasAppearanceTest("printLine_simple", 40, 40, canvas => {
+    let painter = new Painter(canvas);
+    let r = new Rect(5, 5, 30, 30);
+    painter.strokeRect(r, "green");
+    let used = painter.printLine(
+        "test",
+        r,
+        0,
+        "black",
+        12,
+        "monospace");
+    assertThat(used).isApproximatelyEqualTo(new Rect(5, 18.5, 28, 12), 2.5);
+}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAA1klEQVRYhe2YwQ3CMAxF/zaskVPFIB0kl06SQbhkEhY' +
+'pBwo1lgkpTkmF/o96iB39/+SoPRSgqKMpIiB2W6EGMCLi0gHunlkJWHGwsapzCejNJaA3l4DeXAJ6cwnozSWgN5eA3tzXg3kHFNtzE+AZCcCsHmk8qp6' +
+'W7KWlNhQ9G09Q1k8ArmI/LTWr996zIaA1iVlByfrQA3D8bPTUrhNMopOxTkOHlgD03vb8EnDCelVyavoa5YuSUb5i2/Nfv4O/EwG9IqBXGwEP/fModIB' +
+'7rOC8B4pqrhsoxyh6D5LV0gAAAABJRU5ErkJggg==',
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
+
+suite.canvasAppearanceTest("printLine_aligned", 40, 40, canvas => {
+    let painter = new Painter(canvas);
+    painter.clear("gray");
+    let used1 = painter.printLine(
+        "A",
+        new Rect(0, 0, 40, 40).leftHalf(),
+        0,
+        "red",
+        24,
+        "monospace");
+    let used2 = painter.printLine(
+        "long",
+        new Rect(0, 0, 40, 40).rightHalf(),
+        1,
+        "green",
+        24,
+        "monospace");
+    assertThat(used1).isApproximatelyEqualTo(new Rect(0, 12, 14.4, 24), 2.5);
+    assertThat(used2).isApproximatelyEqualTo(new Rect(20, 23.25, 20, 9), 2.5);
+}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABYUlEQVRYhe3WoW7DMBQF0MdKzIKMwsyCzALDCg2L/QH' +
+'5hfsL5cWjY4NlZUNlZWVDQ0FFd6CzV6WNmm7T7EkGV6riqjp+z8+NAGDOkdSAAizA1IACLMDUgAIswNSAAvwz4MEYUuQqx7rOA3iZbddxUIpPqxUpwnX' +
+'f5wU81jX3TUMAHJTirm3zAW68J0W48Z4AuGtbvldVPsAxaAxODnyvqquWvmkdW54UODUUYWiSA/dNc/NaWfc9KcJn59ICT4vFzbsw5GDMrB9VUFT4nYp' +
+'H4MtyydNiMfnFe+vjGMzbzGzgwZi7FRqU4rbrvgXU0BRIrKyGjs8EQg8fqy8QGpjPtQfO2NQZvQfs0LHDeWMOjhaWHj5iw7qFpYOLUAd3Bs6d0kf++uY' +
+'ALewkMHyWQamrYRhfyq/Wzh6Y864lJiButTi09nKoQosF8lXBHGNg8gSGympoAv/phTXXFGABpk4B/jQftjpRyNhAo6oAAAAASUVORK5CYII=',
+    1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
+
 
 suite.canvasAppearanceTest("strokeGrid", 40, 40, canvas => {
     let painter = new Painter(canvas);

@@ -100,12 +100,12 @@ export default class Painter {
      * @param {!string} fontFamily
      * @returns {!Rect} A minimal bounding rectangle containing the pixels affected by the text printing.
      */
-    print(text,
-          area,
-          proportionalCenterOfAlignment = new Point(0, 0),
-          fontColor = Config.DEFAULT_TEXT_COLOR,
-          maxFontSize = Config.DEFAULT_FONT_SIZE,
-          fontFamily = Config.DEFAULT_FONT_FAMILY) {
+    printParagraph(text,
+                   area,
+                   proportionalCenterOfAlignment = new Point(0, 0),
+                   fontColor = Config.DEFAULT_TEXT_COLOR,
+                   maxFontSize = Config.DEFAULT_FONT_SIZE,
+                   fontFamily = Config.DEFAULT_FONT_FAMILY) {
 
         let fontSize;
         let ascendingHeightOf = metric => {
@@ -157,6 +157,59 @@ export default class Painter {
         //noinspection JSUnresolvedVariable
         let maxWidth = new Seq(measures).map(e => e.width).max(0);
         return new Rect(fx(maxWidth), y, maxWidth, height);
+    }
+
+    /**
+     * Draws a single line of text, without line breaks, using font size reduction to make things fit.
+     *
+     * @param {!string} text
+     * @param {!Rect} area
+     * @param {!number} proportionalCenterOfHorizontalAlignment
+     * @param {!string} fontColor
+     * @param {!int} maxFontSize
+     * @param {!string} fontFamily
+     * @returns {!Rect} A minimal bounding rectangle containing the pixels affected by the text printing.
+     */
+    printLine(text,
+              area,
+              proportionalCenterOfHorizontalAlignment = 0,
+              fontColor = Config.DEFAULT_TEXT_COLOR,
+              maxFontSize = Config.DEFAULT_FONT_SIZE,
+              fontFamily = Config.DEFAULT_FONT_FAMILY) {
+
+        let fontSize;
+        let ascendingHeightOf = metric => {
+            //noinspection JSUnresolvedVariable
+            let d = metric.fontBoundingBoxAscent;
+            return d === undefined ? fontSize * 0.75 : d;
+        };
+        let descendingHeightOf = metric => {
+            //noinspection JSUnresolvedVariable
+            let d = metric.fontBoundingBoxDescent;
+            return d === undefined ? fontSize * 0.25 : d;
+        };
+        let heightOf = metric => ascendingHeightOf(metric) + descendingHeightOf(metric);
+
+        let measure;
+        for (let df = 0; ; df++) { // Note: potential for quadratic behavior.
+            fontSize = maxFontSize - df;
+            this.ctx.font = fontSize + "px " + fontFamily;
+            measure = this.ctx.measureText(text);
+            if ((measure.width <= area.w && heightOf(measure) <= area.h) || fontSize <= 6) {
+                break;
+            }
+        }
+
+        let h = heightOf(measure);
+        let py = ascendingHeightOf(measure) / h;
+        let f = (offset, full, used, proportion) => offset + (full - used) * proportion;
+        let x = f(area.x, area.w, measure.width, proportionalCenterOfHorizontalAlignment);
+        let y = f(area.y, area.h, h, py);
+
+        this.ctx.fillStyle = fontColor;
+        this.ctx.fillText(text, x, y + ascendingHeightOf(measure));
+
+        return new Rect(x, y, measure.width, h);
     }
 
     /**

@@ -35,7 +35,7 @@ export default class MathPainter {
                                fillColor = Config.PROBABILITY_BOX_FILL_UP_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
         painter.fillRect(drawArea.takeBottomProportion(probability), fillColor);
-        painter.printCenteredText(MathPainter.describeProbability(probability, 1), drawArea.center());
+        painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
         painter.strokeRect(drawArea);
     }
 
@@ -57,36 +57,37 @@ export default class MathPainter {
                                           fillColor = Config.PROBABILITY_BOX_FILL_UP_COLOR) {
         let h = probabilityOfCondition;
         let w = h === 0 ? 0 : probabilityOfHitGivenCondition;
-        let gs = w === 0 ? "0/0" : MathPainter.describeProbability(w, 0);
+        let gs = w === 0 ? "N/A" : MathPainter.describeProbability(w, 0);
         let ps = MathPainter.describeProbability(w * h, 0);
 
         painter.fillRect(drawArea, semiFillColor);
         painter.fillRect(drawArea.takeLeftProportion(w).takeBottomProportion(h), fillColor);
         painter.fillRect(drawArea.takeRightProportion(1 - w).takeTopProportion(1 - h), backgroundColor);
 
-        painter.printCenteredText(
+        let usedTop = painter.printLine(
             "t|c:",
-            drawArea.topHalf().centerLeft().offsetBy(1, 0),
-            new Point(0, 0.5),
+            drawArea.topHalf().skipLeft(1),
+            0,
             Config.DEFAULT_TEXT_COLOR,
             10);
-        painter.printCenteredText(
+        let usedBottom = painter.printLine(
             "t\u00B7c:",
-            drawArea.bottomHalf().centerLeft().offsetBy(1, 0),
-            new Point(0, 0.5),
+            drawArea.bottomHalf().skipLeft(1),
+            0,
             Config.DEFAULT_TEXT_COLOR,
             10);
 
-        painter.printCenteredText(
-            gs.replace("100%", "100 "),
-            drawArea.topHalf().centerRight(),
-            new Point(1, 0.5),
-            Config.DEFAULT_TEXT_COLOR,
+        let available = drawArea.skipLeft(Math.max(usedTop.right(), usedBottom.right()) - drawArea.x + 1);
+        painter.printLine(
+            gs,
+            available.topHalf().skipRight(1),
+            1,
+            w === 0 ? "red" : Config.DEFAULT_TEXT_COLOR,
             11);
-        painter.printCenteredText(
-            ps.replace("100%", "100 "),
-            drawArea.bottomHalf().centerRight(),
-            new Point(1, 0.5),
+        painter.printLine(
+            ps,
+            available.bottomHalf().skipRight(1),
+            1,
             Config.DEFAULT_TEXT_COLOR,
             11);
         painter.strokeRect(drawArea);
