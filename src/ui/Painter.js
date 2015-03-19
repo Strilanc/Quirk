@@ -135,7 +135,7 @@ export default class Painter {
             measures = lines.map(e => this.ctx.measureText(e));
             //noinspection JSUnresolvedVariable
             height = new Seq(measures).map(heightOf).sum();
-            if (height <= area.h || fontSize <= 6) {
+            if (height <= area.h || fontSize <= 4) {
                 break;
             }
         }
@@ -195,7 +195,7 @@ export default class Painter {
             fontSize = maxFontSize - df;
             this.ctx.font = fontSize + "px " + fontFamily;
             measure = this.ctx.measureText(text);
-            if ((measure.width <= area.w && heightOf(measure) <= area.h) || fontSize <= 6) {
+            if ((measure.width <= area.w && heightOf(measure) <= area.h) || fontSize <= 4) {
                 break;
             }
         }

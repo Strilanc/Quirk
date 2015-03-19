@@ -2,7 +2,7 @@ import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
 
 /**
- * A named and described single-qubit quantum operation.
+ * A described and possibly time-varying quantum operation.
  */
 export default class Gate {
     /**
@@ -35,7 +35,7 @@ export default class Gate {
      */
     matrixAt(time) {
         return this.matrixOrFunc instanceof Matrix ? this.matrixOrFunc : this.matrixOrFunc(time);
-    };
+    }
 
     /**
      * @param {!number} fraction
@@ -62,7 +62,7 @@ export default class Gate {
             `${deg_desc}° Phase Gate`,
             `Rotates the phase of a qubit's ON state by ${deg_desc}° while leaving its OFF state alone.`,
             `The standard Pauli Z gate corresponds to Z(180°).`);
-    };
+    }
 
     /**
      * @param {!number} x
@@ -85,7 +85,7 @@ export default class Gate {
             "A custom operation based on a rotation.",
             "",
             symbol === undefined ? Gate.MATRIX_DRAWER : Gate.DEFAULT_DRAWER);
-    };
+    }
 
     /**
      * @param {!Matrix} matrix
@@ -99,7 +99,7 @@ export default class Gate {
             "A custom operation.",
             "",
             Gate.MATRIX_DRAWER);
-    };
+    }
 
     /**
      *
@@ -116,25 +116,11 @@ export default class Gate {
             `${fractionLabel} Target Rotation Gate`,
             `A tuned rotation gate that maps an OFF input to an output with ${fractionLabel} probability of being ON.`,
             `Equivalent to R(acos(√(${fractionLabel}))).`);
-    };
+    }
 
     isTimeBased() {
         return !(this.matrixOrFunc instanceof Matrix);
-    };
-
-    isControlModifier() {
-        return this === Gates.Special.Control || this === Gates.Special.AntiControl;
-    };
-
-
-    /**
-     * @param {!Gate} gate
-     */
-    static updateIfFuzzGate(gate) {
-        if (gate === Gate.SILLY_GATES[0]) {
-            Gate.SILLY_GATES[0] = Gate.makeFuzzGate();
-        }
-    };
+    }
 
     /**
      * @param {!Painter} painter
@@ -146,7 +132,7 @@ export default class Gate {
      */
     paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
         this.symbolDrawer(painter, new GateDrawParams(isInToolbox, isHighlighted, areaRect, this, time, circuitContext));
-    };
+    }
 }
 
 /**

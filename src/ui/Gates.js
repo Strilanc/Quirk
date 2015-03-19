@@ -435,3 +435,13 @@ Gates.KnownToSerializer = [
     Gates.Named.Evolving.R,
     Gates.Named.Evolving.H
 ];
+
+///**
+// * @param {!Gate} gate
+// */
+//static updateIfFuzzGate(gate) {
+//    if (gate === Gate.SILLY_GATES[0]) {
+//        Gate.SILLY_GATES[0] = Gate.makeFuzzGate();
+//    }
+//};
+//
