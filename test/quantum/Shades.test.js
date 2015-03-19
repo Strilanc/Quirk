@@ -716,3 +716,85 @@ suite.webGlTest("renderQubitOperation_flows", () => {
         3, 27, 0, 0
     ]));
 });
+
+suite.webGlTest("renderSwapOperation", () => {
+    let director = new WglDirector();
+    let out = new WglTexture(1<<2, 1<<1);
+    let inp = new WglTexture(1<<2, 1<<1);
+    let cnt = new WglTexture(1<<2, 1<<1);
+    Shades.renderPixelColorData(director, inp, new Float32Array([
+        11, 12, 13, 14, //000
+        21, 22, 23, 24, //001
+        31, 32, 33, 34, //010
+        41, 42, 43, 44, //011
+        51, 52, 53, 54, //100
+        61, 62, 63, 64, //101
+        71, 72, 73, 74, //110
+        81, 82, 83, 84  //111
+    ]));
+
+    Shades.renderUniformColor(director, cnt, 1, 0, 0, 0);
+    Shades.renderSwapOperation(director, out, inp, 0, 1, cnt);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        11, 12, 13, 14, //000
+        31, 32, 33, 34, //010
+        21, 22, 23, 24, //001
+        41, 42, 43, 44, //011
+        51, 52, 53, 54, //100
+        71, 72, 73, 74, //110
+        61, 62, 63, 64, //101
+        81, 82, 83, 84  //111
+    ]));
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 2, false);
+    Shades.renderSwapOperation(director, out, inp, 0, 1, cnt);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        11, 12, 13, 14, //000
+        31, 32, 33, 34, //010
+        21, 22, 23, 24, //001
+        41, 42, 43, 44, //011
+        51, 52, 53, 54, //100
+        61, 62, 63, 64, //101
+        71, 72, 73, 74, //110
+        81, 82, 83, 84  //111
+    ]));
+
+    Shades.renderUniformColor(director, cnt, 1, 0, 0, 0);
+    Shades.renderSwapOperation(director, out, inp, 0, 2, cnt);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        11, 12, 13, 14, //000
+        51, 52, 53, 54, //100
+        31, 32, 33, 34, //010
+        71, 72, 73, 74, //110
+        21, 22, 23, 24, //001
+        61, 62, 63, 64, //101
+        41, 42, 43, 44, //011
+        81, 82, 83, 84  //111
+    ]));
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 1, false);
+    Shades.renderSwapOperation(director, out, inp, 0, 2, cnt);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        11, 12, 13, 14, //000
+        51, 52, 53, 54, //100
+        31, 32, 33, 34, //010
+        41, 42, 43, 44, //011
+        21, 22, 23, 24, //001
+        61, 62, 63, 64, //101
+        71, 72, 73, 74, //110
+        81, 82, 83, 84  //111
+    ]));
+
+    Shades.renderSingleBitConstraintControlMask(director, cnt, 1, true);
+    Shades.renderSwapOperation(director, out, inp, 0, 2, cnt);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        11, 12, 13, 14, //000
+        21, 22, 23, 24, //001
+        31, 32, 33, 34, //010
+        71, 72, 73, 74, //110
+        51, 52, 53, 54, //100
+        61, 62, 63, 64, //101
+        41, 42, 43, 44, //011
+        81, 82, 83, 84  //111
+    ]));
+});

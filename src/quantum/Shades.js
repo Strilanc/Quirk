@@ -46,7 +46,7 @@ export default class Shades {
      */
     static renderPixelColorData(director, destinationTexture, pixelColorData) {
         let [w, h] = [destinationTexture.width, destinationTexture.height];
-        U.need(pixelColorData.length === w * h * 4);
+        U.need(pixelColorData.length === w * h * 4, "pixelColorData.length === w * h * 4");
 
         director.useRawDataTextureIn(w, h, pixelColorData, texture => {
             director.render(destinationTexture, GLSL_PASS_THROUGH, [
@@ -67,7 +67,13 @@ export default class Shades {
      * @param {!WglTexture} foregroundTexture
      * @param {!WglTexture} backgroundTexture
      */
-    static renderOverlayed(director, destinationTexture, foregroundX, foregroundY, foregroundTexture, backgroundTexture) {
+    static renderOverlayed(
+            director,
+            destinationTexture,
+            foregroundX,
+            foregroundY,
+            foregroundTexture,
+            backgroundTexture) {
         director.render(destinationTexture, GLSL_OVERLAY, [
             WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
             WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
@@ -236,7 +242,25 @@ export default class Shades {
         ]);
     };
 
-
+    /**
+     * Renders the result of applying a controlled swap operation to a superposition.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!int} qubitIndex1
+     * @param {!int} qubitIndex2
+     * @param {!WglTexture} controlTexture
+     */
+    static renderSwapOperation(director, destinationTexture, inputTexture, qubitIndex1, qubitIndex2, controlTexture) {
+        director.render(destinationTexture, GLSL_SWAP_QUBITS, [
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
+            WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
+            WglArg.texture("controlTexture", controlTexture, 1)
+        ]);
+    };
 }
 
 const snippets = {
@@ -299,8 +323,8 @@ const GLSL_SET_SINGLE_PIXEL = new WglShader(`
 
     void main() {
         vec2 d = gl_FragCoord.xy - vec2(0.5, 0.5) - pixel;
-        float f = float(d == vec2(0, 0));
-        gl_FragColor = vec4(f, 0, 0, 0);
+        float f = float(d == vec2(0.0, 0.0));
+        gl_FragColor = vec4(f, 0.0, 0.0, 0.0);
     }`);
 
 const GLSL_PASS_THROUGH = new WglShader(`
@@ -357,7 +381,7 @@ const GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT = new WglShader(`
         bool targetBitIsOn = mod(state, targetBitPositionMask * 2.0) > targetBitPositionMask - 0.5;
 
         float match = mod(float(targetBitIsOn) + desiredBitValue + 1.0, 2.0);
-        gl_FragColor = vec4(match, 0, 0, 0);
+        gl_FragColor = vec4(match, 0.0, 0.0, 0.0);
     }`);
 
 const GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT = new WglShader(`
@@ -382,7 +406,7 @@ const GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT = new WglShader(`
         vec2 uv = gl_FragCoord.xy / textureSize.xy;
         float oldMatch = texture2D(controlTexture, uv).x;
 
-        gl_FragColor = vec4(match * oldMatch, 0, 0, 0);
+        gl_FragColor = vec4(match * oldMatch, 0.0, 0.0, 0.0);
     }`);
 
 const GLSL_FROM_AMPLITUDES_TO_PROBABILITIES = new WglShader(`
@@ -396,7 +420,7 @@ const GLSL_FROM_AMPLITUDES_TO_PROBABILITIES = new WglShader(`
         vec2 uv = gl_FragCoord.xy / textureSize.xy;
         vec4 amps = texture2D(inputTexture, uv);
         float p = dot(amps, amps);
-        gl_FragColor = vec4(p, 0, 0, 0);
+        gl_FragColor = vec4(p, 0.0, 0.0, 0.0);
     }`);
 
 const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
@@ -502,6 +526,60 @@ const GLSL_APPLY_CUSTOM_QUBIT_OPERATION = new WglShader(`
         vec2 outputAmplitude = vec2(dot(amplitudeCombo, dotReal),
                                     dot(amplitudeCombo, dotImag));
 
-        gl_FragColor = vec4(outputAmplitude, 0, 0);
+        gl_FragColor = vec4(outputAmplitude, 0.0, 0.0);
 
+    }`);
+
+const GLSL_SWAP_QUBITS = new WglShader(`
+    /**
+     * A texture holding the complex coefficients of the superposition to operate on.
+     * The real components are in the red component, and the imaginary components are in the green component.
+     */
+    uniform sampler2D inputTexture;
+
+    /**
+     * A texture with flags that determine which states get affected by the operation.
+     * The red component is 1 for states that should participate, and 0 otherwise.
+     */
+    uniform sampler2D controlTexture;
+
+    /**
+     * The width and height of the textures being operated on.
+     */
+    uniform vec2 textureSize;
+
+    /**
+     * A power of two (2^n) with the exponent n determined by the index of one of the qubits to swap.
+     */
+    uniform float qubitIndexMask1;
+
+    /**
+     * A power of two (2^n) with the exponent n determined by the index of the other qubit to swap.
+     */
+    uniform float qubitIndexMask2;
+
+    ${snippets.filterBit}
+    ${snippets.toggleBit}
+    ${snippets.stateToPixelUv}
+
+    void main() {
+        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float state = pixelXy.y * textureSize.x + pixelXy.x;
+        vec2 pixelUv = gl_FragCoord.xy / textureSize;
+
+        float opposingState1 = toggleBit(state, qubitIndexMask1);
+        float opposingState2 = toggleBit(state, qubitIndexMask2);
+        bool qubitIsOn1 = state >= opposingState1;
+        bool qubitIsOn2 = state >= opposingState2;
+        bool blockedByControls = texture2D(controlTexture, pixelUv).x == 0.0;
+
+        vec2 srcPixelUv;
+        if (!blockedByControls && qubitIsOn1 != qubitIsOn2) {
+            float swapState = opposingState1 + opposingState2 - state;
+            vec2 swapPixelUv = stateToPixelUv(swapState);
+            srcPixelUv = swapPixelUv;
+        } else {
+            srcPixelUv = pixelUv;
+        }
+        gl_FragColor = texture2D(inputTexture, srcPixelUv);
     }`);

@@ -5,6 +5,7 @@ import Gates from "src/ui/Gates.js"
 import Gate from "src/ui/Gate.js"
 import Serializer from "src/ui/Serializer.js"
 import Format from "src/base/Format.js"
+import GateColumn from "src/ui/GateColumn.js"
 
 let suite = new Suite("Serializer");
 
@@ -30,7 +31,7 @@ suite.test("roundTrip_Matrix", () => {
 });
 
 suite.test("roundTrip_Gate", () => {
-    assertRoundTrip(Gate, Gates.Named.HalfTurns.X, {"id":"X"});
+    assertRoundTrip(Gate, Gates.Named.HalfTurns.X, {id:"X"});
     for (let g of Gates.KnownToSerializer) {
         assertRoundTrip(Gate, g, {id: g.symbol});
     }
@@ -50,4 +51,16 @@ suite.test("roundTrip_Gate", () => {
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});
     assertThat(g.matrixAt(0)).isEqualTo(g2.matrixAt(0));
     assertThat(g.symbol).isEqualTo(g2.symbol);
+});
+
+suite.test("roundTrip_GateColumn", () => {
+    assertRoundTrip(
+        GateColumn,
+        new GateColumn([
+            null,
+            Gates.Named.HalfTurns.X,
+            Gates.Named.Evolving.X,
+            Gates.Named.Special.SwapHalf,
+            Gates.Named.Special.Control]),
+        [null, {id:"X"}, {id:"X(t)"}, {id:"Swap"}, {id:"\u2022"}]);
 });
