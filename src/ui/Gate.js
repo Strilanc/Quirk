@@ -1,6 +1,9 @@
+import Util from "src/base/Util.js"
+import Matrix from "src/math/Matrix.js"
+
 /**
-* A named and described single-qubit quantum operation.
-*/
+ * A named and described single-qubit quantum operation.
+ */
 export default class Gate {
     /**
      * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
@@ -23,7 +26,7 @@ export default class Gate {
         this.name = name;
         this.blurb = blurb;
         this.details = details;
-        this.symbolDrawer = symbolDrawer || Gate.DEFAULT_SYMBOL_DRAWER;
+        this.symbolDrawer = symbolDrawer || Gate.DEFAULT_DRAWER;
     }
 
     /**
@@ -54,13 +57,11 @@ export default class Gate {
                 : (Math.round(deg*64)/64).toString() + "°";
 
         return new Gate(
-            symbol || "Z(" + name_desc + ")",
+            symbol || `Z(${name_desc})`,
             Matrix.fromPauliRotation(0, 0, fraction),
-            deg_desc + "° Phase Gate",
-            "Rotates the phase of a qubit's ON state by " + deg_desc + " degrees,\n" +
-            "while leaving its OFF state alone. The standard Pauli Z gate\n" +
-            "corresponds to Z(180°).",
-            true);
+            `${deg_desc}° Phase Gate`,
+            `Rotates the phase of a qubit's ON state by ${deg_desc}° while leaving its OFF state alone.`,
+            `The standard Pauli Z gate corresponds to Z(180°).`);
     };
 
     /**
@@ -78,12 +79,12 @@ export default class Gate {
         let n = Math.sqrt(x * x + y * y + z * z);
         let deg = n * 360;
         return new Gate(
-            symbol || ("R(" + [x, y, z].map(Format.SIMPLIFIED.formatFloat).toString() + ")"),
+            symbol || `R(${[x, y, z].map(e => Format.SIMPLIFIED.formatFloat(e)).toString()})`,
             Matrix.fromPauliRotation(x, y, z),
-            deg + "° around <" + x / n + ", " + y / n + ", " + z / n + ">",
+            `${deg}° around <${x/n}, ${y/n}, ${z/n}>`,
             "A custom operation based on a rotation.",
-            true,
-            symbol === undefined ? Gate.MATRIX_SYMBOL_DRAWER : undefined);
+            "",
+            symbol === undefined ? Gate.MATRIX_DRAWER : Gate.DEFAULT_DRAWER);
     };
 
     /**
@@ -92,12 +93,12 @@ export default class Gate {
      */
     static fromCustom(matrix) {
         return new Gate(
-            "",
+            matrix.toString(Format.MINIFIED),
             matrix,
             matrix.toString(Format.SIMPLIFIED),
             "A custom operation.",
-            true,
-            Gate.MATRIX_SYMBOL_DRAWER);
+            "",
+            Gate.MATRIX_DRAWER);
     };
 
     /**
@@ -110,20 +111,11 @@ export default class Gate {
     static fromTargetedRotation(p, fractionLabel, fractionSymbol) {
         Util.need(p >= -1 && p <= 1, arguments);
         return new Gate(
-            "∠" + (fractionSymbol || fractionLabel),
+            `∠${fractionSymbol || fractionLabel}`,
             Matrix.fromTargetedRotation(p),
-            "" + fractionLabel + " Target Rotation Gate",
-            "A rotation gate tuned to transition an initially-OFF qubit to\n" +
-            "having a " + fractionLabel + "s probability of being ON.\n\n" +
-            "Equivalent to R(acos(√(" + fractionLabel + "))).",
-            true);
-    };
-
-    /**
-     * @returns {!string}
-     */
-    toString() {
-        return this.name;
+            `${fractionLabel} Target Rotation Gate`,
+            `A tuned rotation gate that maps an OFF input to an output with ${fractionLabel} probability of being ON.`,
+            `Equivalent to R(acos(√(${fractionLabel}))).`);
     };
 
     isTimeBased() {
@@ -131,7 +123,7 @@ export default class Gate {
     };
 
     isControlModifier() {
-        return this === Gate.CONTROL || this === Gate.ANTI_CONTROL;
+        return this === Gates.Special.Control || this === Gates.Special.AntiControl;
     };
 
 
@@ -142,50 +134,6 @@ export default class Gate {
         if (gate === Gate.SILLY_GATES[0]) {
             Gate.SILLY_GATES[0] = Gate.makeFuzzGate();
         }
-    };
-
-    /**
-     * @returns {object}
-     */
-    toJson() {
-        if (!this.needMatrixToRecover) {
-            return {id: this.symbol}
-        }
-
-        return {
-            id: this.symbol,
-            matrix: this.matrixAt(0.25).toJson()
-        };
-    };
-
-    /**
-     *
-     * @param {object} json
-     * @returns {!Gate}
-     * @throws {Error}
-     */
-    static fromJson(json) {
-        let symbol = forceGetProperty(json, "id");
-        let matrixProp = json["matrix"];
-        let matrix = matrixProp === undefined ? undefined : Matrix.fromJson(matrixProp);
-
-        if (symbol === Gate.FUZZ_SYMBOL && matrix !== undefined) {
-            let r = Gate.makeFuzzGate();
-            r.matrixOrFunc = matrix;
-            return r;
-        }
-
-        let match = new Seq(Gates.AllBuiltin).
-            filter(g => g.symbol === symbol).
-            first(null);
-
-        if (match !== null) {
-            let noMatchedNeeded = matrix === undefined && !match.needMatrixToRecover;
-            if (noMatchedNeeded || match.matrixAt(0).isEqualTo(matrix)) {
-                return match;
-            }
-        }
-        return new Gate(symbol, matrix, symbol, "An imported gate.", true);
     };
 
     /**
@@ -204,7 +152,7 @@ export default class Gate {
 /**
 * @param {!GateDrawParams} args
 */
-Gate.DEFAULT_SYMBOL_DRAWER = args => {
+Gate.DEFAULT_DRAWER = args => {
     let backColor = Config.GATE_FILL_COLOR;
     if (!args.isInToolbox && !args.gate.matrixAt(args.time).isApproximatelyUnitary(0.001)) {
         backColor = Config.BROKEN_COLOR_GATE;
@@ -214,17 +162,26 @@ Gate.DEFAULT_SYMBOL_DRAWER = args => {
     }
     args.painter.fillRect(args.rect, backColor);
     args.painter.strokeRect(args.rect);
-    args.painter.print(args.gate.symbol, args.rect, new Point(0.5, 0.5), Config.DEFAULT_TEXT_COLOR, 16);
+    let fontSize = 16;
+    let trim = Math.max(0, (args.rect.h - fontSize) * 0.4);
+    args.painter.printParagraph(
+        args.gate.symbol,
+        args.rect.skipTop(trim).skipBottom(trim),
+        new Point(0.5, 0.5),
+        Config.DEFAULT_TEXT_COLOR,
+        fontSize);
 };
 
 /**
  * @param {!GateDrawParams} args
 */
-Gate.MATRIX_SYMBOL_DRAWER = args => {
+Gate.MATRIX_DRAWER = args => {
     args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
-    args.painter.paintMatrix(
+    MathPainter.paintMatrix(
+        args.painter,
         args.gate.matrixAt(args.time),
-        args.rect);
+        args.rect,
+        []);
     if (args.isHighlighted) {
         args.painter.ctx.globalAlpha = 0.9;
         args.painter.fillRect(args.rect, Config.HIGHLIGHT_COLOR_GATE);
@@ -237,7 +194,7 @@ Gate.MATRIX_SYMBOL_DRAWER = args => {
 */
 Gate.CYCLE_DRAWER = args => {
     if (args.isInToolbox) {
-        Gate.DEFAULT_SYMBOL_DRAWER(args);
+        Gate.DEFAULT_DRAWER(args);
         return;
     }
     let t = args.time * 2 * Math.PI;
@@ -245,7 +202,7 @@ Gate.CYCLE_DRAWER = args => {
         Math.cos(t) * 0.75 * args.rect.w/2,
         -Math.sin(t) * 0.75 * args.rect.h/2);
     let p = args.rect.center().plus(d);
-    Gate.DEFAULT_SYMBOL_DRAWER(args);
+    Gate.DEFAULT_DRAWER(args);
     args.painter.fillCircle(p, 3, "gray");
 };
 
@@ -254,8 +211,8 @@ Gate.CYCLE_DRAWER = args => {
 */
 Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
     if (args.isInToolbox) {
-        Gate.DEFAULT_SYMBOL_DRAWER(args);
+        Gate.DEFAULT_DRAWER(args);
         return;
     }
-    Gate.MATRIX_SYMBOL_DRAWER(args);
+    Gate.MATRIX_DRAWER(args);
 };

@@ -58,26 +58,6 @@ export default class Matrix {
     };
     
     /**
-     * @param {object} json
-     * @returns {!Matrix}
-     * @throws {Error}
-     */
-    static fromJson(json) {
-        if (typeof json !== "string") {
-            throw new Error("Not a packed matrix string: " + json);
-        }
-        //noinspection JSCheckFunctionSignatures
-        return parse(json);
-    };
-    
-    /**
-     * @returns {!object}
-     */
-    toJson() {
-        return this.toString(Format.MINIFIED);
-    };
-    
-    /**
      * Returns a text representation of the receiving matrix.
      * (It uses curly braces so you can paste it into wolfram alpha.)
      * @param {=Format} format

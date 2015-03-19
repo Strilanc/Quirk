@@ -4,6 +4,7 @@ import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/base/Point.js"
 import Rect from "src/base/Rect.js"
 import Complex from "src/math/Complex.js"
+import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("MathPainter");
 
@@ -190,3 +191,23 @@ suite.canvasAppearanceTest("paintAmplitude_zero", 20, 20, canvas => {
         "green");
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAFUlEQVQ4jWNgGAWjYBSMglEwCqgDAAZUAAHyXCJfAAA' +
 'AAElFTkSuQmCC');
+
+suite.canvasAppearanceTest("paintMatrix", 20, 20, canvas => {
+    let painter = new Painter(canvas);
+    MathPainter.paintMatrix(
+        painter,
+        Matrix.square([
+            1, 0, Complex.I,
+            new Complex(0.5, -0.5), 0, 0,
+            -1, 0.5, 0.25]),
+        new Rect(0, 0, 20, 20),
+        []);
+}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAChklEQVQ4jaWVsWvbUBDG3+YhQ5eImkDAFrWHJ7QGsmT' +
+'NUPCkOz3JMp5CpkCiEtujl2DyB3STEAg6WDRbvWRrB3V5tB7SBpqlJJlCodBCt/brkFg0JkqKc/ANb7gf37t3d08YhgEpJWzbhmVZsG0bUkqYpnkihBj' +
+'eJdM0T2Y5lUoFzWYTlmXBMAwIKSU8z0OapsjzHFEUwXVdMPNElAQzT1zXRRRFqNVqGI1G8H0fUkoI27aRpim01tBaI8sydLtdMPPnMiARfdrd3YXWGvV' +
+'6HVmWIU1T2LYNYVkW8jyH1hpbW1uo1+tYWVmBlPJHGVApdZ4kSWFAa408z2FZ1rXDOI4Lh1prDAYDENH0HofTXq93KyeO42uHUkq4roswDJEkCQaDAYI' +
+'gADNn99Qw830f/X4fSZIgDEO4rntdQ9M0T5h5opQ6bbfbl0Q0ZeaMmYf3AIfMnBHRtN1uXyqlTpl5ctMZYiiEEJ7nPSWiVhnkP2MohBBDx3FeENGfnZ2' +
+'dK8/zrojo2aOAnU7nYjweQ2uNg4OD74eHh87CQCklgiDAeDzG2toaNjY2Zn1Y+igPAokIzIzt7W1Uq9XZ+XHAeS0MbDQaF47jfCCiS6XUN8dxvhLRe2Z' +
+'+ubBD13Wxt7eHJEnQ6/Xg+/7iDm3bRhRFt8ao3+8Xo0dE60EQnAVBcEZE6w8CK5UKarVasTW01jg6OoLv++dCCKGUerW/v/97eXkZpml+nCdsbm7CMIz' +
+'XBbDZbGI0GhUwrTXCMIRS6lQIIZi52+l0frZarV/M3J0HEtFzInpSAC3Lgu/7xYKN43i2YN/ezHRGRMdEdPzPWZZeuewLaDQaF1JK3KXV1dV31Wr1zby' +
+'Wlpa+/AVU9LeqRT4BRAAAAABJRU5ErkJggg==');

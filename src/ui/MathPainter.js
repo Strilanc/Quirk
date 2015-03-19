@@ -1,6 +1,7 @@
 import Painter from "src/ui/Painter.js"
 import Format from "src/base/Format.js"
 import Point from "src/base/Point.js"
+import Rect from "src/base/Rect.js"
 import Util from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
 import Config from "src/Config.js"
@@ -134,5 +135,54 @@ export default class MathPainter {
         if (isControl) {
             painter.strokeLine(area.topLeft(), area.bottomRight());
         }
+    };
+
+    /**
+     * Draws a visual representation of a complex matrix.
+     * @param {!Painter} painter
+     * @param {!Matrix} matrix The matrix to draw.
+     * @param {!Rect} drawArea The rectangle to draw the matrix within.
+     * @param {!(!Point[])} focusPoints
+     */
+    static paintMatrix(painter, matrix, drawArea, focusPoints) {
+        let numCols = matrix.width();
+        let numRows = matrix.height();
+        let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+
+        // Contents
+        for (let c = 0; c < numCols; c++) {
+            for (let r = 0; r < numRows; r++) {
+                MathPainter.paintAmplitude(
+                    painter,
+                    matrix.rows[r][c],
+                    topLeftCell.proportionalShiftedBy(c, r));
+            }
+        }
+
+        // Frame
+        painter.strokeRect(drawArea);
+        if (Config.PAINT_MATRIX_GRID_COLOR_OR_NULL !== null) {
+            painter.strokeGrid(topLeftCell, numCols, numRows, Config.PAINT_MATRIX_GRID_COLOR_OR_NULL);
+        }
+
+        // Tooltip
+        //for (let pos of focusPoints) {
+        //    let focus_c = Math.floor((pos.x - topLeftCell.x) / topLeftCell.w);
+        //    let focus_r = Math.floor((pos.y - topLeftCell.y) / topLeftCell.h);
+        //    if (!new Rect(0, 0, numCols, numRows).containsPoint(new Point(focus_c, focus_r))) {
+        //        continue;
+        //    }
+        //
+        //    let cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
+        //    let numWires = Math.log2(Math.max(matrix.width(), matrix.height()));
+        //    let stater = bitMask => Seq.range(numWires).
+        //        map(i => ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0").
+        //        join("");
+        //
+        //    let tip = stater(focus_c) + " → " + stater(focus_r) +
+        //        "\n= " + matrix.rows[focus_r][focus_c].toString(Format.CONSISTENT);
+        //
+        //    hand.paintToolTipIfHoveringIn(painter, cell, tip);
+        //}
     };
 }

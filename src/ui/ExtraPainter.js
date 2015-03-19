@@ -37,85 +37,6 @@
 //    //    }
 //    //};
 //
-//    ///**
-//    // * Draws representations of complex values used to weight components of a superposition.
-//    // *
-//    // * @param {!Rect} area The drawing area, where the amplitude will be represented visually.
-//    // * @param {!Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
-//    // */
-//    //paintAmplitude(amplitude, area) {
-//    //    let c = area.center();
-//    //    let magnitude = amplitude.abs();
-//    //    let p = amplitude.norm2();
-//    //    let d = Math.min(area.w, area.h) / 2;
-//    //    let r = d * magnitude;
-//    //    let dx = d * amplitude.real;
-//    //    let dy = d * amplitude.imag;
-//    //    let isControl = amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE;
-//    //
-//    //    if (magnitude <= 0.0001) {
-//    //        return; // Even showing a tiny dot is too much.
-//    //    }
-//    //
-//    //    // fill rect from bottom to top as the amplitude becomes more probable
-//    //    this.fillRect(area.takeBottom(p * area.h), Config.AMPLITUDE_PROBABILITY_FILL_UP_COLOR);
-//    //
-//    //    // show the direction and magnitude as a circle with a line indicator
-//    //    this.fillCircle(c, r, Config.AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL);
-//    //    this.strokeCircle(c, r, Config.AMPLITUDE_CIRCLE_STROKE_COLOR);
-//    //    this.strokeLine(c, new Point(c.x + dx, c.y - dy));
-//    //
-//    //    // cross out (in addition to the darkening) when controlled
-//    //    if (isControl) {
-//    //        this.strokeLine(area.topLeft(), area.bottomRight());
-//    //    }
-//    //};
-//
-//    ///**
-//    // * Draws a visual representation of a complex matrix.
-//    // * @param {!Matrix} matrix The matrix to draw.
-//    // * @param {!Rect} drawArea The rectangle to draw the matrix within.
-//    // * @param {=Hand} hand Determines if a focus box with numbers is shown.
-//    // */
-//    //paintMatrix(matrix, drawArea, hand) {
-//    //    let numCols = matrix.width();
-//    //    let numRows = matrix.height();
-//    //    let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
-//    //
-//    //    let focus_c = null;
-//    //    let focus_r = null;
-//    //    let pos = hand !== undefined && hand.pos !== null && hand.heldGateBlock === null ? hand.pos : null;
-//    //    let cell;
-//    //    for (let c = 0; c < numCols; c++) {
-//    //        for (let r = 0; r < numRows; r++) {
-//    //            cell = topLeftCell.proportionalShiftedBy(c, r);
-//    //            this.paintAmplitude(matrix.rows[r][c], cell);
-//    //            if (pos !== null && cell.containsPoint(Util.notNull(pos))) {
-//    //                focus_c = c;
-//    //                focus_r = r;
-//    //            }
-//    //        }
-//    //    }
-//    //
-//    //    this.strokeRect(drawArea);
-//    //    if (Config.PAINT_MATRIX_GRID_COLOR_OR_NULL !== null) {
-//    //        this.strokeGrid(topLeftCell, numCols, numRows, Config.PAINT_MATRIX_GRID_COLOR_OR_NULL);
-//    //    }
-//    //
-//    //    if (focus_c !== null) {
-//    //        cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
-//    //        let numWires = Math.log2(Math.max(matrix.width(), matrix.height()));
-//    //        let stater = bitMask => Seq.range(numWires).
-//    //            map(i => ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0").
-//    //            join("");
-//    //
-//    //        let tip = stater(focus_c) + " → " + stater(focus_r) +
-//    //            "\n= " + matrix.rows[focus_r][focus_c].toString(Format.CONSISTENT);
-//    //
-//    //        hand.paintToolTipIfHoveringIn(this, cell, tip);
-//    //    }
-//    //};
-//
 //    //paintDisalloweds(matrix, drawArea) {
 //    //    let numCols = matrix.width();
 //    //    let numRows = matrix.height();
@@ -219,19 +140,6 @@
 //    //    this.strokeGrid(topLeftCell, numDrawCols, numDrawRows);
 //    //}
 //
-//    ///**
-//    // * @param {!number} probability
-//    // * @param {!Rect} drawArea
-//    // * @param {=string} highlightColor
-//    // */
-//    //paintProbabilityBox(probability, drawArea, highlightColor) {
-//    //    let w = drawArea.w * probability;
-//    //    this.fillRect(drawArea, highlightColor);
-//    //    this.fillRect(drawArea.takeLeft(w), Config.PROBABILITY_BOX_FILL_UP_COLOR);
-//    //    this.printCenteredText(describeProbability(probability, 1), drawArea.center());
-//    //    this.strokeRect(drawArea);
-//    //}
-//
 //    /**
 //     * Draws a tooltip box.
 //     *
@@ -273,45 +181,4 @@
 //        this.strokeRect(paintRect);
 //        this.printText(text, paintRect.center().offsetBy(-w / 2, -h / 2 + fontSize), fontColor, fontSize, fontFamily);
 //    }
-//
-//    ///**
-//    // * @param {!number} probabilityOfCondition
-//    // * @param {!number} probabilityOfHitGivenCondition
-//    // * @param {!Rect} drawArea
-//    // * @param {=string} highlightColor
-//    // */
-//    //paintConditionalProbabilityBox(probabilityOfCondition,
-//    //                               probabilityOfHitGivenCondition,
-//    //                               drawArea,
-//    //                               highlightColor) {
-//    //    this.fillRect(drawArea, highlightColor);
-//    //    let topPrintPos = new Point(drawArea.x, drawArea.y + 15);
-//    //    let s;
-//    //    if (probabilityOfCondition === 0) {
-//    //        // Draw bad-value triangle
-//    //        let ps = [drawArea.topLeft(), drawArea.centerRight(), drawArea.centerLeft()];
-//    //        this.ctx.beginPath();
-//    //        this.ctx.moveTo(ps[0].x, ps[0].y);
-//    //        this.ctx.lineTo(ps[1].x, ps[1].y);
-//    //        this.ctx.lineTo(ps[2].x, ps[2].y);
-//    //        this.ctx.lineTo(ps[0].x, ps[0].y);
-//    //        this.ctx.fillStyle = Config.PROBABILITY_BOX_FILL_UP_COLOR;
-//    //        this.ctx.fill();
-//    //        s = "0/0";
-//    //    } else {
-//    //        this.fillRect(drawArea.topHalf().takeLeftProportion(probabilityOfHitGivenCondition),
-//    //            Config.PROBABILITY_BOX_FILL_UP_COLOR);
-//    //        s = describeProbability(probabilityOfHitGivenCondition, 0);
-//    //    }
-//    //
-//    //    let probabilityOfHit = probabilityOfCondition * probabilityOfHitGivenCondition;
-//    //    this.fillRect(drawArea.bottomHalf().takeLeftProportion(probabilityOfHit), Config.PROBABILITY_BOX_FILL_UP_COLOR);
-//    //    this.printText(
-//    //        "|:" + s,
-//    //        topPrintPos.offsetBy(3, 0));
-//    //    this.printText(
-//    //        "∧" + describeProbability(probabilityOfHit, 0),
-//    //        topPrintPos.offsetBy(-1, drawArea.h / 2));
-//    //    this.strokeRect(drawArea);
-//    //}
 //}

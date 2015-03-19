@@ -58,26 +58,6 @@ export default class Complex {
     };
 
     /**
-     * @returns {!object}
-     */
-    toJson() {
-        return this.toString(Complex.MINIFIED);
-    };
-
-    /**
-     * @param {object} json
-     * @returns {!Complex}
-     * @throws {Error}
-     */
-    static fromJson(json) {
-        if (typeof json === "string") {
-            //noinspection JSCheckFunctionSignatures
-            return Complex.parse(json);
-        }
-        throw new Error("Not a packed complex string: " + json);
-    };
-
-    /**
      * Wraps the given number into a Complex value (unless it's already a Complex value).
      * @param {!number|!Complex} v
      * @returns {!Complex}

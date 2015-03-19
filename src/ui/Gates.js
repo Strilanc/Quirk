@@ -1,3 +1,8 @@
+import Util from "src/base/Util.js"
+import Gate from "src/ui/Gate.js"
+import Matrix from "src/math/Matrix.js"
+import Complex from "src/math/Complex.js"
+
 let Gates = {};
 export default Gates;
 
@@ -18,11 +23,11 @@ Gates.Named = {
             "Control",
             "Modifies linked operations to only happen when the control qubit is ON.",
             "The control 'gate' is a modifier of other operations. " +
-            "It conditions them to only occur in the parts of the superposition where the control qubit is ON. " +
-            "It applies to all operation in the same column.",
+                "It conditions them to only occur in the parts of the superposition where the control qubit is ON. " +
+                "It applies to all operation in the same column.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    Gate.DEFAULT_SYMBOL_DRAWER(args);
+                    Gate.DEFAULT_DRAWER(args);
                 }
                 args.painter.fillCircle(args.rect.center(), 5, "black");
             }),
@@ -33,12 +38,12 @@ Gates.Named = {
             "Anti-Control",
             "Modifies linked operations to only happen when the control qubit is OFF.",
             "The anti-control 'gate' is a modifier of other operations. " +
-            "It conditions them to only occur in the parts of the superposition where the control qubit is OFF (the " +
-            "opposite of the usual control gate). " +
-            "It applies to all operation in the same column.",
+                "It conditions them to only occur in the parts of the superposition where the control qubit is OFF (" +
+                "the opposite of the usual control gate). " +
+                "It applies to all operation in the same column.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    Gate.DEFAULT_SYMBOL_DRAWER(args);
+                    Gate.DEFAULT_DRAWER(args);
                 }
                 let p = args.rect.center();
                 args.painter.fillCircle(p, 5);
@@ -51,12 +56,12 @@ Gates.Named = {
             "Peek",
             "Shows the chance that a wire is ON.",
             "Peeking does not affect the result or perform a measurement, though that would be required in practice. " +
-            "In addition to showing the probability that a measurement of the wire at the gate's position would " +
-            "return ON instead of OFF, Peek can show the conditional probability ('t|c') of ON-ness given that the " +
-            "controls were satisfied when affected by controls.",
+                "In addition to showing the probability that a measurement of the wire at the gate's position would " +
+                "return ON instead of OFF, Peek can show the conditional probability ('t|c') of ON-ness given that " +
+                "the controls were satisfied when affected by controls.",
             args => {
                 if (args.circuitContext === null || args.isHighlighted) {
-                    Gate.DEFAULT_SYMBOL_DRAWER(args);
+                    Gate.DEFAULT_DRAWER(args);
                     return;
                 }
 
@@ -88,7 +93,7 @@ Gates.Named = {
             "Place two swap gate halves in the same column to form a swap gate.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    Gate.DEFAULT_SYMBOL_DRAWER(args);
+                    Gate.DEFAULT_DRAWER(args);
                     return;
                 }
 
@@ -105,8 +110,8 @@ Gates.Named = {
             "Down Gate",
             "Cycles through OFF, (1+i)(OFF - i ON), ON, and (1-i)(OFF + i ON).",
             "The Down gate is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
-            "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
-            "Its inverse is the Up gate."),
+                "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
+                "Its inverse is the Up gate."),
 
         Up: new Gate(
             "↑",
@@ -114,11 +119,11 @@ Gates.Named = {
             "Up Gate / Beam Splitter",
             "Cycles through OFF, (1-i)(OFF + i ON), ON, and (1+i)(OFF - i ON).",
             "The Up gate acts like an optical beam splitter. " +
-            "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
-            "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
-            "Its inverse is the Down gate.",
+                "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
+                "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
+                "Its inverse is the Down gate.",
             args => {
-                Gate.DEFAULT_SYMBOL_DRAWER(args);
+                Gate.DEFAULT_DRAWER(args);
                 args.painter.ctx.globalAlpha = 0.25;
                 args.painter.strokeLine(args.params.rect.topLeft(), args.params.rect.bottomRight());
                 args.painter.ctx.globalAlpha = 1;
@@ -130,8 +135,8 @@ Gates.Named = {
             "Right Gate",
             "Cycles through OFF, (1+i)(OFF + ON), i ON, and (1-i)(OFF - ON).",
             "The Right gate is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
-            "It is a square root of the Pauli Y gate. " +
-            "Its inverse is the Left gate."),
+                "It is a square root of the Pauli Y gate. " +
+                "Its inverse is the Left gate."),
 
         Left: new Gate(
             "←",
@@ -139,8 +144,8 @@ Gates.Named = {
             "Left Gate",
             "Cycles through OFF, (1-i)(OFF - ON), i ON, and (1+i)(OFF + ON).",
             "The Left gate is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
-            "It is a square root of the Pauli Y gate. " +
-            "Its inverse is the Right gate."),
+                "It is a square root of the Pauli Y gate. " +
+                "Its inverse is the Right gate."),
 
         CounterClockwise: new Gate(
             "↺",
@@ -148,8 +153,8 @@ Gates.Named = {
             "Counter-Clockwise Phase Gate",
             "Phases ON states by a factor of i, without affecting OFF states.",
             "The Counter-Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
-            "It is a square root of the Pauli Z gate. " +
-            "Its inverse is the Clockwise Phase Gate."),
+                "It is a square root of the Pauli Z gate. " +
+                "Its inverse is the Clockwise Phase Gate."),
 
         Clockwise: new Gate(
             "↻",
@@ -157,8 +162,8 @@ Gates.Named = {
             "Clockwise Phase Gate",
             "Phases ON states by a factor of -i, without affecting OFF states.",
             "The Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
-            "It is a square root of the Pauli Z gate. " +
-            "Its inverse is the Counter-Clockwise Phase Gate.")
+                "It is a square root of the Pauli Z gate. " +
+                "Its inverse is the Counter-Clockwise Phase Gate.")
     },
     HalfTurns: {
         X: new Gate(
@@ -167,20 +172,23 @@ Gates.Named = {
             "Not Gate [Pauli X Gate]",
             "Toggles between ON and OFF.",
             "The Not Gate is a 180° turn around the Bloch Sphere's X axis. " +
-            "It pairs states that agree on everything, except the value of target qubit, and swaps their amplitudes. " +
-            "Combine with Control gates to create Controlled-Not and Toffoli gates.",
+                "Pairs states that differ only in the value of target qubit, and swaps their amplitudes. " +
+                "Combine with Control gates to create Controlled-Not and Toffoli gates.",
             args => {
-                if (args.circuitContext === null ||
-                        args.circuitContext.gateColumn.gates.every(e => e === null || !e.isControlModifier()) ||
-                        args.isHighlighted) {
-                    Gate.DEFAULT_SYMBOL_DRAWER(args);
-                } else {
-                    let drawArea = args.rect.scaledOutwardBy(0.6);
-                    args.painter.fillCircle(drawArea.center(), drawArea.w / 2);
-                    args.painter.strokeCircle(drawArea.center(), drawArea.w / 2);
-                    args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
-                    args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
+                let noControlsInColumn =
+                    args.circuitContext === null ||
+                    args.circuitContext.gateColumn.gates.every(
+                        e => e !== Gates.Special.Control && e !== Gates.Special.AntiControl);
+                if (noControlsInColumn || args.isHighlighted) {
+                    Gate.DEFAULT_DRAWER(args);
+                    return;
                 }
+
+                let drawArea = args.rect.scaledOutwardBy(0.6);
+                args.painter.fillCircle(drawArea.center(), drawArea.w / 2);
+                args.painter.strokeCircle(drawArea.center(), drawArea.w / 2);
+                args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
+                args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
             }),
 
         Y: new Gate(
@@ -189,7 +197,7 @@ Gates.Named = {
             "Pauli Y Gate",
             "A combination of the X and Z gates.",
             "The Pauli Y gate is a 180° turn around the Bloch Sphere's Y axis. " +
-            "It is equivalent to an X gate followed by a Z gate, up to a global phase factor."),
+                "It is equivalent to an X gate followed by a Z gate, up to a global phase factor."),
 
         Z: new Gate(
             "Z",
@@ -197,7 +205,7 @@ Gates.Named = {
             "Phase Flip Gate [Pauli Z Gate]",
             "Negates the phase of ON states, without affecting OFF states.",
             "The Phase Flip Gate is a 180° around the Bloch Sphere's Z axis." +
-            "Negates the amplitude of parts of the superposition where the target qubit is ON."),
+                "Negates the amplitude of parts of the superposition where the target qubit is ON."),
 
         H: new Gate(
             "H",
@@ -205,8 +213,8 @@ Gates.Named = {
             "Hadamard Gate",
             "Toggles ON to ON+OFF and back, but toggles OFF to ON-OFF and back.",
             "The Hadamard gate is the simplest quantum gate that can create and interfere superpositions. " +
-            "Applying it once to each wire, in the starting state, creates a uniform superposition of all states. " +
-            "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis",
+                "Applying once to each wire, in the starting state, creates a uniform superposition of all states. " +
+                "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis",
             false)
     },
     Evolving: {
@@ -221,7 +229,7 @@ Gates.Named = {
             "Evolving Rotation Gate",
             "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
             "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+                "After the first turn, there's a global phase factor of -1 leftover.)",
             Gate.CYCLE_DRAWER),
 
         H: new Gate(
@@ -270,67 +278,62 @@ Gates.Named = {
                 new Complex(Math.random() - 0.5, Math.random() - 0.5)
             ]).closestUnitary(),
             "Fuzz Gate",
-            "Replaced by a different operation each time you grab it.",
-            Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX,
-            true),
+            "Replaced by a different unitary operation each time you grab it.",
+            "",
+            Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
-        CREATION: new Gate(
-            "!Creation",
-            Matrix.square([0, 1, 0, 0]),
-            "Creation operator [NOT UNITARY]",
-            "Increases the value of the wire, increasing false to true and increase true to ... uh...\n" +
-            "\n" +
-            "May cause the annihilation of all things.",
-            true),
-
-        ANNIHILATION: new Gate(
-            "!Annihilation",
-            Matrix.square([0, 0, 1, 0]),
-            "Annihilation Operator [NOT UNITARY]",
-            "Decreases the value of the wire, decreasing true to false and decreasing false to ... uh...\n" +
-            "\n" +
-            "May cause the annihilation of all things.",
-            true),
+        //CREATION: new Gate(
+        //    "!Creation",
+        //    Matrix.square([0, 1, 0, 0]),
+        //    "Creation operator [NOT UNITARY]",
+        //    "Increases the value of the wire, increasing false to true and increase true to ... uh...\n" +
+        //    "\n" +
+        //    "May cause the annihilation of all things.",
+        //    true),
+        //
+        //ANNIHILATION: new Gate(
+        //    "!Annihilation",
+        //    Matrix.square([0, 0, 1, 0]),
+        //    "Annihilation Operator [NOT UNITARY]",
+        //    "Decreases the value of the wire, decreasing true to false and decreasing false to ... uh...\n" +
+        //    "\n" +
+        //    "May cause the annihilation of all things.",
+        //    true),
 
         RESET: new Gate(
             "!Reset",
             Matrix.square([1, 1, 0, 0]),
             "Reset Gate [NOT UNITARY]",
-            "Forces a qubit OFF.\n" +
-            "\n" +
-            "May cause double vision or the annihilation of all things.",
-            true),
+            "Forces a qubit OFF.",
+            "May cause double vision or the annihilation of all things."),
 
         DECAY: new Gate(
             "!Decay",
             Matrix.square([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]),
             "Decay Gate [NOT UNITARY]",
             "Cuts existence in half.",
-            true),
+            ""),
 
         IDENTITY: new Gate(
             "",
             Matrix.square([1, 0, 0, 1]),
             "Identity Gate",
             "Has no effect. Does nothing. Wastes space. A nop.",
-            true),
+            ""),
 
         SAME: new Gate(
             "!Same",
             Matrix.square([Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5)]),
             "Same Gate [NOT UNITARY]",
-            "Distributes amplitudes equally in all cases, causing the ON and OFF\n" +
-            "amplitudes to always end up equal.\n" +
-            "\n" +
-            "What could go wrong?",
-            true),
+            "Distributes amplitudes equally in all cases, causing the ON and OFF amplitudes to always end up equal.",
+            "What could go wrong?"),
 
         HOLE: new Gate(
             "!Hole",
             Matrix.square([0, 0, 0, 0]),
             "Hole Gate [NOT UNITARY]",
             "Throws the amplitudes down a hole. ALL of them.",
-            true)
+            "")
     }
 };
 

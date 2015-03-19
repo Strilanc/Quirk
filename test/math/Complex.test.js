@@ -35,22 +35,6 @@ suite.test("isApproximatelyEqualTo", () => {
     assertThat(c).isNotApproximatelyEqualTo("");
 });
 
-suite.test("toJson", () => {
-    assertThat(new Complex(1, 0).toJson()).isEqualTo("1");
-    assertThat(new Complex(2, -3).toJson()).isEqualTo("2-3i");
-    assertThat(new Complex(0, -1).toJson()).isEqualTo("-i");
-    assertThat(new Complex(1/3, 0).toJson()).isEqualTo("\u2153");
-    assertThat(new Complex(1/3+0.00001, 0).toJson()).isEqualTo("0.3333433333333333");
-});
-
-suite.test("fromJson", () => {
-    assertThat(Complex.fromJson("1")).isEqualTo(new Complex(1, 0));
-    assertThat(Complex.fromJson("2-3i")).isEqualTo(new Complex(2, -3));
-    assertThat(Complex.fromJson("-i")).isEqualTo(new Complex(0, -1));
-    assertThat(Complex.fromJson("\u2153")).isEqualTo(new Complex(1/3, 0));
-    assertThat(Complex.fromJson("0.3333433333333333")).isEqualTo(new Complex(1/3+0.00001, 0))
-});
-
 suite.test("from", () => {
     assertThat(Complex.from(1).real).isEqualTo(1);
     assertThat(Complex.from(1).imag).isEqualTo(0);
