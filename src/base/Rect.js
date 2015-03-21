@@ -389,4 +389,18 @@ export default class Rect {
     withH(newH) {
         return new Rect(this.x, this.y, this.w, newH);
     };
+
+    /**
+     * Returns the result of repositioning the receiving rect so that it is inside the paintable area. Also shrinks the
+     * receiving rect, if necessary.
+     * @param {!Rect} boundingRect
+     * @returns {!Rect}
+     */
+    snapInside(boundingRect) {
+        let w = Math.min(boundingRect.w, this.w);
+        let h = Math.min(boundingRect.h, this.h);
+        let x = Math.max(Math.min(this.x, boundingRect.right() - w), boundingRect.x);
+        let y = Math.max(Math.min(this.y, boundingRect.bottom() - h), boundingRect.y);
+        return new Rect(x, y, w, h);
+    }
 }

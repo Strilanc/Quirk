@@ -133,6 +133,7 @@ let fromJson_Gate = json => {
     return new Gate(symbol, matrix, symbol, "(A custom imported gate.)", "", Gate.DEFAULT_DRAWER);
 };
 
+//noinspection JSCheckFunctionSignatures
 /**
  * @param {!GateColumn} v
  * @returns {!object}

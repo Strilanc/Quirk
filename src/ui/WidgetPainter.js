@@ -181,46 +181,4 @@ export default class WidgetPainter {
     //
     //    this.strokeGrid(topLeftCell, numDrawCols, numDrawRows);
     //}
-
-    ///**
-    // * Draws a tooltip box.
-    // *
-    // * @param {!string} text The tooltip's text.
-    // * @param {!Point} focusPoint The position of the mouse cursor.
-    // * @param {!Rect} focusRect The location of the object to which the tooltip belongs.
-    // * @param {=string} fontColor The text color. Defaults to black.
-    // * @param {=number} fontSize The text size. Defaults to 12px.
-    // * @param {=string} fontFamily The text font family. Defaults to Helvetica.
-    // */
-    //paintTooltip(text, focusPoint, focusRect, fontColor, fontSize, fontFamily) {
-    //    fontSize = fontSize || Config.DEFAULT_FONT_SIZE;
-    //
-    //    let ctx = this.ctx;
-    //    let lines = text.split("\n");
-    //    //noinspection JSCheckFunctionSignatures
-    //    let w = new Seq(lines).map(e => ctx.measureText(e).width).max();
-    //    let h = fontSize * lines.length * 1.3;
-    //
-    //    let paintRect = new Rect(focusPoint.x, focusRect.y - h, w, h).paddedBy(2);
-    //    if (paintRect.y < 0) {
-    //        new Rect(focusPoint.x, focusRect.bottom(), w, h).paddedBy(2);
-    //    }
-    //
-    //    if (paintRect.right() > this.canvas.width) {
-    //        paintRect = paintRect.withX(this.canvas.width - paintRect.w);
-    //    }
-    //    if (paintRect.bottom() > this.canvas.height) {
-    //        paintRect = paintRect.withY(this.canvas.height - paintRect.h);
-    //    }
-    //    if (paintRect.x < 0) {
-    //        paintRect = paintRect.withX(0);
-    //    }
-    //    if (paintRect.y < 0) {
-    //        paintRect = paintRect.withY(0);
-    //    }
-    //
-    //    this.fillRect(paintRect);
-    //    this.strokeRect(paintRect);
-    //    this.printText(text, paintRect.center().offsetBy(-w / 2, -h / 2 + fontSize), fontColor, fontSize, fontFamily);
-    //}
 }

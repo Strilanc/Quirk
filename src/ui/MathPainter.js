@@ -166,23 +166,29 @@ export default class MathPainter {
         }
 
         // Tooltip
-        //for (let pos of focusPoints) {
-        //    let focus_c = Math.floor((pos.x - topLeftCell.x) / topLeftCell.w);
-        //    let focus_r = Math.floor((pos.y - topLeftCell.y) / topLeftCell.h);
-        //    if (!new Rect(0, 0, numCols, numRows).containsPoint(new Point(focus_c, focus_r))) {
-        //        continue;
-        //    }
-        //
-        //    let cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
-        //    let numWires = Math.log2(Math.max(matrix.width(), matrix.height()));
-        //    let stater = bitMask => Seq.range(numWires).
-        //        map(i => ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0").
-        //        join("");
-        //
-        //    let tip = stater(focus_c) + " → " + stater(focus_r) +
-        //        "\n= " + matrix.rows[focus_r][focus_c].toString(Format.CONSISTENT);
-        //
-        //    hand.paintToolTipIfHoveringIn(painter, cell, tip);
-        //}
+        for (let pos of focusPoints) {
+            let focus_c = Math.floor((pos.x - topLeftCell.x) / topLeftCell.w);
+            let focus_r = Math.floor((pos.y - topLeftCell.y) / topLeftCell.h);
+            if (!new Rect(0, 0, numCols, numRows).containsPoint(new Point(focus_c, focus_r))) {
+                continue;
+            }
+
+            let cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
+            let numWires = Math.log2(Math.max(matrix.width(), matrix.height()));
+            let stater = bitMask => Seq.range(numWires).
+                map(i => ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0").
+                join("");
+
+            let tip = `${stater(focus_c)} → ${stater(focus_r)}` +
+                "\n= " + matrix.rows[focus_r][focus_c].toString(Format.CONSISTENT);
+
+            let paintRect = new Rect(cell.x, cell.y - 30, 100, 30).snapInside(painter.paintableArea()).paddedBy(-2);
+            painter.defer(() => {
+                let usedRect = painter.printParagraph(tip, paintRect, new Point(0, 1)).paddedBy(2);
+                painter.fillRect(usedRect);
+                painter.strokeRect(usedRect);
+                painter.printParagraph(tip, paintRect, new Point(0, 1));
+            });
+        }
     };
 }

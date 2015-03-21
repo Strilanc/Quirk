@@ -265,3 +265,42 @@ suite.test("scaledOutwardBy", () => {
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(0.5)).isEqualTo(new Rect(3.25, 4.75, 2.5, 3.5));
     assertThat(new Rect(2, 3, 5, 7).scaledOutwardBy(2)).isEqualTo(new Rect(-0.5, -0.5, 10, 14));
 });
+
+suite.test("snapInside", () => {
+    // Equal.
+    assertThat(new Rect(10, 20, 50, 70).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+
+    // Filling.
+    assertThat(new Rect(9, 20, 50, 70).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+    assertThat(new Rect(11, 20, 50, 70).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+    assertThat(new Rect(10, 19, 50, 70).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+    assertThat(new Rect(10, 21, 50, 70).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+    assertThat(new Rect(10, 20, 500, 70).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+    assertThat(new Rect(10, 20, 50, 700).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 50, 70));
+
+    // X Shift.
+    assertThat(new Rect(-1000, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 21, 10, 10));
+    assertThat(new Rect(9, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 21, 10, 10));
+    assertThat(new Rect(10, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 21, 10, 10));
+    assertThat(new Rect(11, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 21, 10, 10));
+    assertThat(new Rect(49, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(49, 21, 10, 10));
+    assertThat(new Rect(50, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(50, 21, 10, 10));
+    assertThat(new Rect(51, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(50, 21, 10, 10));
+    assertThat(new Rect(1000, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(50, 21, 10, 10));
+
+    // Y Shift.
+    assertThat(new Rect(11, -1000, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 20, 10, 10));
+    assertThat(new Rect(11, 19, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 20, 10, 10));
+    assertThat(new Rect(11, 20, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 20, 10, 10));
+    assertThat(new Rect(11, 21, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 21, 10, 10));
+    assertThat(new Rect(11, 79, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 79, 10, 10));
+    assertThat(new Rect(11, 80, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 80, 10, 10));
+    assertThat(new Rect(11, 81, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 80, 10, 10));
+    assertThat(new Rect(11, 1000, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(11, 80, 10, 10));
+
+    // Disjoint.
+    assertThat(new Rect(-100, -100, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 20, 10, 10));
+    assertThat(new Rect(+100, -100, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(50, 20, 10, 10));
+    assertThat(new Rect(+100, +100, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(50, 80, 10, 10));
+    assertThat(new Rect(-100, +100, 10, 10).snapInside(new Rect(10, 20, 50, 70))).isEqualTo(new Rect(10, 80, 10, 10));
+});

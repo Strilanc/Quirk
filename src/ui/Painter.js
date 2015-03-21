@@ -10,10 +10,27 @@ export default class Painter {
      * @param {!HTMLCanvasElement} canvas
      * @property {!HTMLCanvasElement} canvas
      * @property {!CanvasRenderingContext2D} ctx
+     * @property {!function()} deferred
      */
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
+        this.deferred = [];
+    }
+
+    defer(tooltipPainter) {
+        this.deferred.push(tooltipPainter);
+    }
+
+    paintDeferred() {
+        for (let e of this.deferred) {
+            e();
+        }
+        this.deferred = [];
+    }
+
+    paintableArea() {
+        return new Rect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     clear(color = Config.DEFAULT_FILL_COLOR) {

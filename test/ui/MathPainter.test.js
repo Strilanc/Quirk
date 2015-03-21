@@ -8,6 +8,13 @@ import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("MathPainter");
 
+suite.test("paintableArea", () => {
+    let c = document.createElement("canvas");
+    c.width = 23;
+    c.height = 34;
+    assertThat(new Painter(c).paintableArea()).isEqualTo(new Rect(0, 0, 23, 34));
+});
+
 suite.test("describeProbability", () => {
     assertThat(MathPainter.describeProbability(0, 0)).isEqualTo("0%");
     assertThat(MathPainter.describeProbability(0, 1)).isEqualTo("0%");
@@ -211,3 +218,24 @@ suite.canvasAppearanceTest("paintMatrix", 20, 20, canvas => {
 '+ubBD13Wxt7eHJEnQ6/Xg+/7iDm3bRhRFt8ao3+8Xo0dE60EQnAVBcEZE6w8CK5UKarVasTW01jg6OoLv++dCCKGUerW/v/97eXkZpml+nCdsbm7CMIz' +
 'XBbDZbGI0GhUwrTXCMIRS6lQIIZi52+l0frZarV/M3J0HEtFzInpSAC3Lgu/7xYKN43i2YN/ezHRGRMdEdPzPWZZeuewLaDQaF1JK3KXV1dV31Wr1zby' +
 'Wlpa+/AVU9LeqRT4BRAAAAABJRU5ErkJggg==');
+
+suite.canvasAppearanceTest("paintMatrixTooltip", 100, 100, canvas => {
+    let painter = new Painter(canvas);
+    MathPainter.paintMatrix(
+        painter,
+        Matrix.square([
+            0.5, 0.5,
+            Complex.I, 0.5]),
+        new Rect(0, 0, 100, 100),
+        [new Point(25, 75)]);
+    painter.clear("#FF0000");
+    painter.paintDeferred();
+}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAACS0lEQVR4nO3awW2DMBSH8beLF+HmWdjC10zCGD14DmZ' +
+'5PVGlVNiuY4e/ou9J36GFtha/EgKKuZmTTnb3AggQ6QARCxCxABELELEAEQsQsQARCxCxABELELEAEQsQsQARCxCxABELELEAEQsQsSyZOY3vqxdkWRZ' +
+'PKdHAlmXx1H2GpOTM2EkpjQMJIbiZuZn5vu/TFr1tm4cQpv3+O2cYyLquvq6ru7s/Ho9pB2zbNjczQGogZuY558uvR0yM0UMInCE1kH3f/7xMHQduxgB' +
+'SAck5DwHJOXuMsbofIG88Q45rRG0fQAZcQ46DXSvGWMQEpAEkxvjyu6yc88/vKA0gjfchz//l3If0zVAQ5vUBRGwAEZtbQFqfeZX2691Wm5br08h1Hbc' +
+'MxzvSt4O0PvMq7de7rTYtz8lmr+vtIK3PvEr79W57/t55Wp+TjV7XlDPk6obvfCBa7+hL+/VuOx/UqymBzFjXrS9Zrc+8Svv1brv6pzn/7RLIjHXdCsI' +
+'Z8iaQ1pes42AoXkOO+YhryH+m9ZlXab/ebS1TAxm9rttB3P3XWXR+P17b79VttTmDzF6XBAhzPYCIDSBiA4jYvATCR0nVPkpqdvsHkz+xr16Qnh+ieQE' +
+'iFiBiASIWIGIBIhYgYgEiFiBiASIWIGIBIhYgYgEiFiBiASIWIGIBIhYgYgEiFiBiASIWIGIBIhYgYgEiFiBiASIWIGIBIhYgYgEiFiBiASIWIGIBIhY' +
+'gYgEiFiBiASIWIGIBIhYgYgEiFiBiASIWIGIBIhYgYn0DITjKQ+HlPi8AAAAASUVORK5CYII='
+    , 3000); // Text rendering differs between browsers.
