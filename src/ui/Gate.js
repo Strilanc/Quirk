@@ -1,5 +1,9 @@
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
+import GateDrawParams from "src/ui/GateDrawParams.js"
+import Config from "src/Config.js"
+import Point from "src/base/Point.js"
+import Rect from "src/base/Rect.js"
 
 /**
  * A described and possibly time-varying quantum operation.
@@ -131,7 +135,14 @@ export default class Gate {
      * @param {?CircuitContext} circuitContext
      */
     paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
-        this.symbolDrawer(painter, new GateDrawParams(isInToolbox, isHighlighted, areaRect, this, time, circuitContext));
+        this.symbolDrawer(new GateDrawParams(
+            painter,
+            isInToolbox,
+            isHighlighted,
+            areaRect,
+            this,
+            time,
+            circuitContext));
     }
 }
 
@@ -149,11 +160,10 @@ Gate.DEFAULT_DRAWER = args => {
     args.painter.fillRect(args.rect, backColor);
     args.painter.strokeRect(args.rect);
     let fontSize = 16;
-    let trim = Math.max(0, (args.rect.h - fontSize) * 0.4);
-    args.painter.printParagraph(
+    args.painter.printLine(
         args.gate.symbol,
-        args.rect.skipTop(trim).skipBottom(trim),
-        new Point(0.5, 0.5),
+        args.rect.paddedBy(-2).takeTopProportion(0.85),
+        0.5,
         Config.DEFAULT_TEXT_COLOR,
         fontSize);
 };

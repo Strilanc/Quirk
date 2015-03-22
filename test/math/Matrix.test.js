@@ -73,7 +73,7 @@ suite.test("toString", () => {
     assertThat(Matrix.square([0, 1, new Complex(1/3, 1), new Complex(0, 1/3 + 0.0000001)]).toString(Format.MINIFIED)).
         isEqualTo("{{0,1},{\u2153+i,0.3333334333333333i}}");
     assertThat(Matrix.square([0, 1, new Complex(1/3, 1), new Complex(0, 1/3 + 0.0000001)]).toString(Format.CONSISTENT)).
-        isEqualTo("{{0.000+0.000i, 1.000+0.000i}, {0.333+1.000i, 0.000+0.333i}}");
+        isEqualTo("{{+0.000+0.000i, +1.000+0.000i}, {+0.333+1.000i, +0.000+0.333i}}");
 });
 
 suite.test("parse", () => {

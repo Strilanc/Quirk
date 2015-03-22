@@ -17,7 +17,7 @@ export class CircuitContext {
     }
 }
 
-export class GateDrawParams {
+export default class GateDrawParams {
     /**
      * @param {!Painter} painter
      * @param {!boolean} isInToolbox

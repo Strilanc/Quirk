@@ -78,6 +78,26 @@ suite.webGlTest("withQubitOperationApplied", () => {
         0, 0, -s/2, -0.5, 0.5, 0, s/2, 0.5]));
 });
 
+suite.webGlTest("withSwapApplied", () => {
+    let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(1, 3);
+
+    t = t.withSwap(0, 1, ControlMask.NO_CONTROLS);
+    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+        0, 0, 1, 0, 0, 0, 0, 0]));
+
+    t = t.withSwap(0, 1, ControlMask.NO_CONTROLS);
+    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+        0, 1, 0, 0, 0, 0, 0, 0]));
+
+    t = t.withSwap(0, 2, ControlMask.NO_CONTROLS);
+    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+        0, 0, 0, 0, 1, 0, 0, 0]));
+
+    t = t.withSwap(1, 2, ControlMask.NO_CONTROLS);
+    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+        0, 0, 1, 0, 0, 0, 0, 0]));
+});
+
 suite.webGlTest("probabilities", () => {
     assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(7, 3).probabilities().read().asProbabilities().
         compute()).isEqualTo([0, 0, 0, 0, 0, 0, 0, 1]);

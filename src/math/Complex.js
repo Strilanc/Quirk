@@ -131,7 +131,8 @@ export default class Complex {
         var imagFactor = format.allowAbbreviation && Math.abs(Math.abs(this.imag) - 1) <= format.maxAbbreviationError ?
             "" :
             format.formatFloat(Math.abs(this.imag));
-        return format.formatFloat(this.real) + separator + imagFactor + "i";
+        var prefix = format.allowAbbreviation || format.fixedDigits === undefined || this.real < 0 ? "" : "+";
+        return prefix + format.formatFloat(this.real) + separator + imagFactor + "i";
     };
 
     /**

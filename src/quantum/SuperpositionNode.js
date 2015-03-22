@@ -85,7 +85,6 @@ export default class SuperpositionNode {
      */
     withQubitOperationApplied(qubitIndex, operation, controlMask) {
         Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
-        //Util.need(qubitIndex >= 0 && qubitIndex < this.qubitCount, "qubitIndex >= 0 && qubitIndex < this.qubitCount");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
             let control = Shades.renderControlMask(
@@ -104,6 +103,35 @@ export default class SuperpositionNode {
             return control.available;
         });
     };
+
+    /**
+     * Returns a texture holding the result of applying a swap operation.
+     * @param {!int} qubitIndex1 The index of one of the qubits to swap.
+     * @param {!int} qubitIndex2 The index of the other qubit to swap.
+     * @param {!ControlMask} controlMask
+     * @returns {!SuperpositionNode}
+     */
+    withSwap(qubitIndex1, qubitIndex2, controlMask) {
+        Util.need(controlMask.desiredValueFor(qubitIndex1) === null, "Controlled with qubit being modified.");
+        Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
+
+        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
+            let control = Shades.renderControlMask(
+                getSharedDirector(),
+                controlMask,
+                allocTexture(this.width, this.height),
+                allocTexture(this.width, this.height));
+            Shades.renderSwapOperation(
+                getSharedDirector(),
+                control.available,
+                input[0],
+                qubitIndex1,
+                qubitIndex2,
+                control.result);
+            reuseTexture(control.result);
+            return control.available;
+        });
+    }
 
     /**
      * Returns a texture containing probabilities for the amplitudes in the receiving texture.
@@ -140,7 +168,7 @@ export default class SuperpositionNode {
     };
 
     /**
-     * Forces evaluation of the pipeline, to compute this texture's color components.
+     * Returns a node with operations for extending the pipeline after the eventual pixel data read occurs.
      * @returns {!SuperpositionReadNode}
      */
     read() {
@@ -207,7 +235,7 @@ export default class SuperpositionNode {
 
     /**
      * @param {!(!SuperpositionNode[])} superpositionNodes
-     * @returns {!Map.<!int, !SuperpositionReadNode>}
+     * @returns {!(!SuperpositionReadNode[])}
      */
     static mergedReadFloats(superpositionNodes) {
         //noinspection JSUnresolvedVariable
@@ -236,15 +264,14 @@ export default class SuperpositionNode {
         let combined = new Seq(superpositionNodes).aggregate(seedCombined, accumulateCombined).read();
 
         //noinspection JSUnresolvedVariable
-        return new Seq(superpositionNodes).toMap(
-            e => e.pipelineNode.id,
+        return new Seq(superpositionNodes).map(
             e => new SuperpositionReadNode(new PipelineNode([combined.floatsNode], inputs => {
                 let floats = inputs[0];
                 //noinspection JSUnresolvedVariable
                 let pixelRect = pack.placeMap.get(e.pipelineNode.id);
                 let floatRect = pixelRect.withX(pixelRect.x * 4).withW(pixelRect.w * 4);
                 return Util.sliceRectFromFlattenedArray(pack.width * 4, floats, floatRect);
-            })));
+            }))).toArray();
     }
 }
 
@@ -298,7 +325,7 @@ export class SuperpositionReadNode {
             return Seq.naturals().
                 map(i => 4 << i).
                 takeWhile(i => i < floats.length).
-                map(i => floats[4 << i]).
+                map(i => floats[i]).
                 toArray();
         });
     };

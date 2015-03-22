@@ -2,6 +2,7 @@ import Util from "src/base/Util.js"
 import Gate from "src/ui/Gate.js"
 import Matrix from "src/math/Matrix.js"
 import Complex from "src/math/Complex.js"
+import Config from "src/Config.js"
 
 let Gates = {};
 export default Gates;
@@ -108,24 +109,25 @@ Gates.Named = {
             "↓",
             Matrix.fromPauliRotation(0.25, 0, 0),
             "Down Gate",
-            "Cycles through OFF, (1+i)(OFF - i ON), ON, and (1-i)(OFF + i ON).",
-            "The Down gate is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
+            "(Another) Half of a Not.",
+            "The Down gate cycles through OFF, (1+i)(OFF - i ON), ON, and (1-i)(OFF + i ON). " +
+                "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
                 "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
                 "Its inverse is the Up gate."),
 
         Up: new Gate(
             "↑",
             Matrix.fromPauliRotation(0.75, 0, 0),
-            "Up Gate / Beam Splitter",
-            "Cycles through OFF, (1-i)(OFF + i ON), ON, and (1+i)(OFF - i ON).",
-            "The Up gate acts like an optical beam splitter. " +
+            "Up Gate [Beam Splitter]",
+            "Half of a Not. Acts like optical beam splitters.",
+            "The Up gate cycles through the states OFF, (1-i)(OFF + i ON), ON, and (1+i)(OFF - i ON). " +
                 "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
                 "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
                 "Its inverse is the Down gate.",
             args => {
                 Gate.DEFAULT_DRAWER(args);
                 args.painter.ctx.globalAlpha = 0.25;
-                args.painter.strokeLine(args.params.rect.topLeft(), args.params.rect.bottomRight());
+                args.painter.strokeLine(args.rect.topLeft(), args.rect.bottomRight());
                 args.painter.ctx.globalAlpha = 1;
             }),
 
@@ -133,8 +135,9 @@ Gates.Named = {
             "→",
             Matrix.fromPauliRotation(0, 0.25, 0),
             "Right Gate",
-            "Cycles through OFF, (1+i)(OFF + ON), i ON, and (1-i)(OFF - ON).",
-            "The Right gate is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
+            "Half of a Y Gate.",
+            "The Right gate cycles through OFF, (1+i)(OFF + ON), i ON, and (1-i)(OFF - ON). " +
+                "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
                 "It is a square root of the Pauli Y gate. " +
                 "Its inverse is the Left gate."),
 
@@ -142,8 +145,9 @@ Gates.Named = {
             "←",
             Matrix.fromPauliRotation(0, 0.75, 0),
             "Left Gate",
-            "Cycles through OFF, (1-i)(OFF - ON), i ON, and (1+i)(OFF + ON).",
-            "The Left gate is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
+            "(Another) Half of a Y Gate.",
+            "The Left gate cycles through OFF, (1-i)(OFF - ON), i ON, and (1+i)(OFF + ON). " +
+                "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
                 "It is a square root of the Pauli Y gate. " +
                 "Its inverse is the Right gate."),
 
@@ -151,7 +155,7 @@ Gates.Named = {
             "↺",
             Matrix.fromPauliRotation(0, 0, 0.25),
             "Counter-Clockwise Phase Gate",
-            "Phases ON states by a factor of i, without affecting OFF states.",
+            "Phases ON by a factor of i, without affecting OFF.",
             "The Counter-Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
                 "It is a square root of the Pauli Z gate. " +
                 "Its inverse is the Clockwise Phase Gate."),
@@ -160,7 +164,7 @@ Gates.Named = {
             "↻",
             Matrix.fromPauliRotation(0, 0, 0.75),
             "Clockwise Phase Gate",
-            "Phases ON states by a factor of -i, without affecting OFF states.",
+            "Phases ON by a factor of -i, without affecting OFF.",
             "The Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
                 "It is a square root of the Pauli Z gate. " +
                 "Its inverse is the Counter-Clockwise Phase Gate.")
@@ -211,8 +215,9 @@ Gates.Named = {
             "H",
             Matrix.HADAMARD,
             "Hadamard Gate",
-            "Toggles ON to ON+OFF and back, but toggles OFF to ON-OFF and back.",
-            "The Hadamard gate is the simplest quantum gate that can create and interfere superpositions. " +
+            "Creates/cancels uniform superpositions.",
+            "The Hadamard gate is the simplest non-classical gate. " +
+                "Toggles ON to ON+OFF and back, but toggles OFF to ON-OFF and back. " +
                 "Applying once to each wire, in the starting state, creates a uniform superposition of all states. " +
                 "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis",
             false)
@@ -362,10 +367,10 @@ Gates.Sets = [
     {
         hint: "Quarter Turns (+/-)",
         gates: [
-            Gates.Named.QuarterTurns.Down,
+            Gates.Named.QuarterTurns.Up,
             Gates.Named.QuarterTurns.Right,
             Gates.Named.QuarterTurns.CounterClockwise,
-            Gates.Named.QuarterTurns.Up,
+            Gates.Named.QuarterTurns.Down,
             Gates.Named.QuarterTurns.Left,
             Gates.Named.QuarterTurns.Clockwise
         ]

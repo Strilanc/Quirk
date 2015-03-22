@@ -2,8 +2,11 @@ import Util from "src/base/Util.js"
 import Gates from "src/ui/Gates.js"
 import Rect from "src/base/Rect.js"
 import Point from "src/base/Point.js"
+import Config from "src/Config.js"
+import Painter from "src/ui/Painter.js"
+import WidgetPainter from "src/ui/WidgetPainter.js"
 
-class Toolbox {
+export default class ToolboxWidget {
     /**
      * That thing showing gates you can grab.
      * @param {!Rect} area
@@ -41,16 +44,6 @@ class Toolbox {
     }
 
     /**
-     * @param {!Painter} painter
-     * @param {!int} groupIndex
-     * @param {!int} gateIndex
-     * @param {!number} time
-     * @private
-     */
-    paintHint(painter, groupIndex, gateIndex, time) {
-    }
-
-    /**
      *
      * @param {!Point} p
      *
@@ -67,6 +60,14 @@ class Toolbox {
             }
         }
         return null;
+    }
+
+    /**
+     * @param {!ToolboxWidget|*} other
+     * @returns {!boolean}
+     */
+    isEqualTo(other) {
+        return other instanceof ToolboxWidget && this.area.isEqualTo(other.area);
     }
 
     /**
@@ -103,11 +104,9 @@ class Toolbox {
             }
 
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
-            let hintRect = new Rect(gateRect.center().x - 200, gateRect.bottom() + 10, 400, 400).
+            let hintRect = new Rect(gateRect.center().x - 200, gateRect.bottom() + 2, 400, 300).
                 snapInside(painter.paintableArea().skipTop(gateRect.bottom()));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, time));
-
-            this.paintHint(painter, f.groupIndex, f.gateIndex, time);
         }
     }
 
