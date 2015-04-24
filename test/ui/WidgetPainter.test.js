@@ -41,4 +41,4 @@ suite.canvasAppearanceTest("paintGateTooltip", 100, 100, canvas => {
 '2i3OHQJMp5hiZRzjM4TZQzJbHp4DIZr/aEuExi08FlMl6tCXGdxCbBdTJerQlxncQmwXUyXq0JcZ3EJsF1Ml5tCTlEEhvHIZLxakVIFDWJcj6gcqJcUX' +
 'GRKFc2Ga9Wp71VEuVM/t1VolyZZLxaE+I6iU0qrpPxak1IFLlNYtMVl8l4tSfEZRKbKY64SsarPSHoVlwksRW5LhfJeCdBCLqVJlHu76BJlPMMTdaJZ2' +
 'gI8QwNIZ4hJ+Ts7AxardZRl7Ozs3oQ8urVK8B/lTv2cux/V9hut+F/q49xxDiqTOMAAAAASUVORK5CYII='
-    , 3000); // Text rendering differs quite a bit from system to system... hard to test it effectively.);
+    , 6000); // Text rendering differs quite a bit from system to system... hard to test it effectively.);

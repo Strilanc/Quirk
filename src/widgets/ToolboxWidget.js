@@ -1,7 +1,9 @@
 import Util from "src/base/Util.js"
 import Gates from "src/ui/Gates.js"
+import GateColumn from "src/ui/GateColumn.js"
 import Rect from "src/base/Rect.js"
 import Point from "src/base/Point.js"
+import Seq from "src/base/Seq.js"
 import Config from "src/Config.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
@@ -92,7 +94,10 @@ export default class ToolboxWidget {
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
                 if (gate !== null) {
-                    gate.paint(painter, this.gateDrawRect(groupIndex, gateIndex), true, false, time, null);
+                    let r = this.gateDrawRect(groupIndex, gateIndex);
+                    //noinspection JSCheckFunctionSignatures
+                    let isHighlighted = new Seq(focusPoints).any(pt => r.containsPoint(pt));
+                    gate.paint(painter, r, true, isHighlighted, time, null);
                 }
             }
         }
@@ -110,36 +115,35 @@ export default class ToolboxWidget {
         }
     }
 
-    ///**
-    // *
-    // * @param {!Hand} hand
-    // * @returns {!Hand} newHand
-    // */
-    //tryGrab(hand) {
-    //    if (hand.pos === null || hand.heldGateBlock !== null) {
-    //        return hand;
-    //    }
-    //
-    //    let f = this.findGateAt(Util.notNull(hand.pos));
-    //    if (f === null) {
-    //        return hand;
-    //    }
-    //
-    //    let gate = Gate.GATE_SET[f.groupIndex].gates[f.gateIndex];
-    //    Gate.updateIfFuzzGate(gate);
-    //    let gateBlock = gate === Gate.SWAP_HALF ? GateBlock.swap(0) : GateBlock.single(gate);
-    //    return hand.withHeldGate(gateBlock, 0);
-    //}
+    /**
+     * @param {!Hand} hand
+     * @returns {!Hand} newHand
+     */
+    tryGrab(hand) {
+        if (hand.pos === null || hand.isBusy()) {
+            return hand;
+        }
 
-    ///**
-    // * @param {!Hand} hand
-    // * @returns {!boolean}
-    // */
-    //needsContinuousRedrawAt(hand) {
-    //    if (hand.pos === null || hand.heldGateBlock !== null) {
-    //        return false;
-    //    }
-    //    let g = this.findGateAt(Util.notNull(hand.pos));
-    //    return g !== null && g.gate !== null && g.gate.isTimeBased();
-    //}
+        let f = this.findGateAt(Util.notNull(hand.pos));
+        if (f === null) {
+            return hand;
+        }
+
+        if (f.gate.symbol === Gates.Named.Silly.FUZZ_SYMBOL) {
+            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Named.Silly.FUZZ_MAKER();
+        }
+        return hand.withHeldGates(new GateColumn([f.gate]));
+    }
+
+    //noinspection JSMethodCanBeStatic
+    /**
+    * @param {!Hand} hand
+    * @returns {!boolean}
+    */
+    needsContinuousRedraw(hand) {
+        //noinspection JSUnresolvedVariable,JSCheckFunctionSignatures
+        return new Seq(hand.hoverPoints()).
+            map(p => this.findGateAt(p)).
+            any(f => f !== null && f.gate !== null && f.gate.isTimeBased());
+    }
 }

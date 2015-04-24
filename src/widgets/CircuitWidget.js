@@ -1,6 +1,10 @@
 import Util from "src/base/Util.js"
+import Seq from "src/base/Seq.js"
+import Point from "src/base/Point.js"
+import Rect from "src/base/Rect.js"
 import CircuitDefinition from "src/ui/CircuitDefinition.js"
 import CircuitStats from "src/ui/CircuitStats.js"
+import Config from "src/Config.js"
 
 /** @type {!number} */
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
@@ -20,13 +24,13 @@ export default class CircuitWidget {
      * @property {!Rect} area
      * @property {!CircuitDefinition} circuitDefinition
      * @property {?int} compressedColumnIndex
-     * @property {!function(!int) : !string} wireLabeller
+     * @property {!function(!int) : !string=} wireLabeller
      */
-    constructor(area, circuitDefinition, compressedColumnIndex, wireLabeller) {
+    constructor(area, circuitDefinition, compressedColumnIndex, wireLabeller = CircuitWidget.DEFAULT_WIRE_LABELLER) {
         this.area = area;
         this.circuitDefinition = circuitDefinition;
         this.compressedColumnIndex = compressedColumnIndex;
-        this.wireLabeller = wireLabeller || CircuitWidget.DEFAULT_WIRE_LABELLER;
+        this.wireLabeller = wireLabeller;
     }
 
     /**
@@ -77,7 +81,7 @@ export default class CircuitWidget {
      * @returns {!number}
      */
     getWireSpacing() {
-        return this.area.h / this.numWires;
+        return this.area.h / this.circuitDefinition.numWires;
     }
 
     /**
@@ -85,7 +89,7 @@ export default class CircuitWidget {
      * @returns {!Rect}
      */
     wireRect(wireIndex) {
-        Util.need(wireIndex >= 0 && wireIndex < this.numWires, "wireIndex out of range", arguments);
+        Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires, "wireIndex out of range", arguments);
         let wireHeight = this.getWireSpacing();
         return this.area.skipTop(wireHeight * wireIndex).takeTop(wireHeight);
     }
@@ -99,14 +103,14 @@ export default class CircuitWidget {
             return null;
         }
 
-        return Math.floor((p.y - this.area.y) * this.numWires / this.area.h);
+        return Math.floor((p.y - this.area.y) * this.circuitDefinition.numWires / this.area.h);
     }
 
     /**
      * @returns {!Array<!string>}}
      */
     getLabels() {
-        return range(this.numWires).map(this.wireLabeller);
+        return range(this.circuitDefinition.numWires).map(this.wireLabeller);
     }
 
     /**
@@ -163,45 +167,45 @@ export default class CircuitWidget {
         return i;
     }
 
-    ///**
-    // * @param {!Hand} hand
-    // * @returns {?{ col : !number, row : !number, isInsert : !boolean }}
-    // */
-    //findModificationIndex(hand) {
-    //    if (hand.pos === null) {
-    //        return null;
-    //    }
-    //    let halfColIndex = this.findOpHalfColumnAt(Util.notNull(hand.pos));
-    //    if (halfColIndex === null) {
-    //        return null;
-    //    }
-    //    let wireIndex = Util.notNull(this.findWireAt(Util.notNull(hand.pos)));
-    //    let colIndex = Math.ceil(halfColIndex);
-    //    let isInsert = Math.abs(halfColIndex % 1) === 0.5;
-    //    if (colIndex >= this.columns.length) {
-    //        return {col: colIndex, row: wireIndex, isInsert: isInsert};
-    //    }
-    //
-    //    if (!isInsert) {
-    //        let isFree = this.columns[colIndex].gates[wireIndex] === null;
-    //        if (hand.heldGateBlock !== null) {
-    //            for (let k = 1; k < hand.heldGateBlock.gates.length; k++) {
-    //                if (this.columns[colIndex].gates[wireIndex + k] !== null) {
-    //                    isFree = false;
-    //                }
-    //            }
-    //        }
-    //        if (!isFree) {
-    //            let isAfter = hand.pos.x > this.opRect(colIndex).center().x;
-    //            isInsert = true;
-    //            if (isAfter) {
-    //                colIndex += 1;
-    //            }
-    //        }
-    //    }
-    //
-    //    return {col: colIndex, row: wireIndex, isInsert: isInsert};
-    //}
+    /**
+     * @param {!Hand} hand
+     * @returns {?{ col : !number, row : !number, isInsert : !boolean }}
+     */
+    findModificationIndex(hand) {
+        if (hand.pos === null) {
+            return null;
+        }
+        let halfColIndex = this.findOpHalfColumnAt(Util.notNull(hand.pos));
+        if (halfColIndex === null) {
+            return null;
+        }
+        let wireIndex = Util.notNull(this.findWireAt(Util.notNull(hand.pos)));
+        let colIndex = Math.ceil(halfColIndex);
+        let isInsert = Math.abs(halfColIndex % 1) === 0.5;
+        if (colIndex >= this.columns.length) {
+            return {col: colIndex, row: wireIndex, isInsert: isInsert};
+        }
+
+        if (!isInsert) {
+            let isFree = this.columns[colIndex].gates[wireIndex] === null;
+            if (hand.heldGates !== null) {
+                for (let k = 0; k < hand.heldGates.gates.length; k++) {
+                    if (this.columns[colIndex].gates[wireIndex + k] !== null) {
+                        isFree = false;
+                    }
+                }
+            }
+            if (!isFree) {
+                let isAfter = hand.pos.x > this.opRect(colIndex).center().x;
+                isInsert = true;
+                if (isAfter) {
+                    colIndex += 1;
+                }
+            }
+        }
+
+        return {col: colIndex, row: wireIndex, isInsert: isInsert};
+    }
 
     /**
      * @param {!int} operationIndex
@@ -232,6 +236,10 @@ export default class CircuitWidget {
         return Rect.centeredSquareWithRadius(new Point(op.x + Config.GATE_RADIUS, wire.center().y), Config.GATE_RADIUS);
     }
 
+    afterTidyingUp() {
+        return this.withCircuit(this.circuitDefinition.withoutEmpties());
+    }
+
     ///**
     // * Returns a per-wire measure of entanglement before and after each operation.
     // * @param {!number} time
@@ -250,7 +258,7 @@ export default class CircuitWidget {
     //        return max / min;
     //    };
     //
-    //    let n = this.numWires;
+    //    let n = this.circuitDefinition.numWires;
     //    return this.scanStates(time).map(s => range(n).map(i => {
     //        let otherWiresMask = (1 << n) - (1 << i) - 1;
     //        let p = s.probability(1 << i, 1 << i);
@@ -282,7 +290,7 @@ export default class CircuitWidget {
     //paintWireProbabilityCurves(painter, hand, time) {
     //    let probabilities = this.scanProbabilities(time);
     //    let entanglementMeasures = this.scanPerWireEntanglementMeasure(time);
-    //    for (let r = 0; r < this.numWires; r++) {
+    //    for (let r = 0; r < this.circuitDefinition.numWires; r++) {
     //        for (let c = 0; c <= this.columns.length; c++) {
     //            let x1 = c === 0 ? this.area.x + 30 : this.gateRect(r, c - 1).center().x;
     //            let x2 = c === this.columns.length ? this.wireRect(r).right() : this.gateRect(r, c).center().x;
@@ -315,65 +323,63 @@ export default class CircuitWidget {
         if (this === other) {
             return true;
         }
-        //noinspection JSUnresolvedFunction
+        //noinspection JSUnresolvedFunction,JSUnresolvedVariable
         return other instanceof CircuitWidget &&
             this.area.isEqualTo(other.area) &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
             this.compressedColumnIndex === other.compressedColumnIndex &&
-            range(this.numWires).every(i => this.wireLabeller(i) === other.wireLabeller(i));
+            Seq.range(this.circuitDefinition.numWires).every(i => this.wireLabeller(i) === other.wireLabeller(i));
     }
 
-    ///**
-    // * @param {!Painter} painter
-    // * @param {!Hand} hand
-    // * @param {!number} time
-    // */
-    //paint(painter, hand, time) {
-    //    painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
-    //    let states = this.scanStates(time);
-    //
-    //    // Draw labelled wires
-    //    for (let i = 0; i < this.numWires; i++) {
-    //        let wireY = this.wireRect(i).center().y;
-    //        painter.printCenteredText(this.wireLabeller(i) + ":", new Point(this.area.x + 14, wireY));
-    //        painter.strokeLine(new Point(this.area.x + 30, wireY), new Point(this.area.x + this.area.w, wireY));
-    //    }
-    //
-    //    this.paintWireProbabilityCurves(painter, hand, time);
-    //
-    //    // Draw operations
-    //    for (let i2 = 0; i2 < this.columns.length; i2++) {
-    //        this.drawCircuitOperation(painter, this.columns[i2], i2, states[i2 + 1], hand, time);
-    //    }
-    //}
+    /**
+     * @param {!Painter} painter
+     * @param {!Hand} hand
+     * @param {!number} time
+     */
+    paint(painter, hand, time) {
+        painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
+        //let states = this.scanStates(time);
 
-    ///**
-    // * @param {!Painter} painter
-    // * @param {!GateColumn} gateColumn
-    // * @param {!int} columnIndex
-    // * @param {!QuantumState} state A complex column vector.
-    // * @param {!Hand} hand
-    // * @param {!number} time
-    // */
-    //drawCircuitOperation(painter, gateColumn, columnIndex, state, hand, time) {
-    //
-    //    this.drawColumnControlWires(painter, gateColumn, columnIndex, state);
-    //
-    //    for (let i = 0; i < this.numWires; i++) {
-    //        let b = this.gateRect(i, columnIndex);
-    //
-    //        if (gateColumn.gates[i] === null) {
-    //            continue;
-    //        }
-    //        //noinspection JSValidateTypes
-    //        /** @type {!Gate} */
-    //        let gate = gateColumn.gates[i];
-    //
-    //        //let isHolding = hand.pos !== null && hand.col === columnIndex && hand.row === i;
-    //        let canGrab = hand.isHoveringIn(b);
-    //        gate.paint(painter, b, false, canGrab, time, new CircuitContext(gateColumn, i, state));
-    //    }
-    //}
+        //// Draw labelled wires
+        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
+            let wireRect = this.wireRect(i);
+            let y = wireRect.center().y;
+            painter.printParagraph(this.wireLabeller(i) + ":", wireRect.takeLeft(28), new Point(0, 0.5));
+            painter.strokeLine(new Point(this.area.x + 30, y), new Point(this.area.right(), y));
+        }
+
+        //this.paintWireProbabilityCurves(painter, hand, time);
+
+        // Draw operations
+        for (let i = 0; i < this.circuitDefinition.columns.length; i++) {
+            this.drawCircuitOperation(painter, this.circuitDefinition.columns[i], i, hand, time);
+        }
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!GateColumn} gateColumn
+     * @param {!int} columnIndex
+     * @param {!Hand} hand
+     * @param {!number} time
+     */
+    drawCircuitOperation(painter, gateColumn, columnIndex, hand, time) {
+        //this.drawColumnControlWires(painter, gateColumn, columnIndex, state);
+
+        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
+            let b = this.gateRect(i, columnIndex);
+
+            if (gateColumn.gates[i] === null) {
+                continue;
+            }
+            //noinspection JSValidateTypes
+            /** @type {!Gate} */
+            let gate = gateColumn.gates[i];
+
+            let canGrab = new Seq(hand.hoverPoints()).any(pt => b.containsPoint(pt));
+            gate.paint(painter, b, false, canGrab, time, null); //new CircuitContext(gateColumn, i, state));
+        }
+    }
 
     ///**
     // * @param {!Painter} painter
@@ -426,11 +432,11 @@ export default class CircuitWidget {
     //    let newCols = this.columns.map(e => e);
     //    let compressedColumnIndex = null;
     //    while (newCols.length <= modificationPoint.col) {
-    //        newCols.push(GateColumn.empty(this.numWires));
+    //        newCols.push(GateColumn.empty(this.circuitDefinition.numWires));
     //    }
     //
     //    if (modificationPoint.isInsert) {
-    //        newCols.insertAt(modificationPoint.col, GateColumn.empty(this.numWires));
+    //        newCols.insertAt(modificationPoint.col, GateColumn.empty(this.circuitDefinition.numWires));
     //        compressedColumnIndex = modificationPoint.col;
     //    }
     //
@@ -439,7 +445,7 @@ export default class CircuitWidget {
     //
     //    return new Circuit(
     //        this.area,
-    //        this.numWires,
+    //        this.circuitDefinition.numWires,
     //        newCols,
     //        compressedColumnIndex,
     //        this.wireLabeller);
@@ -493,7 +499,7 @@ export default class CircuitWidget {
     //    return {
     //        newCircuit: new Circuit(
     //            this.area,
-    //            this.numWires,
+    //            this.circuitDefinition.numWires,
     //            this.columns.withItemReplacedAtBy(c, new GateColumn(newCol)),
     //            null,
     //            this.wireLabeller),
@@ -517,7 +523,7 @@ export default class CircuitWidget {
     //drawRightHandPeekGates(painter, time) {
     //    let left = this.area.x + this.area.w - Config.GATE_RADIUS * 2 - CIRCUIT_OP_RIGHT_SPACING;
     //    let out = this.getOutput(time);
-    //    for (let i = 0; i < this.numWires; i++) {
+    //    for (let i = 0; i < this.circuitDefinition.numWires; i++) {
     //        painter.paintProbabilityBox(
     //            out.probability(1 << i, 1 << i),
     //            this.gateRect(i, 0).withX(left));

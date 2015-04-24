@@ -65,11 +65,11 @@ export default class Hand {
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.pos, other.pos) &&
             this.heldGatesGrabInset === other.heldGatesGrabInset &&
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGates, other.heldGates);
-    };
+    }
 
     toString() {
         return `pos: ${this.pos}, holding: ${this.heldGates}`;
-    };
+    }
 
     /**
      * @param {?Point} newPos
@@ -77,14 +77,14 @@ export default class Hand {
      */
     withPos(newPos) {
         return new Hand(newPos, this.heldGates, this.heldGatesGrabInset);
-    };
+    }
 
     /**
      * @returns {!Hand}
      */
     withDrop() {
         return new Hand(this.pos, null, null);
-    };
+    }
 
     /**
      * @param {!GateColumn} heldGates
@@ -93,7 +93,7 @@ export default class Hand {
      */
     withHeldGates(heldGates, heldGatesGrabInset=0) {
         return new Hand(this.pos, heldGates, heldGatesGrabInset);
-    };
+    }
 }
 
 Hand.EMPTY = new Hand(null, null, null);

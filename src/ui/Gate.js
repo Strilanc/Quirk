@@ -189,7 +189,7 @@ Gate.MATRIX_DRAWER = args => {
 * @param {!GateDrawParams} args
 */
 Gate.CYCLE_DRAWER = args => {
-    if (args.isInToolbox) {
+    if (args.isInToolbox && !args.isHighlighted) {
         Gate.DEFAULT_DRAWER(args);
         return;
     }

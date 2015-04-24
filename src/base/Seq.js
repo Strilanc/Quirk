@@ -213,10 +213,7 @@ class Seq {
         let seq = this.iterable;
         return Seq.fromGenerator(function*() {
             for (let e of seq) {
-                let s = sequenceProjection(e);
-                for (let f of s) {
-                    yield f;
-                }
+                yield* sequenceProjection(e);
             }
         });
     };
@@ -469,9 +466,7 @@ class Seq {
         let seqSeq = this.iterable;
         return Seq.fromGenerator(function*() {
             for (let seq of seqSeq) {
-                for (let item of seq) {
-                    yield item;
-                }
+                yield* seq;
             }
         });
     };
@@ -485,12 +480,8 @@ class Seq {
     concat(other) {
         let seq = this.iterable;
         return Seq.fromGenerator(function*() {
-            for (let e of seq) {
-                yield e;
-            }
-            for (let e2 of other) {
-                yield e2;
-            }
+            yield* seq;
+            yield* other;
         });
     };
 

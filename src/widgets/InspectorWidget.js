@@ -1,5 +1,8 @@
+import describe from "src/base/Describe.js"
 import Util from "src/base/Util.js"
+import Seq from "src/base/Seq.js"
 import CircuitWidget from "src/widgets/CircuitWidget.js"
+import CircuitDefinition from "src/ui/CircuitDefinition.js"
 import ToolboxWidget from "src/widgets/ToolboxWidget.js"
 import Config from "src/Config.js"
 import Rect from "src/base/Rect.js"
@@ -36,7 +39,7 @@ export default class InspectorWidget {
     updateArea(drawArea) {
         this.drawArea = drawArea;
 
-        var remainder = drawArea.skipTop(this.circuitWidget.area.bottom());
+        let remainder = drawArea.skipTop(this.circuitWidget.area.bottom());
         this.outputStateHintArea = remainder.takeRight(remainder.h);
         this.cumulativeOperationHintArea = this.outputStateHintArea.
             withX(this.outputStateHintArea.x - this.outputStateHintArea.w - 5);
@@ -44,7 +47,7 @@ export default class InspectorWidget {
         this.focusedStateHintArea = this.focusedOperationHintArea.withX(this.focusedOperationHintArea.right() + 5);
         this.cumulativeFocusedOperationHintArea = this.focusedStateHintArea.withX(this.focusedStateHintArea.right() + 5);
 
-        var toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
         this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).takeTop(250));
     }
@@ -55,11 +58,14 @@ export default class InspectorWidget {
      * @returns {!InspectorWidget}
      */
     static empty(numWires, drawArea) {
-        var toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
 
         return new InspectorWidget(
             drawArea,
-            new CircuitWidget(drawArea.skipTop(toolboxHeight).takeTop(250), numWires, [], null, undefined),
+            new CircuitWidget(
+                drawArea.skipTop(toolboxHeight).takeTop(250),
+                new CircuitDefinition(numWires, []),
+                null),
             new ToolboxWidget(drawArea.takeTop(toolboxHeight)),
             Hand.EMPTY);
     }
@@ -73,8 +79,8 @@ export default class InspectorWidget {
     //    // Wire probabilities
     //    this.circuit.drawRightHandPeekGates(painter, time);
     //
-    //    //var factors = this.circuit.getOutput().contiguousFactorization();
-    //    //for (var i = 0; i < factors.length; i++) {
+    //    //let factors = this.circuit.getOutput().contiguousFactorization();
+    //    //for (let i = 0; i < factors.length; i++) {
     //    //    painter.paintQuantumStateAsGrid(factors[i], this.focusedStateHintArea.leftHalf().topHalf().withX(i * this.focusedOperationHintArea.w*0.6));
     //    //}
     //
@@ -89,8 +95,8 @@ export default class InspectorWidget {
     //        this.cumulativeOperationHintArea,
     //        this.hand);
     //
-    //    //var _ = 0;
-    //    //var X = 0;
+    //    //let _ = 0;
+    //    //let X = 0;
     //    //painter.paintDisalloweds(
     //    //    Matrix.square([
     //    //        // 1  0  1  0  1  0  1  0  1  0  1  0  1  0  1
@@ -127,12 +133,12 @@ export default class InspectorWidget {
     //        return;
     //    }
     //
-    //    var possibleFocusedColumn = this.circuit.findExistingOpColumnAt(notNull(this.hand.pos));
+    //    let possibleFocusedColumn = this.circuit.findExistingOpColumnAt(notNull(this.hand.pos));
     //    if (possibleFocusedColumn === null) {
     //        return;
     //    }
     //
-    //    var c = Util.notNull(possibleFocusedColumn);
+    //    let c = Util.notNull(possibleFocusedColumn);
     //
     //    // Highlight the column
     //    painter.ctx.globalAlpha = 0.75;
@@ -163,30 +169,32 @@ export default class InspectorWidget {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         //this.paintFocus(painter, time);
-        //this.circuitWidget.paint(painter, this.hand, time);
+        this.circuitWidget.paint(painter, this.hand, time);
         //this.paintOutput(painter, time);
         this.toolboxWidget.paint(painter, time, this.hand.hoverPoints());
-        //this.paintHand(painter, time);
+        this.paintHand(painter, time);
     }
 
-    ///**
-    // * @param {!Painter} painter
-    // * @param {!number} time
-    // * @private
-    // */
-    //paintHand(painter, time) {
-    //    if (this.hand.pos === null || this.hand.heldGateBlock === null) {
-    //        return;
-    //    }
-    //
-    //    var dh = this.circuit.getWireSpacing();
-    //    for (var k = 0; k < this.hand.heldGateBlock.gates.length; k++) {
-    //        var p = this.hand.pos.offsetBy(0, dh * (k - this.hand.heldGateBlockOffset));
-    //        var r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
-    //        var g = this.hand.heldGateBlock.gates[k];
-    //        g.paint(painter, r, false, true, time, null);
-    //    }
-    //}
+    /**
+     * @param {!Painter} painter
+     * @param {!number} time
+     * @private
+     */
+    paintHand(painter, time) {
+        let gates = this.hand.heldGates;
+        if (this.hand.pos === null || gates === null) {
+            return;
+        }
+        gates = gates.gates;
+
+        let dh = this.circuitWidget.getWireSpacing();
+        for (let k = 0; k < gates.length; k++) {
+            let p = this.hand.pos.offsetBy(0, dh * (k - gates.length + 1));
+            let r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
+            //paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
+            gates[k].paint(painter, r, false, true, time, null);
+        }
+    }
 
     ///**
     // *
@@ -196,11 +204,11 @@ export default class InspectorWidget {
     // */
     //captureCycle(painter, progressCallback, urlCallback) {
     //    //noinspection JSUnresolvedFunction
-    //    var gif = new GIF({
+    //    let gif = new GIF({
     //        workers: 2,
     //        quality: 10
     //    });
-    //    for (var t = 0.001; t < 1; t += 0.02) {
+    //    for (let t = 0.001; t < 1; t += 0.02) {
     //        this.paint(painter, t);
     //        gif.addFrame(painter.canvas, {copy: true, delay: 50});
     //        if (!this.needsContinuousRedraw()) {
@@ -215,24 +223,24 @@ export default class InspectorWidget {
     //    gif.render();
     //}
 
-    ///**
-    // * @returns {!Inspector}
-    // */
-    //grab() {
-    //    var hand = this.hand;
-    //    var circuit = this.circuit;
-    //
-    //    hand = this.toolbox.tryGrab(hand);
-    //    var x = circuit.tryGrab(hand);
-    //    hand = x.newHand;
-    //    circuit = x.newCircuit;
-    //
-    //    return new Inspector(
-    //        this.drawArea,
-    //        circuit,
-    //        this.toolbox,
-    //        hand);
-    //}
+    /**
+    * @returns {!InspectorWidget}
+    */
+    afterGrabbing() {
+        let hand = this.hand;
+        let circuit = this.circuitWidget;
+
+        hand = this.toolboxWidget.tryGrab(hand);
+        //let x = circuit.tryGrab(hand);
+        //hand = x.newHand;
+        //circuit = x.newCircuit;
+
+        return new InspectorWidget(
+            this.drawArea,
+            circuit,
+            this.toolboxWidget,
+            hand);
+    }
 
     /**
      * @param {!InspectorWidget|*} other
@@ -242,6 +250,7 @@ export default class InspectorWidget {
         if (this === other) {
             return true;
         }
+        //noinspection JSUnresolvedVariable
         return other instanceof InspectorWidget &&
             this.drawArea.isEqualTo(other.drawArea) &&
             this.circuitWidget.isEqualTo(other.circuitWidget) &&
@@ -257,57 +266,49 @@ export default class InspectorWidget {
         return new InspectorWidget(this.drawArea, circuitWidget, this.toolboxWidget, this.hand);
     }
 
-    ///**
-    // * @param {!Hand} hand
-    // * @returns {!Inspector}
-    // */
-    //withHand(hand) {
-    //    return new Inspector(this.drawArea, this.circuit, this.toolbox, hand);
-    //}
+    /**
+    * @returns {!InspectorWidget}
+    */
+    afterTidyingUp() {
+        return this.withCircuitWidget(this.circuitWidget.afterTidyingUp());
+    }
 
-    ///**
-    // * @returns {!Inspector}
-    // */
-    //drop() {
-    //    var p = this.previewDrop();
-    //    return p.
-    //        withCircuit(p.circuit.withoutEmpties()).
-    //        withHand(p.hand.withDrop());
-    //}
+    /**
+     * @returns {!InspectorWidget}
+     */
+    afterDropping() {
+        if (this.hand.heldGates === null) {
+            return this;
+        }
 
-    ///**
-    // * @returns {!Inspector}
-    // */
-    //previewDrop() {
-    //    if (this.hand.heldGateBlock === null) {
-    //        return this;
-    //    }
-    //
-    //    var hand = this.hand;
-    //    var circuit = this.circuit;
-    //
-    //    var modPt = circuit.findModificationIndex(hand);
-    //    if (modPt !== null && hand.heldGateBlock === null && modPt.col >= circuit.columns.length) {
-    //        modPt = null;
-    //    }
-    //    if (modPt === null) {
-    //        return this;
-    //    }
-    //
-    //    circuit = circuit.withOpBeingAdded(modPt, hand);
-    //    hand = hand.withDrop();
-    //
-    //    return new Inspector(
-    //        this.drawArea,
-    //        circuit,
-    //        this.toolbox,
-    //        hand);
-    //}
+        let hand = this.hand;
+        let circuitWidget = this.circuitWidget;
+        return this.withHand(this.hand.withDrop());
+        let modPt = circuitWidget.findModificationIndex(hand);
+        //if (modPt !== null && hand.heldGateBlock === null && modPt.col >= circuit.columns.length) {
+        //    modPt = null;
+        //}
+        //if (modPt === null) {
+        //    return this;
+        //}
+        //
+        //circuit = circuit.withOpBeingAdded(modPt, hand);
+        //hand = hand.withDrop();
+        //
+        //return new Inspector(
+        //    this.drawArea,
+        //    circuit,
+        //    this.toolbox,
+        //    hand);
+    }
 
-    //needsContinuousRedraw() {
-    //    return this.previewDrop().circuit.hasTimeBasedGates() ||
-    //        this.toolbox.needsContinuousRedrawAt(this.hand);
-    //}
+    needsContinuousRedraw() {
+        //noinspection JSUnresolvedFunction
+        return this.toolboxWidget.needsContinuousRedraw(this.hand) ||
+            this.hand.heldGates !== null && new Seq(this.hand.heldGates.gates).any(g => g.isTimeBased());
+        //return this.previewDrop().circuit.hasTimeBasedGates() ||
+        //    this.toolbox.needsContinuousRedrawAt(this.hand);
+    }
 
     /**
      * @param {!Hand} hand
@@ -333,17 +334,17 @@ export default class InspectorWidget {
     // * @returns {!Inspector}
     // */
     //withImportedCircuit(json) {
-    //    var wireCount = forceGetProperty(json, "wires");
+    //    let wireCount = forceGetProperty(json, "wires");
     //    if (!isInt(wireCount) || wireCount < 1 || wireCount > Config.MAX_WIRE_COUNT) {
     //        throw new Error("wires must be an int between 1 and " + Config.MAX_WIRE_COUNT);
     //    }
     //
-    //    var columns = forceGetProperty(json, "cols");
+    //    let columns = forceGetProperty(json, "cols");
     //    if (!Array.isArray(columns)) {
     //        throw new Error("cols must be an array.");
     //    }
     //
-    //    var gateCols = columns.map(GateColumn.fromJson).map(function (e) {
+    //    let gateCols = columns.map(GateColumn.fromJson).map(function (e) {
     //        if (e.gates.length < wireCount) {
     //            return new GateColumn(e.gates.paddedWithTo(null, wireCount));
     //        }
