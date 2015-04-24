@@ -1,3 +1,5 @@
+var path = require('path');
+
 module.exports = function(grunt) {
     //noinspection JSUnresolvedFunction
     grunt.initConfig({
@@ -6,7 +8,10 @@ module.exports = function(grunt) {
             translate_src: {
                 options: {
                     experimental: true,
-                    copyRuntime: 'out/tmp/traceur/bootstrap_pre_src'
+                    copyRuntime: 'out/tmp/traceur/bootstrap_pre_src',
+                    moduleNaming: {
+                        stripPrefix: "out/tmp/traceur"
+                    }
                 },
                 files: [{
                     expand: true,
@@ -17,7 +22,10 @@ module.exports = function(grunt) {
             },
             translate_test: {
                 options: {
-                    experimental: true
+                    experimental: true,
+                    moduleNaming: {
+                        stripPrefix: "out/tmp/traceur"
+                    }
                 },
                 files: [{
                     expand: true,
