@@ -123,9 +123,8 @@ export default class Util {
         let result = new Map();
 
         if (includeGroupsForOriginalKeysEvenIfEmpty) {
-            //noinspection JSDuplicatedDeclaration
-            for (let k of groupMap.keys()) {
-                result.set(k, []);
+            for (let e of groupMap.keys()) {
+                result.set(e, []);
             }
         }
 

@@ -116,7 +116,6 @@ class WglShaderContext {
         g.deleteShader(glVertexShader);
         g.deleteShader(glFragmentShader);
 
-        //noinspection JSCheckFunctionSignatures
         this.uniformLocations = new Seq(uniformParameterNames).toMap(e => e, e => g.getUniformLocation(program, e));
         this.positionAttributeLocation = g.getAttribLocation(program, 'position');
         this.program = program;

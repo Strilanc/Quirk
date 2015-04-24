@@ -144,13 +144,10 @@ export default class Painter {
         for (let df = 0; ; df++) { // Note: potential for quadratic behavior.
             fontSize = maxFontSize - df;
             this.ctx.font = fontSize + "px " + fontFamily;
-            //noinspection JSCheckFunctionSignatures
             lines = forcedLines.
                 flatMap(line => Util.breakLine(line, area.w, s => this.ctx.measureText(s).width)).
                 toArray();
-            //noinspection JSCheckFunctionSignatures
             measures = lines.map(e => this.ctx.measureText(e));
-            //noinspection JSUnresolvedVariable
             height = new Seq(measures).map(heightOf).sum();
             if (height <= area.h || fontSize <= 4) {
                 break;
@@ -171,7 +168,6 @@ export default class Painter {
             dy += descendingHeightOf(measures[i]);
         }
 
-        //noinspection JSUnresolvedVariable
         let maxWidth = new Seq(measures).map(e => e.width).max(0);
         return new Rect(fx(maxWidth), y, maxWidth, height);
     }

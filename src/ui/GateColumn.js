@@ -9,7 +9,7 @@ import ControlMask from "src/quantum/ControlMask.js"
 /**
  * A column of gates in a circuit with many qubits.
  */
-export default class GateColumn {
+class GateColumn {
     /**
      * A column of gates in a circuit with many qubits.
      *
@@ -30,7 +30,6 @@ export default class GateColumn {
         if (this === other) {
             return true;
         }
-        //noinspection JSUnresolvedVariable
         return other instanceof GateColumn &&
             new Seq(this.gates).isEqualTo(new Seq(other.gates), Util.STRICT_EQUALITY);
     }
@@ -118,7 +117,6 @@ export default class GateColumn {
      * @returns {!ControlMask}
      */
     controls() {
-        //noinspection JSCheckFunctionSignatures
         return Seq.
             range(this.gates.length).
             map(i =>
@@ -162,3 +160,5 @@ export default class GateColumn {
     //    };
     //}
 }
+
+export default GateColumn;

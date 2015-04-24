@@ -1,4 +1,5 @@
 import Util from "src/base/Util.js"
+import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import Config from "src/Config.js"

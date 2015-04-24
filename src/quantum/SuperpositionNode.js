@@ -212,8 +212,7 @@ export default class SuperpositionNode {
                 rechoose = grownLength >= width;
             }
 
-            //noinspection JSUnusedAssignment
-            var r = new Rect(x, y, w, h);
+            let r = new Rect(x, y, w, h);
             //noinspection JSUnusedAssignment
             placeMap.set(key, r);
             width = Math.max(width, r.right());
@@ -229,7 +228,6 @@ export default class SuperpositionNode {
         width = Util.ceilingPowerOf2(width);
         height = Util.ceilingPowerOf2(height);
 
-        //noinspection JSValidateTypes
         return {width, height, placeMap};
     };
 
@@ -238,7 +236,6 @@ export default class SuperpositionNode {
      * @returns {!(!SuperpositionReadNode[])}
      */
     static mergedReadFloats(superpositionNodes) {
-        //noinspection JSUnresolvedVariable
         let pack = SuperpositionNode.packRects(new Seq(superpositionNodes).toMap(
             e => e.pipelineNode.id,
             e => e));
@@ -263,11 +260,9 @@ export default class SuperpositionNode {
         // Hope they're in the right order (as opposed to doing a topological sort)...
         let combined = new Seq(superpositionNodes).aggregate(seedCombined, accumulateCombined).read();
 
-        //noinspection JSUnresolvedVariable
         return new Seq(superpositionNodes).map(
             e => new SuperpositionReadNode(new PipelineNode([combined.floatsNode], inputs => {
                 let floats = inputs[0];
-                //noinspection JSUnresolvedVariable
                 let pixelRect = pack.placeMap.get(e.pipelineNode.id);
                 let floatRect = pixelRect.withX(pixelRect.x * 4).withW(pixelRect.w * 4);
                 return Util.sliceRectFromFlattenedArray(pack.width * 4, floats, floatRect);
@@ -341,7 +336,6 @@ let getSharedDirector = () => {
     return CACHED_SHARED_DIRECTORY;
 };
 
-//noinspection JSValidateTypes
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 let TEXTURE_POOL = new Map();
 
@@ -353,12 +347,9 @@ let TEXTURE_POOL = new Map();
 let allocTexture = (width, height) => {
     let k = width + ":" + height;
 
-    //noinspection JSUnresolvedFunction
     if (!TEXTURE_POOL.has(k)) {
-        //noinspection JSUnresolvedFunction
         TEXTURE_POOL.set(k, []);
     }
-    //noinspection JSUnresolvedFunction
     let pool = TEXTURE_POOL.get(k);
     if (pool.length > 0) {
         return pool.pop();
@@ -371,7 +362,6 @@ let allocTexture = (width, height) => {
  * @param {!WglTexture} texture
  */
 let reuseTexture = texture => {
-    //noinspection JSUnresolvedFunction
     let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height);
     pool.push(texture);
 };

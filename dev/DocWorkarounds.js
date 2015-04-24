@@ -2,23 +2,37 @@
  * Associates keys with values.
  *
  * This class is just a JSDoc hack to make WebStorm understand the built-in Map type, and should not be used.
+ * @property {!function() : !Iterator.<V>} values
+ * @template K, V
  */
 class Map {
-    /**
-     * @property {!int} size
-     * @property {!function()} clear
-     * @property {!function(K)} delete
-     * @property {!Iterator.<!((K|V)[])>} entries
-     * @property {!function() : !Iterator.<V>} values
-     * @template K, V
-     */
     constructor() {
-        throw new Error("Just a doc class")
+        /** @type {!int} */
+        this.size = 0;
+        throw new Error("Just a doc class");
+    }
+
+    //noinspection JSUnusedGlobalSymbols
+    /**
+     * @returns undefined
+     */
+    clear() {
+    }
+
+    //noinspection JSUnusedGlobalSymbols,ReservedWordAsName
+    /**
+     * @param {K|*} key
+     * @returns undefined
+     * @template K
+     */
+    delete(key) {
+        throw new Error("Just a doc class " + key + this)
     }
 
     /**
      * @param {K|*} key
      * @returns {V|undefined}
+     * @template K, V
      */
     get(key) {
         throw new Error("Just a doc class " + key + this)
@@ -27,7 +41,8 @@ class Map {
     /**
      * @param {K|*} key
      * @param {V|*} val
-     * @returns {Map.<K, T>|undefined}
+     * @returns {Map.<K, V>|undefined}
+     * @template K, V
      */
     set(key, val) {
         throw new Error("Just a doc class " + key + val + this)
@@ -36,6 +51,7 @@ class Map {
     /**
      * @param {K|*} key
      * @returns {!boolean}
+     * @template K
      */
     has(key) {
         throw new Error("Just a doc class " + key + this)
@@ -43,8 +59,25 @@ class Map {
 
     /**
      * @returns {!Iterator.<K>}
+     * @template K
      */
     keys() {
+        throw new Error("Just a doc class " + this);
+    }
+
+    /**
+     * @returns {!Iterator.<V>}
+     * @template V
+     */
+    values() {
+        throw new Error("Just a doc class " + this);
+    }
+
+    /**
+     * @returns {!Iterator.<[K, V]>}
+     * @template K, V
+     */
+    entries() {
         throw new Error("Just a doc class " + this);
     }
 }
@@ -72,6 +105,7 @@ class Set {
     /**
      * @param {T|*} key
      * @returns {!boolean}
+     * @template T
      */
     has(key) {
         throw new Error("Just a doc class " + key + this)

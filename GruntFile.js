@@ -1,4 +1,3 @@
-//noinspection JSUnresolvedVariable
 module.exports = function(grunt) {
     //noinspection JSUnresolvedFunction
     grunt.initConfig({

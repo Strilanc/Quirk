@@ -1,14 +1,12 @@
 import Format from "src/base/Format.js"
 
 /**
- * Represents a number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
+ * Represents a complex number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
  */
-export default class Complex {
+class Complex {
     /**
      * @param {!number} real The real part of the Complex number. The 'a' in a + bi.
      * @param {!number} imag The imaginary part of the Complex number. The 'b' in a + bi.
-     * @property {!number} real
-     * @property {!number} imag
      */
     constructor(real, imag) {
         /**
@@ -31,7 +29,6 @@ export default class Complex {
      */
     isEqualTo(other) {
         if (other instanceof Complex) {
-            //noinspection JSUnresolvedVariable
             return this.real === other.real && this.imag === other.imag;
         }
         if (typeof other === "number") {
@@ -79,7 +76,6 @@ export default class Complex {
      */
     static realPartOf(v) {
         if (v instanceof Complex) {
-            //noinspection JSUnresolvedVariable
             return v.real;
         }
         if (typeof v === "number") {
@@ -95,7 +91,6 @@ export default class Complex {
      */
     static imagPartOf(v) {
         if (v instanceof Complex) {
-            //noinspection JSUnresolvedVariable
             return v.imag;
         }
         if (typeof v === "number") {
@@ -283,3 +278,5 @@ Complex.ONE = new Complex(1, 0);
  * @type {!Complex}
  */
 Complex.I = new Complex(0, 1);
+
+export default Complex;

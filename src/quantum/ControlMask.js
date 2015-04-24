@@ -4,7 +4,7 @@ import Seq from "src/base/Seq.js"
 /**
  * Stores a set of requirements that a state's bits must meet.
  */
-export default class ControlMask {
+class ControlMask {
     /**
      * @param {!int} inclusionMask.
      * @param {!int} desiredValueMask
@@ -34,7 +34,6 @@ export default class ControlMask {
      * @returns {!boolean}
      */
     isEqualTo(other) {
-        //noinspection JSUnresolvedVariable
         return other instanceof ControlMask &&
             this.inclusionMask == other.inclusionMask &&
             this.desiredValueMask == other.desiredValueMask;
@@ -115,3 +114,5 @@ export default class ControlMask {
 
 /** @type {!ControlMask} */
 ControlMask.NO_CONTROLS = new ControlMask(0, 0);
+
+export default ControlMask;

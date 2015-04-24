@@ -13,7 +13,7 @@ let CIRCUIT_OP_LEFT_SPACING = 35;
 /** @type {!number} */
 let CIRCUIT_OP_RIGHT_SPACING = 5;
 
-export default class CircuitWidget {
+class CircuitWidget {
     /**
      *
      * @param {!Rect} area
@@ -323,7 +323,6 @@ export default class CircuitWidget {
         if (this === other) {
             return true;
         }
-        //noinspection JSUnresolvedFunction,JSUnresolvedVariable
         return other instanceof CircuitWidget &&
             this.area.isEqualTo(other.area) &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
@@ -372,7 +371,6 @@ export default class CircuitWidget {
             if (gateColumn.gates[i] === null) {
                 continue;
             }
-            //noinspection JSValidateTypes
             /** @type {!Gate} */
             let gate = gateColumn.gates[i];
 
@@ -532,3 +530,5 @@ export default class CircuitWidget {
 }
 
 CircuitWidget.DEFAULT_WIRE_LABELLER = CircuitWidget.makeWireLabeller(1);
+
+export default CircuitWidget;

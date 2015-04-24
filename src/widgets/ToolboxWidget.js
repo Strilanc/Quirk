@@ -8,7 +8,7 @@ import Config from "src/Config.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
 
-export default class ToolboxWidget {
+class ToolboxWidget {
     /**
      * That thing showing gates you can grab.
      * @param {!Rect} area
@@ -95,7 +95,6 @@ export default class ToolboxWidget {
                 let gate = group.gates[gateIndex];
                 if (gate !== null) {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
-                    //noinspection JSCheckFunctionSignatures
                     let isHighlighted = new Seq(focusPoints).any(pt => r.containsPoint(pt));
                     gate.paint(painter, r, true, isHighlighted, time, null);
                 }
@@ -135,15 +134,15 @@ export default class ToolboxWidget {
         return hand.withHeldGates(new GateColumn([f.gate]));
     }
 
-    //noinspection JSMethodCanBeStatic
     /**
     * @param {!Hand} hand
     * @returns {!boolean}
     */
     needsContinuousRedraw(hand) {
-        //noinspection JSUnresolvedVariable,JSCheckFunctionSignatures
         return new Seq(hand.hoverPoints()).
             map(p => this.findGateAt(p)).
             any(f => f !== null && f.gate !== null && f.gate.isTimeBased());
     }
 }
+
+export default ToolboxWidget;

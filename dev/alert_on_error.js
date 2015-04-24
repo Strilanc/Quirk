@@ -10,6 +10,7 @@ window.onerror = function myErrorHandler(errorMsg, url, lineNumber, columnNumber
     if (this.caught === undefined) {
         this.caught = [];
     }
+    //noinspection JSUnresolvedVariable
     var location = (errorObj instanceof Object) ? errorObj.stack : undefined;
     if (location === undefined) {
         location = url + ":" + lineNumber + ":" + columnNumber;

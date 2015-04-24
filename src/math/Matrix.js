@@ -7,7 +7,7 @@ import Complex from "src/math/Complex.js"
  * A matrix of complex values.
  * @class
  */
-export default class Matrix {
+class Matrix {
     /**
      * @param rows {!(!(!Complex[]))} The rows of complex coefficients making up the matrix.
      */
@@ -230,7 +230,6 @@ export default class Matrix {
         let h = this.height();
         let n = this.width();
         U.need(other.height() === n, "Matrix.times: compatible sizes");
-        //noinspection JSCheckFunctionSignatures
         return Matrix.generate(w, h, (r, c) => Seq.
             range(n).
             map(i => m.rows[r][i].times(other.rows[i][c])).
@@ -242,7 +241,6 @@ export default class Matrix {
      * @returns {!number}
      */
     norm2() {
-        //noinspection JSUnresolvedFunction
         return new Seq(this.rows).flatten().map(e => e.norm2()).sum();
     };
     
@@ -326,8 +324,10 @@ export default class Matrix {
         var sigma_v = Matrix.PAULI_X.scaledBy(x).plus(
                       Matrix.PAULI_Y.scaledBy(y)).plus(
                       Matrix.PAULI_Z.scaledBy(z));
-    
+
+        /** @type {!Complex} */
         var ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
+        /** @type {!Complex} */
         var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
     
         var m = Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
@@ -560,3 +560,5 @@ Matrix.PAULI_Z = Matrix.square([1, 0, 0, -1]);
  * @type {!Matrix}
  */
 Matrix.HADAMARD = Matrix.square([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
+
+export default Matrix;

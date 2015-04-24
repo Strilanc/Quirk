@@ -38,13 +38,11 @@ export default class CircuitStats{
         }
         p.push(state);
         let r1 = SuperpositionNode.mergedReadFloats(p);
-        //noinspection JSUnresolvedFunction
         let x1 = r1.slice(0, r1.length - 1).map(e => e.asPerQubitProbabilities());
         let x2 = r1[r1.length - 1].asAmplitudes();
         let r2 = PipelineNode.computePipeline(new Seq(x1).concat([x2]).toArray());
         let wireProbabilities = r2.slice(0, r2.length - 1);
         let final = r2[r2.length - 1];
-        //noinspection JSCheckFunctionSignatures
         return new CircuitStats(circuitDefinition, wireProbabilities, final);
     }
 }

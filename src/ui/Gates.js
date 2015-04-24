@@ -1,6 +1,7 @@
 import Util from "src/base/Util.js"
 import Gate from "src/ui/Gate.js"
 import Matrix from "src/math/Matrix.js"
+import MathPainter from "src/ui/MathPainter.js"
 import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
 
@@ -219,8 +220,7 @@ Gates.Named = {
             "The Hadamard gate is the simplest non-classical gate. " +
                 "Toggles ON to ON+OFF and back, but toggles OFF to ON-OFF and back. " +
                 "Applying once to each wire, in the starting state, creates a uniform superposition of all states. " +
-                "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis",
-            false)
+                "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis.")
     },
     Evolving: {
         R: new Gate(

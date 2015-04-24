@@ -58,7 +58,6 @@ let toJson_Complex = v => v.toString(Format.MINIFIED);
  */
 let fromJson_Complex = json => {
     if (typeof json === "string") {
-        //noinspection JSCheckFunctionSignatures
         return Complex.parse(json);
     }
     throw new Error("Not a packed complex string: " + json);
@@ -116,7 +115,6 @@ let fromJson_Gate = json => {
     let matrixProp = json["matrix"];
     let matrix = matrixProp === undefined ? undefined : fromJson_Matrix(matrixProp);
 
-    //noinspection JSUnresolvedVariable
     let match = new Seq(Gates.KnownToSerializer).
         filter(g => g.symbol === symbol).
         first(null);
@@ -133,7 +131,6 @@ let fromJson_Gate = json => {
     return new Gate(symbol, matrix, symbol, "(A custom imported gate.)", "", Gate.DEFAULT_DRAWER);
 };
 
-//noinspection JSCheckFunctionSignatures
 /**
  * @param {!GateColumn} v
  * @returns {!object}

@@ -136,7 +136,6 @@ function equate_Iterables(subject, other) {
             return false;
         }
     }
-    //noinspection JSValidateTypes
     return otherIter.next().done;
 }
 

@@ -7,7 +7,7 @@ import Shades from "src/quantum/Shades.js"
 import PipelineNode from "src/quantum/PipelineNode.js"
 import ControlMask from "src/quantum/ControlMask.js"
 
-export default class CircuitDefinition {
+class CircuitDefinition {
     /**
      * @param {!int} numWires
      * @param {!Array<!GateColumn>} columns
@@ -17,14 +17,12 @@ export default class CircuitDefinition {
     constructor(numWires, columns) {
         Util.need(numWires >= 0, "numWires >= 0");
         Util.need(columns.every(e => e instanceof GateColumn), "columns.every(e => e instanceof GateColumn)");
-        //noinspection JSUnresolvedVariable
         Util.need(columns.every(e => e.gates.length === numWires), "columns.every(e => e.gates.length === numWires)");
         this.numWires = numWires;
         this.columns = columns;
     }
 
     withoutEmpties() {
-        //noinspection JSUnresolvedFunction
         return new CircuitDefinition(
             this.numWires,
             this.columns.filter(e => !e.isEmpty()));
@@ -55,3 +53,5 @@ export default class CircuitDefinition {
             join("\n");
     }
 }
+
+export default CircuitDefinition;

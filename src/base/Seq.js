@@ -9,7 +9,6 @@ const EMPTY_SYGIL = { not_a_normal_value: true };
 /**
  * A fluent wrapper for iterable sequences of values, exposing useful methods and properties.
  */
-export default //noinspection JSUnusedGlobalSymbols
 class Seq {
     /**
      * Wraps the given iterable.
@@ -24,16 +23,17 @@ class Seq {
 
         if (iterable instanceof Seq) {
             // Avoid double-wrapping.
-            //noinspection JSUnresolvedVariable
             this.iterable = iterable.iterable;
         } else {
             this.iterable = iterable;
         }
     }
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * Iterates over the sequence's items.
      * @returns {!Iterator.<T>}
+     * @template T
      */
     [Symbol.iterator]() {
         return this.iterable[Symbol.iterator]();
@@ -47,6 +47,7 @@ class Seq {
      *
      * @param {!function() : Iterator.<T>} generatorFunction
      * @returns {!Seq.<T>}
+     * @template T
      */
     static fromGenerator(generatorFunction) {
         return new Seq({ [Symbol.iterator]: generatorFunction });
@@ -56,6 +57,7 @@ class Seq {
     * Determines if the given iterable contains the same items as this sequence.
     * @param {*|!(T[])|!Seq.<T>|!Iterable.<T>} other
     * @param {!function(T, T|*) : !boolean} comparator
+     * @template T
     */
     isEqualTo(other, comparator = (e1, e2) => e1 === e2) {
         if (other === undefined || other === null || other[Symbol.iterator] === undefined) {
@@ -77,6 +79,7 @@ class Seq {
     /**
      * Returns an array containing the items of this sequence.
      * @returns {!(T[])}
+     * @template T
      */
     toArray() {
         return Array.from(this);
@@ -85,6 +88,7 @@ class Seq {
     /**
      * Returns a set containing the distinct items of this sequence.
      * @returns {!Set.<T>)
+     * @template T
      */
     toSet() {
         return new Set(this.iterable);
@@ -163,6 +167,7 @@ class Seq {
      * Returns a sequence with the same items, but precomputed and stored. If the sequence is already solid, e.g. it is
      * backed by an array, then it is returned directly (and unchanged).
      * @returns {!Seq.<T>}
+     * @template T
      */
     solidify() {
         let knownSolidTypes = [
@@ -191,7 +196,7 @@ class Seq {
      * Returns a sequence iterating the results of applying a transformation to the items of the receiving sequence.
      * @param {!function(T): R} projection
      * @returns {!Seq.<T>}
-     * @template R
+     * @template T, R
      */
     map(projection) {
         let seq = this.iterable;
@@ -207,7 +212,7 @@ class Seq {
      * items of the receiving sequence.
      * @param {!function(T): !Iterable<R>} sequenceProjection
      * @returns {!Seq.<T>}
-     * @template R
+     * @template T, R
      */
     flatMap(sequenceProjection) {
         let seq = this.iterable;
@@ -223,6 +228,7 @@ class Seq {
      * the predicate, by causing it to return a falsy value, are skipped.
      * @param {!function(T) : !boolean} predicate
      * @returns {!Seq.<T>}
+     * @template T
      */
     filter(predicate) {
         let seq = this.iterable;
@@ -242,7 +248,7 @@ class Seq {
      * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
      * is thrown when the sequence is empty.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     fold(combiner, emptyErrorAlternative = THROW_IF_EMPTY) {
         let accumulator = EMPTY_SYGIL;
@@ -264,7 +270,7 @@ class Seq {
      * @param {!function(A, T) : A} aggregator Computes the next accumulator value.
      * @param {A} seed The initial accumulator value.
      * @returns {A}
-     * @template A
+     * @template T, A
      */
     aggregate(seed, aggregator) {
         let accumulator = seed;
@@ -283,7 +289,7 @@ class Seq {
      *
      * @returns {!Seq.<R>}
      *
-     * @template T2, R
+     * @template T, T2, R
      */
     zip(other, combiner) {
         let seq = this.iterable;
@@ -299,25 +305,27 @@ class Seq {
         });
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns the largest value in the sequence, as determined by the `<` operator. If the sequence  is empty, then
      * either an error is thrown or the given alternative value is returned.
      * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
      * is thrown when the sequence is empty.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     max(emptyErrorAlternative = THROW_IF_EMPTY) {
         return this.fold((e1, e2) => e1 < e2 ? e2 : e1, emptyErrorAlternative);
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns the smallest value in the sequence, as determined by the `<` operator. If the sequence  is empty, then
      * either an error is thrown or the given alternative value is returned.
      * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
      * is thrown when the sequence is empty.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     min(emptyErrorAlternative = THROW_IF_EMPTY) {
         return this.fold((e1, e2) => e1 < e2 ? e1 : e2, emptyErrorAlternative);
@@ -331,7 +339,7 @@ class Seq {
      * is thrown when the sequence is empty.
      * @param {(function(A, A): !boolean)=} isALessThanBComparator The operation used to compare scores.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     maxBy(projection, emptyErrorAlternative = THROW_IF_EMPTY, isALessThanBComparator = (e1, e2) => e1 < e2) {
         let curMaxItem = EMPTY_SYGIL;
@@ -370,7 +378,7 @@ class Seq {
      * is thrown when the sequence is empty.
      * @param {(function(A, A): !boolean)=} isALessThanBComparator The operation used to compare scores.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     minBy(projection, emptyErrorAlternative = THROW_IF_EMPTY, isALessThanBComparator = (e1, e2) => e1 < e2) {
         return this.maxBy(projection, emptyErrorAlternative, (e1, e2) => isALessThanBComparator(e2, e1));
@@ -380,6 +388,7 @@ class Seq {
      * Determines if any of the items in the sequence matches the given predicate.
      * @param {!function(T) : !boolean} predicate
      * @returns {!boolean}
+     * @template T
      */
     any(predicate) {
         for (let e of this) {
@@ -394,15 +403,18 @@ class Seq {
      * Determines if every item in the sequence matches the given predicate.
      * @param {!function(T) : !boolean} predicate
      * @returns {!boolean}
+     * @template T
      */
     every(predicate) {
         return !this.any(e => !predicate(e));
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * Determines if the sequence contains a given value or not, as determined by the <code>===</code> operator.
      * @param {T|*} value
      * @returns {!boolean}
+     * @template T
      */
     contains(value) {
         return this.any(e => e === value);
@@ -412,6 +424,7 @@ class Seq {
      * Adds up the numbers in the sequence, using the `+` operator, and returns the total.
      * The empty sum is defined to be 0, to satisfy the invariant that X.concat([s]).sum() === X.sum() + s.
      * @returns {T|!number|*}
+     * @template T
      */
     sum() {
         return this.fold((a, e) => a + e, 0);
@@ -421,6 +434,7 @@ class Seq {
      * Multiplies up the numbers in the sequence, using the `*` operator, and returns the total.
      * The empty product is defined to be 1, to satisfy the invariant that X.concat([s]).product() === X.product() + s.
      * @returns {T|!number|*}
+     * @template T
      */
     product() {
         return this.fold((a, e) => a * e, 1);
@@ -434,7 +448,7 @@ class Seq {
      * @param {A} seed
      * @param {!function(A, T) : A} aggregator
      * @returns {!Seq.<A>}
-     * @template A
+     * @template T, A
      */
     scan(seed, aggregator) {
         let seq = this.iterable;
@@ -452,6 +466,7 @@ class Seq {
     /**
      * Returns a sequence containing the same items, but in the opposite order.
      * @returns {!Seq.<T>}
+     * @template T
      */
     reverse() {
         return new Seq(this.toArray().reverse());
@@ -471,11 +486,12 @@ class Seq {
         });
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns a sequence that iterates the receiving sequence's items and then the given iterable's items.
      * @param {*|!(A[])|!Seq.<A>} other
      * @returns {!Seq.<T|A>}
-     * @template A
+     * @template T, A
      */
     concat(other) {
         let seq = this.iterable;
@@ -490,7 +506,7 @@ class Seq {
      * @param {A} item
      * @param {!int} index
      * @returns {!Seq.<T|A>}
-     * @template A
+     * @template T, A
      */
     overlayAt(item, index) {
         if (index < 0) {
@@ -511,6 +527,7 @@ class Seq {
      * sequence is cut short just before yielding that item.
      * @param {!function(T) : !boolean} predicate
      * @returns {!Seq.<T>}
+     * @template T
      */
     takeWhile(predicate) {
         let seq = this.iterable;
@@ -528,6 +545,7 @@ class Seq {
      * Returns a sequence with the same items, except cut short if it exceeds the given maximum count.
      * @param {!int} maxTakeCount
      * @returns {!Seq.<T>}
+     * @template T
      */
     take(maxTakeCount) {
         if (maxTakeCount < 0) {
@@ -553,6 +571,7 @@ class Seq {
      * Returns a sequence with the same items, except the give number are skipped at the start.
      * @param {!int} maxSkipCount
      * @returns {!Seq.<T>}
+     * @template T
      */
     skip(maxSkipCount) {
         if (maxSkipCount < 0) {
@@ -580,7 +599,7 @@ class Seq {
      * @param {!function(T) : K} keySelector Items are considered distinct when their image, through this function, is
      * not already in the Set of seen images. The return type must support being inserted into a Set.
      * @returns {!Seq.<T>}
-     * @template K
+     * @template T, K
      */
     distinctBy(keySelector) {
         let seq = this;
@@ -601,6 +620,7 @@ class Seq {
     * Returns a sequence with the same items, except duplicate items are omitted.
     * The items must support being inserted into / found in a Set.
     * @returns {!Seq.<T>}
+     * @template T
     */
     distinct() {
         return this.distinctBy(e => e);
@@ -613,7 +633,7 @@ class Seq {
      * @param {=A} emptyManyErrorAlternative The value to return if the sequence is empty. If not provided, an error
      * is thrown when the sequence is empty or has more than one value.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     single(emptyManyErrorAlternative = THROW_IF_EMPTY) {
         let iter = this[Symbol.iterator]();
@@ -639,7 +659,7 @@ class Seq {
      * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
      * is thrown when the sequence is empty.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     first(emptyErrorAlternative = THROW_IF_EMPTY) {
         let iter = this[Symbol.iterator]();
@@ -656,12 +676,13 @@ class Seq {
         return emptyErrorAlternative;
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns the last item in the sequence.
      * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error
      * is thrown when the sequence is empty.
      * @returns {T|A}
-     * @template A
+     * @template T, A
      */
     last(emptyErrorAlternative = THROW_IF_EMPTY) {
         //noinspection JSUnusedAssignment
@@ -704,7 +725,7 @@ class Seq {
      * @param {A} paddingItem
      * @param {!int} minCount
      * @returns {!Seq.<T|A>}
-     * @template A
+     * @template T, A
      */
     paddedWithTo(paddingItem, minCount) {
         if (minCount < 0) {
@@ -733,7 +754,7 @@ class Seq {
      * @param {!function(T): K} keySelector
      * @param {!function(T): V} valueSelector
      * @returns {!Map.<K, V>}
-     * @template K, V
+     * @template T, K, V
      */
     toMap(keySelector, valueSelector) {
         let map = new Map();
@@ -754,7 +775,7 @@ class Seq {
      * maps to an array of the items (from the sequence) that mapped to said key.
      * @param {!function(T): K} keySelector
      * @returns {!Map.<K, !(T[])>}
-     * @template K
+     * @template T, K
      */
     groupBy(keySelector) {
         let map = new Map();
@@ -774,7 +795,7 @@ class Seq {
      * @param {!function(T) : !(T[])} neighborSelector
      * @param {!function(T) : K} keySelector
      * @returns {!Seq.<T>}
-     * @template K
+     * @template T, K
      */
     breadthFirstSearch(neighborSelector, keySelector = e => e) {
         let seq = this;
@@ -796,3 +817,5 @@ class Seq {
         });
     };
 }
+
+export default Seq;

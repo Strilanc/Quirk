@@ -3,7 +3,7 @@ import Point from "src/base/Point.js"
 /**
  * A 2-d rectangle.
  */
-export default class Rect {
+class Rect {
     /**
      * A 2-d rectangle.
      * @param {!number} x
@@ -404,3 +404,5 @@ export default class Rect {
         return new Rect(x, y, w, h);
     }
 }
+
+export default Rect;

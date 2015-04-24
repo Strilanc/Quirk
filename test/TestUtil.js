@@ -256,7 +256,7 @@ export class Suite {
      */
     constructor(name) {
         Suite.suites.push(this);
-        /** @type {!(!function(!{ warn_only: boolean|!string })[])} */
+        /** @type {!(!function(!{ warn_only: !boolean|!string })[])} */
         this.tests = [];
          /** @type {!string} name */
         this.name = name;
@@ -264,7 +264,7 @@ export class Suite {
 
     /**
      * @param {!string} name
-     * @param {!function(!{ warn_only: boolean|!string })} method
+     * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     test(name, method) {
         this.tests.push([name, method]);
@@ -272,7 +272,7 @@ export class Suite {
 
     /**
      * @param {!string} name
-     * @param {!function(!{ warn_only: boolean|!string })} method
+     * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     webGlTest(name, method) {
         let wrappedMethod = (status) => {
@@ -303,7 +303,7 @@ export class Suite {
      * @param {!string} name
      * @param {!int} width
      * @param {!int} height
-     * @param {!function(!HTMLCanvasElement, !{ warn_only: boolean|!string })} method
+     * @param {!function(!HTMLCanvasElement, !{ warn_only: !boolean|!string })} method
      * @param {!string} expectedSrc Either the location of an accessible image, or a 'data:image/' link.
      * @param {!int=} tolerance
      */

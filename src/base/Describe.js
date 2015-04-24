@@ -48,7 +48,7 @@ function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
 }
 export default describe;
 
-    /**
+/**
  * @param {!Map} map
  * @param {!int} limit
  * @returns {!string}
@@ -60,9 +60,7 @@ function describe_Map(map, limit) {
             entries.push("[...]");
             break;
         }
-        //noinspection JSUnusedAssignment
         let keyDesc = describe(k, limit - 1);
-        //noinspection JSUnusedAssignment
         let valDesc = describe(v, limit - 1);
         entries.push(`${keyDesc}: ${valDesc}`);
     }
