@@ -22,6 +22,12 @@ class CircuitDefinition {
         this.columns = columns;
     }
 
+    withColumns(columns) {
+        return new CircuitDefinition(
+            this.numWires,
+            columns)
+    }
+
     withoutEmpties() {
         return new CircuitDefinition(
             this.numWires,
@@ -47,7 +53,7 @@ class CircuitDefinition {
                 map(c => {
                     let g = self.columns[c].gates[r];
                     let t = g === null ? w : g.symbol;
-                    return new Seq(t).paddedWithTo(w, 7).join("");
+                    return new Seq(t).padded(7, w).join("");
                 }).
                 join("")).
             join("\n");

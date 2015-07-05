@@ -88,9 +88,8 @@ function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
         }
     }
 
-    //noinspection JSCheckFunctionSignatures
     return keys.every(key => other.hasOwnProperty(key) &&
-    isApproximatelyEqualToHelper(subject[key], other[key], epsilon));
+        isApproximatelyEqualToHelper(subject[key], other[key], epsilon));
 }
 
 export class AssertionSubject {
@@ -129,6 +128,7 @@ export class AssertionSubject {
         }
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * @param {*} other
      */
@@ -138,6 +138,7 @@ export class AssertionSubject {
         }
     };
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * @param {*} other
      */
@@ -194,12 +195,10 @@ export function assertTrue(subject) {
     assertThat(subject).isEqualTo(true);
 }
 
-//noinspection JSUnusedGlobalSymbols
 export function assertFalse(subject) {
     assertThat(subject).isEqualTo(false);
 }
 
-//noinspection JSUnusedGlobalSymbols
 /**
  * Invokes a function, requiring it to throw an exception. Returns the exception wrapped in an assertion subject.
  * @param {function()} func

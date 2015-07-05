@@ -126,20 +126,19 @@ class GateColumn {
             aggregate(ControlMask.NO_CONTROLS, (a, e) => a.combine(e));
     }
 
-    ///**
-    // * @param {!int} startIndex
-    // * @param {!Gate} gate
-    // * @returns {!GateColumn}
-    // */
-    //withGateAdded(startIndex, gateBlock) {
-    //    need(startIndex >= 0 && startIndex <= this.gates.length - gateBlock.gates.length);
-    //    new Seq(this.gates).overlayAt()
-    //    let gates = this.gates.map(e => e);
-    //    for (let i = 0; i < gateBlock.gates.length; i++) {
-    //        gates[startIndex + i] = gateBlock.gates[i];
-    //    }
-    //    return new GateColumn(gates);
-    //}
+    /**
+     * @param {!int} startIndex
+     * @param {!GateColumn} gateCol
+     * @returns {!GateColumn}
+     */
+    withGatesAdded(startIndex, gateCol) {
+        Util.need(startIndex >= 0 && startIndex <= this.gates.length - gateCol.gates.length);
+        let gates = this.gates.map(e => e);
+        for (let i = 0; i < gateCol.gates.length; i++) {
+            gates[startIndex + i] = gateCol.gates[i];
+        }
+        return new GateColumn(gates);
+    }
 
     ///**
     // * Returns the probability of controls on a column being satisfied and a wire being ON,

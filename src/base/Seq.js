@@ -6,14 +6,28 @@ export const THROW_IF_EMPTY = { if_same_instance_as_this_then_throw: true };
  */
 const EMPTY_SYGIL = { not_a_normal_value: true };
 
+//noinspection JSUnresolvedVariable
+const GENERIC_ARRAY_TYPES = [
+    Float32Array,
+    Float64Array,
+    Int8Array,
+    Int16Array,
+    Int32Array,
+    Uint8Array,
+    Uint16Array,
+    Uint32Array,
+    Uint8ClampedArray
+];
+
 /**
  * A fluent wrapper for iterable sequences of values, exposing useful methods and properties.
  */
 class Seq {
     /**
-     * Wraps the given iterable.
+     * Wraps the given array, collection, or other iterable.
+     * Use fromGenerator for wrapping generator functions.
+     *
      * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
-     * @property {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
      * @template T
      */
     constructor(iterable) {
@@ -21,12 +35,12 @@ class Seq {
             throw new Error(`Not iterable: ${iterable}`);
         }
 
-        if (iterable instanceof Seq) {
-            // Avoid double-wrapping.
-            this.iterable = iterable.iterable;
-        } else {
-            this.iterable = iterable;
-        }
+        /**
+         * The generator, array, or other iterable object wrapped by this Seq instance.
+         * @type {!(T[])|!Iterable.<T>|*}
+         * @template T
+         */
+        this.iterable = iterable instanceof Seq ? iterable.iterable : iterable; // Avoid double-wrapping.
     }
 
     //noinspection JSUnusedGlobalSymbols
@@ -305,7 +319,6 @@ class Seq {
         });
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns the largest value in the sequence, as determined by the `<` operator. If the sequence  is empty, then
      * either an error is thrown or the given alternative value is returned.
@@ -318,7 +331,6 @@ class Seq {
         return this.fold((e1, e2) => e1 < e2 ? e2 : e1, emptyErrorAlternative);
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns the smallest value in the sequence, as determined by the `<` operator. If the sequence  is empty, then
      * either an error is thrown or the given alternative value is returned.
@@ -502,25 +514,98 @@ class Seq {
     };
 
     /**
-     * Returns a sequence with the same items, except the item at the given index (if reached) is replaced.
+     * Returns a sequence with the same items, except the item at the given index is replaced.
+     * If the index is not reached during iteration, an exception is thrown.
+     * @param {!int} index
+     * @param {A} overlayedItem
+     * @returns {!Seq.<T|A>}
+     * @template T, A
+     */
+    withOverlayedItem(index, overlayedItem) {
+        if (index < 0) {
+            throw new Error("needed index >= 0");
+        }
+        let self = this;
+        return Seq.fromGenerator(function*() {
+            if (self.tryPeekCount() !== undefined && index >= self.tryPeekCount()) {
+                throw new Error("needed index <= count");
+            }
+            let i = 0;
+            for (let e of self.iterable) {
+                yield i === index ? overlayedItem : e;
+                i++;
+            }
+            if (i <= index) {
+                throw new Error("sequence ended before overlay " +
+                    "[withOverlayedItem(${index}, ${overlayedItem})]");
+            }
+        });
+    };
+
+    /**
+     * Returns a sequence with the same items, except the item at the given index is transformed by the given function.
+     * If the index is not reached during iteration, an exception is thrown.
+     * @param {!int} index
+     * @param {!function(T) : A} itemTransformation
+     * @returns {!Seq.<T|A>}
+     * @template T, A
+     */
+    withTransformedItem(index, itemTransformation) {
+        if (index < 0) {
+            throw new Error("needed index >= 0");
+        }
+        let self = this;
+        return Seq.fromGenerator(function*() {
+            if (self.tryPeekCount() !== undefined && index >= self.tryPeekCount()) {
+                throw new Error("needed index <= count");
+            }
+            let i = 0;
+            for (let e of self.iterable) {
+                yield i === index ? itemTransformation(e) : e;
+                i++;
+            }
+            if (i <= index) {
+                throw new Error("sequence ended before transformation " +
+                    "[withTransformedItem(${index}, ${itemTransformation})]");
+            }
+        });
+    };
+
+    /**
+     * Returns a sequence with the same items, except the given extra item is yielded when the given index is reached.
+     * If the insertion index is the length of the sequence, the inserted item is the last yielded item.
+     * If the insertion index is past the length of the sequence, an error is thrown (but only at the end of iteration).
+     *
      * @param {A} item
      * @param {!int} index
      * @returns {!Seq.<T|A>}
      * @template T, A
      */
-    overlayAt(item, index) {
+    withInsertedItem(index, item) {
         if (index < 0) {
             throw new Error("needed index >= 0");
         }
-        let seq = this.iterable;
+        let self = this;
         return Seq.fromGenerator(function*() {
+            if (self.tryPeekCount() !== undefined && index > self.tryPeekCount()) {
+                throw new Error("needed index <= count");
+            }
             let i = 0;
-            for (let e of seq) {
-                yield i === index ? item : e;
+            for (let e of self.iterable) {
+                if (i == index) {
+                    yield item;
+                }
                 i++;
+                yield e;
+            }
+            if (i == index) {
+                yield item;
+            }
+            if (i < index) {
+                throw new Error("sequence ended before insertion [withInsertedItem(${index}, ${item})]");
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, until one of the items fails to match the given predicate. Then the
@@ -703,12 +788,29 @@ class Seq {
     };
 
     /**
+     * If the sequence is of a known type with a known number of items, then returns the length of the sequence.
+     * Otherwise, returns undefined.
+     * It is guaranteed that the sequence will not be iterated by this method.
+     */
+    tryPeekCount() {
+        if (Array.isArray(this.iterable) || !GENERIC_ARRAY_TYPES.every(t => !(this.iterable instanceof t))) {
+            return this.iterable.length;
+        }
+        if (this.iterable instanceof Map || this.iterable instanceof Set) {
+            return this.iterable.size;
+        }
+        return undefined;
+    }
+
+    /**
      * Determines the number of items in the sequence.
+     * Uses length/size methods of known types, when possible, but otherwise falls back to iterating all the items.
      * Gets stuck in a loop if the sequence is unbounded.
      */
     count() {
-        if (Array.isArray(this.iterable)) {
-            return this.iterable.length;
+        let known = this.tryPeekCount();
+        if (known !== undefined) {
+            return known;
         }
 
         let n = 0;
@@ -722,12 +824,12 @@ class Seq {
     /**
      * Returns a sequence starting with the same items, but padded up to the given length with the given item. If the
      * sequence already exceeds the given length, no items are added.
-     * @param {A} paddingItem
      * @param {!int} minCount
+     * @param {A=} paddingItem
      * @returns {!Seq.<T|A>}
      * @template T, A
      */
-    paddedWithTo(paddingItem, minCount) {
+    padded(minCount, paddingItem=undefined) {
         if (minCount < 0) {
             throw new Error("needed minCount >= 0");
         }
@@ -744,6 +846,22 @@ class Seq {
             }
         });
     };
+
+    /**
+     * Conditionally applies a transformation to the sequence.
+     * If the given condition is false, the original sequence is returned.
+     * If the given condition is true, the sequence is run through the given transformation and the result is returned.
+     *
+     * This method mainly exists for syntactic convenience, so a dotted pipeline can be done in a single expression.
+     * For example, <code>seq.map(e => e + 1).ifThen(filterFlag, s => s.filter(e => e == 1)).toArray()</code>
+     *
+     * @param {!boolean} condition
+     * @param {!function(!Seq<T>) : ((!Seq<T>)|(!Iterable.<T>)|(!(T[]))|*)} sequenceTransformation
+     * @template T
+     */
+    ifThen(condition, sequenceTransformation) {
+        return condition ? new Seq(sequenceTransformation(this)) : this;
+    }
 
     /**
      * Returns a map containing the key/value pairs created by projecting each of the items in the sequence through

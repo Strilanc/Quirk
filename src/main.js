@@ -116,8 +116,7 @@ redraw = function () {
     let painter = new Painter(canvas);
 
     inspector.updateArea(painter.paintableArea());
-    //inspector.previewDrop().paint(painter, ts);
-    inspector.paint(painter, circuitTime);
+    inspector.previewDrop().paint(painter, circuitTime);
     painter.paintDeferred();
 
     tickWhenAppropriate();

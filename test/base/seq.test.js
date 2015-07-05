@@ -379,20 +379,80 @@ suite.test("concat", () => {
     assertThat(new Seq([5, 6]).concat([7, 8])).iteratesAs(5, 6, 7, 8);
 });
 
-suite.test("overlayAt", () => {
-    assertThrows(() => new Seq([]).overlayAt(undefined, -1));
+suite.test("withOverlayedItem", () => {
+    let f = "abc";
 
-    assertThat(new Seq([]).overlayAt("abc", 0)).iteratesAs();
-    assertThat(new Seq([1]).overlayAt("abc", 0)).iteratesAs("abc");
-    assertThat(new Seq([1, 2]).overlayAt("abc", 0)).iteratesAs("abc", 2);
+    // Negative index check happens at wrap-time.
+    assertThrows(() => new Seq([]).withOverlayedItem(-1, f));
+    assertThrows(() => new Seq([1]).withOverlayedItem(-1, f));
 
-    assertThat(new Seq([]).overlayAt("abc", 1)).iteratesAs();
-    assertThat(new Seq([1]).overlayAt("abc", 1)).iteratesAs(1);
-    assertThat(new Seq([1, 2]).overlayAt("abc", 1)).iteratesAs(1, "abc");
-    assertThat(new Seq([1, 2, 3]).overlayAt("abc", 1)).iteratesAs(1, "abc", 3);
+    // Past-end-of-sequence exception thrown only at iteration-time, and happens right away for arrays.
+    assertThat(new Seq([]).withOverlayedItem(100, f)).isNotEqualTo(null);
+    assertThrows(() => new Seq([]).withOverlayedItem(0, f).toArray());
+    assertThrows(() => new Seq([]).withOverlayedItem(1, f).toArray());
+    assertThrows(() => new Seq([1]).withOverlayedItem(1, f).toArray());
+    assertThrows(() => new Seq([1, 2, 3]).withOverlayedItem(3, f).toArray());
+    assertThrows(() => new Seq([1, 2, 3]).withOverlayedItem(3, f).take(1).toArray());
+    assertThrows(() => new Seq(function*() { yield "a"; }).withOverlayedItem(1, f).toArray());
 
-    assertThat(new Seq([1, 2, 3]).overlayAt("abc", 2)).iteratesAs(1, 2, "abc");
-    assertThat(new Seq([1, 2, 3]).overlayAt("abc", 3)).iteratesAs(1, 2, 3);
+    assertThat(new Seq([1]).withOverlayedItem(0, f)).iteratesAs("abc");
+    assertThat(new Seq([1, 2]).withOverlayedItem(0, f)).iteratesAs("abc", 2);
+    assertThat(new Seq([1, 2]).withOverlayedItem(1, f)).iteratesAs(1, "abc");
+    assertThat(new Seq([1, 2, 3]).withOverlayedItem(0, f)).iteratesAs("abc", 2, 3);
+    assertThat(new Seq([1, 2, 3]).withOverlayedItem(1, f)).iteratesAs(1, "abc", 3);
+    assertThat(new Seq([1, 2, 3]).withOverlayedItem(2, f)).iteratesAs(1, 2, "abc");
+});
+
+suite.test("withTransformedItem", () => {
+    let f = e => e + "a";
+
+    // Negative index check happens at wrap-time.
+    assertThrows(() => new Seq([]).withTransformedItem(-1, f));
+    assertThrows(() => new Seq([1]).withTransformedItem(-1, f));
+
+    // Past-end-of-sequence exception thrown only at iteration-time, and happens right away for arrays.
+    assertThat(new Seq([]).withTransformedItem(100, f)).isNotEqualTo(null);
+    assertThrows(() => new Seq([]).withTransformedItem(0, f).toArray());
+    assertThrows(() => new Seq([]).withTransformedItem(1, f).toArray());
+    assertThrows(() => new Seq([1]).withTransformedItem(1, f).toArray());
+    assertThrows(() => new Seq([1, 2, 3]).withTransformedItem(3, f).toArray());
+    assertThrows(() => new Seq([1, 2, 3]).withTransformedItem(3, f).take(1).toArray());
+    assertThrows(() => new Seq(function*() { yield "a"; }).withTransformedItem(1, f).toArray());
+
+    assertThat(new Seq([1]).withTransformedItem(0, f)).iteratesAs("1a");
+    assertThat(new Seq([1, 2]).withTransformedItem(0, f)).iteratesAs("1a", 2);
+    assertThat(new Seq([1, 2]).withTransformedItem(1, f)).iteratesAs(1, "2a");
+    assertThat(new Seq([1, 2, 3]).withTransformedItem(0, f)).iteratesAs("1a", 2, 3);
+    assertThat(new Seq([1, 2, 3]).withTransformedItem(1, f)).iteratesAs(1, "2a", 3);
+    assertThat(new Seq([1, 2, 3]).withTransformedItem(2, f)).iteratesAs(1, 2, "3a");
+});
+
+suite.test("withInsertedItem", () => {
+    let f = "abc";
+
+    // Negative index check happens at wrap-time.
+    assertThrows(() => new Seq([]).withInsertedItem(-1, f));
+    assertThrows(() => new Seq([1]).withInsertedItem(-1, f));
+    assertThrows(() => new Seq([1, 2, 3]).withInsertedItem(-1, f));
+
+    // Past-end-of-sequence exception thrown only at iteration-time, and happens right away for arrays.
+    assertThat(new Seq([]).withInsertedItem(100, f)).isNotEqualTo(null);
+    assertThrows(() => new Seq([]).withInsertedItem(1, f).toArray());
+    assertThrows(() => new Seq([1]).withInsertedItem(2, f).toArray());
+    assertThrows(() => new Seq([1, 2, 3]).withInsertedItem(4, f).toArray());
+    assertThrows(() => new Seq([1, 2, 3]).withInsertedItem(4, f).take(1).toArray());
+    assertThrows(() => new Seq(function*() { yield "a"; }).withInsertedItem(2, f).toArray());
+
+    assertThat(new Seq([]).withInsertedItem(0, f)).iteratesAs("abc");
+    assertThat(new Seq([1]).withInsertedItem(0, f)).iteratesAs("abc", 1);
+    assertThat(new Seq([1]).withInsertedItem(1, f)).iteratesAs(1, "abc");
+    assertThat(new Seq([1, 2]).withInsertedItem(0, f)).iteratesAs("abc", 1, 2);
+    assertThat(new Seq([1, 2]).withInsertedItem(1, f)).iteratesAs(1, "abc", 2);
+    assertThat(new Seq([1, 2]).withInsertedItem(2, f)).iteratesAs(1, 2, "abc");
+    assertThat(new Seq([1, 2, 3]).withInsertedItem(0, f)).iteratesAs("abc", 1, 2, 3);
+    assertThat(new Seq([1, 2, 3]).withInsertedItem(1, f)).iteratesAs(1, "abc", 2, 3);
+    assertThat(new Seq([1, 2, 3]).withInsertedItem(2, f)).iteratesAs(1, 2, "abc", 3);
+    assertThat(new Seq([1, 2, 3]).withInsertedItem(3, f)).iteratesAs(1, 2, 3, "abc");
 });
 
 suite.test("takeWhile", () => {
@@ -527,6 +587,27 @@ suite.test("last", () => {
     assertThat(new Seq([2, 3]).last("abc")).isEqualTo(3);
 });
 
+suite.test("tryPeekCount", () => {
+    assertThat(new Seq([]).tryPeekCount()).isEqualTo(0);
+    assertThat(new Seq([11]).tryPeekCount()).isEqualTo(1);
+    assertThat(new Seq([11, 12]).tryPeekCount()).isEqualTo(2);
+    assertThat(new Seq([11, 12, 13]).tryPeekCount()).isEqualTo(3);
+    assertThat(new Seq([11, 12, 13, 4, 5, 6]).count()).isEqualTo(6);
+
+    assertThat(new Seq(new Map()).tryPeekCount()).isEqualTo(0);
+    assertThat(new Seq(new Map([["a", "b"]])).tryPeekCount()).isEqualTo(1);
+
+    assertThat(new Seq(new Set()).tryPeekCount()).isEqualTo(0);
+    assertThat(new Seq(new Set("a")).tryPeekCount()).isEqualTo(1);
+
+    assertThat(new Seq(new Float32Array([1, 2, 3])).tryPeekCount()).isEqualTo(3);
+
+    assertThat(new Seq([11, 12, 13]).map(e => e + 1).tryPeekCount()).isEqualTo(undefined);
+    assertThat(Seq.fromGenerator(function*() {}).tryPeekCount()).isEqualTo(undefined);
+    assertThat(Seq.fromGenerator(function*() { yield "a"; }).tryPeekCount()).isEqualTo(undefined);
+    assertThat(Seq.fromGenerator(function*() { yield "a"; yield "b"; }).tryPeekCount()).isEqualTo(undefined);
+});
+
 suite.test("count", () => {
     assertThat(new Seq([]).count()).isEqualTo(0);
     assertThat(new Seq([11]).count()).isEqualTo(1);
@@ -534,31 +615,49 @@ suite.test("count", () => {
     assertThat(new Seq([11, 12, 13]).count()).isEqualTo(3);
     assertThat(new Seq([11, 12, 13, 4, 5, 6]).count()).isEqualTo(6);
 
+    assertThat(new Seq(new Map()).count()).isEqualTo(0);
+    assertThat(new Seq(new Map([["a", "b"]])).count()).isEqualTo(1);
+
+    assertThat(new Seq(new Set()).count()).isEqualTo(0);
+    assertThat(new Seq(new Set("a")).count()).isEqualTo(1);
+
+    assertThat(new Seq(new Float32Array([1, 2, 3])).count()).isEqualTo(3);
+
+    assertThat(new Seq([11, 12, 13]).map(e => e + 1).count()).isEqualTo(3);
     assertThat(Seq.fromGenerator(function*() {}).count()).isEqualTo(0);
     assertThat(Seq.fromGenerator(function*() { yield "a"; }).count()).isEqualTo(1);
     assertThat(Seq.fromGenerator(function*() { yield "a"; yield "b"; }).count()).isEqualTo(2);
 });
 
-suite.test("paddedWithTo", () => {
-    assertThat(new Seq([]).paddedWithTo("a", 0)).iteratesAs();
-    assertThat(new Seq([]).paddedWithTo("a", 1)).iteratesAs("a");
-    assertThat(new Seq([]).paddedWithTo("a", 2)).iteratesAs("a", "a");
-    assertThat(new Seq([]).paddedWithTo("a", 3)).iteratesAs("a", "a", "a");
+suite.test("padded", () => {
+    assertThat(new Seq([]).padded(0, "a")).iteratesAs();
+    assertThat(new Seq([]).padded(1, "a")).iteratesAs("a");
+    assertThat(new Seq([]).padded(2, "a")).iteratesAs("a", "a");
+    assertThat(new Seq([]).padded(3, "a")).iteratesAs("a", "a", "a");
+    assertThat(new Seq([]).padded(3)).iteratesAs(undefined, undefined, undefined);
 
-    assertThat(new Seq([2]).paddedWithTo("a", 0)).iteratesAs(2);
-    assertThat(new Seq([2]).paddedWithTo("a", 1)).iteratesAs(2);
-    assertThat(new Seq([2]).paddedWithTo("a", 2)).iteratesAs(2, "a");
-    assertThat(new Seq([2]).paddedWithTo("a", 3)).iteratesAs(2, "a", "a");
+    assertThat(new Seq([2]).padded(0, "a")).iteratesAs(2);
+    assertThat(new Seq([2]).padded(1, "a")).iteratesAs(2);
+    assertThat(new Seq([2]).padded(2, "a")).iteratesAs(2, "a");
+    assertThat(new Seq([2]).padded(3, "a")).iteratesAs(2, "a", "a");
 
-    assertThat(new Seq([2, 3]).paddedWithTo("a", 0)).iteratesAs(2, 3);
-    assertThat(new Seq([2, 3]).paddedWithTo("a", 1)).iteratesAs(2, 3);
-    assertThat(new Seq([2, 3]).paddedWithTo("a", 2)).iteratesAs(2, 3);
-    assertThat(new Seq([2, 3]).paddedWithTo("a", 3)).iteratesAs(2, 3, "a");
+    assertThat(new Seq([2, 3]).padded(0, "a")).iteratesAs(2, 3);
+    assertThat(new Seq([2, 3]).padded(1, "a")).iteratesAs(2, 3);
+    assertThat(new Seq([2, 3]).padded(2, "a")).iteratesAs(2, 3);
+    assertThat(new Seq([2, 3]).padded(3, "a")).iteratesAs(2, 3, "a");
 
-    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 0)).iteratesAs(2, 3, 5);
-    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 1)).iteratesAs(2, 3, 5);
-    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 2)).iteratesAs(2, 3, 5);
-    assertThat(new Seq([2, 3, 5]).paddedWithTo("a", 3)).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).padded(0, "a")).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).padded(1, "a")).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).padded(2, "a")).iteratesAs(2, 3, 5);
+    assertThat(new Seq([2, 3, 5]).padded(3, "a")).iteratesAs(2, 3, 5);
+});
+
+suite.test("ifThen", () => {
+    assertThat(new Seq([1, 2, 3]).ifThen(false, s => [4, 5, 6])).iteratesAs(1, 2, 3);
+    assertThat(new Seq([1, 2, 3]).ifThen(true, s => [4, 5, 6])).iteratesAs(4, 5, 6);
+
+    assertThat(new Seq([1, 2, 3]).ifThen(false, s => s.map(e => e * 2))).iteratesAs(1, 2, 3);
+    assertThat(new Seq([1, 2, 3]).ifThen(true, s => s.map(e => e * 2))).iteratesAs(2, 4, 6);
 });
 
 suite.test("toMap", () => {

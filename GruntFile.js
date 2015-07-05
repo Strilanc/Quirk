@@ -82,7 +82,6 @@ module.exports = function(grunt) {
     });
 
     grunt.registerTask('bootstrap_get_packages', function(src, dst) {
-        //noinspection JSUnresolvedFunction
         var packagedFiles = grunt.file.glob.sync(src);
         var getters = packagedFiles.map(function(e) {
             return 'System.get("' + e + '");';

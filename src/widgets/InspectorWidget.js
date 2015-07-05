@@ -2,6 +2,8 @@ import describe from "src/base/Describe.js"
 import Util from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
 import CircuitWidget from "src/widgets/CircuitWidget.js"
+import GateColumn from "src/ui/GateColumn.js"
+import Serializer from "src/ui/Serializer.js"
 import CircuitDefinition from "src/ui/CircuitDefinition.js"
 import ToolboxWidget from "src/widgets/ToolboxWidget.js"
 import Config from "src/Config.js"
@@ -273,41 +275,32 @@ export default class InspectorWidget {
         return this.withCircuitWidget(this.circuitWidget.afterTidyingUp());
     }
 
-    /**
-     * @returns {!InspectorWidget}
-     */
-    afterDropping() {
+    previewDrop() {
         if (this.hand.heldGates === null) {
             return this;
         }
 
         let hand = this.hand;
         let circuitWidget = this.circuitWidget;
-        return this.withHand(this.hand.withDrop());
-        let modPt = circuitWidget.findModificationIndex(hand);
-        //if (modPt !== null && hand.heldGateBlock === null && modPt.col >= circuit.columns.length) {
-        //    modPt = null;
-        //}
-        //if (modPt === null) {
-        //    return this;
-        //}
-        //
-        //circuit = circuit.withOpBeingAdded(modPt, hand);
-        //hand = hand.withDrop();
-        //
-        //return new Inspector(
-        //    this.drawArea,
-        //    circuit,
-        //    this.toolbox,
-        //    hand);
+        let previewCircuit = circuitWidget.previewDrop(hand);
+        let previewHand = previewCircuit == circuitWidget ? hand : hand.withDrop();
+        return this.withHand(previewHand).withCircuitWidget(previewCircuit);
+    }
+
+    /**
+     * @returns {!InspectorWidget}
+     */
+    afterDropping() {
+        return this.
+            withCircuitWidget(this.circuitWidget.afterDropping(this.hand)).
+            withHand(this.hand.withDrop());
     }
 
     needsContinuousRedraw() {
         //noinspection JSUnresolvedFunction
         return this.toolboxWidget.needsContinuousRedraw(this.hand) ||
-            this.hand.heldGates !== null && new Seq(this.hand.heldGates.gates).any(g => g.isTimeBased());
-        //return this.previewDrop().circuit.hasTimeBasedGates() ||
-        //    this.toolbox.needsContinuousRedrawAt(this.hand);
+            (this.hand.heldGates !== null && new Seq(this.hand.heldGates.gates).any(g => g.isTimeBased()) ||
+            this.circuitWidget.needsContinuousRedraw());
     }
 
     /**
@@ -324,8 +317,8 @@ export default class InspectorWidget {
 
     //exportCircuit() {
     //    return {
-    //        wires: this.circuit.numWires,
-    //        cols: this.circuit.columns.map(arg1(GateColumn.prototype.toJson))
+    //        wires: this.circuitWidget.circuitDefinition.numWires,
+    //        cols: this.circuitWidget.circuitDefinition.columns.map(e => Serializer.fromJson(GateColumn, e))
     //    };
     //}
 
@@ -346,7 +339,7 @@ export default class InspectorWidget {
     //
     //    let gateCols = columns.map(GateColumn.fromJson).map(function (e) {
     //        if (e.gates.length < wireCount) {
-    //            return new GateColumn(e.gates.paddedWithTo(null, wireCount));
+    //            return new GateColumn(e.gates.padded(wireCount, null));
     //        }
     //        if (e.gates.length > wireCount) {
     //            return new GateColumn(e.gates.slice(0, wireCount));

@@ -12,13 +12,25 @@ class Rect {
      * @param {!number} h
      */
     constructor(x, y, w, h) {
-        /** @type {!number} */
+        /**
+         * The x-coordinate of the left of the rectangle.
+         * @type {!number}
+         */
         this.x = x;
-        /** @type {!number} */
+        /**
+         * The y-coordinate of the top of the rectangle.
+         * @type {!number}
+         */
         this.y = y;
-        /** @type {!number} */
+        /**
+         * The width of the rectangle.
+         * @type {!number}
+         */
         this.w = w;
-        /** @type {!number} */
+        /**
+         * The height of the rectangle.
+         * @type {!number}
+         */
         this.h = h;
     }
 

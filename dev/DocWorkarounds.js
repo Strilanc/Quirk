@@ -6,7 +6,11 @@
  * @template K, V
  */
 class Map {
-    constructor() {
+    //noinspection JSUnusedLocalSymbols
+    /**
+     * @param {(*[])=} iterableKeyValuePairs
+     */
+    constructor(iterableKeyValuePairs) {
         /** @type {!int} */
         this.size = 0;
         throw new Error("Just a doc class");
@@ -88,7 +92,9 @@ class Map {
  * This class is just a JSDoc hack to make WebStorm understand the built-in Set type, and should not be used.
  */
 class Set {
+    //noinspection JSUnusedLocalSymbols
     /**
+     * @param {(*[]=} valuesIterable
      * @property {!int} size
      * @property {!function()} clear
      * @property {!function(T) : !Set.<T>} add
@@ -98,7 +104,7 @@ class Set {
      * @property {!function() : !Iterator.<T>} values
      * @template T
      */
-    constructor() {
+    constructor(valuesIterable) {
         throw new Error("Just a doc class")
     }
 
