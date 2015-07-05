@@ -68,21 +68,21 @@ Gates.Named = {
                     return;
                 }
 
-                let p = args.circuitContext.gateColumn.measureProbabilityOn(
-                    args.circuitContext.wireIndex,
-                    args.circuitContext.state);
-                if (p.canDiffer) {
-                    MathPainter.paintConditionalProbabilityBox(
-                        args.painter,
-                        p.probabilityOfCondition,
-                        p.probabilityOfHitGivenCondition,
-                        args.rect);
-                } else {
-                    MathPainter.paintProbabilityBox(
-                        args.painter,
-                        p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
-                        args.rect);
-                }
+                //let p = args.circuitContext.gateColumn.measureProbabilityOn(
+                //    args.circuitContext.wireIndex,
+                //    args.circuitContext.state);
+                //if (p.canDiffer) {
+                //    MathPainter.paintConditionalProbabilityBox(
+                //        args.painter,
+                //        p.probabilityOfCondition,
+                //        p.probabilityOfHitGivenCondition,
+                //        args.rect);
+                //} else {
+                //    MathPainter.paintProbabilityBox(
+                //        args.painter,
+                //        p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
+                //        args.rect);
+                //}
             }),
 
         SwapHalf: new Gate(
@@ -184,7 +184,7 @@ Gates.Named = {
                 let noControlsInColumn =
                     args.circuitContext === null ||
                     args.circuitContext.gateColumn.gates.every(
-                        e => e !== Gates.Special.Control && e !== Gates.Special.AntiControl);
+                        e => e !== Gates.Named.Special.Control && e !== Gates.Named.Special.AntiControl);
                 if (noControlsInColumn || args.isHighlighted) {
                     Gate.DEFAULT_DRAWER(args);
                     return;

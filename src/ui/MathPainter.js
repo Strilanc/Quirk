@@ -10,11 +10,11 @@ import Matrix from "src/math/Matrix.js"
 
 export default class MathPainter {
     static describeProbability(p, fractionalDigits) {
-        if (p >= 0.9999) {
-            return "100%";
+        if (p >= 0.999) {
+            return "ON";
         }
-        if (p <= 0.0001) {
-            return "0%";
+        if (p <= 0.001) {
+            return "OFF";
         }
 
         var v = p * 100;

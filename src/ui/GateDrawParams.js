@@ -1,11 +1,11 @@
 /**
  * @param {!GateColumn} gateColumn
  * @param {!int} wireIndex
- * @param {!QuantumState} state
+ * @param {!CircuitStats} state
  *
  * @property {!GateColumn} gateColumn
  * @property {!int} wireIndex
- * @property {!QuantumState} state
+ * @property {!CircuitStats} state
  *
  * @constructor
  */

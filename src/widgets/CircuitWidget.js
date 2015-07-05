@@ -8,6 +8,7 @@ import Config from "src/Config.js"
 import GateColumn from "src/ui/GateColumn.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
+import { CircuitContext } from "src/ui/GateDrawParams.js"
 
 /** @type {!number} */
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
@@ -366,7 +367,8 @@ class CircuitWidget {
      * @param {!number} time
      */
     drawCircuitOperation(painter, gateColumn, columnIndex, hand, time) {
-        //this.drawColumnControlWires(painter, gateColumn, columnIndex, state);
+        let state = CircuitStats.fromCircuitAtTime(this.circuitDefinition, time);
+        this.drawColumnControlWires(painter, gateColumn, columnIndex);
 
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let b = this.gateRect(i, columnIndex);
@@ -378,46 +380,45 @@ class CircuitWidget {
             let gate = gateColumn.gates[i];
 
             let canGrab = new Seq(hand.hoverPoints()).any(pt => b.containsPoint(pt));
-            gate.paint(painter, b, false, canGrab, time, null); //new CircuitContext(gateColumn, i, state));
+            gate.paint(painter, b, false, canGrab, time, new CircuitContext(gateColumn, i, state));
         }
     }
 
-    ///**
-    // * @param {!Painter} painter
-    // * @param {!GateColumn} gateColumn
-    // * @param {!int} columnIndex
-    // * @param {!QuantumState} state
-    // */
-    //drawColumnControlWires(painter, gateColumn, columnIndex, state) {
-    //    let hasControls = gateColumn.gates.indexOf(Gate.CONTROL) > -1;
-    //    let hasAntiControls = gateColumn.gates.indexOf(Gate.ANTI_CONTROL) > -1;
-    //    let hasSwaps = gateColumn.gates.indexOf(Gates.Named.Special.SwapHalf) > -1;
-    //
-    //    if (!hasControls && !hasAntiControls && !hasSwaps) {
-    //        return;
-    //    }
-    //
-    //    let masks = gateColumn.masks();
-    //    let p = state.probability(masks.targetMask, masks.inclusionMask);
-    //    let minIndex;
-    //    let maxIndex;
-    //    for (let i = 0; i < gateColumn.gates.length; i++) {
-    //        if (gateColumn.gates[gateColumn.gates.length - 1 - i] !== null) {
-    //            minIndex = gateColumn.gates.length - 1 - i;
-    //        }
-    //        if (gateColumn.gates[i] !== null) {
-    //            maxIndex = i;
-    //        }
-    //    }
-    //    let x = this.opRect(columnIndex).center().x;
-    //    let y1 = this.wireRect(minIndex).center().y;
-    //    let y2 = this.wireRect(maxIndex).center().y;
-    //    painter.strokeLine(new Point(x, y1), new Point(x, y2));
-    //
-    //    painter.ctx.globalAlpha = Config.CONTROL_WIRE_ACTIVE_GLOW_ALPHA * p;
-    //    painter.fillRect(new Rect(x - 3, y1, 6, y2 - y1), Config.CONTROL_WIRE_ACTIVE_GLOW_COLOR);
-    //    painter.ctx.globalAlpha = 1;
-    //}
+    /**
+     * @param {!Painter} painter
+     * @param {!GateColumn} gateColumn
+     * @param {!int} columnIndex
+     */
+    drawColumnControlWires(painter, gateColumn, columnIndex) {
+        let hasControls = gateColumn.gates.indexOf(Gates.Named.Special.Control) > -1;
+        let hasAntiControls = gateColumn.gates.indexOf(Gates.Named.Special.AntiControl) > -1;
+        let hasSwaps = gateColumn.gates.indexOf(Gates.Named.Special.SwapHalf) > -1;
+
+        if (!hasControls && !hasAntiControls && !hasSwaps) {
+            return;
+        }
+
+        //let masks = gateColumn.masks();
+        //let p = state.probability(masks.targetMask, masks.inclusionMask);
+        let minIndex;
+        let maxIndex;
+        for (let i = 0; i < gateColumn.gates.length; i++) {
+            if (gateColumn.gates[gateColumn.gates.length - 1 - i] !== null) {
+                minIndex = gateColumn.gates.length - 1 - i;
+            }
+            if (gateColumn.gates[i] !== null) {
+                maxIndex = i;
+            }
+        }
+        let x = this.opRect(columnIndex).center().x;
+        let y1 = this.wireRect(minIndex).center().y;
+        let y2 = this.wireRect(maxIndex).center().y;
+        painter.strokeLine(new Point(x, y1), new Point(x, y2));
+
+        //painter.ctx.globalAlpha = Config.CONTROL_WIRE_ACTIVE_GLOW_ALPHA * p;
+        //painter.fillRect(new Rect(x - 3, y1, 6, y2 - y1), Config.CONTROL_WIRE_ACTIVE_GLOW_COLOR);
+        //painter.ctx.globalAlpha = 1;
+    }
 
     /**
      * @param {!Hand} hand
