@@ -320,7 +320,7 @@ export class SuperpositionReadNode {
             return Seq.naturals().
                 map(i => 4 << i).
                 takeWhile(i => i < floats.length).
-                map(i => floats[i]).
+                map(i => 1 - floats[i]).
                 toArray();
         });
     };

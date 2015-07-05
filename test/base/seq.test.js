@@ -660,6 +660,29 @@ suite.test("ifThen", () => {
     assertThat(new Seq([1, 2, 3]).ifThen(true, s => s.map(e => e * 2))).iteratesAs(2, 4, 6);
 });
 
+suite.test("partitioned", () => {
+    assertThrows(() => new Seq([]).partitioned(-1));
+    assertThrows(() => new Seq([]).partitioned(0));
+
+    assertThat(new Seq([]).partitioned(1)).iteratesAs();
+
+    assertThat(new Seq(["a"]).partitioned(1)).iteratesAs(["a"]);
+    assertThat(new Seq(["a"]).partitioned(2)).iteratesAs(["a"]);
+
+    assertThat(new Seq(["a", "b"]).partitioned(1)).iteratesAs(["a"], ["b"]);
+    assertThat(new Seq(["a", "b"]).partitioned(2)).iteratesAs(["a", "b"]);
+    assertThat(new Seq(["a", "b"]).partitioned(3)).iteratesAs(["a", "b"]);
+
+    assertThat(new Seq(["a", "b", "c"]).partitioned(1)).iteratesAs(["a"], ["b"], ["c"]);
+    assertThat(new Seq(["a", "b", "c"]).partitioned(2)).iteratesAs(["a", "b"], ["c"]);
+    assertThat(new Seq(["a", "b", "c"]).partitioned(3)).iteratesAs(["a", "b", "c"]);
+
+    assertThat(new Seq(["a", "b", "c", "d"]).partitioned(1)).iteratesAs(["a"], ["b"], ["c"], ["d"]);
+    assertThat(new Seq(["a", "b", "c", "d"]).partitioned(2)).iteratesAs(["a", "b"], ["c", "d"]);
+    assertThat(new Seq(["a", "b", "c", "d"]).partitioned(3)).iteratesAs(["a", "b", "c"], ["d"]);
+    assertThat(new Seq(["a", "b", "c", "d"]).partitioned(4)).iteratesAs(["a", "b", "c", "d"]);
+});
+
 suite.test("toMap", () => {
     assertThat(new Seq([]).toMap(() => { throw new Error(); }, () => { throw new Error(); })).isEqualTo(new Map());
     assertThat(new Seq([2]).toMap(e => e * e, e => e)).isEqualTo(new Map([[4, 2]]));

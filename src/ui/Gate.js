@@ -145,6 +145,10 @@ export default class Gate {
             time,
             circuitContext));
     }
+
+    toString() {
+        return `Gate(${this.symbol})`;
+    }
 }
 
 /**

@@ -8,8 +8,11 @@ import CircuitDefinition from "src/ui/CircuitDefinition.js"
 import ToolboxWidget from "src/widgets/ToolboxWidget.js"
 import Config from "src/Config.js"
 import Rect from "src/base/Rect.js"
+import Matrix from "src/math/Matrix.js"
 import Painter from "src/ui/Painter.js"
+import MathPainter from "src/ui/MathPainter.js"
 import Hand from "src/ui/Hand.js"
+import CircuitStats from "src/ui/CircuitStats.js"
 
 export default class InspectorWidget {
     /**
@@ -72,25 +75,29 @@ export default class InspectorWidget {
             Hand.EMPTY);
     }
 
-    ///**
-    // * @param {!number} time
-    // * @param {!Painter} painter
-    // * @private
-    // */
-    //paintOutput(painter, time) {
-    //    // Wire probabilities
-    //    this.circuit.drawRightHandPeekGates(painter, time);
+    /**
+     * @param {!number} time
+     * @param {!Painter} painter
+     * @private
+     */
+    paintOutput(painter, time) {
+        // Wire probabilities
+        this.circuitWidget.drawRightHandPeekGates(painter, time);
     //
     //    //let factors = this.circuit.getOutput().contiguousFactorization();
     //    //for (let i = 0; i < factors.length; i++) {
     //    //    painter.paintQuantumStateAsGrid(factors[i], this.focusedStateHintArea.leftHalf().topHalf().withX(i * this.focusedOperationHintArea.w*0.6));
     //    //}
     //
-    //    // State amplitudes
-    //    painter.paintQuantumStateAsLabelledGrid(
-    //        this.circuit.getOutput(time),
-    //        this.outputStateHintArea,
-    //        this.circuit.getLabels());
+        // State amplitudes
+        let final = CircuitStats.fromCircuitAtTime(this.circuitWidget.circuitDefinition, time);
+        let w = 1 << Math.ceil(this.circuitWidget.circuitDefinition.numWires/2);
+        let amps = new Matrix(new Seq(final.finalState).partitioned(w).toArray());
+        MathPainter.paintMatrix(painter, amps, this.outputStateHintArea, []);
+        //painter.paintQuantumStateAsLabelledGrid(
+        //    this.circuit.getOutput(time),
+        //    this.outputStateHintArea,
+        //    this.circuit.getLabels());
     //
     //    painter.paintMatrix(
     //        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length, time),
@@ -123,7 +130,7 @@ export default class InspectorWidget {
     //    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _
     //    //    ]),
     //    //    this.cumulativeOperationHintArea);
-    //}
+    }
 
     ///**
     // * @param {!Painter} painter
@@ -172,7 +179,7 @@ export default class InspectorWidget {
 
         //this.paintFocus(painter, time);
         this.circuitWidget.paint(painter, this.hand, time);
-        //this.paintOutput(painter, time);
+        this.paintOutput(painter, time);
         this.toolboxWidget.paint(painter, time, this.hand.hoverPoints());
         this.paintHand(painter, time);
     }
@@ -233,9 +240,9 @@ export default class InspectorWidget {
         let circuit = this.circuitWidget;
 
         hand = this.toolboxWidget.tryGrab(hand);
-        //let x = circuit.tryGrab(hand);
-        //hand = x.newHand;
-        //circuit = x.newCircuit;
+        let x = circuit.tryGrab(hand);
+        hand = x.newHand;
+        circuit = x.newCircuit;
 
         return new InspectorWidget(
             this.drawArea,

@@ -6,6 +6,8 @@ import CircuitDefinition from "src/ui/CircuitDefinition.js"
 import CircuitStats from "src/ui/CircuitStats.js"
 import Config from "src/Config.js"
 import GateColumn from "src/ui/GateColumn.js"
+import Gates from "src/ui/Gates.js"
+import MathPainter from "src/ui/MathPainter.js"
 
 /** @type {!number} */
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
@@ -292,9 +294,9 @@ class CircuitWidget {
     //    let probabilities = this.scanProbabilities(time);
     //    let entanglementMeasures = this.scanPerWireEntanglementMeasure(time);
     //    for (let r = 0; r < this.circuitDefinition.numWires; r++) {
-    //        for (let c = 0; c <= this.columns.length; c++) {
+    //        for (let c = 0; c <= this.circuitDefinition.columns.length; c++) {
     //            let x1 = c === 0 ? this.area.x + 30 : this.gateRect(r, c - 1).center().x;
-    //            let x2 = c === this.columns.length ? this.wireRect(r).right() : this.gateRect(r, c).center().x;
+    //            let x2 = c === this.circuitDefinition.columns.length ? this.wireRect(r).right() : this.gateRect(r, c).center().x;
     //            let y = this.wireRect(r).center().y;
     //            let w = 3;
     //            let we = 6;
@@ -389,7 +391,7 @@ class CircuitWidget {
     //drawColumnControlWires(painter, gateColumn, columnIndex, state) {
     //    let hasControls = gateColumn.gates.indexOf(Gate.CONTROL) > -1;
     //    let hasAntiControls = gateColumn.gates.indexOf(Gate.ANTI_CONTROL) > -1;
-    //    let hasSwaps = gateColumn.gates.indexOf(Gate.SWAP_HALF) > -1;
+    //    let hasSwaps = gateColumn.gates.indexOf(Gates.Named.Special.SwapHalf) > -1;
     //
     //    if (!hasControls && !hasAntiControls && !hasSwaps) {
     //        return;
@@ -463,53 +465,57 @@ class CircuitWidget {
             this.wireLabeller);
     }
 
-    ///**
-    // * @param {!Hand} hand
-    // * @returns {!{newCircuit: !Circuit, newHand: !Hand}}
-    // */
-    //tryGrab(hand) {
-    //    if (hand.pos === null) {
-    //        return {newCircuit: this, newHand: hand};
-    //    }
-    //
-    //    let possibleCol = this.findExistingOpColumnAt(Util.notNull(hand.pos));
-    //    if (possibleCol === null) {
-    //        return {newCircuit: this, newHand: hand};
-    //    }
-    //
-    //    let c = Util.notNull(possibleCol);
-    //    let r = Util.notNull(this.findWireAt(Util.notNull(hand.pos)));
-    //    if (!this.gateRect(r, c).containsPoint(Util.notNull(hand.pos)) || this.columns[c].gates[r] === null) {
-    //        return {newCircuit: this, newHand: hand};
-    //    }
-    //
-    //    let newCol = this.columns[c].gates.clone();
-    //    let gate = newCol[r];
-    //    newCol[r] = null;
-    //    let newGateBlock = [gate];
-    //
-    //    let remainingSwap = newCol.indexOf(Gate.SWAP_HALF);
-    //    //let isAnchor = gate.isAnchor() &&
-    //    //    newCol.filter(function (e) { return e !== null && e.isAnchor(); }).length === 1;
-    //
-    //    if (gate === Gate.SWAP_HALF && remainingSwap !== -1) {
-    //        newCol[remainingSwap] = null;
-    //        while (newGateBlock.length < Math.abs(remainingSwap - r)) {
-    //            newGateBlock.push(null);
-    //        }
-    //        newGateBlock.push(Gate.SWAP_HALF);
-    //    }
-    //
-    //    return {
-    //        newCircuit: new Circuit(
-    //            this.area,
-    //            this.circuitDefinition.numWires,
-    //            this.columns.withItemReplacedAtBy(c, new GateColumn(newCol)),
-    //            null,
-    //            this.wireLabeller),
-    //        newHand: hand.withHeldGate(new GateBlock(newGateBlock), 0)
-    //    };
-    //}
+    /**
+     * @param {!Hand} hand
+     * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     */
+    tryGrab(hand) {
+        if (hand.pos === null) {
+            return {newCircuit: this, newHand: hand};
+        }
+
+        let possibleCol = this.findExistingOpColumnAt(Util.notNull(hand.pos));
+        if (possibleCol === null) {
+            return {newCircuit: this, newHand: hand};
+        }
+
+        let c = Util.notNull(possibleCol);
+        let r = Util.notNull(this.findWireAt(Util.notNull(hand.pos)));
+        if (!this.gateRect(r, c).containsPoint(Util.notNull(hand.pos)) || this.circuitDefinition.columns[c].gates[r] === null) {
+            return {newCircuit: this, newHand: hand};
+        }
+
+        let gate = this.circuitDefinition.columns[c].gates[r];
+        let remainingGates = new Seq(this.circuitDefinition.columns[c].gates).toArray();
+        remainingGates[r] = null;
+        let grabbedGates = [gate];
+
+        //let isAnchor = gate.isAnchor() &&
+        //    newCol.filter(function (e) { return e !== null && e.isAnchor(); }).length === 1;
+
+        let remainingSwap = remainingGates.indexOf(Gates.Named.Special.SwapHalf);
+        let grabInset = 0;
+        if (gate === Gates.Named.Special.SwapHalf && remainingSwap !== -1) {
+            remainingGates[remainingSwap] = null;
+            while (grabbedGates.length < Math.abs(remainingSwap - r)) {
+                grabbedGates.push(null);
+            }
+            grabbedGates.push(Gates.Named.Special.SwapHalf);
+            grabInset = Math.max(0, r - remainingSwap);
+        }
+
+        let newCols = new Seq(this.circuitDefinition.columns).
+            withOverlayedItem(c, new GateColumn(remainingGates)).
+            toArray();
+        return {
+            newCircuit: new CircuitWidget(
+                this.area,
+                this.circuitDefinition.withColumns(newCols),
+                null,
+                this.wireLabeller),
+            newHand: hand.withHeldGates(new GateColumn(grabbedGates), grabInset)
+        };
+    }
 
     /**
      * @returns {!boolean}
@@ -520,21 +526,20 @@ class CircuitWidget {
                         g => g !== null && g.isTimeBased()));
     }
 
-    ///**
-    // * Draws a peek gate on each wire at the right-hand side of the circuit.
-    // *
-    // * @param {!Painter} painter
-    // * @param {!number} time
-    // */
-    //drawRightHandPeekGates(painter, time) {
-    //    let left = this.area.x + this.area.w - Config.GATE_RADIUS * 2 - CIRCUIT_OP_RIGHT_SPACING;
-    //    let out = this.getOutput(time);
-    //    for (let i = 0; i < this.circuitDefinition.numWires; i++) {
-    //        painter.paintProbabilityBox(
-    //            out.probability(1 << i, 1 << i),
-    //            this.gateRect(i, 0).withX(left));
-    //    }
-    //}
+    /**
+     * Draws a peek gate on each wire at the right-hand side of the circuit.
+     *
+     * @param {!Painter} painter
+     * @param {!number} time
+     */
+    drawRightHandPeekGates(painter, time) {
+        let state = CircuitStats.fromCircuitAtTime(this.circuitDefinition, time);
+        let left = this.area.x + this.area.w - Config.GATE_RADIUS * 2 - CIRCUIT_OP_RIGHT_SPACING;
+        let p = new Seq(state.wireProbabilities).last();
+        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
+            MathPainter.paintProbabilityBox(painter, p[i], this.gateRect(i, 0).withX(left));
+        }
+    }
 }
 
 CircuitWidget.DEFAULT_WIRE_LABELLER = CircuitWidget.makeWireLabeller(1);

@@ -908,6 +908,33 @@ class Seq {
     };
 
     /**
+     * Groups elements into arrays of the given size (except for the last partition, which may be smaller) and yields
+     * the groups instead of individual items.
+     * @param {!int} partitionSize
+     * @returns {!Seq.<!(T[])>}
+     * @template T
+     */
+    partitioned(partitionSize) {
+        if (partitionSize <= 0) {
+            throw new Error("need partitionSize > 0");
+        }
+        let seq = this;
+        return Seq.fromGenerator(function*() {
+            let buffer = [];
+            for (let item of seq) {
+                buffer.push(item);
+                if (buffer.length >= partitionSize) {
+                    yield buffer;
+                    buffer = [];
+                }
+            }
+            if (buffer.length > 0) {
+                yield buffer;
+            }
+        });
+    }
+
+    /**
      * Iterates elements reachable by starting from the given sequence and applying the given neighbor yielding function
      * to known nodes.
      * @param {!function(T) : !(T[])} neighborSelector

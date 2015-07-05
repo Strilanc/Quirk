@@ -7,22 +7,37 @@ import Matrix from "src/math/Matrix.js"
 import SuperpositionNode from "src/quantum/SuperpositionNode.js"
 import PipelineNode from "src/quantum/PipelineNode.js"
 
+let cached = [undefined, undefined, undefined];
+
 export default class CircuitStats{
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!(!number[])} wireProbabilities
-     * @param {!Matrix} finalState
-     * @property {!CircuitDefinition} circuitDefinition
-     * @property {!(!number[])} wireProbabilities
-     * @property {!Matrix} finalState
+     * @param {!((!Complex)[])} finalState
      */
     constructor(circuitDefinition, wireProbabilities, finalState) {
+        /**
+         * The circuit that these stats apply to.
+         * @type {!CircuitDefinition}
+         */
         this.circuitDefinition = circuitDefinition;
+        /**
+         * Probability that each wire is on, individually, at each slice.
+         * @type {!(!number[])}
+         */
         this.wireProbabilities = wireProbabilities;
+        /**
+         * The output quantum superposition.
+         * @type {!((!Complex)[])}
+         */
         this.finalState = finalState;
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
+        if (cached[0] === circuitDefinition && cached[1] === time) {
+            return cached[2];
+        }
+
         let state = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
         let p = [];
         p.push(state.controlProbabilityCombinations(0));
@@ -43,6 +58,10 @@ export default class CircuitStats{
         let r2 = PipelineNode.computePipeline(new Seq(x1).concat([x2]).toArray());
         let wireProbabilities = r2.slice(0, r2.length - 1);
         let final = r2[r2.length - 1];
-        return new CircuitStats(circuitDefinition, wireProbabilities, final);
+
+        cached[0] = circuitDefinition;
+        cached[1] = time;
+        cached[2] = new CircuitStats(circuitDefinition, wireProbabilities, final);
+        return cached[2];
     }
 }
