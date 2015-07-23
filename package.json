@@ -1,18 +1,25 @@
 {
-  "name" : "ToyQuantumCircuitInspector",
-  "title" : "Toy Quantum Circuit Inspector",
-  "version" : "0.1.0",
+  "name": "ToyQuantumCircuitInspector",
+  "title": "Toy Quantum Circuit Inspector",
+  "version": "0.1.0",
   "homepage": "https://github.com/Strilanc/Quantum-Circuit-Inspector",
   "bugs": {
     "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector/issues"
   },
   "devDependencies": {
-    "grunt": "0.4.1",
-    "grunt-contrib-concat": "0.1.3",
-    "grunt-contrib-watch" : "0.5.3",
-    "grunt-jstestdriver-phantomjs" : "0.0.7"
+    "grunt": "0.4.4",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-karma": "^0.10.1",
+    "grunt-traceur": "^0.5.1",
+    "traceur": "^0.0.88",
+    "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-firefox-launcher": "^0.1.4"
   },
-  "scripts": { "test": "grunt test" },
+  "scripts": {
+    "test": "grunt test"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector.git"
