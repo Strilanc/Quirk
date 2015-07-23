@@ -178,55 +178,27 @@ export default class SuperpositionNode {
     };
 
     /**
-     * Performs a (very) naive bin packing of the given sizes of boxes into a bin with power-of-2 width and height.
-     *
-     * Current strategy is to greedily choose to grow a new row or column, then greedily place new rects along it until
-     * the new col/row extends along the whole shape so far. Definitely not optimal, unless the shapes are all the same
-     * size.
+     * Figures out how large of a texture is needed to aggregate all the desired results, and the offset where those
+     * results will end up in the output.
      *
      * @param {!Map.<K, !{width: !int, height: !int}>} sizeMap
-     * @returns {!{width: !int, height: !int, placeMap: !Map.<K, !Rect>}}
+     * @returns {!{width: !int, height: !int, placeMap: !Map.<K, !int>}}
      * @template K
      */
-    static packRects(sizeMap) {
-        let width = 0;
-        let height = 0;
-        let growingNewColumnElseRow = false;
-        let growRootOffset = 0;
-        let grownLength = 0;
+    static planPackingIntoSingleTexture(sizeMap) {
+        let total = 0;
 
         let placeMap = new Map();
         for (let [key, size] of sizeMap) {
             //noinspection JSUnusedAssignment
             let {width: w, height: h} = size;
-            let x, y, rechoose;
-            if (growingNewColumnElseRow) {
-                x = growRootOffset;
-                y = grownLength;
-                grownLength += h;
-                rechoose = grownLength >= height;
-            } else {
-                x = grownLength;
-                y = growRootOffset;
-                grownLength += w;
-                rechoose = grownLength >= width;
-            }
-
-            let r = new Rect(x, y, w, h);
             //noinspection JSUnusedAssignment
-            placeMap.set(key, r);
-            width = Math.max(width, r.right());
-            height = Math.max(height, r.bottom());
-
-            if (rechoose) {
-                growingNewColumnElseRow = width <= height;
-                grownLength = 0;
-                growRootOffset = growingNewColumnElseRow ? width : height;
-            }
+            placeMap.set(key, total);
+            total += w * h;
         }
 
-        width = Util.ceilingPowerOf2(width);
-        height = Util.ceilingPowerOf2(height);
+        let width = Util.ceilingPowerOf2(Math.ceil(Math.sqrt(total)));
+        let height = Util.ceilingPowerOf2(Math.ceil(total / width));
 
         return {width, height, placeMap};
     };
@@ -236,24 +208,25 @@ export default class SuperpositionNode {
      * @returns {!(!SuperpositionReadNode[])}
      */
     static mergedReadFloats(superpositionNodes) {
-        let pack = SuperpositionNode.packRects(new Seq(superpositionNodes).toMap(
-            e => e.pipelineNode.id,
-            e => e));
+        let sizes = new Seq(superpositionNodes).keyedBy(e => e.pipelineNode.id);
+        let plan = SuperpositionNode.planPackingIntoSingleTexture(sizes);
 
-        let seedCombined = new SuperpositionNode(pack.width, pack.height, [], () => {
-            let t = allocTexture(pack.width, pack.height);
+        let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
+            let t = allocTexture(plan.width, plan.height);
             Shades.renderUniformColor(getSharedDirector(), t, 0, 0, 0, 0);
             return t;
         });
         let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
-            pack.width,
-            pack.height,
+            plan.width,
+            plan.height,
             [aNode.pipelineNode, eNode.pipelineNode],
             textures => {
+                // Note: this would be more efficient if the merging was done in a balanced way.
+                // This will do for now, despite being quadratic instead of n log n.
                 let [a, e] = textures;
-                let t = allocTexture(pack.width, pack.height);
-                let r = pack.placeMap.get(eNode.pipelineNode.id);
-                Shades.renderOverlayed(getSharedDirector(), t, r.x, r.y, e, a);
+                let t = allocTexture(plan.width, plan.height);
+                let r = plan.placeMap.get(eNode.pipelineNode.id);
+                Shades.renderLinearOverlay(getSharedDirector(), t, r, e, a);
                 return t;
             });
 
@@ -263,9 +236,19 @@ export default class SuperpositionNode {
         return new Seq(superpositionNodes).map(
             e => new SuperpositionReadNode(new PipelineNode([combined.floatsNode], inputs => {
                 let floats = inputs[0];
-                let pixelRect = pack.placeMap.get(e.pipelineNode.id);
-                let floatRect = pixelRect.withX(pixelRect.x * 4).withW(pixelRect.w * 4);
-                return Util.sliceRectFromFlattenedArray(pack.width * 4, floats, floatRect);
+                let offset = plan.placeMap.get(e.pipelineNode.id) * 4;
+                let length = e.width * e.height * 4;
+
+                if (floats.slice) {
+                    return floats.slice(offset, offset + length);
+                }
+
+                // The above fails in chrome, so we need this fallback. For now.
+                let result = new Float32Array(length);
+                for (let i = 0; i < length; i++) {
+                    result[i] = floats[i + offset];
+                }
+                return result;
             }))).toArray();
     }
 }

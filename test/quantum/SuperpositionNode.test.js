@@ -118,33 +118,33 @@ suite.webGlTest("controlProbabilityCombinations", () => {
         8.25, 6, 1, 1]);
 });
 
-suite.webGlTest("packRects", () => {
-    assertThat(SuperpositionNode.packRects(new Map())).isEqualTo({
+suite.webGlTest("planPackingIntoSingleTexture", () => {
+    assertThat(SuperpositionNode.planPackingIntoSingleTexture(new Map())).isEqualTo({
         width: 1,
         height: 1,
         placeMap: new Map()});
 
-    assertThat(SuperpositionNode.packRects(new Map([["a", {width: 8, height: 4}]]))).isEqualTo({
+    assertThat(SuperpositionNode.planPackingIntoSingleTexture(new Map([["a", {width: 8, height: 4}]]))).isEqualTo({
         width: 8,
         height: 4,
         placeMap: new Map([
-            ["a", new Rect(0, 0, 8, 4)]
+            ["a", 0]
         ])
     });
 
-    assertThat(SuperpositionNode.packRects(new Map([
+    assertThat(SuperpositionNode.planPackingIntoSingleTexture(new Map([
         ["a", {width: 8, height: 4}],
         ["b", {width: 8, height: 4}]
     ]))).isEqualTo({
         width: 8,
         height: 8,
         placeMap: new Map([
-            ["a", new Rect(0, 0, 8, 4)],
-            ["b", new Rect(0, 4, 8, 4)]
+            ["a", 0],
+            ["b", 32]
         ])
     });
 
-    assertThat(SuperpositionNode.packRects(new Map([
+    assertThat(SuperpositionNode.planPackingIntoSingleTexture(new Map([
         ["a", {width: 8, height: 4}],
         ["b", {width: 8, height: 4}],
         ["c", {width: 8, height: 4}],
@@ -155,16 +155,16 @@ suite.webGlTest("packRects", () => {
         width: 16,
         height: 16,
         placeMap: new Map([
-            ["a", new Rect(0, 0, 8, 4)],
-            ["b", new Rect(0, 4, 8, 4)],
-            ["c", new Rect(8, 0, 8, 4)],
-            ["d", new Rect(8, 4, 8, 4)],
-            ["e", new Rect(0, 8, 8, 4)],
-            ["f", new Rect(8, 8, 8, 4)]
+            ["a", 0],
+            ["b", 32],
+            ["c", 64],
+            ["d", 96],
+            ["e", 128],
+            ["f", 160]
         ])
     });
 
-    assertThat(SuperpositionNode.packRects(new Map([
+    assertThat(SuperpositionNode.planPackingIntoSingleTexture(new Map([
         ["a", {width: 8, height: 4}],
         ["b", {width: 8, height: 8}],
         ["c", {width: 8, height: 4}],
@@ -175,26 +175,26 @@ suite.webGlTest("packRects", () => {
         width: 16,
         height: 16,
         placeMap: new Map([
-            ["a", new Rect(0, 0, 8, 4)],
-            ["b", new Rect(0, 4, 8, 8)],
-            ["c", new Rect(8, 0, 8, 4)],
-            ["d", new Rect(8, 4, 8, 4)],
-            ["e", new Rect(8, 8, 8, 4)],
-            ["f", new Rect(0, 12, 8, 4)]
+            ["a", 0],
+            ["b", 32],
+            ["c", 96],
+            ["d", 128],
+            ["e", 160],
+            ["f", 192]
         ])
     });
 
-    assertThat(SuperpositionNode.packRects(new Map([
+    assertThat(SuperpositionNode.planPackingIntoSingleTexture(new Map([
         ["a", {width: 4, height: 4}],
         ["b", {width: 8, height: 8}],
         ["c", {width: 4, height: 4}]
     ]))).isEqualTo({
         width: 16,
-        height: 16,
+        height: 8,
         placeMap: new Map([
-            ["a", new Rect(0, 0, 4, 4)],
-            ["b", new Rect(4, 0, 8, 8)],
-            ["c", new Rect(0, 8, 4, 4)]
+            ["a", 0],
+            ["b", 16],
+            ["c", 80]
         ])
     });
 });
