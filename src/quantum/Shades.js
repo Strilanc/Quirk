@@ -84,6 +84,31 @@ export default class Shades {
     }
 
     /**
+     * Renders a texture with the given background texture, but with the given foreground texture's data scanned
+     * linearly into the background.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!int} offset
+     * @param {!WglTexture} foregroundTexture
+     * @param {!WglTexture} backgroundTexture
+     */
+    static renderLinearOverlay(
+            director,
+            destinationTexture,
+            offset,
+            foregroundTexture,
+            backgroundTexture) {
+        director.render(destinationTexture, GLSL_LINEAR_OVERLAY, [
+            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
+            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
+            WglArg.texture("backgroundTexture", backgroundTexture, 0),
+            WglArg.texture("foregroundTexture", foregroundTexture, 1),
+            WglArg.int("offset", offset)
+        ]);
+    }
+
+    /**
      * Renders a control mask onto the destination texture, used elsewhere for determining whether or not an operation
      * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
      * blocked.
@@ -362,6 +387,36 @@ const GLSL_OVERLAY = new WglShader(`
         } else {
           uv = gl_FragCoord.xy / backgroundTextureSize;
           gl_FragColor = texture2D(backgroundTexture, uv);
+        }
+    }`);
+
+const GLSL_LINEAR_OVERLAY = new WglShader(`
+    /** The size of the covered texture. */
+    uniform vec2 backgroundTextureSize;
+
+    /** The size of the covering texture. */
+    uniform vec2 foregroundTextureSize;
+
+    /** The larger covered texture. */
+    uniform sampler2D backgroundTexture;
+
+    /** The smaller covering texture that can be positioned. */
+    uniform sampler2D foregroundTexture;
+
+    /** The starting index of the range where the foreground data should be copied. */
+    uniform int offset;
+
+    void main() {
+        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float i = pixelXy.x + pixelXy.y * backgroundTextureSize.x - float(offset);
+        if (i >= 0.0 && i < foregroundTextureSize.x * foregroundTextureSize.y) {
+            float x = mod(i, foregroundTextureSize.x);
+            float y = (i - x) / foregroundTextureSize.x;
+            vec2 fore_uv = vec2(x + 0.5, y + 0.5) / foregroundTextureSize.xy;
+            gl_FragColor = texture2D(foregroundTexture, fore_uv);
+        } else {
+            vec2 back_uv = gl_FragCoord.xy / backgroundTextureSize;
+            gl_FragColor = texture2D(backgroundTexture, back_uv);
         }
     }`);
 

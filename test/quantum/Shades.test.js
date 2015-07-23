@@ -162,6 +162,64 @@ suite.webGlTest("renderOverlayed", () => {
     ]));
 });
 
+suite.webGlTest("renderLinearOverlay", () => {
+    let director = new WglDirector();
+
+    let fore = new WglTexture(2, 2);
+    let back = new WglTexture(4, 4);
+    Shades.renderPixelColorData(director, fore, new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray()));
+    Shades.renderPixelColorData(director, back, new Float32Array(Seq.range(4*4*4).map(e => -e).toArray()));
+
+    let out = new WglTexture(4, 4);
+    Shades.renderLinearOverlay(director, out, 0, fore, back);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915,
+        -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
+        -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
+        -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
+    ]));
+
+    Shades.renderLinearOverlay(director, out, 1, fore, back);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        -0,  -1,  -2,  -3,  900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911,
+        912, 913, 914, 915, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
+        -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
+        -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
+    ]));
+
+    Shades.renderLinearOverlay(director, out, 2, fore, back);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        -0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,  900, 901, 902, 903, 904, 905, 906, 907,
+        908, 909, 910, 911, 912, 913, 914, 915, -24, -25, -26, -27, -28, -29, -30, -31,
+        -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
+        -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
+    ]));
+
+    Shades.renderLinearOverlay(director, out, 4, fore, back);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
+        900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911, 912, 913, 914, 915,
+        -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
+        -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
+    ]));
+
+    Shades.renderLinearOverlay(director, out, 12, fore, back);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
+        -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
+        -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
+        900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911, 912, 913, 914, 915
+    ]));
+
+    Shades.renderLinearOverlay(director, out, 13, fore, back);
+    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+        -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
+        -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
+        -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
+        -48, -49, -50, -51, 900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911
+    ]));
+});
+
 suite.webGlTest("renderSingleBitConstraintControlMask", () => {
     let director = new WglDirector();
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
