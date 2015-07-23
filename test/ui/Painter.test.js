@@ -5,6 +5,13 @@ import Rect from "src/base/Rect.js"
 
 let suite = new Suite("Painter");
 
+suite.test("paintableArea", () => {
+    let c = /** @type !HTMLCanvasElement */ document.createElement("canvas");
+    c.width = 23;
+    c.height = 34;
+    assertThat(new Painter(c).paintableArea()).isEqualTo(new Rect(0, 0, 23, 34));
+});
+
 suite.canvasAppearanceTest("clear", 20, 20, canvas => {
     let painter = new Painter(canvas);
     painter.clear('#123456');
