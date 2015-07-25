@@ -76,13 +76,13 @@ export default class InspectorWidget {
     }
 
     /**
-     * @param {!number} time
      * @param {!Painter} painter
+     * @param {!CircuitStats} stats
      * @private
      */
-    paintOutput(painter, time) {
+    paintOutput(painter, stats) {
         // Wire probabilities
-        this.circuitWidget.drawRightHandPeekGates(painter, time);
+        this.circuitWidget.drawRightHandPeekGates(painter, stats);
     //
     //    //let factors = this.circuit.getOutput().contiguousFactorization();
     //    //for (let i = 0; i < factors.length; i++) {
@@ -90,17 +90,16 @@ export default class InspectorWidget {
     //    //}
     //
         // State amplitudes
-        let final = CircuitStats.fromCircuitAtTime(this.circuitWidget.circuitDefinition, time);
         let w = 1 << Math.ceil(this.circuitWidget.circuitDefinition.numWires/2);
-        let amps = new Matrix(new Seq(final.finalState).partitioned(w).toArray());
+        let amps = new Matrix(new Seq(stats.finalState).partitioned(w).toArray());
         MathPainter.paintMatrix(painter, amps, this.outputStateHintArea, []);
         //painter.paintQuantumStateAsLabelledGrid(
-        //    this.circuit.getOutput(time),
+        //    this.circuit.getOutput(stats.time),
         //    this.outputStateHintArea,
         //    this.circuit.getLabels());
     //
     //    painter.paintMatrix(
-    //        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length, time),
+    //        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length, stats.time),
     //        this.cumulativeOperationHintArea,
     //        this.hand);
     //
@@ -170,18 +169,17 @@ export default class InspectorWidget {
 
     /**
      * @param {!Painter} painter
-     * @param {!number} time
-     * @params {!Hand} hand
+     * @param {!CircuitStats} stats
      */
-    paint(painter, time) {
+    paint(painter, stats) {
         // Clear
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         //this.paintFocus(painter, time);
-        this.circuitWidget.paint(painter, this.hand, time);
-        this.paintOutput(painter, time);
-        this.toolboxWidget.paint(painter, time, this.hand.hoverPoints());
-        this.paintHand(painter, time);
+        this.circuitWidget.paint(painter, this.hand, stats);
+        this.paintOutput(painter, stats);
+        this.toolboxWidget.paint(painter, stats.time, this.hand.hoverPoints());
+        this.paintHand(painter, stats.time);
     }
 
     /**

@@ -337,11 +337,11 @@ class CircuitWidget {
     /**
      * @param {!Painter} painter
      * @param {!Hand} hand
-     * @param {!number} time
+     * @param {!CircuitStats} stats
      */
-    paint(painter, hand, time) {
+    paint(painter, hand, stats) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
-        //let states = this.scanStates(time);
+        //let states = this.scanStates(stats.time);
 
         //// Draw labelled wires
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
@@ -351,11 +351,11 @@ class CircuitWidget {
             painter.strokeLine(new Point(this.area.x + 30, y), new Point(this.area.right(), y));
         }
 
-        //this.paintWireProbabilityCurves(painter, hand, time);
+        //this.paintWireProbabilityCurves(painter, hand, stats.time);
 
         // Draw operations
         for (let i = 0; i < this.circuitDefinition.columns.length; i++) {
-            this.drawCircuitOperation(painter, this.circuitDefinition.columns[i], i, hand, time);
+            this.drawCircuitOperation(painter, this.circuitDefinition.columns[i], i, hand, stats);
         }
     }
 
@@ -364,10 +364,9 @@ class CircuitWidget {
      * @param {!GateColumn} gateColumn
      * @param {!int} columnIndex
      * @param {!Hand} hand
-     * @param {!number} time
+     * @param {!CircuitStats} stats
      */
-    drawCircuitOperation(painter, gateColumn, columnIndex, hand, time) {
-        let state = CircuitStats.fromCircuitAtTime(this.circuitDefinition, time);
+    drawCircuitOperation(painter, gateColumn, columnIndex, hand, stats) {
         this.drawColumnControlWires(painter, gateColumn, columnIndex);
 
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
@@ -380,7 +379,7 @@ class CircuitWidget {
             let gate = gateColumn.gates[i];
 
             let canGrab = new Seq(hand.hoverPoints()).any(pt => b.containsPoint(pt));
-            gate.paint(painter, b, false, canGrab, time, new CircuitContext(gateColumn, i, state));
+            gate.paint(painter, b, false, canGrab, stats.time, new CircuitContext(gateColumn, i, stats));
         }
     }
 
@@ -531,12 +530,11 @@ class CircuitWidget {
      * Draws a peek gate on each wire at the right-hand side of the circuit.
      *
      * @param {!Painter} painter
-     * @param {!number} time
+     * @param {!CircuitStats} stats
      */
-    drawRightHandPeekGates(painter, time) {
-        let state = CircuitStats.fromCircuitAtTime(this.circuitDefinition, time);
+    drawRightHandPeekGates(painter, stats) {
         let left = this.area.x + this.area.w - Config.GATE_RADIUS * 2 - CIRCUIT_OP_RIGHT_SPACING;
-        let p = new Seq(state.wireProbabilities).last();
+        let p = new Seq(stats.wireProbabilities).last();
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             MathPainter.paintProbabilityBox(painter, p[i], this.gateRect(i, 0).withX(left));
         }

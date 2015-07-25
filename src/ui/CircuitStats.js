@@ -7,20 +7,24 @@ import Matrix from "src/math/Matrix.js"
 import SuperpositionNode from "src/quantum/SuperpositionNode.js"
 import PipelineNode from "src/quantum/PipelineNode.js"
 
-let cached = [undefined, undefined, undefined];
-
 export default class CircuitStats{
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!(!number[])} wireProbabilities
      * @param {!((!Complex)[])} finalState
+     * @param {!number} time
      */
-    constructor(circuitDefinition, wireProbabilities, finalState) {
+    constructor(circuitDefinition, time, wireProbabilities, finalState) {
         /**
          * The circuit that these stats apply to.
          * @type {!CircuitDefinition}
          */
         this.circuitDefinition = circuitDefinition;
+        /**
+         * The time these stats apply to.
+         * @type {!number}
+         */
+        this.time = time;
         /**
          * Probability that each wire is on, individually, at each slice.
          * @type {!(!number[])}
@@ -34,13 +38,9 @@ export default class CircuitStats{
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
-        if (cached[0] === circuitDefinition && cached[1] === time) {
-            return cached[2];
-        }
-
         let state = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
-        let p = [];
-        p.push(state.controlProbabilityCombinations(0));
+        let nodes = [];
+        nodes.push(state.controlProbabilityCombinations(0));
         for (let col of circuitDefinition.columns) {
             let mask = col.controls();
             for (let op of col.singleQubitOperationsAt(time)) {
@@ -49,19 +49,18 @@ export default class CircuitStats{
             for (let op of col.swapPairs()) {
                 state = state.withSwap(op[0], op[1], mask);
             }
-            p.push(state.controlProbabilityCombinations(mask.desiredValueMask));
+            nodes.push(state.controlProbabilityCombinations(mask.desiredValueMask));
         }
-        p.push(state);
-        let r1 = SuperpositionNode.mergedReadFloats(p);
-        let x1 = r1.slice(0, r1.length - 1).map(e => e.asPerQubitProbabilities());
-        let x2 = r1[r1.length - 1].asAmplitudes();
-        let r2 = PipelineNode.computePipeline(new Seq(x1).concat([x2]).toArray());
-        let wireProbabilities = r2.slice(0, r2.length - 1);
-        let final = r2[r2.length - 1];
+        nodes.push(state);
 
-        cached[0] = circuitDefinition;
-        cached[1] = time;
-        cached[2] = new CircuitStats(circuitDefinition, wireProbabilities, final);
-        return cached[2];
+        let merged = SuperpositionNode.mergedReadFloats(nodes);
+
+        let wireProbColsNode = merged.slice(0, merged.length - 1).map(e => e.asPerQubitProbabilities());
+        let finalStateNode = merged[merged.length - 1].asAmplitudes();
+        let nodeResults = PipelineNode.computePipeline(new Seq(wireProbColsNode).concat([finalStateNode]).toArray());
+        let wireProbabilityCols = nodeResults.slice(0, nodeResults.length - 1);
+        let finalState = nodeResults[nodeResults.length - 1];
+
+        return new CircuitStats(circuitDefinition, time, wireProbabilityCols, finalState);
     }
 }

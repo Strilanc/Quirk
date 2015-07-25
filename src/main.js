@@ -114,9 +114,11 @@ redraw = function () {
     canvas.width = canvasDiv.clientWidth;
     canvas.height = canvasDiv.clientHeight;
     let painter = new Painter(canvas);
+    let shown = inspector.previewDrop();
+    let stats = CircuitStats.fromCircuitAtTime(shown.circuitWidget.circuitDefinition, circuitTime);
 
-    inspector.updateArea(painter.paintableArea());
-    inspector.previewDrop().paint(painter, circuitTime);
+    shown.updateArea(painter.paintableArea());
+    shown.paint(painter, stats);
     painter.paintDeferred();
 
     tickWhenAppropriate();

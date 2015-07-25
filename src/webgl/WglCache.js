@@ -98,7 +98,7 @@ export default class WglCache {
             var s = WebGLRenderingContext;
             g.bindBuffer(s.ARRAY_BUFFER, result.positionBuffer);
             g.bufferData(s.ARRAY_BUFFER, positions, s.STATIC_DRAW);
-            // Note: if ARRAY_BUFFER should not be rebound anywhere else.
+            // Note: ARRAY_BUFFER should not be rebound anywhere else.
 
             var indices = new Uint16Array([
                 0, 2, 1,

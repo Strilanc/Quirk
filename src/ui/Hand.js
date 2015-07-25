@@ -3,7 +3,7 @@ import Point from "src/base/Point.js"
 import Gate from "src/ui/Gate.js"
 import GateColumn from "src/ui/GateColumn.js"
 
-export default class Hand {
+class Hand {
     /**
      * @param {?Point} pos
      * @param {?GateColumn} heldGates
@@ -95,5 +95,6 @@ export default class Hand {
         return new Hand(this.pos, heldGates, heldGatesGrabInset);
     }
 }
+export default Hand;
 
 Hand.EMPTY = new Hand(null, null, null);
