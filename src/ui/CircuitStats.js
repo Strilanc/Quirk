@@ -4,8 +4,8 @@ import GateColumn from "src/ui/GateColumn.js"
 import Gate from "src/ui/Gate.js"
 import CircuitDefinition from "src/ui/CircuitDefinition.js"
 import Matrix from "src/math/Matrix.js"
-import SuperpositionNode from "src/quantum/SuperpositionNode.js"
-import PipelineNode from "src/quantum/PipelineNode.js"
+import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
+import PipelineNode from "src/pipeline/PipelineNode.js"
 
 export default class CircuitStats{
     /**
@@ -38,20 +38,20 @@ export default class CircuitStats{
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
-        let state = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
+        let initialState = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
         let nodes = [];
-        nodes.push(state.controlProbabilityCombinations(0));
+        nodes.push(initialState.controlProbabilityCombinations(0));
         for (let col of circuitDefinition.columns) {
             let mask = col.controls();
             for (let op of col.singleQubitOperationsAt(time)) {
-                state = state.withQubitOperationApplied(op.i, op.m, mask)
+                initialState = initialState.withQubitOperationApplied(op.i, op.m, mask)
             }
             for (let op of col.swapPairs()) {
-                state = state.withSwap(op[0], op[1], mask);
+                initialState = initialState.withSwap(op[0], op[1], mask);
             }
-            nodes.push(state.controlProbabilityCombinations(mask.desiredValueMask));
+            nodes.push(initialState.controlProbabilityCombinations(mask.desiredValueMask));
         }
-        nodes.push(state);
+        nodes.push(initialState);
 
         let merged = SuperpositionNode.mergedReadFloats(nodes);
 

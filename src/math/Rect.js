@@ -1,11 +1,10 @@
 import Point from "src/math/Point.js"
 
 /**
- * A 2-d rectangle.
+ * A two dimensional axis-aligned rectangle with defined position and size.
  */
 class Rect {
     /**
-     * A 2-d rectangle.
      * @param {!number} x
      * @param {!number} y
      * @param {!number} w

@@ -1,5 +1,5 @@
 import { Suite, assertThat } from "test/TestUtil.js"
-import PipelineNode from "src/quantum/PipelineNode.js"
+import PipelineNode from "src/pipeline/PipelineNode.js"
 
 let suite = new Suite("PipelineNode");
 

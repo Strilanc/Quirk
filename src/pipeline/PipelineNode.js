@@ -1,6 +1,6 @@
 import WglDirector from "src/webgl/WglDirector.js"
 import WglTexture from "src/webgl/WglTexture.js"
-import Shades from "src/quantum/Shades.js"
+import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Util from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
 import describe from "src/base/Describe.js"
@@ -8,8 +8,14 @@ import describe from "src/base/Describe.js"
 let nextUniqueId = 0;
 
 /**
- * An operation with dependencies and dependents, that can be computed while automatically managing resources via a
- * graph exploration.
+ * An operation with dependencies and dependents, who results can be computed in tandem with other nodes via a graph
+ * exploration of their dependencies.
+ *
+ * This class exists mainly because reading pixel data from textures has terrible latency but good bandwidth, so it's
+ * beneficial to combine many textures into one big one and do a single huge read. All the code that wants to know
+ * texture data needs to cooperate somehow so they read all at once. This class lets that be a two step process:
+ * do a pass where the needed results are collected as PipelineNode instances, then run the pipeline, then do a second
+ * pass where the results are forwarded to where they are needed. It's more complicated than necessary, but it works.
  */
 class PipelineNode {
     /**

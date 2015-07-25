@@ -4,7 +4,7 @@ import Gate from "src/ui/Gate.js"
 import Matrix from "src/math/Matrix.js"
 import Gates from "src/ui/Gates.js"
 import describe from "src/base/Describe.js"
-import ControlMask from "src/quantum/ControlMask.js"
+import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 
 /**
  * A column of gates in a circuit with many qubits.
@@ -114,16 +114,16 @@ class GateColumn {
     }
 
     /**
-     * @returns {!ControlMask}
+     * @returns {!QuantumControlMask}
      */
     controls() {
         return Seq.
             range(this.gates.length).
             map(i =>
-                this.gates[i] === Gates.Named.Special.Control ? ControlMask.fromBitIs(i, true) :
-                this.gates[i] === Gates.Named.Special.AntiControl ? ControlMask.fromBitIs(i, false) :
-                ControlMask.NO_CONTROLS).
-            aggregate(ControlMask.NO_CONTROLS, (a, e) => a.combine(e));
+                this.gates[i] === Gates.Named.Special.Control ? QuantumControlMask.fromBitIs(i, true) :
+                this.gates[i] === Gates.Named.Special.AntiControl ? QuantumControlMask.fromBitIs(i, false) :
+                QuantumControlMask.NO_CONTROLS).
+            aggregate(QuantumControlMask.NO_CONTROLS, (a, e) => a.combine(e));
     }
 
     /**

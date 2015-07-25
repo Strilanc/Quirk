@@ -1,15 +1,15 @@
+import Complex from "src/math/Complex.js"
+import QuantumShaders from "src/pipeline/QuantumShaders.js"
+import Seq from "src/base/Seq.js"
+import PipelineNode from "src/pipeline/PipelineNode.js"
+import Util from "src/base/Util.js"
 import WglDirector from "src/webgl/WglDirector.js"
 import WglTexture from "src/webgl/WglTexture.js"
-import Shades from "src/quantum/Shades.js"
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
-import Rect from "src/math/Rect.js"
-import Complex from "src/math/Complex.js"
-import PipelineNode from "src/quantum/PipelineNode.js"
-import describe from "src/base/Describe.js"
 
 /**
- * Has a pipeline node computing a texture containing amplitudes (or probabilities), and methods for operation on it.
+ * Represents a WebGL texture containing amplitudes or probabilities, to be computed when the pipeline is run.
+ *
+ * Use mergedReadFloats to get pipeline nodes for the pixel data, instead of the not-so-useful textures.
  */
 export default class SuperpositionNode {
 
@@ -58,7 +58,9 @@ export default class SuperpositionNode {
             dataArray[i*4 + 1] = Complex.imagPartOf(amplitudes[i]);
         }
         let qubitCount = Util.bitSize(amplitudes.length - 1);
-        return SuperpositionNode.input(qubitCount, t => Shades.renderPixelColorData(getSharedDirector(), t, dataArray));
+        return SuperpositionNode.input(
+            qubitCount,
+            t => QuantumShaders.renderPixelColorData(getSharedDirector(), t, dataArray));
     };
 
     /**
@@ -72,7 +74,7 @@ export default class SuperpositionNode {
         Util.need(stateIndex >= 0 && stateIndex < (1 << qubitCount), "stateMask >= 0 && stateMask < (1 << qubitCount)");
 
         return SuperpositionNode.input(qubitCount, t =>
-            Shades.renderClassicalState(getSharedDirector(), t, stateIndex));
+            QuantumShaders.renderClassicalState(getSharedDirector(), t, stateIndex));
     };
 
     /**
@@ -80,19 +82,19 @@ export default class SuperpositionNode {
      * state.
      * @param {!int} qubitIndex The index of the qubit to apply the operation to.
      * @param {!Matrix} operation A 2x2 matrix.
-     * @param {!ControlMask} controlMask
+     * @param {!QuantumControlMask} controlMask
      * @returns {!SuperpositionNode}
      */
     withQubitOperationApplied(qubitIndex, operation, controlMask) {
         Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = Shades.renderControlMask(
+            let control = QuantumShaders.renderControlMask(
                 getSharedDirector(),
                 controlMask,
                 allocTexture(this.width, this.height),
                 allocTexture(this.width, this.height));
-            Shades.renderQubitOperation(
+            QuantumShaders.renderQubitOperation(
                 getSharedDirector(),
                 control.available,
                 input[0],
@@ -108,7 +110,7 @@ export default class SuperpositionNode {
      * Returns a texture holding the result of applying a swap operation.
      * @param {!int} qubitIndex1 The index of one of the qubits to swap.
      * @param {!int} qubitIndex2 The index of the other qubit to swap.
-     * @param {!ControlMask} controlMask
+     * @param {!QuantumControlMask} controlMask
      * @returns {!SuperpositionNode}
      */
     withSwap(qubitIndex1, qubitIndex2, controlMask) {
@@ -116,12 +118,12 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = Shades.renderControlMask(
+            let control = QuantumShaders.renderControlMask(
                 getSharedDirector(),
                 controlMask,
                 allocTexture(this.width, this.height),
                 allocTexture(this.width, this.height));
-            Shades.renderSwapOperation(
+            QuantumShaders.renderSwapOperation(
                 getSharedDirector(),
                 control.available,
                 input[0],
@@ -140,7 +142,7 @@ export default class SuperpositionNode {
     probabilities() {
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], inputs => {
             let result = allocTexture(this.width, this.height);
-            Shades.renderProbabilitiesFromAmplitudes(
+            QuantumShaders.renderProbabilitiesFromAmplitudes(
                 getSharedDirector(),
                 result,
                 inputs[0]);
@@ -156,7 +158,7 @@ export default class SuperpositionNode {
      */
     controlProbabilityCombinations(controlDirectionMask) {
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], inputs => {
-            let r = Shades.renderControlCombinationProbabilities(
+            let r = QuantumShaders.renderControlCombinationProbabilities(
                 getSharedDirector(),
                 allocTexture(this.width, this.height),
                 allocTexture(this.width, this.height),
@@ -213,7 +215,7 @@ export default class SuperpositionNode {
 
         let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
             let t = allocTexture(plan.width, plan.height);
-            Shades.renderUniformColor(getSharedDirector(), t, 0, 0, 0, 0);
+            QuantumShaders.renderUniformColor(getSharedDirector(), t, 0, 0, 0, 0);
             return t;
         });
         let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
@@ -226,7 +228,7 @@ export default class SuperpositionNode {
                 let [a, e] = textures;
                 let t = allocTexture(plan.width, plan.height);
                 let r = plan.placeMap.get(eNode.pipelineNode.id);
-                Shades.renderLinearOverlay(getSharedDirector(), t, r, e, a);
+                QuantumShaders.renderLinearOverlay(getSharedDirector(), t, r, e, a);
                 return t;
             });
 
@@ -253,6 +255,9 @@ export default class SuperpositionNode {
     }
 }
 
+/**
+ * Represents an array of amplitudes or probabilities to be computed when the surrounding pipeline is run.
+ */
 export class SuperpositionReadNode {
     /**
      * @param {!PipelineNode<!(!number[])|!Float32Array>} floatsNode

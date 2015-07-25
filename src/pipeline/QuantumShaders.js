@@ -1,11 +1,14 @@
-import U from "src/base/Util.js"
+import Matrix from "src/math/Matrix.js"
+import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglDirector from "src/webgl/WglDirector.js"
-import Matrix from "src/math/Matrix.js"
-import ControlMask from "src/quantum/ControlMask.js"
 
-export default class Shades {
+/**
+ * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
+ */
+export default class QuantumShaders {
     /**
      * Renders the given color components onto the entire destination texture.
      *
@@ -46,7 +49,7 @@ export default class Shades {
      */
     static renderPixelColorData(director, destinationTexture, pixelColorData) {
         let [w, h] = [destinationTexture.width, destinationTexture.height];
-        U.need(pixelColorData.length === w * h * 4, "pixelColorData.length === w * h * 4");
+        Util.need(pixelColorData.length === w * h * 4, "pixelColorData.length === w * h * 4");
 
         director.useRawDataTextureIn(w, h, pixelColorData, texture => {
             director.render(destinationTexture, GLSL_PASS_THROUGH, [
@@ -185,7 +188,7 @@ export default class Shades {
      * contains the final result.
      *
      * @param {!WglDirector} director
-     * @param {!ControlMask} controlMask
+     * @param {!QuantumControlMask} controlMask
      * @param {!WglTexture} workspace1
      * @param {!WglTexture} workspace2
      * @returns {!{result: !WglTexture, available: !WglTexture}}
@@ -193,7 +196,7 @@ export default class Shades {
     static renderControlMask(director, controlMask, workspace1, workspace2) {
         // Special case: no constraints.
         if (controlMask.inclusionMask === 0) {
-            Shades.renderUniformColor(director, workspace1, 1, 0, 0, 0);
+            QuantumShaders.renderUniformColor(director, workspace1, 1, 0, 0, 0);
             return {result: workspace1, available: workspace2};
         }
 
@@ -207,12 +210,12 @@ export default class Shades {
             /** @type {!boolean} */
             let b = c;
             if (hasFirst) {
-                Shades.renderAddBitConstraintToControlMask(director, workspace2, workspace1, i, b);
+                QuantumShaders.renderAddBitConstraintToControlMask(director, workspace2, workspace1, i, b);
                 let t = workspace2;
                 workspace2 = workspace1;
                 workspace1 = t;
             } else {
-                Shades.renderSingleBitConstraintControlMask(director, workspace1, i, b);
+                QuantumShaders.renderSingleBitConstraintControlMask(director, workspace1, i, b);
                 hasFirst = true;
             }
         }
@@ -231,10 +234,15 @@ export default class Shades {
      * @returns {!{result: !WglTexture, available: !WglTexture}}
      */
     static renderControlCombinationProbabilities(director, workspace1, workspace2, mask, amplitudes) {
-        Shades.renderProbabilitiesFromAmplitudes(director, workspace1, amplitudes);
+        QuantumShaders.renderProbabilitiesFromAmplitudes(director, workspace1, amplitudes);
         let n = amplitudes.width * amplitudes.height;
         for (let i = 0; (1 << i) < n; i++) {
-            Shades.renderConditionalProbabilitiesPipeline(director, workspace2, workspace1, i, (mask & (1 << i)) !== 0);
+            QuantumShaders.renderConditionalProbabilitiesPipeline(
+                director,
+                workspace2,
+                workspace1,
+                i,
+                (mask & (1 << i)) !== 0);
             let t = workspace2;
             workspace2 = workspace1;
             workspace1 = t;
@@ -253,7 +261,7 @@ export default class Shades {
      * @param {!WglTexture} controlTexture
      */
     static renderQubitOperation(director, destinationTexture, inputTexture, operation, qubitIndex, controlTexture) {
-        U.need(operation.width() === 2 && operation.height() === 2);
+        Util.need(operation.width() === 2 && operation.height() === 2);
         let [[a, b], [c, d]] = operation.rows;
         director.render(destinationTexture, GLSL_APPLY_CUSTOM_QUBIT_OPERATION, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),

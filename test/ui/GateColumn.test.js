@@ -2,7 +2,7 @@ import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 import GateColumn from "src/ui/GateColumn.js"
-import ControlMask from "src/quantum/ControlMask.js"
+import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 
 let suite = new Suite("GateColumn");
 
@@ -100,16 +100,16 @@ suite.test("swapPairs", () => {
 });
 
 suite.test("controls", () => {
-    assertThat(new GateColumn([]).controls()).isEqualTo(ControlMask.NO_CONTROLS);
-    assertThat(new GateColumn([null, null]).controls()).isEqualTo(ControlMask.NO_CONTROLS);
-    assertThat(new GateColumn([null, Gates.Named.HalfTurns.X]).controls()).isEqualTo(ControlMask.NO_CONTROLS);
+    assertThat(new GateColumn([]).controls()).isEqualTo(QuantumControlMask.NO_CONTROLS);
+    assertThat(new GateColumn([null, null]).controls()).isEqualTo(QuantumControlMask.NO_CONTROLS);
+    assertThat(new GateColumn([null, Gates.Named.HalfTurns.X]).controls()).isEqualTo(QuantumControlMask.NO_CONTROLS);
     assertThat(new GateColumn([
         Gates.Named.Special.Control, Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf
-    ]).controls()).isEqualTo(new ControlMask(3, 1));
+    ]).controls()).isEqualTo(new QuantumControlMask(3, 1));
     assertThat(new GateColumn([
         Gates.Named.Special.AntiControl, Gates.Named.Special.Control, Gates.Named.Special.SwapHalf
-    ]).controls()).isEqualTo(new ControlMask(3, 2));
+    ]).controls()).isEqualTo(new QuantumControlMask(3, 2));
     assertThat(new GateColumn([
         Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf, Gates.Named.Special.Control
-    ]).controls()).isEqualTo(new ControlMask(5, 4));
+    ]).controls()).isEqualTo(new QuantumControlMask(5, 4));
 });
