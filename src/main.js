@@ -1,12 +1,12 @@
-import CircuitDefinition from "src/ui/CircuitDefinition.js"
-import CircuitStats from "src/ui/CircuitStats.js"
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
 import InspectorWidget from "src/widgets/InspectorWidget.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
-import Serializer from "src/ui/Serializer.js"
+import Serializer from "src/circuit/Serializer.js"
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */

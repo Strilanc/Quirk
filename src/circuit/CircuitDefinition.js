@@ -1,11 +1,6 @@
-import Util from "src/base/Util.js"
+import GateColumn from "src/circuit/GateColumn.js"
 import Seq from "src/base/Seq.js"
-import GateColumn from "src/ui/GateColumn.js"
-import Gate from "src/ui/Gate.js"
-import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
-import QuantumShaders from "src/pipeline/QuantumShaders.js"
-import PipelineNode from "src/pipeline/PipelineNode.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Util from "src/base/Util.js"
 
 class CircuitDefinition {
     /**

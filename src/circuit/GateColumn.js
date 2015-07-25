@@ -1,10 +1,9 @@
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
-import Gate from "src/ui/Gate.js"
-import Matrix from "src/math/Matrix.js"
+import Gate from "src/circuit/Gate.js"
 import Gates from "src/ui/Gates.js"
-import describe from "src/base/Describe.js"
+import Matrix from "src/math/Matrix.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /**
  * A column of gates in a circuit with many qubits.

@@ -1,18 +1,16 @@
-import describe from "src/base/Describe.js"
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import CircuitStats from "src/circuit/CircuitStats.js"
 import CircuitWidget from "src/widgets/CircuitWidget.js"
-import GateColumn from "src/ui/GateColumn.js"
-import Serializer from "src/ui/Serializer.js"
-import CircuitDefinition from "src/ui/CircuitDefinition.js"
-import ToolboxWidget from "src/widgets/ToolboxWidget.js"
 import Config from "src/Config.js"
-import Rect from "src/math/Rect.js"
-import Matrix from "src/math/Matrix.js"
-import Painter from "src/ui/Painter.js"
+import GateDrawParams from "src/ui/GateDrawParams.js"
 import MathPainter from "src/ui/MathPainter.js"
+import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
-import CircuitStats from "src/ui/CircuitStats.js"
+import Painter from "src/ui/Painter.js"
+import Rect from "src/math/Rect.js"
+import Seq from "src/base/Seq.js"
+import ToolboxWidget from "src/widgets/ToolboxWidget.js"
+import Util from "src/base/Util.js"
 
 export default class InspectorWidget {
     /**
@@ -179,15 +177,15 @@ export default class InspectorWidget {
         this.circuitWidget.paint(painter, this.hand, stats);
         this.paintOutput(painter, stats);
         this.toolboxWidget.paint(painter, stats, this.hand.hoverPoints());
-        this.paintHand(painter, stats.time);
+        this.paintHand(painter, stats);
     }
 
     /**
      * @param {!Painter} painter
-     * @param {!number} time
+     * @param {!CircuitStats} stats
      * @private
      */
-    paintHand(painter, time) {
+    paintHand(painter, stats) {
         let gates = this.hand.heldGates;
         if (this.hand.pos === null || gates === null) {
             return;
@@ -199,7 +197,7 @@ export default class InspectorWidget {
             let p = this.hand.pos.offsetBy(0, dh * (k - gates.length + 1));
             let r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
             //paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
-            gates[k].paint(painter, r, false, true, time, null);
+            gates[k].drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
         }
     }
 

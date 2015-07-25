@@ -1,13 +1,14 @@
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import CircuitDefinition from "src/ui/CircuitDefinition.js"
-import CircuitStats from "src/ui/CircuitStats.js"
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
-import GateColumn from "src/ui/GateColumn.js"
+import GateColumn from "src/circuit/GateColumn.js"
+import GateDrawParams from "src/ui/GateDrawParams.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
+import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
+import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /** @type {!number} */
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
@@ -378,7 +379,7 @@ class CircuitWidget {
             let gate = gateColumn.gates[i];
 
             let canGrab = new Seq(hand.hoverPoints()).any(pt => b.containsPoint(pt));
-            gate.paint(painter, b, false, canGrab, stats, {row: i, col: columnIndex});
+            gate.drawer(new GateDrawParams(painter, false, canGrab, b, gate, stats, {row: i, col: columnIndex}));
         }
     }
 

@@ -1,9 +1,8 @@
-import Util from "src/base/Util.js"
-import Gate from "src/ui/Gate.js"
-import Matrix from "src/math/Matrix.js"
-import MathPainter from "src/ui/MathPainter.js"
 import Complex from "src/math/Complex.js"
-import Config from "src/Config.js"
+import Gate from "src/circuit/Gate.js"
+import GateFactory from "src/ui/GateFactory.js"
+import MathPainter from "src/ui/MathPainter.js"
+import Matrix from "src/math/Matrix.js"
 import Rect from "src/math/Rect.js"
 
 let Gates = {};
@@ -30,7 +29,7 @@ Gates.Named = {
                 "It applies to all operation in the same column.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    Gate.DEFAULT_DRAWER(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                 }
                 args.painter.fillCircle(args.rect.center(), 5, "black");
             }),
@@ -46,7 +45,7 @@ Gates.Named = {
                 "It applies to all operation in the same column.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    Gate.DEFAULT_DRAWER(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                 }
                 let p = args.rect.center();
                 args.painter.fillCircle(p, 5);
@@ -64,7 +63,7 @@ Gates.Named = {
                 "the controls were satisfied when affected by controls.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    Gate.DEFAULT_DRAWER(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                     return;
                 }
 
@@ -96,7 +95,7 @@ Gates.Named = {
             "Place two swap gate halves in the same column to form a swap gate.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    Gate.DEFAULT_DRAWER(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                     return;
                 }
 
@@ -115,7 +114,8 @@ Gates.Named = {
             "The Down gate cycles through OFF, (1+i)(OFF - i ON), ON, and (1-i)(OFF + i ON). " +
                 "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
                 "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
-                "Its inverse is the Up gate."),
+                "Its inverse is the Up gate.",
+            GateFactory.DEFAULT_DRAWER),
 
         Up: new Gate(
             "↑",
@@ -127,7 +127,7 @@ Gates.Named = {
                 "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
                 "Its inverse is the Down gate.",
             args => {
-                Gate.DEFAULT_DRAWER(args);
+                GateFactory.DEFAULT_DRAWER(args);
                 args.painter.ctx.globalAlpha = 0.25;
                 args.painter.strokeLine(args.rect.topLeft(), args.rect.bottomRight());
                 args.painter.ctx.globalAlpha = 1;
@@ -141,7 +141,8 @@ Gates.Named = {
             "The Right gate cycles through OFF, (1+i)(OFF + ON), i ON, and (1-i)(OFF - ON). " +
                 "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
                 "It is a square root of the Pauli Y gate. " +
-                "Its inverse is the Left gate."),
+                "Its inverse is the Left gate.",
+            GateFactory.DEFAULT_DRAWER),
 
         Left: new Gate(
             "←",
@@ -151,7 +152,8 @@ Gates.Named = {
             "The Left gate cycles through OFF, (1-i)(OFF - ON), i ON, and (1+i)(OFF + ON). " +
                 "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
                 "It is a square root of the Pauli Y gate. " +
-                "Its inverse is the Right gate."),
+                "Its inverse is the Right gate.",
+            GateFactory.DEFAULT_DRAWER),
 
         CounterClockwise: new Gate(
             "↺",
@@ -160,7 +162,8 @@ Gates.Named = {
             "Phases ON by a factor of i, without affecting OFF.",
             "The Counter-Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
                 "It is a square root of the Pauli Z gate. " +
-                "Its inverse is the Clockwise Phase Gate."),
+                "Its inverse is the Clockwise Phase Gate.",
+            GateFactory.DEFAULT_DRAWER),
 
         Clockwise: new Gate(
             "↻",
@@ -169,7 +172,8 @@ Gates.Named = {
             "Phases ON by a factor of -i, without affecting OFF.",
             "The Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
                 "It is a square root of the Pauli Z gate. " +
-                "Its inverse is the Counter-Clockwise Phase Gate.")
+                "Its inverse is the Counter-Clockwise Phase Gate.",
+            GateFactory.DEFAULT_DRAWER)
     },
     HalfTurns: {
         X: new Gate(
@@ -186,7 +190,7 @@ Gates.Named = {
                     args.stats.circuitDefinition.columns[args.positionInCircuit.col].gates.every(
                         e => e !== Gates.Named.Special.Control && e !== Gates.Named.Special.AntiControl);
                 if (noControlsInColumn || args.isHighlighted) {
-                    Gate.DEFAULT_DRAWER(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                     return;
                 }
 
@@ -203,7 +207,8 @@ Gates.Named = {
             "Pauli Y Gate",
             "A combination of the X and Z gates.",
             "The Pauli Y gate is a 180° turn around the Bloch Sphere's Y axis. " +
-                "It is equivalent to an X gate followed by a Z gate, up to a global phase factor."),
+                "It is equivalent to an X gate followed by a Z gate, up to a global phase factor.",
+            GateFactory.DEFAULT_DRAWER),
 
         Z: new Gate(
             "Z",
@@ -211,7 +216,8 @@ Gates.Named = {
             "Phase Flip Gate [Pauli Z Gate]",
             "Negates the phase of ON states, without affecting OFF states.",
             "The Phase Flip Gate is a 180° around the Bloch Sphere's Z axis." +
-                "Negates the amplitude of parts of the superposition where the target qubit is ON."),
+                "Negates the amplitude of parts of the superposition where the target qubit is ON.",
+            GateFactory.DEFAULT_DRAWER),
 
         H: new Gate(
             "H",
@@ -221,7 +227,8 @@ Gates.Named = {
             "The Hadamard gate is the simplest non-classical gate. " +
                 "Toggles ON to ON+OFF and back, but toggles OFF to ON-OFF and back. " +
                 "Applying once to each wire, in the starting state, creates a uniform superposition of all states. " +
-                "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis.")
+                "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis.",
+            GateFactory.DEFAULT_DRAWER)
     },
     Evolving: {
         R: new Gate(
@@ -236,7 +243,7 @@ Gates.Named = {
             "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
             "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
                 "After the first turn, there's a global phase factor of -1 leftover.)",
-            Gate.CYCLE_DRAWER),
+            GateFactory.CYCLE_DRAWER),
 
         H: new Gate(
             "H(t)",
@@ -247,7 +254,7 @@ Gates.Named = {
             "Evolving Hadamard Gate",
             "Interpolates between no-op and the Hadamard Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's X+Z axis.",
-            Gate.CYCLE_DRAWER),
+            GateFactory.CYCLE_DRAWER),
 
         X: new Gate(
             "X(t)",
@@ -255,7 +262,7 @@ Gates.Named = {
             "Evolving X Gate",
             "Interpolates between no-op and the Not Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's X axis.",
-            Gate.CYCLE_DRAWER),
+            GateFactory.CYCLE_DRAWER),
 
         Y: new Gate(
             "Y(t)",
@@ -263,7 +270,7 @@ Gates.Named = {
             "Evolving Y Gate",
             "Interpolates between no-op and the Pauli Y Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Y axis.",
-            Gate.CYCLE_DRAWER),
+            GateFactory.CYCLE_DRAWER),
 
         Z: new Gate(
             "Z(t)",
@@ -271,7 +278,7 @@ Gates.Named = {
             "Evolving Z Gate",
             "Interpolates between no-op and the Phase Flip Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Z axis.",
-            Gate.CYCLE_DRAWER)
+            GateFactory.CYCLE_DRAWER)
     },
     Silly: {
         FUZZ_SYMBOL: "Fuzz",
@@ -286,7 +293,7 @@ Gates.Named = {
             "Fuzz Gate",
             "Replaced by a different unitary operation each time you grab it.",
             "",
-            Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
+            GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
         //CREATION: new Gate(
         //    "!Creation",
@@ -311,35 +318,40 @@ Gates.Named = {
             Matrix.square([1, 1, 0, 0]),
             "Reset Gate [NOT UNITARY]",
             "Forces a qubit OFF.",
-            "May cause double vision or the annihilation of all things."),
+            "May cause double vision or the annihilation of all things.",
+            GateFactory.DEFAULT_DRAWER),
 
         DECAY: new Gate(
             "!Decay",
             Matrix.square([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]),
             "Decay Gate [NOT UNITARY]",
             "Cuts existence in half.",
-            ""),
+            "",
+            GateFactory.DEFAULT_DRAWER),
 
         IDENTITY: new Gate(
             "",
             Matrix.square([1, 0, 0, 1]),
             "Identity Gate",
             "Has no effect. Does nothing. Wastes space. A nop.",
-            ""),
+            "",
+            GateFactory.DEFAULT_DRAWER),
 
         SAME: new Gate(
             "!Same",
             Matrix.square([Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5)]),
             "Same Gate [NOT UNITARY]",
             "Distributes amplitudes equally in all cases, causing the ON and OFF amplitudes to always end up equal.",
-            "What could go wrong?"),
+            "What could go wrong?",
+            GateFactory.DEFAULT_DRAWER),
 
         HOLE: new Gate(
             "!Hole",
             Matrix.square([0, 0, 0, 0]),
             "Hole Gate [NOT UNITARY]",
             "Throws the amplitudes down a hole. ALL of them.",
-            "")
+            "",
+            GateFactory.DEFAULT_DRAWER)
     }
 };
 
@@ -389,21 +401,21 @@ Gates.Sets = [
     {
         hint: "Targeted",
         gates: [
-            Gate.fromTargetedRotation(-1/3, "-1/3"),
-            Gate.fromTargetedRotation(-2/3, "-2/3"),
-            Gate.fromTargetedRotation(1/3, "+1/3"),
-            Gate.fromTargetedRotation(2/3, "+2/3")
+            GateFactory.fromTargetedRotation(-1/3, "-1/3"),
+            GateFactory.fromTargetedRotation(-2/3, "-2/3"),
+            GateFactory.fromTargetedRotation(1/3, "+1/3"),
+            GateFactory.fromTargetedRotation(2/3, "+2/3")
         ]
     },
     {
         hint: "Other Z",
         gates: [
-            Gate.fromPauliRotation(0, 0, 1 / 3),
-            Gate.fromPauliRotation(0, 0, 1 / 8),
-            Gate.fromPauliRotation(0, 0, 1 / 16),
-            Gate.fromPauliRotation(0, 0, -1 / 3),
-            Gate.fromPauliRotation(0, 0, -1 / 8),
-            Gate.fromPauliRotation(0, 0, -1 / 16)
+            GateFactory.fromPauliRotation(0, 0, 1 / 3),
+            GateFactory.fromPauliRotation(0, 0, 1 / 8),
+            GateFactory.fromPauliRotation(0, 0, 1 / 16),
+            GateFactory.fromPauliRotation(0, 0, -1 / 3),
+            GateFactory.fromPauliRotation(0, 0, -1 / 8),
+            GateFactory.fromPauliRotation(0, 0, -1 / 16)
         ]
     },
     {

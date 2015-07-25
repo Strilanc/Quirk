@@ -1,5 +1,6 @@
 import { Suite, fail } from "test/TestUtil.js"
 import equate from "src/base/Equate.js"
+
 import describe from "src/base/Describe.js"
 
 let suite = new Suite("Equate");
@@ -16,6 +17,8 @@ class PropClass {
 //noinspection JSUnusedGlobalSymbols
 class SomeIterable {
     constructor() {}
+
+    //noinspection JSMethodCanBeStatic,JSUnusedGlobalSymbols
     [Symbol.iterator]() { return [1, 2, 3][Symbol.iterator](); }
 }
 class One {

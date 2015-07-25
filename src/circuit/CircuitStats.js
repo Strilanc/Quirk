@@ -1,18 +1,14 @@
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
-import GateColumn from "src/ui/GateColumn.js"
-import Gate from "src/ui/Gate.js"
-import CircuitDefinition from "src/ui/CircuitDefinition.js"
-import Matrix from "src/math/Matrix.js"
-import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
+import Seq from "src/base/Seq.js"
+import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
 
 export default class CircuitStats{
     /**
      * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
      * @param {!(!number[])} wireProbabilities
      * @param {!((!Complex)[])} finalState
-     * @param {!number} time
      */
     constructor(circuitDefinition, time, wireProbabilities, finalState) {
         /**

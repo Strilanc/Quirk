@@ -1,11 +1,12 @@
 import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
-import Seq from "src/base/Seq.js"
+import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
+
 import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
-import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
+import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Rect from "src/math/Rect.js"
+import Seq from "src/base/Seq.js"
 
 let suite = new Suite("SuperpositionNode");
 

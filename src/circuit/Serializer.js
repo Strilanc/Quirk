@@ -1,13 +1,14 @@
-import Gate from "src/ui/Gate.js"
-import GateColumn from "src/ui/GateColumn.js"
-import Gates from "src/ui/Gates.js"
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
 import describe from "src/base/Describe.js"
-import Seq from "src/base/Seq.js"
-import Complex from "src/math/Complex.js"
-import Matrix from "src/math/Matrix.js"
 import Format from "src/base/Format.js"
-import CircuitDefinition from "src/ui/CircuitDefinition.js"
+import Gate from "src/circuit/Gate.js"
+import GateColumn from "src/circuit/GateColumn.js"
+import GateFactory from "src/ui/GateFactory.js"
+import Gates from "src/ui/Gates.js"
+import Matrix from "src/math/Matrix.js"
+import Seq from "src/base/Seq.js"
 
 /**
  * Serializes supported values to/from json elements.
@@ -130,7 +131,7 @@ let fromJson_Gate = json => {
         return r;
     }
 
-    return new Gate(symbol, matrix, symbol, "(A custom imported gate.)", "", Gate.DEFAULT_DRAWER);
+    return new Gate(symbol, matrix, symbol, "(A custom imported gate.)", "", GateFactory.DEFAULT_DRAWER);
 };
 
 /**

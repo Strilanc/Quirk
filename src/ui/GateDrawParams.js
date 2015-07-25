@@ -1,3 +1,6 @@
+/**
+ * Values used by the various gate drawing strategies.
+ */
 export default class GateDrawParams {
     /**
      * @param {!Painter} painter

@@ -1,10 +1,5 @@
 import { Suite, assertThat, fail } from "test/TestUtil.js"
-import Painter from "src/ui/Painter.js"
 import MathPainter from "src/ui/MathPainter.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import Complex from "src/math/Complex.js"
-import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("MathPainter");
 

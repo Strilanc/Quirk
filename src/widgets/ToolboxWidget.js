@@ -1,6 +1,7 @@
 import Util from "src/base/Util.js"
 import Gates from "src/ui/Gates.js"
-import GateColumn from "src/ui/GateColumn.js"
+import GateColumn from "src/circuit/GateColumn.js"
+import GateDrawParams from "src/ui/GateDrawParams.js"
 import Rect from "src/math/Rect.js"
 import Point from "src/math/Point.js"
 import Seq from "src/base/Seq.js"
@@ -96,7 +97,7 @@ class ToolboxWidget {
                 if (gate !== null) {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
                     let isHighlighted = new Seq(focusPoints).any(pt => r.containsPoint(pt));
-                    gate.paint(painter, r, true, isHighlighted, stats, null);
+                    gate.drawer(new GateDrawParams(painter, true, isHighlighted, r, Util.notNull(gate), stats, null));
                 }
             }
         }

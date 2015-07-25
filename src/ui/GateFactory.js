@@ -1,47 +1,16 @@
-import Util from "src/base/Util.js"
+import Config from "src/Config.js"
+import Gate from "src/circuit/Gate.js"
+import GateDrawParams from "src/ui/GateDrawParams.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
-import GateDrawParams from "src/ui/GateDrawParams.js"
-import Config from "src/Config.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import Util from "src/base/Util.js"
 
 /**
  * A described and possibly time-varying quantum operation.
  */
-export default class Gate {
-    /**
-     * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
-     * @param {!Matrix|!function(!number): !Matrix} matrixOrFunc The operation the gate applies.
-     * @param {!string} name A helpful human-readable name for the operation.
-     * @param {!string} blurb A helpful description of what the operation does.
-     * @param {!string} details A helpful description of what the operation does.
-     * @param {!function(!GateDrawParams)=} symbolDrawer
-     *
-     * @property {!string} symbol
-     * @property {!Matrix|!function(!number): !Matrix} matrixOrFunc
-     * @property {!string} name
-     * @property {!string} blurb
-     * @property {!string} details
-     * @property {!function} symbolDrawer
-     */
-    constructor(symbol, matrixOrFunc, name, blurb, details, symbolDrawer) {
-        this.symbol = symbol;
-        this.matrixOrFunc = matrixOrFunc;
-        this.name = name;
-        this.blurb = blurb;
-        this.details = details;
-        this.symbolDrawer = symbolDrawer || Gate.DEFAULT_DRAWER;
-    }
-
-    /**
-     * @param {!number} time
-     * @returns {!Matrix}
-     */
-    matrixAt(time) {
-        return this.matrixOrFunc instanceof Matrix ? this.matrixOrFunc : this.matrixOrFunc(time);
-    }
-
+export default class GateFactory {
     /**
      * @param {!number} fraction
      * @param {!string} symbol
@@ -66,7 +35,8 @@ export default class Gate {
             Matrix.fromPauliRotation(0, 0, fraction),
             `${deg_desc}° Phase Gate`,
             `Rotates the phase of a qubit's ON state by ${deg_desc}° while leaving its OFF state alone.`,
-            `The standard Pauli Z gate corresponds to Z(180°).`);
+            `The standard Pauli Z gate corresponds to Z(180°).`,
+            GateFactory.DEFAULT_DRAWER);
     }
 
     /**
@@ -78,7 +48,7 @@ export default class Gate {
      */
     static fromPauliRotation(x, y, z, symbol) {
         if (x === 0 && y === 0) {
-            return Gate.fromPhaseRotation(z, symbol);
+            return GateFactory.fromPhaseRotation(z, symbol);
         }
 
         let n = Math.sqrt(x * x + y * y + z * z);
@@ -89,7 +59,7 @@ export default class Gate {
             `${deg}° around <${x/n}, ${y/n}, ${z/n}>`,
             "A custom operation based on a rotation.",
             "",
-            symbol === undefined ? Gate.MATRIX_DRAWER : Gate.DEFAULT_DRAWER);
+            symbol === undefined ? GateFactory.MATRIX_DRAWER : GateFactory.DEFAULT_DRAWER);
     }
 
     /**
@@ -97,13 +67,13 @@ export default class Gate {
      * @returns {!Gate}
      */
     static fromCustom(matrix) {
-        return new Gate(
+        return new GateFactory(
             matrix.toString(Format.MINIFIED),
             matrix,
             matrix.toString(Format.SIMPLIFIED),
             "A custom operation.",
             "",
-            Gate.MATRIX_DRAWER);
+            GateFactory.MATRIX_DRAWER);
     }
 
     /**
@@ -120,41 +90,15 @@ export default class Gate {
             Matrix.fromTargetedRotation(p),
             `${fractionLabel} Target Rotation Gate`,
             `A tuned rotation gate that maps an OFF input to an output with ${fractionLabel} probability of being ON.`,
-            `Equivalent to R(acos(√(${fractionLabel}))).`);
-    }
-
-    isTimeBased() {
-        return !(this.matrixOrFunc instanceof Matrix);
-    }
-
-    /**
-     * @param {!Painter} painter
-     * @param {!Rect} areaRect
-     * @param {!boolean} isInToolbox
-     * @param {!boolean} isHighlighted
-     * @param {!CircuitStats} stats
-     * @param {?{row: !int, col: !int}} positionInCircuit
-     */
-    paint(painter, areaRect, isInToolbox, isHighlighted, stats, positionInCircuit) {
-        this.symbolDrawer(new GateDrawParams(
-            painter,
-            isInToolbox,
-            isHighlighted,
-            areaRect,
-            this,
-            stats,
-            positionInCircuit));
-    }
-
-    toString() {
-        return `Gate(${this.symbol})`;
+            `Equivalent to R(acos(√(${fractionLabel}))).`,
+            GateFactory.DEFAULT_DRAWER);
     }
 }
 
 /**
-* @param {!GateDrawParams} args
-*/
-Gate.DEFAULT_DRAWER = args => {
+ * @param {!GateDrawParams} args
+ */
+GateFactory.DEFAULT_DRAWER = args => {
     let backColor = Config.GATE_FILL_COLOR;
     if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
         backColor = Config.BROKEN_COLOR_GATE;
@@ -175,8 +119,8 @@ Gate.DEFAULT_DRAWER = args => {
 
 /**
  * @param {!GateDrawParams} args
-*/
-Gate.MATRIX_DRAWER = args => {
+ */
+GateFactory.MATRIX_DRAWER = args => {
     args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
     MathPainter.paintMatrix(
         args.painter,
@@ -191,11 +135,11 @@ Gate.MATRIX_DRAWER = args => {
 };
 
 /**
-* @param {!GateDrawParams} args
-*/
-Gate.CYCLE_DRAWER = args => {
+ * @param {!GateDrawParams} args
+ */
+GateFactory.CYCLE_DRAWER = args => {
     if (args.isInToolbox && !args.isHighlighted) {
-        Gate.DEFAULT_DRAWER(args);
+        GateFactory.DEFAULT_DRAWER(args);
         return;
     }
     let t = args.stats.time * 2 * Math.PI;
@@ -203,17 +147,17 @@ Gate.CYCLE_DRAWER = args => {
         Math.cos(t) * 0.75 * args.rect.w/2,
         -Math.sin(t) * 0.75 * args.rect.h/2);
     let p = args.rect.center().plus(d);
-    Gate.DEFAULT_DRAWER(args);
+    GateFactory.DEFAULT_DRAWER(args);
     args.painter.fillCircle(p, 3, "gray");
 };
 
 /**
-* @param {!GateDrawParams} args
-*/
-Gate.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
+ * @param {!GateDrawParams} args
+ */
+GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
     if (args.isInToolbox) {
-        Gate.DEFAULT_DRAWER(args);
+        GateFactory.DEFAULT_DRAWER(args);
         return;
     }
-    Gate.MATRIX_DRAWER(args);
+    GateFactory.MATRIX_DRAWER(args);
 };

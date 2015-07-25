@@ -1,11 +1,12 @@
 import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
-import WglTexture from "src/webgl/WglTexture.js"
-import WglDirector from "src/webgl/WglDirector.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
+
+import Complex from "src/math/Complex.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
-import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
+import WglTexture from "src/webgl/WglTexture.js"
+import WglDirector from "src/webgl/WglDirector.js"
 
 let suite = new Suite("QuantumShaders");
 

@@ -1,12 +1,13 @@
 import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
+import Serializer from "src/circuit/Serializer.js"
+
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
-import Matrix from "src/math/Matrix.js"
-import Gates from "src/ui/Gates.js"
-import Gate from "src/ui/Gate.js"
-import Serializer from "src/ui/Serializer.js"
 import Format from "src/base/Format.js"
-import GateColumn from "src/ui/GateColumn.js"
-import CircuitDefinition from "src/ui/CircuitDefinition.js"
+import Gate from "src/circuit/Gate.js"
+import GateColumn from "src/circuit/GateColumn.js"
+import Gates from "src/ui/Gates.js"
+import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("Serializer");
 

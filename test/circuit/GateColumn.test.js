@@ -1,7 +1,8 @@
 import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
+import GateColumn from "src/circuit/GateColumn.js"
+
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
-import GateColumn from "src/ui/GateColumn.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 
 let suite = new Suite("GateColumn");

@@ -1,7 +1,7 @@
 import Util from "src/base/Util.js"
 import Point from "src/math/Point.js"
-import Gate from "src/ui/Gate.js"
-import GateColumn from "src/ui/GateColumn.js"
+import Gate from "src/circuit/Gate.js"
+import GateColumn from "src/circuit/GateColumn.js"
 
 class Hand {
     /**

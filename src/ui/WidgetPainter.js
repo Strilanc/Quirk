@@ -3,7 +3,7 @@ import Util from "src/base/Util.js"
 import Rect from "src/math/Rect.js"
 import Config from "src/Config.js"
 import Point from "src/math/Point.js"
-import Gate from "src/ui/Gate.js"
+import Gate from "src/circuit/Gate.js"
 import Painter from "src/ui/Painter.js"
 import MathPainter from "src/ui/MathPainter.js"
 

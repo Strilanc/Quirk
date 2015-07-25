@@ -1,5 +1,6 @@
 import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Complex from "src/math/Complex.js"
+
 import Format from "src/base/Format.js"
 
 let suite = new Suite("Complex");
