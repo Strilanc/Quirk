@@ -63,7 +63,7 @@ Gates.Named = {
                 "return ON instead of OFF, Peek can show the conditional probability ('t|c') of ON-ness given that " +
                 "the controls were satisfied when affected by controls.",
             args => {
-                if (args.circuitContext === null || args.isHighlighted) {
+                if (args.positionInCircuit === null || args.isHighlighted) {
                     Gate.DEFAULT_DRAWER(args);
                     return;
                 }
@@ -182,8 +182,8 @@ Gates.Named = {
                 "Combine with Control gates to create Controlled-Not and Toffoli gates.",
             args => {
                 let noControlsInColumn =
-                    args.circuitContext === null ||
-                    args.circuitContext.gateColumn.gates.every(
+                    args.positionInCircuit === null ||
+                    args.stats.circuitDefinition.columns[args.positionInCircuit.col].gates.every(
                         e => e !== Gates.Named.Special.Control && e !== Gates.Named.Special.AntiControl);
                 if (noControlsInColumn || args.isHighlighted) {
                     Gate.DEFAULT_DRAWER(args);

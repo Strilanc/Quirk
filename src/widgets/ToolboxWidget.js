@@ -81,10 +81,10 @@ class ToolboxWidget {
 
     /**
      * @param {!Painter} painter
-     * @param {!number} time
+     * @param {!CircuitStats} stats
      * @param {!(!Point[])} focusPoints
      */
-    paint(painter, time, focusPoints) {
+    paint(painter, stats, focusPoints) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
         for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
@@ -96,7 +96,7 @@ class ToolboxWidget {
                 if (gate !== null) {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
                     let isHighlighted = new Seq(focusPoints).any(pt => r.containsPoint(pt));
-                    gate.paint(painter, r, true, isHighlighted, time, null);
+                    gate.paint(painter, r, true, isHighlighted, stats, null);
                 }
             }
         }
@@ -110,7 +110,7 @@ class ToolboxWidget {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
             let hintRect = new Rect(gateRect.center().x - 200, gateRect.bottom() + 2, 400, 300).
                 snapInside(painter.paintableArea().skipTop(gateRect.bottom()));
-            painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, time));
+            painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
         }
     }
 

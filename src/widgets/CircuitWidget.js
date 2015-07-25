@@ -8,7 +8,6 @@ import Config from "src/Config.js"
 import GateColumn from "src/ui/GateColumn.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
-import { CircuitContext } from "src/ui/GateDrawParams.js"
 
 /** @type {!number} */
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
@@ -379,7 +378,7 @@ class CircuitWidget {
             let gate = gateColumn.gates[i];
 
             let canGrab = new Seq(hand.hoverPoints()).any(pt => b.containsPoint(pt));
-            gate.paint(painter, b, false, canGrab, stats.time, new CircuitContext(gateColumn, i, stats));
+            gate.paint(painter, b, false, canGrab, stats, {row: i, col: columnIndex});
         }
     }
 

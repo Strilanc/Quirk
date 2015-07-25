@@ -1,22 +1,3 @@
-/**
- * @param {!GateColumn} gateColumn
- * @param {!int} wireIndex
- * @param {!CircuitStats} state
- *
- * @property {!GateColumn} gateColumn
- * @property {!int} wireIndex
- * @property {!CircuitStats} state
- *
- * @constructor
- */
-export class CircuitContext {
-    constructor(gateColumn, wireIndex, state) {
-        this.gateColumn = gateColumn;
-        this.wireIndex = wireIndex;
-        this.state = state;
-    }
-}
-
 export default class GateDrawParams {
     /**
      * @param {!Painter} painter
@@ -24,24 +5,23 @@ export default class GateDrawParams {
      * @param {!boolean} isHighlighted
      * @param {!Rect} rect
      * @param {!Gate} gate
-     * @param {!number} time
-     * @param {?CircuitContext} circuitContext
-     *
-     * @property {!Painter} painter
-     * @property {!boolean} isInToolbox
-     * @property {!boolean} isHighlighted
-     * @property {!Rect} rect
-     * @property {!Gate} gate
-     * @property {!number} time
-     * @property {?CircuitContext} circuitContext
+     * @param {!CircuitStats} stats
+     * @param {?{row: !int, col: !int}} positionInCircuit
      */
-    constructor(painter, isInToolbox, isHighlighted, rect, gate, time, circuitContext) {
+    constructor(painter, isInToolbox, isHighlighted, rect, gate, stats, positionInCircuit) {
+        /** @type {!Painter} */
         this.painter = painter;
+        /** @type {!boolean} */
         this.isInToolbox = isInToolbox;
+        /** @type {!boolean} */
         this.isHighlighted = isHighlighted;
+        /** @type {!Rect} */
         this.rect = rect;
+        /** @type {!Gate} */
         this.gate = gate;
-        this.time = time;
-        this.circuitContext = circuitContext;
+        /** @type {!CircuitStats} */
+        this.stats = stats;
+        /** @type {?{row: !int, col: !int}} */
+        this.positionInCircuit = positionInCircuit;
     }
 }

@@ -132,18 +132,18 @@ export default class Gate {
      * @param {!Rect} areaRect
      * @param {!boolean} isInToolbox
      * @param {!boolean} isHighlighted
-     * @param {!number} time
-     * @param {?CircuitContext} circuitContext
+     * @param {!CircuitStats} stats
+     * @param {?{row: !int, col: !int}} positionInCircuit
      */
-    paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
+    paint(painter, areaRect, isInToolbox, isHighlighted, stats, positionInCircuit) {
         this.symbolDrawer(new GateDrawParams(
             painter,
             isInToolbox,
             isHighlighted,
             areaRect,
             this,
-            time,
-            circuitContext));
+            stats,
+            positionInCircuit));
     }
 
     toString() {
@@ -156,7 +156,7 @@ export default class Gate {
 */
 Gate.DEFAULT_DRAWER = args => {
     let backColor = Config.GATE_FILL_COLOR;
-    if (!args.isInToolbox && !args.gate.matrixAt(args.time).isApproximatelyUnitary(0.001)) {
+    if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
         backColor = Config.BROKEN_COLOR_GATE;
     }
     if (args.isHighlighted) {
@@ -180,7 +180,7 @@ Gate.MATRIX_DRAWER = args => {
     args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
     MathPainter.paintMatrix(
         args.painter,
-        args.gate.matrixAt(args.time),
+        args.gate.matrixAt(args.stats.time),
         args.rect,
         []);
     if (args.isHighlighted) {
@@ -198,7 +198,7 @@ Gate.CYCLE_DRAWER = args => {
         Gate.DEFAULT_DRAWER(args);
         return;
     }
-    let t = args.time * 2 * Math.PI;
+    let t = args.stats.time * 2 * Math.PI;
     let d = new Point(
         Math.cos(t) * 0.75 * args.rect.w/2,
         -Math.sin(t) * 0.75 * args.rect.h/2);
