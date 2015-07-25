@@ -4,7 +4,7 @@ import Matrix from "src/math/Matrix.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
-import Rect from "src/base/Rect.js"
+import Rect from "src/math/Rect.js"
 
 let Gates = {};
 export default Gates;

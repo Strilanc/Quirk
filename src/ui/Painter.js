@@ -2,8 +2,8 @@ import Format from "src/base/Format.js"
 import Util from "src/base/Util.js"
 import Seq from "src/base/Seq.js"
 import Config from "src/Config.js"
-import Rect from "src/base/Rect.js"
-import Point from "src/base/Rect.js"
+import Rect from "src/math/Rect.js"
+import Point from "src/math/Point.js"
 
 export default class Painter {
     /**

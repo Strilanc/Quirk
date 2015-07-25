@@ -1,4 +1,4 @@
-import Rect from "src/base/Rect.js"
+import Rect from "src/math/Rect.js"
 import WglCache from "src/webgl/WglCache.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
@@ -125,7 +125,7 @@ export default class WglDirector {
         let g = c.webGLRenderingContext;
         texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, destinationBuffer);
-        this.checkForError("readPixels(..., UNSIGNED_BYTE, ...)");
+        this.checkForError("readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
 
         return destinationBuffer;
     };
@@ -145,7 +145,7 @@ export default class WglDirector {
         let g = c.webGLRenderingContext;
         texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.FLOAT, destinationBuffer);
-        this.checkForError("readPixels(..., FLOAT, ...)");
+        this.checkForError("readPixels(..., RGBA, FLOAT, ...)");
 
         return destinationBuffer;
     };

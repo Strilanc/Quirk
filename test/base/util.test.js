@@ -1,6 +1,6 @@
 import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Util from "src/base/Util.js"
-import Rect from "src/base/Rect.js"
+import Rect from "src/math/Rect.js"
 import Seq from "src/base/Seq.js"
 
 let suite = new Suite("Util");
@@ -75,40 +75,6 @@ suite.test("powerOfTwoness", () => {
     assertThat(Util.powerOfTwoness(1 << 20)).isEqualTo(20);
     assertThat(Util.powerOfTwoness(1 + (1 << 20))).isEqualTo(0);
     assertThat(Util.powerOfTwoness(2 + (1 << 20))).isEqualTo(1);
-});
-
-suite.test("sliceRectFromFlattenedArray", () => {
-    assertThat(Util.sliceRectFromFlattenedArray(4, [], new Rect(0, 0, 0, 0))).isEqualTo([]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(2, 2, 2, 2))).isEqualTo([
-        10, 11,
-        14, 15
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 2, 2, 2))).isEqualTo([
-        8, 9,
-        12, 13
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 1, 2, 2))).isEqualTo([
-        4, 5,
-        8, 9
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 0, 2, 2))).isEqualTo([
-        0, 1,
-        4, 5
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(16).toArray(), new Rect(0, 0, 3, 3))).isEqualTo([
-        0, 1, 2,
-        4, 5, 6,
-        8, 9, 10
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(20).toArray(), new Rect(0, 0, 1, 4))).isEqualTo([
-        0, 4, 8, 12
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(20).toArray(), new Rect(1, 2, 1, 3))).isEqualTo([
-        9, 13, 17
-    ]);
-    assertThat(Util.sliceRectFromFlattenedArray(4, Seq.range(20).toArray(), new Rect(1, 2, 3, 1))).isEqualTo([
-        9, 10, 11
-    ]);
 });
 
 suite.test("reverseGroupMap", () => {

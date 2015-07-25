@@ -5,7 +5,7 @@ import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
 import SuperpositionNode from "src/quantum/SuperpositionNode.js"
 import PipelineNode from "src/quantum/PipelineNode.js"
-import Rect from "src/base/Rect.js"
+import Rect from "src/math/Rect.js"
 
 let suite = new Suite("SuperpositionNode");
 

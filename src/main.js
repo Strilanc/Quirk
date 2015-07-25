@@ -3,9 +3,9 @@ import CircuitStats from "src/ui/CircuitStats.js"
 import Config from "src/Config.js"
 import InspectorWidget from "src/widgets/InspectorWidget.js"
 import Painter from "src/ui/Painter.js"
-import Point from "src/base/Point.js"
-import Rect from "src/base/Rect.js"
-import Revision from "src/ui/Revision.js"
+import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
+import Revision from "src/base/Revision.js"
 import Serializer from "src/ui/Serializer.js"
 
 //noinspection JSValidateTypes

@@ -3,8 +3,8 @@ import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import Config from "src/Config.js"
-import Point from "src/base/Point.js"
-import Rect from "src/base/Rect.js"
+import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
 
 /**
  * A described and possibly time-varying quantum operation.

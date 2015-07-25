@@ -1,3 +1,6 @@
+/**
+ * Configuration parameters for quantum circuit visualizer.
+ */
 export default class Config {}
 
 Config.NUM_INITIAL_WIRES = 4;

@@ -323,10 +323,12 @@ export class Suite {
                     let actualSrc = actualCanvas.toDataURL("image/png");
                     fail(`Drawn image <\n\n${actualSrc}\n\n> differed with MSE=${mse} from <\n${expectedSrc}\n>.`);
                 }
-                if (mse > 0) {
-                    let s = `${this.name}.${name} image differed, but within tolerance (MSE=${mse}).`;
-                    (mse < 0.1 ? console.info : console.warn)(s);
-                }
+
+                // When things get hairy, it's useful to see the tolerance-vs-difference. But usually it's just noise.
+                //if (mse > 0) {
+                //    let s = `${this.name}.${name} image differed, but within tolerance (MSE=${mse}).`;
+                //    (mse < 0.1 ? console.info : console.warn)(s);
+                //}
             });
         });
     }

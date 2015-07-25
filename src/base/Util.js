@@ -1,5 +1,3 @@
-import Rect from "src/base/Rect.js"
-
 /**
  * Miscellaneous utility methods.
  */
@@ -91,25 +89,6 @@ export default class Util {
         var lowBit = i & lowMask;
         return Math.round(Math.log2(lowBit));
     };
-
-    /**
-     * Returns the flattened items at indexes corresponding to a rectangle in a 2-dimensional array, after the array was
-     * flattened.
-     * @param {!int} rowWidth
-     * @param {!(T[])} items
-     * @param {!Rect} rect
-     * @returns {!(T[])}
-     * @template T
-     */
-    static sliceRectFromFlattenedArray(rowWidth, items, rect) {
-        let result = [];
-        for (let j = 0; j < rect.h; j++) {
-            for (let i = 0; i < rect.w; i++) {
-                result.push(items[(j+rect.y)*rowWidth + i + rect.x]);
-            }
-        }
-        return result;
-    }
 
     /**
      * Converts from Map.<K, V[]> to Map.<V, K[]> in the "obvious" way, by having each value map to the group of keys that

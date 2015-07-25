@@ -1,5 +1,5 @@
 import Util from "src/base/Util.js"
-import Point from "src/base/Point.js"
+import Point from "src/math/Point.js"
 import Gate from "src/ui/Gate.js"
 import GateColumn from "src/ui/GateColumn.js"
 

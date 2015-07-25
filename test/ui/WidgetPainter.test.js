@@ -1,7 +1,7 @@
 import { Suite, assertThat } from "test/TestUtil.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
-import Rect from "src/base/Rect.js"
+import Rect from "src/math/Rect.js"
 import Gates from "src/ui/Gates.js"
 
 let suite = new Suite("WidgetPainter");
