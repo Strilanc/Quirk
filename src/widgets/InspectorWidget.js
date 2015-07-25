@@ -320,47 +320,15 @@ export default class InspectorWidget {
             hand);
     }
 
-    //exportCircuit() {
-    //    return {
-    //        wires: this.circuitWidget.circuitDefinition.numWires,
-    //        cols: this.circuitWidget.circuitDefinition.columns.map(e => Serializer.fromJson(GateColumn, e))
-    //    };
-    //}
-
-    ///**
-    // * @param {!object} json
-    // * @returns {!Inspector}
-    // */
-    //withImportedCircuit(json) {
-    //    let wireCount = forceGetProperty(json, "wires");
-    //    if (!isInt(wireCount) || wireCount < 1 || wireCount > Config.MAX_WIRE_COUNT) {
-    //        throw new Error("wires must be an int between 1 and " + Config.MAX_WIRE_COUNT);
-    //    }
-    //
-    //    let columns = forceGetProperty(json, "cols");
-    //    if (!Array.isArray(columns)) {
-    //        throw new Error("cols must be an array.");
-    //    }
-    //
-    //    let gateCols = columns.map(GateColumn.fromJson).map(function (e) {
-    //        if (e.gates.length < wireCount) {
-    //            return new GateColumn(e.gates.padded(wireCount, null));
-    //        }
-    //        if (e.gates.length > wireCount) {
-    //            return new GateColumn(e.gates.slice(0, wireCount));
-    //        }
-    //        return e;
-    //    });
-    //
-    //    return new Inspector(
-    //        this.drawArea,
-    //        new Circuit(
-    //            this.circuit.area,
-    //            wireCount,
-    //            gateCols,
-    //            null,
-    //            this.circuit.wireLabeller),
-    //        this.toolbox,
-    //        Hand.EMPTY);
-    //}
+    /**
+     * @param {!CircuitDefinition} newCircuitDefinition
+     * @returns {!InspectorWidget}
+     */
+    withCircuitDefinition(newCircuitDefinition) {
+        return new InspectorWidget(
+            this.drawArea,
+            this.circuitWidget.withCircuit(newCircuitDefinition),
+            this.toolboxWidget,
+            Hand.EMPTY);
+    }
 }

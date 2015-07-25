@@ -6,6 +6,7 @@ import Gate from "src/ui/Gate.js"
 import Serializer from "src/ui/Serializer.js"
 import Format from "src/base/Format.js"
 import GateColumn from "src/ui/GateColumn.js"
+import CircuitDefinition from "src/ui/CircuitDefinition.js"
 
 let suite = new Suite("Serializer");
 
@@ -31,9 +32,9 @@ suite.test("roundTrip_Matrix", () => {
 });
 
 suite.test("roundTrip_Gate", () => {
-    assertRoundTrip(Gate, Gates.Named.HalfTurns.X, {id:"X"});
+    assertRoundTrip(Gate, Gates.Named.HalfTurns.X, "X");
     for (let g of Gates.KnownToSerializer) {
-        assertRoundTrip(Gate, g, {id: g.symbol});
+        assertRoundTrip(Gate, g, g.symbol);
     }
 
     let f = Gates.Named.Silly.FUZZ_MAKER();
@@ -61,6 +62,16 @@ suite.test("roundTrip_GateColumn", () => {
             Gates.Named.HalfTurns.X,
             Gates.Named.Evolving.X,
             Gates.Named.Special.SwapHalf,
-            Gates.Named.Special.Control]),
-        [null, {id:"X"}, {id:"X(t)"}, {id:"Swap"}, {id:"\u2022"}]);
+            Gates.Named.Special.Control,
+            null]),
+        [1, "X", "X(t)", "Swap", "\u2022", 1]);
+});
+
+suite.test("roundTrip_circuitDefinition", () => {
+    assertRoundTrip(
+        CircuitDefinition,
+        new CircuitDefinition(
+            7,
+            [new GateColumn([null, Gates.Named.HalfTurns.X, null, null, null, null, null])]),
+        {wires: 7, cols: [[1, "X"]]});
 });

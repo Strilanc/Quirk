@@ -627,6 +627,29 @@ class Seq {
     };
 
     /**
+     * Returns a sequence with the same items, except items are dropped from the end of the sequence until the last item
+     * doesn't satisfy the given predicate.
+     * @param {!function(T) : !boolean} predicate
+     * @returns {!Seq.<T>}
+     * @template T
+     */
+    skipTailWhile(predicate) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let tail = [];
+            for (let e of seq) {
+                if (predicate(e)) {
+                    tail.push(e);
+                } else {
+                    yield* tail;
+                    tail = [];
+                    yield e;
+                }
+            }
+        });
+    };
+
+    /**
      * Returns a sequence with the same items, except cut short if it exceeds the given maximum count.
      * @param {!int} maxTakeCount
      * @returns {!Seq.<T>}
