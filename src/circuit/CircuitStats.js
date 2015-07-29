@@ -1,5 +1,6 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
+import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
 import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
 
@@ -49,7 +50,8 @@ export default class CircuitStats{
             for (let op of col.swapPairs()) {
                 initialState = initialState.withSwap(op[0], op[1], mask);
             }
-            nodes.push(initialState.controlProbabilityCombinations(mask.desiredValueMask));
+            // TODO: get both the controlled aggregates and the per-qubit probabilities.
+            nodes.push(initialState.controlProbabilityCombinations(QuantumControlMask.NO_CONTROLS.desiredValueMask));
         }
         nodes.push(initialState);
 
