@@ -279,10 +279,18 @@ export class SuperpositionReadNode {
      * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
      * @returns {!PipelineNode<!(!Complex[])>}
      */
-    asAmplitudes() {
+    asRenormalizedAmplitudes() {
         return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
-            return Seq.range(floats.length/4).map(i => new Complex(floats[i*4], floats[i*4+1])).toArray();
+
+            // Renormalization factor. For better answers when non-unitary gates are used.
+            let unity = 0;
+            for (let f of floats) {
+                unity += f*f;
+            }
+            unity = Math.sqrt(unity);
+
+            return Seq.range(floats.length/4).map(i => new Complex(floats[i*4]/unity, floats[i*4+1]/unity)).toArray();
         });
     };
 
@@ -302,26 +310,27 @@ export class SuperpositionReadNode {
      * control combination data.
      * @returns {!PipelineNode.<!(!number[])>}
      */
-    asPerQubitProbabilities() {
+    asRenormalizedPerQubitProbabilities() {
         return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
+            let unity = floats[0]; // Renormalization factor. For better answers when non-unitary gates are used.
             return Seq.naturals().
                 map(i => 4 << i).
                 takeWhile(i => i < floats.length).
-                map(i => 1 - floats[i]).
+                map(i => (1 - floats[i] / unity)).
                 toArray();
         });
     };
 }
 
 /** @type {undefined|!WglDirector} */
-let CACHED_SHARED_DIRECTORY = undefined;
+let CACHED_SHARED_DIRECTOR = undefined;
 /** @returns {!WglDirector} */
 let getSharedDirector = () => {
-    if (CACHED_SHARED_DIRECTORY === undefined) {
-        CACHED_SHARED_DIRECTORY = new WglDirector();
+    if (CACHED_SHARED_DIRECTOR === undefined) {
+        CACHED_SHARED_DIRECTOR = new WglDirector();
     }
-    return CACHED_SHARED_DIRECTORY;
+    return CACHED_SHARED_DIRECTOR;
 };
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */

@@ -75,7 +75,10 @@ redraw = function () {
     canvas.height = canvasDiv.clientHeight;
     let painter = new Painter(canvas);
     let shown = inspector.previewDrop();
-    let stats = CircuitStats.fromCircuitAtTime(shown.circuitWidget.circuitDefinition, circuitTime);
+    let statsFunc = shown.circuitWidget.circuitDefinition.numWires > Config.MAX_LIVE_UPDATE_WIRE_COUNT
+        ? CircuitStats.emptyAtTime
+        : CircuitStats.fromCircuitAtTime;
+    let stats = statsFunc(shown.circuitWidget.circuitDefinition, circuitTime);
 
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats);

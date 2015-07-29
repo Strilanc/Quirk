@@ -123,6 +123,15 @@ export default class MathPainter {
         if (magnitude <= 0.0001) {
             return; // Even showing a tiny dot is too much.
         }
+        if (isNaN(magnitude)) {
+            painter.printParagraph("NaN", area, new Point(0.5, 0.5), "red");
+        }
+        if (magnitude == Infinity) {
+            painter.printParagraph("\u221E", area, new Point(0.5, 0.5), "red");
+        }
+        if (magnitude == -Infinity) {
+            painter.printParagraph("-\u221E", area, new Point(0.5, 0.5), "red");
+        }
 
         // fill rect from bottom to top as the amplitude becomes more probable
         painter.fillRect(area.takeBottom(p * area.h), amplitudeProbabilityFillColor);

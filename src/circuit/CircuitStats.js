@@ -33,6 +33,10 @@ export default class CircuitStats{
         this.finalState = finalState;
     }
 
+    static emptyAtTime(circuitDefinition, time) {
+        return new CircuitStats(circuitDefinition, time, [], []);
+    }
+
     static fromCircuitAtTime(circuitDefinition, time) {
         let initialState = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
         let nodes = [];
@@ -51,8 +55,8 @@ export default class CircuitStats{
 
         let merged = SuperpositionNode.mergedReadFloats(nodes);
 
-        let wireProbColsNode = merged.slice(0, merged.length - 1).map(e => e.asPerQubitProbabilities());
-        let finalStateNode = merged[merged.length - 1].asAmplitudes();
+        let wireProbColsNode = merged.slice(0, merged.length - 1).map(e => e.asRenormalizedPerQubitProbabilities());
+        let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();
         let nodeResults = PipelineNode.computePipeline(new Seq(wireProbColsNode).concat([finalStateNode]).toArray());
         let wireProbabilityCols = nodeResults.slice(0, nodeResults.length - 1);
         let finalState = nodeResults[nodeResults.length - 1];

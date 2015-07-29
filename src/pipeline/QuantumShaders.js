@@ -164,6 +164,22 @@ export default class QuantumShaders {
     };
 
     /**
+     * Renders a texture with each pixel's individual color values from the source texture scaled by the given factor.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!number} factor
+     */
+    static renderScaled(director, destinationTexture, inputTexture, factor) {
+        director.render(destinationTexture, GLSL_SCALE, [
+            WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.float("factor", factor)
+        ]);
+    };
+
+    /**
      * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
      * sum of all probabilities matching a mask.
      *
@@ -370,6 +386,21 @@ const GLSL_PASS_THROUGH = new WglShader(`
     void main() {
         vec2 uv = gl_FragCoord.xy / textureSize.xy;
         gl_FragColor = texture2D(inputTexture, uv);
+    }`);
+
+const GLSL_SCALE = new WglShader(`
+    /** The width and height of the textures being operated on. */
+    uniform vec2 textureSize;
+
+    /** The texture to pass through. */
+    uniform sampler2D inputTexture;
+
+    /** Scaling factor. */
+    uniform float factor;
+
+    void main() {
+        vec2 uv = gl_FragCoord.xy / textureSize.xy;
+        gl_FragColor = texture2D(inputTexture, uv) * factor;
     }`);
 
 const GLSL_OVERLAY = new WglShader(`

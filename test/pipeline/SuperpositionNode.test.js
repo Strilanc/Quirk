@@ -17,8 +17,8 @@ suite.webGlTest("fromAmplitudes", () => {
     let t = SuperpositionNode.fromAmplitudes([1.5, new Complex(1, -2), 0, Complex.I]);
     assertThat(t.read().raw().compute()).isEqualTo(new Float32Array([
         1.5, 0, 0, 0, 1, -2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]));
-    assertThat(t.read().asAmplitudes().compute()).isEqualTo([
-        1.5, new Complex(1, -2), 0, Complex.I]);
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo([
+        1.5/Math.sqrt(8.25), new Complex(1, -2).dividedBy(Math.sqrt(8.25)), 0, Complex.I.dividedBy(Math.sqrt(8.25))]);
     assertThat(t.read().asProbabilities().compute()).isEqualTo([
         1.5, 1, 0, 0]);
 
@@ -31,7 +31,7 @@ suite.webGlTest("fromClassicalStateInRegisterOfSize", () => {
     assertThrows(() => SuperpositionNode.fromClassicalStateInRegisterOfSize(4, 2));
     assertThrows(() => SuperpositionNode.fromClassicalStateInRegisterOfSize(9, 3));
 
-    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 4).read().asAmplitudes().compute()).
+    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 4).read().asRenormalizedAmplitudes().compute()).
         isEqualTo([
             1, 0, 0, 0,
             0, 0, 0, 0,
@@ -39,7 +39,7 @@ suite.webGlTest("fromClassicalStateInRegisterOfSize", () => {
             0, 0, 0, 0
         ]);
 
-    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(6, 4).read().asAmplitudes().compute()).
+    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(6, 4).read().asRenormalizedAmplitudes().compute()).
         isEqualTo([
             0, 0, 0, 0,
             0, 0, 1, 0,
@@ -47,7 +47,7 @@ suite.webGlTest("fromClassicalStateInRegisterOfSize", () => {
             0, 0, 0, 0
         ]);
 
-    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(3, 2).read().asAmplitudes().compute()).
+    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(3, 2).read().asRenormalizedAmplitudes().compute()).
         isEqualTo([
             0, 0,
             0, 1
@@ -59,23 +59,23 @@ suite.webGlTest("withQubitOperationApplied", () => {
     let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(7, 3);
 
     t = t.withQubitOperationApplied(0, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 0, 0, 0, 0, s, -s]));
 
     t = t.withQubitOperationApplied(1, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 0, 0, 0.5, -0.5, -0.5, 0.5]));
 
     t = t.withQubitOperationApplied(2, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         s/2, -s/2, -s/2, s/2, -s/2, s/2, s/2, -s/2]));
 
     t = t.withQubitOperationApplied(1, Matrix.HADAMARD, QuantumControlMask.fromBitIs(0, true));
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         s/2, 0, -s/2, -0.5, -s/2, 0, s/2, 0.5]));
 
     t = t.withQubitOperationApplied(2, Matrix.HADAMARD, new QuantumControlMask(0x3, 0));
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, -s/2, -0.5, 0.5, 0, s/2, 0.5]));
 });
 
@@ -83,19 +83,19 @@ suite.webGlTest("withSwapApplied", () => {
     let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(1, 3);
 
     t = t.withSwap(0, 1, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 1, 0, 0, 0, 0, 0]));
 
     t = t.withSwap(0, 1, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 1, 0, 0, 0, 0, 0, 0]));
 
     t = t.withSwap(0, 2, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 0, 0, 1, 0, 0, 0]));
 
     t = t.withSwap(1, 2, QuantumControlMask.NO_CONTROLS);
-    assertThat(t.read().asAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 1, 0, 0, 0, 0, 0]));
 });
 
@@ -205,7 +205,7 @@ suite.webGlTest("mergedReadFloats", () => {
     let textureNodes = Seq.range(8).map(i => SuperpositionNode.fromClassicalStateInRegisterOfSize(i, 3)).toArray();
     let readNodes = SuperpositionNode.mergedReadFloats(textureNodes).values();
     //noinspection JSUnresolvedFunction
-    let amplitudeNodes = new Seq(readNodes).map(e => e.asAmplitudes()).toArray();
+    let amplitudeNodes = new Seq(readNodes).map(e => e.asRenormalizedAmplitudes()).toArray();
     let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
     assertThat(amplitudeArrays).isEqualTo([
         [1, 0, 0, 0, 0, 0, 0, 0],
@@ -240,7 +240,7 @@ suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
     //noinspection JSCheckFunctionSignatures
     let readNodes = SuperpositionNode.mergedReadFloats(stateNodes).values();
     //noinspection JSUnresolvedFunction
-    let amplitudeNodes = new Seq(readNodes).map(e => e.asAmplitudes()).toArray();
+    let amplitudeNodes = new Seq(readNodes).map(e => e.asRenormalizedAmplitudes()).toArray();
     let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
     let s = Math.sqrt(0.5);
     assertThat(amplitudeArrays).isApproximatelyEqualTo([

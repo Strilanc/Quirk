@@ -291,7 +291,7 @@ Gates.Named = {
                 new Complex(Math.random() - 0.5, Math.random() - 0.5)
             ]).closestUnitary(),
             "Fuzz Gate",
-            "Replaced by a different unitary operation each time you grab it.",
+            "Differs every time you grab a new one.",
             "",
             GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
@@ -317,40 +317,25 @@ Gates.Named = {
             "!Reset",
             Matrix.square([1, 1, 0, 0]),
             "Reset Gate [NOT UNITARY]",
-            "Forces a qubit OFF.",
-            "May cause double vision or the annihilation of all things.",
+            "Sends all amplitude into the OFF state, then renormalizes.",
+            "Bad things happen when the ON and OFF amplitudes destructively interfere. " +
+                "Equivalent to post-selection (modulo some Hadamard gates).",
             GateFactory.DEFAULT_DRAWER),
 
-        DECAY: new Gate(
-            "!Decay",
-            Matrix.square([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]),
-            "Decay Gate [NOT UNITARY]",
-            "Cuts existence in half.",
-            "",
+        POST_SELECT: new Gate(
+            "!Select",
+            Matrix.square([0, 0, 0, 1]),
+            "Post-selection Gate",
+            "Discards OFF states, then renormalizes.",
+            "Search terms: PostBQP, Quantum Suicide, Weak Measurement.",
             GateFactory.DEFAULT_DRAWER),
 
-        IDENTITY: new Gate(
-            "",
-            Matrix.square([1, 0, 0, 1]),
-            "Identity Gate",
-            "Has no effect. Does nothing. Wastes space. A nop.",
-            "",
-            GateFactory.DEFAULT_DRAWER),
-
-        SAME: new Gate(
-            "!Same",
-            Matrix.square([Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5), Math.sqrt(0.5)]),
-            "Same Gate [NOT UNITARY]",
-            "Distributes amplitudes equally in all cases, causing the ON and OFF amplitudes to always end up equal.",
-            "What could go wrong?",
-            GateFactory.DEFAULT_DRAWER),
-
-        HOLE: new Gate(
-            "!Hole",
+        VOID: new Gate(
+            "!Void",
             Matrix.square([0, 0, 0, 0]),
-            "Hole Gate [NOT UNITARY]",
-            "Throws the amplitudes down a hole. ALL of them.",
-            "",
+            "Void Gate [NOT UNITARY]",
+            "Zeroes all amplitudes, then renormalizes.",
+            "This kills the universe. If you use controls then it post-selects on the controls being met.",
             GateFactory.DEFAULT_DRAWER)
     }
 };
@@ -422,11 +407,11 @@ Gates.Sets = [
         hint: "Silly",
         gates: [
             Gates.Named.Silly.FUZZ_MAKER(),
+            null,
+            null,
+            Gates.Named.Silly.POST_SELECT,
             Gates.Named.Silly.RESET,
-            Gates.Named.Silly.DECAY,
-            Gates.Named.Silly.IDENTITY,
-            Gates.Named.Silly.SAME,
-            Gates.Named.Silly.HOLE
+            Gates.Named.Silly.VOID
         ]
     }
 ];

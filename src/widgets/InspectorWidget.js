@@ -42,6 +42,10 @@ export default class InspectorWidget {
     updateArea(drawArea) {
         this.drawArea = drawArea;
 
+        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+        this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
+        this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).skipBottom(Config.STATE_VIEWING_AREA_HEIGHT));
+
         let remainder = drawArea.skipTop(this.circuitWidget.area.bottom());
         this.outputStateHintArea = remainder.takeRight(remainder.h);
         this.cumulativeOperationHintArea = this.outputStateHintArea.
@@ -49,10 +53,6 @@ export default class InspectorWidget {
         this.focusedOperationHintArea = remainder.takeLeft(remainder.h);
         this.focusedStateHintArea = this.focusedOperationHintArea.withX(this.focusedOperationHintArea.right() + 5);
         this.cumulativeFocusedOperationHintArea = this.focusedStateHintArea.withX(this.focusedStateHintArea.right() + 5);
-
-        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
-        this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).takeTop(250));
     }
 
     /**
@@ -79,6 +79,10 @@ export default class InspectorWidget {
      * @private
      */
     paintOutput(painter, stats) {
+        if (this.circuitWidget.circuitDefinition.numWires > Config.MAX_LIVE_UPDATE_WIRE_COUNT) {
+            return;
+        }
+
         // Wire probabilities
         this.circuitWidget.drawRightHandPeekGates(painter, stats);
     //

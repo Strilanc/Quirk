@@ -257,7 +257,7 @@ export class Suite {
         Suite.suites.push(this);
         /** @type {!(!function(!{ warn_only: !boolean|!string })[])} */
         this.tests = [];
-         /** @type {!string} name */
+         /** @type {!string} */
         this.name = name;
     }
 

@@ -506,6 +506,34 @@ suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
     ]));
 });
 
+suite.webGlTest("renderScaled", () => {
+    let director = new WglDirector();
+    let amps = new WglTexture(4, 2);
+    QuantumShaders.renderPixelColorData(director, amps, new Float32Array([
+        2, 3, 0, 0,
+        0.5, 0.5, 0, 0,
+        1, 2, 3, 4,
+        0.25, 0.5, 0, 0,
+        Math.sqrt(1/2), 0, 0, 0,
+        0, Math.sqrt(1/3), 0, 0,
+        3/5, 4/5, 0, 0,
+        1, 0, 0, 0
+    ]));
+
+    let out = new WglTexture(4, 2);
+    QuantumShaders.renderScaled(director, out, amps, 3);
+    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo(new Float32Array([
+        6, 9, 0, 0,
+        1.5, 1.5, 0, 0,
+        3, 6, 9, 12,
+        0.75, 1.5, 0, 0,
+        Math.sqrt(9/2), 0, 0, 0,
+        0, Math.sqrt(3), 0, 0,
+        9/5, 12/5, 0, 0,
+        3, 0, 0, 0
+    ]));
+});
+
 suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
     let director = new WglDirector();
     let inp = new WglTexture(4, 2);

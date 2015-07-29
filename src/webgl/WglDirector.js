@@ -3,38 +3,30 @@ import WglCache from "src/webgl/WglCache.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
-let nextUniqueId = 0;
-
-/**
- * A context for telling webgl to do useful things with shaders and textures, like rendering.
- */
-export default class WglDirector {
+class WglDirectorSharedContext {
     constructor() {
-        /**
-         * @type {!HTMLCanvasElement}
-         * @private
-         */
+        /** @type {!HTMLCanvasElement} */
         this.canvas = document.createElement('canvas');
 
         //noinspection JSValidateTypes
-        /**
-         * @type {!WebGLRenderingContext}
-         * @private
-         */
+        /** @type {!WebGLRenderingContext} */
         let g = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
         //noinspection JSValidateTypes
         if (g === null) {
+            document.removeChild(this.canvas);
             throw new Error('Error creating WebGL context.');
         }
         if (g.getExtension('OES_texture_float') === undefined) {
+            document.removeChild(this.canvas);
             throw new Error("WebGL support for 32-bit floats not present.")
         }
 
+        /** @type {!WglCache} */
         this.cache = new WglCache(g, nextUniqueId++, 0);
 
         this.canvas.addEventListener(
             "webglcontextrestored",
-            event => {
+                event => {
                 event.preventDefault();
                 this.cache.temporaryIdentifier++;
             },
@@ -42,11 +34,45 @@ export default class WglDirector {
 
         this.canvas.addEventListener(
             'webglcontextlost',
-            event => {
+                event => {
                 event.preventDefault();
                 this.cache.temporaryIdentifier++;
             },
             false);
+    };
+}
+
+let nextUniqueId = 0;
+let shared = undefined;
+
+/**
+ * A context for telling webgl to do useful things with shaders and textures, like rendering.
+ */
+export default class WglDirector {
+    constructor() {
+        if (shared === undefined) {
+            // Tests fail if too many directors are created, and it's wasteful to make so many canvases when only one
+            // is required. Not aware of any downsides, other than differing side effects (i.e. number of canvases added
+            // to the DOM).
+            shared = new WglDirectorSharedContext();
+        }
+
+        /**
+         * @type {!HTMLCanvasElement}
+         * @private
+         */
+        this.canvas = shared.canvas;
+
+        /**
+         * @type {!WebGLRenderingContext}
+         * @private
+         */
+        this.g = shared.g;
+
+        /**
+         * @type {!WglCache}
+         */
+        this.cache = shared.cache;
     };
 
     /**
