@@ -36,7 +36,12 @@ export default class MathPainter {
                                backgroundColor = Config.BACKGROUND_COLOR,
                                fillColor = Config.PROBABILITY_BOX_FILL_UP_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
-        painter.fillRect(drawArea.takeBottomProportion(probability), fillColor);
+        if (isNaN(probability)) {
+            painter.fillPolygon([drawArea.bottomLeft(), drawArea.topLeft(), drawArea.topRight()], fillColor);
+        } else {
+            painter.fillRect(drawArea.takeBottomProportion(probability), fillColor);
+        }
+
         painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
         painter.strokeRect(drawArea);
     }

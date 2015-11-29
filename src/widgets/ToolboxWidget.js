@@ -109,7 +109,7 @@ class ToolboxWidget {
             }
 
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
-            let hintRect = new Rect(gateRect.center().x - 200, gateRect.bottom() + 2, 400, 300).
+            let hintRect = new Rect(gateRect.center().x - 200, gateRect.bottom() + 2, 600, 300).
                 snapInside(painter.paintableArea().skipTop(gateRect.bottom()));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
         }

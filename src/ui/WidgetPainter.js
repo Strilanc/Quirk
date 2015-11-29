@@ -3,6 +3,7 @@ import Util from "src/base/Util.js"
 import Rect from "src/math/Rect.js"
 import Config from "src/Config.js"
 import Point from "src/math/Point.js"
+import Matrix from "src/math/Matrix.js"
 import Gate from "src/circuit/Gate.js"
 import Painter from "src/ui/Painter.js"
 import MathPainter from "src/ui/MathPainter.js"
@@ -15,32 +16,41 @@ export default class WidgetPainter {
      * @param {!number} time
      */
     static paintGateTooltip(painter, area, gate, time) {
-        painter.fillRect(area);
-
         let h = area.h;
         let w = area.w;
+        let hasOp = !Matrix.identity(2).isEqualTo(gate.matrixOrFunc);
         let titleRect = area.skipTop(h*0.02).takeTop(h*0.06).skipLeft(w*0.02).skipRight(w*0.02);
         let blurbRect = area.skipTop(h*0.09).takeTop(h*0.06).skipLeft(w*0.01).skipRight(w*0.01);
         let detailsRect = area.skipTop(h*0.16).takeTop(h*0.15).skipLeft(w*0.01).skipRight(w*0.01);
         let matrixTitleRect = area.skipTop(h*0.32).takeTop(h*0.06).skipLeft(w*0.02).skipRight(w*0.02);
         let matrixDesc = gate.matrixAt(time).toString(gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED);
 
+        if (!hasOp) {
+            area = area.takeTop(matrixTitleRect.y - area.y);
+        }
+
+        painter.fillRect(area);
+
         painter.printLine(gate.name, titleRect, 0.5, "blue", 24);
         painter.printLine(gate.blurb, blurbRect, 0.5, Config.DEFAULT_TEXT_COLOR, 14);
         painter.printParagraph(gate.details, detailsRect, new Point(0, 0.5));
-        let matrixTitleUsed = painter.printLine("Matrix:", matrixTitleRect, 0, Config.DEFAULT_TEXT_COLOR, 20);
-        let matrixDescRect = area.skipTop(matrixTitleUsed.bottom() - area.y).takeTop(Math.min(h*0.1, 16)).
-            skipLeft(w*0.01).skipRight(w*0.01);
-        painter.printLine(matrixDesc, matrixDescRect, 0, Config.DEFAULT_TEXT_COLOR, 14);
-        let matrixDrawArea = area.skipTop(matrixDescRect.bottom() - area.y).
-            skipTop(h*0.01).skipBottom(h*0.01).skipLeft(w*0.01).skipRight(w*0.01);
 
-        let d = Math.min(matrixDrawArea.w, matrixDrawArea.h);
-        MathPainter.paintMatrix(
-            painter,
-            gate.matrixAt(time),
-            matrixDrawArea.withW(d).withH(d),
-            []);
+        if (hasOp) {
+            let matrixTitleUsed = painter.printLine("Matrix:", matrixTitleRect, 0, Config.DEFAULT_TEXT_COLOR, 20);
+            let matrixDescRect = area.skipTop(matrixTitleUsed.bottom() - area.y).takeTop(Math.min(h*0.1, 16)).
+                skipLeft(w*0.01).skipRight(w*0.01);
+
+            painter.printLine(matrixDesc, matrixDescRect, 0, Config.DEFAULT_TEXT_COLOR, 14);
+            let matrixDrawArea = area.skipTop(matrixDescRect.bottom() - area.y).
+                skipTop(h*0.01).skipBottom(h*0.01).skipLeft(w*0.01).skipRight(w*0.01);
+
+            let d = Math.min(matrixDrawArea.w, matrixDrawArea.h);
+            MathPainter.paintMatrix(
+                painter,
+                gate.matrixAt(time),
+                matrixDrawArea.withW(d).withH(d),
+                []);
+        }
 
         painter.strokeRect(area);
     };

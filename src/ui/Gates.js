@@ -14,10 +14,9 @@ Gates.Named = {
             "•",
             Matrix.CONTROL,
             "Control",
-            "Modifies linked operations to only happen when the control qubit is ON.",
-            "The control 'gate' is a modifier of other operations. " +
-                "It conditions them to only occur in the parts of the superposition where the control qubit is ON. " +
-                "It applies to all operation in the same column.",
+            "Conditions on a qubit being ON.",
+            "Modifies operations in the same column to only occur in the parts of the superposition where the control " +
+                "qubit is ON.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -29,11 +28,9 @@ Gates.Named = {
             "◦",
             Matrix.ANTI_CONTROL,
             "Anti-Control",
-            "Modifies linked operations to only happen when the control qubit is OFF.",
-            "The anti-control 'gate' is a modifier of other operations. " +
-                "It conditions them to only occur in the parts of the superposition where the control qubit is OFF (" +
-                "the opposite of the usual control gate). " +
-                "It applies to all operation in the same column.",
+            "Conditions on a qubit being OFF.",
+            "Modifies operations in the same column to only occur in the parts of the superposition where the control " +
+                "qubit is OFF.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -46,12 +43,10 @@ Gates.Named = {
         Peek: new Gate(
             "Peek",
             Matrix.identity(2),
-            "Peek",
-            "Shows the chance that a wire is ON.",
-            "Peeking does not affect the result or perform a measurement, though that would be required in practice. " +
-                "In addition to showing the probability that a measurement of the wire at the gate's position would " +
-                "return ON instead of OFF, Peek can show the conditional probability ('t|c') of ON-ness given that " +
-                "the controls were satisfied when affected by controls.",
+            "Peek Gate",
+            "Shows the conditional chance that a wire is ON.",
+            "The displayed value is P(target GIVEN controls); don't confuse it with P(target AND controls). " +
+            "Peek gates magically don't affect the simulated system in any way; they don't even perform a measurement.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -90,65 +85,57 @@ Gates.Named = {
         Down: new Gate(
             "X^+½",
             Matrix.fromPauliRotation(0.25, 0, 0),
-            "Down Gate",
-            "(Another) Half of a Not.",
-            "The Down gate cycles through OFF, (1+i)(OFF - i ON), ON, and (1-i)(OFF + i ON). " +
-                "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
-                "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
-                "Its inverse is the Up gate.",
+            "Half X Gate (+)",
+            "Principle Square Root of Not",
+            "A +90\u00B0 rotation around the Bloch Sphere's X axis. " +
+                "Apply twice for the same effect as an X gate.",
             GateFactory.POWER_DRAWER),
 
         Up: new Gate(
             "X^-½",
             Matrix.fromPauliRotation(0.75, 0, 0),
-            "Up Gate [Beam Splitter]",
-            "Half of a Not. Acts like optical beam splitters.",
-            "The Up gate cycles through the states OFF, (1-i)(OFF + i ON), ON, and (1+i)(OFF - i ON). " +
-                "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
-                "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
-                "Its inverse is the Down gate.",
+            "Half X Gate (-)",
+            "Adjoint Square Root of Not",
+            "A -90\u00B0 rotation around the Bloch Sphere's X axis. " +
+                "Apply twice for the same effect as an X gate.",
             GateFactory.POWER_DRAWER),
 
         Right: new Gate(
             "Y^+½",
             Matrix.fromPauliRotation(0, 0.25, 0),
-            "Right Gate",
-            "Half of a Y Gate.",
-            "The Right gate cycles through OFF, (1+i)(OFF + ON), i ON, and (1-i)(OFF - ON). " +
-                "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
-                "It is a square root of the Pauli Y gate. " +
-                "Its inverse is the Left gate.",
+            "Half Y Gate (+)",
+            "Principle Square Root of Y.",
+            "A +90\u00B0 rotation around the Bloch Sphere's Y axis. " +
+                "Apply twice for the same effect as a Y gate.",
             GateFactory.POWER_DRAWER),
 
         Left: new Gate(
             "Y^-½",
             Matrix.fromPauliRotation(0, 0.75, 0),
-            "Left Gate",
-            "(Another) Half of a Y Gate.",
-            "The Left gate cycles through OFF, (1-i)(OFF - ON), i ON, and (1+i)(OFF + ON). " +
-                "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
-                "It is a square root of the Pauli Y gate. " +
-                "Its inverse is the Right gate.",
+            "Half Y Gate (-)",
+            "Adjoint Square Root of Y.",
+            "A -90\u00B0 rotation around the Bloch Sphere's Y axis. " +
+                "Apply twice for the same effect as a Y gate.",
             GateFactory.POWER_DRAWER),
 
         CounterClockwise: new Gate(
             "Z^+½",
             Matrix.fromPauliRotation(0, 0, 0.25),
-            "Counter-Clockwise Phase Gate",
-            "Phases ON by a factor of i, without affecting OFF.",
-            "The Counter-Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
-                "It is a square root of the Pauli Z gate. " +
-                "Its inverse is the Clockwise Phase Gate.",
+            "Half Z Gate (+) ['P' gate]",
+            "Principle Square Root of Z.",
+            "Phases ON by a factor of i, without affecting OFF. " +
+                "A +90\u00B0 rotation around the Bloch Sphere's Z axis. " +
+                "Apply twice for the same effect as a Z gate.",
             GateFactory.POWER_DRAWER),
 
         Clockwise: new Gate(
             "Z^-½",
             Matrix.fromPauliRotation(0, 0, 0.75),
-            "Clockwise Phase Gate",
-            "Phases ON by a factor of -i, without affecting OFF.",
-            "The Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
-                "It is a square root of the Pauli Z gate. " +
-                "Its inverse is the Counter-Clockwise Phase Gate.",
+            "Half Z Gate (-)",
+            "Adjoint Square Root of Z.",
+            "Phases ON by a factor of -i, without affecting OFF. " +
+                "A +90\u00B0 rotation around the Bloch Sphere's Z axis. " +
+                "Apply twice for the same effect as a Z gate.",
             GateFactory.POWER_DRAWER)
     },
     HalfTurns: {
@@ -157,9 +144,8 @@ Gates.Named = {
             Matrix.PAULI_X,
             "Not Gate [Pauli X Gate]",
             "Toggles between ON and OFF.",
-            "The Not Gate is a 180° turn around the Bloch Sphere's X axis. " +
-                "Pairs states that differ only in the value of target qubit, and swaps their amplitudes. " +
-                "Combine with Control gates to create Controlled-Not and Toffoli gates.",
+            "Toggles the qubit's value in the computational basis. " +
+                "A 180° turn around the Bloch Sphere's X axis.",
             args => {
                 let noControlsInColumn =
                     args.positionInCircuit === null ||
@@ -182,17 +168,15 @@ Gates.Named = {
             Matrix.PAULI_Y,
             "Pauli Y Gate",
             "A combination of the X and Z gates.",
-            "The Pauli Y gate is a 180° turn around the Bloch Sphere's Y axis. " +
-                "It is equivalent to an X gate followed by a Z gate, up to a global phase factor.",
+            "A 180° turn around the Bloch Sphere's Y axis.",
             GateFactory.DEFAULT_DRAWER),
 
         Z: new Gate(
             "Z",
             Matrix.PAULI_Z,
             "Phase Flip Gate [Pauli Z Gate]",
-            "Negates the phase of ON states, without affecting OFF states.",
-            "The Phase Flip Gate is a 180° around the Bloch Sphere's Z axis." +
-                "Negates the amplitude of parts of the superposition where the target qubit is ON.",
+            "Negates the amplitude of states where the qubit is ON.",
+            "A 180° turn around the Bloch Sphere's Z axis.",
             GateFactory.DEFAULT_DRAWER),
 
         H: new Gate(
@@ -200,10 +184,9 @@ Gates.Named = {
             Matrix.HADAMARD,
             "Hadamard Gate",
             "Creates/cancels uniform superpositions.",
-            "The Hadamard gate is the simplest non-classical gate. " +
-                "Toggles ON to ON+OFF and back, but toggles OFF to ON-OFF and back. " +
-                "Applying once to each wire, in the starting state, creates a uniform superposition of all states. " +
-                "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis.",
+            "Toggles between ON and ON+OFF; also toggles between OFF and ON-OFF. " +
+                "A 180° turn around the Bloch Sphere's diagonal X+Z axis. " +
+                "Useful for creating uniform superpositions of all states.",
             GateFactory.DEFAULT_DRAWER)
     },
     Exponentiating: {
@@ -215,10 +198,9 @@ Gates.Named = {
                 let s = new Complex(0, Math.sin(r));
                 return Matrix.square([c, s, s, c]);
             },
-            "Evolving Exponential X Gate",
-            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
-            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+            "Exponentiating X Gate",
+            "A gradual spin around the Bloch Sphere's X axis",
+            "Never actually equals X, due to the accumulating phase caused by the matrix exponentiation.",
             GateFactory.CYCLE_DRAWER),
 
         AntiExpiX: new Gate(
@@ -229,10 +211,9 @@ Gates.Named = {
                 let s = new Complex(0, Math.sin(r));
                 return Matrix.square([c, s, s, c]);
             },
-            "Evolving Exponential X Gate",
-            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
-            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+            "Inverse Exponentiating X Gate",
+            "A gradual counter-spin around the Bloch Sphere's X axis",
+            "Never actually equals X, due to the accumulating phase caused by the matrix exponentiation.",
             GateFactory.CYCLE_DRAWER),
 
         ExpiY: new Gate(
@@ -243,10 +224,10 @@ Gates.Named = {
                 let s = Math.sin(r);
                 return Matrix.square([c, -s, s, c]);
             },
-            "Evolving Rotation Gate",
-            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
-            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+            "Exponentiating Y Gate",
+            "A gradual spin around the Bloch Sphere's Y axis",
+            "Corresponds to real 2x2 rotation matrices. " +
+                "Never actually equals Y, due to the accumulating phase caused by the matrix exponentiation.",
             GateFactory.CYCLE_DRAWER),
 
         AntiExpiY: new Gate(
@@ -257,10 +238,10 @@ Gates.Named = {
                 let s = Math.sin(r);
                 return Matrix.square([c, -s, s, c]);
             },
-            "Evolving Rotation Gate",
-            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
-            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+            "Inverse Exponentiating Y Gate",
+            "A gradual counter-spin around the Bloch Sphere's Y axis",
+            "Corresponds to real 2x2 rotation matrices. " +
+                "Never actually equals Y, due to the accumulating phase caused by the matrix exponentiation.",
             GateFactory.CYCLE_DRAWER),
 
         ExpiZ: new Gate(
@@ -271,10 +252,9 @@ Gates.Named = {
                 let s = Math.sin(r);
                 return Matrix.square([new Complex(c, s), 0, 0, new Complex(c, -s)]);
             },
-            "Evolving Exponential Z Gate",
-            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
-            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+            "Exponentiating Z Gate",
+            "A gradual spin around the Bloch Sphere's Z axis",
+            "Never actually equals Z, due to the accumulating phase caused by the matrix exponentiation.",
             GateFactory.CYCLE_DRAWER),
 
         AntiExpiZ: new Gate(
@@ -285,10 +265,9 @@ Gates.Named = {
                 let s = Math.sin(r);
                 return Matrix.square([new Complex(c, s), 0, 0, new Complex(c, -s)]);
             },
-            "Evolving Exponential Z Gate",
-            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
-            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-            "After the first turn, there's a global phase factor of -1 leftover.)",
+            "Inverse Exponentiating Z Gate",
+            "A gradual counter-spin around the Bloch Sphere's Z axis",
+            "Never actually equals Z, due to the accumulating phase caused by the matrix exponentiation.",
             GateFactory.CYCLE_DRAWER)
     },
     Powering: {
