@@ -71,7 +71,16 @@ module.exports = function(grunt) {
             }
         },
         clean: {
-            clean_out_tmp: ["out/tmp"]
+            clean_out_tmp: ["out/tmp"],
+            clean_out_out: ["out/"]
+        },
+        copy: {
+            copy_res_to_out: {
+                cwd: 'res/',
+                src: '*',
+                dest: 'out/',
+                expand: true
+            }
         },
         makeTestPostBootstrap: {
             options: {
@@ -91,6 +100,7 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-traceur');
 
@@ -99,6 +109,7 @@ module.exports = function(grunt) {
         'traceur:translate_src',
         'bootstrap_get_packages:src/**/*.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat_traceur_src',
+        'copy:copy_res_to_out',
         'clean:clean_out_tmp'
     ]);
     grunt.registerTask('build_test', [
@@ -111,6 +122,6 @@ module.exports = function(grunt) {
     ]);
     grunt.registerTask('build', ['build_src', 'build_test']);
 
-    grunt.registerTask('test', ['build_test', 'karma:unit_just_firefox_for_travis']);
-    grunt.registerTask('test_more', ['build_test', 'karma:unit']);
+    grunt.registerTask('test_just_firefox_for_travis_ci', ['build_test', 'karma:unit_just_firefox_for_travis']);
+    grunt.registerTask('test', ['build_test', 'karma:unit']);
 };
