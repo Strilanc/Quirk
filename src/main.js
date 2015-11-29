@@ -7,6 +7,7 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
+import describe from "src/base/Describe.js"
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
@@ -102,7 +103,7 @@ let isClicking = mouseEvent => mouseEvent.which === 1;
 
 let useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
-        return;
+        return false;
     }
     inspector = newInspector;
     let jsonText = snapshot();
@@ -112,21 +113,33 @@ let useInspector = (newInspector, keepInHistory) => {
     }
 
     redraw();
+    return true;
 };
 
-//noinspection JSUnresolvedFunction
-canvas.addEventListener("mousedown", ev => {
+let down = ev => {
     if (!isClicking(ev)) { return; }
-    ev.preventDefault();
 
     let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
     let newInspector = inspector.withHand(newHand).afterGrabbing();
-    useInspector(newInspector, false);
-    revision.startingUpdate();
-});
+    if (useInspector(newInspector, false)) {
+        ev.preventDefault();
+        revision.startingUpdate();
+    }
+};
+let down2 = ev => {
+    ev.preventDefault();
 
-////noinspection JSUnresolvedFunction
-document.addEventListener("mouseup", ev => {
+    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev.changedTouches[0]));
+    let newInspector = inspector.withHand(newHand).afterGrabbing();
+    let didGrab = newInspector.hand.heldGates !== null && inspector.hand.heldGates === null;
+    if (didGrab) {
+        useInspector(newInspector, false);
+        console.log("prevent0");
+        ev.preventDefault();
+        revision.startingUpdate();
+    }
+};
+let up = ev => {
     if (!isClicking(ev) || !inspector.hand.isBusy()) {
         return;
     }
@@ -135,10 +148,20 @@ document.addEventListener("mouseup", ev => {
     let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
     let newInspector = inspector.withHand(newHand).afterDropping().afterTidyingUp();
     useInspector(newInspector, true);
-});
+};
+let up2 = ev => {
+    if (!inspector.hand.isBusy()) {
+        return;
+    }
 
-//noinspection JSUnresolvedFunction
-document.addEventListener("mousemove", ev => {
+    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev.changedTouches[0]));
+    let newInspector = inspector.withHand(newHand).afterDropping().afterTidyingUp();
+    if (useInspector(newInspector, true)) {
+        console.log("prevent1");
+        ev.preventDefault();
+    }
+};
+let move = ev => {
     if (!isClicking(ev) || !inspector.hand.isBusy()) {
         // Not a drag out of the canvas; don't care.
         return;
@@ -148,7 +171,33 @@ document.addEventListener("mousemove", ev => {
     let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
     let newInspector = inspector.withHand(newHand);
     useInspector(newInspector, false);
-});
+};
+let move2 = ev => {
+    console.log("mov");
+    if (!inspector.hand.isBusy()) {
+        // Not a drag out of the canvas; don't care.
+        return;
+    }
+
+    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev.changedTouches[0]));
+    let newInspector = inspector.withHand(newHand);
+    if (useInspector(newInspector, false)) {
+        console.log("prevent3");
+        ev.preventDefault();
+    }
+};
+
+canvas.addEventListener("mousedown", down);
+//canvas.addEventListener("touchstart", down2);
+
+document.addEventListener("mouseup", up);
+document.addEventListener("touchend", up2);
+
+//noinspection JSUnresolvedFunction
+document.addEventListener("mousemove", move);
+document.addEventListener("touchmove", move2);
+
+// "touchcancel"
 
 //noinspection JSUnresolvedFunction
 canvas.addEventListener("mousemove", ev => {

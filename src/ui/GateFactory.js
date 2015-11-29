@@ -36,7 +36,7 @@ export default class GateFactory {
             `${deg_desc}° Phase Gate`,
             `Rotates the phase of a qubit's ON state by ${deg_desc}° while leaving its OFF state alone.`,
             `The standard Pauli Z gate corresponds to Z(180°).`,
-            GateFactory.DEFAULT_DRAWER);
+            GateFactory.POWER_DRAWER);
     }
 
     /**
@@ -59,7 +59,7 @@ export default class GateFactory {
             `${deg}° around <${x/n}, ${y/n}, ${z/n}>`,
             "A custom operation based on a rotation.",
             "",
-            symbol === undefined ? GateFactory.MATRIX_DRAWER : GateFactory.DEFAULT_DRAWER);
+            symbol === undefined ? GateFactory.MATRIX_DRAWER : GateFactory.POWER_DRAWER);
     }
 
     /**
@@ -86,12 +86,12 @@ export default class GateFactory {
     static fromTargetedRotation(p, fractionLabel, fractionSymbol) {
         Util.need(p >= -1 && p <= 1, arguments);
         return new Gate(
-            `∠${fractionSymbol || fractionLabel}`,
+            `${fractionSymbol || fractionLabel}`,
             Matrix.fromTargetedRotation(p),
             `${fractionLabel} Target Rotation Gate`,
             `A tuned rotation gate that maps an OFF input to an output with ${fractionLabel} probability of being ON.`,
             `Equivalent to R(acos(√(${fractionLabel}))).`,
-            GateFactory.DEFAULT_DRAWER);
+            GateFactory.POWER_DRAWER);
     }
 }
 
@@ -120,6 +120,40 @@ GateFactory.DEFAULT_DRAWER = args => {
 /**
  * @param {!GateDrawParams} args
  */
+GateFactory.POWER_DRAWER = args => {
+    let parts = args.gate.symbol.split("^");
+    if (parts.length != 2) {
+        GateFactory.DEFAULT_DRAWER(args);
+        return;
+    }
+
+    let backColor = Config.GATE_FILL_COLOR;
+    if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
+        backColor = Config.BROKEN_COLOR_GATE;
+    }
+    if (args.isHighlighted) {
+        backColor = Config.HIGHLIGHT_COLOR_GATE;
+    }
+    args.painter.fillRect(args.rect, backColor);
+    args.painter.strokeRect(args.rect);
+    let fontSize = 16;
+    args.painter.printLine(
+        parts[0],
+        args.rect.paddedBy(-2).takeBottomProportion(0.6).takeLeftProportion(0.4),
+        0.8,
+        Config.DEFAULT_TEXT_COLOR,
+        fontSize);
+    args.painter.printLine(
+        parts[1],
+        args.rect.paddedBy(-2).takeTopProportion(0.6).takeRightProportion(0.8),
+        0.3,
+        Config.DEFAULT_TEXT_COLOR,
+        fontSize);
+};
+
+/**
+ * @param {!GateDrawParams} args
+ */
 GateFactory.MATRIX_DRAWER = args => {
     args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
     MathPainter.paintMatrix(
@@ -139,7 +173,7 @@ GateFactory.MATRIX_DRAWER = args => {
  */
 GateFactory.CYCLE_DRAWER = args => {
     if (args.isInToolbox && !args.isHighlighted) {
-        GateFactory.DEFAULT_DRAWER(args);
+        GateFactory.POWER_DRAWER(args);
         return;
     }
     let t = args.stats.time * 2 * Math.PI;
@@ -147,7 +181,7 @@ GateFactory.CYCLE_DRAWER = args => {
         Math.cos(t) * 0.75 * args.rect.w/2,
         -Math.sin(t) * 0.75 * args.rect.h/2);
     let p = args.rect.center().plus(d);
-    GateFactory.DEFAULT_DRAWER(args);
+    GateFactory.POWER_DRAWER(args);
     args.painter.fillCircle(p, 3, "gray");
 };
 

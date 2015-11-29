@@ -76,11 +76,11 @@ suite.test("singleQubitOperationsAt", () => {
         Gates.Named.Special.SwapHalf, Gates.Named.Special.SwapHalf
     ]).singleQubitOperationsAt(0)).isEqualTo([]);
 
-    assertThat(new GateColumn([Gates.Named.Evolving.X]).singleQubitOperationsAt(0)).isEqualTo([]);
-    assertThat(new GateColumn([Gates.Named.Evolving.X]).singleQubitOperationsAt(0.25)).isEqualTo([
+    assertThat(new GateColumn([Gates.Named.Powering.X]).singleQubitOperationsAt(0)).isEqualTo([]);
+    assertThat(new GateColumn([Gates.Named.Powering.X]).singleQubitOperationsAt(0.25)).isEqualTo([
         {m: Matrix.fromPauliRotation(0.25, 0, 0), i: 0}
     ]);
-    assertThat(new GateColumn([Gates.Named.Evolving.X]).singleQubitOperationsAt(0.5)).isEqualTo([
+    assertThat(new GateColumn([Gates.Named.Powering.X]).singleQubitOperationsAt(0.5)).isEqualTo([
         {m: Matrix.PAULI_X, i: 0}
     ]);
 });

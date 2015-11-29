@@ -61,11 +61,11 @@ suite.test("roundTrip_GateColumn", () => {
         new GateColumn([
             null,
             Gates.Named.HalfTurns.X,
-            Gates.Named.Evolving.X,
+            Gates.Named.Powering.X,
             Gates.Named.Special.SwapHalf,
             Gates.Named.Special.Control,
             null]),
-        [1, "X", "X(t)", "Swap", "\u2022", 1]);
+        [1, "X", "X^t", "Swap", "\u2022", 1]);
 });
 
 suite.test("roundTrip_circuitDefinition", () => {

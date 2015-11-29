@@ -8,15 +8,6 @@ import Rect from "src/math/Rect.js"
 let Gates = {};
 export default Gates;
 
-/**
- * @type {{
- *  Special: {Control: !Gate, AntiControl: !Gate, Peek: !Gate, SwapHalf: !Gate},
- *  QuarterTurns: {Down: !Gate, Up: !Gate, Right: !Gate, Left: !Gate, CounterClockwise: !Gate, Clockwise: !Gate},
- *  HalfTurns: {X: !Gate, Y: !Gate, Z: !Gate, H: !Gate}, Evolving: {R: !Gate, H: !Gate, X: !Gate, Y: !Gate, Z: !Gate},
- *  Silly: {FUZZ_SYMBOL: string, FUZZ_MAKER: (!function() : !Gate), CREATION: !Gate, ANNIHILATION: !Gate, RESET: !Gate, DECAY: !Gate,
- *          IDENTITY: !Gate, SAME: !Gate, HOLE: !Gate}
- * }}
- */
 Gates.Named = {
     Special: {
         Control: new Gate(
@@ -107,7 +98,7 @@ Gates.Named = {
 
     QuarterTurns: {
         Down: new Gate(
-            "↓",
+            "X^+½",
             Matrix.fromPauliRotation(0.25, 0, 0),
             "Down Gate",
             "(Another) Half of a Not.",
@@ -115,10 +106,10 @@ Gates.Named = {
                 "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
                 "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
                 "Its inverse is the Up gate.",
-            GateFactory.DEFAULT_DRAWER),
+            GateFactory.POWER_DRAWER),
 
         Up: new Gate(
-            "↑",
+            "X^-½",
             Matrix.fromPauliRotation(0.75, 0, 0),
             "Up Gate [Beam Splitter]",
             "Half of a Not. Acts like optical beam splitters.",
@@ -126,15 +117,10 @@ Gates.Named = {
                 "It is a 90\u00B0 rotation around the Bloch Sphere's X axis. " +
                 "It is a square root of the Pauli X gate, and applying it twice is equivalent to a NOT. " +
                 "Its inverse is the Down gate.",
-            args => {
-                GateFactory.DEFAULT_DRAWER(args);
-                args.painter.ctx.globalAlpha = 0.25;
-                args.painter.strokeLine(args.rect.topLeft(), args.rect.bottomRight());
-                args.painter.ctx.globalAlpha = 1;
-            }),
+            GateFactory.POWER_DRAWER),
 
         Right: new Gate(
-            "→",
+            "Y^+½",
             Matrix.fromPauliRotation(0, 0.25, 0),
             "Right Gate",
             "Half of a Y Gate.",
@@ -142,10 +128,10 @@ Gates.Named = {
                 "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
                 "It is a square root of the Pauli Y gate. " +
                 "Its inverse is the Left gate.",
-            GateFactory.DEFAULT_DRAWER),
+            GateFactory.POWER_DRAWER),
 
         Left: new Gate(
-            "←",
+            "Y^-½",
             Matrix.fromPauliRotation(0, 0.75, 0),
             "Left Gate",
             "(Another) Half of a Y Gate.",
@@ -153,27 +139,27 @@ Gates.Named = {
                 "It is a 90\u00B0 rotation around the Bloch Sphere's Y axis. " +
                 "It is a square root of the Pauli Y gate. " +
                 "Its inverse is the Right gate.",
-            GateFactory.DEFAULT_DRAWER),
+            GateFactory.POWER_DRAWER),
 
         CounterClockwise: new Gate(
-            "↺",
+            "Z^+½",
             Matrix.fromPauliRotation(0, 0, 0.25),
             "Counter-Clockwise Phase Gate",
             "Phases ON by a factor of i, without affecting OFF.",
             "The Counter-Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
                 "It is a square root of the Pauli Z gate. " +
                 "Its inverse is the Clockwise Phase Gate.",
-            GateFactory.DEFAULT_DRAWER),
+            GateFactory.POWER_DRAWER),
 
         Clockwise: new Gate(
-            "↻",
+            "Z^-½",
             Matrix.fromPauliRotation(0, 0, 0.75),
             "Clockwise Phase Gate",
             "Phases ON by a factor of -i, without affecting OFF.",
             "The Clockwise Phase Gate is a 90\u00B0 rotation around the Bloch Sphere's Z axis. " +
                 "It is a square root of the Pauli Z gate. " +
                 "Its inverse is the Counter-Clockwise Phase Gate.",
-            GateFactory.DEFAULT_DRAWER)
+            GateFactory.POWER_DRAWER)
     },
     HalfTurns: {
         X: new Gate(
@@ -230,10 +216,38 @@ Gates.Named = {
                 "Corresponds to a 180° around the Bloch Sphere's diagonal X+Z axis.",
             GateFactory.DEFAULT_DRAWER)
     },
-    Evolving: {
-        R: new Gate(
-            "R(t)",
-            t => {
+    Exponentiating: {
+        ExpiX: new Gate(
+            "e^+iXt",
+                t => {
+                let r = (t % 1) * Math.PI * 2;
+                let c = Math.cos(r);
+                let s = new Complex(0, Math.sin(r));
+                return Matrix.square([c, s, s, c]);
+            },
+            "Evolving Exponential X Gate",
+            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
+            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
+            "After the first turn, there's a global phase factor of -1 leftover.)",
+            GateFactory.CYCLE_DRAWER),
+
+        AntiExpiX: new Gate(
+            "e^-iXt",
+                t => {
+                let r = (-t % 1) * Math.PI * 2;
+                let c = Math.cos(r);
+                let s = new Complex(0, Math.sin(r));
+                return Matrix.square([c, s, s, c]);
+            },
+            "Evolving Exponential X Gate",
+            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
+            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
+            "After the first turn, there's a global phase factor of -1 leftover.)",
+            GateFactory.CYCLE_DRAWER),
+
+        ExpiY: new Gate(
+            "e^+iYt",
+                t => {
                 let r = (t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = Math.sin(r);
@@ -242,42 +256,98 @@ Gates.Named = {
             "Evolving Rotation Gate",
             "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
             "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
-                "After the first turn, there's a global phase factor of -1 leftover.)",
+            "After the first turn, there's a global phase factor of -1 leftover.)",
             GateFactory.CYCLE_DRAWER),
 
-        H: new Gate(
-            "H(t)",
-            t => {
-                let r = (t % 1) / Math.sqrt(2);
-                return Matrix.fromPauliRotation(r, 0, r);
+        AntiExpiY: new Gate(
+            "e^-iYt",
+                t => {
+                let r = (-t % 1) * Math.PI * 2;
+                let c = Math.cos(r);
+                let s = Math.sin(r);
+                return Matrix.square([c, -s, s, c]);
             },
-            "Evolving Hadamard Gate",
-            "Interpolates between no-op and the Hadamard Gate over time.",
-            "Performs a continuous phase-corrected rotation around the Bloch Sphere's X+Z axis.",
+            "Evolving Rotation Gate",
+            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
+            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
+            "After the first turn, there's a global phase factor of -1 leftover.)",
             GateFactory.CYCLE_DRAWER),
 
+        ExpiZ: new Gate(
+            "e^+iZt",
+                t => {
+                let r = (t % 1) * Math.PI * 2;
+                let c = Math.cos(r);
+                let s = Math.sin(r);
+                return Matrix.square([new Complex(c, s), 0, 0, new Complex(c, -s)]);
+            },
+            "Evolving Exponential Z Gate",
+            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
+            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
+            "After the first turn, there's a global phase factor of -1 leftover.)",
+            GateFactory.CYCLE_DRAWER),
+
+        AntiExpiZ: new Gate(
+            "e^-iZt",
+                t => {
+                let r = (-t % 1) * Math.PI * 2;
+                let c = Math.cos(r);
+                let s = Math.sin(r);
+                return Matrix.square([new Complex(c, s), 0, 0, new Complex(c, -s)]);
+            },
+            "Evolving Exponential Z Gate",
+            "Interpolates between no-op and the Not Gate over time, without introducing imaginary factors.",
+            "(The downside of not using complex factors is that it takes two turns to get back to the start point. " +
+            "After the first turn, there's a global phase factor of -1 leftover.)",
+            GateFactory.CYCLE_DRAWER)
+    },
+    Powering: {
         X: new Gate(
-            "X(t)",
-            t => Matrix.fromPauliRotation(t % 1, 0, 0),
+            "X^t",
+                t => Matrix.fromPauliRotation(t % 1, 0, 0),
             "Evolving X Gate",
             "Interpolates between no-op and the Not Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's X axis.",
             GateFactory.CYCLE_DRAWER),
 
+        AntiX: new Gate(
+            "X^-t",
+                t => Matrix.fromPauliRotation((1-t) % 1, 0, 0),
+            "Evolving Anti X Gate",
+            "Interpolates between no-op and the Not Gate over time.",
+            "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's X axis.",
+            GateFactory.CYCLE_DRAWER),
+
         Y: new Gate(
-            "Y(t)",
-            t => Matrix.fromPauliRotation(0, t % 1, 0),
+            "Y^t",
+                t => Matrix.fromPauliRotation(0, t % 1, 0),
             "Evolving Y Gate",
             "Interpolates between no-op and the Pauli Y Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Y axis.",
             GateFactory.CYCLE_DRAWER),
 
+        AntiY: new Gate(
+            "Y^-t",
+                t => Matrix.fromPauliRotation(0, (1-t) % 1, 0),
+            "Evolving Anti Y Gate",
+            "Interpolates between no-op and the Pauli Y Gate over time.",
+            "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Y axis.",
+            GateFactory.CYCLE_DRAWER),
+
         Z: new Gate(
-            "Z(t)",
-            t => Matrix.fromPauliRotation(0, 0, t % 1),
+            "Z^t",
+                t => Matrix.fromPauliRotation(0, 0, t % 1),
             "Evolving Z Gate",
             "Interpolates between no-op and the Phase Flip Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Z axis.",
+            GateFactory.CYCLE_DRAWER),
+
+        AntiZ: new Gate(
+            "Z^-t",
+                t => Matrix.fromPauliRotation(0, 0, (1-t) % 1),
+            "Evolving Anti Z Gate",
+            "Interpolates between no-op and the Phase Flip Gate over time.",
+            "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Z axis.",
             GateFactory.CYCLE_DRAWER)
     },
     Silly: {
@@ -365,42 +435,55 @@ Gates.Sets = [
     {
         hint: "Quarter Turns (+/-)",
         gates: [
-            Gates.Named.QuarterTurns.Up,
+            Gates.Named.QuarterTurns.Down,
             Gates.Named.QuarterTurns.Right,
             Gates.Named.QuarterTurns.CounterClockwise,
-            Gates.Named.QuarterTurns.Down,
+            Gates.Named.QuarterTurns.Up,
             Gates.Named.QuarterTurns.Left,
             Gates.Named.QuarterTurns.Clockwise
         ]
     },
     {
-        hint: "Evolving",
+        hint: "Powering",
         gates: [
-            Gates.Named.Evolving.X,
-            Gates.Named.Evolving.Y,
-            Gates.Named.Evolving.Z,
-            Gates.Named.Evolving.R,
-            Gates.Named.Evolving.H
+            Gates.Named.Powering.X,
+            Gates.Named.Powering.Y,
+            Gates.Named.Powering.Z,
+            Gates.Named.Powering.AntiX,
+            Gates.Named.Powering.AntiY,
+            Gates.Named.Powering.AntiZ
+        ]
+    },
+    {
+        hint: "Exponentiating",
+        gates: [
+            Gates.Named.Exponentiating.ExpiX,
+            Gates.Named.Exponentiating.ExpiY,
+            Gates.Named.Exponentiating.ExpiZ,
+            Gates.Named.Exponentiating.AntiExpiX,
+            Gates.Named.Exponentiating.AntiExpiY,
+            Gates.Named.Exponentiating.AntiExpiZ
         ]
     },
     {
         hint: "Targeted",
         gates: [
-            GateFactory.fromTargetedRotation(-1/3, "-1/3"),
-            GateFactory.fromTargetedRotation(-2/3, "-2/3"),
-            GateFactory.fromTargetedRotation(1/3, "+1/3"),
-            GateFactory.fromTargetedRotation(2/3, "+2/3")
+            GateFactory.fromTargetedRotation(-1/3, "Y^a-√⅓"),
+            GateFactory.fromTargetedRotation(-2/3, "Y^a-√⅔"),
+            null,
+            GateFactory.fromTargetedRotation(1/3, "Y^a√⅓"),
+            GateFactory.fromTargetedRotation(2/3, "Y^a√⅔")
         ]
     },
     {
         hint: "Other Z",
         gates: [
-            GateFactory.fromPauliRotation(0, 0, 1 / 3),
-            GateFactory.fromPauliRotation(0, 0, 1 / 8),
-            GateFactory.fromPauliRotation(0, 0, 1 / 16),
-            GateFactory.fromPauliRotation(0, 0, -1 / 3),
-            GateFactory.fromPauliRotation(0, 0, -1 / 8),
-            GateFactory.fromPauliRotation(0, 0, -1 / 16)
+            GateFactory.fromPauliRotation(0, 0, 1 / 6, "Z^+⅓"),
+            GateFactory.fromPauliRotation(0, 0, 1 / 8, "Z^+¼"),
+            GateFactory.fromPauliRotation(0, 0, 1 / 16, "Z^+⅛"),
+            GateFactory.fromPauliRotation(0, 0, -1 / 6, "Z^-⅓"),
+            GateFactory.fromPauliRotation(0, 0, -1 / 8, "Z^-¼"),
+            GateFactory.fromPauliRotation(0, 0, -1 / 16, "Z^-⅛")
         ]
     },
     {
@@ -432,9 +515,16 @@ Gates.KnownToSerializer = [
     Gates.Named.QuarterTurns.Up,
     Gates.Named.QuarterTurns.Left,
     Gates.Named.QuarterTurns.Clockwise,
-    Gates.Named.Evolving.X,
-    Gates.Named.Evolving.Y,
-    Gates.Named.Evolving.Z,
-    Gates.Named.Evolving.R,
-    Gates.Named.Evolving.H
+    Gates.Named.Powering.X,
+    Gates.Named.Powering.Y,
+    Gates.Named.Powering.Z,
+    Gates.Named.Powering.AntiX,
+    Gates.Named.Powering.AntiY,
+    Gates.Named.Powering.AntiZ,
+    Gates.Named.Exponentiating.ExpiX,
+    Gates.Named.Exponentiating.ExpiY,
+    Gates.Named.Exponentiating.ExpiZ,
+    Gates.Named.Exponentiating.AntiExpiX,
+    Gates.Named.Exponentiating.AntiExpiY,
+    Gates.Named.Exponentiating.AntiExpiZ
 ];
