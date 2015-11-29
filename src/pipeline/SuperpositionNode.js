@@ -317,7 +317,35 @@ export class SuperpositionReadNode {
             return Seq.naturals().
                 map(i => 4 << i).
                 takeWhile(i => i < floats.length).
-                map(i => (1 - floats[i] / unity)).
+                map(i => 1 - floats[i] / unity).
+                toArray();
+        });
+    };
+
+    /**
+     * Reads the probability that each qubit would end up true, given that the mask's conrols were satisfied,
+     * based on the texture data being corresponding control combination data.
+     * @param {!QuantumControlMask} mask
+     * @returns {!PipelineNode.<!(!number[])>}
+     */
+    asRenormalizedConditionalPerQubitProbabilities(mask) {
+        return new PipelineNode([this.floatsNode], inputs => {
+            let floats = inputs[0];
+            return Seq.naturals().
+                map(i => 1 << i).
+                takeWhile(bit => (bit << 2) < floats.length).
+                map(bit => {
+                    let pMatch = floats[(mask.inclusionMask | bit) << 2];
+                    let pEither = floats[(mask.inclusionMask & ~bit) << 2];
+                    if (pEither <= 0) {
+                        return NaN;
+                    }
+                    let p = Math.max(0, Math.min(1, pMatch / pEither));
+                    if ((mask.desiredValueMask & bit) === 0) {
+                        p = 1 - p;
+                    }
+                    return p;
+                }).
                 toArray();
         });
     };

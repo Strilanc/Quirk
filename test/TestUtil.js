@@ -49,7 +49,9 @@ function isApproximatelyEqualToHelper(subject, other, epsilon) {
     } else if (subject.isApproximatelyEqualTo !== undefined) {
         return subject.isApproximatelyEqualTo(other, epsilon);
     } else if (typeof subject === 'number') {
-        return typeof other === 'number' && Math.abs(subject - other) < epsilon;
+        return subject === other ||
+            (isNaN(subject) && isNaN(other)) ||
+            (typeof other === 'number' && Math.abs(subject - other) < epsilon);
     } else if (isArrayIsh(subject)) {
         if (!isArrayIsh(other) || other.length !== subject.length) {
             return false;

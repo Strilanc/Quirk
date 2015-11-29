@@ -42,60 +42,6 @@ export default class MathPainter {
     }
 
     /**
-     * @param {!Painter} painter
-     * @param {!number} probabilityOfCondition
-     * @param {!number} probabilityOfHitGivenCondition
-     * @param {!Rect} drawArea
-     * @param {!string=} backgroundColor
-     * @param {!string=} semiFillColor
-     * @param {!string=} fillColor
-     */
-    static paintConditionalProbabilityBox(painter,
-                                          probabilityOfCondition,
-                                          probabilityOfHitGivenCondition,
-                                          drawArea,
-                                          backgroundColor = Config.BACKGROUND_COLOR,
-                                          semiFillColor = Config.PROBABILITY_BOX_SEMI_FILL_COLOR,
-                                          fillColor = Config.PROBABILITY_BOX_FILL_UP_COLOR) {
-        let h = probabilityOfCondition;
-        let w = h === 0 ? 0 : probabilityOfHitGivenCondition;
-        let gs = w === 0 ? "N/A" : MathPainter.describeProbability(w, 0);
-        let ps = MathPainter.describeProbability(w * h, 0);
-
-        painter.fillRect(drawArea, semiFillColor);
-        painter.fillRect(drawArea.takeLeftProportion(w).takeBottomProportion(h), fillColor);
-        painter.fillRect(drawArea.takeRightProportion(1 - w).takeTopProportion(1 - h), backgroundColor);
-
-        let usedTop = painter.printLine(
-            "t|c:",
-            drawArea.topHalf().skipLeft(1),
-            0,
-            Config.DEFAULT_TEXT_COLOR,
-            10);
-        let usedBottom = painter.printLine(
-            "t\u00B7c:",
-            drawArea.bottomHalf().skipLeft(1),
-            0,
-            Config.DEFAULT_TEXT_COLOR,
-            10);
-
-        let available = drawArea.skipLeft(Math.max(usedTop.right(), usedBottom.right()) - drawArea.x + 1);
-        painter.printLine(
-            gs,
-            available.topHalf().skipRight(1),
-            1,
-            w === 0 ? "red" : Config.DEFAULT_TEXT_COLOR,
-            11);
-        painter.printLine(
-            ps,
-            available.bottomHalf().skipRight(1),
-            1,
-            Config.DEFAULT_TEXT_COLOR,
-            11);
-        painter.strokeRect(drawArea);
-    }
-
-    /**
      * Draws a complex value, assuming it's magnitude is less than 1.
      *
      * @param {!Painter} painter

@@ -58,21 +58,11 @@ Gates.Named = {
                     return;
                 }
 
-                //let p = args.circuitContext.gateColumn.measureProbabilityOn(
-                //    args.circuitContext.wireIndex,
-                //    args.circuitContext.state);
-                //if (p.canDiffer) {
-                //    MathPainter.paintConditionalProbabilityBox(
-                //        args.painter,
-                //        p.probabilityOfCondition,
-                //        p.probabilityOfHitGivenCondition,
-                //        args.rect);
-                //} else {
-                //    MathPainter.paintProbabilityBox(
-                //        args.painter,
-                //        p.probabilityOfCondition * p.probabilityOfHitGivenCondition,
-                //        args.rect);
-                //}
+                let {row, col} = args.positionInCircuit;
+                MathPainter.paintProbabilityBox(
+                    args.painter,
+                    args.stats.probability(row, col, true),
+                    args.rect);
             }),
 
         SwapHalf: new Gate(

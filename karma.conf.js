@@ -5,7 +5,7 @@ module.exports = function(config) {
         files: ['out/all_tests.js'],
         exclude: [],
         preprocessors: {},
-        reporters: ['progress'],
+        reporters: ['dots'],
         port: 19876,
         colors: true,
         logLevel: config.LOG_INFO,

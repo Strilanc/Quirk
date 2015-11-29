@@ -9,9 +9,10 @@ export default class CircuitStats{
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
      * @param {!(!number[])} wireProbabilities
+     * @param {!(!number[])} conditionalWireProbabilities
      * @param {!((!Complex)[])} finalState
      */
-    constructor(circuitDefinition, time, wireProbabilities, finalState) {
+    constructor(circuitDefinition, time, wireProbabilities, conditionalWireProbabilities, finalState) {
         /**
          * The circuit that these stats apply to.
          * @type {!CircuitDefinition}
@@ -28,20 +29,38 @@ export default class CircuitStats{
          */
         this.wireProbabilities = wireProbabilities;
         /**
+         * Probability that each wire is on, individually, at each slice.
+         * @type {!(!number[])}
+         */
+        this.conditionalWireProbabilities = conditionalWireProbabilities;
+        /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
          */
         this.finalState = finalState;
     }
 
+    probability(wireIndex, colIndex, conditional=false) {
+        let stepIndex = colIndex + 1;
+        if (stepIndex >= this.wireProbabilities.length) {
+            // Steps after the final column have no controls, so use the uncontrolled final column in that case.
+            conditional = false;
+        }
+
+        let ps = conditional ? this.conditionalWireProbabilities : this.wireProbabilities;
+        let t = Math.max(0, Math.min(stepIndex, ps.length - 1));
+        return ps[t][wireIndex];
+    }
+
     static emptyAtTime(circuitDefinition, time) {
-        return new CircuitStats(circuitDefinition, time, [], []);
+        return new CircuitStats(circuitDefinition, time, [], [], []);
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
         let initialState = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
         let nodes = [];
         nodes.push(initialState.controlProbabilityCombinations(0));
+        let masks = [QuantumControlMask.NO_CONTROLS];
         for (let col of circuitDefinition.columns) {
             let mask = col.controls();
             for (let op of col.singleQubitOperationsAt(time)) {
@@ -50,19 +69,33 @@ export default class CircuitStats{
             for (let op of col.swapPairs()) {
                 initialState = initialState.withSwap(op[0], op[1], mask);
             }
-            // TODO: get both the controlled aggregates and the per-qubit probabilities.
-            nodes.push(initialState.controlProbabilityCombinations(QuantumControlMask.NO_CONTROLS.desiredValueMask));
+            nodes.push(initialState.controlProbabilityCombinations(mask.desiredValueMask));
+            masks.push(mask);
         }
         nodes.push(initialState);
 
         let merged = SuperpositionNode.mergedReadFloats(nodes);
 
-        let wireProbColsNode = merged.slice(0, merged.length - 1).map(e => e.asRenormalizedPerQubitProbabilities());
+        let m = merged.slice(0, merged.length - 1);
+        let n = m.length;
+        let wireProbColsNode = Seq.range(n).map(i => m[i].asRenormalizedPerQubitProbabilities());
+        let condWireProbColsNode = Seq.range(n).
+            map(i => m[i].asRenormalizedConditionalPerQubitProbabilities(masks[i]));
         let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();
-        let nodeResults = PipelineNode.computePipeline(new Seq(wireProbColsNode).concat([finalStateNode]).toArray());
-        let wireProbabilityCols = nodeResults.slice(0, nodeResults.length - 1);
-        let finalState = nodeResults[nodeResults.length - 1];
+        let nodeResults = PipelineNode.computePipeline(
+            new Seq(wireProbColsNode).
+            concat(condWireProbColsNode).
+            concat([finalStateNode]).
+            toArray());
+        let wireProbabilityCols = nodeResults.slice(0, n);
+        let conditionalWireProbabilityCols = nodeResults.slice(n, n*2);
+        let finalState = nodeResults[n*2];
 
-        return new CircuitStats(circuitDefinition, time, wireProbabilityCols, finalState);
+        return new CircuitStats(
+            circuitDefinition,
+            time,
+            wireProbabilityCols,
+            conditionalWireProbabilityCols,
+            finalState);
     }
 }
