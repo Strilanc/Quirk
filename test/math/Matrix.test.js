@@ -383,3 +383,67 @@ suite.test("closestUnitary_2x2", () => {
     assertThat(Matrix.square([1, Complex.I, -1, Complex.I.times(-1)]).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square([1, 0, 0, Complex.I.times(-1)]));
 });
+
+suite.test("eigenDecomposition", () => {
+    let s = Math.sqrt(0.5);
+    let z = Math.sqrt(2);
+    assertThat(Matrix.identity(2).eigenDecomposition()).isEqualTo([
+        {val: 1, vec: Matrix.col([1, 0])},
+        {val: 1, vec: Matrix.col([0, 1])}
+    ]);
+    assertThat(Matrix.PAULI_X.eigenDecomposition()).isApproximatelyEqualTo([
+        {val: -1, vec: Matrix.col([s, -s])},
+        {val: 1, vec: Matrix.col([s, s])}
+    ]);
+    assertThat(Matrix.PAULI_Y.eigenDecomposition()).isApproximatelyEqualTo([
+        {val: -1, vec: Matrix.col([s, new Complex(0, -s)])},
+        {val: 1, vec: Matrix.col([s, new Complex(0, s)])}
+    ]);
+    assertThat(Matrix.PAULI_Z.eigenDecomposition()).isEqualTo([
+        {val: -1, vec: Matrix.col([0, 1])},
+        {val: 1, vec: Matrix.col([1, 0])}
+    ]);
+    assertThat(Matrix.square([1, 1, 1, -1]).eigenDecomposition()).isApproximatelyEqualTo([
+        {val: -z, vec: Matrix.col([1 - z, 1]).scaledBy(-1/Math.sqrt(4-2*z))},
+        {val: z, vec: Matrix.col([1 + z, 1]).scaledBy(1/Math.sqrt(4+2*z))}
+    ]);
+    assertThat(Matrix.HADAMARD.eigenDecomposition()).isApproximatelyEqualTo([
+        {val: -1, vec: Matrix.col([1 - z, 1]).scaledBy(-1/Math.sqrt(4-2*z))},
+        {val: 1, vec: Matrix.col([1 + z, 1]).scaledBy(1/Math.sqrt(4+2*z))}
+    ]);
+});
+
+suite.test("liftApply", () => {
+    let i = Complex.I;
+    let mi = Complex.I.times(-1);
+    let s = Math.sqrt(0.5);
+    let tExpi = t => (c => c.times(i).times(t).exp());
+    let tPow = t => (c => c.raisedTo(t));
+
+    assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square([-1, 0, 0, -1]));
+    assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square([0, i, i, 0]));
+    assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI/4))).
+        isApproximatelyEqualTo(Matrix.square([1, i, i, 1]).scaledBy(s));
+
+    assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square([-1, 0, 0, -1]));
+    assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square([0, 1, -1, 0]));
+    assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI/4))).isApproximatelyEqualTo(Matrix.square([s, s, -s, s]));
+
+    assertThat(Matrix.PAULI_Z.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square([-1, 0, 0, -1]));
+    assertThat(Matrix.PAULI_Z.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square([i, 0, 0, mi]));
+    assertThat(Matrix.PAULI_Z.liftApply(tExpi(Math.PI/4))).
+        isApproximatelyEqualTo(Matrix.square([new Complex(s, s), 0, 0, new Complex(s, -s)]));
+
+    assertThat(Matrix.PAULI_X.liftApply(tPow(0.5))).
+        isApproximatelyEqualTo(Matrix.square([i, 1, 1, i]).scaledBy(new Complex(0.5, -0.5)));
+    assertThat(Matrix.PAULI_X.liftApply(tPow(-0.5))).
+        isApproximatelyEqualTo(Matrix.square([mi, 1, 1, mi]).scaledBy(new Complex(0.5, 0.5)));
+
+    assertThat(Matrix.PAULI_Y.liftApply(tPow(0.5))).
+        isApproximatelyEqualTo(Matrix.square([1, -1, 1, 1]).scaledBy(new Complex(0.5, 0.5)));
+    assertThat(Matrix.PAULI_Y.liftApply(tPow(-0.5))).
+        isApproximatelyEqualTo(Matrix.square([1, 1, -1, 1]).scaledBy(new Complex(0.5, -0.5)));
+
+    assertThat(Matrix.PAULI_Z.liftApply(tPow(0.5))).isApproximatelyEqualTo(Matrix.square([1, 0, 0, i]));
+    assertThat(Matrix.PAULI_Z.liftApply(tPow(-0.5))).isApproximatelyEqualTo(Matrix.square([1, 0, 0, mi]));
+});

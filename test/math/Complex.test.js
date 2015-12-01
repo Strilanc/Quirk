@@ -217,3 +217,60 @@ suite.test("dividedBy", () => {
     assertThat(new Complex(2, 3).dividedBy(new Complex(0, 2))).isEqualTo(new Complex(1.5, -1));
     assertThat(new Complex(2, -2).dividedBy(new Complex(1, 1))).isEqualTo(new Complex(0, -2));
 });
+
+suite.test("sqrts", () => {
+    let s = Math.sqrt(0.5);
+    assertThat(Complex.ZERO.sqrts()).isEqualTo([0]);
+    assertThat(Complex.ONE.sqrts()).isEqualTo([1, -1]);
+    assertThat(Complex.I.sqrts()).isApproximatelyEqualTo([new Complex(s, s), new Complex(-s, -s)]);
+    assertThat(Complex.ONE.times(-1).sqrts()).isEqualTo([new Complex(0, 1), new Complex(0, -1)]);
+    assertThat(new Complex(4, 0).sqrts()).isEqualTo([2, -2]);
+    assertThat(new Complex(0, -4).sqrts()).isApproximatelyEqualTo([new Complex(s*2, -s*2), new Complex(-s*2, s*2)]);
+});
+
+suite.test("rootsOfQuadratic", () => {
+    assertThrows(() => Complex.rootsOfQuadratic(0, 0, 0));
+
+    assertThat(Complex.rootsOfQuadratic(0, 0, 1)).isEqualTo([]);
+
+    assertThat(Complex.rootsOfQuadratic(1, 0, 4)).isEqualTo([new Complex(0, -2), new Complex(0, 2)]);
+    assertThat(Complex.rootsOfQuadratic(1, 0, 1)).isEqualTo([new Complex(0, -1), new Complex(0, 1)]);
+    assertThat(Complex.rootsOfQuadratic(1, 0, 0)).isEqualTo([0]);
+    assertThat(Complex.rootsOfQuadratic(1, 0, -1)).isEqualTo([-1, 1]);
+    assertThat(Complex.rootsOfQuadratic(1, 0, -4)).isEqualTo([-2, 2]);
+
+    assertThat(Complex.rootsOfQuadratic(1, 1, 0)).isEqualTo([-1, 0]);
+    assertThat(Complex.rootsOfQuadratic(1, 7, 12)).isEqualTo([-4, -3]);
+    assertThat(Complex.rootsOfQuadratic(2, 14, 24)).isEqualTo([-4, -3]);
+
+    let s = Math.sqrt(0.5);
+    assertThat(Complex.rootsOfQuadratic(1, 0, new Complex(0, -1))).
+        isApproximatelyEqualTo([new Complex(-s, -s), new Complex(s, s)]);
+});
+
+suite.test("exp", () => {
+    assertThat(Complex.ZERO.exp()).isEqualTo(1);
+    assertThat(Complex.ONE.exp()).isApproximatelyEqualTo(Math.E);
+    assertThat(Complex.I.times(Math.PI).exp()).isApproximatelyEqualTo(-1);
+    assertThat(Complex.I.times(2*Math.PI).exp()).isApproximatelyEqualTo(1);
+    assertThat(Complex.I.times(Math.PI/2).exp()).isApproximatelyEqualTo(Complex.I);
+    assertThat(new Complex(2, 0).exp()).isApproximatelyEqualTo(Math.E*Math.E);
+    assertThat(new Complex(2, Math.PI).exp()).isApproximatelyEqualTo(-Math.E*Math.E);
+});
+
+suite.test("ln", () => {
+    assertThat(Complex.ONE.ln()).isEqualTo(0);
+    assertThat(new Complex(Math.E, 0).ln()).isApproximatelyEqualTo(1);
+    assertThat(new Complex(-1, 0).ln()).isApproximatelyEqualTo(new Complex(0, Math.PI));
+    assertThat(new Complex(0, 1).ln()).isApproximatelyEqualTo(new Complex(0, Math.PI/2));
+    assertThat(new Complex(Math.E*Math.E, 0).ln()).isApproximatelyEqualTo(new Complex(2, 0));
+    assertThat(new Complex(-Math.E*Math.E, 0).ln()).isApproximatelyEqualTo(new Complex(2, Math.PI));
+});
+
+suite.test("raisedTo", () => {
+    assertThat(Complex.I.raisedTo(Complex.I)).isApproximatelyEqualTo(Math.exp(-Math.PI/2));
+    assertThat(new Complex(1, 1).raisedTo(new Complex(1, 1))).isApproximatelyEqualTo(
+        new Complex(0.2739572538301, 0.5837007587586));
+    assertThat(new Complex(2, 3).raisedTo(new Complex(5, 7))).isApproximatelyEqualTo(
+        new Complex(0.1525582909989, 0.6079153491494));
+});

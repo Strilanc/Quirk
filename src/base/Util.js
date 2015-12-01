@@ -186,31 +186,6 @@ export default class Util {
         }
         return lines;
     }
-
-
-    ///**
-    // * Returns an object's property, or else throws an exception when the object doesn't have that property.
-    // * @param {*} object
-    // * @param {*} key
-    // * @returns {*}
-    // */
-    //static forceGetProperty(object, key) {
-    //    if (!object.hasOwnProperty(key)) {
-    //        throw new Error("Missing property: " + key);
-    //    }
-    //    return object[key];
-    //};
-    //
-    ///**
-    // * @param {function(T) : R} func
-    // * @returns {function(?T) : ?R}
-    // * @template {T, R}
-    // */
-    //static wrapFuncToPropagateNull(func) {
-    //    return function(arg) {
-    //        return arg === null ? null : func(arg);
-    //    }
-    //};
 }
 
 /**

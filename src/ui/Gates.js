@@ -192,12 +192,7 @@ Gates.Named = {
     Exponentiating: {
         ExpiX: new Gate(
             "e^+iXt",
-            t => {
-                let r = (t % 1) * Math.PI * 2;
-                let c = Math.cos(r);
-                let s = new Complex(0, Math.sin(r));
-                return Matrix.square([c, s, s, c]);
-            },
+            t => Matrix.PAULI_X.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
             "Exponentiating X Gate",
             "A gradual spin around the Bloch Sphere's X axis",
             "Never actually equals X, due to the accumulating phase caused by the matrix exponentiation.",
@@ -205,12 +200,7 @@ Gates.Named = {
 
         AntiExpiX: new Gate(
             "e^-iXt",
-            t => {
-                let r = (-t % 1) * Math.PI * 2;
-                let c = Math.cos(r);
-                let s = new Complex(0, Math.sin(r));
-                return Matrix.square([c, s, s, c]);
-            },
+            t => Matrix.PAULI_X.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
             "Inverse Exponentiating X Gate",
             "A gradual counter-spin around the Bloch Sphere's X axis",
             "Never actually equals X, due to the accumulating phase caused by the matrix exponentiation.",
@@ -218,12 +208,7 @@ Gates.Named = {
 
         ExpiY: new Gate(
             "e^+iYt",
-            t => {
-                let r = (t % 1) * Math.PI * 2;
-                let c = Math.cos(r);
-                let s = Math.sin(r);
-                return Matrix.square([c, -s, s, c]);
-            },
+            t => Matrix.PAULI_Y.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
             "Exponentiating Y Gate",
             "A gradual spin around the Bloch Sphere's Y axis",
             "Corresponds to real 2x2 rotation matrices. " +
@@ -232,12 +217,7 @@ Gates.Named = {
 
         AntiExpiY: new Gate(
             "e^-iYt",
-            t => {
-                let r = (-t % 1) * Math.PI * 2;
-                let c = Math.cos(r);
-                let s = Math.sin(r);
-                return Matrix.square([c, -s, s, c]);
-            },
+            t => Matrix.PAULI_Y.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
             "Inverse Exponentiating Y Gate",
             "A gradual counter-spin around the Bloch Sphere's Y axis",
             "Corresponds to real 2x2 rotation matrices. " +
@@ -246,12 +226,7 @@ Gates.Named = {
 
         ExpiZ: new Gate(
             "e^+iZt",
-            t => {
-                let r = (t % 1) * Math.PI * 2;
-                let c = Math.cos(r);
-                let s = Math.sin(r);
-                return Matrix.square([new Complex(c, s), 0, 0, new Complex(c, -s)]);
-            },
+            t => Matrix.PAULI_Z.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
             "Exponentiating Z Gate",
             "A gradual spin around the Bloch Sphere's Z axis",
             "Never actually equals Z, due to the accumulating phase caused by the matrix exponentiation.",
@@ -259,12 +234,7 @@ Gates.Named = {
 
         AntiExpiZ: new Gate(
             "e^-iZt",
-            t => {
-                let r = (-t % 1) * Math.PI * 2;
-                let c = Math.cos(r);
-                let s = Math.sin(r);
-                return Matrix.square([new Complex(c, s), 0, 0, new Complex(c, -s)]);
-            },
+            t => Matrix.PAULI_Z.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
             "Inverse Exponentiating Z Gate",
             "A gradual counter-spin around the Bloch Sphere's Z axis",
             "Never actually equals Z, due to the accumulating phase caused by the matrix exponentiation.",
@@ -273,7 +243,7 @@ Gates.Named = {
     Powering: {
         X: new Gate(
             "X^t",
-            t => Matrix.fromPauliRotation(t % 1, 0, 0),
+            t => Matrix.PAULI_X.liftApply(c => c.raisedTo(t * 2)),
             "Evolving X Gate",
             "Interpolates between no-op and the Not Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's X axis.",
@@ -281,7 +251,7 @@ Gates.Named = {
 
         AntiX: new Gate(
             "X^-t",
-            t => Matrix.fromPauliRotation(-t % 1, 0, 0),
+            t => Matrix.PAULI_X.liftApply(c => c.raisedTo(-t * 2)),
             "Evolving Anti X Gate",
             "Interpolates between no-op and the Not Gate over time.",
             "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's X axis.",
@@ -289,7 +259,7 @@ Gates.Named = {
 
         Y: new Gate(
             "Y^t",
-            t => Matrix.fromPauliRotation(0, t % 1, 0),
+            t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(t * 2)),
             "Evolving Y Gate",
             "Interpolates between no-op and the Pauli Y Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Y axis.",
@@ -297,7 +267,7 @@ Gates.Named = {
 
         AntiY: new Gate(
             "Y^-t",
-            t => Matrix.fromPauliRotation(0, -t % 1, 0),
+            t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(-t * 2)),
             "Evolving Anti Y Gate",
             "Interpolates between no-op and the Pauli Y Gate over time.",
             "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Y axis.",
@@ -305,7 +275,7 @@ Gates.Named = {
 
         Z: new Gate(
             "Z^t",
-            t => Matrix.fromPauliRotation(0, 0, t % 1),
+            t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(t * 2)),
             "Evolving Z Gate",
             "Interpolates between no-op and the Phase Flip Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Z axis.",
@@ -313,7 +283,7 @@ Gates.Named = {
 
         AntiZ: new Gate(
             "Z^-t",
-            t => Matrix.fromPauliRotation(0, 0, -t % 1),
+            t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(-t * 2)),
             "Evolving Anti Z Gate",
             "Interpolates between no-op and the Phase Flip Gate over time.",
             "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Z axis.",

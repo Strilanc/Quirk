@@ -391,7 +391,64 @@ class Matrix {
             c, -s,
             s, c]);
     };
-    
+
+    /**
+     * Computes the eigenvalues and eigenvectors of a 2x2 matrix.
+     * @returns {!Array.<!{val: !Complex, vec: !Matrix}>}
+     */
+    eigenDecomposition() {
+        if (this.width() !== 2 || this.height() !== 2) {
+            throw "Not implemented: non-2x2 eigen decomposition";
+        }
+        let [[a, b],
+             [c, d]] = this.rows;
+        let vals = Complex.rootsOfQuadratic(
+            Complex.ONE,
+            a.plus(d).times(-1),
+            a.times(d).minus(b.times(c)));
+        if (vals.length === 0) {
+            throw new Error("Degenerate")
+        }
+        if (vals.length === 1) {
+            return [
+                {val: vals[0], vec: Matrix.col([1, 0])},
+                {val: vals[0], vec: Matrix.col([0, 1])}
+            ];
+        }
+        return vals.map(v => {
+            // x*(a-L) + y*b = 0
+            let [x, y] = [b.times(-1), a.minus(v)];
+            if (x.isEqualTo(0) && y.isEqualTo(0)) {
+                [x, y] = [v.minus(d), c];
+            }
+            if (!x.isEqualTo(0)) {
+                y = y.dividedBy(x);
+                x = Complex.ONE;
+            }
+            let m = Math.sqrt(x.norm2() + y.norm2());
+            if (m === 0) {
+                throw new Error("Unexpected degenerate");
+            }
+            return {val: v, vec: Matrix.col([x, y]).scaledBy(1/m)};
+        });
+    }
+
+    /**
+     * Lifts a numeric function so that it applies to matrices by using the eigendecomposition and applying the function
+     * to the eigenvalue coefficients.
+     * @param {!function(!Complex) : !Complex} complexFunction
+     * @returns {!Matrix}
+     */
+    liftApply(complexFunction) {
+        let t = this.scaledBy(0);
+        for (let {val, vec} of this.eigenDecomposition()) {
+            let fVal = complexFunction(val);
+            let part = vec.times(vec.adjoint());
+            t = t.plus(part.scaledBy(fVal));
+        }
+        return t;
+    }
+
     /**
      * Factors the matrix int u*s*v parts, where u and v are unitary matrices and s is a real diagonal matrix.
      * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}

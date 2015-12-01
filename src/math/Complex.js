@@ -259,6 +259,71 @@ class Complex {
         var n = this.times(c.conjugate());
         return new Complex(n.real / d, n.imag / d);
     };
+
+    sqrts() {
+        let [r, i] = [this.real, this.imag];
+        let m = Math.sqrt(Math.sqrt(r*r + i*i));
+        if (m === 0) {
+            return [Complex.ZERO];
+        }
+        if (i === 0 && r < 0) {
+            return [new Complex(0, m), new Complex(0, -m)]
+        }
+
+        let a = this.phase() / 2;
+        let c = new Complex(m * Math.cos(a), m * Math.sin(a));
+        return [c, c.times(-1)];
+    }
+
+    /**
+     * Returns the result of raising Euler's constant to the receiving complex value.
+     * @returns {!Complex}
+     */
+    exp() {
+        let [m, c, s] = [Math.exp(this.real), Math.cos(this.imag), Math.sin(this.imag)];
+        return new Complex(m*c, m*s);
+    }
+
+    /**
+     * Returns the natural logarithm of the receiving complex value.
+     * @returns {!Complex}
+     */
+    ln() {
+        return new Complex(Math.log(this.abs()), this.phase());
+    }
+
+    /**
+     * Returns the result of raising the receiving complex value to the given complex exponent.
+     * @param {!number|!Complex} exponent
+     * @returns {!Complex}
+     */
+    raisedTo(exponent) {
+        return this.ln().times(Complex.from(exponent)).exp();
+    }
+
+    /**
+     * Returns the distinct roots of the quadratic, or linear, equation.
+     */
+    static rootsOfQuadratic(a, b, c) {
+        a = Complex.from(a);
+        b = Complex.from(b);
+        c = Complex.from(c);
+
+        if (a.isEqualTo(0)) {
+            if (!b.isEqualTo(0)) {
+                return [-c / b];
+            }
+            if (!c.isEqualTo(0)) {
+                return [];
+            }
+            throw Error("Degenerate");
+        }
+
+        let difs = b.times(b).minus(a.times(c).times(4)).sqrts();
+        let mid = b.times(-1);
+        let denom = a.times(2);
+        return difs.map(d => mid.minus(d).dividedBy(denom));
+    }
 }
 
 /**
