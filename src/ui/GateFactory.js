@@ -75,24 +75,6 @@ export default class GateFactory {
             "",
             GateFactory.MATRIX_DRAWER);
     }
-
-    /**
-     *
-     * @param {!number} p
-     * @param {!string} fractionLabel
-     * @param {=string} fractionSymbol
-     * @returns {!Gate}
-     */
-    static fromTargetedRotation(p, fractionLabel, fractionSymbol) {
-        Util.need(p >= -1 && p <= 1, arguments);
-        return new Gate(
-            `${fractionSymbol || fractionLabel}`,
-            Matrix.fromTargetedRotation(p),
-            `${fractionLabel} Target Rotation Gate`,
-            `A tuned rotation gate that maps an OFF input to an output with ${fractionLabel} probability of being ON.`,
-            `Equivalent to R(acos(√(${fractionLabel}))).`,
-            GateFactory.POWER_DRAWER);
-    }
 }
 
 /**

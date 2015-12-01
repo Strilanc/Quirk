@@ -9,6 +9,8 @@ import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import describe from "src/base/Describe.js"
 
+let canvasDiv = document.getElementById("canvasDiv");
+
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
 let canvas = document.getElementById("drawCanvas");
@@ -19,10 +21,6 @@ if (canvas === null) {
 
 //noinspection JSValidateTypes
 /** @type {!HTMLDivElement} */
-let canvasDiv = document.getElementById("canvasDiv");
-
-//noinspection JSValidateTypes
-/** @type {!HTMLDivElement} */
 let inspectorDiv = document.getElementById("inspectorDiv");
 
 //noinspection JSValidateTypes
@@ -30,7 +28,9 @@ let inspectorDiv = document.getElementById("inspectorDiv");
 let currentCircuitLink = document.getElementById("currentCircuitLink");
 
 /** @type {!InspectorWidget} */
-let inspector = InspectorWidget.empty(Config.NUM_INITIAL_WIRES, new Rect(0, 0, canvas.width, canvas.height));
+let inspector = InspectorWidget.empty(
+    Config.NUM_INITIAL_WIRES,
+    new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
 let snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
 let restore = jsonText => {
@@ -73,7 +73,7 @@ let tickWhenAppropriate = () => {
 
 redraw = function () {
     canvas.width = canvasDiv.clientWidth;
-    canvas.height = canvasDiv.clientHeight;
+    canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);
     let shown = inspector.previewDrop();
     let statsFunc = shown.circuitWidget.circuitDefinition.numWires > Config.MAX_LIVE_UPDATE_WIRE_COUNT

@@ -333,4 +333,14 @@ export default class InspectorWidget {
             this.toolboxWidget,
             Hand.EMPTY);
     }
+
+    static defaultHeight(wireCount = undefined) {
+        if (wireCount === undefined) {
+            wireCount = Config.NUM_INITIAL_WIRES;
+        }
+        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+        let stateHeight = Config.STATE_VIEWING_AREA_HEIGHT;
+        let wireHeight = wireCount * 50;
+        return toolboxHeight + stateHeight + wireHeight;
+    }
 }

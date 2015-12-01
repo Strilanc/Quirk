@@ -121,7 +121,7 @@ Gates.Named = {
         CounterClockwise: new Gate(
             "Z^+½",
             Matrix.fromPauliRotation(0, 0, 0.25),
-            "Half Z Gate (+) ['P' gate]",
+            "Half Z Gate (+) ['S' gate]",
             "Principle Square Root of Z.",
             "Phases ON by a factor of i, without affecting OFF. " +
                 "A +90\u00B0 rotation around the Bloch Sphere's Z axis. " +
@@ -192,7 +192,7 @@ Gates.Named = {
     Exponentiating: {
         ExpiX: new Gate(
             "e^+iXt",
-                t => {
+            t => {
                 let r = (t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = new Complex(0, Math.sin(r));
@@ -205,7 +205,7 @@ Gates.Named = {
 
         AntiExpiX: new Gate(
             "e^-iXt",
-                t => {
+            t => {
                 let r = (-t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = new Complex(0, Math.sin(r));
@@ -218,7 +218,7 @@ Gates.Named = {
 
         ExpiY: new Gate(
             "e^+iYt",
-                t => {
+            t => {
                 let r = (t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = Math.sin(r);
@@ -232,7 +232,7 @@ Gates.Named = {
 
         AntiExpiY: new Gate(
             "e^-iYt",
-                t => {
+            t => {
                 let r = (-t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = Math.sin(r);
@@ -246,7 +246,7 @@ Gates.Named = {
 
         ExpiZ: new Gate(
             "e^+iZt",
-                t => {
+            t => {
                 let r = (t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = Math.sin(r);
@@ -259,7 +259,7 @@ Gates.Named = {
 
         AntiExpiZ: new Gate(
             "e^-iZt",
-                t => {
+            t => {
                 let r = (-t % 1) * Math.PI * 2;
                 let c = Math.cos(r);
                 let s = Math.sin(r);
@@ -273,7 +273,7 @@ Gates.Named = {
     Powering: {
         X: new Gate(
             "X^t",
-                t => Matrix.fromPauliRotation(t % 1, 0, 0),
+            t => Matrix.fromPauliRotation(t % 1, 0, 0),
             "Evolving X Gate",
             "Interpolates between no-op and the Not Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's X axis.",
@@ -281,7 +281,7 @@ Gates.Named = {
 
         AntiX: new Gate(
             "X^-t",
-                t => Matrix.fromPauliRotation((1-t) % 1, 0, 0),
+            t => Matrix.fromPauliRotation(-t % 1, 0, 0),
             "Evolving Anti X Gate",
             "Interpolates between no-op and the Not Gate over time.",
             "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's X axis.",
@@ -289,7 +289,7 @@ Gates.Named = {
 
         Y: new Gate(
             "Y^t",
-                t => Matrix.fromPauliRotation(0, t % 1, 0),
+            t => Matrix.fromPauliRotation(0, t % 1, 0),
             "Evolving Y Gate",
             "Interpolates between no-op and the Pauli Y Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Y axis.",
@@ -297,7 +297,7 @@ Gates.Named = {
 
         AntiY: new Gate(
             "Y^-t",
-                t => Matrix.fromPauliRotation(0, (1-t) % 1, 0),
+            t => Matrix.fromPauliRotation(0, -t % 1, 0),
             "Evolving Anti Y Gate",
             "Interpolates between no-op and the Pauli Y Gate over time.",
             "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Y axis.",
@@ -305,7 +305,7 @@ Gates.Named = {
 
         Z: new Gate(
             "Z^t",
-                t => Matrix.fromPauliRotation(0, 0, t % 1),
+            t => Matrix.fromPauliRotation(0, 0, t % 1),
             "Evolving Z Gate",
             "Interpolates between no-op and the Phase Flip Gate over time.",
             "Performs a continuous phase-corrected rotation around the Bloch Sphere's Z axis.",
@@ -313,7 +313,7 @@ Gates.Named = {
 
         AntiZ: new Gate(
             "Z^-t",
-                t => Matrix.fromPauliRotation(0, 0, (1-t) % 1),
+            t => Matrix.fromPauliRotation(0, 0, -t % 1),
             "Evolving Anti Z Gate",
             "Interpolates between no-op and the Phase Flip Gate over time.",
             "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Z axis.",
@@ -402,7 +402,7 @@ Gates.Sets = [
         ]
     },
     {
-        hint: "Quarter Turns (+/-)",
+        hint: "Quarter Turns",
         gates: [
             Gates.Named.QuarterTurns.Down,
             Gates.Named.QuarterTurns.Right,
@@ -432,16 +432,6 @@ Gates.Sets = [
             Gates.Named.Exponentiating.AntiExpiX,
             Gates.Named.Exponentiating.AntiExpiY,
             Gates.Named.Exponentiating.AntiExpiZ
-        ]
-    },
-    {
-        hint: "Targeted",
-        gates: [
-            GateFactory.fromTargetedRotation(-1/3, "Y^a-√⅓"),
-            GateFactory.fromTargetedRotation(-2/3, "Y^a-√⅔"),
-            null,
-            GateFactory.fromTargetedRotation(1/3, "Y^a√⅓"),
-            GateFactory.fromTargetedRotation(2/3, "Y^a√⅔")
         ]
     },
     {
