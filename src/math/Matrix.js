@@ -15,8 +15,8 @@ class Matrix {
         U.need(Array.isArray(rows) && rows.every(Array.isArray), "array rows", rows);
         U.need(rows.length > 0, "non-zero height", arguments);
 
-        var seqRows = new Seq(rows);
-        var w = seqRows.map(e => e.length).distinct().single(0);
+        let seqRows = new Seq(rows);
+        let w = seqRows.map(e => e.length).distinct().single(0);
         U.need(w > 0, "consistent non-zero width", rows);
         U.need(seqRows.flatten().every(e => e instanceof Complex), "complex entries", rows);
     
@@ -65,7 +65,7 @@ class Matrix {
      */
     toString(format) {
         format = format || Format.EXACT;
-        var data = this.rows.
+        let data = this.rows.
             map(row => row.
                 map(e => e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(format)).
                 join(format.itemSeparator)).
@@ -250,18 +250,17 @@ class Matrix {
      * @returns {!Matrix}
      */
     tensorProduct(other) {
-        var m = this;
-        var w1 = this.width();
-        var w2 = other.width();
-        var h1 = this.height();
-        var h2 = other.height();
+        let w1 = this.width();
+        let w2 = other.width();
+        let h1 = this.height();
+        let h2 = other.height();
         return Matrix.generate(w1 * w2, h1 * h2, (r, c) => {
-            var r1 = Math.floor(r / h2);
-            var c1 = Math.floor(c / w2);
-            var r2 = r % h2;
-            var c2 = c % w2;
-            var v1 = m.rows[r1][c1];
-            var v2 = other.rows[r2][c2];
+            let r1 = Math.floor(r / h2);
+            let c1 = Math.floor(c / w2);
+            let r2 = r % h2;
+            let c2 = c % w2;
+            let v1 = this.rows[r1][c1];
+            let v2 = other.rows[r2][c2];
             if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
                 return Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
             }
@@ -283,7 +282,7 @@ class Matrix {
         if (exponent === 0) {
             return Matrix.identity(1);
         }
-        var t = this;
+        let t = this;
         while (exponent > 1) {
             // TODO: use repeated squaring instead
             t = t.tensorProduct(this);
@@ -310,7 +309,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     static fromPauliRotation(x, y, z) {
-        var sinc = t => {
+        let sinc = t => {
             if (Math.abs(t) < 0.0002) { return 1 - t*t / 6.0; }
             return Math.sin(t) / t;
         };
@@ -319,26 +318,26 @@ class Matrix {
         y = -y * Math.PI * 2;
         z = -z * Math.PI * 2;
     
-        var s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
-        var theta = Math.sqrt(x*x + y*y + z*z);
-        var sigma_v = Matrix.PAULI_X.scaledBy(x).plus(
+        let s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
+        let theta = Math.sqrt(x*x + y*y + z*z);
+        let sigma_v = Matrix.PAULI_X.scaledBy(x).plus(
                       Matrix.PAULI_Y.scaledBy(y)).plus(
                       Matrix.PAULI_Z.scaledBy(z));
 
         /** @type {!Complex} */
-        var ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
+        let ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
         /** @type {!Complex} */
-        var cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
+        let cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
     
-        var m = Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
-        var expectNiceValuesCorrection = v => Format.simplifyByRounding(v, 0.0000000000001);
+        let m = Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
+        let expectNiceValuesCorrection = v => Format.simplifyByRounding(v, 0.0000000000001);
         return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
     };
     
     static fromTargetedRotation(p) {
         U.need(p >= -1 && p <= 1, arguments);
-        var c = Math.sqrt(1 - Math.abs(p));
-        var s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
+        let c = Math.sqrt(1 - Math.abs(p));
+        let s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
         c = Format.simplifyByRounding(c, 0.00000000001);
         s = Format.simplifyByRounding(s, 0.00000000001);
         return Matrix.square([c, -s, s, c]);
@@ -360,10 +359,10 @@ class Matrix {
      * @param {!int} swapWire2
      */
     static fromWireSwap(numWires, swapWire1, swapWire2) {
-        var bitSwap = n => {
-            var m1 = 1 << swapWire1;
-            var m2 = 1 << swapWire2;
-            var s = n & ~(m1 | m2);
+        let bitSwap = n => {
+            let m1 = 1 << swapWire1;
+            let m2 = 1 << swapWire2;
+            let s = n & ~(m1 | m2);
             if ((n & m1) !== 0) { s |= m2; }
             if ((n & m2) !== 0) { s |= m1; }
             return s;
@@ -386,8 +385,8 @@ class Matrix {
      * @returns {!Matrix} A real matrix.
      */
     static rotation(theta) {
-        var c = Math.cos(theta);
-        var s = Math.sin(theta);
+        let c = Math.cos(theta);
+        let s = Math.sin(theta);
         return Matrix.square([
             c, -s,
             s, c]);
@@ -403,7 +402,7 @@ class Matrix {
          * @param {!Complex|!number} q
          * @returns {!Matrix}
          */
-        var phase_cancel_matrix = (p, q) => {
+        let phase_cancel_matrix = (p, q) => {
             return Matrix.square([
                 Complex.from(p).unit().conjugate(), 0,
                 0, Complex.from(q).unit().conjugate()]);
@@ -413,22 +412,22 @@ class Matrix {
          * @param {!Matrix} m
          * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
          */
-        var svd_real_2x2 = m => {
-            var a = Complex.realPartOf(m.rows[0][0]);
-            var b = Complex.realPartOf(m.rows[0][1]);
-            var c = Complex.realPartOf(m.rows[1][0]);
-            var d = Complex.realPartOf(m.rows[1][1]);
+        let svd_real_2x2 = m => {
+            let a = Complex.realPartOf(m.rows[0][0]);
+            let b = Complex.realPartOf(m.rows[0][1]);
+            let c = Complex.realPartOf(m.rows[1][0]);
+            let d = Complex.realPartOf(m.rows[1][1]);
     
-            var t = a + d;
-            var x = b + c;
-            var y = b - c;
-            var z = a - d;
+            let t = a + d;
+            let x = b + c;
+            let y = b - c;
+            let z = a - d;
     
-            var theta_0 = Math.atan2(x, t) / 2.0;
-            var theta_d = Math.atan2(y, z) / 2.0;
+            let theta_0 = Math.atan2(x, t) / 2.0;
+            let theta_d = Math.atan2(y, z) / 2.0;
     
-            var s_0 = Math.sqrt(t * t + x * x) / 2.0;
-            var s_d = Math.sqrt(z * z + y * y) / 2.0;
+            let s_0 = Math.sqrt(t * t + x * x) / 2.0;
+            let s_d = Math.sqrt(z * z + y * y) / 2.0;
     
             return {
                 u: Matrix.rotation(theta_0 - theta_d),
@@ -441,39 +440,39 @@ class Matrix {
          * @param {!Matrix} m
          * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
          */
-        var svd_2x2 = m => {
+        let svd_2x2 = m => {
             // Initially all entries are free.
             // m = | ?+?i  ?+?i |
             //     | ?+?i  ?+?i |
     
             // Cancel top row phase
-            var p = phase_cancel_matrix(m.rows[0][0], m.rows[0][1]);
-            var m2 = m.times(p);
+            let p = phase_cancel_matrix(m.rows[0][0], m.rows[0][1]);
+            let m2 = m.times(p);
             // m2 = m p r = | >     >    |
             //              | ?+?i  ?+?i |
     
             // Cancel top-right value by rotation.
-            var r = Matrix.rotation(Math.atan2(m2.rows[0][1].real, m2.rows[0][0].real));
-            var m3 = m2.times(r);
+            let r = Matrix.rotation(Math.atan2(m2.rows[0][1].real, m2.rows[0][0].real));
+            let m3 = m2.times(r);
             // m3 = m p r = | ?+?i  0    |
             //              | ?+?i  ?+?i |
     
             // Make bottom row non-imaginary and non-negative by column phasing.
-            var q = phase_cancel_matrix(m3.rows[1][0], m3.rows[1][1]);
-            var m4 = m3.times(q);
+            let q = phase_cancel_matrix(m3.rows[1][0], m3.rows[1][1]);
+            let m4 = m3.times(q);
             // m4 = m p r q = | ?+?i  0 |
             //                | >     > |
     
             // Cancel imaginary part of top left value by row phasing.
-            var t = phase_cancel_matrix(m4.rows[0][0], 1);
-            var m5 = t.times(m4);
+            let t = phase_cancel_matrix(m4.rows[0][0], 1);
+            let m5 = t.times(m4);
             // m5 = t m p r q = | > 0 |
             //                  | > > |
     
             // All values are now real (also the top-right is zero), so delegate to a
             // singular value decomposition that works for real matrices.
             // t m p r q = u s v
-            var usv = svd_real_2x2(m5);
+            let usv = svd_real_2x2(m5);
     
             // m = (t* u) s (v q* r* p*)
             return {
@@ -500,7 +499,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     closestUnitary() {
-        var svd = this.singularValueDecomposition();
+        let svd = this.singularValueDecomposition();
         return svd.u.times(svd.v);
     };
 }
