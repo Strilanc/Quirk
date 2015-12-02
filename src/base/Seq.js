@@ -650,6 +650,26 @@ class Seq {
     };
 
     /**
+     * Returns a sequence with the same items, except items at the start of the sequence are skipped until an item
+     * doesn't satisfy the given predicate.
+     * @param {!function(T) : !boolean} predicate
+     * @returns {!Seq.<T>}
+     * @template T
+     */
+    skipWhile(predicate) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let matched = true;
+            for (let e of seq) {
+                matched = matched && predicate(e);
+                if (!matched) {
+                    yield e;
+                }
+            }
+        });
+    };
+
+    /**
      * Returns a sequence with the same items, except cut short if it exceeds the given maximum count.
      * @param {!int} maxTakeCount
      * @returns {!Seq.<T>}

@@ -301,4 +301,14 @@ export default class Painter {
         this.ctx.fillStyle = fillColor;
         this.ctx.fill();
     }
+
+    fillArrowHead(x, y, radius, angle, spread, fillColor = 'black') {
+        let a1 = angle + spread/2 + Math.PI;
+        let a2 = angle - spread/2 + Math.PI;
+        this.fillPolygon([
+            new Point(x + Math.cos(angle)*radius, y + Math.sin(angle)*radius),
+            new Point(x + Math.cos(a1)*radius, y + Math.sin(a1)*radius),
+            new Point(x + Math.cos(a2)*radius, y + Math.sin(a2)*radius)
+        ], fillColor);
+    }
 }

@@ -12,7 +12,11 @@ export default class CircuitStats{
      * @param {!(!number[])} conditionalWireProbabilities
      * @param {!((!Complex)[])} finalState
      */
-    constructor(circuitDefinition, time, wireProbabilities, conditionalWireProbabilities, finalState) {
+    constructor(circuitDefinition,
+                time,
+                wireProbabilities,
+                conditionalWireProbabilities,
+                finalState) {
         /**
          * The circuit that these stats apply to.
          * @type {!CircuitDefinition}

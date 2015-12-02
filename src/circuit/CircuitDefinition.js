@@ -1,6 +1,7 @@
 import GateColumn from "src/circuit/GateColumn.js"
 import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
+import Gates from "src/ui/Gates.js"
 
 class CircuitDefinition {
     /**
@@ -27,6 +28,23 @@ class CircuitDefinition {
         return new CircuitDefinition(
             this.numWires,
             this.columns.filter(e => !e.isEmpty()));
+    }
+
+    /**
+     * Determines at what point each wire is measured (if ever).
+     * @returns {!Array.<int>}
+     */
+    wireMeasuredColumns() {
+        if (this.__cachedMeasureIndices === undefined) {
+            this.__cachedMeasureIndices = Seq.
+                range(this.numWires).
+                map(r => Seq.
+                    range(this.columns.length).
+                    skipWhile(c => this.columns[c].gates[r] !== Gates.Named.Special.Measurement).
+                    first(Infinity)).
+                toArray();
+        }
+        return this.__cachedMeasureIndices;
     }
 
     isEqualTo(other) {

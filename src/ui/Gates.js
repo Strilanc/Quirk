@@ -1,9 +1,11 @@
+import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
 import GateFactory from "src/ui/GateFactory.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Rect from "src/math/Rect.js"
+import Seq from "src/base/Seq.js"
 
 let Gates = {};
 export default Gates;
@@ -60,6 +62,42 @@ Gates.Named = {
                     args.rect);
             }),
 
+        Measurement: new Gate(
+            "Measure",
+            Matrix.identity(2),
+            "Measurement Gate",
+            "Measures a qubit in the computational basis.",
+            "Decoheres the qubit into a classical bit. " +
+                "Measured qubits can still be used as controls but, for simplicity, further operations are blocked.",
+                // And by 'simplicity' I mostly mean code-wise and time-cost-wise. Allowing mixed states would square
+                // the amount of information being processed; much easier to lean on the deferred measurement principle.
+            args => {
+                let backColor = Config.GATE_FILL_COLOR;
+                if (args.isHighlighted) {
+                    backColor = Config.HIGHLIGHT_COLOR_GATE;
+                }
+                args.painter.fillRect(args.rect, backColor);
+                args.painter.strokeRect(args.rect);
+
+                let r = args.rect.w*0.4;
+                let {x, y} = args.rect.center();
+                y += r*0.6;
+                let a = -Math.PI/3;
+                let [c, s] = [Math.cos(a)*r*1.5, Math.sin(a)*r*1.5];
+                let [p, q] = [x + c, y + s];
+
+                // Draw the dial and shaft.
+                args.painter.ctx.beginPath();
+                args.painter.ctx.arc(x, y, r, Math.PI, 2*Math.PI);
+                args.painter.ctx.moveTo(x, y);
+                args.painter.ctx.lineTo(p, q);
+                args.painter.ctx.strokeStyle = 'black';
+                args.painter.ctx.lineWidth = 1;
+                args.painter.ctx.stroke();
+                // Draw the indicator head.
+                args.painter.fillArrowHead(p, q, r*0.3, a, Math.PI/2, 'black');
+            }),
+
         SwapHalf: new Gate(
             "Swap",
             Matrix.square([1, 0, 0, 0,
@@ -75,7 +113,14 @@ Gates.Named = {
                     return;
                 }
 
+                let hasMatchedSwaps = new Seq(args.stats.circuitDefinition.columns[args.positionInCircuit.col].gates).
+                    filter(g => g === Gates.Named.Special.SwapHalf).
+                    count() === 2;
                 let swapRect = Rect.centeredSquareWithRadius(args.rect.center(), args.rect.w / 6);
+                if (!hasMatchedSwaps) {
+                    args.painter.strokeRect(swapRect, 'black');
+                    args.painter.fillRect(swapRect, 'red');
+                }
                 args.painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
                 args.painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
             })
@@ -304,24 +349,6 @@ Gates.Named = {
             "",
             GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
-        //CREATION: new Gate(
-        //    "!Creation",
-        //    Matrix.square([0, 1, 0, 0]),
-        //    "Creation operator [NOT UNITARY]",
-        //    "Increases the value of the wire, increasing false to true and increase true to ... uh...\n" +
-        //    "\n" +
-        //    "May cause the annihilation of all things.",
-        //    true),
-        //
-        //ANNIHILATION: new Gate(
-        //    "!Annihilation",
-        //    Matrix.square([0, 0, 1, 0]),
-        //    "Annihilation Operator [NOT UNITARY]",
-        //    "Decreases the value of the wire, decreasing true to false and decreasing false to ... uh...\n" +
-        //    "\n" +
-        //    "May cause the annihilation of all things.",
-        //    true),
-
         RESET: new Gate(
             "!Reset",
             Matrix.square([1, 1, 0, 0]),
@@ -355,9 +382,11 @@ Gates.Sets = [
         hint: "Special",
         gates: [
             Gates.Named.Special.Control,
-            Gates.Named.Special.SwapHalf,
+            null,
             Gates.Named.Special.Peek,
-            Gates.Named.Special.AntiControl
+            Gates.Named.Special.AntiControl,
+            null,
+            Gates.Named.Special.Measurement
         ]
     },
     {
@@ -365,7 +394,7 @@ Gates.Sets = [
         gates: [
             Gates.Named.HalfTurns.H,
             null,
-            null,
+            Gates.Named.Special.SwapHalf,
             Gates.Named.HalfTurns.X,
             Gates.Named.HalfTurns.Y,
             Gates.Named.HalfTurns.Z
@@ -433,6 +462,7 @@ Gates.KnownToSerializer = [
     Gates.Named.Special.Control,
     Gates.Named.Special.SwapHalf,
     Gates.Named.Special.Peek,
+    Gates.Named.Special.Measurement,
     Gates.Named.Special.AntiControl,
     Gates.Named.HalfTurns.H,
     Gates.Named.HalfTurns.X,

@@ -36,3 +36,15 @@ suite.test("isEqualTo", () => {
     assertThat(new CircuitDefinition(2, [])).isEqualTo(new CircuitDefinition(2, []));
     assertThat(new CircuitDefinition(2, [])).isNotEqualTo(new CircuitDefinition(3, []));
 });
+
+suite.test("wireMeasuredColumns", () => {
+    let M = Gates.Named.Special.Measurement;
+    assertThat(
+        new CircuitDefinition(3, [
+            new GateColumn([null, null, null]),
+            new GateColumn([null, null, M]),
+            new GateColumn([M, null, null]),
+            new GateColumn([null, null, null])]
+        ).wireMeasuredColumns()
+    ).isEqualTo([2, Infinity, 1]);
+});

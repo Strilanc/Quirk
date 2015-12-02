@@ -237,7 +237,10 @@ class CircuitWidget {
     gateRect(wireIndex, operationIndex) {
         let op = this.opRect(operationIndex);
         let wire = this.wireRect(wireIndex);
-        return Rect.centeredSquareWithRadius(new Point(op.x + Config.GATE_RADIUS, wire.center().y), Config.GATE_RADIUS);
+        let r = Rect.centeredSquareWithRadius(
+            new Point(op.x + Config.GATE_RADIUS, wire.center().y),
+            Config.GATE_RADIUS);
+        return new Rect(Math.round(r.x - 0.5) + 0.5, Math.round(r.y - 0.5) + 0.5, Math.round(r.w), Math.round(r.h));
     }
 
     afterTidyingUp() {
@@ -346,9 +349,18 @@ class CircuitWidget {
         //// Draw labelled wires
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let wireRect = this.wireRect(i);
-            let y = wireRect.center().y;
-            painter.printParagraph(this.wireLabeller(i) + ":", wireRect.takeLeft(28), new Point(0, 0.5));
-            painter.strokeLine(new Point(this.area.x + 30, y), new Point(this.area.right(), y));
+            let y = Math.round(wireRect.center().y - 0.5) + 0.5;
+            painter.printParagraph(this.wireLabeller(i) + ":", wireRect.takeLeft(20), new Point(1, 0.5));
+            let x = this.circuitDefinition.wireMeasuredColumns()[i];
+            if (x === Infinity) {
+                painter.strokeLine(new Point(this.area.x + 25, y), new Point(this.area.right(), y));
+            } else {
+                x = this.opRect(x).center().x;
+                painter.strokeLine(new Point(this.area.x + 25, y), new Point(x, y));
+                painter.strokeLine(new Point(x, y-1), new Point(this.area.right(), y-1));
+                painter.strokeLine(new Point(x, y+1), new Point(this.area.right(), y+1));
+            }
+
         }
 
         //this.paintWireProbabilityCurves(painter, hand, stats.time);
@@ -389,34 +401,72 @@ class CircuitWidget {
      * @param {!int} columnIndex
      */
     drawColumnControlWires(painter, gateColumn, columnIndex) {
-        let hasControls = gateColumn.gates.indexOf(Gates.Named.Special.Control) > -1;
-        let hasAntiControls = gateColumn.gates.indexOf(Gates.Named.Special.AntiControl) > -1;
-        let hasSwaps = gateColumn.gates.indexOf(Gates.Named.Special.SwapHalf) > -1;
+        let n = gateColumn.gates.length;
+        let gs = gateColumn.gates;
 
-        if (!hasControls && !hasAntiControls && !hasSwaps) {
-            return;
+        let hasTwoSwaps = Seq.range(gateColumn.gates.length).
+                filter(i => gs[i] === Gates.Named.Special.SwapHalf).
+                count() == 2;
+
+        let canBeControlled = i =>
+            gs[i] !== null &&
+            gs[i] !== Gates.Named.Special.Control &&
+            gs[i] !== Gates.Named.Special.AntiControl &&
+            (hasTwoSwaps || gs[i] !== Gates.Named.Special.SwapHalf);
+
+        let causesSingleWire = i =>
+            this.circuitDefinition.wireMeasuredColumns()[i] > columnIndex && (
+                gs[i] === Gates.Named.Special.Control ||
+                gs[i] === Gates.Named.Special.AntiControl);
+
+        let causesDoubleWire = i =>
+            this.circuitDefinition.wireMeasuredColumns()[i] <= columnIndex && (
+                gs[i] === Gates.Named.Special.Control ||
+                gs[i] === Gates.Named.Special.AntiControl);
+
+        let isMatchedSwap = i =>
+            hasTwoSwaps && gs[i] === Gates.Named.Special.SwapHalf;
+
+        let t1 = Seq.range(n).filter(canBeControlled).first(null);
+        let t2 = Seq.range(n).filter(canBeControlled).last(null);
+        let c1 = Seq.range(n).filter(causesSingleWire).first(null);
+        let c2 = Seq.range(n).filter(causesSingleWire).last(null);
+        let cc1 = Seq.range(n).filter(causesDoubleWire).first(null);
+        let cc2 = Seq.range(n).filter(causesDoubleWire).last(null);
+        let s1 = Seq.range(n).filter(isMatchedSwap).first(null);
+        let s2 = Seq.range(n).filter(isMatchedSwap).last(null);
+
+        let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
+        if (c1 !== null && t1 !== null) {
+            let y1 =  this.wireRect(Math.min(t1, c1)).center().y;
+            let y2 = this.wireRect(Math.max(t2, c2)).center().y;
+            painter.strokeLine(new Point(x,y1), new Point(x, y2));
         }
-
-        //let masks = gateColumn.masks();
-        //let p = state.probability(masks.targetMask, masks.inclusionMask);
-        let minIndex;
-        let maxIndex;
-        for (let i = 0; i < gateColumn.gates.length; i++) {
-            if (gateColumn.gates[gateColumn.gates.length - 1 - i] !== null) {
-                minIndex = gateColumn.gates.length - 1 - i;
-            }
-            if (gateColumn.gates[i] !== null) {
-                maxIndex = i;
-            }
+        if (s1 !== null) {
+            let y1 =  this.wireRect(s1).center().y;
+            let y2 = this.wireRect(s2).center().y;
+            painter.strokeLine(new Point(x,y1), new Point(x, y2));
         }
-        let x = this.opRect(columnIndex).center().x;
-        let y1 = this.wireRect(minIndex).center().y;
-        let y2 = this.wireRect(maxIndex).center().y;
-        painter.strokeLine(new Point(x, y1), new Point(x, y2));
+        if (cc1 !== null && t1 !== null) {
+            let y1 =  this.wireRect(Math.min(t1, cc1)).center().y;
+            let y2 = this.wireRect(Math.max(t2, cc2)).center().y;
+            painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
+            painter.strokeLine(new Point(x-1, y1), new Point(x-1, y2));
+        }
+    }
 
-        //painter.ctx.globalAlpha = Config.CONTROL_WIRE_ACTIVE_GLOW_ALPHA * p;
-        //painter.fillRect(new Rect(x - 3, y1, 6, y2 - y1), Config.CONTROL_WIRE_ACTIVE_GLOW_COLOR);
-        //painter.ctx.globalAlpha = 1;
+    static _shiftGateAhead(cols, row, oldCol, minCol) {
+        let gate = cols[oldCol].gates[row];
+        let newCol = Seq.
+            range(cols.length).
+            skip(minCol).
+            skipWhile(c => cols[c].gates[row] !== null).
+            first(cols.length);
+        return new Seq(cols).
+            padded(cols.length + 1, GateColumn.empty(cols[0].gates.length)).
+            withTransformedItem(oldCol, c => c.withGatesAdded(row, new GateColumn([null]))).
+            withTransformedItem(newCol, c => c.withGatesAdded(row, new GateColumn([gate]))).
+            toArray();
     }
 
     /**
@@ -444,6 +494,26 @@ class CircuitWidget {
             padded(i + 1, emptyCol).
             withTransformedItem(i, c => c.withGatesAdded(row, addedGateBlock)).
             toArray();
+
+        // Measurement must happen after non-control operations, so shift it ahead if needed.
+        if (!hand.heldGates.isEqualTo(new GateColumn([Gates.Named.Special.Control]))
+                && !hand.heldGates.isEqualTo(new GateColumn([Gates.Named.Special.AntiControl]))) {
+            let measureCol = this.circuitDefinition.wireMeasuredColumns()[modificationPoint.row];
+            if (measureCol < modificationPoint.col) {
+                newCols =
+                    CircuitWidget._shiftGateAhead(newCols, modificationPoint.row, measureCol, modificationPoint.col);
+            }
+        }
+        if (hand.heldGates.isEqualTo(new GateColumn([Gates.Named.Special.Measurement]))) {
+            newCols = Seq.
+                range(newCols.length).
+                map(c => c <= modificationPoint.col ||
+                        newCols[c].gates[modificationPoint.row] === Gates.Named.Special.Control ||
+                        newCols[c].gates[modificationPoint.row] === Gates.Named.Special.AntiControl
+                    ? newCols[c] : newCols[c].withGatesAdded(modificationPoint.row, new GateColumn([null]))).
+                toArray();
+        }
+
         if (isInserting) {
             this.compressedColumnIndex = i;
         }

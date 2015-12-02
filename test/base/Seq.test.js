@@ -464,8 +464,23 @@ suite.test("takeWhile", () => {
     assertThat(new Seq([1, 3]).takeWhile(e => e % 2 === 1)).iteratesAs(1, 3);
     assertThat(new Seq([1, 4]).takeWhile(e => e % 2 === 1)).iteratesAs(1);
     assertThat(new Seq([2, 3]).takeWhile(e => e % 2 === 1)).iteratesAs();
+    assertThat(new Seq([2, 4]).takeWhile(e => e % 2 === 1)).iteratesAs();
 
     assertThat(new Seq([1, 3, 5, 2, 4, 7]).takeWhile(e => e % 2 === 1)).iteratesAs(1, 3, 5);
+});
+
+suite.test("skipWhile", () => {
+    assertThat(new Seq([]).skipWhile(() => { throw new Error(); })).iteratesAs();
+
+    assertThat(new Seq([1]).skipWhile(e => e % 2 === 1)).iteratesAs();
+    assertThat(new Seq([2]).skipWhile(e => e % 2 === 1)).iteratesAs(2);
+
+    assertThat(new Seq([1, 3]).skipWhile(e => e % 2 === 1)).iteratesAs();
+    assertThat(new Seq([1, 4]).skipWhile(e => e % 2 === 1)).iteratesAs(4);
+    assertThat(new Seq([2, 3]).skipWhile(e => e % 2 === 1)).iteratesAs(2, 3);
+    assertThat(new Seq([2, 4]).skipWhile(e => e % 2 === 1)).iteratesAs(2, 4);
+
+    assertThat(new Seq([1, 3, 5, 2, 4, 7]).skipWhile(e => e % 2 === 1)).iteratesAs(2, 4, 7);
 });
 
 suite.test("skipTailWhile", () => {
