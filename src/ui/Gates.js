@@ -372,7 +372,32 @@ Gates.Named = {
             "Void Gate [NOT UNITARY]",
             "Zeroes all amplitudes, then renormalizes.",
             "This kills the universe. If you use controls then it post-selects on the controls being met.",
-            GateFactory.DEFAULT_DRAWER)
+            GateFactory.DEFAULT_DRAWER),
+
+        SPACER: new Gate(
+            "…",
+            Matrix.identity(2),
+            "Spacer",
+            "A gate with no effect.",
+            "Only useful for affecting the auto-layout of the circuit",
+            args => {
+                if (args.isInToolbox || args.isHighlighted) {
+                    let backColor = Config.GATE_FILL_COLOR;
+                    if (args.isHighlighted) {
+                        backColor = Config.HIGHLIGHT_COLOR_GATE;
+                    }
+                    args.painter.fillRect(args.rect, backColor);
+                    args.painter.strokeRect(args.rect);
+                } else {
+                    let {x, y} = args.rect.center();
+                    let r = new Rect(x - 14, y - 2, 28, 4);
+                    args.painter.fillRect(r, Config.BACKGROUND_COLOR_CIRCUIT);
+                }
+                args.painter.fillCircle(args.rect.center().offsetBy(7, 0), 2, "black");
+                args.painter.fillCircle(args.rect.center(), 2, "black");
+                args.painter.fillCircle(args.rect.center().offsetBy(-7, 0), 2, "black");
+            }
+        )
     }
 };
 
@@ -448,7 +473,7 @@ Gates.Sets = [
         hint: "Silly",
         gates: [
             Gates.Named.Silly.FUZZ_MAKER(),
-            null,
+            Gates.Named.Silly.SPACER,
             null,
             Gates.Named.Silly.POST_SELECT,
             Gates.Named.Silly.RESET,
@@ -464,6 +489,10 @@ Gates.KnownToSerializer = [
     Gates.Named.Special.Peek,
     Gates.Named.Special.Measurement,
     Gates.Named.Special.AntiControl,
+    Gates.Named.Silly.SPACER,
+    Gates.Named.Silly.VOID,
+    Gates.Named.Silly.RESET,
+    Gates.Named.Silly.POST_SELECT,
     Gates.Named.HalfTurns.H,
     Gates.Named.HalfTurns.X,
     Gates.Named.HalfTurns.Y,

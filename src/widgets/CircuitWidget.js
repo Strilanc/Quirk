@@ -395,6 +395,12 @@ class CircuitWidget {
         }
     }
 
+    static _isAllowedAfterMeasurement(g) {
+        return g === Gates.Named.Special.Control ||
+            g === Gates.Named.Special.AntiControl ||
+            g === Gates.Named.Silly.SPACER ||
+            g === Gates.Named.Special.Peek;
+    }
     /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
@@ -412,6 +418,7 @@ class CircuitWidget {
             gs[i] !== null &&
             gs[i] !== Gates.Named.Special.Control &&
             gs[i] !== Gates.Named.Special.AntiControl &&
+            gs[i] !== Gates.Named.Silly.SPACER &&
             (hasTwoSwaps || gs[i] !== Gates.Named.Special.SwapHalf);
 
         let causesSingleWire = i =>
@@ -496,8 +503,7 @@ class CircuitWidget {
             toArray();
 
         // Measurement must happen after non-control operations, so shift it ahead if needed.
-        if (!hand.heldGates.isEqualTo(new GateColumn([Gates.Named.Special.Control]))
-                && !hand.heldGates.isEqualTo(new GateColumn([Gates.Named.Special.AntiControl]))) {
+        if (hand.heldGates.gates.length !== 1 || !CircuitWidget._isAllowedAfterMeasurement(hand.heldGates.gates[0])) {
             let measureCol = this.circuitDefinition.wireMeasuredColumns()[modificationPoint.row];
             if (measureCol < modificationPoint.col) {
                 newCols =
@@ -508,8 +514,7 @@ class CircuitWidget {
             newCols = Seq.
                 range(newCols.length).
                 map(c => c <= modificationPoint.col ||
-                        newCols[c].gates[modificationPoint.row] === Gates.Named.Special.Control ||
-                        newCols[c].gates[modificationPoint.row] === Gates.Named.Special.AntiControl
+                        CircuitWidget._isAllowedAfterMeasurement(newCols[c].gates[modificationPoint.row])
                     ? newCols[c] : newCols[c].withGatesAdded(modificationPoint.row, new GateColumn([null]))).
                 toArray();
         }
