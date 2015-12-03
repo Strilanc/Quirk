@@ -180,7 +180,7 @@ export default class InspectorWidget {
         //this.paintFocus(painter, time);
         this.circuitWidget.paint(painter, this.hand, stats);
         this.paintOutput(painter, stats);
-        this.toolboxWidget.paint(painter, stats, this.hand.hoverPoints());
+        this.toolboxWidget.paint(painter, stats, this.hand);
         this.paintHand(painter, stats);
     }
 

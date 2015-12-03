@@ -55,11 +55,14 @@ class ToolboxWidget {
 
     /**
      *
-     * @param {!Point} p
+     * @param {?Point} p
      *
      * @returns {?{groupIndex: !int, gateIndex: !int, gate: !Gate}}
      */
     findGateAt(p) {
+        if (p === null) {
+            return null;
+        }
         for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
             let group = Gates.Sets[groupIndex];
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
@@ -90,9 +93,9 @@ class ToolboxWidget {
     /**
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
-     * @param {!(!Point[])} focusPoints
+     * @param {!Hand} hand
      */
-    paint(painter, stats, focusPoints) {
+    paint(painter, stats, hand) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
         for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
@@ -103,20 +106,16 @@ class ToolboxWidget {
                 let gate = group.gates[gateIndex];
                 if (gate !== null) {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
-                    let isHighlighted = new Seq(focusPoints).any(pt => r.containsPoint(pt));
+                    let isHighlighted = new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
                     gate.drawer(new GateDrawParams(painter, true, isHighlighted, r, Util.notNull(gate), stats, null));
                 }
             }
         }
 
-        for (let pt of focusPoints) {
-            let f = this.findGateAt(pt);
-            if (f === null) {
-                continue;
-            }
-
+        let f = this.findGateAt(hand.pos);
+        if (f !== null && (!hand.isBusy() || hand.heldGates.isEqualTo(new GateColumn([f.gate])))) {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
-            let hintRect = new Rect(gateRect.center().x - 200, gateRect.bottom() + 2, 600, 300).
+            let hintRect = new Rect(gateRect.right() + 1, gateRect.bottom() + 1, 600, 300).
                 snapInside(painter.paintableArea().skipTop(gateRect.bottom()));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
         }
