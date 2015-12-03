@@ -29,10 +29,17 @@ class ToolboxWidget {
         let dx = Math.floor(gateIndex / 3);
         let dy = gateIndex % 3;
 
-        let x = this.area.x + Config.TOOLBOX_MARGIN_X + dx * Config.TOOLBOX_GATE_SPAN + groupIndex * Config.TOOLBOX_GROUP_SPAN;
-        let y = this.area.y + Config.TOOLBOX_MARGIN_Y + dy * Config.TOOLBOX_GATE_SPAN;
+        let x = this.area.x + Config.TOOLBOX_MARGIN_X +
+            dx * Config.TOOLBOX_GATE_SPAN +
+            groupIndex * Config.TOOLBOX_GROUP_SPAN;
+        let y = this.area.y + Config.TOOLBOX_MARGIN_Y +
+            dy * Config.TOOLBOX_GATE_SPAN;
 
-        return new Rect(x, y, Config.GATE_RADIUS * 2, Config.GATE_RADIUS * 2);
+        return new Rect(
+            Math.round(x - 0.5) + 0.5,
+            Math.round(y - 0.5) + 0.5,
+            Config.GATE_RADIUS * 2,
+            Config.GATE_RADIUS * 2);
     }
 
     /**
