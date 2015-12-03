@@ -22,6 +22,11 @@ export default class Revision {
         this.isOffHistory = false;
     }
 
+    cancel() {
+        this.isOffHistory = false;
+        return this.history[this.index];
+    }
+
     undo() {
         if (this.index > 0 && !this.isOffHistory) {
             this.index -= 1;

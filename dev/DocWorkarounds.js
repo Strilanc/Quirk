@@ -177,3 +177,36 @@ class performance {
         throw new Error("Just a doc class")
     }
 }
+
+/**
+ * @property {*} identifier
+ * @property {!float} screenX
+ * @property {!float} screenY
+ * @property {!float} clientX
+ * @property {!float} clientY
+ * @property {!float} pageX
+ * @property {!float} pageY
+ * @property {!Element} target
+ */
+function Touch() {
+}
+
+/**
+ * @property {!int} length
+ * @property {!function(!int) : !Touch} item
+ */
+function TouchList() {
+}
+
+/**
+ * @property {!boolean} altKey
+ * @property {!TouchList} changedTouches
+ * @property {!boolean} ctrlKey
+ * @property {!boolean} metaKey
+ * @property {!boolean} shiftKey
+ * @property {!TouchList} targetTouches
+ * @property {!TouchList} touches
+ * @property {!function()} preventDefault
+ */
+function TouchEvent() {
+}

@@ -233,14 +233,15 @@ export default class InspectorWidget {
     //}
 
     /**
-    * @returns {!InspectorWidget}
-    */
-    afterGrabbing() {
+     * @param {!boolean} duplicate
+     * @returns {!InspectorWidget}
+     */
+    afterGrabbing(duplicate=false) {
         let hand = this.hand;
         let circuit = this.circuitWidget;
 
         hand = this.toolboxWidget.tryGrab(hand);
-        let x = circuit.tryGrab(hand);
+        let x = circuit.tryGrab(hand, duplicate);
         hand = x.newHand;
         circuit = x.newCircuit;
 

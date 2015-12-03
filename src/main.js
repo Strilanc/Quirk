@@ -44,8 +44,12 @@ let revision = new Revision(snapshot());
 let circuitTime = 0;
 /** @type {!number|null} */
 let ticker = null;
+/**
+ * Milliseconds.
+ * @type {!number}
+ */
 let tickerPrevTime = 0;
-/** @type {!function()} */
+/** @type {!function(void) : void} */
 let redraw;
 
 let tickWhenAppropriate = () => {
@@ -88,18 +92,14 @@ redraw = function () {
     tickWhenAppropriate();
 };
 
-/**
- * @param {!MouseEvent} mouseEvent
- */
-let mousePosRelativeToCanvas = mouseEvent => {
+/** @param {!MouseEvent|!Touch} ev */
+let eventPosRelativeToCanvas = ev => {
     let b = canvas.getBoundingClientRect();
-    return new Point(mouseEvent.clientX - b.left, mouseEvent.clientY - b.top);
+    return new Point(ev.clientX - b.left, ev.clientY - b.top);
 };
 
-/**
- * @param {!MouseEvent} mouseEvent
- */
-let isClicking = mouseEvent => mouseEvent.which === 1;
+/** @param {!MouseEvent} ev */
+let isLeftClicking = ev => ev.which === 1;
 
 let useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
@@ -116,112 +116,133 @@ let useInspector = (newInspector, keepInHistory) => {
     return true;
 };
 
-let down = ev => {
-    if (!isClicking(ev)) { return; }
+let grabbingPointerId = undefined;
+let grabTime = window.performance.now();
+const ALLOW_REGRAB_WATCHDOG_TIME = 5000; // milliseconds
 
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
-    let newInspector = inspector.withHand(newHand).afterGrabbing();
-    if (useInspector(newInspector, false)) {
-        ev.preventDefault();
+/**
+ * @param {!Point} pt
+ * @param {*} id
+ * @param {!boolean} shift
+ * @returns {!boolean} Whether or not we grabbed something.
+ */
+let tryGrabAtWith = (pt, id, shift) => {
+    if (grabbingPointerId !== undefined && window.performance.now() < grabTime + ALLOW_REGRAB_WATCHDOG_TIME) {
+        return false;
+    }
+
+    let newHand = inspector.hand.withPos(pt);
+    let newInspector = inspector.withHand(newHand).afterGrabbing(shift);
+    if (!useInspector(newInspector, false)) {
+        return false;
+    }
+
+    if (newInspector.hand.isBusy()) {
         revision.startingUpdate();
+        grabbingPointerId = id;
+        grabTime = window.performance.now();
     }
+    return true;
 };
-let down2 = ev => {
-    ev.preventDefault();
-
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev.changedTouches[0]));
-    let newInspector = inspector.withHand(newHand).afterGrabbing();
-    let didGrab = newInspector.hand.heldGates !== null && inspector.hand.heldGates === null;
-    if (didGrab) {
-        useInspector(newInspector, false);
-        console.log("prevent0");
-        ev.preventDefault();
-        revision.startingUpdate();
-    }
-};
-let up = ev => {
-    if (!isClicking(ev) || !inspector.hand.isBusy()) {
-        return;
-    }
-    ev.preventDefault();
-
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
-    let newInspector = inspector.withHand(newHand).afterDropping().afterTidyingUp();
-    useInspector(newInspector, true);
-};
-let up2 = ev => {
-    if (!inspector.hand.isBusy()) {
-        return;
+/**
+ * @param {!Point} pt
+ * @param {*} id
+ * @param {!boolean} shift
+ * @returns {!boolean} Whether or not we dragged something.
+ */
+let tryDragAtWith = (pt, id, shift) => {
+    if (grabbingPointerId !== id || !inspector.hand.isBusy()) {
+        return false;
     }
 
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev.changedTouches[0]));
-    let newInspector = inspector.withHand(newHand).afterDropping().afterTidyingUp();
-    if (useInspector(newInspector, true)) {
-        console.log("prevent1");
-        ev.preventDefault();
-    }
-};
-let move = ev => {
-    if (!isClicking(ev) || !inspector.hand.isBusy()) {
-        // Not a drag out of the canvas; don't care.
-        return;
-    }
-    ev.preventDefault();
-
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
+    let newHand = inspector.hand.withPos(pt);
     let newInspector = inspector.withHand(newHand);
     useInspector(newInspector, false);
+    return true;
 };
-let move2 = ev => {
-    console.log("mov");
-    if (!inspector.hand.isBusy()) {
-        // Not a drag out of the canvas; don't care.
-        return;
+/**
+ * @param {!Point} pt
+ * @param {*} id
+ * @param {!boolean} shift
+ * @returns {!boolean} Whether or not we dropped something.
+ */
+let tryDropAtWith = (pt, id, shift) => {
+    if (grabbingPointerId !== id || !inspector.hand.isBusy()) {
+        return false;
     }
 
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev.changedTouches[0]));
-    let newInspector = inspector.withHand(newHand);
-    if (useInspector(newInspector, false)) {
-        console.log("prevent3");
+    let newHand = inspector.hand.withPos(pt);
+    let newInspector = inspector.withHand(newHand).afterDropping().afterTidyingUp();
+    let clearHand = newInspector.hand.withPos(null);
+    let clearInspector = newInspector.withHand(clearHand);
+    useInspector(clearInspector, true);
+    grabbingPointerId = undefined;
+    return true;
+};
+/**
+ * @param {!Point} pt
+ * @param {*} id
+ * @param {!boolean} shift
+ * @returns {!boolean} Whether or not we cancelled.
+ */
+let tryCancelAtWith = (pt, id, shift) => {
+    if (grabbingPointerId !== id) {
+        return false;
+    }
+
+    restore(revision.cancel());
+    grabbingPointerId = undefined;
+    return true;
+};
+
+/**
+ * @param {!TouchEvent} ev
+ * @param {!function(!Point, *, !boolean) : !boolean} handler
+ */
+let handleTouchEventWith = (ev, handler) => {
+    for (let i = 0; i < ev.changedTouches.length; i++) {
+        let touch = ev.changedTouches[i];
+        if (handler(eventPosRelativeToCanvas(touch), touch.identifier, ev.shiftKey)) {
+            ev.preventDefault();
+            return;
+        }
+    }
+};
+
+/**
+ * @param {!MouseEvent} ev
+ * @param {!function(!Point, *) : !boolean} handler
+ */
+let handleMouseEventWith = (ev, handler) => {
+    if (isLeftClicking(ev) && handler(eventPosRelativeToCanvas(ev), "mouse!", ev.shiftKey)) {
         ev.preventDefault();
     }
 };
 
-canvas.addEventListener("mousedown", down);
-//canvas.addEventListener("touchstart", down2);
-
-document.addEventListener("mouseup", up);
-document.addEventListener("touchend", up2);
-
-//noinspection JSUnresolvedFunction
-document.addEventListener("mousemove", move);
-document.addEventListener("touchmove", move2);
-
-// "touchcancel"
-
-//noinspection JSUnresolvedFunction
-canvas.addEventListener("mousemove", ev => {
-    if (isClicking(ev) && inspector.hand.isBusy()) {
-        // being handled by document mouse move
-        return;
+canvas.addEventListener('mousedown', ev => handleMouseEventWith(ev, tryGrabAtWith));
+document.addEventListener('mousemove', ev => {
+    if (inspector.hand.isBusy()) {
+        handleMouseEventWith(ev, tryDragAtWith);
+    } else {
+        ev.preventDefault();
+        let newHand = inspector.hand.withPos(eventPosRelativeToCanvas(ev));
+        let newInspector = inspector.withHand(newHand);
+        useInspector(newInspector, false);
     }
-    ev.preventDefault();
-
-    let newHand = inspector.hand.withPos(mousePosRelativeToCanvas(ev));
-    useInspector(inspector.withHand(newHand), false);
 });
+document.addEventListener('mouseup', ev => handleMouseEventWith(ev, tryDropAtWith));
+canvas.addEventListener('mouseleave', ev => handleMouseEventWith(ev, tryDropAtWith));
 
-//noinspection JSUnresolvedFunction
-canvas.addEventListener("mouseleave", () => {
-    let newHand = inspector.hand.withPos(null);
-    useInspector(inspector.withHand(newHand), false)
-});
+canvas.addEventListener('touchstart', ev => handleTouchEventWith(ev, tryGrabAtWith));
+document.addEventListener('touchmove', ev => handleTouchEventWith(ev, tryDragAtWith));
+document.addEventListener('touchend', ev => handleTouchEventWith(ev, tryDropAtWith));
+document.addEventListener('touchcancel', ev => handleTouchEventWith(ev, tryCancelAtWith));
 
 window.addEventListener('resize', redraw, false);
 
 document.addEventListener("keydown", e => {
-    let Y_KEY = 89;
-    let Z_KEY = 90;
+    const Y_KEY = 89;
+    const Z_KEY = 90;
     let isUndo = e.keyCode == Z_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
     let isRedo1 = e.keyCode == Z_KEY && e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey;
     let isRedo2 = e.keyCode == Y_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;

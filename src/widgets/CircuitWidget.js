@@ -542,9 +542,10 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
+     * @param {!boolean} duplicate
      * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
      */
-    tryGrab(hand) {
+    tryGrab(hand, duplicate=false) {
         if (hand.pos === null) {
             return {newCircuit: this, newHand: hand};
         }
@@ -562,7 +563,9 @@ class CircuitWidget {
 
         let gate = this.circuitDefinition.columns[c].gates[r];
         let remainingGates = new Seq(this.circuitDefinition.columns[c].gates).toArray();
-        remainingGates[r] = null;
+        if (!duplicate) {
+            remainingGates[r] = null;
+        }
         let grabbedGates = [gate];
 
         let grabInset = 0;
