@@ -565,20 +565,7 @@ class CircuitWidget {
         remainingGates[r] = null;
         let grabbedGates = [gate];
 
-        //let isAnchor = gate.isAnchor() &&
-        //    newCol.filter(function (e) { return e !== null && e.isAnchor(); }).length === 1;
-
-        let remainingSwap = remainingGates.indexOf(Gates.Named.Special.SwapHalf);
         let grabInset = 0;
-        if (gate === Gates.Named.Special.SwapHalf && remainingSwap !== -1) {
-            remainingGates[remainingSwap] = null;
-            while (grabbedGates.length < Math.abs(remainingSwap - r)) {
-                grabbedGates.push(null);
-            }
-            grabbedGates.push(Gates.Named.Special.SwapHalf);
-            grabInset = Math.max(0, r - remainingSwap);
-        }
-
         let newCols = new Seq(this.circuitDefinition.columns).
             withOverlayedItem(c, new GateColumn(remainingGates)).
             toArray();
