@@ -50,7 +50,7 @@ class ToolboxWidget {
     groupLabelRect(groupIndex) {
         let r = this.gateDrawRect(groupIndex, 0);
         let c = new Point(r.x + Config.TOOLBOX_GATE_SPAN - Config.TOOLBOX_GATE_SPACING / 2, r.y - 10);
-        return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y - 5, Config.TOOLBOX_GATE_SPAN*2, 10);
+        return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y - 5, Config.TOOLBOX_GATE_SPAN*2, 14);
     }
 
     /**
@@ -100,7 +100,7 @@ class ToolboxWidget {
 
         for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
             let group = Gates.Sets[groupIndex];
-            painter.printLine(group.hint, this.groupLabelRect(groupIndex), 0.5);
+            painter.printLine(group.hint, this.groupLabelRect(groupIndex), 0.5, 'black', 16);
 
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
@@ -119,6 +119,14 @@ class ToolboxWidget {
                 snapInside(painter.paintableArea().skipTop(gateRect.bottom()));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
         }
+
+        let r = new Rect(0, 0, Config.TOOLBOX_MARGIN_X, this.area.h);
+        let {x, y} = r.center();
+        painter.ctx.save();
+        painter.ctx.translate(x, y);
+        painter.ctx.rotate(-Math.PI/2);
+        painter.printLine("Toolbox", new Rect(-r.h / 2, -r.w / 2, r.h, r.w), 0.5, 'black', 24);
+        painter.ctx.restore();
     }
 
     /**
