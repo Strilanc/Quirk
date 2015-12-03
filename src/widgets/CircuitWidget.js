@@ -421,6 +421,7 @@ class CircuitWidget {
             gs[i] !== Gates.Named.Special.Control &&
             gs[i] !== Gates.Named.Special.AntiControl &&
             gs[i] !== Gates.Named.Silly.SPACER &&
+            gs[i] !== Gates.Named.Special.Measurement &&
             (hasTwoSwaps || gs[i] !== Gates.Named.Special.SwapHalf);
 
         let causesSingleWire = i =>
