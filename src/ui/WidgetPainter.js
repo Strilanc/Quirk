@@ -19,10 +19,14 @@ export default class WidgetPainter {
         let h = area.h;
         let w = area.w;
         let hasOp = !Matrix.identity(2).isEqualTo(gate.matrixOrFunc);
-        let titleRect = area.skipTop(h*0.02).takeTop(h*0.06).skipLeft(w*0.02).skipRight(w*0.02);
-        let blurbRect = area.skipTop(h*0.09).takeTop(h*0.06).skipLeft(w*0.01).skipRight(w*0.01);
-        let detailsRect = area.skipTop(h*0.16).takeTop(h*0.15).skipLeft(w*0.01).skipRight(w*0.01);
-        let matrixTitleRect = area.skipTop(h*0.32).takeTop(h*0.06).skipLeft(w*0.02).skipRight(w*0.02);
+        let titleRect = area.skipTop(h*0.02).takeTop(h*0.09).
+            skipLeft(w*0.02).skipRight(w*0.02);
+        let blurbRect = area.skipTop(titleRect.bottom()-area.y+h*0.01).takeTop(h*0.09).
+            skipLeft(w*0.01).skipRight(w*0.01);
+        let detailsRect = area.skipTop(blurbRect.bottom()-area.y+h*0.01).takeTop(h*0.18).
+            skipLeft(w*0.01).skipRight(w*0.01);
+        let matrixTitleRect = area.skipTop(detailsRect.bottom()-area.y+h*0.01).takeTop(h*0.08).
+            skipLeft(w*0.02).skipRight(w*0.02);
         let matrixDesc = gate.matrixAt(time).toString(gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED);
 
         if (!hasOp) {
@@ -36,9 +40,8 @@ export default class WidgetPainter {
         painter.printParagraph(gate.details, detailsRect, new Point(0, 0.5));
 
         if (hasOp) {
-            let matrixTitleUsed = painter.printLine("Matrix:", matrixTitleRect, 0, Config.DEFAULT_TEXT_COLOR, 20);
-            let matrixDescRect = area.skipTop(matrixTitleUsed.bottom() - area.y).takeTop(Math.min(h*0.1, 16)).
-                skipLeft(w*0.01).skipRight(w*0.01);
+            let matrixTitleUsed = painter.printLine("Matrix form: ", matrixTitleRect, 0, Config.DEFAULT_TEXT_COLOR, 20);
+            let matrixDescRect = matrixTitleRect.skipLeft(matrixTitleUsed.right() - matrixTitleRect.x);
 
             painter.printLine(matrixDesc, matrixDescRect, 0, Config.DEFAULT_TEXT_COLOR, 14);
             let matrixDrawArea = area.skipTop(matrixDescRect.bottom() - area.y).

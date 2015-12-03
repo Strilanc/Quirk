@@ -179,4 +179,4 @@ Format.SIMPLIFIED = new Format(true, 0.0005, 3, ", ");
  * (It should look good when varying and animated.)
  * @type {!Format}
  */
-Format.CONSISTENT = new Format(false, 0, 3, ", ");
+Format.CONSISTENT = new Format(false, 0, 2, ", ");
