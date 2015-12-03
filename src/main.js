@@ -167,7 +167,11 @@ let tryDragAtWith = (pt, id, shift) => {
  * @returns {!boolean} Whether or not we dropped something.
  */
 let tryDropAtWith = (pt, id, shift) => {
-    if (grabbingPointerId !== id || !inspector.hand.isBusy()) {
+    if (grabbingPointerId !== id) {
+        return false;
+    }
+    grabbingPointerId = undefined;
+    if (!inspector.hand.isBusy()) {
         return false;
     }
 
@@ -176,7 +180,6 @@ let tryDropAtWith = (pt, id, shift) => {
     let clearHand = newInspector.hand.withPos(null);
     let clearInspector = newInspector.withHand(clearHand);
     useInspector(clearInspector, true);
-    grabbingPointerId = undefined;
     return true;
 };
 /**
