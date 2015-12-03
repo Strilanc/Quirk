@@ -133,15 +133,13 @@ let tryGrabAtWith = (pt, id, shift) => {
 
     let newHand = inspector.hand.withPos(pt);
     let newInspector = inspector.withHand(newHand).afterGrabbing(shift);
-    if (!useInspector(newInspector, false)) {
+    if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
         return false;
     }
 
-    if (newInspector.hand.isBusy()) {
-        revision.startingUpdate();
-        grabbingPointerId = id;
-        grabTime = window.performance.now();
-    }
+    revision.startingUpdate();
+    grabbingPointerId = id;
+    grabTime = window.performance.now();
     return true;
 };
 /**
@@ -155,6 +153,7 @@ let tryDragAtWith = (pt, id, shift) => {
         return false;
     }
 
+    grabTime = window.performance.now();
     let newHand = inspector.hand.withPos(pt);
     let newInspector = inspector.withHand(newHand);
     useInspector(newInspector, false);

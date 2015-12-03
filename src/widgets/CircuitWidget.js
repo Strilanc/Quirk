@@ -382,7 +382,7 @@ class CircuitWidget {
         this.drawColumnControlWires(painter, gateColumn, columnIndex);
 
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
-            let b = this.gateRect(i, columnIndex);
+            let r = this.gateRect(i, columnIndex);
 
             if (gateColumn.gates[i] === null) {
                 continue;
@@ -390,8 +390,10 @@ class CircuitWidget {
             /** @type {!Gate} */
             let gate = gateColumn.gates[i];
 
-            let canGrab = new Seq(hand.hoverPoints()).any(pt => b.containsPoint(pt));
-            gate.drawer(new GateDrawParams(painter, false, canGrab, b, gate, stats, {row: i, col: columnIndex}));
+            let canGrab =
+                (new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt)) && this.compressedColumnIndex === null) ||
+                this.compressedColumnIndex === columnIndex;
+            gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row: i, col: columnIndex}));
         }
     }
 
@@ -519,11 +521,9 @@ class CircuitWidget {
                 toArray();
         }
 
-        if (isInserting) {
-            this.compressedColumnIndex = i;
-        }
-
-        return this.withCircuit(this.circuitDefinition.withColumns(newCols));
+        let result = this.withCircuit(this.circuitDefinition.withColumns(newCols));
+        result.compressedColumnIndex = isInserting ? i : null;
+        return result;
     }
 
     afterDropping(hand) {
