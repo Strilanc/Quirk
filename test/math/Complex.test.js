@@ -248,6 +248,25 @@ suite.test("rootsOfQuadratic", () => {
         isApproximatelyEqualTo([new Complex(-s, -s), new Complex(s, s)]);
 });
 
+suite.test("rootsOfQuadratic_fuzz", () => {
+    for (let i = 0; i < 100; i++) {
+        // Random point on surface of unit sphere.
+		let theta = 2*Math.PI*Math.random();
+		let phi = Math.acos(2*Math.random() - 1);
+		let a = Math.cos(theta)*Math.sin(phi);
+		let b = Math.sin(theta)*Math.sin(phi);
+		let c = Math.cos(phi);
+
+        // Check that returned roots are actually roots.
+        // (Note: will not detect missed roots.)
+        let roots = Complex.rootsOfQuadratic(a, b, c);
+        for (let x of roots) {
+            let y = x.times(x).times(a).plus(x.times(b)).plus(c);
+            assertThat(y).isApproximatelyEqualTo(0);
+        }
+    }
+});
+
 suite.test("exp", () => {
     assertThat(Complex.ZERO.exp()).isEqualTo(1);
     assertThat(Complex.ONE.exp()).isApproximatelyEqualTo(Math.E);
