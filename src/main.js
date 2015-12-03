@@ -32,8 +32,13 @@ let inspector = InspectorWidget.empty(
     Config.NUM_INITIAL_WIRES,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
+let grabbingPointerId = undefined;
+let grabTime = window.performance.now();
+const ALLOW_REGRAB_WATCHDOG_TIME = 5000; // milliseconds
+
 let snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
 let restore = jsonText => {
+    grabbingPointerId = undefined;
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
     currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     redraw();
@@ -115,10 +120,6 @@ let useInspector = (newInspector, keepInHistory) => {
     redraw();
     return true;
 };
-
-let grabbingPointerId = undefined;
-let grabTime = window.performance.now();
-const ALLOW_REGRAB_WATCHDOG_TIME = 5000; // milliseconds
 
 /**
  * @param {!Point} pt
