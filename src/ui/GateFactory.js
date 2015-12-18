@@ -77,8 +77,8 @@ export default class GateFactory {
     }
 }
 
-GateFactory.MAKE_HIGHLIGHTED_DRAWER = (fillColor = Config.GATE_FILL_COLOR) => args => {
-    let backColor = fillColor;
+GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR) => args => {
+    let backColor = args.isInToolbox ? toolboxFillColor : Config.GATE_FILL_COLOR;
     if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
         backColor = Config.BROKEN_COLOR_GATE;
     }

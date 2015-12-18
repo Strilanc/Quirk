@@ -22,7 +22,7 @@ Gates.Named = {
                 "qubit is ON.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    GateFactory.DEFAULT_DRAWER(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.SIMPLE_GATE_HIGHLIGHT)(args);
                 }
                 args.painter.fillCircle(args.rect.center(), 5, "black");
             }),
@@ -213,7 +213,7 @@ Gates.Named = {
                     args.positionInCircuit !== null &&
                     args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
                 if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
-                    GateFactory.DEFAULT_DRAWER(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.SIMPLE_GATE_HIGHLIGHT)(args);
                     return;
                 }
 
@@ -260,7 +260,7 @@ Gates.Named = {
             "Toggles between ON and ON+OFF; also toggles between OFF and ON-OFF. " +
                 "A 180° turn around the Bloch Sphere's diagonal X+Z axis. " +
                 "Useful for creating uniform superpositions of all states.",
-            GateFactory.DEFAULT_DRAWER)
+            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.SIMPLE_GATE_HIGHLIGHT))
     },
     Exponentiating: {
         ExpiX: new Gate(

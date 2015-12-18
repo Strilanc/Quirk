@@ -150,11 +150,15 @@ let tryGrabAtWith = (pt, id, shift) => {
         return false;
     }
 
-    let newHand = inspector.hand.withPos(pt);
-    let newInspector = syncArea(inspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(shift);
+    let oldInspector = inspector;
+    let newHand = oldInspector.hand.withPos(pt);
+    let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(shift);
     if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
         return false;
     }
+
+    // Add extra wire temporarily.
+    useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(shift), false);
 
     revision.startingUpdate();
     grabbingPointerId = id;
