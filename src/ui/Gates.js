@@ -4,6 +4,7 @@ import Gate from "src/circuit/Gate.js"
 import GateFactory from "src/ui/GateFactory.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
+import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Seq from "src/base/Seq.js"
 
@@ -50,6 +51,26 @@ Gates.Named = {
             "The displayed value is P(target GIVEN controls); don't confuse it with P(target AND controls). " +
             "Peek gates magically don't affect the simulated system in any way; they don't even perform a measurement.",
             args => {
+                if (args.positionInCircuit === null || args.isHighlighted) {
+                    GateFactory.DEFAULT_DRAWER(args);
+                    return;
+                }
+
+                let {row, col} = args.positionInCircuit;
+                MathPainter.paintProbabilityBox(
+                    args.painter,
+                    args.stats.probability(row, col, true),
+                    args.rect);
+            }),
+
+        Tomography: new Gate(
+            "State",
+            Matrix.identity(2),
+            "Quantum State Tomography Gate",
+            "Shows the density matrix of some qubits in a column.",
+            "The displayed value is the state GIVEN the controls, and marginalized over un-involved qubits. " +
+            "Tomography gates magically don't affect the simulated system in any way; they don't even perform a measurement.",
+                args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
                     return;
@@ -113,14 +134,7 @@ Gates.Named = {
                     return;
                 }
 
-                let hasMatchedSwaps = new Seq(args.stats.circuitDefinition.columns[args.positionInCircuit.col].gates).
-                    filter(g => g === Gates.Named.Special.SwapHalf).
-                    count() === 2;
                 let swapRect = Rect.centeredSquareWithRadius(args.rect.center(), args.rect.w / 6);
-                if (!hasMatchedSwaps) {
-                    args.painter.strokeRect(swapRect, 'black');
-                    args.painter.fillRect(swapRect, 'red');
-                }
                 args.painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
                 args.painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
             })
@@ -192,11 +206,13 @@ Gates.Named = {
             "Toggles the qubit's value in the computational basis. " +
                 "A 180° turn around the Bloch Sphere's X axis.",
             args => {
-                let noControlsInColumn =
-                    args.positionInCircuit === null ||
-                    args.stats.circuitDefinition.columns[args.positionInCircuit.col].gates.every(
-                        e => e !== Gates.Named.Special.Control && e !== Gates.Named.Special.AntiControl);
-                if (noControlsInColumn || args.isHighlighted) {
+                let hasSingleWireControl =
+                    args.positionInCircuit !== null &&
+                    args.stats.circuitDefinition.colHasSingleWireControl(args.positionInCircuit.col);
+                let hasDoubleWireControl =
+                    args.positionInCircuit !== null &&
+                    args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
+                if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
                     return;
                 }
@@ -204,8 +220,20 @@ Gates.Named = {
                 let drawArea = args.rect.scaledOutwardBy(0.6);
                 args.painter.fillCircle(drawArea.center(), drawArea.w / 2);
                 args.painter.strokeCircle(drawArea.center(), drawArea.w / 2);
-                args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
-                args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
+                if (hasSingleWireControl) {
+                    args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
+                }
+                if (hasDoubleWireControl) {
+                    args.painter.strokeLine(drawArea.topCenter().offsetBy(-1, 0), drawArea.bottomCenter().offsetBy(-1, 0));
+                    args.painter.strokeLine(drawArea.topCenter().offsetBy(+1, 0), drawArea.bottomCenter().offsetBy(+1, 0));
+                }
+                let isMeasured = args.stats.circuitDefinition.locIsMeasured(new Point(args.positionInCircuit.col, args.positionInCircuit.row));
+                if (isMeasured) {
+                    args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, -1), drawArea.centerRight().offsetBy(0, -1));
+                    args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, +1), drawArea.centerRight().offsetBy(0, +1));
+                } else {
+                    args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
+                }
             }),
 
         Y: new Gate(
@@ -407,11 +435,11 @@ Gates.Sets = [
         hint: "Special",
         gates: [
             Gates.Named.Special.Control,
-            null,
+            Gates.Named.Special.Measurement,
             Gates.Named.Special.Peek,
             Gates.Named.Special.AntiControl,
             null,
-            Gates.Named.Special.Measurement
+            Gates.Named.Special.Tomography
         ]
     },
     {
@@ -487,6 +515,7 @@ Gates.KnownToSerializer = [
     Gates.Named.Special.Control,
     Gates.Named.Special.SwapHalf,
     Gates.Named.Special.Peek,
+    Gates.Named.Special.Tomography,
     Gates.Named.Special.Measurement,
     Gates.Named.Special.AntiControl,
     Gates.Named.Silly.SPACER,

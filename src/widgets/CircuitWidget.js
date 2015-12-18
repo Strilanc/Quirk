@@ -374,65 +374,54 @@ class CircuitWidget {
     /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
-     * @param {!int} columnIndex
+     * @param {!int} col
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
      */
-    drawCircuitOperation(painter, gateColumn, columnIndex, hand, stats) {
-        this.drawColumnControlWires(painter, gateColumn, columnIndex);
+    drawCircuitOperation(painter, gateColumn, col, hand, stats) {
+        this.drawColumnControlWires(painter, gateColumn, col, stats);
 
-        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
-            let r = this.gateRect(i, columnIndex);
+        for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+            let r = this.gateRect(row, col);
 
-            if (gateColumn.gates[i] === null) {
+            if (gateColumn.gates[row] === null) {
                 continue;
             }
             /** @type {!Gate} */
-            let gate = gateColumn.gates[i];
+            let gate = gateColumn.gates[row];
 
             let canGrab =
                 (new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt)) && this.compressedColumnIndex === null) ||
-                this.compressedColumnIndex === columnIndex;
-            gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row: i, col: columnIndex}));
+                this.compressedColumnIndex === col;
+            gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
+            let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
+            if (isDisabledReason !== null) {
+                painter.strokeLine(r.topLeft(), r.bottomRight(), 'orange', 3);
+                painter.printParagraph(isDisabledReason, r, new Point(0.5, 0.5), 'red');
+            }
         }
     }
 
-    static _isAllowedAfterMeasurement(g) {
-        return g === Gates.Named.Special.Control ||
-            g === Gates.Named.Special.AntiControl ||
-            g === Gates.Named.Silly.SPACER ||
-            g === Gates.Named.Special.Peek;
-    }
     /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
      * @param {!int} columnIndex
+     * @param {!CircuitStats} stats
      */
-    drawColumnControlWires(painter, gateColumn, columnIndex) {
+    drawColumnControlWires(painter, gateColumn, columnIndex, stats) {
         let n = gateColumn.gates.length;
         let gs = gateColumn.gates;
 
-        let hasTwoSwaps = Seq.range(gateColumn.gates.length).
-                filter(i => gs[i] === Gates.Named.Special.SwapHalf).
-                count() == 2;
+        let hasTwoSwaps = stats.circuitDefinition.colHasPairedSwapGate(columnIndex);
 
-        let canBeControlled = i =>
-            gs[i] !== null &&
-            gs[i] !== Gates.Named.Special.Control &&
-            gs[i] !== Gates.Named.Special.AntiControl &&
-            gs[i] !== Gates.Named.Silly.SPACER &&
-            gs[i] !== Gates.Named.Special.Measurement &&
-            (hasTwoSwaps || gs[i] !== Gates.Named.Special.SwapHalf);
+        let canBeControlled =
+            i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i));
 
-        let causesSingleWire = i =>
-            this.circuitDefinition.wireMeasuredColumns()[i] > columnIndex && (
-                gs[i] === Gates.Named.Special.Control ||
-                gs[i] === Gates.Named.Special.AntiControl);
+        let causesSingleWire =
+            i => this.circuitDefinition.locStartsSingleControlWire(new Point(columnIndex, i));
 
-        let causesDoubleWire = i =>
-            this.circuitDefinition.wireMeasuredColumns()[i] <= columnIndex && (
-                gs[i] === Gates.Named.Special.Control ||
-                gs[i] === Gates.Named.Special.AntiControl);
+        let causesDoubleWire =
+            i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i));
 
         let isMatchedSwap = i =>
             hasTwoSwaps && gs[i] === Gates.Named.Special.SwapHalf;
@@ -504,23 +493,6 @@ class CircuitWidget {
             padded(i + 1, emptyCol).
             withTransformedItem(i, c => c.withGatesAdded(row, addedGateBlock)).
             toArray();
-
-        // Measurement must happen after non-control operations, so shift it ahead if needed.
-        if (hand.heldGates.gates.length !== 1 || !CircuitWidget._isAllowedAfterMeasurement(hand.heldGates.gates[0])) {
-            let measureCol = this.circuitDefinition.wireMeasuredColumns()[modificationPoint.row];
-            if (measureCol < modificationPoint.col) {
-                newCols =
-                    CircuitWidget._shiftGateAhead(newCols, modificationPoint.row, measureCol, modificationPoint.col);
-            }
-        }
-        if (hand.heldGates.isEqualTo(new GateColumn([Gates.Named.Special.Measurement]))) {
-            newCols = Seq.
-                range(newCols.length).
-                map(c => c <= modificationPoint.col ||
-                        CircuitWidget._isAllowedAfterMeasurement(newCols[c].gates[modificationPoint.row])
-                    ? newCols[c] : newCols[c].withGatesAdded(modificationPoint.row, new GateColumn([null]))).
-                toArray();
-        }
 
         let result = this.withCircuit(this.circuitDefinition.withColumns(newCols));
         result.compressedColumnIndex = isInserting ? i : null;

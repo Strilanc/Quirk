@@ -54,42 +54,6 @@ suite.test("isEmpty", () => {
     assertFalse(new GateColumn([Gates.Named.HalfTurns.X, Gates.Named.HalfTurns.X]).isEmpty());
 });
 
-suite.test("singleQubitOperationsAt", () => {
-    assertThat(new GateColumn([]).singleQubitOperationsAt(0)).isEqualTo([]);
-    assertThat(new GateColumn([null, null]).singleQubitOperationsAt(0)).isEqualTo([]);
-    assertThat(new GateColumn([Gates.Named.HalfTurns.X, null]).singleQubitOperationsAt(0)).isEqualTo([
-        {m: Matrix.PAULI_X, i: 0}
-    ]);
-    assertThat(new GateColumn([null, Gates.Named.HalfTurns.X]).singleQubitOperationsAt(0)).isEqualTo([
-        {m: Matrix.PAULI_X, i: 1}
-    ]);
-    assertThat(new GateColumn([
-        Gates.Named.HalfTurns.Y, Gates.Named.HalfTurns.X
-    ]).singleQubitOperationsAt(0)).isEqualTo([
-        {m: Matrix.PAULI_Y, i: 0},
-        {m: Matrix.PAULI_X, i: 1}
-    ]);
-    assertThat(new GateColumn([
-        Gates.Named.Special.Control, Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf
-    ]).singleQubitOperationsAt(0)).isEqualTo([]);
-    assertThat(new GateColumn([
-        Gates.Named.Special.SwapHalf, Gates.Named.Special.SwapHalf
-    ]).singleQubitOperationsAt(0)).isEqualTo([]);
-
-    let t0 = new GateColumn([Gates.Named.Powering.X]).singleQubitOperationsAt(0);
-    if (t0.length !== 0) {
-        assertThat(t0).isApproximatelyEqualTo([
-            {m: Matrix.identity(2), i: 0}
-        ]);
-    }
-    assertThat(new GateColumn([Gates.Named.Powering.X]).singleQubitOperationsAt(0.25)).isApproximatelyEqualTo([
-        {m: Matrix.fromPauliRotation(0.25, 0, 0), i: 0}
-    ]);
-    assertThat(new GateColumn([Gates.Named.Powering.X]).singleQubitOperationsAt(0.5)).isApproximatelyEqualTo([
-        {m: Matrix.PAULI_X, i: 0}
-    ]);
-});
-
 suite.test("swapPairs", () => {
     assertThat(new GateColumn([]).swapPairs()).isEqualTo([]);
     assertThat(new GateColumn([null, null]).swapPairs()).isEqualTo([]);

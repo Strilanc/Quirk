@@ -48,56 +48,6 @@ class GateColumn {
         return this.gates.every(e => e === null);
     }
 
-    ///**
-    // * Returns the matrix corresponding to the parallel applications of the operations in this circuit column.
-    // * @param {!number} time
-    // * @returns {!Matrix}
-    // */
-    //matrixAt(time) {
-    //    let ops = [];
-    //    let swapIndices = [];
-    //    for (let i = 0; i < this.gates.length; i++) {
-    //        let op;
-    //        if (this.gates[i] === null) {
-    //            op = Matrix.identity(2);
-    //        } else if (this.gates[i] === Gates.Named.Special.SwapHalf) {
-    //            swapIndices.push(i);
-    //            op = Matrix.identity(2);
-    //        } else {
-    //            op = this.gates[i].matrixAt(time);
-    //        }
-    //        ops.push(op);
-    //    }
-    //
-    //    let result = ops.reduce(function (a, e) {
-    //        return e.tensorProduct(a);
-    //    }, Matrix.identity(1));
-    //    if (swapIndices.length === 2) {
-    //        result = Matrix.fromWireSwap(this.gates.length, swapIndices[0], swapIndices[1]).times(result);
-    //    }
-    //    return result;
-    //}
-
-    /**
-     * @param {!number} time
-     * @returns {!(!{m: !Matrix, i: !int}[])}
-     */
-    singleQubitOperationsAt(time) {
-        let I = Matrix.identity(2);
-        return Seq.
-            range(this.gates.length).
-            filter(i => {
-                if (this.gates[i] === null) {
-                    return false;
-                }
-                let m = this.gates[i].matrixAt(time);
-                return m.width() === 2 && m.height() === 2 && !m.isEqualTo(I);
-            }).
-            map(i => ({m: this.gates[i].matrixAt(time), i: i})).
-            toArray();
-    }
-
-
     /**
      * @returns {!(!(![!int, !int])[])}
      */
@@ -138,25 +88,6 @@ class GateColumn {
         }
         return new GateColumn(gates);
     }
-
-    ///**
-    // * Returns the probability of controls on a column being satisfied and a wire being ON,
-    // * if that was measured.
-    // *
-    // * @param {!int} targetWire
-    // * @param {!QuantumState} columnState
-    // * @returns {!{probabilityOfCondition: !number, probabilityOfHitGivenCondition: !number, canDiffer: !boolean}}
-    // */
-    //measureProbabilityOn(targetWire, columnState) {
-    //    let colMasks = this.masks();
-    //    let wireMask = 1 << targetWire;
-    //    let p = columnState.conditionalProbability(colMasks.targetMask | wireMask, wireMask, colMasks.inclusionMask);
-    //    return {
-    //        probabilityOfCondition: p.probabilityOfCondition,
-    //        probabilityOfHitGivenCondition: p.probabilityOfHitGivenCondition,
-    //        canDiffer: colMasks.inclusionMask !== 0
-    //    };
-    //}
 }
 
 export default GateColumn;

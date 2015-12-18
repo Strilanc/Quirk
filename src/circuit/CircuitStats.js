@@ -65,9 +65,10 @@ export default class CircuitStats{
         let nodes = [];
         nodes.push(initialState.controlProbabilityCombinations(0));
         let masks = [QuantumControlMask.NO_CONTROLS];
-        for (let col of circuitDefinition.columns) {
+        for (let colIndex of Seq.range(circuitDefinition.columns.length)) {
+            let col = circuitDefinition.columns[colIndex];
             let mask = col.controls();
-            for (let op of col.singleQubitOperationsAt(time)) {
+            for (let op of circuitDefinition.singleQubitOperationsInColAt(colIndex, time)) {
                 initialState = initialState.withQubitOperationApplied(op.i, op.m, mask)
             }
             for (let op of col.swapPairs()) {
