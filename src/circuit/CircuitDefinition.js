@@ -180,10 +180,18 @@ class CircuitDefinition {
      * @private
      */
     static _isGateAllowedAfterMeasurementIfNoQuantumControls(g) {
-        return g === Gates.Named.HalfTurns.X ||
-            g === Gates.Named.HalfTurns.Y ||
-            g === Gates.Named.HalfTurns.Z ||
-            g === Gates.Named.Special.SwapHalf;
+        let m = g.matrixOrFunc;
+        let is2x2 = m instanceof Matrix && m.width() == 2 && m.height() == 2;
+        let e = 0.00000001;
+        let isDiag1 = is2x2 && m.rows[0][0].isApproximatelyEqualTo(0, e) && m.rows[1][1].isApproximatelyEqualTo(0, e);
+        let isDiag2 = is2x2 && m.rows[1][0].isApproximatelyEqualTo(0, e) && m.rows[0][1].isApproximatelyEqualTo(0, e);
+        return g === Gates.Named.Special.SwapHalf ||
+            g === Gates.Named.Exponentiating.ExpiZ ||
+            g === Gates.Named.Exponentiating.AntiExpiZ ||
+            g === Gates.Named.Powering.Z ||
+            g === Gates.Named.Powering.AntiZ ||
+            isDiag1 ||
+            isDiag2;
     }
 
     /**
@@ -213,7 +221,8 @@ class CircuitDefinition {
 
         if (this.locIsMeasured(pt) && g !== null && !CircuitDefinition._isGateAllowedAfterMeasurement(g)) {
             // Half-turns make sense and don't un-measure, as long as all controls are also measured.
-            if (CircuitDefinition._isGateAllowedAfterMeasurementIfNoQuantumControls(g) && !this.colHasSingleWireControl(pt.x)) {
+            if (!this.colHasSingleWireControl(pt.x) &&
+                    CircuitDefinition._isGateAllowedAfterMeasurementIfNoQuantumControls(g)) {
                 return null;
             }
 

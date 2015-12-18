@@ -49,7 +49,7 @@ Gates.Named = {
             "Peek Gate",
             "Shows the conditional chance that a wire is ON.",
             "The displayed value is P(target GIVEN controls); don't confuse it with P(target AND controls). " +
-            "Peek gates magically don't affect the simulated system in any way; they don't even perform a measurement.",
+            "Magically doesn't affect the system in any way: no measurements are simulated.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -66,10 +66,10 @@ Gates.Named = {
         Tomography: new Gate(
             "State",
             Matrix.identity(2),
-            "Quantum State Tomography Gate",
-            "Shows the density matrix of some qubits in a column.",
-            "The displayed value is the state GIVEN the controls, and marginalized over un-involved qubits. " +
-            "Tomography gates magically don't affect the simulated system in any way; they don't even perform a measurement.",
+            "Tomography Gate",
+            "Shows the density matrix of one or more qubits.",
+            "The displayed state is conditioned on any controls, and marginalized over any un-involved qubits. " +
+            "Magically doesn't affect the system in any way: no measurements are simulated.",
                 args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -87,9 +87,9 @@ Gates.Named = {
             "Measure",
             Matrix.identity(2),
             "Measurement Gate",
-            "Measures a qubit in the computational basis.",
+            "Measures a qubit in the computational basis, along the Z axis.",
             "Decoheres the qubit into a classical bit. " +
-                "Measured qubits can still be used as controls but, for simplicity, further operations are blocked.",
+                "For simplicity, the simulator blocks non-classical operations on measured qubits.",
                 // And by 'simplicity' I mostly mean code-wise and time-cost-wise. Allowing mixed states would square
                 // the amount of information being processed; much easier to lean on the deferred measurement principle.
             args => {
