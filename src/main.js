@@ -251,6 +251,7 @@ canvas.addEventListener('mousedown', ev => {
             withHand(newHand).
             afterGrabbing(false). // Grab the gate.
             withHand(newHand). // Lose the gate.
+            afterTidyingUp().
             withJustEnoughWires(0);
         if (useInspector(newInspector, true)) {
             ev.preventDefault();

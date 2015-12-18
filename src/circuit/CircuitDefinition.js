@@ -181,8 +181,6 @@ class CircuitDefinition {
             g === Gates.Named.Special.AntiControl ||
             g === Gates.Named.Special.Tomography ||
             g === Gates.Named.Special.Measurement ||
-            g === Gates.Named.Silly.POST_SELECT ||
-            g === Gates.Named.Silly.VOID ||
             g === Gates.Named.Silly.SPACER ||
             g === Gates.Named.Special.Peek;
     }
