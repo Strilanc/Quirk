@@ -80,11 +80,25 @@ let tickWhenAppropriate = () => {
     }
 };
 
+/**
+ * @param {!InspectorWidget} ins
+ * @returns {!InspectorWidget}
+ */
+let syncArea = function(ins) {
+    ins.updateArea(
+        new Rect(
+            0,
+            0,
+            canvasDiv.clientWidth,
+            InspectorWidget.defaultHeight(ins.circuitWidget.circuitDefinition.numWires)));
+    return ins;
+};
+
 redraw = function () {
     canvas.width = canvasDiv.clientWidth;
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);
-    let shown = inspector.previewDrop();
+    let shown = syncArea(inspector).previewDrop();
     let statsFunc = shown.circuitWidget.circuitDefinition.numWires > Config.MAX_LIVE_UPDATE_WIRE_COUNT
         ? CircuitStats.emptyAtTime
         : CircuitStats.fromCircuitAtTime;
@@ -105,6 +119,8 @@ let eventPosRelativeToCanvas = ev => {
 
 /** @param {!MouseEvent} ev */
 let isLeftClicking = ev => ev.which === 1;
+/** @param {!MouseEvent} ev */
+let isMiddleClicking = ev => ev.which === 2;
 
 let useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
@@ -133,7 +149,7 @@ let tryGrabAtWith = (pt, id, shift) => {
     }
 
     let newHand = inspector.hand.withPos(pt);
-    let newInspector = inspector.withHand(newHand).afterGrabbing(shift);
+    let newInspector = syncArea(inspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(shift);
     if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
         return false;
     }
@@ -176,9 +192,9 @@ let tryDropAtWith = (pt, id, shift) => {
     }
 
     let newHand = inspector.hand.withPos(pt);
-    let newInspector = inspector.withHand(newHand).afterDropping().afterTidyingUp();
+    let newInspector = syncArea(inspector).withHand(newHand).afterDropping().afterTidyingUp();
     let clearHand = newInspector.hand.withPos(null);
-    let clearInspector = newInspector.withHand(clearHand);
+    let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(0);
     useInspector(clearInspector, true);
     return true;
 };
@@ -222,7 +238,21 @@ let handleMouseEventWith = (ev, handler) => {
     }
 };
 
-canvas.addEventListener('mousedown', ev => handleMouseEventWith(ev, tryGrabAtWith));
+canvas.addEventListener('mousedown', ev => {
+    if (isMiddleClicking(ev)) {
+        let newHand = inspector.hand.withPos(eventPosRelativeToCanvas(ev));
+        let newInspector = syncArea(inspector).
+            withHand(newHand).
+            afterGrabbing(false). // Grab the gate.
+            withHand(newHand). // Lose the gate.
+            withJustEnoughWires(0);
+        if (useInspector(newInspector, true)) {
+            ev.preventDefault();
+        }
+        return;
+    }
+    handleMouseEventWith(ev, tryGrabAtWith);
+});
 document.addEventListener('mousemove', ev => {
     if (inspector.hand.isBusy()) {
         handleMouseEventWith(ev, tryDragAtWith);

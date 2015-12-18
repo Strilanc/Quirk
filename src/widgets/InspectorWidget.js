@@ -273,7 +273,14 @@ export default class InspectorWidget {
      * @returns {!InspectorWidget}
      */
     withCircuitWidget(circuitWidget) {
+        if (circuitWidget === this.circuitWidget) {
+            return this;
+        }
         return new InspectorWidget(this.drawArea, circuitWidget, this.toolboxWidget, this.hand);
+    }
+
+    withJustEnoughWires(extra = 0) {
+        return this.withCircuitWidget(this.circuitWidget.withJustEnoughWires(extra));
     }
 
     /**

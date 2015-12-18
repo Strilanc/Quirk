@@ -44,6 +44,19 @@ class CircuitDefinition {
             this.columns.filter(e => !e.isEmpty()));
     }
 
+    withWireCount(newWireCount) {
+        if (newWireCount === this.numWires) {
+            return this;
+        }
+        return new CircuitDefinition(
+            newWireCount,
+            this.columns.map(c => new GateColumn(
+                new Seq(c.gates).
+                    take(newWireCount).
+                    padded(newWireCount, null).
+                    toArray())));
+    }
+
     /**
      * Determines at what point each wire is measured (if ever).
      * @returns {!Array.<int>}

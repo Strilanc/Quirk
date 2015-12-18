@@ -229,6 +229,41 @@ suite.test("colHasSingleWireControl", () => {
     assertThat(pts).isEqualTo([2, 3, 4, 6, 7, 8]);
 });
 
+suite.test("withWireCount", () => {
+    let circuit = CircuitDefinition.from([
+        [_, X, Y],
+        [_, _, _],
+        [C, _, H]
+    ]);
+
+    assertThat(circuit.withWireCount(0)).isEqualTo(CircuitDefinition.from([
+        [],
+        [],
+        []
+    ]));
+    assertThat(circuit.withWireCount(1)).isEqualTo(CircuitDefinition.from([
+        [_],
+        [_],
+        [C]
+    ]));
+    assertThat(circuit.withWireCount(2)).isEqualTo(CircuitDefinition.from([
+        [_, X],
+        [_, _],
+        [C, _]
+    ]));
+    assertThat(circuit.withWireCount(3)).isEqualTo(circuit);
+    assertThat(circuit.withWireCount(4)).isEqualTo(CircuitDefinition.from([
+        [_, X, Y, _],
+        [_, _, _, _],
+        [C, _, H, _]
+    ]));
+    assertThat(circuit.withWireCount(5)).isEqualTo(CircuitDefinition.from([
+        [_, X, Y, _, _],
+        [_, _, _, _, _],
+        [C, _, H, _, _]
+    ]));
+});
+
 // untested:
 //locHasControllableGate
 //colHasPairedSwapGate

@@ -506,11 +506,23 @@ class CircuitWidget {
     }
 
     withCircuit(circuitDefinition) {
+        if (circuitDefinition.isEqualTo(this.circuitDefinition)) {
+            return this;
+        }
         return new CircuitWidget(
             this.area,
             circuitDefinition,
             this.compressedColumnIndex,
             this.wireLabeller);
+    }
+
+    withJustEnoughWires(extra = 0) {
+        let maxUsedWire = new Seq(this.circuitDefinition.columns).
+            map(c => Seq.range(this.circuitDefinition.numWires).filter(i => c.gates[i] !== null).last(0)).
+            max(0);
+        let desiredWireCount = maxUsedWire + 1 + extra;
+        desiredWireCount = Math.min(Config.MAX_WIRE_COUNT, Math.max(Config.MIN_WIRE_COUNT, desiredWireCount));
+        return this.withCircuit(this.circuitDefinition.withWireCount(desiredWireCount));
     }
 
     /**
