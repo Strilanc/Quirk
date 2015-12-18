@@ -158,7 +158,6 @@ let fromJson_GateColumn = json => {
  */
 let toJson_CircuitDefinition = v => {
     return {
-        wires: v.numWires,
         cols: v.columns.map(Serializer.toJson).map(c => new Seq(c).skipTailWhile(e => e === 1).toArray())
     };
 };
@@ -169,30 +168,20 @@ let toJson_CircuitDefinition = v => {
  * @throws
  */
 let fromJson_CircuitDefinition = json => {
-    let {wires: wires, cols: cols} = json;
+    let {cols} = json;
 
-    if (!Number.isInteger(wires) || wires < 0) {
-        throw new Error(`CircuitDefinition json should contain a valid number of wires. Json: ${describe(json)}`);
-    }
-    if (wires > Config.MAX_WIRE_COUNT) {
-        throw new Error(`Number of wires exceeds maximum. Json: ${describe(json)}, max: ${Config.MAX_WIRE_COUNT}`);
-    }
     if (!Array.isArray(cols)) {
         throw new Error(`CircuitDefinition json should contain an array of cols. Json: ${describe(json)}`);
     }
-    let gateCols = cols.map(e => Serializer.fromJson(GateColumn, e)).map(e => {
-        if (e.gates.length < wires) {
-            // Pad column up to circuit length.
-            return new GateColumn(new Seq(e.gates).padded(wires, null).toArray());
-        }
-        if (e.gates.length > wires) {
-            // Silently discard gates off the edge of the circuit.
-            return new GateColumn(e.gates.slice(0, wires));
-        }
-        return e;
-    });
+    let gateCols = cols.map(e => Serializer.fromJson(GateColumn, e));
+    let numWires = new Seq(gateCols).map(e => e.gates.length).max(0);
+    numWires = Math.max(Config.MIN_WIRE_COUNT, Math.min(numWires, Config.MAX_WIRE_COUNT));
+    gateCols = gateCols.map(e => new GateColumn(new Seq(e.gates).
+            padded(numWires, null). // Pad column up to circuit length.
+            toArray().
+            slice(0, numWires))); // Silently discard gates off the edge of the circuit.
 
-    return new CircuitDefinition(wires, gateCols);
+    return new CircuitDefinition(numWires, gateCols);
 };
 
 const BINDINGS = [

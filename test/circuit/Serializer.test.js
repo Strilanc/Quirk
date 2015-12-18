@@ -72,7 +72,7 @@ suite.test("roundTrip_circuitDefinition", () => {
     assertRoundTrip(
         CircuitDefinition,
         new CircuitDefinition(
-            7,
-            [new GateColumn([null, Gates.Named.HalfTurns.X, null, null, null, null, null])]),
-        {wires: 7, cols: [[1, "X"]]});
+            3,
+            [new GateColumn([null, null, Gates.Named.HalfTurns.X])]),
+        {cols: [[1, 1, "X"]]});
 });

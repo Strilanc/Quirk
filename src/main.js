@@ -41,6 +41,7 @@ let restore = jsonText => {
     grabbingPointerId = undefined;
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
     currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
     redraw();
 };
 let revision = new Revision(snapshot());
@@ -128,8 +129,9 @@ let useInspector = (newInspector, keepInHistory) => {
     }
     inspector = newInspector;
     let jsonText = snapshot();
-    currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     if (keepInHistory) {
+        currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+        currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
         revision.update(jsonText);
     }
 
@@ -309,7 +311,7 @@ if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
     try {
         let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
         let circuitDef = Serializer.fromJson(CircuitDefinition, json);
-        useInspector(inspector.withCircuitDefinition(circuitDef), false);
+        useInspector(inspector.withCircuitDefinition(circuitDef), true);
         revision = new Revision(snapshot())
     } catch (ex) {
         alert("Failed to load circuit: " + ex);
