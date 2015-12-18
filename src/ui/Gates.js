@@ -46,13 +46,13 @@ Gates.Named = {
         Peek: new Gate(
             "Peek",
             Matrix.identity(2),
-            "Peek Gate",
-            "Shows the conditional chance that a wire is ON.",
+            "Classical Chance Display",
+            "Displays the conditional chance that measuring a wire would return ON.",
             "The displayed value is P(target GIVEN controls); don't confuse it with P(target AND controls). " +
             "Magically doesn't affect the system in any way: no measurements are simulated.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    GateFactory.DEFAULT_DRAWER(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.PROBABILITY_BOX_FILL_UP_COLOR)(args);
                     return;
                 }
 
@@ -64,15 +64,15 @@ Gates.Named = {
             }),
 
         Tomography: new Gate(
-            "State",
+            "Show",
             Matrix.identity(2),
-            "Tomography Gate",
-            "Shows the density matrix of one or more qubits.",
+            "Quantum State Display",
+            "Displays the conditional density matrix of one or more wires.",
             "The displayed state is conditioned on any controls, and marginalized over any un-involved qubits. " +
             "Magically doesn't affect the system in any way: no measurements are simulated.",
-                args => {
+            args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    GateFactory.DEFAULT_DRAWER(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.PROBABILITY_BOX_FILL_UP_COLOR)(args);
                     return;
                 }
 
@@ -432,7 +432,7 @@ Gates.Named = {
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gates.Sets = [
     {
-        hint: "Special",
+        hint: "Inspection",
         gates: [
             Gates.Named.Special.Control,
             Gates.Named.Special.Measurement,

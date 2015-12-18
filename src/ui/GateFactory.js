@@ -77,11 +77,8 @@ export default class GateFactory {
     }
 }
 
-/**
- * @param {!GateDrawParams} args
- */
-GateFactory.DEFAULT_DRAWER = args => {
-    let backColor = Config.GATE_FILL_COLOR;
+GateFactory.MAKE_HIGHLIGHTED_DRAWER = (fillColor = Config.GATE_FILL_COLOR) => args => {
+    let backColor = fillColor;
     if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
         backColor = Config.BROKEN_COLOR_GATE;
     }
@@ -98,6 +95,11 @@ GateFactory.DEFAULT_DRAWER = args => {
         Config.DEFAULT_TEXT_COLOR,
         fontSize);
 };
+
+/**
+ * @param {!GateDrawParams} args
+ */
+GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
 
 /**
  * @param {!GateDrawParams} args

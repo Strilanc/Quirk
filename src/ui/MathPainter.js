@@ -33,7 +33,7 @@ export default class MathPainter {
     static paintProbabilityBox(painter,
                                probability,
                                drawArea,
-                               backgroundColor = Config.BACKGROUND_COLOR,
+                               backgroundColor = Config.PROBABILITY_BOX_BACK_FILL_COLOR,
                                fillColor = Config.PROBABILITY_BOX_FILL_UP_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
         if (isNaN(probability)) {
