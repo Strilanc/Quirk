@@ -302,11 +302,20 @@ export default class Painter {
         this.ctx.fill();
     }
 
-    fillArrowHead(x, y, radius, angle, spread, fillColor = 'black') {
-        let a1 = angle + spread/2 + Math.PI;
-        let a2 = angle - spread/2 + Math.PI;
+    /**
+     * @param {!number} x The x-position of the center of the arrow head.
+     * @param {number} y The y-position of the center of the arrow head.
+     * @param {number} radius The radius of the circle the arrow head is inscribed inside.
+     * @param {number} facingAngle The direction the arrow head is pointing towards.
+     * @param {number} sweptAngle The angle swept out by the back of the arrow head, relative to its center (not the
+     * point at the front).
+     * @param fillColor
+     */
+    fillArrowHead(x, y, radius, facingAngle, sweptAngle, fillColor = 'black') {
+        let a1 = facingAngle + sweptAngle/2 + Math.PI;
+        let a2 = facingAngle - sweptAngle/2 + Math.PI;
         this.fillPolygon([
-            new Point(x + Math.cos(angle)*radius, y + Math.sin(angle)*radius),
+            new Point(x + Math.cos(facingAngle)*radius, y + Math.sin(facingAngle)*radius),
             new Point(x + Math.cos(a1)*radius, y + Math.sin(a1)*radius),
             new Point(x + Math.cos(a2)*radius, y + Math.sin(a2)*radius)
         ], fillColor);

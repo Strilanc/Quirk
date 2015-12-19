@@ -165,6 +165,7 @@ let tryGrabAtWith = (pt, id, shift) => {
     grabTime = window.performance.now();
     return true;
 };
+//noinspection JSUnusedLocalSymbols
 /**
  * @param {!Point} pt
  * @param {*} id
@@ -182,6 +183,7 @@ let tryDragAtWith = (pt, id, shift) => {
     useInspector(newInspector, false);
     return true;
 };
+//noinspection JSUnusedLocalSymbols
 /**
  * @param {!Point} pt
  * @param {*} id
@@ -204,6 +206,7 @@ let tryDropAtWith = (pt, id, shift) => {
     useInspector(clearInspector, true);
     return true;
 };
+//noinspection JSUnusedLocalSymbols
 /**
  * @param {!Point} pt
  * @param {*} id

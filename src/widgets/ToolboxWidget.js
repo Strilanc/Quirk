@@ -67,6 +67,7 @@ class ToolboxWidget {
             let group = Gates.Sets[groupIndex];
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
+                //noinspection JSCheckFunctionSignatures
                 if (gate !== null && this.gateDrawRect(groupIndex, gateIndex).containsPoint(p)) {
                     return {groupIndex: groupIndex, gateIndex: gateIndex, gate: Util.notNull(gate)};
                 }

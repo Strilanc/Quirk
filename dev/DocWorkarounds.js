@@ -95,7 +95,6 @@ class Set {
     //noinspection JSUnusedLocalSymbols
     /**
      * @param {(*[]=} valuesIterable
-     * @property {!int} size
      * @property {!function()} clear
      * @property {!function(T) : !Set.<T>} add
      * @property {!function(T)} delete
@@ -105,6 +104,8 @@ class Set {
      * @template T
      */
     constructor(valuesIterable) {
+        /** @type {!int} */
+        this.size = 0;
         throw new Error("Just a doc class")
     }
 

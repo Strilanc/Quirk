@@ -48,11 +48,6 @@ export default class InspectorWidget {
 
         let remainder = drawArea.skipTop(this.circuitWidget.area.bottom());
         this.outputStateHintArea = remainder.takeRight(remainder.h);
-        this.cumulativeOperationHintArea = this.outputStateHintArea.
-            withX(this.outputStateHintArea.x - this.outputStateHintArea.w - 5);
-        this.focusedOperationHintArea = remainder.takeLeft(remainder.h);
-        this.focusedStateHintArea = this.focusedOperationHintArea.withX(this.focusedOperationHintArea.right() + 5);
-        this.cumulativeFocusedOperationHintArea = this.focusedStateHintArea.withX(this.focusedStateHintArea.right() + 5);
     }
 
     /**

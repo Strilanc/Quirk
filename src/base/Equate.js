@@ -145,7 +145,7 @@ function equate_Iterables(subject, other) {
  * @returns {!boolean}
  */
 function equate_Maps(subject, other) {
-    if (subject.size != other.size) {
+    if (subject.size !== other.size) {
         return false;
     }
     for (let [k, v] of subject) {
@@ -169,7 +169,7 @@ function equate_Maps(subject, other) {
  * @returns {!boolean}
  */
 function equate_Sets(subject, other) {
-    if (subject.size != other.size) {
+    if (subject.size !== other.size) {
         return false;
     }
     for (let k of subject) {

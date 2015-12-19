@@ -92,45 +92,6 @@ export default class WidgetPainter {
     //    }
     //};
 
-    //paintDisalloweds(matrix, drawArea) {
-    //    let numCols = matrix.width();
-    //    let numRows = matrix.height();
-    //    let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
-    //
-    //    this.ctx.globalAlpha = 0.25;
-    //    for (let c = 0; c < numCols; c++) {
-    //        for (let r = 0; r < numRows; r++) {
-    //            let cell = topLeftCell.proportionalShiftedBy(c, r);
-    //            if (matrix._rows[r][c].isEqualTo(0)) {
-    //                this.fillRect(cell, "red")
-    //            }
-    //        }
-    //    }
-    //    this.ctx.globalAlpha = 1;
-    //};
-
-    /**
-     *
-     * @param {!Array<*>} factors
-     * @param {!Rect} drawArea
-     * @param {!Array<!string>} labels
-     */
-    //paintFactoredQuantumStateAsLabelledGrid(factors, drawArea, labels) {
-    //    let numWireRows = Math.floor(labels.length / 2);
-    //    let numWireCols = labels.length - numWireRows;
-    //    let numDrawRows = 1 << numWireRows;
-    //    let numDrawCols = 1 << numWireCols;
-    //
-    //    let labelDif = 5;
-    //    let labelSpace = 8;
-    //    let skipLength = Math.max(numWireRows, numWireCols) * labelDif + labelSpace;
-    //
-    //    // Draw state grid
-    //    let gridRect = drawArea.skipLeft(skipLength).skipTop(skipLength);
-    //    this.paintQuantumStateAsGrid(state, gridRect);
-    //
-    //};
-
     ///**
     // *
     // * @param {!QuantumState} state
@@ -166,32 +127,5 @@ export default class WidgetPainter {
     //        new Point(0, -labelDif),
     //        new Point(gridRect.w / numDrawCols, 0),
     //        labels.slice(0, numWireCols));
-    //}
-
-    ///**
-    // * Draws a visual representation of a column vector, using a grid layout.
-    // * @param {!QuantumState} quantumState The quantum state to draw.
-    // * @param {!Rect} drawArea The rectangle to draw the vector within.
-    // */
-    //paintQuantumStateAsGrid(quantumState, drawArea) {
-    //    let numStates = quantumState.columnVector.height();
-    //    let numWires = quantumState.countQubits();
-    //    let numWireCols = Math.ceil(numWires / 2);
-    //    let numWireRows = Math.floor(numWires / 2);
-    //    let numDrawCols = 1 << numWireCols;
-    //    let numDrawRows = 1 << numWireRows;
-    //    let topLeftCell = new Rect(
-    //        drawArea.x,
-    //        drawArea.y,
-    //        drawArea.w / numDrawCols,
-    //        drawArea.h / numDrawRows);
-    //
-    //    for (let r = 0; r < numStates; r++) {
-    //        let dx = r % numDrawCols;
-    //        let dy = Math.floor(r / numDrawCols);
-    //        this.paintAmplitude(quantumState.columnVector.rows[r][0], topLeftCell.proportionalShiftedBy(dx, dy));
-    //    }
-    //
-    //    this.strokeGrid(topLeftCell, numDrawCols, numDrawRows);
     //}
 }

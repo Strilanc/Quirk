@@ -31,27 +31,6 @@ class Hand {
         return this.pos === null || this.isBusy() ? [] : [this.pos];
     }
 
-    ///**
-    // * @param {!Rect} rect
-    // * @returns {!boolean}
-    // */
-    //isHoveringIn(rect) {
-    //    //noinspection JSCheckFunctionSignatures
-    //    return !hoverPoints().every(e => !rect.containsPoint(e));
-    //};
-
-    ///**
-    // * @param {!Painter} painter
-    // * @param {!Rect} rect
-    // * @param {!string} text
-    // */
-    //paintToolTipIfHoveringIn(painter, rect, text) {
-    //    if (this.isHoveringIn(rect)) {
-    //        painter.strokeRect(rect, Config.TOOLTIP_HIGHLIGHT_STROKE_COLOR, 3);
-    //        painter.paintTooltip(text, Util.notNull(this.pos), rect);
-    //    }
-    //};
-
     /**
      *
      * @param {!Hand|*} other

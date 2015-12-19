@@ -87,6 +87,7 @@ export default class CircuitStats{
         let condWireProbColsNode = Seq.range(n).
             map(i => m[i].asRenormalizedConditionalPerQubitProbabilities(masks[i]));
         let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();
+        //noinspection JSCheckFunctionSignatures
         let nodeResults = PipelineNode.computePipeline(
             new Seq(wireProbColsNode).
             concat(condWireProbColsNode).
