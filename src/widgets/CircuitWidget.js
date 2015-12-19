@@ -396,8 +396,17 @@ class CircuitWidget {
             gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== null) {
+                if (canGrab) {
+                    painter.ctx.globalAlpha /= 2;
+                }
                 painter.strokeLine(r.topLeft(), r.bottomRight(), 'orange', 3);
-                painter.printParagraph(isDisabledReason, r, new Point(0.5, 0.5), 'red');
+                painter.ctx.globalAlpha /= 2;
+                painter.fillRect(r.paddedBy(5), 'yellow');
+                painter.ctx.globalAlpha *= 2;
+                painter.printParagraph(isDisabledReason, r.paddedBy(5), new Point(0.5, 0.5), 'red');
+                if (canGrab) {
+                    painter.ctx.globalAlpha *= 2;
+                }
             }
         }
     }

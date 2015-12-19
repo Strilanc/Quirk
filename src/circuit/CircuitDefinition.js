@@ -67,7 +67,8 @@ class CircuitDefinition {
                 range(this.numWires).
                 map(r => Seq.
                     range(this.columns.length).
-                    skipWhile(c => this.columns[c].gates[r] !== Gates.Named.Special.Measurement).
+                    skipWhile(c => this.columns[c].gates[r] !== Gates.Named.Special.Measurement ||
+                        this.colHasControls(c)).
                     first(Infinity)).
                 toArray();
         }
@@ -151,8 +152,11 @@ class CircuitDefinition {
             g !== Gates.Named.Special.Control &&
             g !== Gates.Named.Special.AntiControl &&
             g !== Gates.Named.Silly.SPACER &&
-            g !== Gates.Named.Special.Measurement &&
             (g !== Gates.Named.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
+    }
+
+    colHasControls(col) {
+        return Seq.range(this.numWires).any(row => this.locIsControl(new Point(col, row)));
     }
 
     /**
@@ -212,6 +216,12 @@ class CircuitDefinition {
      */
     gateAtLocIsDisabledReason(pt) {
         let g = this.gateAtLoc(pt);
+
+        if (g === Gates.Named.Special.Measurement) {
+            if (this.colHasControls(pt.x)) {
+                return "can't\ncontrol\n(sorry)";
+            }
+        }
 
         if (g === Gates.Named.Special.SwapHalf) {
             let pts = Seq.range(this.numWires).

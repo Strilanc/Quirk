@@ -122,9 +122,9 @@ suite.webGlTest("conditionedWireProbabilityJustBefore_dependent", () => {
     assertThat(s.conditionedWireProbabilityJustBefore(2, 3)).isApproximatelyEqualTo(0);
 
     // Control on first wire, anti-control on second wire.
-    //assertThat(s.conditionedWireProbabilityJustBefore(0, 4)).isApproximatelyEqualTo(0);
-    //assertThat(s.conditionedWireProbabilityJustBefore(1, 4)).isApproximatelyEqualTo(1);
-    //assertThat(s.conditionedWireProbabilityJustBefore(2, 4)).isApproximatelyEqualTo(NaN);
+    assertThat(s.conditionedWireProbabilityJustBefore(0, 4)).isApproximatelyEqualTo(0);
+    assertThat(s.conditionedWireProbabilityJustBefore(1, 4)).isApproximatelyEqualTo(1);
+    assertThat(s.conditionedWireProbabilityJustBefore(2, 4)).isApproximatelyEqualTo(NaN);
 });
 
 suite.webGlTest("wireProbabilities_inControl", () => {
