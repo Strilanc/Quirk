@@ -85,7 +85,7 @@ let tickWhenAppropriate = () => {
  * @param {!InspectorWidget} ins
  * @returns {!InspectorWidget}
  */
-let syncArea = function(ins) {
+let syncArea = ins => {
     ins.updateArea(
         new Rect(
             0,
@@ -95,7 +95,7 @@ let syncArea = function(ins) {
     return ins;
 };
 
-redraw = function () {
+redraw = () => {
     canvas.width = canvasDiv.clientWidth;
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);

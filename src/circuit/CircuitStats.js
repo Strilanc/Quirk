@@ -3,6 +3,7 @@ import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
 import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
+import Util from "src/base/Util.js"
 
 export default class CircuitStats{
     /**
@@ -30,13 +31,15 @@ export default class CircuitStats{
         /**
          * Probability that each wire is on, individually, at each slice.
          * @type {!(!number[])}
+         * @private
          */
-        this.wireProbabilities = wireProbabilities;
+        this._wireProbabilityData = wireProbabilities;
         /**
          * Probability that each wire is on, individually, at each slice.
          * @type {!(!number[])}
+         * @private
          */
-        this.conditionalWireProbabilities = conditionalWireProbabilities;
+        this._conditionalWireProbabilityData = conditionalWireProbabilities;
         /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
@@ -44,16 +47,59 @@ export default class CircuitStats{
         this.finalState = finalState;
     }
 
-    probability(wireIndex, colIndex, conditional=false) {
-        let stepIndex = colIndex + 1;
-        if (stepIndex >= this.wireProbabilities.length) {
-            // Steps after the final column have no controls, so use the uncontrolled final column in that case.
-            conditional = false;
+    /**
+     * Returns the probability that a wire would be on if it was measured just before a given column.
+     *
+     * @param {int} wireIndex
+     * @param {int|Infinity} colIndex
+     * @returns {!number}
+     */
+    wireProbabilityJustBefore(wireIndex, colIndex) {
+        Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
+
+        // The initial state is all-qubits-off.
+        if (colIndex <= 0 || this.circuitDefinition.columns.length === 0) {
+            return 0;
         }
 
-        let ps = conditional ? this.conditionalWireProbabilities : this.wireProbabilities;
-        let t = Math.max(0, Math.min(stepIndex, ps.length - 1));
-        return ps[t][wireIndex];
+        let t = Math.min(colIndex, this._wireProbabilityData.length) - 1;
+        return this._wireProbabilityData[t][wireIndex];
+    }
+
+    /**
+     * Returns the probability that a wire would be on if it was measured just before a given column, but conditioned on
+     * wires with controls in that column matching their controls.
+     * A wire is never conditioned on itself; self-conditions are ignored when computing the probability.
+     *
+     * @param {int} wireIndex
+     * @param {int|Infinity} colIndex
+     * @returns {!number}
+     */
+    conditionedWireProbabilityJustBefore(wireIndex, colIndex) {
+        Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
+
+        // The initial state is all-qubits-off.
+        if (colIndex < 0 || this.circuitDefinition.columns.length === 0) {
+            return 0;
+        }
+
+        // After the last column there are no controls to condition on.
+        if (colIndex >= this.circuitDefinition.columns.length) {
+            return this.wireProbabilityJustBefore(wireIndex, colIndex);
+        }
+
+        // Still in the initial state, but unmet controls should cause a division by zero.
+        if (colIndex === 0) {
+            let controls = this.circuitDefinition.columns[0].controls();
+            let mustBeOnMask = controls.inclusionMask & controls.desiredValueMask;
+            if (mustBeOnMask !== 0 && mustBeOnMask !== 1 << wireIndex) {
+                return NaN;
+            }
+            return 0;
+        }
+
+        let t = Math.min(colIndex, this._conditionalWireProbabilityData.length) - 1;
+        return this._conditionalWireProbabilityData[t][wireIndex];
     }
 
     static emptyAtTime(circuitDefinition, time) {
@@ -61,29 +107,30 @@ export default class CircuitStats{
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
-        let initialState = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
         let nodes = [];
-        nodes.push(initialState.controlProbabilityCombinations(0));
-        let masks = [QuantumControlMask.NO_CONTROLS];
-        for (let colIndex of Seq.range(circuitDefinition.columns.length)) {
-            let col = circuitDefinition.columns[colIndex];
-            let mask = col.controls();
-            for (let op of circuitDefinition.singleQubitOperationsInColAt(colIndex, time)) {
-                initialState = initialState.withQubitOperationApplied(op.i, op.m, mask)
+        let masks = [];
+
+        let stateNode = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
+        for (let col of Seq.range(circuitDefinition.columns.length)) {
+            let gateCol = circuitDefinition.columns[col];
+            let mask = gateCol.controls();
+            for (let op of circuitDefinition.singleQubitOperationsInColAt(col, time)) {
+                stateNode = stateNode.withQubitOperationApplied(op.i, op.m, mask)
             }
-            for (let op of col.swapPairs()) {
-                initialState = initialState.withSwap(op[0], op[1], mask);
+            for (let op of gateCol.swapPairs()) {
+                stateNode = stateNode.withSwap(op[0], op[1], mask);
             }
-            nodes.push(initialState.controlProbabilityCombinations(mask.desiredValueMask));
+            nodes.push(stateNode.controlProbabilityCombinations(mask.desiredValueMask));
             masks.push(mask);
         }
-        nodes.push(initialState);
+        nodes.push(stateNode);
 
         let merged = SuperpositionNode.mergedReadFloats(nodes);
 
         let m = merged.slice(0, merged.length - 1);
         let n = m.length;
-        let wireProbColsNode = Seq.range(n).map(i => m[i].asRenormalizedPerQubitProbabilities());
+        let wireProbColsNode = Seq.range(n).
+            map(i => m[i].asRenormalizedPerQubitProbabilities(masks[i]));
         let condWireProbColsNode = Seq.range(n).
             map(i => m[i].asRenormalizedConditionalPerQubitProbabilities(masks[i]));
         let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();

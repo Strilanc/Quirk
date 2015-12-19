@@ -308,16 +308,27 @@ export class SuperpositionReadNode {
     /**
      * Reads the probability that each qubit would end up true, if measured, based on the texture data being
      * control combination data.
+     * @param {!QuantumControlMask} maskUsedWhenCombining The mask that was used when combining the probabilities.
      * @returns {!PipelineNode.<!(!number[])>}
      */
-    asRenormalizedPerQubitProbabilities() {
+    asRenormalizedPerQubitProbabilities(maskUsedWhenCombining) {
         return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
             let unity = floats[0]; // Renormalization factor. For better answers when non-unitary gates are used.
             return Seq.naturals().
-                map(i => 4 << i).
-                takeWhile(i => i < floats.length).
-                map(i => 1 - floats[i] / unity).
+                map(i => 1 << i).
+                takeWhile(bit => (bit << 2) < floats.length).
+                map(bit => {
+                    if (unity <= 0) {
+                        return NaN;
+                    }
+                    let p = floats[bit << 2] / unity;
+                    p = Math.max(0, Math.min(1, p));
+                    if ((maskUsedWhenCombining.desiredValueMask & bit) === 0) {
+                        p = 1 - p;
+                    }
+                    return p;
+                }).
                 toArray();
         });
     };

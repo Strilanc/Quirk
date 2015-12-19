@@ -2,6 +2,8 @@
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
 
+let assertionSubjectIndexInCurrentTest = 0;
+
 function isArrayIsh(value) {
     return Array.isArray(value) ||
         value instanceof Float32Array ||
@@ -46,6 +48,8 @@ function sanityCheck(subject) {
 function isApproximatelyEqualToHelper(subject, other, epsilon) {
     if (subject === null) {
         return other === null;
+    } else if (subject === undefined) {
+        return other === undefined;
     } else if (subject.isApproximatelyEqualTo !== undefined) {
         return subject.isApproximatelyEqualTo(other, epsilon);
     } else if (typeof subject === 'number') {
@@ -97,9 +101,10 @@ function isApproximatelyEqualToHelperDestructured(subject, other, epsilon) {
 export class AssertionSubject {
     /**
      * @param {*} subject
+     * @param {*} id
      * @property {*} subject
      */
-    constructor(subject) {
+    constructor(subject, id=undefined) {
         sanityCheck(subject);
 
         /**
@@ -107,6 +112,14 @@ export class AssertionSubject {
          * @type {*}
          */
         this.subject = subject;
+        /**
+         * @type {*}
+         */
+        this.id = id;
+    }
+
+    _fail(message) {
+        fail(this.id === undefined ? message : message + ` (${this.id})`);
     }
 
     iteratesAs(...items) {
@@ -118,7 +131,7 @@ export class AssertionSubject {
             }
             actualItems.push(item);
         }
-        assertThat(actualItems).isEqualTo(items);
+        new AssertionSubject(actualItems, this.id).isEqualTo(items);
     };
 
     /**
@@ -126,7 +139,7 @@ export class AssertionSubject {
      */
     isEqualTo(other) {
         if (!equate(this.subject, other)) {
-            fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>`);
+            this._fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>.`);
         }
     };
 
@@ -136,7 +149,7 @@ export class AssertionSubject {
      */
     isGreaterThan(other) {
         if (!(this.subject > other)) {
-            fail(`Got <${describe(this.subject)}> but expected it to be greater than <${describe(other)}>`);
+            this._fail(`Got <${describe(this.subject)}> but expected it to be greater than <${describe(other)}>.`);
         }
     };
 
@@ -146,7 +159,7 @@ export class AssertionSubject {
      */
     isLessThan(other) {
         if (!(this.subject < other)) {
-            fail(`Got <${describe(this.subject)}> but expected it to be less than <${describe(other)}>`);
+            this._fail(`Got <${describe(this.subject)}> but expected it to be less than <${describe(other)}>.`);
         }
     };
 
@@ -155,7 +168,7 @@ export class AssertionSubject {
      */
     isNotEqualTo(other) {
         if (equate(this.subject, other)) {
-            fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>`);
+            this._fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>.`);
         }
     };
 
@@ -165,7 +178,7 @@ export class AssertionSubject {
      */
     isApproximatelyEqualTo(other, epsilon = 0.000001) {
         if (!isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
-            fail(`Got <${describe(this.subject)}> but expected it to approximately equal <${describe(other)}>`);
+            this._fail(`Got <${describe(this.subject)}> but expected it to approximately equal <${describe(other)}>.`);
         }
     };
 
@@ -175,7 +188,8 @@ export class AssertionSubject {
      */
     isNotApproximatelyEqualTo(other, epsilon = 0.000001) {
         if (isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
-            fail(`Got <${describe(this.subject)}> but expected it to NOT approximately equal <${describe(other)}>`);
+            this._fail(
+                `Got <${describe(this.subject)}> but expected it to NOT approximately equal <${describe(other)}>.`);
         }
     };
 }
@@ -190,7 +204,8 @@ export function assertThat(subject, extraArgCatcher) {
     if (extraArgCatcher !== undefined) {
         fail('Extra assertThat arg');
     }
-    return new AssertionSubject(subject);
+    assertionSubjectIndexInCurrentTest += 1;
+    return new AssertionSubject(subject, 'assertThat #' + assertionSubjectIndexInCurrentTest);
 }
 
 export function assertTrue(subject) {
@@ -209,12 +224,12 @@ export function assertFalse(subject) {
  */
 export function assertThrows(func, extraArgCatcher) {
     if (extraArgCatcher !== undefined) {
-        fail('Extra assertThat arg');
+        fail('Extra assertThrows arg');
     }
     try {
         func();
     } catch(ex) {
-        return assertThat(ex);
+        return new AssertionSubject(ex, 'assertThrows');
     }
     fail('Expected an exception to be thrown by ' + func);
     return undefined;
@@ -268,7 +283,10 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     test(name, method) {
-        this.tests.push([name, method]);
+        this.tests.push([name, status => {
+            assertionSubjectIndexInCurrentTest = 0;
+            method(status);
+        }]);
     }
 
     /**
@@ -276,7 +294,7 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     webGlTest(name, method) {
-        let wrappedMethod = (status) => {
+        let wrappedMethod = status => {
             if (webGLSupportPresent === undefined) {
                 if (window.WebGLRenderingContext === undefined) {
                     webGLSupportPresent = false;

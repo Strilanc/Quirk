@@ -59,7 +59,7 @@ Gates.Named = {
                 let {row, col} = args.positionInCircuit;
                 MathPainter.paintProbabilityBox(
                     args.painter,
-                    args.stats.probability(row, col, true),
+                    args.stats.conditionedWireProbabilityJustBefore(row, col),
                     args.rect);
             }),
 
@@ -79,7 +79,7 @@ Gates.Named = {
                 let {row, col} = args.positionInCircuit;
                 MathPainter.paintProbabilityBox(
                     args.painter,
-                    args.stats.probability(row, col, true),
+                    args.stats.conditionedWireProbabilityJustBefore(row, col),
                     args.rect);
             }),
 
