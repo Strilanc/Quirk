@@ -5,33 +5,33 @@ export default class Revision {
     constructor(state) {
         this.history = [state];
         this.index = 0;
-        this.isOffHistory = false;
+        this.isWorkingOnCommit = false;
     }
 
-    startingUpdate() {
-        this.isOffHistory = true;
+    startedWorkingOnCommit() {
+        this.isWorkingOnCommit = true;
     }
 
-    update(newCheckpoint) {
+    cancelCommitBeingWorkedOn() {
+        this.isWorkingOnCommit = false;
+        return this.history[this.index];
+    }
+
+    commit(newCheckpoint) {
+        this.isWorkingOnCommit = false;
         if (newCheckpoint === this.history[this.index]) {
             return;
         }
         this.index += 1;
         this.history.splice(this.index, this.history.length - this.index);
         this.history.push(newCheckpoint);
-        this.isOffHistory = false;
-    }
-
-    cancel() {
-        this.isOffHistory = false;
-        return this.history[this.index];
     }
 
     undo() {
-        if (this.index > 0 && !this.isOffHistory) {
+        if (this.index > 0 && !this.isWorkingOnCommit) {
             this.index -= 1;
         }
-        this.isOffHistory = false;
+        this.isWorkingOnCommit = false;
         return this.history[this.index];
     }
 
@@ -39,7 +39,7 @@ export default class Revision {
         if (this.index + 1 < this.history.length) {
             this.index += 1;
         }
-        this.isOffHistory = false;
+        this.isWorkingOnCommit = false;
         return this.history[this.index];
     }
 }

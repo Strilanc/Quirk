@@ -129,7 +129,7 @@ let useInspector = (newInspector, keepInHistory) => {
     if (keepInHistory) {
         currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
         currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
-        revision.update(jsonText);
+        revision.commit(jsonText);
     }
 
     redraw();
@@ -157,7 +157,7 @@ let tryGrabAtWith = (pt, id, shift) => {
     // Add extra wire temporarily.
     useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(shift), false);
 
-    revision.startingUpdate();
+    revision.startedWorkingOnCommit();
     grabbingPointerId = id;
     grabTime = window.performance.now();
     return true;
@@ -215,7 +215,7 @@ let tryCancelAtWith = (pt, id, shift) => {
         return false;
     }
 
-    restore(revision.cancel());
+    restore(revision.cancelCommitBeingWorkedOn());
     grabbingPointerId = undefined;
     return true;
 };
