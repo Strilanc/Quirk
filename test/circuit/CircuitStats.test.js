@@ -15,22 +15,56 @@ suite.webGlTest("smoke", () => {
     let s = CircuitStats.fromCircuitAtTime(circuit, 0.5);
     assertThat(s.circuitDefinition).isEqualTo(circuit);
     assertThat(s.time).isEqualTo(0.5);
-    assertThat(s.wireProbabilityJustBefore(0, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.wireProbabilityJustBefore(1, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.wireProbabilityJustBefore(0, 1)).isApproximatelyEqualTo(0);
-    assertThat(s.wireProbabilityJustBefore(1, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.wireProbabilityJustBefore(0, 2)).isApproximatelyEqualTo(0.5);
-    assertThat(s.wireProbabilityJustBefore(1, 2)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 1)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 2)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(0, 0)).isApproximatelyEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(0, 0)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(1);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(0.5);
     assertThat(s.finalState).isApproximatelyEqualTo([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]);
 });
 
-suite.webGlTest("conditionedWireProbabilityJustBefore_independent", () => {
+suite.webGlTest("wireProbabilityJustAfter", () => {
+    let X = Gates.Named.HalfTurns.X;
+    let H = Gates.Named.HalfTurns.H;
+    let IsOn = Gates.Named.Special.Control;
+    let IsOff = Gates.Named.Special.AntiControl;
+
+    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
+        [H, null, null],
+        [IsOn, X, X],
+        [IsOn, IsOff, null]
+    ]), 0);
+
+    // Before any operations, all wires off.
+    assertThat(s.wireProbabilityJustAfter(0, -1)).isApproximatelyEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(1, -1)).isApproximatelyEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(2, -1)).isApproximatelyEqualTo(0);
+
+    // In middle of GHZ creation, one wire half.
+    assertThat(s.wireProbabilityJustAfter(0, 0)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(2, 0)).isApproximatelyEqualTo(0);
+
+    // Afterwards created, all wires half.
+    assertThat(s.wireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(2, 1)).isApproximatelyEqualTo(0.5);
+
+    // Controls have no effect.
+    assertThat(s.wireProbabilityJustAfter(0, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(1, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(2, 2)).isApproximatelyEqualTo(0.5);
+
+    // Long term.
+    assertThat(s.wireProbabilityJustAfter(0, Infinity)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(1, Infinity)).isApproximatelyEqualTo(0.5);
+    assertThat(s.wireProbabilityJustAfter(2, Infinity)).isApproximatelyEqualTo(0.5);
+});
+
+suite.webGlTest("controlledWireProbabilityJustAfter_independent", () => {
     let H = Gates.Named.HalfTurns.H;
     let IsOn = Gates.Named.Special.Control;
     let IsOff = Gates.Named.Special.AntiControl;
@@ -39,18 +73,28 @@ suite.webGlTest("conditionedWireProbabilityJustBefore_independent", () => {
         [IsOn, IsOff, null]
     ]), 0);
 
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 0)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 2)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 2)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(0, -1)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(1, -1)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(2, -1)).isApproximatelyEqualTo(0);
+
+    assertThat(s.controlledWireProbabilityJustAfter(0, 0)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 0)).isApproximatelyEqualTo(0.5);
+
+    assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 1)).isApproximatelyEqualTo(0.5);
+
+    assertThat(s.controlledWireProbabilityJustAfter(0, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 2)).isApproximatelyEqualTo(0.5);
+
+    assertThat(s.controlledWireProbabilityJustAfter(0, Infinity)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, Infinity)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(2, Infinity)).isApproximatelyEqualTo(0.5);
 });
 
-suite.webGlTest("wireProbabilityJustBefore", () => {
+suite.webGlTest("controlledWireProbabilityJustAfter_dependent", () => {
     let X = Gates.Named.HalfTurns.X;
     let H = Gates.Named.HalfTurns.H;
     let IsOn = Gates.Named.Special.Control;
@@ -63,76 +107,41 @@ suite.webGlTest("wireProbabilityJustBefore", () => {
         [IsOn, IsOff, null]
     ]), 0);
 
-    for (let wire = 0; wire < 3; wire++) {
-        // Before first H, all wires off.
-        for (let col = -3; col < 1; col++) {
-            assertThat(s.wireProbabilityJustBefore(wire, col)).isApproximatelyEqualTo(0);
-        }
-        // After GHZ state is made, all wires half.
-        for (let col = 2; col < 10; col++) {
-            assertThat(s.wireProbabilityJustBefore(wire, col)).isApproximatelyEqualTo(0.5);
-        }
-        assertThat(s.wireProbabilityJustBefore(wire, Infinity)).isApproximatelyEqualTo(0.5);
-    }
+    assertThat(s.controlledWireProbabilityJustAfter(0, -1)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(1, -1)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(2, -1)).isApproximatelyEqualTo(0);
 
-    // In middle of GHZ creation, one wire half.
-    assertThat(s.wireProbabilityJustBefore(0, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.wireProbabilityJustBefore(1, 1)).isApproximatelyEqualTo(0);
-    assertThat(s.wireProbabilityJustBefore(2, 1)).isApproximatelyEqualTo(0);
-});
+    assertThat(s.controlledWireProbabilityJustAfter(0, 0)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 0)).isApproximatelyEqualTo(0);
 
-suite.webGlTest("conditionedWireProbabilityJustBefore_dependent", () => {
-    let X = Gates.Named.HalfTurns.X;
-    let H = Gates.Named.HalfTurns.H;
-    let IsOn = Gates.Named.Special.Control;
-    let IsOff = Gates.Named.Special.AntiControl;
+    assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(1);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 1)).isApproximatelyEqualTo(1);
 
-    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
-        [H, null, null],
-        [IsOn, X, X],
-        [IsOff, null, null],
-        [IsOn, IsOff, null]
-    ]), 0);
+    assertThat(s.controlledWireProbabilityJustAfter(0, 2)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 2)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 2)).isApproximatelyEqualTo(0);
 
-    for (let wire = 0; wire < 3; wire++) {
-        // Before first H, all wires off.
-        for (let col = -3; col < 1; col++) {
-            assertThat(s.conditionedWireProbabilityJustBefore(wire, col)).isApproximatelyEqualTo(0);
-        }
-        // After circuit, all wires half.
-        for (let col = 5; col < 10; col++) {
-            assertThat(s.conditionedWireProbabilityJustBefore(wire, col)).isApproximatelyEqualTo(0.5);
-        }
-        assertThat(s.conditionedWireProbabilityJustBefore(wire, Infinity)).isApproximatelyEqualTo(0.5);
-    }
+    assertThat(s.controlledWireProbabilityJustAfter(0, 3)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 3)).isApproximatelyEqualTo(1);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 3)).isApproximatelyEqualTo(NaN);
 
-    // In the middle of GHZ creation, one wire half.
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 1)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 1)).isApproximatelyEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(0, 4)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, 4)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(2, 4)).isApproximatelyEqualTo(0.5);
 
-    // Second part of GHZ creation has a control on first wire.
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 2)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 2)).isApproximatelyEqualTo(1);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 2)).isApproximatelyEqualTo(1);
-
-    // Anti-control on first wire.
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 3)).isApproximatelyEqualTo(0.5);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 3)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 3)).isApproximatelyEqualTo(0);
-
-    // Control on first wire, anti-control on second wire.
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 4)).isApproximatelyEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(1, 4)).isApproximatelyEqualTo(1);
-    assertThat(s.conditionedWireProbabilityJustBefore(2, 4)).isApproximatelyEqualTo(NaN);
+    assertThat(s.controlledWireProbabilityJustAfter(0, Infinity)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(1, Infinity)).isApproximatelyEqualTo(0.5);
+    assertThat(s.controlledWireProbabilityJustAfter(2, Infinity)).isApproximatelyEqualTo(0.5);
 });
 
 suite.webGlTest("wireProbabilities_inControl", () => {
     let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([[Gates.Named.Special.Control]]), 0);
-    assertThat(s.wireProbabilityJustBefore(0, -1)).isEqualTo(0);
-    assertThat(s.wireProbabilityJustBefore(0, 0)).isEqualTo(0);
-    assertThat(s.wireProbabilityJustBefore(0, 1)).isEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, -1)).isEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 0)).isEqualTo(0);
-    assertThat(s.conditionedWireProbabilityJustBefore(0, 1)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(0, -1)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(0, 0)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(0, 1)).isEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(0, -1)).isEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(0, 0)).isEqualTo(0);
+    assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isEqualTo(0);
 });

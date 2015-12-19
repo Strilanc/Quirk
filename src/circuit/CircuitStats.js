@@ -54,15 +54,15 @@ export default class CircuitStats{
      * @param {int|Infinity} colIndex
      * @returns {!number}
      */
-    wireProbabilityJustBefore(wireIndex, colIndex) {
+    wireProbabilityJustAfter(wireIndex, colIndex) {
         Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
 
         // The initial state is all-qubits-off.
-        if (colIndex <= 0 || this.circuitDefinition.columns.length === 0) {
+        if (colIndex < 0 || this.circuitDefinition.columns.length === 0) {
             return 0;
         }
 
-        let t = Math.min(colIndex, this._wireProbabilityData.length) - 1;
+        let t = Math.min(colIndex, this._wireProbabilityData.length - 1);
         return this._wireProbabilityData[t][wireIndex];
     }
 
@@ -75,7 +75,7 @@ export default class CircuitStats{
      * @param {int|Infinity} colIndex
      * @returns {!number}
      */
-    conditionedWireProbabilityJustBefore(wireIndex, colIndex) {
+    controlledWireProbabilityJustAfter(wireIndex, colIndex) {
         Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
 
         // The initial state is all-qubits-off.
@@ -85,20 +85,10 @@ export default class CircuitStats{
 
         // After the last column there are no controls to condition on.
         if (colIndex >= this.circuitDefinition.columns.length) {
-            return this.wireProbabilityJustBefore(wireIndex, colIndex);
+            return this.wireProbabilityJustAfter(wireIndex, colIndex);
         }
 
-        // Still in the initial state, but unmet controls should cause a division by zero.
-        if (colIndex === 0) {
-            let controls = this.circuitDefinition.columns[0].controls();
-            let mustBeOnMask = controls.inclusionMask & controls.desiredValueMask;
-            if (mustBeOnMask !== 0 && mustBeOnMask !== 1 << wireIndex) {
-                return NaN;
-            }
-            return 0;
-        }
-
-        let t = Math.min(colIndex, this._conditionalWireProbabilityData.length) - 1;
+        let t = Math.min(colIndex, this._conditionalWireProbabilityData.length - 1);
         return this._conditionalWireProbabilityData[t][wireIndex];
     }
 
