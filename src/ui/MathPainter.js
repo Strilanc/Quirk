@@ -115,7 +115,7 @@ export default class MathPainter {
             for (let r = 0; r < numRows; r++) {
                 MathPainter.paintAmplitude(
                     painter,
-                    matrix.rows[r][c],
+                    matrix.cell(c, r),
                     topLeftCell.proportionalShiftedBy(c, r));
             }
         }
@@ -141,7 +141,7 @@ export default class MathPainter {
                 join("");
 
             let tip = `${stater(focus_c)} → ${stater(focus_r)}` +
-                "\n= " + matrix.rows[focus_r][focus_c].toString(Format.CONSISTENT);
+                "\n= " + matrix.cell(focus_c, focus_r).toString(Format.CONSISTENT);
 
             let paintRect = new Rect(cell.x, cell.y - 30, 100, 30).snapInside(painter.paintableArea()).paddedBy(-2);
             painter.defer(() => {

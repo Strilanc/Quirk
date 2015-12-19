@@ -194,8 +194,8 @@ class CircuitDefinition {
         let m = g.matrixOrFunc;
         let is2x2 = m instanceof Matrix && m.width() == 2 && m.height() == 2;
         let e = 0.00000001;
-        let isDiag1 = is2x2 && m.rows[0][0].isApproximatelyEqualTo(0, e) && m.rows[1][1].isApproximatelyEqualTo(0, e);
-        let isDiag2 = is2x2 && m.rows[1][0].isApproximatelyEqualTo(0, e) && m.rows[0][1].isApproximatelyEqualTo(0, e);
+        let isDiag1 = is2x2 && m.cell(0, 0).isApproximatelyEqualTo(0, e) && m.cell(1, 1).isApproximatelyEqualTo(0, e);
+        let isDiag2 = is2x2 && m.cell(1, 0).isApproximatelyEqualTo(0, e) && m.cell(0, 1).isApproximatelyEqualTo(0, e);
         return g === Gates.Named.Special.SwapHalf ||
             g === Gates.Named.Exponentiating.ExpiZ ||
             g === Gates.Named.Exponentiating.AntiExpiZ ||

@@ -101,7 +101,7 @@ export default class WidgetPainter {
     //    for (let c = 0; c < numCols; c++) {
     //        for (let r = 0; r < numRows; r++) {
     //            let cell = topLeftCell.proportionalShiftedBy(c, r);
-    //            if (matrix.rows[r][c].isEqualTo(0)) {
+    //            if (matrix._rows[r][c].isEqualTo(0)) {
     //                this.fillRect(cell, "red")
     //            }
     //        }

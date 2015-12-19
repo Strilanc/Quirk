@@ -7,26 +7,26 @@ import Format from "src/base/Format.js"
 let suite = new Suite("Matrix");
 
 suite.test("isEqualTo", () => {
-    var m = new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]);
+    var m = Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]);
     assertThat(m).isEqualTo(m);
     assertThat(m).isNotEqualTo(null);
     assertThat(m).isNotEqualTo("");
 
     assertThat(m).isEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
+        Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
     assertThat(m).isNotEqualTo(
-        new Matrix([[new Complex(2, 3)]]));
+        Matrix.fromRows([[new Complex(2, 3)]]));
     assertThat(m).isNotEqualTo(
-        new Matrix([[new Complex(-2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
+        Matrix.fromRows([[new Complex(-2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
     assertThat(m).isNotEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(-5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
+        Matrix.fromRows([[new Complex(2, 3), new Complex(-5, 7)], [new Complex(11, 13), new Complex(17, 19)]]));
     assertThat(m).isNotEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(-11, 13), new Complex(17, 19)]]));
+        Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(-11, 13), new Complex(17, 19)]]));
     assertThat(m).isNotEqualTo(
-        new Matrix([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(-17, 19)]]));
+        Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(-17, 19)]]));
 
-    var col = new Matrix([[new Complex(2, 3), new Complex(5, 7)]]);
-    var row = new Matrix([[new Complex(2, 3)], [new Complex(5, 7)]]);
+    var col = Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)]]);
+    var row = Matrix.fromRows([[new Complex(2, 3)], [new Complex(5, 7)]]);
     assertThat(col).isEqualTo(col);
     assertThat(row).isEqualTo(row);
     assertThat(row).isNotEqualTo(col);
@@ -107,13 +107,9 @@ suite.test("getColumn", () => {
 
 suite.test("square", () => {
     var m = Matrix.square([1, new Complex(2, 3), -5.5, 0]);
-    assertThat(m.rows[0][0]).isEqualTo(1);
-    assertThat(m.rows[0][1]).isEqualTo(new Complex(2, 3));
-    assertThat(m.rows[1][0]).isEqualTo(-5.5);
-    assertThat(m.rows[1][1]).isEqualTo(0);
-    assertThat(m.rows.length).isEqualTo(2);
+    assertThat(m.rows()).isEqualTo([[1, new Complex(2, 3)], [-5.5, 0]]);
 
-    assertThat(Matrix.square([1]).rows[0][0]).isEqualTo(1);
+    assertThat(Matrix.square([1]).rows()).isEqualTo([[1]]);
 });
 
 suite.test("col", () => {
@@ -253,19 +249,46 @@ suite.test("tensorPower", () => {
         isEqualTo("{{1, i, i, -1, i, -1, -1, -i}}");
 });
 
-suite.test("tensorProduct_Controlled", () => {
-    assertThat(Matrix.CONTROL.tensorProduct(Matrix.square([2, 3, 5, 7]))).isEqualTo(Matrix.square([
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 2, 3,
-        0, 0, 5, 7
-    ]));
-    assertThat(Matrix.square([2, 3, 5, 7]).tensorProduct(Matrix.CONTROL)).isEqualTo(Matrix.square([
-        1, 0, 0, 0,
-        0, 2, 0, 3,
-        0, 0, 1, 0,
-        0, 5, 0, 7
-    ]));
+suite.test("timesQubitOperation", () => {
+    let s = Math.sqrt(0.5);
+
+    assertThat(Matrix.col([1, 0, 0, 0]).timesQubitOperation(Matrix.HADAMARD, 0, 0, 0)).
+        isEqualTo(Matrix.col([s, s, 0, 0]));
+    assertThat(Matrix.col([0, 1, 0, 0]).timesQubitOperation(Matrix.HADAMARD, 0, 0, 0)).
+        isEqualTo(Matrix.col([s, -s, 0, 0]));
+    assertThat(Matrix.col([0, 0, 1, 0]).timesQubitOperation(Matrix.HADAMARD, 0, 0, 0)).
+        isEqualTo(Matrix.col([0, 0, s, s]));
+    assertThat(Matrix.col([0, 0, 0, 1]).timesQubitOperation(Matrix.HADAMARD, 0, 0, 0)).
+        isEqualTo(Matrix.col([0, 0, s, -s]));
+
+    assertThat(Matrix.col([1, 0, 0, 0]).timesQubitOperation(Matrix.HADAMARD, 1, 0, 0)).
+        isEqualTo(Matrix.col([s, 0, s, 0]));
+    assertThat(Matrix.col([0, 1, 0, 0]).timesQubitOperation(Matrix.HADAMARD, 1, 0, 0)).
+        isEqualTo(Matrix.col([0, s, 0, s]));
+    assertThat(Matrix.col([0, 0, 1, 0]).timesQubitOperation(Matrix.HADAMARD, 1, 0, 0)).
+        isEqualTo(Matrix.col([s, 0, -s, 0]));
+    assertThat(Matrix.col([0, 0, 0, 1]).timesQubitOperation(Matrix.HADAMARD, 1, 0, 0)).
+        isEqualTo(Matrix.col([0, s, 0, -s]));
+
+    assertThat(Matrix.col([2, 3, 0, 0]).timesQubitOperation(Matrix.PAULI_X, 1, 1, 0)).
+        isEqualTo(Matrix.col([0, 3, 2, 0]));
+    assertThat(Matrix.col([2, 3, 0, 0]).timesQubitOperation(Matrix.PAULI_X, 1, 1, 1)).
+        isEqualTo(Matrix.col([2, 0, 0, 3]));
+});
+
+suite.test("timesQubitOperation_speed", () => {
+    let numQubits = 10;
+    let numOps = 100;
+    let t0 = performance.now();
+    let buf = new Float64Array(2 << numQubits);
+    buf[0] = 1;
+    let state = new Matrix(1, 1 << numQubits, buf);
+    for (let i = 0; i < numOps; i++) {
+        state = state.timesQubitOperation(Matrix.HADAMARD, 0, 6, 0);
+    }
+
+    let t1 = performance.now();
+    assertThat(t1 - t0).isLessThan(100);
 });
 
 suite.test("fromPauliRotation", () => {

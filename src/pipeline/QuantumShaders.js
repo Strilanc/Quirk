@@ -278,7 +278,7 @@ export default class QuantumShaders {
      */
     static renderQubitOperation(director, destinationTexture, inputTexture, operation, qubitIndex, controlTexture) {
         Util.need(operation.width() === 2 && operation.height() === 2);
-        let [[a, b], [c, d]] = operation.rows;
+        let [[a, b], [c, d]] = operation.rows();
         director.render(destinationTexture, GLSL_APPLY_CUSTOM_QUBIT_OPERATION, [
             WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
             WglArg.texture("inputTexture", inputTexture, 0),

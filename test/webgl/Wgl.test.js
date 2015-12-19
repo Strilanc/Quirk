@@ -6,7 +6,7 @@ import WglDirector from "src/webgl/WglDirector.js"
 
 let suite = new Suite("Wgl");
 
-suite.webGlTest("readPixelColorBytes", (status) => {
+suite.webGlTest("readPixelColorBytes", status => {
     // TODO: remove when firefox fixes problem.
     status.warn_only = "WebGL regression in firefox (https://bugzilla.mozilla.org/show_bug.cgi?id=1135949)";
 

@@ -93,7 +93,7 @@ export default class InspectorWidget {
     //
         // State amplitudes
         let w = 1 << Math.ceil(this.circuitWidget.circuitDefinition.numWires/2);
-        let amps = new Matrix(new Seq(stats.finalState).partitioned(w).toArray());
+        let amps = Matrix.fromRows(new Seq(stats.finalState).partitioned(w).toArray());
         MathPainter.paintMatrix(painter, amps, this.outputStateHintArea, []);
         //painter.paintQuantumStateAsLabelledGrid(
         //    this.circuit.getOutput(stats.time),
