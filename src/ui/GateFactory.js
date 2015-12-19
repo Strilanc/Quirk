@@ -80,10 +80,10 @@ export default class GateFactory {
 GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR) => args => {
     let backColor = args.isInToolbox ? toolboxFillColor : Config.GATE_FILL_COLOR;
     if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
-        backColor = Config.BROKEN_COLOR_GATE;
+        backColor = Config.NON_UNITARY_GATE_FILL_COLOR;
     }
     if (args.isHighlighted) {
-        backColor = Config.HIGHLIGHT_COLOR_GATE;
+        backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
     }
     args.painter.fillRect(args.rect, backColor);
     args.painter.strokeRect(args.rect);
@@ -113,10 +113,10 @@ GateFactory.POWER_DRAWER = args => {
 
     let backColor = Config.GATE_FILL_COLOR;
     if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
-        backColor = Config.BROKEN_COLOR_GATE;
+        backColor = Config.NON_UNITARY_GATE_FILL_COLOR;
     }
     if (args.isHighlighted) {
-        backColor = Config.HIGHLIGHT_COLOR_GATE;
+        backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
     }
     args.painter.fillRect(args.rect, backColor);
     args.painter.strokeRect(args.rect);
@@ -139,7 +139,7 @@ GateFactory.POWER_DRAWER = args => {
  * @param {!GateDrawParams} args
  */
 GateFactory.MATRIX_DRAWER = args => {
-    args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHT_COLOR_GATE : Config.GATE_FILL_COLOR);
+    args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR);
     MathPainter.paintMatrix(
         args.painter,
         args.gate.matrixAt(args.stats.time),
@@ -147,7 +147,7 @@ GateFactory.MATRIX_DRAWER = args => {
         []);
     if (args.isHighlighted) {
         args.painter.ctx.globalAlpha = 0.9;
-        args.painter.fillRect(args.rect, Config.HIGHLIGHT_COLOR_GATE);
+        args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
         args.painter.ctx.globalAlpha = 1;
     }
 };

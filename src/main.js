@@ -29,7 +29,7 @@ let currentCircuitLink = document.getElementById("currentCircuitLink");
 
 /** @type {!InspectorWidget} */
 let inspector = InspectorWidget.empty(
-    Config.NUM_INITIAL_WIRES,
+    Config.MIN_WIRE_COUNT,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
 let grabbingPointerId = undefined;
@@ -100,10 +100,7 @@ redraw = function () {
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);
     let shown = syncArea(inspector).previewDrop();
-    let statsFunc = shown.circuitWidget.circuitDefinition.numWires > Config.MAX_LIVE_UPDATE_WIRE_COUNT
-        ? CircuitStats.emptyAtTime
-        : CircuitStats.fromCircuitAtTime;
-    let stats = statsFunc(shown.circuitWidget.circuitDefinition, circuitTime);
+    let stats = CircuitStats.fromCircuitAtTime(shown.circuitWidget.circuitDefinition, circuitTime);
 
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats);

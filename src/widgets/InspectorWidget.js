@@ -339,7 +339,7 @@ export default class InspectorWidget {
 
     static defaultHeight(wireCount = undefined) {
         if (wireCount === undefined) {
-            wireCount = Config.NUM_INITIAL_WIRES;
+            wireCount = Config.MIN_WIRE_COUNT;
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         let stateHeight = Config.STATE_VIEWING_AREA_HEIGHT;

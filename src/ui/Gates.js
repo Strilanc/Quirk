@@ -22,7 +22,7 @@ Gates.Named = {
                 "qubit is ON.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.SIMPLE_GATE_HIGHLIGHT)(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.IMPORTANT_GATE_IN_TOOLBOX_FILL_COLOR)(args);
                 }
                 args.painter.fillCircle(args.rect.center(), 5, "black");
             }),
@@ -52,7 +52,7 @@ Gates.Named = {
             "Magically doesn't affect the system in any way: no measurements are simulated.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.PROBABILITY_BOX_FILL_UP_COLOR)(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR)(args);
                     return;
                 }
 
@@ -72,7 +72,7 @@ Gates.Named = {
             "Magically doesn't affect the system in any way: no measurements are simulated.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.PROBABILITY_BOX_FILL_UP_COLOR)(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR)(args);
                     return;
                 }
 
@@ -95,7 +95,7 @@ Gates.Named = {
             args => {
                 let backColor = Config.GATE_FILL_COLOR;
                 if (args.isHighlighted) {
-                    backColor = Config.HIGHLIGHT_COLOR_GATE;
+                    backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
                 }
                 args.painter.fillRect(args.rect, backColor);
                 args.painter.strokeRect(args.rect);
@@ -213,7 +213,7 @@ Gates.Named = {
                     args.positionInCircuit !== null &&
                     args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
                 if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.SIMPLE_GATE_HIGHLIGHT)(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.IMPORTANT_GATE_IN_TOOLBOX_FILL_COLOR)(args);
                     return;
                 }
 
@@ -260,7 +260,7 @@ Gates.Named = {
             "Toggles between ON and ON+OFF; also toggles between OFF and ON-OFF. " +
                 "A 180° turn around the Bloch Sphere's diagonal X+Z axis. " +
                 "Useful for creating uniform superpositions of all states.",
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.SIMPLE_GATE_HIGHLIGHT))
+            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.IMPORTANT_GATE_IN_TOOLBOX_FILL_COLOR))
     },
     Exponentiating: {
         ExpiX: new Gate(
@@ -412,7 +412,7 @@ Gates.Named = {
                 if (args.isInToolbox || args.isHighlighted) {
                     let backColor = Config.GATE_FILL_COLOR;
                     if (args.isHighlighted) {
-                        backColor = Config.HIGHLIGHT_COLOR_GATE;
+                        backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
                     }
                     args.painter.fillRect(args.rect, backColor);
                     args.painter.strokeRect(args.rect);
