@@ -204,6 +204,7 @@ class CircuitDefinition {
             g === Gates.Named.Exponentiating.ExpiZ ||
             g === Gates.Named.Exponentiating.AntiExpiZ ||
             g === Gates.Named.Powering.Z ||
+            g === Gates.Named.Silly.CLOCK ||
             g === Gates.Named.Powering.AntiZ ||
             isDiag1 ||
             isDiag2;

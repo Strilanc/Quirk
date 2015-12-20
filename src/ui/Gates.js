@@ -402,6 +402,14 @@ Gates.Named = {
             "This kills the universe. If you use controls then it post-selects on the controls being met.",
             GateFactory.DEFAULT_DRAWER),
 
+        CLOCK: new Gate(
+            "X^⌈t⌉",
+            t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
+            "Clock Pulse Gate",
+            "Xors a square wave into the target wire.",
+            "",
+            GateFactory.CYCLE_DRAWER),
+
         SPACER: new Gate(
             "…",
             Matrix.identity(2),
@@ -498,11 +506,11 @@ Gates.Sets = [
         ]
     },
     {
-        hint: "Silly",
+        hint: 'Silly',
         gates: [
             Gates.Named.Silly.FUZZ_MAKER(),
             Gates.Named.Silly.SPACER,
-            null,
+            Gates.Named.Silly.CLOCK,
             Gates.Named.Silly.POST_SELECT,
             Gates.Named.Silly.RESET,
             Gates.Named.Silly.VOID
@@ -520,6 +528,7 @@ Gates.KnownToSerializer = [
     Gates.Named.Special.AntiControl,
     Gates.Named.Silly.SPACER,
     Gates.Named.Silly.VOID,
+    Gates.Named.Silly.CLOCK,
     Gates.Named.Silly.RESET,
     Gates.Named.Silly.POST_SELECT,
     Gates.Named.HalfTurns.H,
