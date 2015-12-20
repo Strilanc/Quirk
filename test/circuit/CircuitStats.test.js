@@ -145,3 +145,14 @@ suite.webGlTest("wireProbabilities_inControl", () => {
     assertThat(s.controlledWireProbabilityJustAfter(0, 0)).isEqualTo(0);
     assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isEqualTo(0);
 });
+
+suite.webGlTest("wireProbabilities_severalQubits", () => {
+    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
+        [null, null, null, null, Gates.Named.HalfTurns.X]
+    ]), 0);
+    assertThat(s.wireProbabilityJustAfter(0, Infinity)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(1, Infinity)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(2, Infinity)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(3, Infinity)).isEqualTo(0);
+    assertThat(s.wireProbabilityJustAfter(4, Infinity)).isEqualTo(1);
+});

@@ -110,7 +110,7 @@ export default class CircuitStats{
             for (let op of gateCol.swapPairs()) {
                 stateNode = stateNode.withSwap(op[0], op[1], mask);
             }
-            nodes.push(stateNode.controlProbabilityCombinations(mask.desiredValueMask));
+            nodes.push(stateNode.controlProbabilityCombinations(mask));
             masks.push(mask);
         }
         nodes.push(stateNode);
@@ -120,9 +120,9 @@ export default class CircuitStats{
         let m = merged.slice(0, merged.length - 1);
         let n = m.length;
         let wireProbColsNode = Seq.range(n).
-            map(i => m[i].asRenormalizedPerQubitProbabilities(masks[i]));
+            map(i => m[i].asRenormalizedPerQubitProbabilities(masks[i], circuitDefinition.numWires));
         let condWireProbColsNode = Seq.range(n).
-            map(i => m[i].asRenormalizedConditionalPerQubitProbabilities(masks[i]));
+            map(i => m[i].asRenormalizedConditionalPerQubitProbabilities(masks[i], circuitDefinition.numWires));
         let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();
         //noinspection JSCheckFunctionSignatures
         let nodeResults = PipelineNode.computePipeline(

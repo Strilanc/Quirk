@@ -199,6 +199,24 @@ export default class QuantumShaders {
     };
 
     /**
+     * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
+     * sum of all probabilities matching a mask.
+     *
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!int} controlInclusionMask
+     */
+    static renderConditionalProbabilitiesFinalize(director, destinationTexture, inputTexture, controlInclusionMask) {
+        director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_FINALIZE, [
+            WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height),
+            WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.float("controlInclusionMask", controlInclusionMask)
+        ]);
+    };
+
+    /**
      * Renders a control mask texture corresponding to the given control mask.
      * Two workspace textures are needed in order to build up the result; the result of the method indicates which one
      * contains the final result.
@@ -243,13 +261,18 @@ export default class QuantumShaders {
      * Renders a texture with probability sums corresponding to states matching various combinations of controls.
      *
      * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
      * @param {!WglTexture} workspace1
      * @param {!WglTexture} workspace2
-     * @param {!int} mask Each bit in the mask determines whether the control is must-be-on (1) or must-be-off (0)
+     * @param {!QuantumControlMask} controlMask
      * @param {!WglTexture} amplitudes
-     * @returns {!{result: !WglTexture, available: !WglTexture}}
      */
-    static renderControlCombinationProbabilities(director, workspace1, workspace2, mask, amplitudes) {
+    static renderControlCombinationProbabilities(director,
+                                                 destinationTexture,
+                                                 workspace1,
+                                                 workspace2,
+                                                 controlMask,
+                                                 amplitudes) {
         QuantumShaders.renderProbabilitiesFromAmplitudes(director, workspace1, amplitudes);
         let n = amplitudes.width * amplitudes.height;
         for (let i = 0; (1 << i) < n; i++) {
@@ -258,12 +281,17 @@ export default class QuantumShaders {
                 workspace2,
                 workspace1,
                 i,
-                (mask & (1 << i)) !== 0);
+                (controlMask.desiredValueMask & (1 << i)) !== 0);
             let t = workspace2;
             workspace2 = workspace1;
             workspace1 = t;
         }
-        return {result: workspace1, available: workspace2};
+
+        QuantumShaders.renderConditionalProbabilitiesFinalize(
+            director,
+            destinationTexture,
+            workspace1,
+            controlMask.inclusionMask);
     };
 
     /**
@@ -547,6 +575,33 @@ const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
         } else {
             gl_FragColor = texture2D(inputTexture, pixelUv - duv);
         }
+    }`);
+
+const GLSL_CONDITIONAL_PROBABILITIES_FINALIZE = new WglShader(`
+    uniform vec2 inputTextureSize;
+    uniform vec2 outputTextureSize;
+    uniform sampler2D inputTexture;
+    uniform float controlInclusionMask;
+
+    ${snippets.filterBit}
+    ${snippets.toggleBit}
+
+    vec2 stateToInputPixelUv(float state) {
+        float c = state + 0.5;
+        float r = mod(c, inputTextureSize.x);
+        float d = floor(c / inputTextureSize.x) + 0.5;
+        return vec2(r, d) / inputTextureSize.xy;
+    }
+
+    void main() {
+        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float bit = pow(2.0, pixelXy.y * outputTextureSize.x + pixelXy.x);
+
+        gl_FragColor = vec4(
+            texture2D(inputTexture, vec2(0.0, 0.0)).x,
+            texture2D(inputTexture, stateToInputPixelUv(bit)).x,
+            texture2D(inputTexture, stateToInputPixelUv(controlInclusionMask)).x,
+            texture2D(inputTexture, stateToInputPixelUv(toggleBit(controlInclusionMask, bit))).x);
     }`);
 
 const GLSL_APPLY_CUSTOM_QUBIT_OPERATION = new WglShader(`

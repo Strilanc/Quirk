@@ -638,42 +638,98 @@ suite.webGlTest("renderControlCombinationProbabilities", () => {
         8, 0, 0, 0
     ]));
 
-    let texA = new WglTexture(4, 2);
-    let texB = new WglTexture(4, 2);
-    let r = QuantumShaders.renderControlCombinationProbabilities(director, texA, texB, -1, inp);
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
-        204, 0, 0, 0,
-        120, 0, 0, 0,
-        138, 0, 0, 0,
-        80, 0, 0, 0,
-        174, 0, 0, 0,
-        100, 0, 0, 0,
-        113, 0, 0, 0,
-        64, 0, 0, 0
+    let ta = new WglTexture(4, 2);
+    let tb = new WglTexture(4, 2);
+    let r = new WglTexture(2, 2);
+    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(7, 7), inp);
+    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+        204, 120, 64, 113,
+        204, 138, 64, 100,
+        204, 174, 64, 80
     ]));
 
-    r = QuantumShaders.renderControlCombinationProbabilities(director, texA, texB, 0, inp);
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
-        204, 0, 0, 0,
-        84, 0, 0, 0,
-        66, 0, 0, 0,
-        26, 0, 0, 0,
-        30, 0, 0, 0,
-        10, 0, 0, 0,
+    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(3, 1), inp);
+    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+        204, 120, 40, 66,
+        204, 66, 40, 120,
+        204, 30, 40, 4
+    ]));
+
+    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(1, 1), inp);
+    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+        204, 120, 120, 204,
+        204, 66, 120, 40,
+        204, 30, 120, 20
+    ]));
+
+    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, QuantumControlMask.NO_CONTROLS, inp);
+    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+        204, 84, 204, 84,
+        204, 66, 204, 66,
+        204, 30, 204, 30
+    ]));
+
+    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(4, 4), inp);
+    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+        204, 84, 174, 74,
+        204, 66, 174, 61,
+        204, 174, 174, 204
+    ]));
+});
+
+suite.webGlTest("renderConditionalProbabilitiesFinalize", () => {
+    let director = new WglDirector();
+    let inp = new WglTexture(4, 4);
+    let dst = new WglTexture(2, 2);
+    QuantumShaders.renderPixelColorData(director, inp, new Float32Array([
+        -1, 0, 0, 0,
+        1, 0, 0, 0,
+        2, 0, 0, 0,
+        3, 0, 0, 0,
+        4, 0, 0, 0,
         5, 0, 0, 0,
-        1, 0, 0, 0
+        6, 0, 0, 0,
+        7, 0, 0, 0,
+        8, 0, 0, 0,
+        9, 0, 0, 0,
+        10, 0, 0, 0,
+        11, 0, 0, 0,
+        12, 0, 0, 0,
+        13, 0, 0, 0,
+        14, 0, 0, 0,
+        15, 0, 0, 0
     ]));
 
-    r = QuantumShaders.renderControlCombinationProbabilities(director, texA, texB, 4, inp);
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
-        204, 0, 0, 0,
-        84, 0, 0, 0,
-        66, 0, 0, 0,
-        26, 0, 0, 0,
-        174, 0, 0, 0,
-        74, 0, 0, 0,
-        61, 0, 0, 0,
-        25, 0, 0, 0
+    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 0);
+    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+        -1, 1, -1, 1,
+        -1, 2, -1, 2,
+        -1, 4, -1, 4,
+        -1, 8, -1, 8
+    ]));
+
+    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 1);
+    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+        -1, 1, 1, -1,
+        -1, 2, 1, 2+1,
+        -1, 4, 1, 4+1,
+        -1, 8, 1, 8+1
+    ]));
+
+    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 2);
+    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+        -1, 1, 2, 1+2,
+        -1, 2, 2, -1,
+        -1, 4, 2, 4+2,
+        -1, 8, 2, 8+2
+    ]));
+
+    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 5);
+    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+        -1, 1, 5, 1+4-1,
+        -1, 2, 5, 2+5,
+        -1, 4, 5, 4-4+1,
+        -1, 8, 5, 8+5
     ]));
 });
 

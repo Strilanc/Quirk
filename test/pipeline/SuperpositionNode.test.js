@@ -19,11 +19,9 @@ suite.webGlTest("fromAmplitudes", () => {
         1.5, 0, 0, 0, 1, -2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]));
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo([
         1.5/Math.sqrt(8.25), new Complex(1, -2).dividedBy(Math.sqrt(8.25)), 0, Complex.I.dividedBy(Math.sqrt(8.25))]);
-    assertThat(t.read().asProbabilities().compute()).isEqualTo([
-        1.5, 1, 0, 0]);
 
-    assertThat(SuperpositionNode.fromAmplitudes(Seq.range(16).toArray()).read().asProbabilities().compute()).
-        isEqualTo(Seq.range(16).toArray());
+    assertThat(SuperpositionNode.fromAmplitudes(Seq.range(16).toArray()).read().raw().compute()).
+        isEqualTo(new Float32Array(Seq.range(16).flatMap(e => [e, 0, 0, 0]).toArray()));
 });
 
 suite.webGlTest("fromClassicalStateInRegisterOfSize", () => {
@@ -99,24 +97,24 @@ suite.webGlTest("withSwapApplied", () => {
         0, 0, 1, 0, 0, 0, 0, 0]));
 });
 
-suite.webGlTest("probabilities", () => {
-    assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(7, 3).probabilities().read().asProbabilities().
-        compute()).isEqualTo([0, 0, 0, 0, 0, 0, 0, 1]);
-
-    assertThat(SuperpositionNode.fromAmplitudes([1.5, new Complex(1, -2), 0, Complex.I]).probabilities().
-        read().asProbabilities().compute()).isEqualTo([2.25, 5, 0, 1]);
-});
-
 suite.webGlTest("controlProbabilityCombinations", () => {
     let s = SuperpositionNode.fromAmplitudes([1.5, new Complex(1, -2), 0, Complex.I]);
-    assertThat(s.controlProbabilityCombinations(0x0).read().asProbabilities().compute()).isEqualTo([
-        8.25, 2.25, 7.25, 2.25]);
-    assertThat(s.controlProbabilityCombinations(0x1).read().asProbabilities().compute()).isEqualTo([
-        8.25, 6, 7.25, 5]);
-    assertThat(s.controlProbabilityCombinations(0x2).read().asProbabilities().compute()).isEqualTo([
-        8.25, 2.25, 1, 0]);
-    assertThat(s.controlProbabilityCombinations(0x3).read().asProbabilities().compute()).isEqualTo([
-        8.25, 6, 1, 1]);
+    let f = m => s.controlProbabilityCombinations(m).read().raw().compute().slice(0, 8);
+    assertThat(f(new QuantumControlMask(0, 0))).isEqualTo(new Float32Array([
+        8.25, 2.25, 8.25, 2.25,
+        8.25, 7.25, 8.25, 7.25]));
+    assertThat(f(new QuantumControlMask(1, 0))).isEqualTo(new Float32Array([
+        8.25, 2.25, 2.25, 8.25,
+        8.25, 7.25, 2.25, 2.25]));
+    assertThat(f(new QuantumControlMask(1, 1))).isEqualTo(new Float32Array([
+        8.25, 6, 6, 8.25,
+        8.25, 7.25, 6, 5]));
+    assertThat(f(new QuantumControlMask(2, 2))).isEqualTo(new Float32Array([
+        8.25, 2.25, 1, 0,
+        8.25, 1, 1, 8.25]));
+    assertThat(f(new QuantumControlMask(3, 3))).isEqualTo(new Float32Array([
+        8.25, 6, 1, 1,
+        8.25, 1, 1, 6]));
 });
 
 suite.webGlTest("planPackingIntoSingleTexture", () => {

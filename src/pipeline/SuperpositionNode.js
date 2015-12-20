@@ -153,19 +153,29 @@ export default class SuperpositionNode {
     /**
      * Returns a texture containing probabilities that the superposition would match various control masks if measured.
      *
-     * @param {!int} controlDirectionMask Determines whether controls are must-be-true or must-be-false, bit by bit.
+     * @param {!QuantumControlMask} controlMask
      * @returns {!SuperpositionNode}
      */
-    controlProbabilityCombinations(controlDirectionMask) {
-        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], inputs => {
-            let r = QuantumShaders.renderControlCombinationProbabilities(
+    controlProbabilityCombinations(controlMask) {
+        let qubitCount = Util.bitSize(this.width * this.height);
+        let qubitCountLg2 = Util.bitSize(qubitCount);
+        let w = 1 << Math.ceil(qubitCountLg2 / 2);
+        let h = 1 << Math.floor(qubitCountLg2 / 2);
+
+        return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
+            let result = allocTexture(w, h);
+            let workspace1 = allocTexture(this.width, this.height);
+            let workspace2 = allocTexture(this.width, this.height);
+            QuantumShaders.renderControlCombinationProbabilities(
                 getSharedDirector(),
-                allocTexture(this.width, this.height),
-                allocTexture(this.width, this.height),
-                controlDirectionMask,
+                result,
+                workspace1,
+                workspace2,
+                controlMask,
                 inputs[0]);
-            reuseTexture(r.available);
-            return r.result;
+            reuseTexture(workspace1);
+            reuseTexture(workspace2);
+            return result;
         });
     };
 
@@ -260,8 +270,8 @@ export default class SuperpositionNode {
  */
 export class SuperpositionReadNode {
     /**
-     * @param {!PipelineNode<!(!number[])|!Float32Array>} floatsNode
-     * @property {!PipelineNode<!(!number[])|!Float32Array>} floatsNode
+     * @param {!PipelineNode<!Array.<!number>|!Float32Array>} floatsNode
+     * @property {!PipelineNode<!Array.<!number>|!Float32Array>} floatsNode
      */
     constructor(floatsNode) {
         this.floatsNode = floatsNode;
@@ -277,7 +287,7 @@ export class SuperpositionReadNode {
 
     /**
      * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
-     * @returns {!PipelineNode<!(!Complex[])>}
+     * @returns {!PipelineNode.<!Array.<!Complex>>}
      */
     asRenormalizedAmplitudes() {
         return new PipelineNode([this.floatsNode], inputs => {
@@ -295,39 +305,25 @@ export class SuperpositionReadNode {
     };
 
     /**
-     * Reads the probabilities associated with the texture data (just the red component).
-     * @returns {!PipelineNode.<!(!number[])>}
-     */
-    asProbabilities() {
-        return new PipelineNode([this.floatsNode], inputs => {
-            let floats = inputs[0];
-            return Seq.range(floats.length/4).map(i => floats[i*4]).toArray();
-        });
-    };
-
-    /**
      * Reads the probability that each qubit would end up true, if measured, based on the texture data being
      * control combination data.
-     * @param {!QuantumControlMask} maskUsedWhenCombining The mask that was used when combining the probabilities.
-     * @returns {!PipelineNode.<!(!number[])>}
+     * @param {!QuantumControlMask} mask The mask that was used when combining the probabilities.
+     * @param {!int} qubitCount
+     * @returns {!PipelineNode.<!Array.<!number>>}
      */
-    asRenormalizedPerQubitProbabilities(maskUsedWhenCombining) {
+    asRenormalizedPerQubitProbabilities(mask, qubitCount) {
         return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
-            let unity = floats[0]; // Renormalization factor. For better answers when non-unitary gates are used.
-            return Seq.naturals().
-                map(i => 1 << i).
-                takeWhile(bit => (bit << 2) < floats.length).
-                map(bit => {
+            return Seq.range(qubitCount).
+                map(i => {
+                    let invertedProbability = (mask.desiredValueMask & (1 << i)) === 0;
+                    let unity = floats[4 * i];
                     if (unity <= 0) {
                         return NaN;
                     }
-                    let p = floats[bit << 2] / unity;
+                    let p = floats[4 * i + 1] / unity;
                     p = Math.max(0, Math.min(1, p));
-                    if ((maskUsedWhenCombining.desiredValueMask & bit) === 0) {
-                        p = 1 - p;
-                    }
-                    return p;
+                    return invertedProbability ? 1 - p : p;
                 }).
                 toArray();
         });
@@ -337,27 +333,30 @@ export class SuperpositionReadNode {
      * Reads the probability that each qubit would end up true, given that the mask's conrols were satisfied,
      * based on the texture data being corresponding control combination data.
      * @param {!QuantumControlMask} mask
-     * @returns {!PipelineNode.<!(!number[])>}
+     * @param {!int} qubitCount
+     * @returns {!PipelineNode.<!Array.<!number>>}
      */
-    asRenormalizedConditionalPerQubitProbabilities(mask) {
+    asRenormalizedConditionalPerQubitProbabilities(mask, qubitCount) {
         return new PipelineNode([this.floatsNode], inputs => {
             let floats = inputs[0];
-            return Seq.naturals().
-                map(i => 1 << i).
-                takeWhile(bit => (bit << 2) < floats.length).
-                map(bit => {
-                    let pMatch = floats[(mask.inclusionMask | bit) << 2];
-                    let pEither = floats[(mask.inclusionMask & ~bit) << 2];
+            let r = Seq.range(qubitCount).
+                map(i => {
+                    let reversedValues = (mask.inclusionMask & (1 << i)) === 0;
+                    let invertedProbability = (mask.desiredValueMask & (1 << i)) === 0;
+                    let pMatch = floats[4 * i + 2];
+                    let pEither = floats[4 * i + 3];
+                    if (reversedValues) {
+                        [pEither, pMatch] = [pMatch, pEither]
+                    }
                     if (pEither <= 0) {
                         return NaN;
                     }
-                    let p = Math.max(0, Math.min(1, pMatch / pEither));
-                    if ((mask.desiredValueMask & bit) === 0) {
-                        p = 1 - p;
-                    }
-                    return p;
+                    let p = pMatch / pEither;
+                    p = Math.max(0, Math.min(1, p));
+                    return invertedProbability ? 1 - p : p;
                 }).
                 toArray();
+            return r;
         });
     };
 }
