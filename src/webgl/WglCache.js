@@ -14,7 +14,7 @@ export default class WglCache {
      * @property {!int} permanentIdentifier
      * @property {!int} temporaryIdentifier
      * @property {!int} maxTextureUnits
-     * @property {!int} maxTextureDiameter
+     * @property {!int} maxTextureSize
      */
     constructor(webGLRenderingContext, permanentIdentifier, temporaryIdentifier) {
         /** @type {!WebGLRenderingContext} */
@@ -27,7 +27,7 @@ export default class WglCache {
         /** @type {Number} */
         this.maxTextureUnits = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
         /** @type {Number} */
-        this.maxTextureDiameter = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
+        this.maxTextureSize = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
 
         /** @type {!ContextStash} */
         this._attributesStash = new Map();

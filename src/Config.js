@@ -4,7 +4,7 @@
 export default class Config {}
 
 Config.MIN_WIRE_COUNT = 2;
-Config.MAX_WIRE_COUNT = 10;
+Config.MAX_WIRE_COUNT = 12; // Note: at 14 I start hitting the pixel limit for textures. And 13 is slow.
 Config.URL_CIRCUIT_PARAM_KEY = 'initialCircuit';
 
 Config.CHART_COLORS = [
