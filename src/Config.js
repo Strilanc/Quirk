@@ -44,6 +44,7 @@ Config.PEEK_GATE_ON_FILL_COLOR = Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR;
 
 Config.BINARY_TREE_LABEL_EDGE_COLOR = 'gray';
 Config.PAINT_MATRIX_GRID_COLOR_OR_NULL = null;
+Config.CYCLE_DURATION_MS = 10000; // How long it takes for evolving gates to cycle, in milliseconds.
 
 Config.AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL = '#CCC';
 Config.AMPLITUDE_PROBABILITY_FILL_UP_COLOR = '#555';

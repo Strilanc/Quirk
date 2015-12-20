@@ -7,7 +7,6 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
-import describe from "src/base/Describe.js"
 
 let canvasDiv = document.getElementById("canvasDiv");
 
@@ -26,6 +25,10 @@ let inspectorDiv = document.getElementById("inspectorDiv");
 //noinspection JSValidateTypes
 /** @type {!HTMLAnchorElement} */
 let currentCircuitLink = document.getElementById("currentCircuitLink");
+let updateCircuitLink = jsonText => {
+    currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
+};
 
 /** @type {!InspectorWidget} */
 let inspector = InspectorWidget.empty(
@@ -40,8 +43,7 @@ let snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.ci
 let restore = jsonText => {
     grabbingPointerId = undefined;
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
-    currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
+    updateCircuitLink(jsonText);
     redraw();
 };
 let revision = new Revision(snapshot());
@@ -69,7 +71,7 @@ let tickWhenAppropriate = () => {
         tickerPrevTime = performance.now();
         ticker = window.setInterval(function() {
             let t = performance.now();
-            let elapsed = (t - tickerPrevTime) / 10000;
+            let elapsed = (t - tickerPrevTime) / Config.CYCLE_DURATION_MS;
             circuitTime += elapsed;
             circuitTime %= 1;
             tickerPrevTime = t;
@@ -127,8 +129,7 @@ let useInspector = (newInspector, keepInHistory) => {
     inspector = newInspector;
     let jsonText = snapshot();
     if (keepInHistory) {
-        currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-        currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
+        updateCircuitLink(jsonText);
         revision.commit(jsonText);
     }
 
