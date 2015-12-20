@@ -18,21 +18,19 @@ export default class InspectorWidget {
      * @param {!CircuitWidget} circuitWidget
      * @param {!ToolboxWidget} toolboxWidget
      * @param {!Hand} hand
-     *
-     * @property {!Rect} drawArea
-     * @property {!CircuitWidget} circuitWidget
-     * @property {!ToolboxWidget} toolboxWidget
-     * @property {!Hand} hand
-     * @property {!Rect} outputStateHintArea
-     * @property {!Rect} focusedOperationHintArea
-     * @property {!Rect} focusedStateHintArea
-     * @property {!Rect} cumulativeFocusedOperationHintArea
-     * @property {!Rect} cumulativeOperationHintArea
      */
     constructor(drawArea, circuitWidget, toolboxWidget, hand) {
+        /** @type {!CircuitWidget} */
         this.circuitWidget = circuitWidget;
+        /** @type {!ToolboxWidget} */
         this.toolboxWidget = toolboxWidget;
+        /** @type {!Hand} */
         this.hand = hand;
+        /** @type {!Rect} */
+        this.drawArea = new Rect(0, 0, 0, 0);
+        /** @type {!Rect} */
+        this.outputStateHintArea = new Rect(0, 0, 0, 0);
+
         this.updateArea(drawArea);
     }
 
@@ -74,58 +72,13 @@ export default class InspectorWidget {
      * @private
      */
     paintOutput(painter, stats) {
-        if (this.circuitWidget.circuitDefinition.numWires > Config.MAX_LIVE_UPDATE_WIRE_COUNT) {
-            return;
-        }
-
         // Wire probabilities
         this.circuitWidget.drawRightHandPeekGates(painter, stats);
-    //
-    //    //let factors = this.circuit.getOutput().contiguousFactorization();
-    //    //for (let i = 0; i < factors.length; i++) {
-    //    //    painter.paintQuantumStateAsGrid(factors[i], this.focusedStateHintArea.leftHalf().topHalf().withX(i * this.focusedOperationHintArea.w*0.6));
-    //    //}
-    //
-        // State amplitudes
+
+       // State amplitudes
         let w = 1 << Math.ceil(this.circuitWidget.circuitDefinition.numWires/2);
         let amps = Matrix.fromRows(new Seq(stats.finalState).partitioned(w).toArray());
         MathPainter.paintMatrix(painter, amps, this.outputStateHintArea, []);
-        //painter.paintQuantumStateAsLabelledGrid(
-        //    this.circuit.getOutput(stats.time),
-        //    this.outputStateHintArea,
-        //    this.circuit.getLabels());
-    //
-    //    painter.paintMatrix(
-    //        this.circuit.getCumulativeOperationUpToBefore(this.circuit.columns.length, stats.time),
-    //        this.cumulativeOperationHintArea,
-    //        this.hand);
-    //
-    //    //let _ = 0;
-    //    //let X = 0;
-    //    //painter.paintDisalloweds(
-    //    //    Matrix.square([
-    //    //        // 1  0  1  0  1  0  1  0  1  0  1  0  1  0  1
-    //    //        // 0  1  1  0  0  1  1  0  0  1  1  0  0  1  1
-    //    //        // 0  0  0  1  1  1  1  0  0  0  0  1  1  1  1
-    //    //        // 0  0  0  0  0  0  0  1  1  1  1  1  1  1  1
-    //    //        1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-    //    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
-    //    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
-    //    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _,
-    //    //        X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1,
-    //    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
-    //    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
-    //    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _,
-    //    //        X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1,
-    //    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
-    //    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
-    //    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _,
-    //    //        X, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1,
-    //    //        _, 1, 1, _, 1, _, _, _, 1, _, _, _, _, _, _, _,
-    //    //        _, _, _, 1, _, 1, 1, _, _, 1, 1, _, 1, _, _, _,
-    //    //        _, _, _, _, _, _, _, 1, _, _, _, 1, _, 1, 1, _
-    //    //    ]),
-    //    //    this.cumulativeOperationHintArea);
     }
 
     ///**
@@ -199,33 +152,6 @@ export default class InspectorWidget {
             gates[k].drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
         }
     }
-
-    ///**
-    // *
-    // * @param {!Painter} painter
-    // * @param {!function(!number)} progressCallback
-    // * @param {!function(!string)} urlCallback
-    // */
-    //captureCycle(painter, progressCallback, urlCallback) {
-    //    //noinspection JSUnresolvedFunction
-    //    let gif = new GIF({
-    //        workers: 2,
-    //        quality: 10
-    //    });
-    //    for (let t = 0.001; t < 1; t += 0.02) {
-    //        this.paint(painter, t);
-    //        gif.addFrame(painter.canvas, {copy: true, delay: 50});
-    //        if (!this.needsContinuousRedraw()) {
-    //            break;
-    //        }
-    //    }
-    //    gif.on('progress', progressCallback);
-    //    gif.on('finished', function (blob) {
-    //        //noinspection JSUnresolvedVariable,JSUnresolvedFunction
-    //        urlCallback(URL.createObjectURL(blob));
-    //    });
-    //    gif.render();
-    //}
 
     /**
      * @param {!boolean} duplicate
