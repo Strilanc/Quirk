@@ -161,12 +161,24 @@ GateFactory.CYCLE_DRAWER = args => {
         return;
     }
     let t = args.stats.time * 2 * Math.PI;
-    let d = new Point(
-        Math.cos(t) * 0.75 * args.rect.w/2,
-        -Math.sin(t) * 0.75 * args.rect.h/2);
-    let p = args.rect.center().plus(d);
+    let c = args.rect.center();
+    let r = 0.4 * args.rect.w;
+
     GateFactory.POWER_DRAWER(args);
-    args.painter.fillCircle(p, 3, "gray");
+
+    args.painter.ctx.beginPath();
+    args.painter.ctx.moveTo(c.x, c.y);
+    args.painter.ctx.lineTo(c.x + r, c.y);
+    args.painter.ctx.arc(c.x, c.y, r, 0, -t, true);
+    args.painter.ctx.lineTo(c.x, c.y);
+    args.painter.ctx.closePath();
+
+    args.painter.ctx.strokeStyle = 'black';
+    args.painter.ctx.fillStyle = 'yellow';
+    args.painter.ctx.globalAlpha = 0.3;
+    args.painter.ctx.stroke();
+    args.painter.ctx.fill();
+    args.painter.ctx.globalAlpha = 1.0;
 };
 
 /**
