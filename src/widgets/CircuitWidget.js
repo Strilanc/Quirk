@@ -505,9 +505,7 @@ class CircuitWidget {
      * @returns {!boolean}
      */
     needsContinuousRedraw() {
-        return new Seq(this.circuitDefinition.columns).any(
-                e => new Seq(e.gates).any(
-                        g => g !== null && g.isTimeBased()));
+        return this.circuitDefinition.isTimeDependent();
     }
 
     /**

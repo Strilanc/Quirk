@@ -21,7 +21,15 @@ class CircuitDefinition {
     }
 
     /**
-     *
+     * @returns {!boolean}
+     */
+    isTimeDependent() {
+        return new Seq(this.columns).any(
+                e => new Seq(e.gates).any(
+                    g => g !== null && g.isTimeBased()));
+    }
+
+    /**
      * @param {!Array.<!Array.<?Gate>>} gates
      * @return {!CircuitDefinition}
      */

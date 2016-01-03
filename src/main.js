@@ -1,5 +1,6 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
+import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
 import Config from "src/Config.js"
 import InspectorWidget from "src/widgets/InspectorWidget.js"
 import Painter from "src/ui/Painter.js"
@@ -59,6 +60,8 @@ let ticker = null;
 let tickerPrevTime = 0;
 /** @type {!function(void) : void} */
 let redraw;
+let currentCircuitStatsCache =
+    new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
 let tickWhenAppropriate = () => {
     let shouldBeTicking = inspector.needsContinuousRedraw();
@@ -76,7 +79,7 @@ let tickWhenAppropriate = () => {
             circuitTime %= 1;
             tickerPrevTime = t;
             redraw();
-        }, 10);
+        }, Config.REFRESH_DURATION_MS);
     } else {
         window.clearInterval(ticker);
         ticker = null;
@@ -102,7 +105,11 @@ redraw = () => {
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);
     let shown = syncArea(inspector).previewDrop();
-    let stats = CircuitStats.fromCircuitAtTime(shown.circuitWidget.circuitDefinition, circuitTime);
+    if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.circuitWidget.circuitDefinition)) {
+        currentCircuitStatsCache =
+            new CycleCircuitStats(shown.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
+    }
+    let stats = currentCircuitStatsCache.statsAtApproximateTime(circuitTime);
 
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats);
