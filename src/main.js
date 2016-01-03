@@ -51,13 +51,20 @@ let revision = new Revision(snapshot());
 
 /** @type {!number} */
 let circuitTime = 0;
-/** @type {!number|null} */
-let ticker = null;
 /**
  * Milliseconds.
  * @type {!number}
  */
-let tickerPrevTime = 0;
+let prevAdvanceTime = performance.now();
+let advanceCircuitTime = () => {
+    let t = performance.now();
+    let elapsed = (t - prevAdvanceTime) / Config.CYCLE_DURATION_MS;
+    circuitTime += elapsed;
+    circuitTime %= 1;
+    prevAdvanceTime = t;
+};
+/** @type {!number|null} */
+let ticker = null;
 /** @type {!function(void) : void} */
 let redraw;
 let currentCircuitStatsCache =
@@ -71,15 +78,7 @@ let tickWhenAppropriate = () => {
         return;
     }
     if (shouldBeTicking) {
-        tickerPrevTime = performance.now();
-        ticker = window.setInterval(function() {
-            let t = performance.now();
-            let elapsed = (t - tickerPrevTime) / Config.CYCLE_DURATION_MS;
-            circuitTime += elapsed;
-            circuitTime %= 1;
-            tickerPrevTime = t;
-            redraw();
-        }, Config.REFRESH_DURATION_MS);
+        ticker = window.setInterval(redraw, Config.REFRESH_DURATION_MS);
     } else {
         window.clearInterval(ticker);
         ticker = null;
@@ -109,6 +108,7 @@ redraw = () => {
         currentCircuitStatsCache =
             new CycleCircuitStats(shown.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
     }
+    advanceCircuitTime();
     let stats = currentCircuitStatsCache.statsAtApproximateTime(circuitTime);
 
     shown.updateArea(painter.paintableArea());
