@@ -270,7 +270,7 @@ let getSearchParameters = () => {
     }
     return paramsObject;
 };
-let loadCircuitFromUrl = isFirst => {
+let loadCircuitFromUrl = () => {
     wantToPushStateIfDiffersFrom = null;
     let params = getSearchParameters();
     if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {

@@ -48,7 +48,9 @@ export default class CooldownThrottle {
         this._timeoutState = state;
         state.id = setTimeout(() => {
             if (!state.cancel) {
-                this._tryCallWithoutScheduling();
+                // Note: if the timer came back early, we need to re-schedule. So _tryCallWithoutScheduling won't do.
+                this._timeoutState = null;
+                this.trigger();
             }
         }, dt);
     }
