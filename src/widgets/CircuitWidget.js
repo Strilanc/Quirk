@@ -515,11 +515,11 @@ class CircuitWidget {
      * @param {!CircuitStats} stats
      */
     drawRightHandPeekGates(painter, stats) {
-        let left = Math.round(
-                this.area.x + this.area.w - Config.GATE_RADIUS * 2 - CIRCUIT_OP_RIGHT_SPACING - 0.5) + 0.5;
+        let n = this.circuitDefinition.columns.length + 1;
+
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
-            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, 0).withX(left));
+            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, n));
         }
     }
 }
