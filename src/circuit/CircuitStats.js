@@ -9,14 +9,14 @@ export default class CircuitStats{
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
-     * @param {!(!number[])} wireProbabilities
-     * @param {!(!number[])} conditionalWireProbabilities
+     * @param {!(!number[])} wireProbabilityData
+     * @param {!(!number[])} conditionalWireProbabilityData
      * @param {!((!Complex)[])} finalState
      */
     constructor(circuitDefinition,
                 time,
-                wireProbabilities,
-                conditionalWireProbabilities,
+                wireProbabilityData,
+                conditionalWireProbabilityData,
                 finalState) {
         /**
          * The circuit that these stats apply to.
@@ -33,13 +33,13 @@ export default class CircuitStats{
          * @type {!(!number[])}
          * @private
          */
-        this._wireProbabilityData = wireProbabilities;
+        this._wireProbabilityData = wireProbabilityData;
         /**
          * Probability that each wire is on, individually, at each slice.
          * @type {!(!number[])}
          * @private
          */
-        this._conditionalWireProbabilityData = conditionalWireProbabilities;
+        this._conditionalWireProbabilityData = conditionalWireProbabilityData;
         /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
@@ -94,6 +94,19 @@ export default class CircuitStats{
 
     static emptyAtTime(circuitDefinition, time) {
         return new CircuitStats(circuitDefinition, time, [], [], []);
+    }
+
+    /**
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
+    withTime(time) {
+        return new CircuitStats(
+            this.circuitDefinition,
+            time,
+            this._wireProbabilityData,
+            this._conditionalWireProbabilityData,
+            this.finalState);
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {

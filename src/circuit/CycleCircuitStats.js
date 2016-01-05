@@ -46,6 +46,6 @@ export default class CycleCircuitStats {
             this._cachedCircuitStatsByTime[i] = this._computeStateForBucket(i);
         }
         //noinspection JSValidateTypes
-        return this._cachedCircuitStatsByTime[i];
+        return this._cachedCircuitStatsByTime[i].withTime(t);
     }
 }
