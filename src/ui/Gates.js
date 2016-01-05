@@ -377,15 +377,6 @@ Gates.Named = {
             "",
             GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
-        RESET: new Gate(
-            "!Reset",
-            Matrix.square([1, 1, 0, 0]),
-            "Reset Gate [NOT UNITARY]",
-            "Sends all amplitude into the OFF state, then renormalizes.",
-            "Bad things happen when the ON and OFF amplitudes destructively interfere. " +
-                "Equivalent to post-selection (modulo some Hadamard gates).",
-            GateFactory.DEFAULT_DRAWER),
-
         POST_SELECT: new Gate(
             "!Select",
             Matrix.square([0, 0, 0, 1]),
@@ -394,19 +385,19 @@ Gates.Named = {
             "Search terms: PostBQP, Quantum Suicide, Weak Measurement.",
             GateFactory.DEFAULT_DRAWER),
 
-        VOID: new Gate(
-            "!Void",
-            Matrix.square([0, 0, 0, 0]),
-            "Void Gate [NOT UNITARY]",
-            "Zeroes all amplitudes, then renormalizes.",
-            "This kills the universe. If you use controls then it post-selects on the controls being met.",
-            GateFactory.DEFAULT_DRAWER),
-
         CLOCK: new Gate(
             "X^⌈t⌉",
             t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
             "Clock Pulse Gate",
             "Xors a square wave into the target wire.",
+            "",
+            GateFactory.CYCLE_DRAWER),
+
+        CLOCK_QUARTER_PHASE: new Gate(
+            "X^⌈t+½⌉",
+            t => ((t+0.25) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
+            "Clock Pulse Gate (Quarter Phase)",
+            "Xors a quarter-phased square wave into the target wire.",
             "",
             GateFactory.CYCLE_DRAWER),
 
@@ -506,14 +497,14 @@ Gates.Sets = [
         ]
     },
     {
-        hint: 'Silly',
+        hint: 'Extra',
         gates: [
-            Gates.Named.Silly.FUZZ_MAKER(),
             Gates.Named.Silly.SPACER,
+            Gates.Named.Silly.FUZZ_MAKER(),
             Gates.Named.Silly.CLOCK,
             Gates.Named.Silly.POST_SELECT,
-            Gates.Named.Silly.RESET,
-            Gates.Named.Silly.VOID
+            null,
+            Gates.Named.Silly.CLOCK_QUARTER_PHASE
         ]
     }
 ];
@@ -527,9 +518,8 @@ Gates.KnownToSerializer = [
     Gates.Named.Special.Measurement,
     Gates.Named.Special.AntiControl,
     Gates.Named.Silly.SPACER,
-    Gates.Named.Silly.VOID,
     Gates.Named.Silly.CLOCK,
-    Gates.Named.Silly.RESET,
+    Gates.Named.Silly.CLOCK_QUARTER_PHASE,
     Gates.Named.Silly.POST_SELECT,
     Gates.Named.HalfTurns.H,
     Gates.Named.HalfTurns.X,
