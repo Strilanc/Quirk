@@ -9,6 +9,7 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
+import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/widgets/MouseUtil.js"
 
 let canvasDiv = document.getElementById("canvasDiv");
 
@@ -25,25 +26,34 @@ if (canvas === null) {
 let inspectorDiv = document.getElementById("inspectorDiv");
 
 //noinspection JSValidateTypes
-/** @type {!HTMLAnchorElement} */
-let currentCircuitLink = document.getElementById("currentCircuitLink");
-let updateCircuitLink = jsonText => {
-    currentCircuitLink.href = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    currentCircuitLink.textContent = "Link to Current Circuit: " + jsonText;
-};
+/** @type {?string} */
+let wantToPushStateIfDiffersFrom = null;
 
 /** @type {!InspectorWidget} */
 let inspector = InspectorWidget.empty(
     Config.MIN_WIRE_COUNT,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
-let grabbingPointerId = undefined;
-let grabTime = window.performance.now();
-const ALLOW_REGRAB_WATCHDOG_TIME = 5000; // milliseconds
+/** @param {!string} jsonText */
+let updateCircuitLink = jsonText => {
+    document.title = `QCircuit (${inspector.circuitWidget.circuitDefinition.readableHash()})`;
+
+    let url = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+
+    if (wantToPushStateIfDiffersFrom !== null && jsonText !== wantToPushStateIfDiffersFrom) {
+        // We moved away from the original state the user was linked to. Keep it in the history.
+        // I'm not sure if this is the correct thing to do. It makes the user press back twice to escape.
+        // On the other hand, it allows them to get back to where they expect when they go back then forward.
+        history.pushState(jsonText, document.title, url);
+        wantToPushStateIfDiffersFrom = null;
+    } else {
+        // Intermediate states are too numerous to put in the history. (Users should use ctrl+Z instead.)
+        history.replaceState(jsonText, document.title, url);
+    }
+};
 
 let snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
 let restore = jsonText => {
-    grabbingPointerId = undefined;
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
     updateCircuitLink(jsonText);
     redrawThrottle.trigger();
@@ -121,17 +131,6 @@ let redraw = () => {
 };
 redrawThrottle = new CooldownThrottle(redraw, Config.REDRAW_COOLDOWN_MS);
 
-/** @param {!MouseEvent|!Touch} ev */
-let eventPosRelativeToCanvas = ev => {
-    let b = canvas.getBoundingClientRect();
-    return new Point(ev.clientX - b.left, ev.clientY - b.top);
-};
-
-/** @param {!MouseEvent} ev */
-let isLeftClicking = ev => ev.which === 1;
-/** @param {!MouseEvent} ev */
-let isMiddleClicking = ev => ev.which === 2;
-
 let useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
         return false;
@@ -147,169 +146,98 @@ let useInspector = (newInspector, keepInHistory) => {
     return true;
 };
 
-/**
- * @param {!Point} pt
- * @param {*} id
- * @param {!boolean} shift
- * @returns {!boolean} Whether or not we grabbed something.
- */
-let tryGrabAtWith = (pt, id, shift) => {
-    if (grabbingPointerId !== undefined && window.performance.now() < grabTime + ALLOW_REGRAB_WATCHDOG_TIME) {
-        return false;
-    }
-
-    let oldInspector = inspector;
-    let newHand = oldInspector.hand.withPos(pt);
-    let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(shift);
-    if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
-        return false;
-    }
-
-    // Add extra wire temporarily.
-    useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(shift), false);
-
-    revision.startedWorkingOnCommit();
-    grabbingPointerId = id;
-    grabTime = window.performance.now();
-    return true;
-};
-//noinspection JSUnusedLocalSymbols
-/**
- * @param {!Point} pt
- * @param {*} id
- * @param {!boolean} shift
- * @returns {!boolean} Whether or not we dragged something.
- */
-let tryDragAtWith = (pt, id, shift) => {
-    if (grabbingPointerId !== id || !inspector.hand.isBusy()) {
-        return false;
-    }
-
-    grabTime = window.performance.now();
-    let newHand = inspector.hand.withPos(pt);
-    let newInspector = inspector.withHand(newHand);
-    useInspector(newInspector, false);
-    return true;
-};
-//noinspection JSUnusedLocalSymbols
-/**
- * @param {!Point} pt
- * @param {*} id
- * @param {!boolean} shift
- * @returns {!boolean} Whether or not we dropped something.
- */
-let tryDropAtWith = (pt, id, shift) => {
-    if (grabbingPointerId !== id) {
-        return false;
-    }
-    grabbingPointerId = undefined;
-    if (!inspector.hand.isBusy()) {
-        return false;
-    }
-
-    let newHand = inspector.hand.withPos(pt);
-    let newInspector = syncArea(inspector).withHand(newHand).afterDropping().afterTidyingUp();
-    let clearHand = newInspector.hand.withPos(null);
-    let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(0);
-    useInspector(clearInspector, true);
-    return true;
-};
-//noinspection JSUnusedLocalSymbols
-/**
- * @param {!Point} pt
- * @param {*} id
- * @param {!boolean} shift
- * @returns {!boolean} Whether or not we left.
- */
-let tryLeaveAtWith = (pt, id, shift) => {
-    if (grabbingPointerId !== id || !inspector.hand.isBusy()) {
-        return false;
-    }
-
-    grabTime = window.performance.now();
-    let newHand = inspector.hand.withPos(null);
-    let newInspector = inspector.withHand(newHand);
-    useInspector(newInspector, false);
-    return true;
-};
-//noinspection JSUnusedLocalSymbols
-/**
- * @param {!Point} pt
- * @param {*} id
- * @param {!boolean} shift
- * @returns {!boolean} Whether or not we cancelled.
- */
-let tryCancelAtWith = (pt, id, shift) => {
-    if (grabbingPointerId !== id) {
-        return false;
-    }
-
-    restore(revision.cancelCommitBeingWorkedOn());
-    grabbingPointerId = undefined;
-    return true;
-};
-
-/**
- * @param {!TouchEvent} ev
- * @param {!function(!Point, *, !boolean) : !boolean} handler
- */
-let handleTouchEventWith = (ev, handler) => {
-    for (let i = 0; i < ev.changedTouches.length; i++) {
-        let touch = ev.changedTouches[i];
-        if (handler(eventPosRelativeToCanvas(touch), touch.identifier, ev.shiftKey)) {
-            ev.preventDefault();
+watchDrags(canvas,
+    /**
+     * Grab
+     * @param {!Point} pt
+     * @param {!MouseEvent|!TouchEvent} ev
+     */
+    (pt, ev) => {
+        let oldInspector = inspector;
+        let newHand = oldInspector.hand.withPos(pt);
+        let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
+        if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
             return;
         }
-    }
-};
 
-/**
- * @param {!MouseEvent} ev
- * @param {!function(!Point, *) : !boolean} handler
- */
-let handleMouseEventWith = (ev, handler) => {
-    if (isLeftClicking(ev) && handler(eventPosRelativeToCanvas(ev), "mouse!", ev.shiftKey)) {
+        // Add extra wire temporarily.
+        useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(ev.shiftKey), false);
+
+        revision.startedWorkingOnCommit();
         ev.preventDefault();
-    }
-};
-
-canvas.addEventListener('mousedown', ev => {
-    if (isMiddleClicking(ev)) {
-        let newHand = inspector.hand.withPos(eventPosRelativeToCanvas(ev));
-        let newInspector = syncArea(inspector).
-            withHand(newHand).
-            afterGrabbing(false). // Grab the gate.
-            withHand(newHand). // Lose the gate.
-            afterTidyingUp().
-            withJustEnoughWires(0);
-        if (useInspector(newInspector, true)) {
-            ev.preventDefault();
+    },
+    /**
+     * Cancel
+     * @param {!MouseEvent|!TouchEvent} ev
+     */
+    ev => {
+        restore(revision.cancelCommitBeingWorkedOn());
+        ev.preventDefault();
+    },
+    /**
+     * Drag
+     * @param {?Point} pt
+     * @param {!MouseEvent|!TouchEvent} ev
+     */
+    (pt, ev) => {
+        if (!inspector.hand.isBusy()) {
+            return;
         }
+
+        let newHand = inspector.hand.withPos(pt);
+        let newInspector = inspector.withHand(newHand);
+        useInspector(newInspector, false);
+        ev.preventDefault();
+    },
+    /**
+     * Drop
+     * @param {?Point} pt
+     * @param {!MouseEvent|!TouchEvent} ev
+     */
+    (pt, ev) => {
+        if (!inspector.hand.isBusy()) {
+            return;
+        }
+
+        let newHand = inspector.hand.withPos(pt);
+        let newInspector = syncArea(inspector).withHand(newHand).afterDropping().afterTidyingUp();
+        let clearHand = newInspector.hand.withPos(null);
+        let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(0);
+        useInspector(clearInspector, true);
+        ev.preventDefault();
+    });
+
+// Middle-click to delete a gate.
+canvas.addEventListener('mousedown', ev => {
+    if (!isMiddleClicking(ev)) {
         return;
     }
-    handleMouseEventWith(ev, tryGrabAtWith);
-});
-document.addEventListener('mousemove', ev => {
-    if (inspector.hand.isBusy()) {
-        handleMouseEventWith(ev, tryDragAtWith);
-    } else {
+    let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));
+    let newInspector = syncArea(inspector).
+        withHand(newHand).
+        afterGrabbing(false). // Grab the gate.
+        withHand(newHand). // Lose the gate.
+        afterTidyingUp().
+        withJustEnoughWires(0);
+    if (useInspector(newInspector, true)) {
         ev.preventDefault();
-        let newHand = inspector.hand.withPos(eventPosRelativeToCanvas(ev));
+    }
+});
+
+// When mouse moves without dragging, track it (for showing hints and things).
+document.addEventListener('mousemove', ev => {
+    if (!inspector.hand.isBusy()) {
+        ev.preventDefault();
+        let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));
         let newInspector = inspector.withHand(newHand);
         useInspector(newInspector, false);
     }
 });
-canvas.addEventListener('mouseup', ev => handleMouseEventWith(ev, tryDropAtWith));
-canvas.addEventListener('mouseleave', ev => handleMouseEventWith(ev, tryLeaveAtWith));
-canvas.addEventListener('mouseenter', ev => handleMouseEventWith(ev, tryLeaveAtWith));
 
-canvas.addEventListener('touchstart', ev => handleTouchEventWith(ev, tryGrabAtWith));
-canvas.addEventListener('touchmove', ev => handleTouchEventWith(ev, tryDragAtWith));
-canvas.addEventListener('touchend', ev => handleTouchEventWith(ev, tryDropAtWith));
-canvas.addEventListener('touchcancel', ev => handleTouchEventWith(ev, tryCancelAtWith));
-
+// Resize drawn circuit as window size changes.
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 
+// Keyboard shortcuts (undo, redo).
 document.addEventListener("keydown", e => {
     const Y_KEY = 89;
     const Z_KEY = 90;
@@ -324,8 +252,9 @@ document.addEventListener("keydown", e => {
     }
 });
 
+// Pull initial circuit out of URL '?x=y' arguments.
 let getSearchParameters = () => {
-    let paramsText = window.location.search.substr(1);
+    let paramsText = document.location.search.substr(1);
     let paramsObject = {};
     if (paramsText !== null && paramsText !== "") {
         let paramsKeyVal = paramsText.split("&");
@@ -341,16 +270,23 @@ let getSearchParameters = () => {
     }
     return paramsObject;
 };
-let params = getSearchParameters();
-if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
-    try {
-        let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
-        let circuitDef = Serializer.fromJson(CircuitDefinition, json);
-        useInspector(inspector.withCircuitDefinition(circuitDef), true);
-        revision = new Revision(snapshot())
-    } catch (ex) {
-        alert("Failed to load circuit: " + ex);
+let loadCircuitFromUrl = isFirst => {
+    wantToPushStateIfDiffersFrom = null;
+    let params = getSearchParameters();
+    if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
+        try {
+            let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
+            let circuitDef = Serializer.fromJson(CircuitDefinition, json);
+            useInspector(inspector.withCircuitDefinition(circuitDef), true);
+            let state = snapshot();
+            revision = new Revision(state);
+            wantToPushStateIfDiffersFrom = state;
+        } catch (ex) {
+            alert("Failed to load circuit: " + ex);
+        }
     }
+    redrawThrottle.trigger();
 }
 
-redrawThrottle.trigger();
+window.onpopstate = () => loadCircuitFromUrl(false);
+loadCircuitFromUrl(true);

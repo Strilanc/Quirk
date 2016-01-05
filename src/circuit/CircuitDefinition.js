@@ -40,6 +40,22 @@ class CircuitDefinition {
         return new CircuitDefinition(gates[0].length, gates.map(c => new GateColumn(c)));
     }
 
+    readableHash() {
+        let allGates = new Seq(this.columns)
+            .flatMap(e => e.gates)
+            .filter(e => e !== null)
+            .map(e => e.symbol)
+            .toArray();
+        if (allGates.length === 0) {
+            return "empty";
+        }
+        let allGatesString = `${allGates.length}/${this.numWires}:${allGates.join("")}`;
+        if (allGatesString.length <= 40) {
+            return allGatesString;
+        }
+        return allGatesString.substring(0, 40) + "…";
+    }
+
     withColumns(columns) {
         return new CircuitDefinition(
             this.numWires,
