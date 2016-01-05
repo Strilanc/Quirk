@@ -8,7 +8,8 @@ const MOUSE_ID = "mouse!";
  * @param {!TouchEvent|!MouseEvent} ev
  * @returns {!boolean}
  */
-let isLeftClicking = ev => ev instanceof TouchEvent || ev.which === 1;
+let isLeftClicking = ev => (window.TouchEvent !== undefined && ev instanceof TouchEvent) || ev.which === 1;
+
 /**
  * @param {!MouseEvent} ev
  * @returns {!boolean}

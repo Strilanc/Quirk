@@ -286,7 +286,7 @@ let loadCircuitFromUrl = () => {
         }
     }
     redrawThrottle.trigger();
-}
+};
 
 window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl(true);
