@@ -229,6 +229,7 @@ class CircuitDefinition {
             g === Gates.Named.Exponentiating.AntiExpiZ ||
             g === Gates.Named.Powering.Z ||
             g === Gates.Named.Silly.CLOCK ||
+            g === Gates.Named.Silly.CLOCK_QUARTER_PHASE ||
             g === Gates.Named.Powering.AntiZ ||
             isDiag1 ||
             isDiag2;
