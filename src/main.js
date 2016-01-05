@@ -1,7 +1,8 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
-import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
+import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
+import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
 import InspectorWidget from "src/widgets/InspectorWidget.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
@@ -45,8 +46,9 @@ let restore = jsonText => {
     grabbingPointerId = undefined;
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
     updateCircuitLink(jsonText);
-    redraw();
+    redrawThrottle.trigger();
 };
+/** @type {!Revision} */
 let revision = new Revision(snapshot());
 
 /** @type {!number} */
@@ -65,8 +67,8 @@ let advanceCircuitTime = () => {
 };
 /** @type {!number|null} */
 let ticker = null;
-/** @type {!function(void) : void} */
-let redraw;
+/** @type {!CooldownThrottle} */
+let redrawThrottle;
 let currentCircuitStatsCache =
     new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
@@ -78,7 +80,7 @@ let tickWhenAppropriate = () => {
         return;
     }
     if (shouldBeTicking) {
-        ticker = window.setInterval(redraw, Config.REFRESH_DURATION_MS);
+        ticker = window.setInterval(() => redrawThrottle.trigger(), Config.REFRESH_DURATION_MS);
     } else {
         window.clearInterval(ticker);
         ticker = null;
@@ -99,7 +101,7 @@ let syncArea = ins => {
     return ins;
 };
 
-redraw = () => {
+let redraw = () => {
     canvas.width = canvasDiv.clientWidth;
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);
@@ -117,6 +119,7 @@ redraw = () => {
 
     tickWhenAppropriate();
 };
+redrawThrottle = new CooldownThrottle(redraw, Config.REDRAW_COOLDOWN_MS);
 
 /** @param {!MouseEvent|!Touch} ev */
 let eventPosRelativeToCanvas = ev => {
@@ -140,7 +143,7 @@ let useInspector = (newInspector, keepInHistory) => {
         revision.commit(jsonText);
     }
 
-    redraw();
+    redrawThrottle.trigger();
     return true;
 };
 
@@ -216,6 +219,24 @@ let tryDropAtWith = (pt, id, shift) => {
  * @param {!Point} pt
  * @param {*} id
  * @param {!boolean} shift
+ * @returns {!boolean} Whether or not we left.
+ */
+let tryLeaveAtWith = (pt, id, shift) => {
+    if (grabbingPointerId !== id || !inspector.hand.isBusy()) {
+        return false;
+    }
+
+    grabTime = window.performance.now();
+    let newHand = inspector.hand.withPos(null);
+    let newInspector = inspector.withHand(newHand);
+    useInspector(newInspector, false);
+    return true;
+};
+//noinspection JSUnusedLocalSymbols
+/**
+ * @param {!Point} pt
+ * @param {*} id
+ * @param {!boolean} shift
  * @returns {!boolean} Whether or not we cancelled.
  */
 let tryCancelAtWith = (pt, id, shift) => {
@@ -278,15 +299,16 @@ document.addEventListener('mousemove', ev => {
         useInspector(newInspector, false);
     }
 });
-document.addEventListener('mouseup', ev => handleMouseEventWith(ev, tryDropAtWith));
-canvas.addEventListener('mouseleave', ev => handleMouseEventWith(ev, tryDropAtWith));
+canvas.addEventListener('mouseup', ev => handleMouseEventWith(ev, tryDropAtWith));
+canvas.addEventListener('mouseleave', ev => handleMouseEventWith(ev, tryLeaveAtWith));
+canvas.addEventListener('mouseenter', ev => handleMouseEventWith(ev, tryLeaveAtWith));
 
 canvas.addEventListener('touchstart', ev => handleTouchEventWith(ev, tryGrabAtWith));
-document.addEventListener('touchmove', ev => handleTouchEventWith(ev, tryDragAtWith));
-document.addEventListener('touchend', ev => handleTouchEventWith(ev, tryDropAtWith));
-document.addEventListener('touchcancel', ev => handleTouchEventWith(ev, tryCancelAtWith));
+canvas.addEventListener('touchmove', ev => handleTouchEventWith(ev, tryDragAtWith));
+canvas.addEventListener('touchend', ev => handleTouchEventWith(ev, tryDropAtWith));
+canvas.addEventListener('touchcancel', ev => handleTouchEventWith(ev, tryCancelAtWith));
 
-window.addEventListener('resize', redraw, false);
+window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 
 document.addEventListener("keydown", e => {
     const Y_KEY = 89;
@@ -331,4 +353,4 @@ if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
     }
 }
 
-redraw();
+redrawThrottle.trigger();

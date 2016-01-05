@@ -16,7 +16,7 @@ class Gate {
      * @param {!string} name A helpful human-readable name for the operation.
      * @param {!string} blurb A helpful description of what the operation does.
      * @param {!string} details A helpful description of what the operation does.
-     * @param {!function(*)} drawer
+     * @param {!function(!GateDrawParams) : void} drawer
      */
     constructor(symbol, matrixOrFunc, name, blurb, details, drawer) {
         /** @type {!string} */
