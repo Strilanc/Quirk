@@ -42,9 +42,9 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
         if (val.unit >= c.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
         }
-        if (val.texture.width * val.texture.height > c.maxTextureSize) {
+        if (val.texture.width > c.maxTextureSize || val.texture.height > c.maxTextureSize) {
             throw new Error(`Uniform texture argument is ${val.texture.width}x${val.texture.height}, but max ` +
-                `texture size is ${c.maxTextureSize}.`);
+                `texture diameter is ${c.maxTextureSize}.`);
         }
         let g = c.webGLRenderingContext;
         g.uniform1i(loc, val.unit);
