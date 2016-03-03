@@ -243,7 +243,7 @@ class CircuitDefinition {
     gateAtLocIsDisabledReason(pt) {
         let g = this.gateAtLoc(pt);
 
-        if (g.name === "Parse Error") {
+        if (g !== null && g.name === "Parse Error") {
             return "parse\nerror";
         }
 
