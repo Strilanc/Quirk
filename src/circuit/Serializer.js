@@ -9,6 +9,7 @@ import GateFactory from "src/ui/GateFactory.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /**
  * Serializes supported values to/from json elements.
@@ -98,6 +99,16 @@ let toJson_Gate = gate => {
         throw new Error("Don't know how to serialize matrix functions.");
     }
 
+    if (gate.name === "Parse Error") {
+        return gate.tag;
+    }
+
+    if (gate.symbol === "") {
+        return {
+            matrix: toJson_Matrix(gate.matrixAt(0.25))
+        };
+    }
+
     return {
         id: gate.symbol,
         matrix: toJson_Matrix(gate.matrixAt(0.25))
@@ -111,18 +122,49 @@ let toJson_Gate = gate => {
  */
 let fromJson_Gate = json => {
     let symbol = typeof json === "string" ? json : json["id"];
+
+    // Recover from bad symbol.
+    if (symbol === undefined) {
+        symbol = "";
+    }
     if (typeof symbol !== "string") {
-        throw new Error(`Gate json should contain a string id. Json: ${describe(json)}`);
+        symbol = describe(symbol);
     }
 
     let matrixProp = json["matrix"];
-    let matrix = matrixProp === undefined ? undefined : fromJson_Matrix(matrixProp);
+    if (matrixProp === undefined) {
+        // Should be a built-in.
+        let match = new Seq(Gates.KnownToSerializer).
+            filter(g => g.symbol === symbol).
+            first(null);
+        if (match !== null) {
+            return match;
+        }
 
-    let match = new Seq(Gates.KnownToSerializer).
-        filter(g => g.symbol === symbol).
-        first(null);
-    if (match !== null && (matrix === undefined || match.matrix.isEqualTo(matrix))) {
-        return match;
+        // Err, okay... probably a bad matrix. Let the parse fail below.
+    }
+
+    let drawer = symbol === "" ? GateFactory.MATRIX_DRAWER : GateFactory.POWER_DRAWER;
+    let matrix;
+    try {
+        matrix = fromJson_Matrix(matrixProp);
+        if (matrix.width() !== matrix.height()) {
+            throw new Error("Gate matrix must be square.");
+        }
+        if (matrix.width() < 2 || !Util.isPowerOf2(matrix.width())) {
+            throw new Error("Gate matrix size must be at least 2, and a power of 2.");
+        }
+    } catch (ex) {
+        console.error("Error parsing gate from json", "<", json, ">", ex);
+        matrix = Matrix.identity(2);
+        return new Gate(
+            symbol,
+            matrix,
+            "Parse Error",
+            "A broken gate",
+            describe(ex),
+            drawer,
+            json);
     }
 
     if (symbol === Gates.Named.Silly.FUZZ_SYMBOL && matrix !== undefined) {
@@ -131,7 +173,7 @@ let fromJson_Gate = json => {
         return r;
     }
 
-    return new Gate(symbol, matrix, symbol, "(A custom imported gate.)", "", GateFactory.DEFAULT_DRAWER);
+    return new Gate(symbol, matrix, symbol, "", "", drawer);
 };
 
 /**

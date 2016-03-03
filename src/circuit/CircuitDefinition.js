@@ -243,6 +243,10 @@ class CircuitDefinition {
     gateAtLocIsDisabledReason(pt) {
         let g = this.gateAtLoc(pt);
 
+        if (g.name === "Parse Error") {
+            return "parse\nerror";
+        }
+
         if (g === Gates.Named.Special.Measurement) {
             if (this.colHasControls(pt.x)) {
                 return "can't\ncontrol\n(sorry)";

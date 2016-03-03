@@ -17,8 +17,9 @@ class Gate {
      * @param {!string} blurb A helpful description of what the operation does.
      * @param {!string} details A helpful description of what the operation does.
      * @param {!function(!GateDrawParams) : void} drawer
+     * @param tag Associated data.
      */
-    constructor(symbol, matrixOrFunc, name, blurb, details, drawer) {
+    constructor(symbol, matrixOrFunc, name, blurb, details, drawer, tag = undefined) {
         /** @type {!string} */
         this.symbol = symbol;
         /** @type {!Matrix|!function(!number): !Matrix} */
@@ -31,6 +32,7 @@ class Gate {
         this.details = details;
         /** @type {!function(*)} */
         this.drawer = drawer;
+        this.tag = tag;
     }
 
     /**
