@@ -77,6 +77,22 @@ class QuantumControlMask {
     };
 
     /**
+     * @returns {!int|Infinity}
+     */
+    includedBitCount() {
+        let m = this.inclusionMask;
+        if (m < 0) {
+            return Infinity;
+        }
+        let n = 0;
+        while (m > 0) {
+            m &= m - 1;
+            n++;
+        }
+        return n;
+    }
+
+    /**
      * @param {!QuantumControlMask} other
      * @returns {!QuantumControlMask}
      */

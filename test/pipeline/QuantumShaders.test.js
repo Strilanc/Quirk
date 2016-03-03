@@ -941,3 +941,38 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 });
+
+suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
+    let director = new WglDirector();
+    let nsize = 4;
+    let size1 = 1 << nsize;
+    let size2 = 1 << nsize;
+    let inp = new WglTexture(size1, size2);
+    let out = new WglTexture(size1, size2);
+
+    // Generate a set of random un-normalized superpositions.
+    let vecs = Seq.range(size1).
+        map(_ => Seq.range(size2).
+            map(__ => new Complex(Math.random()*2 - 1, Math.random()*2 - 1)).
+            toArray()).
+        toArray();
+
+    let expected = new Seq(vecs).
+        map(v => Matrix.col(v)).
+        map(c => c.times(c.adjoint())).
+        fold((m1, m2) => m1.plus(m2));
+
+    let inputPixelData = new Seq(vecs).
+        flatten().
+        flatMap(e => [e.real, e.imag, 0, 0]).
+        toArray();
+    QuantumShaders.renderPixelColorData(director, inp, new Float32Array(inputPixelData));
+    let kept = Seq.range(nsize).toArray();
+    let margined = Seq.range(nsize).map(i => i + nsize).toArray();
+    let controlled = QuantumControlMask.NO_CONTROLS;
+    QuantumShaders.renderSuperpositionToDensityMatrix(director, out, inp, kept, margined, controlled);
+
+    let outputPixelData = director.readPixelColorFloats(out);
+    let computed = Matrix.square(new Seq(outputPixelData).partitioned(4).map(p => new Complex(p[0], p[1])).toArray());
+    assertThat(computed).isApproximatelyEqualTo(expected, 0.0001);
+});

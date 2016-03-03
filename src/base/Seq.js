@@ -222,6 +222,24 @@ class Seq {
     };
 
     /**
+     * Returns a sequence iterating the results of applying a transformation to the indexed items of the receiving
+     * sequence.
+     * @param {!function(T, int): R} projection
+     * @returns {!Seq.<T>}
+     * @template T, R
+     */
+    mapWithIndex(projection) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let i = 0;
+            for (let e of seq) {
+                yield projection(e, i);
+                i += 1;
+            }
+        });
+    };
+
+    /**
      * Returns a sequence iterating the concatenated results of applying an iterable-returning transformation to the
      * items of the receiving sequence.
      * @param {!function(T): !Iterable<R>} sequenceProjection
@@ -444,7 +462,7 @@ class Seq {
 
     /**
      * Multiplies up the numbers in the sequence, using the `*` operator, and returns the total.
-     * The empty product is defined to be 1, to satisfy the invariant that X.concat([s]).product() === X.product() + s.
+     * The empty product is defined to be 1, to satisfy the invariant that X.concat([s]).product() === X.product() * s.
      * @returns {T|!number|*}
      * @template T
      */

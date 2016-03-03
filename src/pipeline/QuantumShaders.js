@@ -1,5 +1,6 @@
 import Matrix from "src/math/Matrix.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
@@ -337,6 +338,49 @@ export default class QuantumShaders {
             WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
             WglArg.texture("controlTexture", controlTexture, 1)
         ]);
+    };
+
+    /**
+     * @param {!WglDirector} director
+     * @param {!WglTexture} destinationTexture
+     * @param {!WglTexture} inputTexture
+     * @param {!Array.<!int>} keptBits
+     * @param {!Array.<!int>} marginalizedBits
+     * @param {!QuantumControlMask} controlMask
+     */
+    static renderSuperpositionToDensityMatrix(director,
+                                              destinationTexture,
+                                              inputTexture,
+                                              keptBits,
+                                              marginalizedBits,
+                                              controlMask) {
+        Util.need(keptBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0), "kept bits overlap controls");
+        Util.need(marginalizedBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0),
+            "marginalized bits overlap controls");
+        Util.need(keptBits.every(b => marginalizedBits.indexOf(b) === -1), "kept bits overlap marginalized bits");
+        Util.need(1 << (controlMask.includedBitCount() + keptBits.length + marginalizedBits.length) ===
+            inputTexture.width * inputTexture.height, "all bits must be kept, marginalized, or controls");
+        Util.need(1 << (2*keptBits.length) === destinationTexture.width * destinationTexture.height,
+            "destination texture has wrong size for density matrix");
+
+        let specializedShader = MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX(marginalizedBits.length, keptBits.length);
+        let bitArg = (k, n) => {
+            let r = n % inputTexture.width;
+            let q = (n - r) / inputTexture.width;
+            return WglArg.vec2(k, r, q);
+        };
+        let args = new Seq([
+            [
+                WglArg.texture("superpositionTexture", inputTexture, 0),
+                WglArg.vec2("superpositionTextureSize", inputTexture.width, inputTexture.height),
+                WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
+                bitArg("control_bits_offset", controlMask.desiredValueMask)
+            ],
+            new Seq(keptBits).mapWithIndex((b, i) => bitArg("kept_bit_" + i, 1 << b)),
+            new Seq(marginalizedBits).mapWithIndex((b, i) => bitArg("margin_bit_" + i, 1 << b))
+        ]).flatten().toArray();
+
+        director.render(destinationTexture, specializedShader, args);
     };
 }
 
@@ -732,3 +776,82 @@ const GLSL_SWAP_QUBITS = new WglShader(`
         }
         gl_FragColor = texture2D(inputTexture, srcPixelUv);
     }`);
+
+
+const PATTERN_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX = `
+    /** Stores the input as 2**n amplitudes defining the state of n qubits. */
+    uniform sampler2D superpositionTexture;
+    /** The width and height of the input superposition texture. */
+    uniform vec2 superpositionTextureSize;
+    /** The width and height of the output texture. */
+    uniform vec2 outputTextureSize;
+
+    /** The offsets used to toggle between the values of bits to be marginalized over. */
+    REPEAT_MARGIN{uniform vec2 margin_bit_#;}
+
+    /** The offsets used to toggle between the values of bits to keep. */
+    REPEAT_KEPT{uniform vec2 kept_bit_#;}
+
+    /** Aims the conversion at the correct subset of the space. */
+    uniform vec2 control_bits_offset;
+
+    void main() {
+        // Find the state pair of the kept bits corresponding to the density matrix position we're computing.
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float ij = xy.y * outputTextureSize.x + xy.x;
+        REPEAT_KEPT{float i# = mod(ij, 2.0); ij = (ij - i#)/2.0;}
+        REPEAT_KEPT{float j# = mod(ij, 2.0); ij = (ij - j#)/2.0;}
+        vec2 i = control_bits_offset REPEAT_KEPT{+ kept_bit_# * i#};
+        vec2 j = control_bits_offset REPEAT_KEPT{+ kept_bit_# * j#};
+
+        // Marginalize over the margin bits.
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        REPEAT_MARGIN{for (int k# = 0; k# < 2; k#++)} {
+            vec2 k = vec2(0.0, 0.0) REPEAT_MARGIN{+ float(k#) * margin_bit_#};
+            vec4 a = texture2D(superpositionTexture, (i + k + vec2(0.5, 0.5)) / superpositionTextureSize);
+            vec4 b = texture2D(superpositionTexture, (j + k + vec2(0.5, 0.5)) / superpositionTextureSize);
+            gl_FragColor += vec4(a.x*b.x + a.y*b.y, a.x*b.y - a.y*b.x, 0.0, 0.0);
+        }
+    }`;
+
+let __MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX__cache = new Map();
+let MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX = (num_margin, num_kept) => {
+    let try_replace = (target, key, num) => {
+        let i = target.indexOf(key);
+        if (i === -1) {
+            return [false, target];
+        }
+        let j = target.indexOf("}", i);
+        if (j === -1) {
+            return [false, target];
+        }
+
+        let i2 = i + key.length;
+        let sub = target.substr(i2, j - i2);
+        let out = target.substr(0, i) +
+            Seq.range(num).map(i => sub.split('#').join(i+"")).join("\n\t\t\t") +
+            target.substr(j + 1);
+        return [true, out];
+    };
+
+    let all_replace = (target, key, num) => {
+        let cont = undefined;
+        do {
+            [cont, target] = try_replace(target, key, num);
+        } while (cont);
+        return target;
+    };
+
+    let key = num_margin + ":" + num_kept;
+    let val = __MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX__cache[key];
+    if (val !== undefined) {
+        return val;
+    }
+
+    let code = PATTERN_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX;
+    code = all_replace(code, "REPEAT_MARGIN{", num_margin);
+    code = all_replace(code, "REPEAT_KEPT{", num_kept);
+    let shader = new WglShader(code);
+    __MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX__cache[key] = shader;
+    return shader;
+};
