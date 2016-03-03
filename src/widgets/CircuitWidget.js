@@ -520,6 +520,7 @@ class CircuitWidget {
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, n));
+            MathPainter.paintMatrix(painter, stats._densityNode[i], this.gateRect(i, n+1), []);
         }
     }
 }

@@ -247,6 +247,16 @@ class Matrix {
     };
 
     /**
+     * Returns the sum of the matrix' diagonal elements.
+     * @returns {!Complex}
+     */
+    trace() {
+        return Seq.range(Math.min(this.width(), this.height())).
+            map(i => this.cell(i, i)).
+            aggregate(Complex.ZERO, (a, e) => a.plus(e));
+    };
+
+    /**
      * Returns the result of scaling the receiving matrix by the given scalar factor.
      * @param {!number|!Complex} v
      * @returns {!Matrix}

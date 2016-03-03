@@ -3,6 +3,7 @@ import Matrix from "src/math/Matrix.js"
 
 import Complex from "src/math/Complex.js"
 import Format from "src/base/Format.js"
+import Seq from "src/base/Seq.js"
 
 let suite = new Suite("Matrix");
 
@@ -469,4 +470,17 @@ suite.test("liftApply", () => {
 
     assertThat(Matrix.PAULI_Z.liftApply(tPow(0.5))).isApproximatelyEqualTo(Matrix.square([1, 0, 0, i]));
     assertThat(Matrix.PAULI_Z.liftApply(tPow(-0.5))).isApproximatelyEqualTo(Matrix.square([1, 0, 0, mi]));
+});
+
+suite.test("trace", () => {
+    assertThat(Matrix.identity(2).trace()).isEqualTo(2);
+    assertThat(Matrix.identity(10).trace()).isEqualTo(10);
+
+    assertThat(Matrix.PAULI_X.trace()).isEqualTo(0);
+    assertThat(Matrix.PAULI_Y.trace()).isEqualTo(0);
+    assertThat(Matrix.PAULI_Z.trace()).isEqualTo(0);
+    assertThat(Matrix.HADAMARD.trace()).isApproximatelyEqualTo(0);
+    assertThat(Matrix.square([1, 2, 3, 4]).trace()).isEqualTo(5);
+
+    assertThat(Matrix.square(Seq.range(9).toArray()).trace()).isEqualTo(12);
 });

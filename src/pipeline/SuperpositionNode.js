@@ -1,4 +1,5 @@
 import Complex from "src/math/Complex.js"
+import Matrix from "src/math/Matrix.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Seq from "src/base/Seq.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
@@ -136,29 +137,14 @@ export default class SuperpositionNode {
     }
 
     /**
-     * Returns a texture containing probabilities for the amplitudes in the receiving texture.
-     * @returns {!SuperpositionNode}
-     */
-    probabilities() {
-        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], inputs => {
-            let result = allocTexture(this.width, this.height);
-            QuantumShaders.renderProbabilitiesFromAmplitudes(
-                getSharedDirector(),
-                result,
-                inputs[0]);
-            return result;
-        });
-    };
-
-    /**
      * Returns a texture containing probabilities that the superposition would match various control masks if measured.
      *
      * @param {!QuantumControlMask} controlMask
      * @returns {!SuperpositionNode}
      */
-    controlProbabilityCombinations(controlMask) {
-        let qubitCount = Util.bitSize(this.width * this.height);
-        let qubitCountLg2 = Util.bitSize(qubitCount);
+    controlledProbabilities(controlMask) {
+        let qubitCount = Util.bitSize(this.width * this.height - 1);
+        let qubitCountLg2 = Util.bitSize(qubitCount - 1);
         let w = 1 << Math.ceil(qubitCountLg2 / 2);
         let h = 1 << Math.floor(qubitCountLg2 / 2);
 
@@ -175,6 +161,30 @@ export default class SuperpositionNode {
                 inputs[0]);
             reuseTexture(workspace1);
             reuseTexture(workspace2);
+            return result;
+        });
+    };
+
+    /**
+     * Returns a texture containing probabilities that the superposition would match various control masks if measured.
+     *
+     * @param {!QuantumControlMask} controlMask
+     * @returns {!SuperpositionNode}
+     */
+    densityMatrixI(i, controlMask) {
+        let qubitCount = Util.bitSize(this.width * this.height - 1);
+        let w = 2;
+        let h = 2;
+
+        return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
+            let result = allocTexture(2, 2);
+            QuantumShaders.renderSuperpositionToDensityMatrix(
+                getSharedDirector(),
+                result,
+                inputs[0],
+                [i],
+                Seq.range(qubitCount).filter(e => e !== i).toArray(),
+                controlMask);
             return result;
         });
     };
@@ -301,6 +311,31 @@ export class SuperpositionReadNode {
             unity = Math.sqrt(unity);
 
             return Seq.range(floats.length/4).map(i => new Complex(floats[i*4]/unity, floats[i*4+1]/unity)).toArray();
+        });
+    };
+
+    /**
+     * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
+     * @returns {!PipelineNode.<!Array.<!Complex>>}
+     */
+    asDensityMatrix() {
+        return new PipelineNode([this.floatsNode], inputs => {
+            let floats = inputs[0];
+
+            let n = Math.round(Math.sqrt(floats.length/4));
+            if (!Util.isPowerOf2(n) || !n*n*4 === floats.length) {
+                throw new Error("Need a square number of entries.")
+            }
+
+            let matrix = Matrix.generate(n, n, (r, c) => new Complex(floats[(r*n + c)*4], floats[(r*n + c)*4 + 1]));
+
+            // Renormalization factor. For better answers when non-unitary gates are used.
+            let unity = matrix.trace();
+            if (unity.isEqualTo(0)) {
+                return matrix.scaledBy(NaN);
+            }
+
+            return matrix.scaledBy(Complex.ONE.dividedBy(unity));
         });
     };
 

@@ -97,9 +97,9 @@ suite.webGlTest("withSwapApplied", () => {
         0, 0, 1, 0, 0, 0, 0, 0]));
 });
 
-suite.webGlTest("controlProbabilityCombinations", () => {
+suite.webGlTest("controlledProbabilities", () => {
     let s = SuperpositionNode.fromAmplitudes([1.5, new Complex(1, -2), 0, Complex.I]);
-    let f = m => s.controlProbabilityCombinations(m).read().raw().compute().slice(0, 8);
+    let f = m => s.controlledProbabilities(m).read().raw().compute().slice(0, 8);
     assertThat(f(new QuantumControlMask(0, 0))).isEqualTo(new Float32Array([
         8.25, 2.25, 8.25, 2.25,
         8.25, 7.25, 8.25, 7.25]));

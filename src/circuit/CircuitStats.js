@@ -11,12 +11,14 @@ export default class CircuitStats{
      * @param {!number} time
      * @param {!(!number[])} wireProbabilityData
      * @param {!(!number[])} conditionalWireProbabilityData
+     * @param densityNode
      * @param {!((!Complex)[])} finalState
      */
     constructor(circuitDefinition,
                 time,
                 wireProbabilityData,
                 conditionalWireProbabilityData,
+                densityNode,
                 finalState) {
         /**
          * The circuit that these stats apply to.
@@ -40,6 +42,7 @@ export default class CircuitStats{
          * @private
          */
         this._conditionalWireProbabilityData = conditionalWireProbabilityData;
+        this._densityNode = densityNode;
         /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
@@ -93,7 +96,7 @@ export default class CircuitStats{
     }
 
     static emptyAtTime(circuitDefinition, time) {
-        return new CircuitStats(circuitDefinition, time, [], [], []);
+        return new CircuitStats(circuitDefinition, time, [], [], [], []);
     }
 
     /**
@@ -106,6 +109,7 @@ export default class CircuitStats{
             time,
             this._wireProbabilityData,
             this._conditionalWireProbabilityData,
+            this._densityNode,
             this.finalState);
     }
 
@@ -123,35 +127,46 @@ export default class CircuitStats{
             for (let op of gateCol.swapPairs()) {
                 stateNode = stateNode.withSwap(op[0], op[1], mask);
             }
-            nodes.push(stateNode.controlProbabilityCombinations(mask));
+            nodes.push(stateNode.controlledProbabilities(mask));
             masks.push(mask);
+        }
+        for (let i of Seq.range(circuitDefinition.numWires)) {
+            nodes.push(stateNode.densityMatrixI(i, QuantumControlMask.NO_CONTROLS));
         }
         nodes.push(stateNode);
 
         let merged = SuperpositionNode.mergedReadFloats(nodes);
 
-        let m = merged.slice(0, merged.length - 1);
-        let n = m.length;
-        let wireProbColsNode = Seq.range(n).
-            map(i => m[i].asRenormalizedPerQubitProbabilities(masks[i], circuitDefinition.numWires));
-        let condWireProbColsNode = Seq.range(n).
-            map(i => m[i].asRenormalizedConditionalPerQubitProbabilities(masks[i], circuitDefinition.numWires));
         let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();
+
+        let densityNodes = merged.slice(merged.length - 1 - circuitDefinition.numWires, merged.length - 1).
+            map(e => e.asDensityMatrix());
+
+        let probNodes = merged.slice(0, merged.length - 1 - circuitDefinition.numWires);
+        let n = probNodes.length;
+        let wireProbColsNode = Seq.range(n).
+            map(i => probNodes[i].asRenormalizedPerQubitProbabilities(masks[i], circuitDefinition.numWires));
+        let condWireProbColsNode = Seq.range(n).
+            map(i => probNodes[i].asRenormalizedConditionalPerQubitProbabilities(masks[i], circuitDefinition.numWires));
+
         //noinspection JSCheckFunctionSignatures
         let nodeResults = PipelineNode.computePipeline(
             new Seq(wireProbColsNode).
             concat(condWireProbColsNode).
+            concat(densityNodes).
             concat([finalStateNode]).
             toArray());
         let wireProbabilityCols = nodeResults.slice(0, n);
         let conditionalWireProbabilityCols = nodeResults.slice(n, n*2);
-        let finalState = nodeResults[n*2];
+        let densityNodeResults = nodeResults.slice(n*2, n*2 + circuitDefinition.numWires);
+        let finalState = nodeResults[n*2 + circuitDefinition.numWires];
 
         return new CircuitStats(
             circuitDefinition,
             time,
             wireProbabilityCols,
             conditionalWireProbabilityCols,
+            densityNodeResults,
             finalState);
     }
 }
