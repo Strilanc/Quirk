@@ -18,11 +18,10 @@ Gates.Named = {
             Matrix.CONTROL,
             "Control",
             "Conditions on a qubit being ON.",
-            "Modifies operations in the same column to only occur in the parts of the superposition where the control " +
-                "qubit is ON.",
+            "Stuff in the same column will only apply to parts of the superposition where the control qubit is ON.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.IMPORTANT_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                 }
                 args.painter.fillCircle(args.rect.center(), 5, "black");
             }),
@@ -32,8 +31,7 @@ Gates.Named = {
             Matrix.ANTI_CONTROL,
             "Anti-Control",
             "Conditions on a qubit being OFF.",
-            "Modifies operations in the same column to only occur in the parts of the superposition where the control " +
-                "qubit is OFF.",
+            "Stuff in the same column will only apply to parts of the superposition where the control qubit is OFF.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -46,10 +44,9 @@ Gates.Named = {
         Peek: new Gate(
             "Peek",
             Matrix.identity(2),
-            "Classical Chance Display",
-            "Displays the conditional chance that measuring a wire would return ON.",
-            "The displayed value is P(target GIVEN controls); don't confuse it with P(target AND controls). " +
-            "Magically doesn't affect the system in any way: no measurements are simulated.",
+            "Probability Display",
+            "No effect. Displays the chance that measuring a wire would return ON.",
+            "Use controls to see the conditional probability P(target GIVEN controls).",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR)(args);
@@ -67,9 +64,8 @@ Gates.Named = {
             "Show",
             Matrix.identity(2),
             "Quantum State Display",
-            "Displays the conditional density matrix of one or more wires.",
-            "The displayed state is conditioned on any controls, and marginalized over any un-involved qubits. " +
-            "Magically doesn't affect the system in any way: no measurements are simulated.",
+            "No effect. Displays the density matrix of one or more wires.",
+            "Use controls to see the conditional mixed state ρ(targets GIVEN controls).",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR)(args);
@@ -88,10 +84,7 @@ Gates.Named = {
             Matrix.identity(2),
             "Measurement Gate",
             "Measures a qubit in the computational basis, along the Z axis.",
-            "Decoheres the qubit into a classical bit. " +
-                "For simplicity, the simulator blocks non-classical operations on measured qubits.",
-                // And by 'simplicity' I mostly mean code-wise and time-cost-wise. Allowing mixed states would square
-                // the amount of information being processed; much easier to lean on the deferred measurement principle.
+            "",
             args => {
                 let backColor = Config.GATE_FILL_COLOR;
                 if (args.isHighlighted) {
@@ -146,8 +139,7 @@ Gates.Named = {
             Matrix.fromPauliRotation(0.25, 0, 0),
             "Half X Gate (+)",
             "Principle Square Root of Not",
-            "A +90\u00B0 rotation around the Bloch Sphere's X axis. " +
-                "Apply twice for the same effect as an X gate.",
+            "A +90° turn around the Bloch Sphere's X axis.",
             GateFactory.POWER_DRAWER),
 
         Up: new Gate(
@@ -155,8 +147,7 @@ Gates.Named = {
             Matrix.fromPauliRotation(0.75, 0, 0),
             "Half X Gate (-)",
             "Adjoint Square Root of Not",
-            "A -90\u00B0 rotation around the Bloch Sphere's X axis. " +
-                "Apply twice for the same effect as an X gate.",
+            "A -90° turn around the Bloch Sphere's X axis.",
             GateFactory.POWER_DRAWER),
 
         Right: new Gate(
@@ -164,8 +155,7 @@ Gates.Named = {
             Matrix.fromPauliRotation(0, 0.25, 0),
             "Half Y Gate (+)",
             "Principle Square Root of Y.",
-            "A +90\u00B0 rotation around the Bloch Sphere's Y axis. " +
-                "Apply twice for the same effect as a Y gate.",
+            "A +90° turn around the Bloch Sphere's Y axis.",
             GateFactory.POWER_DRAWER),
 
         Left: new Gate(
@@ -173,8 +163,7 @@ Gates.Named = {
             Matrix.fromPauliRotation(0, 0.75, 0),
             "Half Y Gate (-)",
             "Adjoint Square Root of Y.",
-            "A -90\u00B0 rotation around the Bloch Sphere's Y axis. " +
-                "Apply twice for the same effect as a Y gate.",
+            "A -90° turn around the Bloch Sphere's Y axis.",
             GateFactory.POWER_DRAWER),
 
         CounterClockwise: new Gate(
@@ -183,8 +172,7 @@ Gates.Named = {
             "Half Z Gate (+) ['S' gate]",
             "Principle Square Root of Z.",
             "Phases ON by a factor of i, without affecting OFF. " +
-                "A +90\u00B0 rotation around the Bloch Sphere's Z axis. " +
-                "Apply twice for the same effect as a Z gate.",
+                "A +90° turn around the Bloch Sphere's Z axis.",
             GateFactory.POWER_DRAWER),
 
         Clockwise: new Gate(
@@ -193,18 +181,17 @@ Gates.Named = {
             "Half Z Gate (-)",
             "Adjoint Square Root of Z.",
             "Phases ON by a factor of -i, without affecting OFF. " +
-                "A +90\u00B0 rotation around the Bloch Sphere's Z axis. " +
-                "Apply twice for the same effect as a Z gate.",
+                "A +90° turn around the Bloch Sphere's Z axis.",
             GateFactory.POWER_DRAWER)
     },
+
     HalfTurns: {
         X: new Gate(
             "X",
             Matrix.PAULI_X,
-            "Not Gate [Pauli X Gate]",
+            "NOT Gate [Pauli X Gate]",
             "Toggles between ON and OFF.",
-            "Toggles the qubit's value in the computational basis. " +
-                "A 180° turn around the Bloch Sphere's X axis.",
+            "A 180° turn around the Bloch Sphere's X axis.",
             args => {
                 let hasSingleWireControl =
                     args.positionInCircuit !== null &&
@@ -213,7 +200,7 @@ Gates.Named = {
                     args.positionInCircuit !== null &&
                     args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
                 if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.IMPORTANT_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                    GateFactory.DEFAULT_DRAWER(args);
                     return;
                 }
 
@@ -260,7 +247,7 @@ Gates.Named = {
             "Toggles between ON and ON+OFF; also toggles between OFF and ON-OFF. " +
                 "A 180° turn around the Bloch Sphere's diagonal X+Z axis. " +
                 "Useful for creating uniform superpositions of all states.",
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.IMPORTANT_GATE_IN_TOOLBOX_FILL_COLOR))
+            GateFactory.DEFAULT_DRAWER)
     },
     Exponentiating: {
         ExpiX: new Gate(
@@ -373,7 +360,7 @@ Gates.Named = {
                 new Complex(Math.random() - 0.5, Math.random() - 0.5)
             ]).closestUnitary(),
             "Fuzz Gate",
-            "Differs every time you grab a new one.",
+            "Changes every time you grab a new one.",
             "",
             GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
@@ -391,7 +378,7 @@ Gates.Named = {
             "Clock Pulse Gate",
             "Xors a square wave into the target wire.",
             "",
-            GateFactory.CYCLE_DRAWER),
+            GateFactory.SQUARE_WAVE_DRAWER_MAKER(0)),
 
         CLOCK_QUARTER_PHASE: new Gate(
             "X^⌈t+½⌉",
@@ -399,7 +386,7 @@ Gates.Named = {
             "Clock Pulse Gate (Quarter Phase)",
             "Xors a quarter-phased square wave into the target wire.",
             "",
-            GateFactory.CYCLE_DRAWER),
+            GateFactory.SQUARE_WAVE_DRAWER_MAKER(0.25)),
 
         SPACER: new Gate(
             "…",

@@ -135,6 +135,52 @@ GateFactory.POWER_DRAWER = args => {
         fontSize);
 };
 
+GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
+    GateFactory.POWER_DRAWER(args);
+
+    if (args.isInToolbox && !args.isHighlighted) {
+        return;
+    }
+
+    let t = (args.stats.time + offset) % 1;
+    let y1 = args.rect.takeBottomProportion(0.2).center().y;
+    let y2 = args.rect.takeTopProportion(0.2).center().y;
+    let yc = y1;
+    let xi = args.rect.x;
+    let xf = args.rect.right();
+    let xt = p => (Math.min(Math.max(xi + (xf - xi)*p, xi), xf) - 0.5) + 0.5;
+    let x1 = xt(0.5 - t - 0.05);
+    let x2 = xt(1 - t - 0.05);
+    let x3 = xt(1.5 - t - 0.05);
+    let off = t < 0.5;
+    let curve = [
+        new Point(xi, yc),
+        new Point(xi, y1),
+        new Point(x1, y1),
+        new Point(x1, y2),
+        new Point(x2, y2),
+        new Point(x2, y1),
+        new Point(x3, y1),
+        new Point(x3, y2),
+        new Point(xf, y2),
+        new Point(xf, y1),
+        new Point(xf, yc)];
+    let top = off ? yc : y2;
+    let bot = off ? y1 : yc;
+    args.painter.fillRect(new Rect(xf-3, top, 3, bot-top), 'orange');
+    args.painter.ctx.globalAlpha = 0.3;
+    args.painter.fillPolygon(curve, 'yellow');
+    for (let i = 1; i < curve.length - 2; i++) {
+        args.painter.strokeLine(curve[i], curve[i+1], 'black');
+    }
+    if (off) {
+        args.painter.fillRect(args.rect, 'white');
+        args.painter.fillRect(args.rect, 'white');
+        args.painter.fillRect(args.rect, 'white');
+    }
+    args.painter.ctx.globalAlpha = 1.0;
+};
+
 /**
  * @param {!GateDrawParams} args
  */

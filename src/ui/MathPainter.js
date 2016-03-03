@@ -43,7 +43,9 @@ export default class MathPainter {
         }
 
         painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
+        painter.ctx.setLineDash([2, 3]);
         painter.strokeRect(drawArea);
+        painter.ctx.setLineDash([]);
     }
 
     /**
