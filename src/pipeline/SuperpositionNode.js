@@ -309,6 +309,9 @@ export class SuperpositionReadNode {
                 unity += f*f;
             }
             unity = Math.sqrt(unity);
+            if (unity < 0.000001) {
+                unity = NaN;
+            }
 
             return Seq.range(floats.length/4).map(i => new Complex(floats[i*4]/unity, floats[i*4+1]/unity)).toArray();
         });
@@ -331,7 +334,7 @@ export class SuperpositionReadNode {
 
             // Renormalization factor. For better answers when non-unitary gates are used.
             let unity = matrix.trace();
-            if (unity.isEqualTo(0)) {
+            if (unity.abs() < 0.00001) {
                 return matrix.scaledBy(NaN);
             }
 
@@ -353,7 +356,7 @@ export class SuperpositionReadNode {
                 map(i => {
                     let invertedProbability = (mask.desiredValueMask & (1 << i)) === 0;
                     let unity = floats[4 * i];
-                    if (unity <= 0) {
+                    if (unity < 0.000001) {
                         return NaN;
                     }
                     let p = floats[4 * i + 1] / unity;
