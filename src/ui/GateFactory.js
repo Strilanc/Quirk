@@ -143,31 +143,28 @@ GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
     }
 
     let t = (args.stats.time + offset) % 1;
-    let y1 = args.rect.takeBottomProportion(0.2).center().y;
-    let y2 = args.rect.takeTopProportion(0.2).center().y;
-    let yc = y1;
+    let yOff = args.rect.takeTopProportion(0.2).center().y;
+    let yOn = args.rect.takeBottomProportion(0.2).center().y;
+    let yNeutral = yOn;
     let xi = args.rect.x;
     let xf = args.rect.right();
-    let xt = p => (Math.min(Math.max(xi + (xf - xi)*p, xi), xf) - 0.5) + 0.5;
-    let x1 = xt(0.5 - t - 0.05);
-    let x2 = xt(1 - t - 0.05);
-    let x3 = xt(1.5 - t - 0.05);
+    let xt = p => Math.min(Math.max(xi + (xf - xi)*p, xi), xf);
+    let x1 = xt(0.5 - t);
+    let x2 = xt(1 - t);
+    let x3 = xt(1.5 - t);
     let off = t < 0.5;
     let curve = [
-        new Point(xi, yc),
-        new Point(xi, y1),
-        new Point(x1, y1),
-        new Point(x1, y2),
-        new Point(x2, y2),
-        new Point(x2, y1),
-        new Point(x3, y1),
-        new Point(x3, y2),
-        new Point(xf, y2),
-        new Point(xf, y1),
-        new Point(xf, yc)];
-    let top = off ? yc : y2;
-    let bot = off ? y1 : yc;
-    args.painter.fillRect(new Rect(xf-3, top, 3, bot-top), 'orange');
+        new Point(xi, yNeutral),
+        new Point(xi, yOff),
+        new Point(x1, yOff),
+        new Point(x1, yOn),
+        new Point(x2, yOn),
+        new Point(x2, yOff),
+        new Point(x3, yOff),
+        new Point(x3, yOn),
+        new Point(xf, yOn),
+        new Point(xf, yOff),
+        new Point(xf, yNeutral)];
     args.painter.ctx.globalAlpha = 0.3;
     args.painter.fillPolygon(curve, 'yellow');
     for (let i = 1; i < curve.length - 2; i++) {
@@ -196,6 +193,18 @@ GateFactory.MATRIX_DRAWER = args => {
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
         args.painter.ctx.globalAlpha = 1;
     }
+};
+
+GateFactory.POST_SELECT_DRAWER = args => {
+    if (args.isInToolbox  || args.isHighlighted) {
+        GateFactory.DEFAULT_DRAWER(args);
+        return;
+    }
+
+    args.painter.fillRect(args.rect, Config.BACKGROUND_COLOR_CIRCUIT);
+    args.painter.printParagraph(args.gate.symbol, args.rect, new Point(0.5, 0.5), Config.DEFAULT_TEXT_COLOR, 16);
+    args.painter.printParagraph("post-", args.rect, new Point(0.5, 0), 'red', 10);
+    args.painter.printParagraph("select", args.rect, new Point(0.5, 1), 'red', 10);
 };
 
 /**

@@ -364,13 +364,21 @@ Gates.Named = {
             "",
             GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
-        POST_SELECT: new Gate(
-            "!Select",
-            Matrix.square([0, 0, 0, 1]),
-            "Post-selection Gate",
-            "Discards OFF states, then renormalizes.",
+        POST_SELECT_OFF: new Gate(
+            "|0⟩⟨0|",
+            Matrix.square([1, 0, 0, 0]),
+            "Post-selection Gate [Off]",
+            "Keeps OFF states, discards ON states, and renormalizes.",
             "Search terms: PostBQP, Quantum Suicide, Weak Measurement.",
-            GateFactory.DEFAULT_DRAWER),
+            GateFactory.POST_SELECT_DRAWER),
+
+        POST_SELECT_ON: new Gate(
+            "|1⟩⟨1|",
+            Matrix.square([0, 0, 0, 1]),
+            "Post-selection Gate [On]",
+            "Keeps ON states, discards OFF states, and renormalizes.",
+            "Search terms: PostBQP, Quantum Suicide, Weak Measurement.",
+            GateFactory.POST_SELECT_DRAWER),
 
         CLOCK: new Gate(
             "X^⌈t⌉",
@@ -381,12 +389,12 @@ Gates.Named = {
             GateFactory.SQUARE_WAVE_DRAWER_MAKER(0)),
 
         CLOCK_QUARTER_PHASE: new Gate(
-            "X^⌈t+½⌉",
-            t => ((t+0.25) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
+            "X^⌈t-¼⌉",
+            t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
             "Clock Pulse Gate (Quarter Phase)",
             "Xors a quarter-phased square wave into the target wire.",
             "",
-            GateFactory.SQUARE_WAVE_DRAWER_MAKER(0.25)),
+            GateFactory.SQUARE_WAVE_DRAWER_MAKER(0.75)),
 
         SPACER: new Gate(
             "…",
@@ -489,8 +497,8 @@ Gates.Sets = [
             Gates.Named.Silly.SPACER,
             Gates.Named.Silly.FUZZ_MAKER(),
             Gates.Named.Silly.CLOCK,
-            Gates.Named.Silly.POST_SELECT,
-            null,
+            Gates.Named.Silly.POST_SELECT_OFF,
+            Gates.Named.Silly.POST_SELECT_ON,
             Gates.Named.Silly.CLOCK_QUARTER_PHASE
         ]
     }
@@ -507,7 +515,8 @@ Gates.KnownToSerializer = [
     Gates.Named.Silly.SPACER,
     Gates.Named.Silly.CLOCK,
     Gates.Named.Silly.CLOCK_QUARTER_PHASE,
-    Gates.Named.Silly.POST_SELECT,
+    Gates.Named.Silly.POST_SELECT_OFF,
+    Gates.Named.Silly.POST_SELECT_ON,
     Gates.Named.HalfTurns.H,
     Gates.Named.HalfTurns.X,
     Gates.Named.HalfTurns.Y,
