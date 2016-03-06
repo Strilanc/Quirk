@@ -154,4 +154,78 @@ export default class MathPainter {
             });
         }
     };
+
+
+    /**
+     * @param {!Painter} painter
+     * @param {!Matrix} matrix
+     * @param {!Rect} drawArea
+     * @param {!string=} backgroundColor
+     * @param {!string=} fillColor
+     */
+    static paintDensityMatrix(painter,
+                              matrix,
+                              drawArea,
+                              backgroundColor = Config.PEEK_GATE_OFF_FILL_COLOR,
+                              fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
+        painter.fillRect(drawArea, backgroundColor);
+
+        let n = matrix.width();
+        let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / n, drawArea.h / n);
+
+        // Off-diagonal contents.
+        let unitRadius = Math.min(topLeftCell.w, topLeftCell.h) / 2;
+        for (let x = 0; x < n; x++) {
+            for (let y = 0; y < n; y++) {
+                if (x == y) {
+                    continue;
+                }
+
+                let r = topLeftCell.proportionalShiftedBy(x, y);
+                let v = matrix.cell(x, y).times(Math.PI/2);
+
+                let mag = v.abs();
+                if (isNaN(mag)) {
+                    painter.printParagraph("NaN", r, new Point(0.5, 0.5), "red");
+                    continue;
+                }
+                if (mag < 0.0001) {
+                    continue; // Too small to see.
+                }
+
+                // show the direction and magnitude as a circle with a line indicator
+                let c = r.center();
+                painter.fillCircle(c, unitRadius * mag, fillColor);
+                painter.strokeCircle(c, unitRadius * mag, '#040');
+                painter.strokeLine(c, c.offsetBy(unitRadius * v.real, unitRadius * v.imag));
+            }
+        }
+
+        // Main diagonal
+        for (let d = 0; d < n; d++) {
+            let p = matrix.cell(d, d).abs();
+            let r = topLeftCell.proportionalShiftedBy(d, d);
+            if (isNaN(p)) {
+                painter.fillPolygon([r.bottomLeft(), r.topLeft(), r.topRight()], fillColor);
+                painter.printParagraph("NaN", r, new Point(0.5, 0.5), "red");
+            } else {
+                let b = r.takeBottomProportion(p);
+                painter.fillRect(b, fillColor);
+                painter.strokeLine(b.topLeft(), b.topRight(), '#040');
+            }
+        }
+
+        // Outline
+        painter.ctx.setLineDash([2, 3]);
+        painter.strokeRect(drawArea);
+        painter.ctx.setLineDash([]);
+
+        // Inline
+        for (let i = 1; i < n; i++) {
+            let x = drawArea.x + drawArea.w / n * i;
+            let y = drawArea.y + drawArea.h / n * i;
+            painter.strokeLine(new Point(drawArea.x, y), new Point(drawArea.right(), y), 'lightgray');
+            painter.strokeLine(new Point(x, drawArea.y), new Point(x, drawArea.bottom()), 'lightgray');
+        }
+    }
 }
