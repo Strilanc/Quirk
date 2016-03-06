@@ -168,22 +168,23 @@ export default class SuperpositionNode {
     /**
      * Returns a texture containing probabilities that the superposition would match various control masks if measured.
      *
+     * @param {!Array.<!int>} wires
      * @param {!QuantumControlMask} controlMask
      * @returns {!SuperpositionNode}
      */
-    densityMatrixI(i, controlMask) {
+    densityMatrixForWires(wires, controlMask) {
         let qubitCount = Util.bitSize(this.width * this.height - 1);
-        let w = 2;
-        let h = 2;
+        let w = 1 << wires.length;
+        let h = 1 << wires.length;
 
         return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
-            let result = allocTexture(2, 2);
+            let result = allocTexture(w, h);
             QuantumShaders.renderSuperpositionToDensityMatrix(
                 getSharedDirector(),
                 result,
                 inputs[0],
-                [i],
-                Seq.range(qubitCount).filter(e => e !== i).toArray(),
+                wires,
+                Seq.range(qubitCount).filter(e => wires.indexOf(e) === -1).toArray(),
                 controlMask);
             return result;
         });

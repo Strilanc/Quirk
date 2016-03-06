@@ -204,6 +204,9 @@ export default class MathPainter {
         // Main diagonal
         for (let d = 0; d < n; d++) {
             let p = matrix.cell(d, d).abs();
+            if (p < 0.0001) {
+                continue; // Too small to see.
+            }
             let r = topLeftCell.proportionalShiftedBy(d, d);
             if (isNaN(p)) {
                 painter.fillPolygon([r.bottomLeft(), r.topLeft(), r.topRight()], fillColor);

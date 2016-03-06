@@ -33,7 +33,7 @@ export default class CycleCircuitStats {
      * @private
      */
     _computeStateForBucket(i) {
-        return CircuitStats.fromCircuitAtTime(this.circuitDefinition, i / this._divisions);
+        return CircuitStats.fromCircuitAtTime(this.circuitDefinition, (i+0.5) / this._divisions);
     }
 
     /**

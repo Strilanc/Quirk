@@ -11,14 +11,16 @@ export default class CircuitStats{
      * @param {!number} time
      * @param {!(!number[])} wireProbabilityData
      * @param {!(!number[])} conditionalWireProbabilityData
-     * @param densityNode
+     * @param densityNodes1
+     * @param densityNodes2
      * @param {!((!Complex)[])} finalState
      */
     constructor(circuitDefinition,
                 time,
                 wireProbabilityData,
                 conditionalWireProbabilityData,
-                densityNode,
+                densityNodes1,
+                densityNodes2,
                 finalState) {
         /**
          * The circuit that these stats apply to.
@@ -42,7 +44,8 @@ export default class CircuitStats{
          * @private
          */
         this._conditionalWireProbabilityData = conditionalWireProbabilityData;
-        this._densityNode = densityNode;
+        this._densityNodes1 = densityNodes1;
+        this._densityNodes2 = densityNodes2;
         /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
@@ -96,7 +99,7 @@ export default class CircuitStats{
     }
 
     static emptyAtTime(circuitDefinition, time) {
-        return new CircuitStats(circuitDefinition, time, [], [], [], []);
+        return new CircuitStats(circuitDefinition, time, [], [], [], [], []);
     }
 
     /**
@@ -109,7 +112,8 @@ export default class CircuitStats{
             time,
             this._wireProbabilityData,
             this._conditionalWireProbabilityData,
-            this._densityNode,
+            this._densityNodes1,
+            this._densityNodes2,
             this.finalState);
     }
 
@@ -131,18 +135,24 @@ export default class CircuitStats{
             masks.push(mask);
         }
         for (let i of Seq.range(circuitDefinition.numWires)) {
-            nodes.push(stateNode.densityMatrixI(i, QuantumControlMask.NO_CONTROLS));
+            nodes.push(stateNode.densityMatrixForWires([i], QuantumControlMask.NO_CONTROLS));
         }
+        let n2 = nodes.length;
         nodes.push(stateNode);
+        for (let i of Seq.range(circuitDefinition.numWires).partitioned(2).filter(e => e.length === 2)) {
+            nodes.push(stateNode.densityMatrixForWires(i, QuantumControlMask.NO_CONTROLS));
+        }
 
         let merged = SuperpositionNode.mergedReadFloats(nodes);
 
-        let finalStateNode = merged[merged.length - 1].asRenormalizedAmplitudes();
+        let finalStateNode = merged[n2].asRenormalizedAmplitudes();
 
-        let densityNodes = merged.slice(merged.length - 1 - circuitDefinition.numWires, merged.length - 1).
+        let densityNodes = merged.slice(n2 - circuitDefinition.numWires, n2).
             map(e => e.asDensityMatrix());
 
-        let probNodes = merged.slice(0, merged.length - 1 - circuitDefinition.numWires);
+        let densityNodes2 = merged.slice(n2 + 1).map(e => e.asDensityMatrix());
+
+        let probNodes = merged.slice(0, n2 - circuitDefinition.numWires);
         let n = probNodes.length;
         let wireProbColsNode = Seq.range(n).
             map(i => probNodes[i].asRenormalizedPerQubitProbabilities(masks[i], circuitDefinition.numWires));
@@ -155,11 +165,13 @@ export default class CircuitStats{
             concat(condWireProbColsNode).
             concat(densityNodes).
             concat([finalStateNode]).
+                concat(densityNodes2).
             toArray());
         let wireProbabilityCols = nodeResults.slice(0, n);
         let conditionalWireProbabilityCols = nodeResults.slice(n, n*2);
         let densityNodeResults = nodeResults.slice(n*2, n*2 + circuitDefinition.numWires);
         let finalState = nodeResults[n*2 + circuitDefinition.numWires];
+        let densityNodeResults2 = nodeResults.slice(n*2 + circuitDefinition.numWires + 1);
 
         return new CircuitStats(
             circuitDefinition,
@@ -167,6 +179,7 @@ export default class CircuitStats{
             wireProbabilityCols,
             conditionalWireProbabilityCols,
             densityNodeResults,
+            densityNodeResults2,
             finalState);
     }
 }
