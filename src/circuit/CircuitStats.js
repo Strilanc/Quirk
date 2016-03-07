@@ -4,6 +4,7 @@ import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
 import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
 import Util from "src/base/Util.js"
+import Matrix from "src/math/Matrix.js"
 
 export default class CircuitStats{
     /**
@@ -172,6 +173,19 @@ export default class CircuitStats{
         let densityNodeResults = nodeResults.slice(n*2, n*2 + circuitDefinition.numWires);
         let finalState = nodeResults[n*2 + circuitDefinition.numWires];
         let densityNodeResults2 = nodeResults.slice(n*2 + circuitDefinition.numWires + 1);
+        for (let i = 0; i < densityNodeResults.length; i++) {
+            if (circuitDefinition.wireMeasuredColumns()[i] < Infinity) {
+                densityNodeResults[i] = Matrix.generate(2, 2, (c, r) =>
+                    c === r ? densityNodeResults[i].cell(c, r) : 0);
+            }
+        }
+        for (let i = 0; i < densityNodeResults2.length; i++) {
+            let b1 = circuitDefinition.wireMeasuredColumns()[i*2] < Infinity;
+            let b2 = circuitDefinition.wireMeasuredColumns()[i*2+1] < Infinity;
+            let m = (b1 ? 1 : 0) + (b2 ? 2 : 0);
+            densityNodeResults2[i] = Matrix.generate(4, 4, (c, r) =>
+                (c & m) === (r & m) ? densityNodeResults2[i].cell(c, r) : 0);
+        }
 
         return new CircuitStats(
             circuitDefinition,
