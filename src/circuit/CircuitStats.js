@@ -205,13 +205,18 @@ export default class CircuitStats{
                 mapWithIndex((m, i) => {
                     let n = m.width();
                     let span = Math.round(Math.log2(n));
-                    let mask = Seq.range(span).
+                    let measuredMask = Seq.range(span).
                         map(j => circuitDefinition.wireMeasuredColumns()[i*span + j] < Infinity).
                         mapWithIndex((b, k) => b ? 1 << k : 0).
                         sum();
                     return {
                         key: circuitDefinition.columns.length + ";" + Seq.range(span).map(e => e + i*span).join(";"),
-                        val: Matrix.generate(n, n, (c, r) => (c & mask) === (r & mask) ? m.cell(c, r) : 0)
+                        val: Matrix.generate(n, n, (c, r) => {
+                            let v = m.cell(c, r);
+                            return (c & measuredMask) === (r & measuredMask) ?
+                                v :
+                                v.times(0); // Note: preserves NaN.
+                        })
                     };
                 })).
             toMap(e => e.key, e => e.val);
