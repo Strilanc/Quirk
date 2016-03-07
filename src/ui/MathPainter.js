@@ -33,8 +33,8 @@ export default class MathPainter {
     static paintProbabilityBox(painter,
                                probability,
                                drawArea,
-                               backgroundColor = Config.PEEK_GATE_OFF_FILL_COLOR,
-                               fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
+                               backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
+                               fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
         if (isNaN(probability)) {
             painter.fillPolygon([drawArea.bottomLeft(), drawArea.topLeft(), drawArea.topRight()], fillColor);
@@ -166,8 +166,8 @@ export default class MathPainter {
     static paintBlochSphere(painter,
                             qubitDensityMatrix,
                             drawArea,
-                            backgroundColor = Config.PEEK_GATE_OFF_FILL_COLOR,
-                            fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
+                            backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
+                            fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         let c = drawArea.center();
         let u = Math.min(drawArea.w, drawArea.h) / 2;
         let [dx, dy, dz] = [new Point(-u, 0), new Point(u / 3, -u / 3), new Point(0, u)];
@@ -214,8 +214,8 @@ export default class MathPainter {
     static paintDensityMatrix(painter,
                               matrix,
                               drawArea,
-                              backgroundColor = Config.PEEK_GATE_OFF_FILL_COLOR,
-                              fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
+                              backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
+                              fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
 
         let n = matrix.width();

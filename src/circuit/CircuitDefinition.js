@@ -207,10 +207,11 @@ class CircuitDefinition {
     static _isGateAllowedAfterMeasurement(g) {
         return g === Gates.Named.Special.Control ||
             g === Gates.Named.Special.AntiControl ||
-            g === Gates.Named.Special.BlochSphereState ||
             g === Gates.Named.Special.Measurement ||
             g === Gates.Named.Silly.SPACER ||
-            g === Gates.Named.Special.Peek;
+            g === Gates.Named.Special.BlochSphereDisplay ||
+            g === Gates.Named.Special.ChanceDisplay ||
+            g === Gates.Named.Special.DensityMatrixDisplay;
     }
 
     /**

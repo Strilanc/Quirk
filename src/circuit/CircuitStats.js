@@ -12,14 +12,14 @@ export default class CircuitStats{
      * @param {!number} time
      * @param {!(!number[])} wireProbabilityData
      * @param {!(!number[])} conditionalWireProbabilityData
-     * @param {!Array.<!Array.<!Matrix>>} outputDensityGroups
+     * @param {!Map.<!String, !Matrix>} knownDensityMatrices
      * @param {!((!Complex)[])} finalState
      */
     constructor(circuitDefinition,
                 time,
                 wireProbabilityData,
                 conditionalWireProbabilityData,
-                outputDensityGroups,
+                knownDensityMatrices,
                 finalState) {
         /**
          * The circuit that these stats apply to.
@@ -44,11 +44,11 @@ export default class CircuitStats{
          */
         this._conditionalWireProbabilityData = conditionalWireProbabilityData;
         /**
-         * Output density matrices for various groups of wires of increasing size.
-         * @type {!Array.<!Array.<!Matrix>>}
+         * Output density matrices for various groups of wires.
+         * @type {!Map.<!String, !Matrix>}
          * @private
          */
-        this._outputDensityGroups = outputDensityGroups;
+        this._knownDensityMatrices = knownDensityMatrices;
         /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
@@ -57,24 +57,32 @@ export default class CircuitStats{
     }
 
     /**
-     * @param {!int} startWire inclusive
-     * @param {!int} endWire exclusive
+     * @param {!Array.<!int>} wires
+     * @param {!int} colIndex
      * @returns {!Matrix|undefined}
      */
-    outputDensityMatrixIfAvailable(startWire, endWire = startWire + 1) {
-        Util.need(0 <= startWire && startWire < endWire, "bad range");
+    densityMatrixAfterIfAvailable(wires, colIndex) {
+        Util.need(new Seq(wires).min() >= 0, "bad wire index");
 
-        let length = endWire - startWire;
-        let i = Math.round(Math.log2(length));
-        if (!Util.isPowerOf2(length) ||
-                endWire > this.circuitDefinition.numWires ||
-                startWire % length !== 0 ||
-                endWire % length !== 0 ||
-                i >= this._outputDensityGroups.length) {
-            return undefined;
+        colIndex = Math.min(colIndex, this.circuitDefinition.columns.length);
+        colIndex = Math.max(colIndex, 0);
+
+        if (colIndex === 0) {
+            let n = 1 << new Seq(wires).distinct().count();
+            return Matrix.generate(n, n, (r, c) => r === 0 && c === 0 ? 1 : 0);
         }
 
-        return this._outputDensityGroups[i][startWire / length];
+        let key = colIndex + ";" + new Seq(wires.map(e => e).sort()).distinct().join(";");
+        if (this._knownDensityMatrices.has(key)) {
+            return this._knownDensityMatrices.get(key);
+        }
+
+        if (wires.length === 1) {
+            let p = this.controlledWireProbabilityJustAfter(wires[0], colIndex);
+            return Matrix.square([1-p, 0, 0, p]);
+        }
+
+        return undefined;
     }
 
     /**
@@ -123,7 +131,7 @@ export default class CircuitStats{
     }
 
     static emptyAtTime(circuitDefinition, time) {
-        return new CircuitStats(circuitDefinition, time, [], [], [], []);
+        return new CircuitStats(circuitDefinition, time, [], [], new Map(), []);
     }
 
     /**
@@ -136,7 +144,7 @@ export default class CircuitStats{
             time,
             this._wireProbabilityData,
             this._conditionalWireProbabilityData,
-            this._outputDensityGroups,
+            this._knownDensityMatrices,
             this.finalState);
     }
 
@@ -192,8 +200,8 @@ export default class CircuitStats{
         //noinspection JSCheckFunctionSignatures
         let values = Util.objectifyArrayFunc(PipelineNode.computePipeline)(valueNodes);
 
-        let outputDensityGroups = new Seq(values.outputDensityGroups).
-            map(g => new Seq(g).
+        let knownDensityMatrices = new Seq(values.outputDensityGroups).
+            flatMap(g => new Seq(g).
                 mapWithIndex((m, i) => {
                     let n = m.width();
                     let span = Math.round(Math.log2(n));
@@ -201,17 +209,19 @@ export default class CircuitStats{
                         map(j => circuitDefinition.wireMeasuredColumns()[i*span + j] < Infinity).
                         mapWithIndex((b, k) => b ? 1 << k : 0).
                         sum();
-                    return Matrix.generate(n, n, (c, r) => (c & mask) === (r & mask) ? m.cell(c, r) : 0);
-                }).
-                toArray()).
-            toArray();
+                    return {
+                        key: circuitDefinition.columns.length + ";" + Seq.range(span).map(e => e + i*span).join(";"),
+                        val: Matrix.generate(n, n, (c, r) => (c & mask) === (r & mask) ? m.cell(c, r) : 0)
+                    };
+                })).
+            toMap(e => e.key, e => e.val);
 
         return new CircuitStats(
             circuitDefinition,
             time,
             values.wireProbabilities,
             values.conditionalWireProbabilities,
-            outputDensityGroups,
+            knownDensityMatrices,
             values.outputSuperposition);
     }
 }

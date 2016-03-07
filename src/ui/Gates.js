@@ -41,7 +41,7 @@ Gates.Named = {
                 args.painter.strokeCircle(p, 5);
             }),
 
-        Peek: new Gate(
+        ChanceDisplay: new Gate(
             "Chance",
             Matrix.identity(2),
             "Probability Display",
@@ -49,7 +49,7 @@ Gates.Named = {
             "Use controls to see the conditional probability P(target GIVEN controls).",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
                     return;
                 }
 
@@ -60,7 +60,7 @@ Gates.Named = {
                     args.rect);
             }),
 
-        BlochSphereState: new Gate(
+        BlochSphereDisplay: new Gate(
             "Bloch",
             Matrix.identity(2),
             "Bloch Sphere Display",
@@ -68,16 +68,31 @@ Gates.Named = {
             "Use controls to see the conditional mixed state ρ(targets GIVEN controls).",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
-                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.INFO_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
                     return;
                 }
 
                 let {row, col} = args.positionInCircuit;
-                let p = args.stats.controlledWireProbabilityJustAfter(row, col);
-                MathPainter.paintBlochSphere(
-                    args.painter,
-                    Matrix.square([1-p, 0, 0, p]),
-                    args.rect);
+                let ρ = args.stats.densityMatrixAfterIfAvailable([row], col);
+                MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
+            }),
+
+        DensityMatrixDisplay: new Gate(
+            "Density",
+            Matrix.identity(2),
+            "Density Matrix Display",
+            "No effect. Shows a wire's state as a density matrix.",
+            "Place on multiple wires in the same column to see a combined density matrix. " +
+                "Use controls to see the conditional mixed state ρ(targets GIVEN controls).",
+            args => {
+                if (args.positionInCircuit === null || args.isHighlighted) {
+                    GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                    return;
+                }
+
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.densityMatrixAfterIfAvailable([row], col);
+                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
             }),
 
         Measurement: new Gate(
@@ -431,10 +446,10 @@ Gates.Sets = [
         gates: [
             Gates.Named.Special.Control,
             Gates.Named.Special.Measurement,
-            Gates.Named.Special.Peek,
+            Gates.Named.Special.ChanceDisplay,
             Gates.Named.Special.AntiControl,
-            null,
-            Gates.Named.Special.BlochSphereState
+            Gates.Named.Special.DensityMatrixDisplay,
+            Gates.Named.Special.BlochSphereDisplay
         ]
     },
     {
@@ -509,8 +524,9 @@ Gates.Sets = [
 Gates.KnownToSerializer = [
     Gates.Named.Special.Control,
     Gates.Named.Special.SwapHalf,
-    Gates.Named.Special.Peek,
-    Gates.Named.Special.BlochSphereState,
+    Gates.Named.Special.ChanceDisplay,
+    Gates.Named.Special.DensityMatrixDisplay,
+    Gates.Named.Special.BlochSphereDisplay,
     Gates.Named.Special.Measurement,
     Gates.Named.Special.AntiControl,
     Gates.Named.Silly.SPACER,
