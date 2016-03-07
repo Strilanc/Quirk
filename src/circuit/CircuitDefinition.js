@@ -40,6 +40,12 @@ class CircuitDefinition {
         return new CircuitDefinition(gates[0].length, gates.map(c => new GateColumn(c)));
     }
 
+    /**
+     * Returns a munged compact text representation of the circuit.
+     *
+     * The text isn't intended to be particularly understandable, but it should vaguely reflect or at least
+     * distinguish the circuit from others when skimming a list of hashes (e.g. links in browser history).
+     */
     readableHash() {
         let allGates = new Seq(this.columns)
             .flatMap(e => e.gates)
@@ -162,7 +168,7 @@ class CircuitDefinition {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
             filter(pt => this.gateAtLoc(pt) === Gates.Named.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== null) &&
+        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt, 0) !== null) &&
             pts.count() == 2;
     }
 
@@ -200,48 +206,43 @@ class CircuitDefinition {
     }
 
     /**
-     * @param {!Gate} g
+     * @param {!Gate} gate
+     * @param {!number} time
      * @returns {boolean}
      * @private
      */
-    static _isGateAllowedAfterMeasurement(g) {
-        return g === Gates.Named.Special.Control ||
-            g === Gates.Named.Special.AntiControl ||
-            g === Gates.Named.Special.Measurement ||
-            g === Gates.Named.Silly.SPACER ||
-            g === Gates.Named.Special.BlochSphereDisplay ||
-            g === Gates.Named.Special.ChanceDisplay ||
-            g === Gates.Named.Special.DensityMatrixDisplay;
+    static _isGateAllowedAfterMeasurement(gate, time) {
+        return Matrix.identity(2).isEqualTo(gate.matrixAt(time));
     }
 
     /**
-     * @param {!Gate} g
+     * @param {!Gate} gate
+     * @param {!number} time
      * @returns {boolean}
      * @private
      */
-    static _isGateAllowedAfterMeasurementIfNoQuantumControls(g) {
-        let m = g.matrixOrFunc;
-        let is2x2 = m instanceof Matrix && m.width() == 2 && m.height() == 2;
-        let e = 0.00000001;
-        let isDiag1 = is2x2 && m.cell(0, 0).isApproximatelyEqualTo(0, e) && m.cell(1, 1).isApproximatelyEqualTo(0, e);
-        let isDiag2 = is2x2 && m.cell(1, 0).isApproximatelyEqualTo(0, e) && m.cell(0, 1).isApproximatelyEqualTo(0, e);
-        return g === Gates.Named.Special.SwapHalf ||
-            g === Gates.Named.Exponentiating.ExpiZ ||
-            g === Gates.Named.Exponentiating.AntiExpiZ ||
-            g === Gates.Named.Powering.Z ||
-            g === Gates.Named.Silly.CLOCK ||
-            g === Gates.Named.Silly.CLOCK_QUARTER_PHASE ||
-            g === Gates.Named.Powering.AntiZ ||
-            isDiag1 ||
-            isDiag2;
+    static _isGateAllowedAfterMeasurementIfNoQuantumControls(gate, time) {
+        let m = gate.matrixAt(time);
+        let n = m.width();
+        if (m.height() !== n) {
+            return false; // Uh... not square? Very strange.
+        }
+        let isLonely = seq => seq.filter(v => !v.isApproximatelyEqualTo(0, 0.00000001)).count() <= 1;
+        let isPhasedPermutation = Seq.range(n).every(k => {
+            let col = new Seq(m.getColumn(k));
+            let row = Seq.range(n).map(r => m.cell(k, r));
+            return isLonely(col) && isLonely(row);
+        });
+        return isPhasedPermutation;
     }
 
     /**
      *
      * @param {!Point} pt
+     * @param {!number} time
      * @returns {!string|null}
      */
-    gateAtLocIsDisabledReason(pt) {
+    gateAtLocIsDisabledReason(pt, time) {
         let g = this.gateAtLoc(pt);
 
         if (g !== null && g.name === "Parse Error") {
@@ -271,10 +272,10 @@ class CircuitDefinition {
             }
         }
 
-        if (this.locIsMeasured(pt) && g !== null && !CircuitDefinition._isGateAllowedAfterMeasurement(g)) {
+        if (this.locIsMeasured(pt) && g !== null && !CircuitDefinition._isGateAllowedAfterMeasurement(g, time)) {
             // Half-turns make sense and don't un-measure, as long as all controls are also measured.
             if (!this.colHasSingleWireControl(pt.x) &&
-                    CircuitDefinition._isGateAllowedAfterMeasurementIfNoQuantumControls(g)) {
+                    CircuitDefinition._isGateAllowedAfterMeasurementIfNoQuantumControls(g, time)) {
                 return null;
             }
 
@@ -300,7 +301,8 @@ class CircuitDefinition {
         return Seq.
             range(col.gates.length).
             filter(row => {
-                if (col.gates[row] === null || this.gateAtLocIsDisabledReason(new Point(colIndex, row)) !== null) {
+                let pt = new Point(colIndex, row);
+                if (col.gates[row] === null || this.gateAtLocIsDisabledReason(pt, time) !== null) {
                     return false;
                 }
                 let m = col.gates[row].matrixAt(time);
