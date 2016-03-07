@@ -42,10 +42,10 @@ Gates.Named = {
             }),
 
         Peek: new Gate(
-            "Peek",
+            "Chance",
             Matrix.identity(2),
             "Probability Display",
-            "No effect. Displays the chance that measuring a wire would return ON.",
+            "No effect. Shows the chance that measuring a wire would return ON.",
             "Use controls to see the conditional probability P(target GIVEN controls).",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
@@ -60,11 +60,11 @@ Gates.Named = {
                     args.rect);
             }),
 
-        Tomography: new Gate(
-            "Show",
+        BlochSphereState: new Gate(
+            "Bloch",
             Matrix.identity(2),
-            "Quantum State Display",
-            "No effect. Displays the density matrix of one or more wires.",
+            "Bloch Sphere Display",
+            "No effect. Shows a wire's state as a point on the Bloch Sphere.",
             "Use controls to see the conditional mixed state ρ(targets GIVEN controls).",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
@@ -73,9 +73,10 @@ Gates.Named = {
                 }
 
                 let {row, col} = args.positionInCircuit;
-                MathPainter.paintProbabilityBox(
+                let p = args.stats.controlledWireProbabilityJustAfter(row, col);
+                MathPainter.paintBlochSphere(
                     args.painter,
-                    args.stats.controlledWireProbabilityJustAfter(row, col),
+                    Matrix.square([1-p, 0, 0, p]),
                     args.rect);
             }),
 
@@ -433,7 +434,7 @@ Gates.Sets = [
             Gates.Named.Special.Peek,
             Gates.Named.Special.AntiControl,
             null,
-            Gates.Named.Special.Tomography
+            Gates.Named.Special.BlochSphereState
         ]
     },
     {
@@ -509,7 +510,7 @@ Gates.KnownToSerializer = [
     Gates.Named.Special.Control,
     Gates.Named.Special.SwapHalf,
     Gates.Named.Special.Peek,
-    Gates.Named.Special.Tomography,
+    Gates.Named.Special.BlochSphereState,
     Gates.Named.Special.Measurement,
     Gates.Named.Special.AntiControl,
     Gates.Named.Silly.SPACER,

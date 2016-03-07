@@ -38,11 +38,12 @@ export default class MathPainter {
         painter.fillRect(drawArea, backgroundColor);
         if (isNaN(probability)) {
             painter.fillPolygon([drawArea.bottomLeft(), drawArea.topLeft(), drawArea.topRight()], fillColor);
+            painter.printParagraph("NaN", drawArea, new Point(0.5, 0.5), 'red');
         } else {
             painter.fillRect(drawArea.takeBottomProportion(probability), fillColor);
+            painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
         }
 
-        painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
         painter.ctx.setLineDash([2, 3]);
         painter.strokeRect(drawArea);
         painter.ctx.setLineDash([]);
@@ -169,12 +170,7 @@ export default class MathPainter {
                             fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
         let c = drawArea.center();
         let u = Math.min(drawArea.w, drawArea.h) / 2;
-        let [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector().getColumn(0);
-        [x, y, z] = [x.real, y.real, z.real];
         let [dx, dy, dz] = [new Point(-u, 0), new Point(-u / 3, u / 3), new Point(0, u)];
-        let pxy = c.plus(dx.times(x)).plus(dy.times(y));
-        let p = pxy.plus(dz.times(z));
-        let r = 4 / (1 + y/8);
 
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
@@ -187,6 +183,16 @@ export default class MathPainter {
         for (let d of [dx, dy, dz]) {
             painter.strokeLine(c.plus(d.times(-1)), c.plus(d), '#BBB');
         }
+        if (isNaN(qubitDensityMatrix.cell(0, 0).real)) {
+            painter.printParagraph("NaN", drawArea, new Point(0.5, 0.5), 'red');
+            return;
+        }
+
+        let [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector().getColumn(0);
+        [x, y, z] = [x.real, y.real, z.real];
+        let pxy = c.plus(dx.times(x)).plus(dy.times(y));
+        let p = pxy.plus(dz.times(z));
+        let r = 4 / (1 + y/8);
 
         // Draw state indicators (also in not-quite-correct 3d).
         painter.strokeLine(c, pxy, '#666');

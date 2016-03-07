@@ -207,7 +207,7 @@ class CircuitDefinition {
     static _isGateAllowedAfterMeasurement(g) {
         return g === Gates.Named.Special.Control ||
             g === Gates.Named.Special.AntiControl ||
-            g === Gates.Named.Special.Tomography ||
+            g === Gates.Named.Special.BlochSphereState ||
             g === Gates.Named.Special.Measurement ||
             g === Gates.Named.Silly.SPACER ||
             g === Gates.Named.Special.Peek;
