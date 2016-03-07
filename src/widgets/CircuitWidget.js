@@ -520,15 +520,22 @@ class CircuitWidget {
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, n));
-            MathPainter.paintBlochSphere(painter, stats._densityNodes1[i], this.gateRect(i, n+1));
-            MathPainter.paintDensityMatrix(painter, stats._densityNodes1[i], this.gateRect(i, n+2));
+            MathPainter.paintBlochSphere(painter, stats.outputDensityMatrixIfAvailable(i), this.gateRect(i, n+1));
         }
-        for (let i = 0; 2*i + 1 < this.circuitDefinition.numWires; i++) {
-            let r1 = this.gateRect(2*i, n+3);
-            let r2 = this.gateRect(2*i+1, n+3);
-            let d = r2.bottom() - r1.y;
-            let r = new Rect(r1.x, r1.y, d, d);
-            MathPainter.paintDensityMatrix(painter, stats._densityNodes2[i], r);
+
+        let offset = n+2;
+        for (let g = 0; g < 3; g++) {
+            let d = 1 << g;
+            for (let i = 0; i < this.circuitDefinition.numWires; i += d) {
+                let m = stats.outputDensityMatrixIfAvailable(i, i + d);
+                if (m !== undefined) {
+                    let topLeft = this.gateRect(i, offset).topLeft();
+                    let wh = this.gateRect(i + d - 1, offset).bottom() - topLeft.y;
+                    let r = new Rect(topLeft.x, topLeft.y, wh, wh);
+                    MathPainter.paintDensityMatrix(painter, m, r);
+                }
+            }
+            offset += d;
         }
     }
 }

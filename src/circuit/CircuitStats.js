@@ -12,16 +12,14 @@ export default class CircuitStats{
      * @param {!number} time
      * @param {!(!number[])} wireProbabilityData
      * @param {!(!number[])} conditionalWireProbabilityData
-     * @param densityNodes1
-     * @param densityNodes2
+     * @param {!Array.<!Array.<!Matrix>>} outputDensityGroups
      * @param {!((!Complex)[])} finalState
      */
     constructor(circuitDefinition,
                 time,
                 wireProbabilityData,
                 conditionalWireProbabilityData,
-                densityNodes1,
-                densityNodes2,
+                outputDensityGroups,
                 finalState) {
         /**
          * The circuit that these stats apply to.
@@ -45,13 +43,38 @@ export default class CircuitStats{
          * @private
          */
         this._conditionalWireProbabilityData = conditionalWireProbabilityData;
-        this._densityNodes1 = densityNodes1;
-        this._densityNodes2 = densityNodes2;
+        /**
+         * Output density matrices for various groups of wires of increasing size.
+         * @type {!Array.<!Array.<!Matrix>>}
+         * @private
+         */
+        this._outputDensityGroups = outputDensityGroups;
         /**
          * The output quantum superposition.
          * @type {!((!Complex)[])}
          */
         this.finalState = finalState;
+    }
+
+    /**
+     * @param {!int} startWire inclusive
+     * @param {!int} endWire exclusive
+     * @returns {!Matrix|undefined}
+     */
+    outputDensityMatrixIfAvailable(startWire, endWire = startWire + 1) {
+        Util.need(0 <= startWire && startWire < endWire, "bad range");
+
+        let length = endWire - startWire;
+        let i = Math.round(Math.log2(length));
+        if (!Util.isPowerOf2(length) ||
+                endWire > this.circuitDefinition.numWires ||
+                startWire % length !== 0 ||
+                endWire % length !== 0 ||
+                i >= this._outputDensityGroups.length) {
+            return undefined;
+        }
+
+        return this._outputDensityGroups[i][startWire / length];
     }
 
     /**
@@ -100,7 +123,7 @@ export default class CircuitStats{
     }
 
     static emptyAtTime(circuitDefinition, time) {
-        return new CircuitStats(circuitDefinition, time, [], [], [], [], []);
+        return new CircuitStats(circuitDefinition, time, [], [], [], []);
     }
 
     /**
@@ -113,8 +136,7 @@ export default class CircuitStats{
             time,
             this._wireProbabilityData,
             this._conditionalWireProbabilityData,
-            this._densityNodes1,
-            this._densityNodes2,
+            this._outputDensityGroups,
             this.finalState);
     }
 
@@ -144,13 +166,13 @@ export default class CircuitStats{
                 skip(1).
                 zip(masks, (stateNode, mask) => stateNode.controlledProbabilities(mask)).
                 toArray(),
-            dNodes: Seq.range(circuitDefinition.numWires).
-                map(i => outputNode.densityMatrixForWires([i], QuantumControlMask.NO_CONTROLS)).
-                toArray(),
-            dNodes2: Seq.range(circuitDefinition.numWires).
-                partitioned(2).
-                filter(e => e.length === 2).
-                map(i => outputNode.densityMatrixForWires(i, QuantumControlMask.NO_CONTROLS)).
+            outputDensityGroups: Seq.range(3).
+                map(power => 1 << power).
+                map(groupSize => Seq.range(circuitDefinition.numWires).
+                    partitioned(groupSize).
+                    filter(e => e.length === groupSize).
+                    map(wireGroup => outputNode.densityMatrixForWires(wireGroup, QuantumControlMask.NO_CONTROLS)).
+                    toArray()).
                 toArray()
         };
 
@@ -164,36 +186,32 @@ export default class CircuitStats{
             conditionalWireProbabilities: new Seq(pixelDataNodes.postProbabilities).
                 zip(masks, (e, m) => e.asRenormalizedConditionalPerQubitProbabilities(m, circuitDefinition.numWires)).
                 toArray(),
-            densityNodes: pixelDataNodes.dNodes.map(e => e.asDensityMatrix()),
-            densityNodes2: pixelDataNodes.dNodes2.map(e => e.asDensityMatrix())
+            outputDensityGroups: pixelDataNodes.outputDensityGroups.map(g => g.map(e => e.asDensityMatrix()))
         };
 
         //noinspection JSCheckFunctionSignatures
         let values = Util.objectifyArrayFunc(PipelineNode.computePipeline)(valueNodes);
 
-        let densityNodeResults = values.densityNodes;
-        let densityNodeResults2 = values.densityNodes2;
-        for (let i = 0; i < densityNodeResults.length; i++) {
-            if (circuitDefinition.wireMeasuredColumns()[i] < Infinity) {
-                densityNodeResults[i] = Matrix.generate(2, 2, (c, r) =>
-                    c === r ? densityNodeResults[i].cell(c, r) : 0);
-            }
-        }
-        for (let i = 0; i < densityNodeResults2.length; i++) {
-            let b1 = circuitDefinition.wireMeasuredColumns()[i*2] < Infinity;
-            let b2 = circuitDefinition.wireMeasuredColumns()[i*2+1] < Infinity;
-            let m = (b1 ? 1 : 0) + (b2 ? 2 : 0);
-            densityNodeResults2[i] = Matrix.generate(4, 4, (c, r) =>
-                (c & m) === (r & m) ? densityNodeResults2[i].cell(c, r) : 0);
-        }
+        let outputDensityGroups = new Seq(values.outputDensityGroups).
+            map(g => new Seq(g).
+                mapWithIndex((m, i) => {
+                    let n = m.width();
+                    let span = Math.round(Math.log2(n));
+                    let mask = Seq.range(span).
+                        map(j => circuitDefinition.wireMeasuredColumns()[i*span + j] < Infinity).
+                        mapWithIndex((b, k) => b ? 1 << k : 0).
+                        sum();
+                    return Matrix.generate(n, n, (c, r) => (c & mask) === (r & mask) ? m.cell(c, r) : 0);
+                }).
+                toArray()).
+            toArray();
 
         return new CircuitStats(
             circuitDefinition,
             time,
             values.wireProbabilities,
             values.conditionalWireProbabilities,
-            densityNodeResults,
-            densityNodeResults2,
+            outputDensityGroups,
             values.outputSuperposition);
     }
 }

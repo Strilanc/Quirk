@@ -170,7 +170,7 @@ export default class MathPainter {
                             fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
         let c = drawArea.center();
         let u = Math.min(drawArea.w, drawArea.h) / 2;
-        let [dx, dy, dz] = [new Point(-u, 0), new Point(-u / 3, u / 3), new Point(0, u)];
+        let [dx, dy, dz] = [new Point(-u, 0), new Point(u / 3, -u / 3), new Point(0, u)];
 
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
