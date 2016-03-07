@@ -93,6 +93,27 @@ export default class Painter {
     }
 
     /**
+     * Draws the outside of an ellipse.
+     * @param {!Point} center The center of the ellipse.
+     * @param {!Point} radii The horizontal and vertical distance from the center of the ellipse to its side.
+     * @param {!string=} color The stroke color.
+     * @param {!number=} thickness The stroke thickness.
+     */
+    strokeEllipse(center, radii, color = Config.DEFAULT_STROKE_COLOR, thickness = Config.DEFAULT_STROKE_THICKNESS) {
+        this.ctx.save();
+        this.ctx.beginPath();
+
+        this.ctx.translate(center.x - radii.x, center.y - radii.y);
+        this.ctx.scale(radii.x, radii.y);
+        this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+
+        this.ctx.restore();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = thickness;
+        this.ctx.stroke();
+    }
+
+    /**
      * Draws the inside of a circle.
      * @param {!Point} center The center of the circle.
      * @param {!number} radius The distance from the center of the circle to its side.

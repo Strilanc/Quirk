@@ -484,3 +484,36 @@ suite.test("trace", () => {
 
     assertThat(Matrix.square(Seq.range(9).toArray()).trace()).isEqualTo(12);
 });
+
+suite.test("qubitDensityMatrixToBlochVector", () => {
+    assertThrows(() => Matrix.square([1]).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.square([1,0,0,0,0,0,0,0,0]).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.identity(2).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.square([1, 1, -1, 0]).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.square([1, 1, 0, 0]).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.square([1, Complex.i, Complex.i, 0]).qubitDensityMatrixToBlochVector());
+
+    assertThat(Matrix.identity(2).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, 0, 0]));
+
+    assertThat(Matrix.identity(2).plus(Matrix.PAULI_X).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([1, 0, 0]));
+    assertThat(Matrix.identity(2).plus(Matrix.PAULI_Y).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, 1, 0]));
+    assertThat(Matrix.identity(2).plus(Matrix.PAULI_Z).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, 0, 1]));
+
+    assertThat(Matrix.identity(2).minus(Matrix.PAULI_X).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([-1, 0, 0]));
+    assertThat(Matrix.identity(2).minus(Matrix.PAULI_Y).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, -1, 0]));
+    assertThat(Matrix.identity(2).minus(Matrix.PAULI_Z).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, 0, -1]));
+
+    assertThat(Matrix.square([1, 0, 0, 0]).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, 0, 1]));
+    assertThat(Matrix.square([0, 0, 0, 1]).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([0, 0, -1]));
+    assertThat(Matrix.square([0.5, 0.5, 0.5, 0.5]).qubitDensityMatrixToBlochVector()).
+        isEqualTo(Matrix.col([1, 0, 0]));
+});

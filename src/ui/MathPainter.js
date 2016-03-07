@@ -155,6 +155,48 @@ export default class MathPainter {
         }
     };
 
+    /**
+     * @param {!Painter} painter
+     * @param {!Matrix} qubitDensityMatrix
+     * @param {!Rect} drawArea
+     * @param {!string=} backgroundColor
+     * @param {!string=} fillColor
+     */
+    static paintBlochSphere(painter,
+                            qubitDensityMatrix,
+                            drawArea,
+                            backgroundColor = Config.PEEK_GATE_OFF_FILL_COLOR,
+                            fillColor = Config.PEEK_GATE_ON_FILL_COLOR) {
+        let c = drawArea.center();
+        let u = Math.min(drawArea.w, drawArea.h) / 2;
+        let [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector().getColumn(0);
+        [x, y, z] = [x.real, y.real, z.real];
+        let [dx, dy, dz] = [new Point(-u, 0), new Point(-u / 3, u / 3), new Point(0, u)];
+        let pxy = c.plus(dx.times(x)).plus(dy.times(y));
+        let p = pxy.plus(dz.times(z));
+        let r = 4 / (1 + y/8);
+
+        // Draw sphere and axis lines (in not-quite-proper 3d).
+        painter.fillCircle(c, u, backgroundColor);
+        painter.strokeCircle(c, u, '#BBB');
+        painter.ctx.setLineDash([2, 3]);
+        painter.strokeCircle(c, u, 'black');
+        painter.ctx.setLineDash([]);
+        painter.strokeEllipse(c, new Point(dx.x, dy.y), '#BBB');
+        painter.strokeEllipse(c, new Point(dy.x, dz.y), '#BBB');
+        for (let d of [dx, dy, dz]) {
+            painter.strokeLine(c.plus(d.times(-1)), c.plus(d), '#BBB');
+        }
+
+        // Draw state indicators (also in not-quite-correct 3d).
+        painter.strokeLine(c, pxy, '#666');
+        painter.strokeLine(pxy, p, '#666');
+        painter.strokeLine(c, c.plus(dz.times(z)), '#666');
+        painter.strokeLine(p, c.plus(dz.times(z)), '#666');
+        painter.strokeLine(c, p, 'black', 2);
+        painter.fillCircle(p, r, fillColor);
+        painter.strokeCircle(p, r, 'black');
+    }
 
     /**
      * @param {!Painter} painter
@@ -219,6 +261,7 @@ export default class MathPainter {
         }
 
         // Outline
+        painter.strokeRect(drawArea, 'lightgray');
         painter.ctx.setLineDash([2, 3]);
         painter.strokeRect(drawArea);
         painter.ctx.setLineDash([]);

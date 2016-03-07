@@ -575,6 +575,25 @@ class Matrix {
     }
 
     /**
+     * Returns the bloch sphere vector (as a matrix columns) corresponding to this density matrix.
+     * @returns {!Matrix}
+     */
+    qubitDensityMatrixToBlochVector() {
+        Util.need(this.width() === 2 && this.height() === 2, "Need a 2x2 density matrix.");
+        Util.need(this.adjoint().isApproximatelyEqualTo(this, 0.01), "Density matrix should be Hermitian.");
+        Util.need(this.trace().isApproximatelyEqualTo(1, 0.01), "Density matrix should have unit trace.");
+
+        // Density matrix from bloch vector equation: M = 1/2 (I + vσ)
+        let vσ = this.scaledBy(2).minus(Matrix.identity(2)).rows();
+        let [[a, b],
+             [c, d]] = vσ;
+        let x = c.plus(b).real/2;
+        let y = c.minus(b).imag/2;
+        let z = a.minus(d).real/2;
+        return Matrix.col([x, y, z]);
+    }
+
+    /**
      * Factors the matrix int u*s*v parts, where u and v are unitary matrices and s is a real diagonal matrix.
      * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
      */
