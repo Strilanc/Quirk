@@ -239,3 +239,33 @@ suite.test("breakLine", () => {
         "narrow narrow"
     ]);
 });
+
+suite.test("decomposeObjectValues", () => {
+    assertThat(Util.decomposeObjectValues({})).isEqualTo([]);
+    assertThat(Util.decomposeObjectValues({a: "x"})).isEqualTo(["x"]);
+    assertThat(Util.decomposeObjectValues({a: {b: "y"}})).isEqualTo([{b: "y"}]);
+    assertThat(Util.decomposeObjectValues({a: "x", b: "y"})).isEqualTo(["x", "y"]);
+    assertThat(Util.decomposeObjectValues({a: []})).isEqualTo([]);
+    assertThat(Util.decomposeObjectValues({a: [1, 2, 3]})).isEqualTo([1, 2, 3]);
+    assertThat(Util.decomposeObjectValues({a: [1, 2, 3], b: "x", c: [4, 5]})).isEqualTo([1, 2, 3, "x", 4, 5]);
+    assertThat(Util.decomposeObjectValues({a: [1, [2, 4], 3]})).isEqualTo([1, 2, 4, 3]);
+    assertThat(Util.decomposeObjectValues({a: [1, [], 3]})).isEqualTo([1, 3]);
+});
+
+suite.test("recomposedObjectValues", () => {
+    assertThrows(() => Util.recomposedObjectValues({}, [1]));
+    assertThrows(() => Util.recomposedObjectValues({a: []}, [1]));
+    assertThrows(() => Util.recomposedObjectValues({a: ""}, []));
+
+    assertThat(Util.recomposedObjectValues({}, [])).isEqualTo({});
+    assertThat(Util.recomposedObjectValues({a: "x"}, ["r"])).isEqualTo({a: "r"});
+    assertThat(Util.recomposedObjectValues({a: {b: "y"}}, ["r"])).isEqualTo({a: "r"});
+    assertThat(Util.recomposedObjectValues({a: "x", b: "y"}, [2, 3])).isEqualTo({a:2, b:3});
+    assertThat(Util.recomposedObjectValues({a: []}, [])).isEqualTo({a:[]});
+    assertThat(Util.recomposedObjectValues({a: [2, 3]}, [4, 5])).isEqualTo({a: [4, 5]});
+    assertThat(Util.recomposedObjectValues({a: [1, 2, 3], b: "x", c: [4, 5]}, ["a", "b", "c", "d", "e", "f"])).
+        isEqualTo({a: ["a", "b", "c"], b: "d", c: ["e", "f"]});
+    assertThat(Util.recomposedObjectValues({a: [1, [2, 4], 3]}, ["a", "b", "c", "d"])).
+        isEqualTo({a: ["a", ["b", "c"], "d"]});
+    assertThat(Util.recomposedObjectValues({a: [1, [], 3]}, ["a", "b"])).isEqualTo({a: ["a", [], "b"]});
+});

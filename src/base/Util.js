@@ -186,6 +186,70 @@ export default class Util {
         }
         return lines;
     }
+
+    /**
+     * Enumerates the fields of an object, stashing their values into an array.
+     * Array fields are flattened into the result array.
+     *
+     * @param {*} object
+     * @returns {!Array.<*>}
+     */
+    static decomposeObjectValues(object) {
+        let result = [];
+
+        let decomposeValueOrArray;
+        decomposeValueOrArray = val => {
+            if (Array.isArray(val)) {
+                for (let item of val) {
+                    decomposeValueOrArray(item);
+                }
+            } else {
+                result.push(val);
+            }
+        };
+
+        for (let key of Object.keys(object)) {
+            decomposeValueOrArray(object[key], result);
+        }
+        return result;
+    }
+
+    /**
+     * @param {*} originalObject
+     * @param {!Array.<*>} newFieldValues
+     * @returns {!object}
+     */
+    static recomposedObjectValues(originalObject, newFieldValues) {
+        let result = {};
+        let i = 0;
+
+        let recomposeValueOrArray;
+        recomposeValueOrArray = originalVal => {
+            if (Array.isArray(originalVal)) {
+                let arr = [];
+                for (let item of originalVal) {
+                    arr.push(recomposeValueOrArray(item));
+                }
+                return arr;
+            }
+
+            return newFieldValues[i++];
+        };
+
+        for (let key of Object.keys(originalObject)) {
+            result[key] = recomposeValueOrArray(originalObject[key]);
+        }
+        Util.need(i === newFieldValues.length, "Mismatched field value count.");
+        return result;
+    }
+
+    /**
+     * @param {!function(!Array.<*>) : !Array.<*>} func
+     * @returns {!function(!object) : !object}
+     */
+    static objectifyArrayFunc(func) {
+        return arg => Util.recomposedObjectValues(arg, func(Util.decomposeObjectValues(arg)));
+    }
 }
 
 /**

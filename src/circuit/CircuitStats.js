@@ -119,60 +119,60 @@ export default class CircuitStats{
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
-        let nodes = [];
-        let masks = [];
+        let stateScanNodes = Seq.range(circuitDefinition.columns.length).
+            scan(
+                SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires),
+                (stateNode, col) => {
+                    let gateCol = circuitDefinition.columns[col];
+                    let mask = gateCol.controls();
+                    for (let op of circuitDefinition.singleQubitOperationsInColAt(col, time)) {
+                        stateNode = stateNode.withQubitOperationApplied(op.i, op.m, mask)
+                    }
+                    for (let op of gateCol.swapPairs()) {
+                        stateNode = stateNode.withSwap(op[0], op[1], mask);
+                    }
+                    return stateNode;
+                }).
+            toArray();
 
-        let stateNode = SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires);
-        for (let col of Seq.range(circuitDefinition.columns.length)) {
-            let gateCol = circuitDefinition.columns[col];
-            let mask = gateCol.controls();
-            for (let op of circuitDefinition.singleQubitOperationsInColAt(col, time)) {
-                stateNode = stateNode.withQubitOperationApplied(op.i, op.m, mask)
-            }
-            for (let op of gateCol.swapPairs()) {
-                stateNode = stateNode.withSwap(op[0], op[1], mask);
-            }
-            nodes.push(stateNode.controlledProbabilities(mask));
-            masks.push(mask);
-        }
-        for (let i of Seq.range(circuitDefinition.numWires)) {
-            nodes.push(stateNode.densityMatrixForWires([i], QuantumControlMask.NO_CONTROLS));
-        }
-        let n2 = nodes.length;
-        nodes.push(stateNode);
-        for (let i of Seq.range(circuitDefinition.numWires).partitioned(2).filter(e => e.length === 2)) {
-            nodes.push(stateNode.densityMatrixForWires(i, QuantumControlMask.NO_CONTROLS));
-        }
+        let masks = circuitDefinition.columns.map(e => e.controls());
+        let outputNode = stateScanNodes[stateScanNodes.length - 1];
 
-        let merged = SuperpositionNode.mergedReadFloats(nodes);
+        let textureNodes = {
+            outputSuperposition: outputNode,
+            postProbabilities: new Seq(stateScanNodes).
+                skip(1).
+                zip(masks, (stateNode, mask) => stateNode.controlledProbabilities(mask)).
+                toArray(),
+            dNodes: Seq.range(circuitDefinition.numWires).
+                map(i => outputNode.densityMatrixForWires([i], QuantumControlMask.NO_CONTROLS)).
+                toArray(),
+            dNodes2: Seq.range(circuitDefinition.numWires).
+                partitioned(2).
+                filter(e => e.length === 2).
+                map(i => outputNode.densityMatrixForWires(i, QuantumControlMask.NO_CONTROLS)).
+                toArray()
+        };
 
-        let finalStateNode = merged[n2].asRenormalizedAmplitudes();
+        let pixelDataNodes = Util.objectifyArrayFunc(SuperpositionNode.mergedReadFloats)(textureNodes);
 
-        let densityNodes = merged.slice(n2 - circuitDefinition.numWires, n2).
-            map(e => e.asDensityMatrix());
-
-        let densityNodes2 = merged.slice(n2 + 1).map(e => e.asDensityMatrix());
-
-        let probNodes = merged.slice(0, n2 - circuitDefinition.numWires);
-        let n = probNodes.length;
-        let wireProbColsNode = Seq.range(n).
-            map(i => probNodes[i].asRenormalizedPerQubitProbabilities(masks[i], circuitDefinition.numWires));
-        let condWireProbColsNode = Seq.range(n).
-            map(i => probNodes[i].asRenormalizedConditionalPerQubitProbabilities(masks[i], circuitDefinition.numWires));
+        let valueNodes = {
+            outputSuperposition: pixelDataNodes.outputSuperposition.asRenormalizedAmplitudes(),
+            wireProbabilities: new Seq(pixelDataNodes.postProbabilities).
+                zip(masks, (e, m) => e.asRenormalizedPerQubitProbabilities(m, circuitDefinition.numWires)).
+                toArray(),
+            conditionalWireProbabilities: new Seq(pixelDataNodes.postProbabilities).
+                zip(masks, (e, m) => e.asRenormalizedConditionalPerQubitProbabilities(m, circuitDefinition.numWires)).
+                toArray(),
+            densityNodes: pixelDataNodes.dNodes.map(e => e.asDensityMatrix()),
+            densityNodes2: pixelDataNodes.dNodes2.map(e => e.asDensityMatrix())
+        };
 
         //noinspection JSCheckFunctionSignatures
-        let nodeResults = PipelineNode.computePipeline(
-            new Seq(wireProbColsNode).
-            concat(condWireProbColsNode).
-            concat(densityNodes).
-            concat([finalStateNode]).
-                concat(densityNodes2).
-            toArray());
-        let wireProbabilityCols = nodeResults.slice(0, n);
-        let conditionalWireProbabilityCols = nodeResults.slice(n, n*2);
-        let densityNodeResults = nodeResults.slice(n*2, n*2 + circuitDefinition.numWires);
-        let finalState = nodeResults[n*2 + circuitDefinition.numWires];
-        let densityNodeResults2 = nodeResults.slice(n*2 + circuitDefinition.numWires + 1);
+        let values = Util.objectifyArrayFunc(PipelineNode.computePipeline)(valueNodes);
+
+        let densityNodeResults = values.densityNodes;
+        let densityNodeResults2 = values.densityNodes2;
         for (let i = 0; i < densityNodeResults.length; i++) {
             if (circuitDefinition.wireMeasuredColumns()[i] < Infinity) {
                 densityNodeResults[i] = Matrix.generate(2, 2, (c, r) =>
@@ -190,10 +190,10 @@ export default class CircuitStats{
         return new CircuitStats(
             circuitDefinition,
             time,
-            wireProbabilityCols,
-            conditionalWireProbabilityCols,
+            values.wireProbabilities,
+            values.conditionalWireProbabilities,
             densityNodeResults,
             densityNodeResults2,
-            finalState);
+            values.outputSuperposition);
     }
 }
