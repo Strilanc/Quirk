@@ -130,6 +130,10 @@ class ToolboxWidget {
         painter.ctx.restore();
     }
 
+    desiredWidth() {
+        return this.gateDrawRect(Gates.Sets.length - 1, 5).right() + 5;
+    }
+
     /**
      * @param {!Hand} hand
      * @returns {!Hand} newHand

@@ -6,6 +6,7 @@ import GateDrawParams from "src/ui/GateDrawParams.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/math/Point.js"
+import Matrix from "src/math/Matrix.js"
 import Rect from "src/math/Rect.js"
 import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
@@ -35,6 +36,20 @@ class CircuitWidget {
         this.circuitDefinition = circuitDefinition;
         this.compressedColumnIndex = compressedColumnIndex;
         this.wireLabeller = wireLabeller;
+    }
+
+    static desiredHeight(wireCount) {
+        return Math.max(Config.MIN_WIRE_COUNT, wireCount) * Config.WIRE_SPACING;
+    }
+
+    desiredWidth() {
+        let r = this.opRect(
+            this.circuitDefinition.columns.length + // Operations.
+            1 + // Spacer.
+            2 + // Wire chance and bloch sphere displays.
+            (1 << Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS) - 1 // Density matrix displays.
+        );
+        return r.x + CircuitWidget.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
     }
 
     /**
@@ -269,9 +284,8 @@ class CircuitWidget {
      */
     paint(painter, hand, stats) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
-        //let states = this.scanStates(stats.time);
 
-        //// Draw labelled wires
+        // Draw labelled wires
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let wireRect = this.wireRect(i);
             let y = Math.round(wireRect.center().y - 0.5) + 0.5;
@@ -288,12 +302,13 @@ class CircuitWidget {
 
         }
 
-        //this.paintWireProbabilityCurves(painter, hand, stats.time);
-
         // Draw operations
         for (let i = 0; i < this.circuitDefinition.columns.length; i++) {
             this.drawCircuitOperation(painter, this.circuitDefinition.columns[i], i, hand, stats);
         }
+
+        // Draw output displays.
+        this.drawRightHandPeekGates(painter, stats);
     }
 
     /**
@@ -527,7 +542,7 @@ class CircuitWidget {
         }
 
         let offset = n+2;
-        for (let g = 0; g < 3; g++) {
+        for (let g = 0; g < Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS; g++) {
             let d = 1 << g;
             for (let i = 0; i + d <= this.circuitDefinition.numWires; i += d) {
                 let m = stats.densityMatrixAfterIfAvailable(Seq.range(d).map(e => e + i).toArray(), Infinity);
@@ -540,6 +555,14 @@ class CircuitWidget {
             }
             offset += d;
         }
+
+        let r = this.gateRect(0, offset);
+        r = r.withH(this.gateRect(this.circuitDefinition.numWires - 1, 0).bottom() - r.y);
+        r = r.withW(r.h);
+        let amps = Matrix.fromRows(new Seq(stats.finalState).
+            partitioned(1 << Math.ceil(this.circuitDefinition.numWires/2)).
+            toArray());
+        MathPainter.paintMatrix(painter, amps, r, []);
     }
 }
 

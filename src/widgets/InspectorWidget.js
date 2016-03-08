@@ -28,10 +28,12 @@ export default class InspectorWidget {
         this.hand = hand;
         /** @type {!Rect} */
         this.drawArea = new Rect(0, 0, 0, 0);
-        /** @type {!Rect} */
-        this.outputStateHintArea = new Rect(0, 0, 0, 0);
 
         this.updateArea(drawArea);
+    }
+
+    desiredWidth() {
+        return Math.max(this.toolboxWidget.desiredWidth(), this.circuitWidget.desiredWidth());
     }
 
     /**
@@ -42,10 +44,8 @@ export default class InspectorWidget {
 
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
-        this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).skipBottom(Config.STATE_VIEWING_AREA_HEIGHT));
-
-        let remainder = drawArea.skipTop(this.circuitWidget.area.bottom());
-        this.outputStateHintArea = remainder.takeRight(remainder.h);
+        this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).
+            takeTop(CircuitWidget.desiredHeight(this.circuitWidget.circuitDefinition.numWires)));
     }
 
     /**
@@ -69,65 +69,11 @@ export default class InspectorWidget {
     /**
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
-     * @private
-     */
-    paintOutput(painter, stats) {
-        // Wire probabilities
-        this.circuitWidget.drawRightHandPeekGates(painter, stats);
-
-       // State amplitudes
-        let w = 1 << Math.ceil(this.circuitWidget.circuitDefinition.numWires/2);
-        let amps = Matrix.fromRows(new Seq(stats.finalState).partitioned(w).toArray());
-        MathPainter.paintMatrix(painter, amps, this.outputStateHintArea, []);
-    }
-
-    ///**
-    // * @param {!Painter} painter
-    // * @param {!number} time
-    // * @private
-    // */
-    //paintFocus(painter, time) {
-    //    if (this.hand.pos === null) {
-    //        return;
-    //    }
-    //
-    //    let possibleFocusedColumn = this.circuit.findExistingOpColumnAt(notNull(this.hand.pos));
-    //    if (possibleFocusedColumn === null) {
-    //        return;
-    //    }
-    //
-    //    let c = Util.notNull(possibleFocusedColumn);
-    //
-    //    // Highlight the column
-    //    painter.ctx.globalAlpha = 0.75;
-    //    painter.fillRect(this.circuit.opRect(c), "yellow");
-    //    painter.ctx.globalAlpha = 1;
-    //
-    //    painter.paintQuantumStateAsLabelledGrid(
-    //        this.circuit.scanStates(time)[c + 1],
-    //        this.focusedStateHintArea,
-    //        this.circuit.getLabels());
-    //
-    //    painter.paintMatrix(
-    //        this.circuit.columns[c].matrixAt(time),
-    //        this.focusedOperationHintArea);
-    //
-    //    painter.paintMatrix(
-    //        this.circuit.getCumulativeOperationUpToBefore(c + 1, time),
-    //        this.cumulativeFocusedOperationHintArea);
-    //}
-
-    /**
-     * @param {!Painter} painter
-     * @param {!CircuitStats} stats
      */
     paint(painter, stats) {
-        // Clear
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
-        //this.paintFocus(painter, time);
         this.circuitWidget.paint(painter, this.hand, stats);
-        this.paintOutput(painter, stats);
         this.toolboxWidget.paint(painter, stats, this.hand);
         this.paintHand(painter, stats);
     }
@@ -268,8 +214,7 @@ export default class InspectorWidget {
             wireCount = Config.MIN_WIRE_COUNT;
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        let stateHeight = Config.STATE_VIEWING_AREA_HEIGHT;
-        let wireHeight = wireCount * 50;
-        return toolboxHeight + stateHeight + wireHeight;
+        let wireHeight = CircuitWidget.desiredHeight(wireCount);
+        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + wireHeight);
     }
 }

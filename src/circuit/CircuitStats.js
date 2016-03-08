@@ -1,4 +1,5 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import Config from "src/Config.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
@@ -174,7 +175,7 @@ export default class CircuitStats{
                 skip(1).
                 zip(masks, (stateNode, mask) => stateNode.controlledProbabilities(mask)).
                 toArray(),
-            outputDensityGroups: Seq.range(3).
+            outputDensityGroups: Seq.range(Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS).
                 map(power => 1 << power).
                 map(groupSize => Seq.range(circuitDefinition.numWires).
                     partitioned(groupSize).

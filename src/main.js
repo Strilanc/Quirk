@@ -163,7 +163,7 @@ let syncArea = ins => {
 };
 
 let redraw = () => {
-    canvas.width = canvasDiv.clientWidth;
+    canvas.width = Math.max(canvasDiv.clientWidth, inspector.desiredWidth());
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     let painter = new Painter(canvas);
     let shown = syncArea(inspector).previewDrop();

@@ -56,6 +56,14 @@ Config.AMPLITUDE_CIRCLE_STROKE_COLOR = Config.AMPLITUDE_PROBABILITY_FILL_UP_COLO
 /** Half of the span of a drawn gate, width-wise and height-wise.
 * @type {!number} */
 Config.GATE_RADIUS = 20;
+Config.WIRE_SPACING = 50;
+
+/**
+ * At level N we partition the wires into groups of size 2^N and show the density matrices for all the partitions.
+ * Setting to 2 will show all the individual states and all the paired states.
+ * Setting to 3 shows all the quadruplet states, but is not very useful because of the information overload.
+ */
+Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS = 2;
 
 Config.BACKGROUND_COLOR = 'white';
 Config.BACKGROUND_COLOR_CIRCUIT = 'white';
@@ -68,4 +76,9 @@ Config.TOOLBOX_GROUP_SPAN = Config.TOOLBOX_GATE_SPAN * 2 + Config.TOOLBOX_GROUP_
 Config.TOOLBOX_MARGIN_X = 35;
 Config.TOOLBOX_MARGIN_Y = 18;
 
-Config.STATE_VIEWING_AREA_HEIGHT = 250;
+/**
+ * Some tooltips end up looking terrible without available vertical space.
+ * (e.g. the error box might not fit, or the gate tips might get squashed)
+ * @type {number}
+ */
+Config.MINIMUM_CANVAS_HEIGHT = 350;
