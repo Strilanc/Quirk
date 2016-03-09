@@ -274,6 +274,26 @@ class Seq {
     };
 
     /**
+     * Returns a sequence iterating the items of the receiving sequence that match a predicate over the item and the
+     * item's index. Items that don't match the predicate are skipped.
+     * @param {!function(T, int) : !boolean} predicate
+     * @returns {!Seq.<T>}
+     * @template T
+     */
+    filterWithIndex(predicate) {
+        let seq = this.iterable;
+        return Seq.fromGenerator(function*() {
+            let i = 0;
+            for (let e of seq) {
+                if (predicate(e, i)) {
+                    yield e;
+                }
+                i++;
+            }
+        });
+    };
+
+    /**
      * Combines the items of a sequence into a single result by iteratively applying a combining function. If the
      * sequence is empty, then either an error is thrown or the given alternative value is returned.
      * @param {!function(T, T) : T} combiner

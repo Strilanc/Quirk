@@ -204,6 +204,19 @@ suite.test("filter", () => {
     assertThat(new Seq([2, 0, 1, 4]).filter(e => e % 2 === 1)).iteratesAs(1);
 });
 
+suite.test("filterWithIndex", () => {
+    assertThat(new Seq([]).filterWithIndex((e, i) => e % 2 === 0)).iteratesAs();
+    assertThat(new Seq([1]).filterWithIndex((e, i) => e % 2 === 0)).iteratesAs();
+    assertThat(new Seq([2]).filterWithIndex((e, i) => e % 2 === 0)).iteratesAs(2);
+    assertThat(new Seq([1, 2]).filterWithIndex((e, i) => e % 2 === 0)).iteratesAs(2);
+    assertThat(new Seq([2, 0, 1, 4]).filterWithIndex((e, i) => e % 2 === 0)).iteratesAs(2, 0, 4);
+    assertThat(new Seq([2, 0, 1, 4]).filterWithIndex((e, i) => e % 2 === 1)).iteratesAs(1);
+
+    assertThat(new Seq([2, 0, 1, 4]).filterWithIndex((e, i) => i % 2 === 0)).iteratesAs(2, 1);
+    assertThat(new Seq([2, 0, 1, 4]).filterWithIndex((e, i) => i % 2 === 1)).iteratesAs(0, 4);
+    assertThat(new Seq([2, 0, 1, 4]).filterWithIndex((e, i) => (e+i) % 2 === 1)).iteratesAs(0, 1, 4);
+});
+
 suite.test("fold", () => {
     assertThrows(() => new Seq([]).fold((e1, e2) => undefined));
     assertThat(new Seq([]).fold(() => { throw new Error(); }, "abc")).isEqualTo("abc");
