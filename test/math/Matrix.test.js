@@ -560,3 +560,24 @@ suite.test("qubitOperationToAngleAxisRotation", () => {
     assertThat(Matrix.square([1, 0, 0, i]).qubitOperationToAngleAxisRotation()).
         isEqualTo({angle: -π/2, axis: [0, 0, 1], phase: π/4});
 });
+
+suite.test("cross3", () => {
+    let [x, y, z] = [Matrix.col([1, 0, 0]), Matrix.col([0, 1, 0]), Matrix.col([0, 0, 1])];
+    let zero = Matrix.col([0, 0, 0]);
+
+    assertThat(zero.cross3(zero)).isEqualTo(zero);
+    assertThat(x.cross3(zero)).isEqualTo(zero);
+    assertThat(y.cross3(zero)).isEqualTo(zero);
+    assertThat(z.cross3(zero)).isEqualTo(zero);
+
+    assertThat(x.cross3(y)).isEqualTo(z);
+    assertThat(y.cross3(z)).isEqualTo(x);
+    assertThat(z.cross3(x)).isEqualTo(y);
+
+    assertThat(y.cross3(x)).isEqualTo(z.scaledBy(-1));
+    assertThat(z.cross3(y)).isEqualTo(x.scaledBy(-1));
+    assertThat(x.cross3(z)).isEqualTo(y.scaledBy(-1));
+
+    assertThat(x.scaledBy(2).cross3(y.scaledBy(3))).isEqualTo(z.scaledBy(6));
+    assertThat(x.plus(y).cross3(y)).isEqualTo(z);
+});

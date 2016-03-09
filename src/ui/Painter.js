@@ -306,6 +306,30 @@ export default class Painter {
     }
 
     /**
+     * Draws a path.
+     * @param {!(!Point[])} vertices
+     * @param {!string=} strokeColor The stroke color.
+     * @param {!number=} strokeThickness The stroke thickness.
+     */
+    strokePath(vertices,
+                  strokeColor = Config.DEFAULT_STROKE_COLOR,
+                  strokeThickness = Config.DEFAULT_STROKE_THICKNESS) {
+        if (vertices.length === 0) {
+            return;
+        }
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(vertices[0].x, vertices[0].y);
+        for (let p of vertices.slice(1)) {
+            this.ctx.lineTo(p.x, p.y);
+        }
+
+        this.ctx.strokeStyle = strokeColor;
+        this.ctx.lineWidth = strokeThickness;
+        this.ctx.stroke();
+    }
+
+    /**
      * Draws the inside of a polygon.
      * @param {!(!Point[])} vertices
      * @param {!string} fillColor

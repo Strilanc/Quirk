@@ -27,7 +27,6 @@ export default class WidgetPainter {
             skipLeft(w*0.01).skipRight(w*0.01);
         let matrixTitleRect = area.skipTop(detailsRect.bottom()-area.y+h*0.01).takeTop(h*0.08).
             skipLeft(w*0.02).skipRight(w*0.02);
-        let matrixDesc = gate.matrixAt(time).toString(gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED);
 
         if (!hasOp) {
             area = area.takeTop(matrixTitleRect.y - area.y);
@@ -40,6 +39,8 @@ export default class WidgetPainter {
         painter.printParagraph(gate.details, detailsRect, new Point(0, 0.5));
 
         if (hasOp) {
+            let curMatrix = gate.matrixAt(time);
+            let matrixDesc = curMatrix.toString(gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED);
             let matrixTitleUsed = painter.printLine("Matrix form: ", matrixTitleRect, 0, Config.DEFAULT_TEXT_COLOR, 20);
             let matrixDescRect = matrixTitleRect.skipLeft(matrixTitleUsed.right() - matrixTitleRect.x);
 
@@ -50,9 +51,16 @@ export default class WidgetPainter {
             let d = Math.min(matrixDrawArea.w, matrixDrawArea.h);
             MathPainter.paintMatrix(
                 painter,
-                gate.matrixAt(time),
+                curMatrix,
                 matrixDrawArea.withW(d).withH(d),
                 []);
+
+            if (curMatrix.width() === 2 && curMatrix.isApproximatelyUnitary(0.000000001)) {
+                MathPainter.paintBlochSphereRotation(
+                    painter,
+                    curMatrix,
+                    matrixDrawArea.skipLeft(d + 10).withW(d).withH(d));
+            }
         }
 
         painter.strokeRect(area);

@@ -38,7 +38,7 @@ class Matrix {
      * @returns {!Complex}
      */
     cell(col, row) {
-        Util.need(col >= 0 && col < this.width() && row >= 0 && row < this.height());
+        Util.need(col >= 0 && col < this.width() && row >= 0 && row < this.height(), "Cell out of range");
         let i = (this._width*row + col)*2;
         return new Complex(this._buffer[i], this._buffer[i + 1]);
     }
@@ -65,7 +65,6 @@ class Matrix {
         let h = rows.length;
         let w = seqRows.map(e => e.length).distinct().single(0);
         Util.need(w > 0, "consistent non-zero width", rows);
-        Util.need(seqRows.flatten().every(e => e instanceof Complex), "complex entries", rows);
 
         let buffer = new Float64Array(w * h * 2);
         let i = 0;
@@ -666,6 +665,22 @@ class Matrix {
         }
 
         return {axis: [x, y, z], angle: θ, phase: φ.phase()};
+    }
+
+    /**
+     * Computes the cross product of two 3d column vectors.
+     * @param {!Matrix} other
+     * @returns {!Matrix}
+     */
+    cross3(other) {
+        Util.need(this.width() === 1 && this.height() === 3, "This isn't a 3d column vector.");
+        Util.need(other.width() === 1 && other.height() === 3, "Other's not a 3d column vector.");
+        return Matrix.generate(1, 3, (r, _) => {
+            let [i, j] = [(r+1) % 3, (r+2) % 3];
+            let a = this.cell(0, i).times(other.cell(0, j));
+            let b = this.cell(0, j).times(other.cell(0, i));
+            return a.minus(b);
+        });
     }
 
     /**
