@@ -107,6 +107,11 @@ suite.test("toString", () => {
 });
 
 suite.test("parse", () => {
+    assertThrows(() => Complex.parse(""));
+    assertThrows(() => Complex.parse("abc"));
+    assertThrows(() => Complex.parse("1e_plus1"));
+    assertThrows(() => Complex.parse("1e_minus1"));
+
     assertThat(Complex.parse("0")).isEqualTo(new Complex(0, 0));
     assertThat(Complex.parse("1")).isEqualTo(new Complex(1, 0));
     assertThat(Complex.parse("-1")).isEqualTo(new Complex(-1, 0));
@@ -123,6 +128,11 @@ suite.test("parse", () => {
     assertThat(Complex.parse("-5-2i")).isEqualTo(new Complex(-5, -2));
 
     assertThat(Complex.parse("\u221A2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
+
+    assertThat(Complex.parse("1e-10")).isEqualTo(new Complex(0.0000000001, 0));
+    assertThat(Complex.parse("1e+10")).isEqualTo(new Complex(10000000000, 0));
+    assertThat(Complex.parse("2.5e-10")).isEqualTo(new Complex(0.00000000025, 0));
+    assertThat(Complex.parse("2.5e+10")).isEqualTo(new Complex(25000000000, 0));
 });
 
 suite.test("norm2", () => {

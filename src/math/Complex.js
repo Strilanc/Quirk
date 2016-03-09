@@ -1,4 +1,6 @@
 import Format from "src/base/Format.js"
+import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /**
  * Represents a complex number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
@@ -136,33 +138,32 @@ class Complex {
      * @returns {!Complex}
      */
     static parse(text) {
-        var sums = text.split("+");
-        var total = Complex.ZERO;
-        for (var i = 0; i < sums.length; i++) {
-            var difs = sums[i].replace("e-", "e_minus").split("-");
+        let lowText = text.toLowerCase();
+        Util.need(text.trim().length !== 0, "Empty: " + text);
+        Util.need(lowText.indexOf("e_plus") === -1 && lowText.indexOf("e_minus") === -1, "Invalid: " + text);
 
-            for (var j = 0; j < difs.length; j++) {
-                var dif = difs[j].replace("e_minus", "e-");
-                if (j === 0 && dif === "") {
-                    continue;
-                }
+        return new Seq(lowText.replace("e+", "e_plus").replace("e-", "e_minus").split("+")).
+            flatMap(summand => new Seq(summand.split("-")).
+                mapWithIndex((rawDif, k) => {
+                    let dif = rawDif.replace("e_minus", "e-").replace("e_plus", "e+");
+                    if (k === 0 && dif === "") {
+                        // Unary negation.
+                        return Complex.ZERO;
+                    }
 
-                var isImaginaryPart = dif[dif.length - 1] === "i";
-                if (isImaginaryPart) {
-                    dif = dif.slice(0, dif.length - 1);
-                }
+                    let isImaginaryPart = dif[dif.length - 1] === "i";
+                    if (isImaginaryPart) {
+                        dif = dif.slice(0, dif.length - 1);
+                    }
 
-                var val = dif === "" ? 1 : Format.parseFloat(dif);
-                if (isNaN(val)) {
-                    throw "Not a float: '" + dif + "'";
-                }
-                var com = Complex.from(val).
-                    times(isImaginaryPart ? Complex.I : 1).
-                    times(j === 0 ? 1 : -1);
-                total = total.plus(com);
-            }
-        }
-        return total;
+                    let val = dif === "" ? 1 : Format.parseFloat(dif);
+                    Util.need(!isNaN(val), "Not a float: '" + dif + "'");
+                    return Complex.from(val).
+                        times(isImaginaryPart ? Complex.I : 1).
+                        times(k === 0 ? 1 : -1);
+                })
+            ).
+            aggregate(Complex.ZERO, (a, e) => a.plus(e));
     };
 
     /**
