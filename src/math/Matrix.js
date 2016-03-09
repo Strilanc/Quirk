@@ -594,6 +594,81 @@ class Matrix {
     }
 
     /**
+     * Returns the square matrix' determinant.
+     * @returns {!Complex}
+     */
+    determinant() {
+        Util.need(this.width() === this.height(), "Must be square");
+        let n = this.width();
+        if (n === 1) {
+            return this.cell(0, 0);
+        }
+        return Seq.range(n).
+            map(k => {
+                let cutColMatrix = Matrix.generate(n - 1, n - 1, (r, c) => this.cell(
+                    c + (c < k ? 0 : 1),
+                    r + 1));
+                return cutColMatrix.determinant().times(this.cell(k, 0)).times(Math.pow(-1, k));
+            }).
+            aggregate(Complex.ZERO, (a, e) => a.plus(e));
+    }
+
+    /**
+     * Given a single-qubit operation matrix U, finds φ, θ, and v=[x,y,z] that satisfy
+     * U = exp(i φ) (I cos(θ/2) + v σ i sin(θ/2))
+     *
+     * @returns {!{axis: !Array.<!number>, angle: !number, phase: !number}}
+     */
+    qubitOperationToAngleAxisRotation() {
+        Util.need(this.width() === 2 && this.height() === 2, "Need a 2x2 matrix.");
+        Util.need(this.isApproximatelyUnitary(0.00001), "Need a unitary matrix.");
+
+        // Extract orthogonal components, adjusting for factors of i.
+        let [[a, b],
+             [c, d]] = this.rows();
+        let wφ = a.plus(d);
+        let xφ = b.plus(c).dividedBy(Complex.I);
+        let yφ = b.minus(c);
+        let zφ = a.minus(d).dividedBy(Complex.I);
+
+        // Cancel global phase factor, pushing all values onto the real line.
+        let φ = new Seq([wφ, xφ, yφ, zφ]).maxBy(e => e.abs()).unit().times(2);
+        let w = wφ.dividedBy(φ).real;
+        let x = xφ.dividedBy(φ).real;
+        let y = yφ.dividedBy(φ).real;
+        let z = zφ.dividedBy(φ).real;
+        let θ = 2*Math.acos(w);
+
+        // Normalize axis.
+        let n = Math.sqrt(x*x + y*y + z*z);
+        if (n < 0.0000001) {
+            // There's an axis singularity near θ=0. Just default to no rotation around the X axis.
+            return {axis: [1, 0, 0], angle: 0, phase: φ.phase()};
+        }
+        x /= n;
+        y /= n;
+        z /= n;
+
+        // Prefer axes that point positive-ward.
+        if (x + y + z < 0) {
+            x = -x;
+            y = -y;
+            z = -z;
+            θ = -θ;
+        }
+
+        // Prefer θ in (-π, π].
+        if (θ <= Math.PI) {
+            θ += 2*Math.PI;
+        }
+        if (θ > Math.PI) {
+            θ -= 2*Math.PI;
+        }
+
+        return {axis: [x, y, z], angle: θ, phase: φ.phase()};
+    }
+
+    /**
      * Factors the matrix int u*s*v parts, where u and v are unitary matrices and s is a real diagonal matrix.
      * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
      */

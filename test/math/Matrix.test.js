@@ -517,3 +517,46 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     assertThat(Matrix.square([0.5, 0.5, 0.5, 0.5]).qubitDensityMatrixToBlochVector()).
         isEqualTo(Matrix.col([1, 0, 0]));
 });
+
+suite.test("determinant", () => {
+    assertThrows(() => Matrix.col([1, 2]).determinant());
+    assertThrows(() => Matrix.row([1, 2]).determinant());
+
+    assertThat(Matrix.square([1]).determinant()).isEqualTo(1);
+    assertThat(Matrix.square([2]).determinant()).isEqualTo(2);
+
+    assertThat(Matrix.square([1, 2, 3, 4]).determinant()).isEqualTo(-2);
+    assertThat(Matrix.square([2, 3, 5, 7]).determinant()).isEqualTo(-1);
+
+    assertThat(Matrix.square([1, 2, 3, 4, 5, 6, 7, 8, 9]).determinant()).isEqualTo(0);
+    assertThat(Matrix.square([2, 3, 5, 7, 11, 13, 17, 19, 23]).determinant()).isEqualTo(-78);
+});
+
+suite.test("qubitOperationToAngleAxisRotation", () => {
+    assertThrows(() => Matrix.col([1]).qubitOperationToAngleAxisRotation());
+    assertThrows(() => Matrix.square([1, 2, 3, 4]).qubitOperationToAngleAxisRotation());
+
+    let [w, x, y, z] = [Matrix.identity(2), Matrix.PAULI_X, Matrix.PAULI_Y, Matrix.PAULI_Z];
+    let π = Math.PI;
+    let i = Complex.I;
+    let s = Math.sqrt(0.5);
+
+    assertThat(w.qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: 0});
+    assertThat(x.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: -π/2});
+    assertThat(y.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: -π/2});
+    assertThat(z.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: -π/2});
+
+    assertThat(w.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: π/2});
+    assertThat(x.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: 0});
+    assertThat(y.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: 0});
+    assertThat(z.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: 0});
+
+    assertThat(Matrix.HADAMARD.qubitOperationToAngleAxisRotation()).
+        isEqualTo({angle: π, axis: [s, 0, s], phase: -π/2});
+    assertThat(Matrix.square([1, i, i, 1]).scaledBy(s).qubitOperationToAngleAxisRotation()).
+        isEqualTo({angle: π/2, axis: [1, 0, 0], phase: 0});
+    assertThat(Matrix.square([s, s, -s, s]).qubitOperationToAngleAxisRotation()).
+        isEqualTo({angle: π/2, axis: [0, 1, 0], phase: 0});
+    assertThat(Matrix.square([1, 0, 0, i]).qubitOperationToAngleAxisRotation()).
+        isEqualTo({angle: -π/2, axis: [0, 0, 1], phase: π/4});
+});
