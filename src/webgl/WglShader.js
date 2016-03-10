@@ -1,3 +1,4 @@
+import Config from "src/Config.js"
 import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglTexture from "src/webgl/WglTexture.js"
@@ -99,8 +100,9 @@ class WglShaderContext {
         g.attachShader(program, glFragmentShader);
         g.linkProgram(program);
 
-        if (g.getProgramInfoLog(program) !== '') {
-            console.warn('gl.getProgramInfoLog()', g.getProgramInfoLog(program));
+        let warnings = g.getProgramInfoLog(program);
+        if (warnings !== '' && Config.SUPPRESSED_GLSL_WARNING_PATTERNS.every(e => !e.test(warnings))) {
+            console.warn('gl.getProgramInfoLog()', warnings);
         }
 
         if (g.getProgramParameter(program, s.LINK_STATUS) === false) {
