@@ -72,6 +72,17 @@ class Complex {
     };
 
     /**
+     * Returns a complex number with the given magnitude and phase.
+     * @param {!number} magnitude
+     * @param {!number} phase
+     * @returns {!Complex}
+     */
+    static polar(magnitude, phase) {
+        let [cos, sin] = Util.snappedCosSin(phase);
+        return new Complex(magnitude*cos, magnitude*sin);
+    }
+
+    /**
      * Returns the real component of a Complex, integer, or float value.
      * @param {!number|!Complex} v
      * @returns {!number}
@@ -207,8 +218,7 @@ class Complex {
     unit() {
         var m = this.norm2();
         if (m < 0.00001) {
-            var theta = this.phase();
-            return new Complex(Math.cos(theta), -Math.sin(theta));
+            return Complex.polar(1, this.phase());
         }
         return this.dividedBy(Math.sqrt(m));
     };
@@ -272,7 +282,7 @@ class Complex {
         }
 
         let a = this.phase() / 2;
-        let c = new Complex(m * Math.cos(a), m * Math.sin(a));
+        let c = Complex.polar(m, a);
         return [c, c.times(-1)];
     }
 
@@ -281,8 +291,7 @@ class Complex {
      * @returns {!Complex}
      */
     exp() {
-        let [m, c, s] = [Math.exp(this.real), Math.cos(this.imag), Math.sin(this.imag)];
-        return new Complex(m*c, m*s);
+        return Complex.polar(Math.exp(this.real), this.imag);
     }
 
     /**
@@ -312,7 +321,7 @@ class Complex {
 
         if (a.isEqualTo(0)) {
             if (!b.isEqualTo(0)) {
-                return [-c / b];
+                return [c.times(-1).dividedBy(b)];
             }
             if (!c.isEqualTo(0)) {
                 return [];

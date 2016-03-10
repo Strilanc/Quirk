@@ -269,3 +269,29 @@ suite.test("recomposedObjectValues", () => {
         isEqualTo({a: ["a", ["b", "c"], "d"]});
     assertThat(Util.recomposedObjectValues({a: [1, [], 3]}, ["a", "b"])).isEqualTo({a: ["a", [], "b"]});
 });
+
+suite.test("snappedCosSin", () => {
+    let r = Math.PI/4;
+    let s = Math.sqrt(0.5);
+
+    assertThat(Util.snappedCosSin(0.123)).isEqualTo([Math.cos(0.123), Math.sin(0.123)]);
+
+    assertThat(Util.snappedCosSin(0)).isEqualTo([1, 0]);
+    assertThat(Util.snappedCosSin(r)).isEqualTo([s, s]);
+    assertThat(Util.snappedCosSin(2*r)).isEqualTo([0, 1]);
+    assertThat(Util.snappedCosSin(3*r)).isEqualTo([-s, s]);
+    assertThat(Util.snappedCosSin(4*r)).isEqualTo([-1, 0]);
+    assertThat(Util.snappedCosSin(5*r)).isEqualTo([-s, -s]);
+    assertThat(Util.snappedCosSin(6*r)).isEqualTo([0, -1]);
+    assertThat(Util.snappedCosSin(7*r)).isEqualTo([s, -s]);
+    assertThat(Util.snappedCosSin(8*r)).isEqualTo([1, 0]);
+
+    assertThat(Util.snappedCosSin(-8*r)).isEqualTo([1, 0]);
+    assertThat(Util.snappedCosSin(-7*r)).isEqualTo([s, s]);
+    assertThat(Util.snappedCosSin(-6*r)).isEqualTo([0, 1]);
+    assertThat(Util.snappedCosSin(-5*r)).isEqualTo([-s, s]);
+    assertThat(Util.snappedCosSin(-4*r)).isEqualTo([-1, 0]);
+    assertThat(Util.snappedCosSin(-3*r)).isEqualTo([-s, -s]);
+    assertThat(Util.snappedCosSin(-2*r)).isEqualTo([0, -1]);
+    assertThat(Util.snappedCosSin(-1*r)).isEqualTo([s, -s]);
+});

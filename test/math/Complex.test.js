@@ -24,6 +24,25 @@ suite.test("isEqualTo", () => {
     assertThat(new Complex(0, 2.5)).isNotEqualTo(2.5);
 });
 
+suite.test("polar", () => {
+    assertThat(Complex.polar(0, 0)).isEqualTo(0);
+    assertThat(Complex.polar(0, 2)).isEqualTo(0);
+    assertThat(Complex.polar(0, -5)).isEqualTo(0);
+
+    assertThat(Complex.polar(1, 0)).isEqualTo(1);
+    assertThat(Complex.polar(2, 0)).isEqualTo(2);
+
+    assertThat(Complex.polar(1, Math.PI)).isEqualTo(-1);
+    assertThat(Complex.polar(1, 3*Math.PI)).isEqualTo(-1);
+    assertThat(Complex.polar(1, -Math.PI)).isEqualTo(-1);
+
+    assertThat(Complex.polar(1, Math.PI/2)).isEqualTo(Complex.I);
+    assertThat(Complex.polar(1, 3*Math.PI/2)).isEqualTo(Complex.I.times(-1));
+
+    assertThat(Complex.polar(1, Math.PI/4)).isEqualTo(new Complex(Math.sqrt(0.5), Math.sqrt(0.5)));
+    assertThat(Complex.polar(Math.sqrt(2), Math.PI/4)).isApproximatelyEqualTo(new Complex(1, 1));
+});
+
 suite.test("isApproximatelyEqualTo", () => {
     var c = new Complex(5, 7);
     assertThat(c).isApproximatelyEqualTo(c, 0);
@@ -239,23 +258,39 @@ suite.test("sqrts", () => {
 });
 
 suite.test("rootsOfQuadratic", () => {
+    // Infinitely many solutions.
     assertThrows(() => Complex.rootsOfQuadratic(0, 0, 0));
 
+    // No solutions.
     assertThat(Complex.rootsOfQuadratic(0, 0, 1)).isEqualTo([]);
+    assertThat(Complex.rootsOfQuadratic(0, 0, Complex.I)).isEqualTo([]);
 
+    // Single solutions due to degenerate linear case.
+    assertThat(Complex.rootsOfQuadratic(0, 1, 1)).isEqualTo([-1]);
+    assertThat(Complex.rootsOfQuadratic(0, Complex.I, Complex.I)).isEqualTo([-1]);
+    assertThat(Complex.rootsOfQuadratic(0, 2, 3)).isEqualTo([-1.5]);
+
+    // Single solution due to root multiplicity.
+    assertThat(Complex.rootsOfQuadratic(1, 0, 0)).isEqualTo([0]);
+    assertThat(Complex.rootsOfQuadratic(1, 2, 1)).isEqualTo([-1]);
+
+    // Two mirrored solutions.
     assertThat(Complex.rootsOfQuadratic(1, 0, 4)).isEqualTo([new Complex(0, -2), new Complex(0, 2)]);
     assertThat(Complex.rootsOfQuadratic(1, 0, 1)).isEqualTo([new Complex(0, -1), new Complex(0, 1)]);
-    assertThat(Complex.rootsOfQuadratic(1, 0, 0)).isEqualTo([0]);
     assertThat(Complex.rootsOfQuadratic(1, 0, -1)).isEqualTo([-1, 1]);
     assertThat(Complex.rootsOfQuadratic(1, 0, -4)).isEqualTo([-2, 2]);
 
+    // Two solutions. General.
     assertThat(Complex.rootsOfQuadratic(1, 1, 0)).isEqualTo([-1, 0]);
     assertThat(Complex.rootsOfQuadratic(1, 7, 12)).isEqualTo([-4, -3]);
     assertThat(Complex.rootsOfQuadratic(2, 14, 24)).isEqualTo([-4, -3]);
 
+    // Complex coefficient.
     let s = Math.sqrt(0.5);
     assertThat(Complex.rootsOfQuadratic(1, 0, new Complex(0, -1))).
         isApproximatelyEqualTo([new Complex(-s, -s), new Complex(s, s)]);
+    assertThat(Complex.rootsOfQuadratic(new Complex(2, 3), new Complex(5, 7), new Complex(11, 13))).
+        isApproximatelyEqualTo([new Complex(-1.06911, 1.85157), new Complex(-1.31551, -1.77465)], 0.0001);
 });
 
 suite.test("rootsOfQuadratic_fuzz", () => {
