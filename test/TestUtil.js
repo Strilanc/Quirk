@@ -102,9 +102,10 @@ export class AssertionSubject {
     /**
      * @param {*} subject
      * @param {*} id
+     * @param {*} info
      * @property {*} subject
      */
-    constructor(subject, id=undefined) {
+    constructor(subject, id=undefined, info=undefined) {
         sanityCheck(subject);
 
         /**
@@ -116,10 +117,20 @@ export class AssertionSubject {
          * @type {*}
          */
         this.id = id;
+        /**
+         * @type {*}
+         */
+        this.info = info;
+    }
+
+    withInfo(newInfo) {
+        return new AssertionSubject(this.subject, this.id, newInfo);
     }
 
     _fail(message) {
-        fail(this.id === undefined ? message : message + ` (${this.id})`);
+        let idMessage = this.id === undefined ? message : `${message} (${this.id})`;
+        let infoMessage = this.info === undefined ? idMessage : `${idMessage} (info: ${describe(this.info)})`;
+        fail(infoMessage);
     }
 
     iteratesAs(...items) {

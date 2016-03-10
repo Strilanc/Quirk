@@ -447,7 +447,8 @@ class Matrix {
                       Matrix.PAULI_Z.scaledBy(z));
 
         /** @type {!Complex} */
-        let ci = new Complex(1 + Math.cos(s * theta), Math.sin(s * theta)).times(0.5);
+        let [cos, sin] = Util.snappedCosSin(s * theta);
+        let ci = new Complex(1 + cos, sin).times(0.5);
         /** @type {!Complex} */
         let cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
 
@@ -632,7 +633,7 @@ class Matrix {
 
         // Cancel global phase factor, pushing all values onto the real line.
         let φ = new Seq([wφ, xφ, yφ, zφ]).maxBy(e => e.abs()).unit().times(2);
-        let w = wφ.dividedBy(φ).real;
+        let w = Math.min(1, Math.max(-1, wφ.dividedBy(φ).real));
         let x = xφ.dividedBy(φ).real;
         let y = yφ.dividedBy(φ).real;
         let z = zφ.dividedBy(φ).real;
@@ -657,14 +658,32 @@ class Matrix {
         }
 
         // Prefer θ in (-π, π].
-        if (θ <= Math.PI) {
-            θ += 2*Math.PI;
-        }
         if (θ > Math.PI) {
             θ -= 2*Math.PI;
+            φ = φ.times(-1);
         }
 
         return {axis: [x, y, z], angle: θ, phase: φ.phase()};
+    }
+
+    /**
+     * Returns the matrix U = exp(i φ) (I cos(θ/2) + v σ i sin(θ/2)).
+     * @param {!number} angle
+     * @param {!Array.<!number>} axis
+     * @param {!number} phase
+     * @returns {!Matrix}
+     */
+    static fromAngleAxisPhaseRotation(angle, axis, phase) {
+        let [x, y, z] = axis;
+        Util.need(Math.abs(x*x+y*y+z*z - 1) < 0.000001, "Not a unit axis.");
+
+        let vσ = Matrix.PAULI_X.scaledBy(x).
+            plus(Matrix.PAULI_Y.scaledBy(y)).
+            plus(Matrix.PAULI_Z.scaledBy(z));
+        let [cos, sin] = Util.snappedCosSin(angle/2);
+        return Matrix.identity(2).scaledBy(cos).
+            plus(vσ.scaledBy(new Complex(0, sin))).
+            scaledBy(Complex.polar(1, phase));
     }
 
     /**

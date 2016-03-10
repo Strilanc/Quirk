@@ -220,7 +220,7 @@ export default class MathPainter {
         let u = Math.min(drawArea.w, drawArea.h) / 2;
         let projMatrix = Matrix.fromRows([
             [-u, 0],
-            [u / 3, -u / 3],
+            [-u / 3, u / 3],
             [0, u]]).adjoint();
         let projToPt = col => {
             let p = projMatrix.times(col);
@@ -259,7 +259,7 @@ export default class MathPainter {
         // Find perpendicular axes, for drawing the rotation arrow circles.
         let norm = e => Math.sqrt(e.adjoint().times(e).cell(0, 0).real);
         let perpVec1 = new Seq(axes).
-            mapWithIndex((a, i) => i !== 1 ? a.scaledBy(0.75) : a). // Prefer not-Y as primary.
+            mapWithIndex((a, i) => a.scaledBy([2, -3, 1][i])). // Prioritize/orient axes to look good.
             map(a => axisVec.cross3(a)).
             maxBy(norm);
         let perpVec2 = axisVec.cross3(perpVec1);

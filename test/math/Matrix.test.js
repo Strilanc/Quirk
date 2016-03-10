@@ -532,6 +532,46 @@ suite.test("determinant", () => {
     assertThat(Matrix.square([2, 3, 5, 7, 11, 13, 17, 19, 23]).determinant()).isEqualTo(-78);
 });
 
+suite.test("fromAngleAxisPhaseRotation", () => {
+    let π = Math.PI;
+    let i = Complex.I;
+    let s = Math.sqrt(0.5);
+    let is = Complex.I.times(s);
+    let mi = Complex.I.times(-1);
+
+    // No-op.
+    assertThat(Matrix.fromAngleAxisPhaseRotation(0, [1, 0, 0], 0)).isEqualTo(Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(0, [0, 1, 0], 0)).isEqualTo(Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(0, [0, 0, 1], 0)).isEqualTo(Matrix.square([1, 0, 0, 1]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(0, [s, 0, s], 0)).isEqualTo(Matrix.square([1, 0, 0, 1]));
+
+    // Phase.
+    assertThat(Matrix.fromAngleAxisPhaseRotation(0, [1, 0, 0], π/2)).isEqualTo(Matrix.square([i, 0, 0, i]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(0, [1, 0, 0], π)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
+
+    // X.
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [1, 0, 0], 0)).isEqualTo(Matrix.square([s, is, is, s]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [1, 0, 0], 0)).isEqualTo(Matrix.square([0, i, i, 0]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(2*π, [1, 0, 0], 0)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
+
+    // Y.
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [0, 1, 0], 0)).isEqualTo(Matrix.square([s, s, -s, s]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [0, 1, 0], 0)).isEqualTo(Matrix.square([0, 1, -1, 0]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(2*π, [0, 1, 0], 0)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
+
+    // Z.
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [0, 0, 1], 0)).
+        isEqualTo(Matrix.square([new Complex(s, s), 0, 0, new Complex(s, -s)]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [0, 0, 1], 0)).isEqualTo(Matrix.square([i, 0, 0, mi]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(2*π, [0, 0, 1], 0)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
+
+    // H.
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [s, 0, s], 0)).
+        isEqualTo(Matrix.square([is, is, is, is.times(-1)]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [s, 0, s], -π/2)).
+        isEqualTo(Matrix.square([s, s, s, -s]));
+});
+
 suite.test("qubitOperationToAngleAxisRotation", () => {
     assertThrows(() => Matrix.col([1]).qubitOperationToAngleAxisRotation());
     assertThrows(() => Matrix.square([1, 2, 3, 4]).qubitOperationToAngleAxisRotation());
@@ -559,6 +599,24 @@ suite.test("qubitOperationToAngleAxisRotation", () => {
         isEqualTo({angle: π/2, axis: [0, 1, 0], phase: 0});
     assertThat(Matrix.square([1, 0, 0, i]).qubitOperationToAngleAxisRotation()).
         isEqualTo({angle: -π/2, axis: [0, 0, 1], phase: π/4});
+});
+
+suite.test("qubitOperationToAngleAxisRotation_vs_fromAngleAxisPhaseRotation_randomized", () => {
+    for (let _ of Seq.range(100)) {
+        let phase = Math.random() * Math.PI * 2;
+        let angle = Math.random() * Math.PI * 4;
+        let a = Math.random() * Math.PI * 2;
+        let b = Math.acos(Math.random() * 2 - 1);
+        let axis = [
+            Math.cos(a)*Math.sin(b),
+            Math.sin(a)*Math.sin(b),
+            Math.cos(b)
+        ];
+        let U = Matrix.fromAngleAxisPhaseRotation(angle, axis, phase);
+        let {angle: angle2, axis: axis2, phase: phase2} = U.qubitOperationToAngleAxisRotation();
+        let U2 = Matrix.fromAngleAxisPhaseRotation(angle2, axis2, phase2);
+        assertThat(U2).withInfo({angle, axis, phase}).isApproximatelyEqualTo(U);
+    }
 });
 
 suite.test("cross3", () => {
