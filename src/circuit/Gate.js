@@ -15,11 +15,12 @@ class Gate {
      * @param {!Matrix|!function(!number): !Matrix} matrixOrFunc The operation the gate applies.
      * @param {!string} name A helpful human-readable name for the operation.
      * @param {!string} blurb A helpful description of what the operation does.
-     * @param {!string} details A helpful description of what the operation does.
      * @param {!function(!GateDrawParams) : void} drawer
      * @param tag Associated data.
      */
-    constructor(symbol, matrixOrFunc, name, blurb, details, drawer, tag = undefined) {
+    constructor(symbol, matrixOrFunc, name, blurb, drawer, tag = undefined) {
+        Util.need(typeof drawer == "function", name + "'s drawer isn't a function");
+
         /** @type {!string} */
         this.symbol = symbol;
         /** @type {!Matrix|!function(!number): !Matrix} */
@@ -28,8 +29,6 @@ class Gate {
         this.name = name;
         /** @type {!string} */
         this.blurb = blurb;
-        /** @type {!string} */
-        this.details = details;
         /** @type {!function(*)} */
         this.drawer = drawer;
         this.tag = tag;
@@ -54,8 +53,8 @@ class Gate {
                 this.matrixOrFunc === other.matrixOrFunc) &&
             this.name === other.name &&
             this.blurb === other.blurb &&
-            this.details === other.details &&
             this.symbol === other.symbol &&
+            this.tag === other.tag &&
             this.drawer === other.drawer;
     }
 

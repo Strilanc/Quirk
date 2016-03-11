@@ -116,8 +116,8 @@ class ToolboxWidget {
         let f = this.findGateAt(hand.pos);
         if (f !== null && (!hand.isBusy() || hand.heldGates.isEqualTo(new GateColumn([f.gate])))) {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
-            let hintRect = new Rect(gateRect.right() + 1, gateRect.bottom() + 1, 500, 200).
-                snapInside(painter.paintableArea().skipTop(gateRect.bottom()));
+            let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
+                snapInside(painter.paintableArea().skipTop(gateRect.y));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
         }
 

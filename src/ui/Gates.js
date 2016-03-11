@@ -17,8 +17,8 @@ Gates.Named = {
             "•",
             Matrix.CONTROL,
             "Control",
-            "Conditions on a qubit being ON.",
-            "Stuff in the same column will only apply to parts of the superposition where the control qubit is ON.",
+            "Conditions on a qubit being ON.\n" +
+                "Gates in the same column will only apply to states meeting the condition.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -30,8 +30,8 @@ Gates.Named = {
             "◦",
             Matrix.ANTI_CONTROL,
             "Anti-Control",
-            "Conditions on a qubit being OFF.",
-            "Stuff in the same column will only apply to parts of the superposition where the control qubit is OFF.",
+            "Conditions on a qubit being OFF.\n" +
+                "Gates in the same column will only apply to states meeting the condition.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -45,8 +45,8 @@ Gates.Named = {
             "Chance",
             Matrix.identity(2),
             "Probability Display",
-            "No effect. Shows the chance that measuring a wire would return ON.",
-            "Use controls to see the conditional probability P(target GIVEN controls).",
+            "Shows the chance that measuring a wire would return ON.\n" +
+                "Use controls to see conditional probabilities.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
@@ -64,8 +64,8 @@ Gates.Named = {
             "Bloch",
             Matrix.identity(2),
             "Bloch Sphere Display",
-            "No effect. Shows a wire's state as a point on the Bloch Sphere.",
-            "Use controls to see the conditional mixed state ρ(targets GIVEN controls).",
+            "Shows a wire's local state as a point on the Bloch Sphere.\n" +
+                "Use controls to see conditional states.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
@@ -81,9 +81,8 @@ Gates.Named = {
             "Density",
             Matrix.identity(2),
             "Density Matrix Display",
-            "No effect. Shows a wire's state as a density matrix.",
-            "Place on multiple wires in the same column to see a combined density matrix. " +
-                "Use controls to see the conditional mixed state ρ(targets GIVEN controls).",
+            "Shows a wire's local state as a density matrix.\n" +
+                "Use controls to see conditional states.",
             args => {
                 if (args.positionInCircuit === null || args.isHighlighted) {
                     GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
@@ -99,8 +98,7 @@ Gates.Named = {
             "Measure",
             Matrix.identity(2),
             "Measurement Gate",
-            "Measures a qubit in the computational basis, along the Z axis.",
-            "",
+            "Measures a wire in the computational basis, along the Z axis.",
             args => {
                 let backColor = Config.GATE_FILL_COLOR;
                 if (args.isHighlighted) {
@@ -135,8 +133,8 @@ Gates.Named = {
                 0, 1, 0, 0,
                 0, 0, 0, 1]),
             "Swap Gate [Half]",
-            "Swaps the values of two qubits.",
-            "Place two swap gate halves in the same column to form a swap gate.",
+            "Swaps the values of two qubits.\n" +
+                "Place two swap gate halves in the same column to form a swap gate.",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     GateFactory.DEFAULT_DRAWER(args);
@@ -155,7 +153,6 @@ Gates.Named = {
             Matrix.fromPauliRotation(0.25, 0, 0),
             "Half X Gate (+)",
             "Principle Square Root of Not",
-            "A +90° turn around the Bloch Sphere's X axis.",
             GateFactory.POWER_DRAWER),
 
         Up: new Gate(
@@ -163,7 +160,6 @@ Gates.Named = {
             Matrix.fromPauliRotation(0.75, 0, 0),
             "Half X Gate (-)",
             "Adjoint Square Root of Not",
-            "A -90° turn around the Bloch Sphere's X axis.",
             GateFactory.POWER_DRAWER),
 
         Right: new Gate(
@@ -171,7 +167,6 @@ Gates.Named = {
             Matrix.fromPauliRotation(0, 0.25, 0),
             "Half Y Gate (+)",
             "Principle Square Root of Y.",
-            "A +90° turn around the Bloch Sphere's Y axis.",
             GateFactory.POWER_DRAWER),
 
         Left: new Gate(
@@ -179,7 +174,6 @@ Gates.Named = {
             Matrix.fromPauliRotation(0, 0.75, 0),
             "Half Y Gate (-)",
             "Adjoint Square Root of Y.",
-            "A -90° turn around the Bloch Sphere's Y axis.",
             GateFactory.POWER_DRAWER),
 
         CounterClockwise: new Gate(
@@ -187,8 +181,6 @@ Gates.Named = {
             Matrix.fromPauliRotation(0, 0, 0.25),
             "Half Z Gate (+) ['S' gate]",
             "Principle Square Root of Z.",
-            "Phases ON by a factor of i, without affecting OFF. " +
-                "A +90° turn around the Bloch Sphere's Z axis.",
             GateFactory.POWER_DRAWER),
 
         Clockwise: new Gate(
@@ -196,8 +188,45 @@ Gates.Named = {
             Matrix.fromPauliRotation(0, 0, 0.75),
             "Half Z Gate (-)",
             "Adjoint Square Root of Z.",
-            "Phases ON by a factor of -i, without affecting OFF. " +
-                "A +90° turn around the Bloch Sphere's Z axis.",
+            GateFactory.POWER_DRAWER)
+    },
+
+    OtherZ: {
+        Z3: new Gate(
+            "Z^+⅓",
+            Matrix.fromPauliRotation(0, 0, 1 / 6),
+            "Z^+⅓ Gate",
+            "Principle third root of Z.",
+            GateFactory.POWER_DRAWER),
+        Z3i: new Gate(
+            "Z^-⅓",
+            Matrix.fromPauliRotation(0, 0, -1 / 6),
+            "Z^-⅓ Gate",
+            "Adjoint third root of Z.",
+            GateFactory.POWER_DRAWER),
+        Z4: new Gate(
+            "Z^+¼",
+            Matrix.fromPauliRotation(0, 0, 1 / 8),
+            "Z^+¼ Gate",
+            "Principle fourth root of Z.",
+            GateFactory.POWER_DRAWER),
+        Z4i: new Gate(
+            "Z^-¼",
+            Matrix.fromPauliRotation(0, 0, -1 / 8),
+            "Z^-¼ Gate",
+            "Adjoint fourth root of Z.",
+            GateFactory.POWER_DRAWER),
+        Z8: new Gate(
+            "Z^+⅛",
+            Matrix.fromPauliRotation(0, 0, 1 / 16),
+            "Z^+⅛ Gate",
+            "Principle eighth root of Z.",
+            GateFactory.POWER_DRAWER),
+        Z8i: new Gate(
+            "Z^-⅛",
+            Matrix.fromPauliRotation(0, 0, -1 / 16),
+            "Z^-⅛ Gate",
+            "Adjoint eighth root of Z.",
             GateFactory.POWER_DRAWER)
     },
 
@@ -207,7 +236,6 @@ Gates.Named = {
             Matrix.PAULI_X,
             "NOT Gate [Pauli X Gate]",
             "Toggles between ON and OFF.",
-            "A 180° turn around the Bloch Sphere's X axis.",
             args => {
                 let hasSingleWireControl =
                     args.positionInCircuit !== null &&
@@ -244,7 +272,6 @@ Gates.Named = {
             Matrix.PAULI_Y,
             "Pauli Y Gate",
             "A combination of the X and Z gates.",
-            "A 180° turn around the Bloch Sphere's Y axis.",
             GateFactory.DEFAULT_DRAWER),
 
         Z: new Gate(
@@ -252,117 +279,106 @@ Gates.Named = {
             Matrix.PAULI_Z,
             "Phase Flip Gate [Pauli Z Gate]",
             "Negates the amplitude of states where the qubit is ON.",
-            "A 180° turn around the Bloch Sphere's Z axis.",
             GateFactory.DEFAULT_DRAWER),
 
         H: new Gate(
             "H",
             Matrix.HADAMARD,
             "Hadamard Gate",
-            "Creates/cancels uniform superpositions.",
-            "Toggles between ON and ON+OFF; also toggles between OFF and ON-OFF. " +
-                "A 180° turn around the Bloch Sphere's diagonal X+Z axis. " +
-                "Useful for creating uniform superpositions of all states.",
+            "The simplest non-classical gate.\n" +
+                "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.",
             GateFactory.DEFAULT_DRAWER)
     },
     Exponentiating: {
         ExpiX: new Gate(
             "e^+iXt",
             t => Matrix.PAULI_X.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
-            "Exponentiating X Gate",
-            "A gradual spin around the Bloch Sphere's X axis",
-            "Never actually equals X, due to the accumulating phase caused by the matrix exponentiation.",
+            "X-Exponentiating Gate",
+            "A gradual spin around the Bloch Sphere's X axis.\n" +
+                "Passes through iX instead of X.",
             GateFactory.CYCLE_DRAWER),
 
         AntiExpiX: new Gate(
             "e^-iXt",
             t => Matrix.PAULI_X.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
-            "Inverse Exponentiating X Gate",
-            "A gradual counter-spin around the Bloch Sphere's X axis",
-            "Never actually equals X, due to the accumulating phase caused by the matrix exponentiation.",
+            "Inverse X-Exponentiating Gate",
+            "A gradual counter-spin around the Bloch Sphere's X axis.\n" +
+                "Passes through iX instead of X.",
             GateFactory.CYCLE_DRAWER),
 
         ExpiY: new Gate(
             "e^+iYt",
             t => Matrix.PAULI_Y.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
-            "Exponentiating Y Gate",
-            "A gradual spin around the Bloch Sphere's Y axis",
-            "Corresponds to real 2x2 rotation matrices. " +
-                "Never actually equals Y, due to the accumulating phase caused by the matrix exponentiation.",
+            "Y-Exponentiating Gate",
+            "A gradual spin around the Bloch Sphere's Y axis.\n" +
+                "Corresponds to real 2x2 rotation matrices, and passes through iY instead of Y.",
             GateFactory.CYCLE_DRAWER),
 
         AntiExpiY: new Gate(
             "e^-iYt",
             t => Matrix.PAULI_Y.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
-            "Inverse Exponentiating Y Gate",
-            "A gradual counter-spin around the Bloch Sphere's Y axis",
-            "Corresponds to real 2x2 rotation matrices. " +
-                "Never actually equals Y, due to the accumulating phase caused by the matrix exponentiation.",
+            "Inverse Y-Exponentiating Gate",
+            "A gradual counter-spin around the Bloch Sphere's Y axis.\n" +
+                "Corresponds to real 2x2 rotation matrices, and passes through iY instead of Y.",
             GateFactory.CYCLE_DRAWER),
 
         ExpiZ: new Gate(
             "e^+iZt",
             t => Matrix.PAULI_Z.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
-            "Exponentiating Z Gate",
-            "A gradual spin around the Bloch Sphere's Z axis",
-            "Never actually equals Z, due to the accumulating phase caused by the matrix exponentiation.",
+            "Z-Exponentiating Gate",
+            "A gradual spin around the Bloch Sphere's Z axis.\n" +
+                "Passes through iZ instead of Z.",
             GateFactory.CYCLE_DRAWER),
 
         AntiExpiZ: new Gate(
             "e^-iZt",
             t => Matrix.PAULI_Z.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
-            "Inverse Exponentiating Z Gate",
-            "A gradual counter-spin around the Bloch Sphere's Z axis",
-            "Never actually equals Z, due to the accumulating phase caused by the matrix exponentiation.",
+            "Inverse Z-Exponentiating Gate",
+            "A gradual counter-spin around the Bloch Sphere's Z axis.\n" +
+                "Passes through iZ instead of Z.",
             GateFactory.CYCLE_DRAWER)
     },
     Powering: {
         X: new Gate(
             "X^t",
             t => Matrix.PAULI_X.liftApply(c => c.raisedTo(t * 2)),
-            "Evolving X Gate",
-            "Interpolates between no-op and the Not Gate over time.",
-            "Performs a continuous phase-corrected rotation around the Bloch Sphere's X axis.",
+            "X-Raising Gate",
+            "A gradual cycle between the X gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         AntiX: new Gate(
             "X^-t",
             t => Matrix.PAULI_X.liftApply(c => c.raisedTo(-t * 2)),
-            "Evolving Anti X Gate",
-            "Interpolates between no-op and the Not Gate over time.",
-            "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's X axis.",
+            "Inverse X-Raising Gate",
+            "A gradual cycle between the X gate and no-op, in reverse.",
             GateFactory.CYCLE_DRAWER),
 
         Y: new Gate(
             "Y^t",
             t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(t * 2)),
-            "Evolving Y Gate",
-            "Interpolates between no-op and the Pauli Y Gate over time.",
-            "Performs a continuous phase-corrected rotation around the Bloch Sphere's Y axis.",
+            "Y-Raising Gate",
+            "A gradual cycle between the Y gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         AntiY: new Gate(
             "Y^-t",
             t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(-t * 2)),
-            "Evolving Anti Y Gate",
-            "Interpolates between no-op and the Pauli Y Gate over time.",
-            "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Y axis.",
+            "Inverse Y-Raising Gate",
+            "A gradual cycle between the Y gate and no-op, in reverse.",
             GateFactory.CYCLE_DRAWER),
 
         Z: new Gate(
             "Z^t",
             t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(t * 2)),
-            "Evolving Z Gate",
-            "Interpolates between no-op and the Phase Flip Gate over time.",
-            "Performs a continuous phase-corrected rotation around the Bloch Sphere's Z axis.",
+            "Z-Raising Gate",
+            "A gradual cycle between the Z gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         AntiZ: new Gate(
             "Z^-t",
             t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(-t * 2)),
-            "Evolving Anti Z Gate",
-            "Interpolates between no-op and the Phase Flip Gate over time.",
-            "Performs a continuous phase-corrected counter rotation around the Bloch Sphere's Z axis.",
+            "Inverse Z-Raising Gate",
+            "A gradual cycle between the Z gate and no-op, in reverse.",
             GateFactory.CYCLE_DRAWER)
     },
     Silly: {
@@ -376,24 +392,22 @@ Gates.Named = {
                 new Complex(Math.random() - 0.5, Math.random() - 0.5)
             ]).closestUnitary(),
             "Fuzz Gate",
-            "Changes every time you grab a new one.",
-            "",
+            "Every time you grab this out of the toolbox, you get a different random gate.\n" +
+                "Duplicate gates in the circuit by holding shift before dragging.",
             GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
 
         POST_SELECT_OFF: new Gate(
             "|0⟩⟨0|",
             Matrix.square([1, 0, 0, 0]),
             "Post-selection Gate [Off]",
-            "Keeps OFF states, discards ON states, and renormalizes.",
-            "Search terms: PostBQP, Quantum Suicide, Weak Measurement.",
+            "Keeps OFF states, discards ON states, and renormalizes.\n",
             GateFactory.POST_SELECT_DRAWER),
 
         POST_SELECT_ON: new Gate(
             "|1⟩⟨1|",
             Matrix.square([0, 0, 0, 1]),
             "Post-selection Gate [On]",
-            "Keeps ON states, discards OFF states, and renormalizes.",
-            "Search terms: PostBQP, Quantum Suicide, Weak Measurement.",
+            "Keeps ON states, discards ON states, and renormalizes.\n",
             GateFactory.POST_SELECT_DRAWER),
 
         CLOCK: new Gate(
@@ -401,7 +415,6 @@ Gates.Named = {
             t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
             "Clock Pulse Gate",
             "Xors a square wave into the target wire.",
-            "",
             GateFactory.SQUARE_WAVE_DRAWER_MAKER(0)),
 
         CLOCK_QUARTER_PHASE: new Gate(
@@ -409,7 +422,6 @@ Gates.Named = {
             t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
             "Clock Pulse Gate (Quarter Phase)",
             "Xors a quarter-phased square wave into the target wire.",
-            "",
             GateFactory.SQUARE_WAVE_DRAWER_MAKER(0.75)),
 
         SPACER: new Gate(
@@ -417,7 +429,6 @@ Gates.Named = {
             Matrix.identity(2),
             "Spacer",
             "A gate with no effect.",
-            "Only useful for affecting the auto-layout of the circuit",
             args => {
                 if (args.isInToolbox || args.isHighlighted) {
                     let backColor = Config.GATE_FILL_COLOR;
@@ -499,12 +510,12 @@ Gates.Sets = [
     {
         hint: "Other Z",
         gates: [
-            GateFactory.fromPauliRotation(0, 0, 1 / 6, "Z^+⅓"),
-            GateFactory.fromPauliRotation(0, 0, 1 / 8, "Z^+¼"),
-            GateFactory.fromPauliRotation(0, 0, 1 / 16, "Z^+⅛"),
-            GateFactory.fromPauliRotation(0, 0, -1 / 6, "Z^-⅓"),
-            GateFactory.fromPauliRotation(0, 0, -1 / 8, "Z^-¼"),
-            GateFactory.fromPauliRotation(0, 0, -1 / 16, "Z^-⅛")
+            Gates.Named.OtherZ.Z3,
+            Gates.Named.OtherZ.Z4,
+            Gates.Named.OtherZ.Z8,
+            Gates.Named.OtherZ.Z3i,
+            Gates.Named.OtherZ.Z4i,
+            Gates.Named.OtherZ.Z8i
         ]
     },
     {

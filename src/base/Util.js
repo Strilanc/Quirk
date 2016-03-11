@@ -152,6 +152,9 @@ export default class Util {
      * @returns {!(!string[])}
      */
     static breakLine(text, maxWidth, measureWidth) {
+        if (text === "") {
+            return [""];
+        }
         let lines = [];
         let p = 0;
         while (p < text.length) {

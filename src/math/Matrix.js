@@ -649,18 +649,18 @@ class Matrix {
         y /= n;
         z /= n;
 
+        // Prefer θ in [-π, π].
+        if (θ > Math.PI) {
+            θ -= 2*Math.PI;
+            φ = φ.times(-1);
+        }
+
         // Prefer axes that point positive-ward.
         if (x + y + z < 0) {
             x = -x;
             y = -y;
             z = -z;
             θ = -θ;
-        }
-
-        // Prefer θ in (-π, π].
-        if (θ > Math.PI) {
-            θ -= 2*Math.PI;
-            φ = φ.times(-1);
         }
 
         return {axis: [x, y, z], angle: θ, phase: φ.phase()};

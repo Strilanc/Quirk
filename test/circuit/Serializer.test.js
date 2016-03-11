@@ -6,6 +6,7 @@ import Complex from "src/math/Complex.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
+import GateFactory from "src/ui/GateFactory.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 
@@ -46,8 +47,7 @@ suite.test("roundTrip_Gate", () => {
         Matrix.square([Complex.I, -1, 2, 3]),
         "custom_name",
         "custom_blurb",
-        "custom_details",
-        Gate.CYCLE_DRAWER);
+        GateFactory.CYCLE_DRAWER);
     let v = Serializer.toJson(g);
     let g2 = Serializer.fromJson(Gate, v);
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});

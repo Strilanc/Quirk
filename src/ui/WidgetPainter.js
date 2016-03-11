@@ -1,14 +1,124 @@
 import Format from "src/base/Format.js"
+import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 import Rect from "src/math/Rect.js"
 import Config from "src/Config.js"
 import Point from "src/math/Point.js"
 import Matrix from "src/math/Matrix.js"
+import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
 import Painter from "src/ui/Painter.js"
 import MathPainter from "src/ui/MathPainter.js"
 
 export default class WidgetPainter {
+
+    /**
+     * @param {!Painter} painter
+     * @param {!number} w
+     * @param {!Gate} gate
+     * @param {!number} time
+     * @returns {!{maxX: !number, maxY: !number}}
+     * @private
+     */
+    static paintGateTooltipHelper(painter, w, gate, time) {
+        let maxX = 0;
+        let maxY = 4;
+        let pad = 4;
+        let dispSize = 65;
+        let pushRect = (rect, actualPad=pad) => {
+            maxY = Math.max(maxY, rect.bottom() + actualPad);
+            maxX = Math.max(maxX, rect.right() + actualPad);
+        };
+
+        pushRect(painter.printLine(gate.name, new Rect(pad, maxY, w, 18), 0, "blue", 24));
+        pushRect(painter.printParagraph(gate.blurb, new Rect(pad, maxY, w, 50), new Point(0, 0), 'black', 14));
+
+        if (Matrix.identity(2).isEqualTo(gate.matrixOrFunc)) {
+            return {maxX, maxY};
+        }
+        pushRect(new Rect(0, maxY, 1, 0), pad*3);
+        let curMatrix = gate.matrixAt(time);
+        let format = gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED;
+
+        // Matrix interpretation.
+        pushRect(painter.printParagraph('As matrix:', new Rect(pad, maxY, w, 18), new Point(0, 0), 'black', 12), 0);
+        let matrixRect = new Rect(pad, maxY, dispSize, dispSize);
+        let matrixDescRect = new Rect(0, matrixRect.y, w - pad, dispSize).skipLeft(matrixRect.right() + pad);
+        MathPainter.paintMatrix(
+            painter,
+            curMatrix,
+            matrixRect,
+            []);
+        pushRect(matrixRect);
+        let n = curMatrix.height();
+        let b = Math.log2(n);
+        let matDescs = Seq.range(n).
+            map(c => {
+                let inDesc = WidgetPainter.describeKet(b, c, 1, Format.SIMPLIFIED);
+                let col = curMatrix.getColumn(c);
+                if (col.every(e => e.isEqualTo(0))) {
+                    return "discards " + inDesc;
+                }
+                if (Seq.range(n).every(r => col[r].isEqualTo(r === c ? 1 : 0))) {
+                    return "doesn't affect " + inDesc;
+                }
+                if (Seq.range(n).every(r => r === c || col[r].isEqualTo(0))) {
+                    return "phases " + inDesc + " by " + col[c].toString(format);
+                }
+                let outDesc = new Seq(col).
+                    mapWithIndex((e, c) => WidgetPainter.describeKet(b, c, e, format)).
+                    filter(e => e !== "").
+                    join(" + ").
+                    replace(" + -", " - ").
+                    replace(" + +", " + ");
+                return 'transforms ' + inDesc + ' into ' + outDesc;
+            }).
+            toArray();
+        let rowHeight = matrixDescRect.h / n;
+        for (let r = 0; r < n; r++) {
+            pushRect(painter.printParagraph(
+                matDescs[r],
+                matrixDescRect.skipTop(r * rowHeight).takeTop(rowHeight),
+                new Point(0, 0.5),
+                'black',
+                12));
+        }
+
+        // Bloch sphere interpretation.
+        if (curMatrix.width() === 2 && curMatrix.isApproximatelyUnitary(0.000000001)) {
+            pushRect(painter.printParagraph(
+                'As rotation:',
+                new Rect(pad, maxY, w, 18),
+                new Point(0, 0),
+                'black',
+                12), 0);
+            let {angle, axis, phase} = curMatrix.qubitOperationToAngleAxisRotation();
+
+            let blochRect = new Rect(pad, maxY, dispSize, dispSize);
+            MathPainter.paintBlochSphereRotation(
+                painter,
+                curMatrix,
+                blochRect);
+            pushRect(blochRect);
+
+            let rotDesc = new Seq([
+                `rotates: ${format.formatFloat(angle * 180 / Math.PI)}°`,
+                `around: ${WidgetPainter.describeAxis(axis, format)}`,
+                '',
+                `hidden phase: exp(${format.formatFloat(phase * 180 / Math.PI)}°i)`,
+                ''
+            ]).join('\n');
+            pushRect(painter.printParagraph(
+                rotDesc,
+                new Rect(0, blochRect.y, w - pad, dispSize).skipLeft(blochRect.right() + pad),
+                new Point(0, 0.5),
+                'black',
+                12));
+        }
+
+        return {maxX, maxY};
+    }
+
     /**
      * @param {!Painter} painter
      * @param {!Rect} area
@@ -16,55 +126,70 @@ export default class WidgetPainter {
      * @param {!number} time
      */
     static paintGateTooltip(painter, area, gate, time) {
-        let h = area.h;
+        painter.ctx.save();
+        painter.ctx.translate(area.x, area.y);
+        area = area.withX(0).withY(0);
+        let scale = Math.min(area.w/500, area.h/200);
+        if (scale < 1) {
+            painter.ctx.scale(scale, scale);
+            area = area.withH(area.h/scale).withW(area.w/scale);
+        }
         let w = area.w;
-        let hasOp = !Matrix.identity(2).isEqualTo(gate.matrixOrFunc);
-        let titleRect = area.skipTop(h*0.02).takeTop(h*0.09).
-            skipLeft(w*0.02).skipRight(w*0.02);
-        let blurbRect = area.skipTop(titleRect.bottom()-area.y+h*0.01).takeTop(h*0.09).
-            skipLeft(w*0.01).skipRight(w*0.01);
-        let detailsRect = area.skipTop(blurbRect.bottom()-area.y+h*0.01).takeTop(h*0.18).
-            skipLeft(w*0.01).skipRight(w*0.01);
-        let matrixTitleRect = area.skipTop(detailsRect.bottom()-area.y+h*0.01).takeTop(h*0.08).
-            skipLeft(w*0.02).skipRight(w*0.02);
 
-        if (!hasOp) {
-            area = area.takeTop(matrixTitleRect.y - area.y);
-        }
+        let {maxX, maxY} = WidgetPainter.paintGateTooltipHelper(painter, w, gate, time);
+        let r = new Rect(0, 0, maxX, maxY);
+        painter.fillRect(r, '#F9FFF9');
+        painter.strokeRect(r, 'black');
+        WidgetPainter.paintGateTooltipHelper(painter, w, gate, time);
 
-        painter.fillRect(area);
-
-        painter.printLine(gate.name, titleRect, 0.5, "blue", 24);
-        painter.printLine(gate.blurb, blurbRect, 0.5, Config.DEFAULT_TEXT_COLOR, 14);
-        painter.printParagraph(gate.details, detailsRect, new Point(0, 0.5));
-
-        if (hasOp) {
-            let curMatrix = gate.matrixAt(time);
-            let matrixDesc = curMatrix.toString(gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED);
-            let matrixTitleUsed = painter.printLine("Matrix form: ", matrixTitleRect, 0, Config.DEFAULT_TEXT_COLOR, 20);
-            let matrixDescRect = matrixTitleRect.skipLeft(matrixTitleUsed.right() - matrixTitleRect.x);
-
-            painter.printLine(matrixDesc, matrixDescRect, 0, Config.DEFAULT_TEXT_COLOR, 14);
-            let matrixDrawArea = area.skipTop(matrixDescRect.bottom() - area.y).
-                skipTop(h*0.01).skipBottom(h*0.01).skipLeft(w*0.01).skipRight(w*0.01);
-
-            let d = Math.min(matrixDrawArea.w, matrixDrawArea.h);
-            MathPainter.paintMatrix(
-                painter,
-                curMatrix,
-                matrixDrawArea.withW(d).withH(d),
-                []);
-
-            if (curMatrix.width() === 2 && curMatrix.isApproximatelyUnitary(0.000000001)) {
-                MathPainter.paintBlochSphereRotation(
-                    painter,
-                    curMatrix,
-                    matrixDrawArea.skipLeft(d + 10).withW(d).withH(d));
-            }
-        }
-
-        painter.strokeRect(area);
+        painter.ctx.restore();
     };
+
+    static describeKet(bitCount, bitMask, factor, format) {
+        factor = Complex.from(factor);
+        if (factor.isEqualTo(0)) {
+            return "";
+        }
+        let scaleFactoDesc =
+            factor.isEqualTo(1) ? "" :
+            factor.isEqualTo(-1) ? "-" :
+            factor.isEqualTo(Complex.I) ? "i" :
+            factor.isEqualTo(Complex.I.times(-1)) ? "-i" :
+            (factor.real === 0 || factor.imag === 0) && format !== Format.CONSISTENT ? factor.toString(format) :
+            '(' + factor.toString(format) + ')·';
+
+        let bitDesc = bitMask.toString(2);
+        while (bitDesc.length < bitCount) {
+            bitDesc = '0' + bitDesc;
+        }
+        return scaleFactoDesc + '|' + bitDesc + '⟩';
+    }
+    /**
+     * @param {!Array.<!number>} unitAxis x, y, z
+     * @param {!Format} format
+     * @returns {!string}
+     */
+    static describeAxis(unitAxis, format) {
+        let max = new Seq(unitAxis).map(Math.abs).max();
+        return new Seq(unitAxis).
+            map(e => e/max).
+            zip(["X", "Y", "Z"], (val, name) => {
+                if (val === 0) {
+                    return "";
+                }
+                if (val === 1) {
+                    return name;
+                }
+                if (val === -1) {
+                    return "-" + name;
+                }
+                return format.formatFloat(val) + "·" + name;
+            }).
+            filter(e => e !== "").
+            join(" + ").
+            replace(" + -", " - ").
+            replace(" + +", " + ");
+    }
 
     ///**
     // *

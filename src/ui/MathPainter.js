@@ -13,15 +13,17 @@ export default class MathPainter {
         var v = p * 100;
         var e = Math.pow(10, -fractionalDigits);
 
-        if (v > 100 - e/2) {
+        if (v > 100 - e / 2) {
             return "On";
         }
-        if (v < e/2) {
+        if (v < e / 2) {
             return "Off";
         }
 
         return Math.min(Math.max(v, e), 100 - e).toFixed(fractionalDigits) + "%";
-    };
+    }
+
+;
 
     /**
      * @param {!Painter} painter
@@ -44,9 +46,7 @@ export default class MathPainter {
             painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
         }
 
-        painter.ctx.setLineDash([2, 3]);
-        painter.strokeRect(drawArea);
-        painter.ctx.setLineDash([]);
+        painter.strokeRect(drawArea, 'lightgray');
     }
 
     /**
@@ -99,7 +99,9 @@ export default class MathPainter {
         if (isControl) {
             painter.strokeLine(area.topLeft(), area.bottomRight());
         }
-    };
+    }
+
+;
 
     /**
      * Draws a visual representation of a complex matrix.
@@ -154,7 +156,9 @@ export default class MathPainter {
                 painter.printParagraph(tip, paintRect, new Point(0, 1));
             });
         }
-    };
+    }
+
+;
 
     /**
      * @param {!Painter} painter
@@ -175,9 +179,6 @@ export default class MathPainter {
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
         painter.strokeCircle(c, u, '#BBB');
-        painter.ctx.setLineDash([2, 3]);
-        painter.strokeCircle(c, u, 'black');
-        painter.ctx.setLineDash([]);
         painter.strokeEllipse(c, new Point(dx.x, dy.y), '#BBB');
         painter.strokeEllipse(c, new Point(dy.x, dz.y), '#BBB');
         for (let d of [dx, dy, dz]) {
@@ -192,7 +193,7 @@ export default class MathPainter {
         [x, y, z] = [x.real, y.real, z.real];
         let pxy = c.plus(dx.times(x)).plus(dy.times(y));
         let p = pxy.plus(dz.times(z));
-        let r = 4 / (1 + y/8);
+        let r = 4 / (1 + y / 8);
 
         // Draw state indicators (also in not-quite-correct 3d).
         painter.strokeLine(c, pxy, '#666');
@@ -201,7 +202,13 @@ export default class MathPainter {
         painter.strokeLine(p, c.plus(dz.times(z)), '#666');
         painter.strokeLine(c, p, 'black', 2);
         painter.fillCircle(p, r, fillColor);
+        painter.ctx.globalAlpha = Math.min(1, Math.max(0, 1-x*x-y*y-z*z));
+        painter.fillCircle(p, r, 'yellow');
+        painter.ctx.globalAlpha = 1;
         painter.strokeCircle(p, r, 'black');
+        painter.ctx.globalAlpha = Math.min(1, Math.max(0, 0.5+y*5));
+        painter.strokeLine(c, p, 'black', 2);
+        painter.ctx.globalAlpha = 1;
     }
 
     /**
@@ -238,7 +245,8 @@ export default class MathPainter {
             painter.strokeLine(c.plus(d.times(-1)), c.plus(d), '#BBB');
         }
 
-        let {angle, axis, phase: _} = operation.qubitOperationToAngleAxisRotation();
+        let {angle, axis} = operation.qubitOperationToAngleAxisRotation();
+        axis = axis.map(e => -e);
         let axisVec = Matrix.col(axis);
         let dAxis = projToPt(axisVec);
 
@@ -323,7 +331,7 @@ export default class MathPainter {
                 }
 
                 let r = topLeftCell.proportionalShiftedBy(x, y);
-                let v = matrix.cell(x, y).times(Math.PI/2);
+                let v = matrix.cell(x, y).times(Math.PI / 2);
 
                 let mag = v.abs();
                 if (isNaN(mag)) {
@@ -361,9 +369,6 @@ export default class MathPainter {
 
         // Outline
         painter.strokeRect(drawArea, 'lightgray');
-        painter.ctx.setLineDash([2, 3]);
-        painter.strokeRect(drawArea);
-        painter.ctx.setLineDash([]);
 
         // Inline
         for (let i = 1; i < n; i++) {

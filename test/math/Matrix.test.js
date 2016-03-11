@@ -493,29 +493,20 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     assertThrows(() => Matrix.square([1, 1, 0, 0]).qubitDensityMatrixToBlochVector());
     assertThrows(() => Matrix.square([1, Complex.i, Complex.i, 0]).qubitDensityMatrixToBlochVector());
 
+    // Maximally mixed state.
     assertThat(Matrix.identity(2).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
         isEqualTo(Matrix.col([0, 0, 0]));
 
-    assertThat(Matrix.identity(2).plus(Matrix.PAULI_X).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([1, 0, 0]));
-    assertThat(Matrix.identity(2).plus(Matrix.PAULI_Y).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, 1, 0]));
-    assertThat(Matrix.identity(2).plus(Matrix.PAULI_Z).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, 0, 1]));
-
-    assertThat(Matrix.identity(2).minus(Matrix.PAULI_X).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([-1, 0, 0]));
-    assertThat(Matrix.identity(2).minus(Matrix.PAULI_Y).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, -1, 0]));
-    assertThat(Matrix.identity(2).minus(Matrix.PAULI_Z).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, 0, -1]));
-
-    assertThat(Matrix.square([1, 0, 0, 0]).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, 0, 1]));
-    assertThat(Matrix.square([0, 0, 0, 1]).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, 0, -1]));
-    assertThat(Matrix.square([0.5, 0.5, 0.5, 0.5]).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([1, 0, 0]));
+    // Pure states as vectors along each axis.
+    let f = m => Matrix.col(m).times(Matrix.col(m).adjoint());
+    let i = Complex.I;
+    let mi = i.times(-1);
+    assertThat(f([1, 0]).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, 0, 1]));
+    assertThat(f([0, 1]).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, 0, -1]));
+    assertThat(f([1, 1]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([1, 0, 0]));
+    assertThat(f([1, -1]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([-1, 0, 0]));
+    assertThat(f([1, i]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, 1, 0]));
+    assertThat(f([1, mi]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, -1, 0]));
 });
 
 suite.test("determinant", () => {

@@ -161,7 +161,6 @@ let fromJson_Gate = json => {
             symbol,
             matrix,
             "Parse Error",
-            "A broken gate",
             describe(ex),
             drawer,
             json);
@@ -173,7 +172,7 @@ let fromJson_Gate = json => {
         return r;
     }
 
-    return new Gate(symbol, matrix, symbol, "", "", drawer);
+    return new Gate(symbol, matrix, symbol, "", drawer);
 };
 
 /**
