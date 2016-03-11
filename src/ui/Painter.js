@@ -198,10 +198,11 @@ export default class Painter {
      *
      * @param {!string} text
      * @param {!Rect} area
-     * @param {!number} proportionalCenterOfHorizontalAlignment
-     * @param {!string} fontColor
-     * @param {!int} maxFontSize
-     * @param {!string} fontFamily
+     * @param {!number|undefined=} proportionalCenterOfHorizontalAlignment
+     * @param {!string|undefined=} fontColor
+     * @param {!int|undefined=} maxFontSize
+     * @param {!string|undefined=} fontFamily
+     * @param {!number|undefined=} proportionalCenterOfVerticalAlignment
      * @returns {!Rect} A minimal bounding rectangle containing the pixels affected by the text printing.
      */
     printLine(text,
@@ -209,7 +210,8 @@ export default class Painter {
               proportionalCenterOfHorizontalAlignment = 0,
               fontColor = Config.DEFAULT_TEXT_COLOR,
               maxFontSize = Config.DEFAULT_FONT_SIZE,
-              fontFamily = Config.DEFAULT_FONT_FAMILY) {
+              fontFamily = Config.DEFAULT_FONT_FAMILY,
+              proportionalCenterOfVerticalAlignment = undefined) {
 
         let fontSize;
         let ascendingHeightOf = metric => {
@@ -235,7 +237,9 @@ export default class Painter {
         }
 
         let h = heightOf(measure);
-        let py = ascendingHeightOf(measure) / h;
+        let py = proportionalCenterOfVerticalAlignment === undefined ?
+            ascendingHeightOf(measure) / h :
+            proportionalCenterOfVerticalAlignment;
         let f = (offset, full, used, proportion) => offset + (full - used) * proportion;
         let x = f(area.x, area.w, measure.width, proportionalCenterOfHorizontalAlignment);
         let y = f(area.y, area.h, h, py);

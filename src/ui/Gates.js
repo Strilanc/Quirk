@@ -15,7 +15,7 @@ Gates.Named = {
     Special: {
         Control: new Gate(
             "•",
-            Matrix.CONTROL,
+            Matrix.identity(2),
             "Control",
             "Conditions on a qubit being ON.\n" +
                 "Gates in the same column will only apply to states meeting the condition.",
@@ -28,7 +28,7 @@ Gates.Named = {
 
         AntiControl: new Gate(
             "◦",
-            Matrix.ANTI_CONTROL,
+            Matrix.identity(2),
             "Anti-Control",
             "Conditions on a qubit being OFF.\n" +
                 "Gates in the same column will only apply to states meeting the condition.",

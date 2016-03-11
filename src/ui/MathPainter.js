@@ -55,16 +55,16 @@ export default class MathPainter {
      * @param {!Painter} painter
      * @param {!Rect} area The drawing area, where the amplitude will be represented visually.
      * @param {!Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
-     * @param {!string=} amplitudeCircleFillColor
-     * @param {!string=} amplitudeCircleStrokeColor
-     * @param {!string=} amplitudeProbabilityFillColor
+     * @param {!string} amplitudeCircleFillColor
+     * @param {!string} amplitudeCircleStrokeColor
+     * @param {!string|undefined} amplitudeProbabilityFillColor
      */
     static paintAmplitude(painter,
                           amplitude,
                           area,
-                          amplitudeCircleFillColor = Config.AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL,
-                          amplitudeCircleStrokeColor = Config.AMPLITUDE_CIRCLE_STROKE_COLOR,
-                          amplitudeProbabilityFillColor = Config.AMPLITUDE_PROBABILITY_FILL_UP_COLOR) {
+                          amplitudeCircleFillColor,
+                          amplitudeCircleStrokeColor,
+                          amplitudeProbabilityFillColor) {
         let c = area.center();
         let magnitude = amplitude.abs();
         let p = amplitude.norm2();
@@ -72,7 +72,6 @@ export default class MathPainter {
         let r = d * magnitude;
         let dx = d * amplitude.real;
         let dy = d * amplitude.imag;
-        let isControl = amplitude === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE;
 
         if (magnitude <= 0.0001) {
             return; // Even showing a tiny dot is too much.
@@ -88,32 +87,40 @@ export default class MathPainter {
         }
 
         // fill rect from bottom to top as the amplitude becomes more probable
-        painter.fillRect(area.takeBottom(p * area.h), amplitudeProbabilityFillColor);
+        if (amplitudeProbabilityFillColor !== undefined) {
+            let fillRect = area.takeBottom(p * area.h);
+            painter.fillRect(fillRect, amplitudeProbabilityFillColor);
+            painter.strokeLine(fillRect.topLeft(), fillRect.topRight(), amplitudeCircleStrokeColor);
+        }
 
         // show the direction and magnitude as a circle with a line indicator
         painter.fillCircle(c, r, amplitudeCircleFillColor);
         painter.strokeCircle(c, r, amplitudeCircleStrokeColor);
         painter.strokeLine(c, new Point(c.x + dx, c.y - dy));
-
-        // cross out (in addition to the darkening) when controlled
-        if (isControl) {
-            painter.strokeLine(area.topLeft(), area.bottomRight());
-        }
     }
-
-;
 
     /**
      * Draws a visual representation of a complex matrix.
      * @param {!Painter} painter
      * @param {!Matrix} matrix The matrix to draw.
      * @param {!Rect} drawArea The rectangle to draw the matrix within.
-     * @param {!(!Point[])} focusPoints
+     * @param {!string} amplitudeCircleFillColor
+     * @param {!string} amplitudeCircleStrokeColor
+     * @param {!string|undefined} amplitudeProbabilityFillColor
+     * @param {!string=} backColor
      */
-    static paintMatrix(painter, matrix, drawArea, focusPoints) {
+    static paintMatrix(painter,
+                       matrix,
+                       drawArea,
+                       amplitudeCircleFillColor,
+                       amplitudeCircleStrokeColor,
+                       amplitudeProbabilityFillColor,
+                       backColor = Config.DISPLAY_GATE_BACK_COLOR) {
         let numCols = matrix.width();
         let numRows = matrix.height();
         let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+
+        painter.fillRect(drawArea, backColor);
 
         // Contents
         for (let c = 0; c < numCols; c++) {
@@ -121,44 +128,15 @@ export default class MathPainter {
                 MathPainter.paintAmplitude(
                     painter,
                     matrix.cell(c, r),
-                    topLeftCell.proportionalShiftedBy(c, r));
+                    topLeftCell.proportionalShiftedBy(c, r),
+                    amplitudeCircleFillColor,
+                    amplitudeCircleStrokeColor,
+                    amplitudeProbabilityFillColor);
             }
         }
 
-        // Frame
-        painter.strokeRect(drawArea);
-        if (Config.PAINT_MATRIX_GRID_COLOR_OR_NULL !== null) {
-            painter.strokeGrid(topLeftCell, numCols, numRows, Config.PAINT_MATRIX_GRID_COLOR_OR_NULL);
-        }
-
-        // Tooltip
-        for (let pos of focusPoints) {
-            let focus_c = Math.floor((pos.x - topLeftCell.x) / topLeftCell.w);
-            let focus_r = Math.floor((pos.y - topLeftCell.y) / topLeftCell.h);
-            if (!new Rect(0, 0, numCols, numRows).containsPoint(new Point(focus_c, focus_r))) {
-                continue;
-            }
-
-            let cell = topLeftCell.proportionalShiftedBy(focus_c, focus_r);
-            let numWires = Math.log2(Math.max(matrix.width(), matrix.height()));
-            let stater = bitMask => Seq.range(numWires).
-                map(i => ((1 << (numWires - i - 1)) & bitMask) !== 0 ? "1" : "0").
-                join("");
-
-            let tip = `${stater(focus_c)} → ${stater(focus_r)}` +
-                "\n= " + matrix.cell(focus_c, focus_r).toString(Format.CONSISTENT);
-
-            let paintRect = new Rect(cell.x, cell.y - 30, 100, 30).snapInside(painter.paintableArea()).paddedBy(-2);
-            painter.defer(() => {
-                let usedRect = painter.printParagraph(tip, paintRect, new Point(0, 1)).paddedBy(2);
-                painter.fillRect(usedRect);
-                painter.strokeRect(usedRect);
-                painter.printParagraph(tip, paintRect, new Point(0, 1));
-            });
-        }
+        painter.strokeGrid(topLeftCell, numCols, numRows, 'lightgray');
     }
-
-;
 
     /**
      * @param {!Painter} painter

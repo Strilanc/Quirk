@@ -556,13 +556,70 @@ class CircuitWidget {
             offset += d;
         }
 
-        let r = this.gateRect(0, offset);
-        r = r.withH(this.gateRect(this.circuitDefinition.numWires - 1, 0).bottom() - r.y);
-        r = r.withW(r.h);
-        let amps = Matrix.fromRows(new Seq(stats.finalState).
-            partitioned(1 << Math.ceil(this.circuitDefinition.numWires/2)).
-            toArray());
-        MathPainter.paintMatrix(painter, amps, r, []);
+        let w = 1 << Math.floor(this.circuitDefinition.numWires/2);
+        let h = 1 << Math.ceil(this.circuitDefinition.numWires/2);
+        let amps = Matrix.generate(w, h, (r, c) => {
+            let interleaved = 0;
+            let n = Util.bitSize(Math.max(r, c));
+            for (let i = 0; i < n; i++) {
+                if ((r & (1 << i)) !== 0) {
+                    interleaved |= 1 << (2 * i)
+                }
+                if ((c & (1 << i)) !== 0) {
+                    interleaved |= 1 << (2 * i + 1)
+                }
+            }
+            return stats.finalState[interleaved];
+        });
+        let pad = this.gateRect(0, 0).y - this.area.y;
+        let ampsRect = this.opRect(offset).skipTop(pad).skipBottom(pad);
+        ampsRect = ampsRect.withW(ampsRect.h * (w/h));
+        let labelRect = ampsRect.withW(ampsRect.w + 50).withH(ampsRect.h + 50);
+        MathPainter.paintMatrix(painter, amps, ampsRect, '#8FF', 'black', '#0BB', '#E8FFFF');
+
+        let halfStateLabel = (k, parity) => Seq.range(this.circuitDefinition.numWires).
+            map(i => i % 2 !== parity ? "_" :
+                     (k & (1 << Math.floor(i/2))) !== 0 ? "1" :
+                     "0").
+            join("");
+        let dw = ampsRect.w / w;
+        let dh = ampsRect.h / h;
+        for (let i = 0; i < h; i++) {
+            let r = labelRect.skipLeft(ampsRect.w + 2).skipTop(dh*i).skipRight(2).withH(dh);
+            let s = halfStateLabel(i, 0);
+            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
+            painter.fillRect(r.paddedBy(2), 'lightgray');
+            painter.printLine(s, r);
+        }
+        painter.ctx.save();
+        painter.ctx.rotate(Math.PI/2);
+        for (let i = 0; i < w; i++) {
+            let r = labelRect.skipTop(ampsRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
+            r = new Rect(r.y, -r.x-r.w, r.h, r.w);
+            let s = halfStateLabel(i, 1);
+            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
+            painter.fillRect(r.paddedBy(2), 'lightgray');
+            painter.printLine(s, r);
+        }
+        painter.ctx.restore();
+
+        painter.printParagraph(
+            "ALL final amplitudes\n(ignoring measurement)",
+            labelRect.withY(labelRect.bottom()).withH(40).withW(200),
+            new Point(0, 0),
+            'gray');
+
+        painter.printParagraph(
+            "Local wire states\n(Chance/Bloch/Density)",
+            labelRect.withY(labelRect.bottom()-40).withH(40).withW(190).withX(labelRect.x - 275),
+            new Point(0.5, 0),
+            'gray');
+
+        painter.printParagraph(
+            "Paired states\n(Density)",
+            labelRect.withY(labelRect.bottom()-40).withH(40).withW(190).withX(labelRect.x - 150),
+            new Point(0.5, 0),
+            'gray');
     }
 }
 

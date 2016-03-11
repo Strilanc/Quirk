@@ -215,6 +215,6 @@ export default class InspectorWidget {
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         let wireHeight = CircuitWidget.desiredHeight(wireCount);
-        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + wireHeight);
+        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + wireHeight + 100);
     }
 }

@@ -122,7 +122,7 @@ class Matrix {
         format = format || Format.EXACT;
         let data = this.rows().
             map(row => row.
-                map(e => e === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE ? "C" : e.toString(format)).
+                map(e => e.toString(format)).
                 join(format.itemSeparator)).
             join("}" + format.itemSeparator + "{");
         return "{{" + data + "}}";
@@ -146,9 +146,7 @@ class Matrix {
             split("},{").
             map(row => row.
                 split(",").
-                map(e => e === "C" ?
-                    Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE :
-                    Complex.parse(e))));
+                map(Complex.parse)));
     };
 
     /**
@@ -349,14 +347,6 @@ class Matrix {
             let c2 = c % w2;
             let v1 = this.cell(c1, r1);
             let v2 = other.cell(c2, r2);
-            if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_ZERO) {
-                return Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
-            }
-            if (v1 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE || v2 === Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE) {
-                return r1 === c1 && r2 === c2 ?
-                    Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE :
-                    Matrix.__TENSOR_SYGIL_COMPLEX_ZERO;
-            }
             return v1.times(v2);
         });
     };
@@ -499,7 +489,7 @@ class Matrix {
      * @returns {!Matrix}
      */
     static identity(size) {
-        return Matrix.generate(size, size, (r, c) => r === c ? 1 : Matrix.__TENSOR_SYGIL_COMPLEX_ZERO);
+        return Matrix.generate(size, size, (r, c) => r === c ? Complex.ONE : Complex.ZERO);
     };
 
     /**
@@ -813,38 +803,6 @@ class Matrix {
         return svd.u.times(svd.v);
     };
 }
-
-/**
- * A special complex value that the tensor product checks for in order to support controlled operations.
- * @type {!Complex}
- */
-Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE = new Complex(1, 0);
-
-/**
- * A marked complex zero that the tensor product propagates, so large empty areas can be grayed out when drawing.
- * @type {!Complex}
- */
-Matrix.__TENSOR_SYGIL_COMPLEX_ZERO = Complex.from(0);
-
-/**
- * A special value that acts like the pseudo-operation "use this qubit as a control" w.r.t. the tensor product.
- *
- * Implemented as a matrix [[C, 0], [0, 1]], where C is a special value that causes a 1 to end up on the diagonal of the
- * expanded matrix and 0 otherwise.
- * @type {!Matrix}
- */
-Matrix.CONTROL = Matrix.square([Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
-                                Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, 1]);
-
-/**
- * A special value that acts like the pseudo-operation "use this qubit as an anti-control" w.r.t. the tensor product.
- *
- * Implemented as a matrix [[1, 0], [0, C]], where C is a special value that causes a 1 to end up on the diagonal of the
- * expanded matrix and 0 otherwise.
- * @type {!Matrix}
- */
-Matrix.ANTI_CONTROL = Matrix.square([1, Matrix.__TENSOR_SYGIL_COMPLEX_ZERO,
-                                     Matrix.__TENSOR_SYGIL_COMPLEX_ZERO, Matrix.__TENSOR_SYGIL_COMPLEX_CONTROL_ONE]);
 
 /**
  * The 2x2 Pauli X matrix.

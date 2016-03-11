@@ -44,11 +44,7 @@ export default class WidgetPainter {
         pushRect(painter.printParagraph('As matrix:', new Rect(pad, maxY, w, 18), new Point(0, 0), 'black', 12), 0);
         let matrixRect = new Rect(pad, maxY, dispSize, dispSize);
         let matrixDescRect = new Rect(0, matrixRect.y, w - pad, dispSize).skipLeft(matrixRect.right() + pad);
-        MathPainter.paintMatrix(
-            painter,
-            curMatrix,
-            matrixRect,
-            []);
+        MathPainter.paintMatrix(painter, curMatrix, matrixRect, Config.DISPLAY_GATE_FORE_COLOR, 'black', undefined);
         pushRect(matrixRect);
         let n = curMatrix.height();
         let b = Math.log2(n);

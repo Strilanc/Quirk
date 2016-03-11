@@ -43,15 +43,10 @@ Config.DISPLAY_GATE_BACK_COLOR = '#E8FFE8';
 Config.DISPLAY_GATE_FORE_COLOR = Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR;
 
 Config.BINARY_TREE_LABEL_EDGE_COLOR = 'gray';
-Config.PAINT_MATRIX_GRID_COLOR_OR_NULL = null;
 Config.CYCLE_DURATION_MS = 8000; // How long it takes for evolving gates to cycle, in milliseconds.
 Config.TIME_CACHE_GRANULARITY = 196; // The number of buckets the cycle is divided into.
 Config.REFRESH_DURATION_MS = 50; // How often time-driven circuits cause redraw.
 Config.REDRAW_COOLDOWN_MS = 15; // How often user-driven actions can cause redraw.
-
-Config.AMPLITUDE_CIRCLE_FILL_COLOR_TYPICAL = '#CCC';
-Config.AMPLITUDE_PROBABILITY_FILL_UP_COLOR = '#555';
-Config.AMPLITUDE_CIRCLE_STROKE_COLOR = Config.AMPLITUDE_PROBABILITY_FILL_UP_COLOR;
 
 /** Half of the span of a drawn gate, width-wise and height-wise.
 * @type {!number} */
