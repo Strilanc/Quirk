@@ -123,7 +123,10 @@ GateFactory.MATRIX_DRAWER = args => {
         args.painter,
         args.gate.matrixAt(args.stats.time),
         args.rect,
-        []);
+        Config.OPERATION_FORE_COLOR,
+        'black',
+        undefined,
+        Config.OPERATION_BACK_COLOR);
     if (args.isHighlighted) {
         args.painter.ctx.globalAlpha = 0.9;
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);

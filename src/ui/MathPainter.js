@@ -275,9 +275,9 @@ export default class MathPainter {
                     dAxis.times(-0.15)
                 ].map(d => arrowHeadRoot.plus(d));
 
-                painter.strokePath(arcPts, 'gray');
+                painter.strokePath(arcPts, '#444');
                 painter.fillPolygon(arrowHeadPts, fillColor);
-                painter.strokePolygon(arrowHeadPts, 'gray');
+                painter.strokePolygon(arrowHeadPts, '#444');
             }
         }
     }

@@ -60,7 +60,8 @@ export default class InspectorWidget {
             drawArea,
             new CircuitWidget(
                 drawArea.skipTop(toolboxHeight).takeTop(250),
-                new CircuitDefinition(numWires, [])),
+                new CircuitDefinition(numWires, []),
+                null),
             new ToolboxWidget(drawArea.takeTop(toolboxHeight)),
             Hand.EMPTY);
     }

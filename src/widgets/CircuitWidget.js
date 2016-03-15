@@ -23,11 +23,11 @@ class CircuitWidget {
      *
      * @param {!Rect} area
      * @param {!CircuitDefinition} circuitDefinition
-     * @param {?int} compressedColumnIndex
+     * @param {!int|null} compressedColumnIndex
      *
      * @property {!Rect} area
      * @property {!CircuitDefinition} circuitDefinition
-     * @property {?int} compressedColumnIndex
+     * @property {!int|null} compressedColumnIndex
      * @property {!function(!int) : !string=} wireLabeller
      */
     constructor(area, circuitDefinition, compressedColumnIndex) {
@@ -563,39 +563,16 @@ class CircuitWidget {
         let ampsRect = this.opRect(offset).skipTop(pad).skipBottom(pad);
         ampsRect = ampsRect.withW(ampsRect.h * (w/h));
         let labelRect = ampsRect.withW(ampsRect.w + 50).withH(ampsRect.h + 50);
-        MathPainter.paintMatrix(painter, amps, ampsRect, '#8FF', 'black', '#0BB', '#E8FFFF');
+        MathPainter.paintMatrix(
+            painter,
+            amps,
+            ampsRect,
+            Config.SUPERPOSITION_MID_COLOR,
+            'black',
+            Config.SUPERPOSITION_FORE_COLOR,
+            Config.SUPERPOSITION_BACK_COLOR);
 
-        let halfStateLabel = (k, parity) => Seq.range(this.circuitDefinition.numWires).
-            map(i => i % 2 !== parity ? "_" :
-                     (k & (1 << Math.floor(i/2))) !== 0 ? "1" :
-                     "0").
-            join("");
-        let dw = ampsRect.w / w;
-        let dh = ampsRect.h / h;
-        for (let i = 0; i < h; i++) {
-            let r = labelRect.skipLeft(ampsRect.w + 2).skipTop(dh*i).skipRight(2).withH(dh);
-            let s = halfStateLabel(i, 0);
-            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
-            painter.fillRect(r.paddedBy(2), 'lightgray');
-            painter.printLine(s, r);
-        }
-        painter.ctx.save();
-        painter.ctx.rotate(Math.PI/2);
-        for (let i = 0; i < w; i++) {
-            let r = labelRect.skipTop(ampsRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
-            r = new Rect(r.y, -r.x-r.w, r.h, r.w);
-            let s = halfStateLabel(i, 1);
-            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
-            painter.fillRect(r.paddedBy(2), 'lightgray');
-            painter.printLine(s, r);
-        }
-        painter.ctx.restore();
-
-        painter.printParagraph(
-            "ALL final amplitudes\n(ignoring measurement)",
-            labelRect.withY(labelRect.bottom()).withH(40).withW(200),
-            new Point(0, 0),
-            'gray');
+        this.drawOutputSuperpositionDisplay(painter, stats, offset);
 
         painter.printParagraph(
             "Local wire states\n(Chance/Bloch/Density)",
@@ -607,6 +584,80 @@ class CircuitWidget {
             "Paired states\n(Density)",
             labelRect.withY(labelRect.bottom()-40).withH(40).withW(190).withX(labelRect.x - 150),
             new Point(0.5, 0),
+            'gray');
+    }
+
+    /**
+     * Draws a peek gate on each wire at the right-hand side of the circuit.
+     *
+     * @param {!Painter} painter
+     * @param {!CircuitStats} stats
+     * @param {!int} col
+     */
+    drawOutputSuperpositionDisplay(painter, stats, col) {
+        let n = this.circuitDefinition.numWires;
+        let [w, h] = [1 << Math.floor(n/2), 1 << Math.ceil(n/2)];
+        let amplitudeGrid = Matrix.generate(w, h, (r, c) => {
+            let interleaved = 0;
+            let bitCount = Util.bitSize(Math.max(r, c));
+            for (let i = 0; i < bitCount; i++) {
+                if ((r & (1 << i)) !== 0) {
+                    interleaved |= 1 << (2 * i)
+                }
+                if ((c & (1 << i)) !== 0) {
+                    interleaved |= 1 << (2 * i + 1)
+                }
+            }
+            return stats.finalState[interleaved];
+        });
+
+        let pad = this.gateRect(0, 0).y - this.area.y;
+        let gridRect = this.opRect(col).skipTop(pad).skipBottom(pad);
+        gridRect = gridRect.withW(gridRect.h * (w/h));
+        MathPainter.paintMatrix(
+            painter,
+            amplitudeGrid,
+            gridRect,
+            Config.SUPERPOSITION_MID_COLOR,
+            'black',
+            Config.SUPERPOSITION_FORE_COLOR,
+            Config.SUPERPOSITION_BACK_COLOR);
+
+        let labelRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
+        let labelText = (k, parity) => Seq.range(n).
+            map(i => i % 2 !== parity ? "_" :
+                (k & (1 << Math.floor(i/2))) !== 0 ? "1" :
+                    "0").
+            join("");
+        let [dw, dh] = [gridRect.w / w, gridRect.h / h];
+
+        // Row labels.
+        for (let i = 0; i < h; i++) {
+            let r = labelRect.skipLeft(gridRect.w + 2).skipTop(dh*i).skipRight(2).withH(dh);
+            let s = labelText(i, 0);
+            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
+            painter.fillRect(r.paddedBy(2), 'lightgray');
+            painter.printLine(s, r);
+        }
+
+        // Column labels.
+        painter.ctx.save();
+        painter.ctx.rotate(Math.PI/2);
+        for (let i = 0; i < w; i++) {
+            let r = labelRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
+            r = new Rect(r.y, -r.x-r.w, r.h, r.w);
+            let s = labelText(i, 1);
+            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
+            painter.fillRect(r.paddedBy(2), 'lightgray');
+            painter.printLine(s, r);
+        }
+        painter.ctx.restore();
+
+        // Hint text.
+        painter.printParagraph(
+            "ALL final amplitudes\n(ignoring measurement)",
+            labelRect.withY(labelRect.bottom()).withH(40).withW(200),
+            new Point(0, 0),
             'gray');
     }
 }
