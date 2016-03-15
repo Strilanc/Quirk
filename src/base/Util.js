@@ -211,7 +211,7 @@ export default class Util {
             }
         };
 
-        for (let key of Object.keys(object)) {
+        for (let key of Object.keys(object).sort()) {
             decomposeValueOrArray(object[key], result);
         }
         return result;
@@ -239,7 +239,7 @@ export default class Util {
             return newFieldValues[i++];
         };
 
-        for (let key of Object.keys(originalObject)) {
+        for (let key of Object.keys(originalObject).sort()) {
             result[key] = recomposeValueOrArray(originalObject[key]);
         }
         Util.need(i === newFieldValues.length, "Mismatched field value count.");

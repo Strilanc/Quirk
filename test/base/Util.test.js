@@ -245,6 +245,7 @@ suite.test("decomposeObjectValues", () => {
     assertThat(Util.decomposeObjectValues({a: "x"})).isEqualTo(["x"]);
     assertThat(Util.decomposeObjectValues({a: {b: "y"}})).isEqualTo([{b: "y"}]);
     assertThat(Util.decomposeObjectValues({a: "x", b: "y"})).isEqualTo(["x", "y"]);
+    assertThat(Util.decomposeObjectValues({b: "y", a: "x"})).isEqualTo(["x", "y"]);
     assertThat(Util.decomposeObjectValues({a: []})).isEqualTo([]);
     assertThat(Util.decomposeObjectValues({a: [1, 2, 3]})).isEqualTo([1, 2, 3]);
     assertThat(Util.decomposeObjectValues({a: [1, 2, 3], b: "x", c: [4, 5]})).isEqualTo([1, 2, 3, "x", 4, 5]);
@@ -261,6 +262,7 @@ suite.test("recomposedObjectValues", () => {
     assertThat(Util.recomposedObjectValues({a: "x"}, ["r"])).isEqualTo({a: "r"});
     assertThat(Util.recomposedObjectValues({a: {b: "y"}}, ["r"])).isEqualTo({a: "r"});
     assertThat(Util.recomposedObjectValues({a: "x", b: "y"}, [2, 3])).isEqualTo({a:2, b:3});
+    assertThat(Util.recomposedObjectValues({b: "y", a: "x"}, [2, 3])).isEqualTo({a:2, b:3});
     assertThat(Util.recomposedObjectValues({a: []}, [])).isEqualTo({a:[]});
     assertThat(Util.recomposedObjectValues({a: [2, 3]}, [4, 5])).isEqualTo({a: [4, 5]});
     assertThat(Util.recomposedObjectValues({a: [1, 2, 3], b: "x", c: [4, 5]}, ["a", "b", "c", "d", "e", "f"])).
