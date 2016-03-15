@@ -24,18 +24,16 @@ class CircuitWidget {
      * @param {!Rect} area
      * @param {!CircuitDefinition} circuitDefinition
      * @param {?int} compressedColumnIndex
-     * @param {undefined|!function(!int) : !string} wireLabeller
      *
      * @property {!Rect} area
      * @property {!CircuitDefinition} circuitDefinition
      * @property {?int} compressedColumnIndex
      * @property {!function(!int) : !string=} wireLabeller
      */
-    constructor(area, circuitDefinition, compressedColumnIndex, wireLabeller = CircuitWidget.DEFAULT_WIRE_LABELLER) {
+    constructor(area, circuitDefinition, compressedColumnIndex) {
         this.area = area;
         this.circuitDefinition = circuitDefinition;
         this.compressedColumnIndex = compressedColumnIndex;
-        this.wireLabeller = wireLabeller;
     }
 
     static desiredHeight(wireCount) {
@@ -123,13 +121,6 @@ class CircuitWidget {
         }
 
         return Math.floor((p.y - this.area.y) * this.circuitDefinition.numWires / this.area.h);
-    }
-
-    /**
-     * @returns {!Array<!string>}}
-     */
-    getLabels() {
-        return range(this.circuitDefinition.numWires).map(this.wireLabeller);
     }
 
     /**
@@ -273,8 +264,7 @@ class CircuitWidget {
         return other instanceof CircuitWidget &&
             this.area.isEqualTo(other.area) &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
-            this.compressedColumnIndex === other.compressedColumnIndex &&
-            Seq.range(this.circuitDefinition.numWires).every(i => this.wireLabeller(i) === other.wireLabeller(i));
+            this.compressedColumnIndex === other.compressedColumnIndex;
     }
 
     /**
@@ -289,7 +279,7 @@ class CircuitWidget {
         for (let i = 0; i < this.circuitDefinition.numWires; i++) {
             let wireRect = this.wireRect(i);
             let y = Math.round(wireRect.center().y - 0.5) + 0.5;
-            painter.printParagraph(this.wireLabeller(i) + ":", wireRect.takeLeft(20), new Point(1, 0.5));
+            painter.printParagraph("|0⟩", wireRect.takeLeft(20), new Point(1, 0.5));
             let x = this.circuitDefinition.wireMeasuredColumns()[i];
             if (x === Infinity) {
                 painter.strokeLine(new Point(this.area.x + 25, y), new Point(this.area.right(), y));
@@ -461,8 +451,7 @@ class CircuitWidget {
         return new CircuitWidget(
             this.area,
             circuitDefinition,
-            this.compressedColumnIndex,
-            this.wireLabeller);
+            this.compressedColumnIndex);
     }
 
     withJustEnoughWires(extra = 0) {
@@ -510,8 +499,7 @@ class CircuitWidget {
             newCircuit: new CircuitWidget(
                 this.area,
                 this.circuitDefinition.withColumns(newCols),
-                null,
-                this.wireLabeller),
+                null),
             newHand: hand.withHeldGates(new GateColumn(grabbedGates), grabInset)
         };
     }
