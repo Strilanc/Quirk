@@ -1058,4 +1058,13 @@ class Seq {
     };
 }
 
+/**
+ * Wraps an iterable into a Seq.
+ * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
+ * @returns {!Iterable.<T>}
+ * @template T
+ */
+let seq = iterable => new Seq(iterable);
+
 export default Seq;
+export {seq, Seq};

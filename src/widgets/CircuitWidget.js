@@ -8,7 +8,7 @@ import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/math/Point.js"
 import Matrix from "src/math/Matrix.js"
 import Rect from "src/math/Rect.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
 /** @type {!number} */
@@ -37,7 +37,7 @@ class CircuitWidget {
     }
 
     static desiredHeight(wireCount) {
-        return Math.max(Config.MIN_WIRE_COUNT, wireCount) * Config.WIRE_SPACING;
+        return Math.max(Config.MIN_WIRE_COUNT, wireCount) * Config.WIRE_SPACING + 100;
     }
 
     desiredWidth() {
@@ -51,54 +51,10 @@ class CircuitWidget {
     }
 
     /**
-     * @param {!Array<!int>|!int} grouping
-     * @returns {!function() : !string}
-     */
-    static makeWireLabeller(grouping) {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        if (grouping === 1) {
-            return i => alphabet[i];
-        }
-
-        if (typeof grouping === 'number') {
-            Util.need(grouping >= 1, "grouping >= 1", arguments);
-            return i => {
-                let g = Math.floor(i / grouping);
-                let e = i % grouping;
-                return alphabet[g] + (e + 1);
-            };
-        }
-
-        if (Array.isArray(grouping)) {
-            let labels = [];
-            for (let g = 0; g < grouping.length; g++) {
-                if (grouping[g] === 1) {
-                    labels.push(alphabet[g]);
-                } else {
-                    for (let i = 0; i < grouping[g]; i++) {
-                        labels.push(alphabet[g] + (i + 1));
-                    }
-                }
-            }
-            return i => labels[i];
-        }
-
-        throw "Unrecognized grouping type: " + grouping;
-    }
-
-
-    /**
      * @param {!Rect} drawArea
      */
     updateArea(drawArea) {
         this.area = drawArea;
-    }
-
-    /**
-     * @returns {!number}
-     */
-    getWireSpacing() {
-        return this.area.h / this.circuitDefinition.numWires;
     }
 
     /**
@@ -107,20 +63,23 @@ class CircuitWidget {
      */
     wireRect(wireIndex) {
         Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires, "wireIndex out of range", arguments);
-        let wireHeight = this.getWireSpacing();
-        return this.area.skipTop(wireHeight * wireIndex).takeTop(wireHeight);
+        return this.area.skipTop(Config.WIRE_SPACING * wireIndex).takeTop(Config.WIRE_SPACING);
     }
 
     /**
      * @param {!Point} p
-     * @returns {?int}
+     * @returns {null|!int}
      */
     findWireAt(p) {
         if (!this.area.containsPoint(p)) {
             return null;
         }
 
-        return Math.floor((p.y - this.area.y) * this.circuitDefinition.numWires / this.area.h);
+        let i = Math.floor((p.y - this.area.y) / Config.WIRE_SPACING);
+        if (i < 0 || i >= this.circuitDefinition.numWires) {
+            return null;
+        }
+        return i;
     }
 
     /**
@@ -186,10 +145,10 @@ class CircuitWidget {
             return null;
         }
         let halfColIndex = this.findOpHalfColumnAt(Util.notNull(hand.pos));
-        if (halfColIndex === null) {
+        let wireIndex = this.findWireAt(Util.notNull(hand.pos));
+        if (halfColIndex === null || wireIndex === null) {
             return null;
         }
-        let wireIndex = Util.notNull(this.findWireAt(Util.notNull(hand.pos)));
         let colIndex = Math.ceil(halfColIndex);
         let isInsert = Math.abs(halfColIndex % 1) === 0.5;
         if (colIndex >= this.circuitDefinition.columns.length) {
@@ -400,7 +359,7 @@ class CircuitWidget {
             skip(minCol).
             skipWhile(c => cols[c].gates[row] !== null).
             first(cols.length);
-        return new Seq(cols).
+        return seq(cols).
             padded(cols.length + 1, GateColumn.empty(cols[0].gates.length)).
             withTransformedItem(oldCol, c => c.withGatesAdded(row, new GateColumn([null]))).
             withTransformedItem(newCol, c => c.withGatesAdded(row, new GateColumn([gate]))).
@@ -426,7 +385,7 @@ class CircuitWidget {
                 modificationPoint.row - hand.heldGatesGrabInset,
                 0),
             this.circuitDefinition.numWires - hand.heldGates.gates.length);
-        let newCols = new Seq(this.circuitDefinition.columns).
+        let newCols = seq(this.circuitDefinition.columns).
             padded(i, emptyCol).
             ifThen(isInserting, s => s.withInsertedItem(i, emptyCol)).
             padded(i + 1, emptyCol).
@@ -455,7 +414,7 @@ class CircuitWidget {
     }
 
     withJustEnoughWires(extra = 0) {
-        let maxUsedWire = new Seq(this.circuitDefinition.columns).
+        let maxUsedWire = seq(this.circuitDefinition.columns).
             map(c => Seq.range(this.circuitDefinition.numWires).filter(i => c.gates[i] !== null).last(0)).
             max(0);
         let desiredWireCount = maxUsedWire + 1 + extra;
@@ -479,20 +438,22 @@ class CircuitWidget {
         }
 
         let c = Util.notNull(possibleCol);
-        let r = Util.notNull(this.findWireAt(Util.notNull(hand.pos)));
-        if (!this.gateRect(r, c).containsPoint(Util.notNull(hand.pos)) || this.circuitDefinition.columns[c].gates[r] === null) {
+        let r = this.findWireAt(Util.notNull(hand.pos));
+        if (r === null ||
+                !this.gateRect(r, c).containsPoint(Util.notNull(hand.pos)) ||
+                this.circuitDefinition.columns[c].gates[r] === null) {
             return {newCircuit: this, newHand: hand};
         }
 
         let gate = this.circuitDefinition.columns[c].gates[r];
-        let remainingGates = new Seq(this.circuitDefinition.columns[c].gates).toArray();
+        let remainingGates = seq(this.circuitDefinition.columns[c].gates).toArray();
         if (!duplicate) {
             remainingGates[r] = null;
         }
         let grabbedGates = [gate];
 
         let grabInset = 0;
-        let newCols = new Seq(this.circuitDefinition.columns).
+        let newCols = seq(this.circuitDefinition.columns).
             withOverlayedItem(c, new GateColumn(remainingGates)).
             toArray();
         return {
@@ -511,6 +472,13 @@ class CircuitWidget {
         return this.circuitDefinition.isTimeDependent();
     }
 
+    importantWireCount() {
+        let usedWireCount = 1 + seq(this.circuitDefinition.columns).
+            flatMap(col => seq(col.gates).mapWithIndex((gate, i) => gate !== null ? i : -Infinity)).
+            max(-Infinity);
+        return Math.max(this.circuitDefinition.numWires - 1, Math.max(Config.MIN_WIRE_COUNT, usedWireCount));
+    }
+
     /**
      * Draws a peek gate on each wire at the right-hand side of the circuit.
      *
@@ -518,21 +486,22 @@ class CircuitWidget {
      * @param {!CircuitStats} stats
      */
     drawRightHandPeekGates(painter, stats) {
-        let n = this.circuitDefinition.columns.length + 1;
+        let colCount = this.circuitDefinition.columns.length + 1;
+        let numWire = this.importantWireCount();
 
-        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
+        for (let i = 0; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
-            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, n));
+            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount));
             let m = stats.densityMatrixAfterIfAvailable([i], Infinity);
             if (m !== undefined) {
-                MathPainter.paintBlochSphere(painter, m, this.gateRect(i, n+1));
+                MathPainter.paintBlochSphere(painter, m, this.gateRect(i, colCount+1));
             }
         }
 
-        let offset = n+2;
+        let offset = colCount+2;
         for (let g = 0; g < Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS; g++) {
             let d = 1 << g;
-            for (let i = 0; i + d <= this.circuitDefinition.numWires; i += d) {
+            for (let i = 0; i + d <= numWire; i += d) {
                 let m = stats.densityMatrixAfterIfAvailable(Seq.range(d).map(e => e + i).toArray(), Infinity);
                 if (m !== undefined) {
                     let topLeft = this.gateRect(i, offset).topLeft();
@@ -544,47 +513,21 @@ class CircuitWidget {
             offset += d;
         }
 
-        let w = 1 << Math.floor(this.circuitDefinition.numWires/2);
-        let h = 1 << Math.ceil(this.circuitDefinition.numWires/2);
-        let amps = Matrix.generate(w, h, (r, c) => {
-            let interleaved = 0;
-            let n = Util.bitSize(Math.max(r, c));
-            for (let i = 0; i < n; i++) {
-                if ((r & (1 << i)) !== 0) {
-                    interleaved |= 1 << (2 * i)
-                }
-                if ((c & (1 << i)) !== 0) {
-                    interleaved |= 1 << (2 * i + 1)
-                }
-            }
-            return stats.finalState[interleaved];
-        });
-        let pad = this.gateRect(0, 0).y - this.area.y;
-        let ampsRect = this.opRect(offset).skipTop(pad).skipBottom(pad);
-        ampsRect = ampsRect.withW(ampsRect.h * (w/h));
-        let labelRect = ampsRect.withW(ampsRect.w + 50).withH(ampsRect.h + 50);
-        MathPainter.paintMatrix(
-            painter,
-            amps,
-            ampsRect,
-            Config.SUPERPOSITION_MID_COLOR,
-            'black',
-            Config.SUPERPOSITION_FORE_COLOR,
-            Config.SUPERPOSITION_BACK_COLOR);
-
-        this.drawOutputSuperpositionDisplay(painter, stats, offset);
-
+        let bottom = this.wireRect(numWire-1).bottom();
+        let right = this.opRect(this.circuitDefinition.columns.length).x;
         painter.printParagraph(
             "Local wire states\n(Chance/Bloch/Density)",
-            labelRect.withY(labelRect.bottom()-40).withH(40).withW(190).withX(labelRect.x - 275),
+            new Rect(right+25, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
 
         painter.printParagraph(
             "Paired states\n(Density)",
-            labelRect.withY(labelRect.bottom()-40).withH(40).withW(190).withX(labelRect.x - 150),
+            new Rect(right+150, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
+
+        this.drawOutputSuperpositionDisplay(painter, stats, offset);
     }
 
     /**
@@ -595,25 +538,15 @@ class CircuitWidget {
      * @param {!int} col
      */
     drawOutputSuperpositionDisplay(painter, stats, col) {
-        let n = this.circuitDefinition.numWires;
-        let [w, h] = [1 << Math.floor(n/2), 1 << Math.ceil(n/2)];
-        let amplitudeGrid = Matrix.generate(w, h, (r, c) => {
-            let interleaved = 0;
-            let bitCount = Util.bitSize(Math.max(r, c));
-            for (let i = 0; i < bitCount; i++) {
-                if ((r & (1 << i)) !== 0) {
-                    interleaved |= 1 << (2 * i)
-                }
-                if ((c & (1 << i)) !== 0) {
-                    interleaved |= 1 << (2 * i + 1)
-                }
-            }
-            return stats.finalState[interleaved];
-        });
+        let numWire = this.importantWireCount();
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
+        let amplitudeGrid = Matrix.generate(colCount, rowCount, (r, c) => stats.finalState[r*colCount + c]);
 
-        let pad = this.gateRect(0, 0).y - this.area.y;
-        let gridRect = this.opRect(col).skipTop(pad).skipBottom(pad);
-        gridRect = gridRect.withW(gridRect.h * (w/h));
+        let topRect = this.gateRect(0, col);
+        let bottomRect = this.gateRect(numWire-1, col);
+        let gridRect = new Rect(topRect.x, topRect.y, 0, bottomRect.bottom() - topRect.y);
+        gridRect = gridRect.withW(gridRect.h * (colCount/rowCount));
         MathPainter.paintMatrix(
             painter,
             amplitudeGrid,
@@ -623,45 +556,39 @@ class CircuitWidget {
             Config.SUPERPOSITION_FORE_COLOR,
             Config.SUPERPOSITION_BACK_COLOR);
 
-        let labelRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
-        let labelText = (k, parity) => Seq.range(n).
-            map(i => i % 2 !== parity ? "_" :
-                (k & (1 << Math.floor(i/2))) !== 0 ? "1" :
-                    "0").
-            join("");
-        let [dw, dh] = [gridRect.w / w, gridRect.h / h];
+        let expandedRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
+        let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
+        let bin = (val, pad) => ("0".repeat(pad) + val.toString(2)).slice(-pad).split("").reverse().join("");
 
         // Row labels.
-        for (let i = 0; i < h; i++) {
-            let r = labelRect.skipLeft(gridRect.w + 2).skipTop(dh*i).skipRight(2).withH(dh);
-            let s = labelText(i, 0);
-            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
-            painter.fillRect(r.paddedBy(2), 'lightgray');
-            painter.printLine(s, r);
+        for (let i = 0; i < rowCount; i++) {
+            let labelRect = expandedRect.skipLeft(gridRect.w + 2).skipTop(dh*i).skipRight(2).withH(dh);
+            let label = "_".repeat(colWires) + bin(i, rowWires);
+            labelRect = painter.printLine(label, labelRect, undefined, undefined, undefined, undefined, 0.5);
+            painter.fillRect(labelRect.paddedBy(2), 'lightgray');
+            painter.printLine(label, labelRect);
         }
 
         // Column labels.
         painter.ctx.save();
         painter.ctx.rotate(Math.PI/2);
-        for (let i = 0; i < w; i++) {
-            let r = labelRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
-            r = new Rect(r.y, -r.x-r.w, r.h, r.w);
-            let s = labelText(i, 1);
-            r = painter.printLine(s, r, undefined, undefined, undefined, undefined, 0.5);
-            painter.fillRect(r.paddedBy(2), 'lightgray');
-            painter.printLine(s, r);
+        for (let i = 0; i < colCount; i++) {
+            let labelRect = expandedRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
+            labelRect = new Rect(labelRect.y, -labelRect.x-labelRect.w, labelRect.h, labelRect.w);
+            let label = bin(i, colWires) + "_".repeat(rowWires);
+            labelRect = painter.printLine(label, labelRect, undefined, undefined, undefined, undefined, 0.5);
+            painter.fillRect(labelRect.paddedBy(2), 'lightgray');
+            painter.printLine(label, labelRect);
         }
         painter.ctx.restore();
 
         // Hint text.
         painter.printParagraph(
             "ALL final amplitudes\n(ignoring measurement)",
-            labelRect.withY(labelRect.bottom()).withH(40).withW(200),
+            expandedRect.withY(expandedRect.bottom()).withH(40).withW(200),
             new Point(0, 0),
             'gray');
     }
 }
-
-CircuitWidget.DEFAULT_WIRE_LABELLER = CircuitWidget.makeWireLabeller(1);
 
 export default CircuitWidget;

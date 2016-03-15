@@ -84,17 +84,16 @@ export default class InspectorWidget {
      * @private
      */
     paintHand(painter, stats) {
-        let gates = this.hand.heldGates;
-        if (this.hand.pos === null || gates === null) {
+        let heldGates = this.hand.heldGates;
+        if (this.hand.pos === null || heldGates === null) {
             return;
         }
-        gates = gates.gates;
+        let gates = heldGates.gates;
 
-        let dh = this.circuitWidget.getWireSpacing();
+        let dh = Config.WIRE_SPACING;
         for (let k = 0; k < gates.length; k++) {
             let p = this.hand.pos.offsetBy(0, dh * (k - gates.length + 1));
             let r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
-            //paint(painter, areaRect, isInToolbox, isHighlighted, time, circuitContext) {
             gates[k].drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
         }
     }
@@ -214,7 +213,7 @@ export default class InspectorWidget {
             wireCount = Config.MIN_WIRE_COUNT;
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        let wireHeight = CircuitWidget.desiredHeight(wireCount);
-        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + wireHeight + 100);
+        let circuitHeight = CircuitWidget.desiredHeight(wireCount);
+        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight);
     }
 }
