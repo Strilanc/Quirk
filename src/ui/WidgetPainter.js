@@ -54,11 +54,11 @@ export default class WidgetPainter {
                 let col = curMatrix.getColumn(c);
                 if (col.every(e => e.isEqualTo(0))) {
                     return "discards " + inDesc;
-                }
-                if (Seq.range(n).every(r => col[r].isEqualTo(r === c ? 1 : 0))) {
-                    return "doesn't affect " + inDesc;
-                }
-                if (Seq.range(n).every(r => r === c || col[r].isEqualTo(0))) {
+                } else if (Seq.range(n).every(r => col[r].isEqualTo(r === c ? 1 : 0))) {
+                    if (!gate.isTimeBased()) {
+                        return "doesn't affect " + inDesc;
+                    }
+                } else if (Seq.range(n).every(r => r === c || col[r].isEqualTo(0))) {
                     return "phases " + inDesc + " by " + col[c].toString(format);
                 }
                 let outDesc = new Seq(col).
