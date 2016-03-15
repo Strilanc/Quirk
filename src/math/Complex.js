@@ -202,6 +202,14 @@ class Complex {
     };
 
     /**
+     * Returns the negation of this complex value.
+     * @returns {!Complex}
+     */
+    neg() {
+        return new Complex(-this.real, -this.imag);
+    }
+
+    /**
      * Returns the angle, in radians, of the receiving complex value with 0 being +real-ward and τ/4 being +imag-ward.
      * Zero defaults to having a phase of zero.
      * @returns {!number}

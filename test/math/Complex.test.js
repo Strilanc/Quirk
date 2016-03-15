@@ -313,26 +313,73 @@ suite.test("rootsOfQuadratic_fuzz", () => {
 });
 
 suite.test("exp", () => {
+    let π = Math.PI;
+    let i = Complex.I;
+    let s = Math.sqrt(0.5);
+
     assertThat(Complex.ZERO.exp()).isEqualTo(1);
     assertThat(Complex.ONE.exp()).isApproximatelyEqualTo(Math.E);
-    assertThat(Complex.I.times(Math.PI).exp()).isApproximatelyEqualTo(-1);
-    assertThat(Complex.I.times(2*Math.PI).exp()).isApproximatelyEqualTo(1);
-    assertThat(Complex.I.times(Math.PI/2).exp()).isApproximatelyEqualTo(Complex.I);
     assertThat(new Complex(2, 0).exp()).isApproximatelyEqualTo(Math.E*Math.E);
-    assertThat(new Complex(2, Math.PI).exp()).isApproximatelyEqualTo(-Math.E*Math.E);
+    assertThat(new Complex(2, π).exp()).isApproximatelyEqualTo(-Math.E*Math.E);
+
+    // Unit circle.
+    assertThat(i.times(-π).exp()).isEqualTo(-1);
+    assertThat(i.times(-π/2).exp()).isEqualTo(i.neg());
+    assertThat(i.times(π/4).exp()).isEqualTo(new Complex(s, s));
+    assertThat(i.times(π/2).exp()).isEqualTo(i);
+    assertThat(i.times(π).exp()).isApproximatelyEqualTo(-1);
+    assertThat(i.times(3*π/2).exp()).isEqualTo(i.neg());
+    assertThat(i.times(2*π).exp()).isEqualTo(1);
 });
 
 suite.test("ln", () => {
+    let π = Math.PI;
+
     assertThat(Complex.ONE.ln()).isEqualTo(0);
     assertThat(new Complex(Math.E, 0).ln()).isApproximatelyEqualTo(1);
-    assertThat(new Complex(-1, 0).ln()).isApproximatelyEqualTo(new Complex(0, Math.PI));
-    assertThat(new Complex(0, 1).ln()).isApproximatelyEqualTo(new Complex(0, Math.PI/2));
+    assertThat(new Complex(-1, 0).ln()).isApproximatelyEqualTo(new Complex(0, π));
+    assertThat(new Complex(0, 1).ln()).isApproximatelyEqualTo(new Complex(0, π/2));
     assertThat(new Complex(Math.E*Math.E, 0).ln()).isApproximatelyEqualTo(new Complex(2, 0));
-    assertThat(new Complex(-Math.E*Math.E, 0).ln()).isApproximatelyEqualTo(new Complex(2, Math.PI));
+    assertThat(new Complex(-Math.E*Math.E, 0).ln()).isApproximatelyEqualTo(new Complex(2, π));
+
+    assertThat(Complex.I.ln().isEqualTo(new Complex(0, π/2)));
+    assertThat(new Complex(1, 1).ln().isEqualTo(new Complex(Math.log(2), π/4)));
+    assertThat(Complex.I.neg().ln().isEqualTo(new Complex(0, -π/2)));
+    assertThat(new Complex(-1, -1).ln().isEqualTo(new Complex(Math.log(2), -3*π/4)));
+});
+
+suite.test("neg", () => {
+    assertThat(new Complex(3, 5).neg()).isEqualTo(new Complex(-3, -5));
 });
 
 suite.test("raisedTo", () => {
-    assertThat(Complex.I.raisedTo(Complex.I)).isApproximatelyEqualTo(Math.exp(-Math.PI/2));
+    let π = Math.PI;
+    let i = new Complex(0, 1);
+    let e = new Complex(Math.E, 0);
+    let s = Math.sqrt(0.5);
+
+    // Unit circle axes.
+    assertThat(e.raisedTo(i.times(-π/2))).isEqualTo(i.neg());
+    assertThat(e.raisedTo(i.times(0))).isEqualTo(1);
+    assertThat(e.raisedTo(i.times(π/2))).isEqualTo(i);
+    assertThat(e.raisedTo(i.times(π))).isEqualTo(-1);
+    assertThat(e.raisedTo(i.times(3*π/2))).isEqualTo(i.neg());
+    assertThat(e.raisedTo(i.times(2*π))).isEqualTo(1);
+
+    // Unit circle diagonals.
+    assertThat(e.raisedTo(i.times(-π/4))).isEqualTo(new Complex(s, -s));
+    assertThat(e.raisedTo(i.times(π/4))).isEqualTo(new Complex(s, s));
+    assertThat(e.raisedTo(i.times(3*π/4))).isEqualTo(new Complex(-s, s));
+    assertThat(e.raisedTo(i.times(5*π/4))).isEqualTo(new Complex(-s, -s));
+
+    // Base negative 1.
+    assertThat(new Complex(-1, 0).raisedTo(0)).isEqualTo(1);
+    assertThat(new Complex(-1, 0).raisedTo(0.5)).isEqualTo(i);
+    assertThat(new Complex(-1, 0).raisedTo(-0.5)).isEqualTo(i.neg());
+    assertThat(new Complex(-1, 0).raisedTo(1)).isEqualTo(-1);
+
+    // Misc.
+    assertThat(i.raisedTo(i)).isApproximatelyEqualTo(Math.exp(-π/2));
     assertThat(new Complex(1, 1).raisedTo(new Complex(1, 1))).isApproximatelyEqualTo(
         new Complex(0.2739572538301, 0.5837007587586));
     assertThat(new Complex(2, 3).raisedTo(new Complex(5, 7))).isApproximatelyEqualTo(
