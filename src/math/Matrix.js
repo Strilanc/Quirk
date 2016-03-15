@@ -605,7 +605,7 @@ class Matrix {
 
     /**
      * Given a single-qubit operation matrix U, finds φ, θ, and v=[x,y,z] that satisfy
-     * U = exp(i φ) (I cos(θ/2) + v σ i sin(θ/2))
+     * U = exp(i φ) (I cos(θ/2) - v σ i sin(θ/2))
      *
      * @returns {!{axis: !Array.<!number>, angle: !number, phase: !number}}
      */
@@ -627,7 +627,7 @@ class Matrix {
         let x = xφ.dividedBy(φ).real;
         let y = yφ.dividedBy(φ).real;
         let z = zφ.dividedBy(φ).real;
-        let θ = 2*Math.acos(w);
+        let θ = -2*Math.acos(w);
 
         // Normalize axis.
         let n = Math.sqrt(x*x + y*y + z*z);
@@ -640,8 +640,8 @@ class Matrix {
         z /= n;
 
         // Prefer θ in [-π, π].
-        if (θ > Math.PI) {
-            θ -= 2*Math.PI;
+        if (θ <= -Math.PI) {
+            θ += 2*Math.PI;
             φ = φ.times(-1);
         }
 
@@ -657,7 +657,7 @@ class Matrix {
     }
 
     /**
-     * Returns the matrix U = exp(i φ) (I cos(θ/2) + v σ i sin(θ/2)).
+     * Returns the matrix U = exp(i φ) (I cos(θ/2) - v σ i sin(θ/2)).
      * @param {!number} angle
      * @param {!Array.<!number>} axis
      * @param {!number} phase
@@ -670,7 +670,7 @@ class Matrix {
         let vσ = Matrix.PAULI_X.scaledBy(x).
             plus(Matrix.PAULI_Y.scaledBy(y)).
             plus(Matrix.PAULI_Z.scaledBy(z));
-        let [cos, sin] = Util.snappedCosSin(angle/2);
+        let [cos, sin] = Util.snappedCosSin(-angle/2);
         return Matrix.identity(2).scaledBy(cos).
             plus(vσ.scaledBy(new Complex(0, sin))).
             scaledBy(Complex.polar(1, phase));

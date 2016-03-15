@@ -528,6 +528,7 @@ suite.test("fromAngleAxisPhaseRotation", () => {
     let i = Complex.I;
     let s = Math.sqrt(0.5);
     let is = Complex.I.times(s);
+    let mis = is.neg();
     let mi = Complex.I.times(-1);
 
     // No-op.
@@ -541,25 +542,29 @@ suite.test("fromAngleAxisPhaseRotation", () => {
     assertThat(Matrix.fromAngleAxisPhaseRotation(0, [1, 0, 0], π)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
 
     // X.
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [1, 0, 0], 0)).isEqualTo(Matrix.square([s, is, is, s]));
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [1, 0, 0], 0)).isEqualTo(Matrix.square([0, i, i, 0]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(-π/2, [1, 0, 0], 0)).isEqualTo(Matrix.square([s, is, is, s]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [1, 0, 0], 0)).isEqualTo(Matrix.square([s, mis, mis, s]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [1, 0, 0], 0)).isEqualTo(Matrix.square([0, mi, mi, 0]));
     assertThat(Matrix.fromAngleAxisPhaseRotation(2*π, [1, 0, 0], 0)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
 
     // Y.
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [0, 1, 0], 0)).isEqualTo(Matrix.square([s, s, -s, s]));
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [0, 1, 0], 0)).isEqualTo(Matrix.square([0, 1, -1, 0]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(-π/2, [0, 1, 0], 0)).isEqualTo(Matrix.square([s, s, -s, s]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [0, 1, 0], 0)).isEqualTo(Matrix.square([s, -s, s, s]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [0, 1, 0], 0)).isEqualTo(Matrix.square([0, -1, 1, 0]));
     assertThat(Matrix.fromAngleAxisPhaseRotation(2*π, [0, 1, 0], 0)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
 
     // Z.
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [0, 0, 1], 0)).
+    assertThat(Matrix.fromAngleAxisPhaseRotation(-π/2, [0, 0, 1], 0)).
         isEqualTo(Matrix.square([new Complex(s, s), 0, 0, new Complex(s, -s)]));
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [0, 0, 1], 0)).isEqualTo(Matrix.square([i, 0, 0, mi]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π/2, [0, 0, 1], 0)).
+        isEqualTo(Matrix.square([new Complex(s, -s), 0, 0, new Complex(s, s)]));
+    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [0, 0, 1], 0)).isEqualTo(Matrix.square([mi, 0, 0, i]));
     assertThat(Matrix.fromAngleAxisPhaseRotation(2*π, [0, 0, 1], 0)).isEqualTo(Matrix.square([-1, 0, 0, -1]));
 
     // H.
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [s, 0, s], 0)).
+    assertThat(Matrix.fromAngleAxisPhaseRotation(-π, [s, 0, s], 0)).
         isEqualTo(Matrix.square([is, is, is, is.times(-1)]));
-    assertThat(Matrix.fromAngleAxisPhaseRotation(π, [s, 0, s], -π/2)).
+    assertThat(Matrix.fromAngleAxisPhaseRotation(-π, [s, 0, s], -π/2)).
         isEqualTo(Matrix.square([s, s, s, -s]));
 });
 
@@ -570,26 +575,32 @@ suite.test("qubitOperationToAngleAxisRotation", () => {
     let [w, x, y, z] = [Matrix.identity(2), Matrix.PAULI_X, Matrix.PAULI_Y, Matrix.PAULI_Z];
     let π = Math.PI;
     let i = Complex.I;
+    let mi = i.neg();
     let s = Math.sqrt(0.5);
 
     assertThat(w.qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: 0});
-    assertThat(x.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: -π/2});
-    assertThat(y.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: -π/2});
-    assertThat(z.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: -π/2});
+    assertThat(x.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: π/2});
+    assertThat(y.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: π/2});
+    assertThat(z.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: π/2});
 
     assertThat(w.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: π/2});
-    assertThat(x.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: 0});
-    assertThat(y.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: 0});
-    assertThat(z.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: 0});
+    assertThat(x.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: π});
+    assertThat(y.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: π});
+    assertThat(z.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: π});
+
+    assertThat(w.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: -π/2});
+    assertThat(x.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: 0});
+    assertThat(y.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: 0});
+    assertThat(z.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: 0});
 
     assertThat(Matrix.HADAMARD.qubitOperationToAngleAxisRotation()).
-        isEqualTo({angle: π, axis: [s, 0, s], phase: -π/2});
+        isEqualTo({angle: π, axis: [s, 0, s], phase: π/2});
     assertThat(Matrix.square([1, i, i, 1]).scaledBy(s).qubitOperationToAngleAxisRotation()).
-        isEqualTo({angle: π/2, axis: [1, 0, 0], phase: 0});
+        isEqualTo({angle: -π/2, axis: [1, 0, 0], phase: 0});
     assertThat(Matrix.square([s, s, -s, s]).qubitOperationToAngleAxisRotation()).
-        isEqualTo({angle: π/2, axis: [0, 1, 0], phase: 0});
+        isEqualTo({angle: -π/2, axis: [0, 1, 0], phase: 0});
     assertThat(Matrix.square([1, 0, 0, i]).qubitOperationToAngleAxisRotation()).
-        isEqualTo({angle: -π/2, axis: [0, 0, 1], phase: π/4});
+        isEqualTo({angle: π/2, axis: [0, 0, 1], phase: π/4});
 });
 
 suite.test("qubitOperationToAngleAxisRotation_vs_fromAngleAxisPhaseRotation_randomized", () => {

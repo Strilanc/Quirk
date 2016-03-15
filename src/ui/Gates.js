@@ -8,6 +8,8 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Seq from "src/base/Seq.js"
 
+const τ = Math.PI * 2;
+
 let Gates = {};
 export default Gates;
 
@@ -110,20 +112,20 @@ Gates.Named = {
                 let r = args.rect.w*0.4;
                 let {x, y} = args.rect.center();
                 y += r*0.6;
-                let a = -Math.PI/3;
+                let a = -τ/6;
                 let [c, s] = [Math.cos(a)*r*1.5, Math.sin(a)*r*1.5];
                 let [p, q] = [x + c, y + s];
 
                 // Draw the dial and shaft.
                 args.painter.ctx.beginPath();
-                args.painter.ctx.arc(x, y, r, Math.PI, 2*Math.PI);
+                args.painter.ctx.arc(x, y, r, τ/2, τ);
                 args.painter.ctx.moveTo(x, y);
                 args.painter.ctx.lineTo(p, q);
                 args.painter.ctx.strokeStyle = 'black';
                 args.painter.ctx.lineWidth = 1;
                 args.painter.ctx.stroke();
                 // Draw the indicator head.
-                args.painter.fillArrowHead(p, q, r*0.3, a, Math.PI/2, 'black');
+                args.painter.fillArrowHead(p, q, r*0.3, a, τ/4, 'black');
             }),
 
         SwapHalf: new Gate(
@@ -151,43 +153,43 @@ Gates.Named = {
         Down: new Gate(
             "X^+½",
             Matrix.fromPauliRotation(0.25, 0, 0),
-            "Half X Gate (+)",
-            "Principle Square Root of Not",
+            "√X Gate",
+            "Principle square root of Not.",
             GateFactory.POWER_DRAWER),
 
         Up: new Gate(
             "X^-½",
             Matrix.fromPauliRotation(0.75, 0, 0),
-            "Half X Gate (-)",
-            "Adjoint Square Root of Not",
+            "X^-½ Gate",
+            "Adjoint square root of Not.",
             GateFactory.POWER_DRAWER),
 
         Right: new Gate(
             "Y^+½",
             Matrix.fromPauliRotation(0, 0.25, 0),
-            "Half Y Gate (+)",
-            "Principle Square Root of Y.",
+            "√Y Gate",
+            "Principle square root of Y.",
             GateFactory.POWER_DRAWER),
 
         Left: new Gate(
             "Y^-½",
             Matrix.fromPauliRotation(0, 0.75, 0),
-            "Half Y Gate (-)",
-            "Adjoint Square Root of Y.",
+            "Y^-½ Gate",
+            "Adjoint square root of Y.",
             GateFactory.POWER_DRAWER),
 
         CounterClockwise: new Gate(
             "Z^+½",
             Matrix.fromPauliRotation(0, 0, 0.25),
-            "Half Z Gate (+) ['S' gate]",
-            "Principle Square Root of Z.",
+            "√Z Gate",
+            "Principle square root of Z.\nAlso known as the 'S' gate.",
             GateFactory.POWER_DRAWER),
 
         Clockwise: new Gate(
             "Z^-½",
             Matrix.fromPauliRotation(0, 0, 0.75),
-            "Half Z Gate (-)",
-            "Adjoint Square Root of Z.",
+            "Z^-½ Gate",
+            "Adjoint square root of Z.",
             GateFactory.POWER_DRAWER)
     },
 
@@ -208,7 +210,7 @@ Gates.Named = {
             "Z^+¼",
             Matrix.fromPauliRotation(0, 0, 1 / 8),
             "Z^+¼ Gate",
-            "Principle fourth root of Z.",
+            "Principle fourth root of Z.\nAlso known as the 'T' gate.",
             GateFactory.POWER_DRAWER),
         Z4i: new Gate(
             "Z^-¼",
@@ -234,8 +236,8 @@ Gates.Named = {
         X: new Gate(
             "X",
             Matrix.PAULI_X,
-            "NOT Gate [Pauli X Gate]",
-            "Toggles between ON and OFF.",
+            "Pauli X Gate",
+            "Toggles between ON and OFF.\nAlso known as the Not gate.",
             args => {
                 let hasSingleWireControl =
                     args.positionInCircuit !== null &&
@@ -277,8 +279,8 @@ Gates.Named = {
         Z: new Gate(
             "Z",
             Matrix.PAULI_Z,
-            "Phase Flip Gate [Pauli Z Gate]",
-            "Negates the amplitude of states where the qubit is ON.",
+            "Pauli Z Gate",
+            "Negates the amplitude of states where the qubit is ON.\nAlso known as the Phase Flip gate.",
             GateFactory.DEFAULT_DRAWER),
 
         H: new Gate(
@@ -290,95 +292,95 @@ Gates.Named = {
             GateFactory.DEFAULT_DRAWER)
     },
     Exponentiating: {
-        ExpiX: new Gate(
-            "e^+iXt",
-            t => Matrix.PAULI_X.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
-            "X-Exponentiating Gate",
-            "A gradual spin around the Bloch Sphere's X axis.\n" +
-                "Passes through iX instead of X.",
-            GateFactory.CYCLE_DRAWER),
-
-        AntiExpiX: new Gate(
+        XForward: new Gate(
             "e^-iXt",
-            t => Matrix.PAULI_X.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
-            "Inverse X-Exponentiating Gate",
-            "A gradual counter-spin around the Bloch Sphere's X axis.\n" +
-                "Passes through iX instead of X.",
+            t => Matrix.PAULI_X.liftApply(c => c.times(τ * -t).times(Complex.I).exp()),
+            "X-Exponentiating Gate (forward)",
+            "A continuous right-handed rotation around the X axis.\n" +
+                "Passes through ±iX instead of X.",
             GateFactory.CYCLE_DRAWER),
 
-        ExpiY: new Gate(
-            "e^+iYt",
-            t => Matrix.PAULI_Y.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
-            "Y-Exponentiating Gate",
-            "A gradual spin around the Bloch Sphere's Y axis.\n" +
-                "Corresponds to real 2x2 rotation matrices, and passes through iY instead of Y.",
+        XBackward: new Gate(
+            "e^+iXt",
+                t => Matrix.PAULI_X.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
+            "X-Exponentiating Gate (backward)",
+            "A continuous left-handed rotation around the X axis.\n" +
+                "Passes through ±iX instead of X.",
             GateFactory.CYCLE_DRAWER),
 
-        AntiExpiY: new Gate(
+        YForward: new Gate(
             "e^-iYt",
-            t => Matrix.PAULI_Y.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
-            "Inverse Y-Exponentiating Gate",
-            "A gradual counter-spin around the Bloch Sphere's Y axis.\n" +
-                "Corresponds to real 2x2 rotation matrices, and passes through iY instead of Y.",
+                t => Matrix.PAULI_Y.liftApply(c => c.times(τ * -t).times(Complex.I).exp()),
+            "Y-Exponentiating Gate (forward)",
+            "A continuous right-handed rotation around the Y axis.\n" +
+                "Passes through ±iY instead of Y.",
             GateFactory.CYCLE_DRAWER),
 
-        ExpiZ: new Gate(
-            "e^+iZt",
-            t => Matrix.PAULI_Z.liftApply(c => c.times(Math.PI * 2 * t).times(Complex.I).exp()),
-            "Z-Exponentiating Gate",
-            "A gradual spin around the Bloch Sphere's Z axis.\n" +
-                "Passes through iZ instead of Z.",
+        YBackward: new Gate(
+            "e^+iYt",
+            t => Matrix.PAULI_Y.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
+            "Y-Exponentiating Gate (backward)",
+            "A continuous left-handed rotation around the Y axis.\n" +
+                "Passes through ±iY instead of Y.",
             GateFactory.CYCLE_DRAWER),
 
-        AntiExpiZ: new Gate(
+        ZForward: new Gate(
             "e^-iZt",
-            t => Matrix.PAULI_Z.liftApply(c => c.times(Math.PI * 2 * -t).times(Complex.I).exp()),
-            "Inverse Z-Exponentiating Gate",
-            "A gradual counter-spin around the Bloch Sphere's Z axis.\n" +
-                "Passes through iZ instead of Z.",
+                t => Matrix.PAULI_Z.liftApply(c => c.times(τ * -t).times(Complex.I).exp()),
+            "Z-Exponentiating Gate (forward)",
+            "A continuous right-handed rotation around the Z axis.\n" +
+                "Passes through ±iZ instead of Z.",
+            GateFactory.CYCLE_DRAWER),
+
+        ZBackward: new Gate(
+            "e^+iZt",
+            t => Matrix.PAULI_Z.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
+            "Z-Exponentiating Gate (backward)",
+            "A continuous left-handed rotation around the Z axis.\n" +
+                "Passes through ±iZ instead of Z.",
             GateFactory.CYCLE_DRAWER)
     },
     Powering: {
         X: new Gate(
             "X^t",
             t => Matrix.PAULI_X.liftApply(c => c.raisedTo(t * 2)),
-            "X-Raising Gate",
-            "A gradual cycle between the X gate and no-op.",
+            "X-Raising Gate (forward)",
+            "A continuous right-handed cycle between the X gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         AntiX: new Gate(
             "X^-t",
             t => Matrix.PAULI_X.liftApply(c => c.raisedTo(-t * 2)),
-            "Inverse X-Raising Gate",
-            "A gradual cycle between the X gate and no-op, in reverse.",
+            "X-Raising Gate (backward)",
+            "A continuous left-handed cycle between the X gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         Y: new Gate(
             "Y^t",
             t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(t * 2)),
-            "Y-Raising Gate",
-            "A gradual cycle between the Y gate and no-op.",
+            "Y-Raising Gate (forward)",
+            "A continuous right-handed cycle between the Y gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         AntiY: new Gate(
             "Y^-t",
             t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(-t * 2)),
-            "Inverse Y-Raising Gate",
-            "A gradual cycle between the Y gate and no-op, in reverse.",
+            "Y-Raising Gate (backward)",
+            "A continuous left-handed cycle between the Y gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         Z: new Gate(
             "Z^t",
             t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(t * 2)),
-            "Z-Raising Gate",
-            "A gradual cycle between the Z gate and no-op.",
+            "Z-Raising Gate (forward)",
+            "A continuous right-handed cycle between the Z gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
         AntiZ: new Gate(
             "Z^-t",
             t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(-t * 2)),
-            "Inverse Z-Raising Gate",
-            "A gradual cycle between the Z gate and no-op, in reverse.",
+            "Z-Raising Gate (backward)",
+            "A continuous left-handed cycle between the Z gate and no-op.",
             GateFactory.CYCLE_DRAWER)
     },
     Silly: {
@@ -407,7 +409,7 @@ Gates.Named = {
             "|1⟩⟨1|",
             Matrix.square([0, 0, 0, 1]),
             "Post-selection Gate [On]",
-            "Keeps ON states, discards ON states, and renormalizes.\n",
+            "Keeps ON states, discards OFF states, and renormalizes.\n",
             GateFactory.POST_SELECT_DRAWER),
 
         CLOCK: new Gate(
@@ -486,7 +488,7 @@ Gates.Sets = [
         ]
     },
     {
-        hint: "Powering",
+        hint: "Raising",
         gates: [
             Gates.Named.Powering.X,
             Gates.Named.Powering.Y,
@@ -499,12 +501,12 @@ Gates.Sets = [
     {
         hint: "Exponentiating",
         gates: [
-            Gates.Named.Exponentiating.ExpiX,
-            Gates.Named.Exponentiating.ExpiY,
-            Gates.Named.Exponentiating.ExpiZ,
-            Gates.Named.Exponentiating.AntiExpiX,
-            Gates.Named.Exponentiating.AntiExpiY,
-            Gates.Named.Exponentiating.AntiExpiZ
+            Gates.Named.Exponentiating.XForward,
+            Gates.Named.Exponentiating.YForward,
+            Gates.Named.Exponentiating.ZForward,
+            Gates.Named.Exponentiating.XBackward,
+            Gates.Named.Exponentiating.YBackward,
+            Gates.Named.Exponentiating.ZBackward
         ]
     },
     {
@@ -561,10 +563,10 @@ Gates.KnownToSerializer = [
     Gates.Named.Powering.AntiX,
     Gates.Named.Powering.AntiY,
     Gates.Named.Powering.AntiZ,
-    Gates.Named.Exponentiating.ExpiX,
-    Gates.Named.Exponentiating.ExpiY,
-    Gates.Named.Exponentiating.ExpiZ,
-    Gates.Named.Exponentiating.AntiExpiX,
-    Gates.Named.Exponentiating.AntiExpiY,
-    Gates.Named.Exponentiating.AntiExpiZ
+    Gates.Named.Exponentiating.XBackward,
+    Gates.Named.Exponentiating.YBackward,
+    Gates.Named.Exponentiating.ZBackward,
+    Gates.Named.Exponentiating.XForward,
+    Gates.Named.Exponentiating.YForward,
+    Gates.Named.Exponentiating.ZForward
 ];

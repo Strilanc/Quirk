@@ -224,7 +224,6 @@ export default class MathPainter {
         }
 
         let {angle, axis} = operation.qubitOperationToAngleAxisRotation();
-        axis = axis.map(e => -e);
         let axisVec = Matrix.col(axis);
         let dAxis = projToPt(axisVec);
 
