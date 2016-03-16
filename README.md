@@ -1,18 +1,31 @@
 Quantum Circuit Inspector
 =========================
 
-A visualization and experimentation tool for small quantum circuits. Includes common single-qubit gates, but not many multi-qubit gates (e.g. swap and fourier transform). Supports controlled and time-varying operations. Not much support for customization yet.
+A toy for exploring the behavior of small quantum circuits.
 
-For example, here is a screenshot of a quantum teleportation circuit. The qubit in A1, which is entangled with B2, is teleported to B1:
+Features:
 
-![The Inspector](http://i.imgur.com/t1aIye1.png)
+- Drag-and-drop gates and state displays into and out of the circuit.
+- Updates and responds to changes in real time (no "compute now" button).
+- Bookmarkable circuits.
+- Time-dependent gates.
+- Scales to 12 qubits by performing computation on the GPU.
+- Gate tooltips showing effects as both a matrix and a rotation.
+- Measurement.
+- Postselection.
+- The circuits look decent.
 
-The bottom left thing is a representation of the highlighted operation as a matrix. Next to it is a representation of the state after the highlighted operation (each cell is one of the classical states, and the contents represent the amplitude). The bottom right thing is a representation of the final state. Within the circuit, the gates showing percentages are "peek" gates. They are showing the probability of the wire being on (*if* it was measured at that point), both given that the controls are satisfied and in-addition-to the controls being satisfied.
+Notable missing features:
 
-JSFiddle Instance
-=================
+- Re-cohering a measured qubit. (That would require the simulation to use density matrices, squaring the cost.)
+- Eigendecomposition of mixed states. (Too expensive.)
+- Showing numbers instead of diagrams. (It's a toy.)
 
-(Up to date as of Dec 6. Basically just all of the javascript concatenated together.)
+Screenshot of the inspector showing a quantum teleportation circuit:
 
-http://jsfiddle.net/c4f5z73v/2/
+![The Inspector](/README_TeleportationLoop.gif)
 
+Snapshots usable on JSFiddle
+============================
+
+Dec 6, 2014: http://jsfiddle.net/c4f5z73v/2/
