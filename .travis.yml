@@ -8,4 +8,4 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script: grunt test-firefox
 addons:
-  firefox: "36.0"
+  firefox: "latest"
