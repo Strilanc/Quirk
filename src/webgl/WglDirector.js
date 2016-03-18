@@ -143,10 +143,13 @@ export default class WglDirector {
      * @returns {!Uint8Array}
      */
     readPixelColorBytes(texture, rect = undefined, destinationBuffer = undefined) {
+        let s = WebGLRenderingContext;
+        if (texture.pixelType !== s.UNSIGNED_BYTE) {
+            throw "Asked to read bytes from a texture with non-byte pixels."
+        }
         rect = rect || new Rect(0, 0, texture.width, texture.height);
         destinationBuffer = destinationBuffer || new Uint8Array(rect.w * rect.h * 4);
 
-        let s = WebGLRenderingContext;
         let c = this.cache;
         let g = c.webGLRenderingContext;
         texture.bindFramebufferFor(c);
@@ -163,10 +166,13 @@ export default class WglDirector {
      * @returns {!Float32Array}
      */
     readPixelColorFloats(texture, rect = undefined, destinationBuffer = undefined) {
+        let s = WebGLRenderingContext;
+        if (texture.pixelType !== s.FLOAT) {
+            throw "Asked to read floats from a texture with non-float pixels."
+        }
         rect = rect || new Rect(0, 0, texture.width, texture.height);
         destinationBuffer = destinationBuffer || new Float32Array(rect.w * rect.h * 4);
 
-        let s = WebGLRenderingContext;
         let c = this.cache;
         let g = c.webGLRenderingContext;
         texture.bindFramebufferFor(c);
