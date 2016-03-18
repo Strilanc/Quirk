@@ -32,9 +32,11 @@ The example terminal commands have been tested on a fresh Ubuntu install.
 
 0. **[Have git and Node.js installed](https://nodejs.org/en/download/)**.
 
-    ```sudo add-apt-repository universe
-    sudo apt-get update
-    sudo apt-get install --yes git npm nodejs-legacy```
+    `sudo add-apt-repository universe`
+    
+    `sudo apt-get update`
+    
+    `sudo apt-get install --yes git npm nodejs-legacy`
 
     *(The first two commands are only needed for REALLY fresh installs. Still-a-Live-CD fresh. nodejs-legacy is needed
     to workaround [an issue in grunt.js](https://github.com/nodejs/node-v0.x-archive/issues/3911).)*
@@ -45,8 +47,9 @@ The example terminal commands have been tested on a fresh Ubuntu install.
 
 0. **Install the project's dev dependencies**.
 
-    ```cd Quantum-Circuit-Inspector
-    npm install```
+    `cd Quantum-Circuit-Inspector`
+    
+    `npm install`
 
     *(If you're on Windows, you'll need to work around
       [this bug in grunt-traceur](https://github.com/aaronfrost/grunt-traceur/issues/66) by going to line 49 of
