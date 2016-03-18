@@ -102,7 +102,12 @@ suite.webGlTest("renderPixelColorData", () => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
-    let data2x2 = new Float32Array(Seq.range(2*2*4).toArray());
+    let data2x2 = new Float32Array([
+        0, NaN, Infinity, -Infinity,
+        Math.PI, Math.E, Math.sqrt(2), 0.1,
+        1, 0.5, -1, -2,
+        Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
+    ]);
     QuantumShaders.renderPixelColorData(director, texture2x2, data2x2);
     assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(data2x2);
 
@@ -110,7 +115,28 @@ suite.webGlTest("renderPixelColorData", () => {
     QuantumShaders.renderPixelColorData(director, texture2x4, data2x4);
     assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(data2x4);
 
+    QuantumShaders.renderPixelColorData(director, texture2x4, data2x4);
+    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(data2x4);
+
     assertThrows(() => QuantumShaders.renderPixelColorData(director, texture2x2, data2x4));
+});
+
+suite.webGlTest("renderFloatsToBytes", () => {
+    let director = new WglDirector();
+    let texture2x2 = new WglTexture(2, 2);
+    let texture4x4Bytes = new WglTexture(4, 4, WebGLRenderingContext.UNSIGNED_BYTE);
+
+    let data2x2 = new Float32Array([
+        0, NaN, Infinity, -Infinity,
+        Math.PI, Math.E, Math.sqrt(2), 0.1,
+        1, 0.5, -1, -2,
+        Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
+    ]);
+    QuantumShaders.renderPixelColorData(director, texture2x2, data2x2);
+    QuantumShaders.renderFloatsToEncodedBytes(director, texture4x4Bytes, texture2x2);
+    let pixels = director.readPixelColorBytes(texture4x4Bytes);
+    let pixels2 = QuantumShaders.decodeBytesToFloats(pixels, 2, 2);
+    assertThat(pixels2).isEqualTo(data2x2);
 });
 
 suite.webGlTest("renderOverlayed", () => {

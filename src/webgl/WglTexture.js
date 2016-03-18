@@ -1,5 +1,6 @@
-import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
+import WglCache from "src/webgl/WglCache.js"
+import WglUtil from "src/webgl/WglUtil.js"
 
 /**
  * Stores pixel data for/from/on the gpu... or something along those lines. You can render to and pull data out of it.
@@ -15,10 +16,10 @@ export default class WglTexture {
         this.width = width;
         /** @type {!int} */
         this.height = height;
-        /** @type {!ContextStash} */
-        this.contextStash = new Map();
         /** @type {!number} */
         this.pixelType = pixelType;
+        /** @type {!ContextStash} */
+        this.contextStash = new Map();
     };
 
     /**
@@ -28,24 +29,29 @@ export default class WglTexture {
      */
     instanceFor(cache) {
         return cache.retrieveOrCreateAssociatedData(this.contextStash, () => {
-            var g = cache.webGLRenderingContext;
+            const Ctx = WebGLRenderingContext;
+            var ctx = cache.webGLRenderingContext;
 
             var result = {
-                texture: g.createTexture(),
-                framebuffer: g.createFramebuffer()
+                texture: ctx.createTexture(),
+                framebuffer: ctx.createFramebuffer()
             };
 
-            var s = WebGLRenderingContext;
-            g.bindTexture(s.TEXTURE_2D, result.texture);
-            g.bindFramebuffer(s.FRAMEBUFFER, result.framebuffer);
+            ctx.bindTexture(Ctx.TEXTURE_2D, result.texture);
+            ctx.bindFramebuffer(Ctx.FRAMEBUFFER, result.framebuffer);
 
-            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
-            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
-            g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, this.width, this.height, 0, s.RGBA, this.pixelType, null);
-            g.framebufferTexture2D(s.FRAMEBUFFER, s.COLOR_ATTACHMENT0, s.TEXTURE_2D, result.texture, 0);
+            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_MAG_FILTER, Ctx.NEAREST);
+            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_MIN_FILTER, Ctx.NEAREST);
+            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_WRAP_S, Ctx.CLAMP_TO_EDGE);
+            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_WRAP_T, Ctx.CLAMP_TO_EDGE);
+            ctx.texImage2D(Ctx.TEXTURE_2D, 0, Ctx.RGBA, this.width, this.height, 0, Ctx.RGBA, this.pixelType, null);
+            WglUtil.checkErrorCode(ctx.getError(), "texImage2D");
+            ctx.framebufferTexture2D(Ctx.FRAMEBUFFER, Ctx.COLOR_ATTACHMENT0, Ctx.TEXTURE_2D, result.texture, 0);
+            WglUtil.checkErrorCode(ctx.getError(), "framebufferTexture2D");
+            WglUtil.checkFrameBufferStatusCode(ctx.checkFramebufferStatus(Ctx.FRAMEBUFFER));
 
-            g.bindTexture(s.TEXTURE_2D, null);
-            g.bindFramebuffer(s.FRAMEBUFFER, null);
+            ctx.bindTexture(Ctx.TEXTURE_2D, null);
+            ctx.bindFramebuffer(Ctx.FRAMEBUFFER, null);
 
             return result;
         });
@@ -57,8 +63,10 @@ export default class WglTexture {
      * @param {!WglCache} cache
      */
     bindFramebufferFor(cache) {
-        cache.webGLRenderingContext.bindFramebuffer(
-            WebGLRenderingContext.FRAMEBUFFER,
-            this.instanceFor(cache).framebuffer);
+        const Ctx = WebGLRenderingContext;
+        let ctx = cache.webGLRenderingContext;
+        ctx.bindFramebuffer(Ctx.FRAMEBUFFER, this.instanceFor(cache).framebuffer);
+        WglUtil.checkErrorCode(ctx.getError(), "framebufferTexture2D");
+        WglUtil.checkFrameBufferStatusCode(ctx.checkFramebufferStatus(Ctx.FRAMEBUFFER));
     }
 }

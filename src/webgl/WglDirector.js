@@ -2,6 +2,7 @@ import Rect from "src/math/Rect.js"
 import WglCache from "src/webgl/WglCache.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
+import WglUtil from "src/webgl/WglUtil.js"
 
 class WglDirectorSharedContext {
     constructor() {
@@ -114,29 +115,6 @@ export default class WglDirector {
     };
 
     /**
-     * Checks if the underlying webgl context has flagged an error, throwing an Error describing the issue if so.
-     * @param {!string} previousOperationDescription
-     */
-    checkForError(previousOperationDescription) {
-        var e = this.cache.webGLRenderingContext.getError();
-        var s = WebGLRenderingContext;
-        if (e === s.NO_ERROR) {
-            return;
-        }
-        var m = {
-            [s.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
-            [s.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
-            [s.OUT_OF_MEMORY]: "OUT_OF_MEMORY",
-            [s.INVALID_ENUM]: "INVALID_ENUM",
-            [s.INVALID_VALUE]: "INVALID_VALUE",
-            [s.INVALID_OPERATION]: "INVALID_OPERATION",
-            [s.INVALID_FRAMEBUFFER_OPERATION]: "INVALID_FRAMEBUFFER_OPERATION"
-        };
-        var d = m[e] !== undefined ? m[e] : "?";
-        throw new Error(`gl.getError() returned ${e} (${d}) after ${previousOperationDescription}.`);
-    };
-
-    /**
      * @param {!WglTexture} texture
      * @param {!Rect=} rect
      * @param {!Uint8Array=} destinationBuffer
@@ -154,7 +132,7 @@ export default class WglDirector {
         let g = c.webGLRenderingContext;
         texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, destinationBuffer);
-        this.checkForError("readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
+        WglUtil.checkErrorCode(g.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
 
         return destinationBuffer;
     };
@@ -177,7 +155,7 @@ export default class WglDirector {
         let g = c.webGLRenderingContext;
         texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.FLOAT, destinationBuffer);
-        this.checkForError("readPixels(..., RGBA, FLOAT, ...)");
+        WglUtil.checkErrorCode(g.getError(), "readPixels(..., RGBA, FLOAT, ...)");
 
         return destinationBuffer;
     };
