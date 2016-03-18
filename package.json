@@ -1,27 +1,30 @@
 {
-  "name": "ToyQuantumCircuitInspector",
-  "title": "Toy Quantum Circuit Inspector",
+  "name": "Quantum-Circuit-Inspector",
+  "title": "Quantum Circuit Inspector",
   "description": "An html5 widget for toying around with, and understanding, simple quantum circuits.",
   "license": "Apache-2.0",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "homepage": "https://github.com/Strilanc/Quantum-Circuit-Inspector",
   "bugs": {
     "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector/issues"
   },
   "devDependencies": {
     "grunt": "0.4.5",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-concat": "^0.5.1",
-    "grunt-contrib-copy": "^0.8.1",
-    "grunt-karma": "^0.12.1",
-    "grunt-traceur": "^0.5.4",
-    "traceur": "^0.0.91",
-    "karma": "^0.13.10",
-    "karma-chrome-launcher": "^0.2.0",
-    "karma-firefox-launcher": "^0.1.6"
+    "grunt-cli": "0.1.13",
+    "grunt-contrib-clean": "1.0.0",
+    "grunt-contrib-concat": "1.0.0",
+    "grunt-contrib-copy": "1.0.0",
+    "grunt-karma": "0.12.2",
+    "grunt-traceur": "0.5.4",
+    "karma": "0.13.22",
+    "karma-chrome-launcher": "0.2.2",
+    "karma-firefox-launcher": "0.1.7",
+    "traceur": "0.0.104"
   },
   "scripts": {
     "test": "grunt test",
+    "test-firefox": "grunt test-firefox",
+    "test-chrome": "grunt test-chrome",
     "build": "grunt build_src"
   },
   "repository": {

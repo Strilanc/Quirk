@@ -39,7 +39,7 @@ module.exports = function(grunt) {
             unit: {
                 configFile: 'karma.conf.js'
             },
-            unit_just_firefox_for_travis: {
+            "unit-firefox": {
                 configFile: 'karma.conf.js',
                 browsers: ['Firefox']
             }
@@ -93,7 +93,7 @@ module.exports = function(grunt) {
     grunt.registerTask('bootstrap_get_packages', function(src, dst) {
         var packagedFiles = grunt.file.glob.sync(src);
         var getters = packagedFiles.map(function(e) {
-            return 'System.get("' + e + '");';
+            return '$traceurRuntime.getModule("' + e + '");';
         }).join("\n");
         grunt.file.write(dst, getters);
     });
@@ -122,6 +122,6 @@ module.exports = function(grunt) {
     ]);
     grunt.registerTask('build', ['build_src', 'build_test']);
 
-    grunt.registerTask('test_just_firefox_for_travis_ci', ['build_test', 'karma:unit_just_firefox_for_travis']);
+    grunt.registerTask('test-firefox', ['build_test', 'karma:unit-firefox']);
     grunt.registerTask('test', ['build_test', 'karma:unit']);
 };
