@@ -6,6 +6,6 @@ install: npm install
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-script: grunt test_just_firefox_for_travis_ci
+script: grunt test-firefox
 addons:
-  firefox: "36.0"
+  firefox: "latest"
