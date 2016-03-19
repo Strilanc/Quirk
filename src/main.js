@@ -22,6 +22,7 @@ if (canvas === null) {
 }
 canvas.width = canvasDiv.clientWidth;
 canvas.height = window.innerHeight;
+let haveLoaded = false;
 
 window.onerror = function myErrorHandler(errorMsg, url, lineNumber, columnNumber, errorObj) {
     if (canvas === undefined) {
@@ -165,6 +166,11 @@ let syncArea = ins => {
 let redraw = () => {
     canvas.width = Math.max(canvasDiv.clientWidth, inspector.desiredWidth());
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
+    if (!haveLoaded) {
+        // Don't draw while loading. It's a huge source of false-positive circuit-load-failed errors during development.
+        return;
+    }
+
     let painter = new Painter(canvas);
     let shown = syncArea(inspector).previewDrop();
     if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.circuitWidget.circuitDefinition)) {
@@ -341,3 +347,5 @@ let loadCircuitFromUrl = () => {
 
 window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl(true);
+haveLoaded = true;
+redraw();
