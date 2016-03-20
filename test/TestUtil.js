@@ -28,7 +28,6 @@ export function fail(message) {
  * @throws
  */
 function sanityCheck(subject) {
-    //noinspection JSUnresolvedVariable
     if (subject instanceof Map) {
         for (let k in subject) {
             if (subject.hasOwnProperty(k)) {
@@ -164,7 +163,6 @@ export class AssertionSubject {
         }
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * @param {*} other
      */

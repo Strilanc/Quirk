@@ -198,7 +198,6 @@ export default class CircuitStats{
             outputDensityGroups: pixelDataNodes.outputDensityGroups.map(g => g.map(e => e.asDensityMatrix()))
         };
 
-        //noinspection JSCheckFunctionSignatures
         let values = Util.objectifyArrayFunc(PipelineNode.computePipeline)(valueNodes);
 
         let knownDensityMatrices = new Seq(values.outputDensityGroups).

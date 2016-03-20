@@ -41,7 +41,6 @@ function equate(subject, other) {
 }
 export default equate;
 
-//noinspection JSUnresolvedVariable
 const GENERIC_ARRAY_TYPES = [
     Float32Array,
     Float64Array,
@@ -220,8 +219,7 @@ function equate_Objects(subject, other) {
         return false;
     }
     if (hasSubjectIter && hasOtherIter) {
-        //noinspection JSCheckFunctionSignatures
-        if (!equate_Iterables(subject, other)) {
+        if (!equate_Iterables(/** @type {!Iterable} */ subject, /** @type {!Iterable} */ other)) {
             return false;
         }
     }

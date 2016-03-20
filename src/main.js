@@ -29,7 +29,6 @@ window.onerror = function myErrorHandler(errorMsg, url, lineNumber, columnNumber
         return false;
     }
 
-    //noinspection JSUnresolvedVariable
     let location = (errorObj instanceof Object) ? errorObj.stack : undefined;
     if (location === undefined) {
         location = url + ":" + lineNumber + ":" + columnNumber;
@@ -77,8 +76,7 @@ window.onerror = function myErrorHandler(errorMsg, url, lineNumber, columnNumber
 /** @type {!HTMLDivElement} */
 let inspectorDiv = document.getElementById("inspectorDiv");
 
-//noinspection JSValidateTypes
-/** @type {?string} */
+/** @type {null|!string} */
 let wantToPushStateIfDiffersFrom = null;
 
 /** @type {!InspectorWidget} */

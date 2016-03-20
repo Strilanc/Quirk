@@ -9,21 +9,21 @@ class WglDirectorSharedContext {
         /** @type {!HTMLCanvasElement} */
         this.canvas = document.createElement('canvas');
 
+
+        let gl = /** @type {!WebGLRenderingContext} */
+            this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
         //noinspection JSValidateTypes
-        /** @type {!WebGLRenderingContext} */
-        let g = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
-        //noinspection JSValidateTypes
-        if (g === null) {
+        if (gl === null) {
             document.removeChild(this.canvas);
             throw new Error('Error creating WebGL context.');
         }
-        if (g.getExtension('OES_texture_float') === undefined) {
+        if (gl.getExtension('OES_texture_float') === undefined) {
             document.removeChild(this.canvas);
             throw new Error("WebGL support for 32-bit floats not present.")
         }
 
         /** @type {!WglCache} */
-        this.cache = new WglCache(g, nextUniqueId++, 0);
+        this.cache = new WglCache(gl, nextUniqueId++, 0);
 
         this.canvas.addEventListener(
             "webglcontextrestored",

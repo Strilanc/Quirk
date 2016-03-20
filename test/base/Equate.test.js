@@ -14,7 +14,6 @@ class EmptyClass2 {
 class PropClass {
     constructor(v) { this.v = v; }
 }
-//noinspection JSUnusedGlobalSymbols
 class SomeIterable {
     constructor() {}
 
@@ -30,7 +29,6 @@ class One {
 class First {
     constructor(x, y) {
         this.x = x;
-        //noinspection JSUnusedGlobalSymbols
         this.y = y;
     }
     isEqualTo(other) {

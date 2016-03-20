@@ -241,9 +241,7 @@ export default class QuantumShaders {
             if (c === null) {
                 continue;
             }
-            //noinspection JSValidateTypes
-            /** @type {!boolean} */
-            let b = c;
+            let b = /** @type {!boolean} */ c;
             if (hasFirst) {
                 QuantumShaders.renderAddBitConstraintToControlMask(director, workspace2, workspace1, i, b);
                 let t = workspace2;

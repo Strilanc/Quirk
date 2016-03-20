@@ -25,7 +25,6 @@ export default class WglShader {
      * @param {!(!WglArg[])} uniformArguments
      */
     bindInstanceFor(context, uniformArguments) {
-        //noinspection JSCheckFunctionSignatures,JSUnresolvedVariable
         let compiled = context.retrieveOrCreateAssociatedData(this.contextStash, () =>
             new WglShaderContext(context, this.fragmentShaderSource, uniformArguments.map(e => e.name)));
 
@@ -71,7 +70,7 @@ class WglShaderContext {
     /**
      * @param {!WglCache} cache
      * @param {!string} fragmentShaderSource
-     * @param {!Iterable.<!string>} uniformParameterNames
+     * @param {!Array.<!string>|!Iterable.<!string>} uniformParameterNames
      *
      * @property {!Map} uniformLocations
      * @property {*} positionAttributeLocation
