@@ -39,6 +39,7 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
     [WglArg.FLOAT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val),
     [WglArg.VEC2_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform2f(loc, val[0], val[1]),
     [WglArg.VEC4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform4f(loc, val[0], val[1], val[2], val[3]),
+    [WglArg.MAT4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniformMatrix4fv(loc, false, val),
     [WglArg.TEXTURE_TYPE]: (c, loc, val) => {
         if (val.unit >= c.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);

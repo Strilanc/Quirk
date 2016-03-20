@@ -6,7 +6,7 @@ import WglDirector from "src/webgl/WglDirector.js"
 
 let suite = new Suite("Wgl");
 
-suite.webGlTest("readPixelColorBytes", status => {
+suite.webGlTest("readPixelColorBytes", () => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`

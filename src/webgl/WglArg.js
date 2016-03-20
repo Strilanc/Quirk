@@ -67,6 +67,15 @@ export default class WglArg {
 
     /**
      * @param {!string} name
+     * @param {!Float32Array|!Array.<!number>} cellsRowByRow
+     * @returns {!WglArg}
+     */
+    static mat4(name, cellsRowByRow) {
+        return new WglArg(WglArg.MAT4_TYPE, name, cellsRowByRow);
+    }
+
+    /**
+     * @param {!string} name
      * @param {!WglTexture} texture
      * @param {!int} unit
      * @returns {!WglArg}
@@ -95,5 +104,6 @@ WglArg.FLOAT_TYPE = "float";
 WglArg.INT_TYPE = "int";
 WglArg.VEC2_TYPE = "vec2";
 WglArg.VEC4_TYPE = "vec4";
+WglArg.MAT4_TYPE = "mat4";
 WglArg.TEXTURE_TYPE = "texture";
 WglArg.RAW_TEXTURE_TYPE = "raw_texture";
