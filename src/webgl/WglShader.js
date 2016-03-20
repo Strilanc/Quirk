@@ -1,5 +1,6 @@
 import Config from "src/Config.js"
 import WglArg from "src/webgl/WglArg.js"
+import { initializedWglContext }  from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -14,7 +15,7 @@ export default class WglShader {
     constructor(fragmentShaderSource) {
         /** @type {!string} */
         this.fragmentShaderSource = fragmentShaderSource;
-        /** @type {undefined|!WglMortalValueSlot.<!WglShaderContext>} */
+        /** @type {undefined|!WglMortalValueSlot.<!WglCompiledShader>} */
         this._shaderContextSlot = undefined; // Wait for someone to tell us the parameter names.
     };
 
@@ -29,7 +30,7 @@ export default class WglShader {
             // We just learned the parameter names.
             let parameterNames = uniformArguments.map(e => e.name);
             this._shaderContextSlot = new WglMortalValueSlot(
-                    ctx => new WglShaderContext(ctx, this.fragmentShaderSource, parameterNames));
+                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames));
         }
         this._shaderContextSlot.initializedValue(context).load(context, uniformArguments);
     };
@@ -39,51 +40,16 @@ export default class WglShader {
     }
 }
 
-const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
-    [WglArg.BOOL_TYPE]: (c, loc, val) => c.gl.uniform1f(loc, val ? 1 : 0),
-    [WglArg.INT_TYPE]: (c, loc, val) => c.gl.uniform1i(loc, val),
-    [WglArg.FLOAT_TYPE]: (c, loc, val) => c.gl.uniform1f(loc, val),
-    [WglArg.VEC2_TYPE]: (c, loc, val) => c.gl.uniform2f(loc, val[0], val[1]),
-    [WglArg.VEC4_TYPE]: (c, loc, val) => c.gl.uniform4f(loc, val[0], val[1], val[2], val[3]),
-    [WglArg.MAT4_TYPE]: (c, loc, val) => c.gl.uniformMatrix4fv(loc, false, val),
-    [WglArg.TEXTURE_TYPE]: (c, loc, val) => {
-        if (val.unit >= c.maxTextureUnits) {
-            throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
-        }
-        if (val.texture.width > c.maxTextureSize || val.texture.height > c.maxTextureSize) {
-            throw new Error(`Uniform texture argument is ${val.texture.width}x${val.texture.height}, but max ` +
-                `texture diameter is ${c.maxTextureSize}.`);
-        }
-        let gl = c.gl;
-        gl.uniform1i(loc, val.unit);
-        gl.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.initializedTexture());
-    },
-    [WglArg.RAW_TEXTURE_TYPE]: (c, loc, val) => {
-        if (val.unit >= c.maxTextureUnits) {
-            throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
-        }
-        let gl = c.gl;
-        gl.uniform1i(loc, val.unit);
-        gl.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture);
-    }
-};
-
 /**
  * A compiled shader program definition that can be bound to / used by a webgl context.
  */
-class WglShaderContext {
+class WglCompiledShader {
     /**
-     * @param {!WglContext} ctx
      * @param {!string} fragmentShaderSource
      * @param {!Array.<!string>|!Iterable.<!string>} uniformParameterNames
-     *
-     * @property {!Map} uniformLocations
-     * @property {*} positionAttributeLocation
-     * @property {*} program
      */
-    constructor(ctx, fragmentShaderSource, uniformParameterNames) {
+    constructor(fragmentShaderSource, uniformParameterNames) {
+        let ctx = initializedWglContext();
         let precision = ctx.maximumShaderFloatPrecision;
         let vertexShader = `
             precision ${precision} float;
@@ -99,8 +65,8 @@ class WglShaderContext {
 
         const GL = WebGLRenderingContext;
         let gl = ctx.gl;
-        let glVertexShader = WglShaderContext.compileShader(gl, GL.VERTEX_SHADER, vertexShader);
-        let glFragmentShader = WglShaderContext.compileShader(gl, GL.FRAGMENT_SHADER, fullFragmentShader);
+        let glVertexShader = WglCompiledShader.compileShader(gl, GL.VERTEX_SHADER, vertexShader);
+        let glFragmentShader = WglCompiledShader.compileShader(gl, GL.FRAGMENT_SHADER, fullFragmentShader);
 
         let program = gl.createProgram();
         gl.attachShader(program, glVertexShader);
@@ -125,8 +91,11 @@ class WglShaderContext {
         gl.deleteShader(glVertexShader);
         gl.deleteShader(glFragmentShader);
 
+        /** @type {!Map.<!string, !WebGLUniformLocation>} */
         this.uniformLocations = new Seq(uniformParameterNames).toMap(e => e, e => gl.getUniformLocation(program, e));
+        /** @type {!Number} */
         this.positionAttributeLocation = gl.getAttribLocation(program, 'position');
+        /** @type {!WebGLProgram} */
         this.program = program;
     };
 
@@ -143,7 +112,7 @@ class WglShaderContext {
             if (location === undefined) {
                 throw new Error(`Unexpected argument: ${arg}`)
             }
-            WGL_ARG_TYPE_UNIFORM_ACTION_MAP[arg.type](context, location, arg.value);
+            WglArg.INPUT_ACTION_MAP.get(arg.type)(context, location, arg.value);
         }
 
         gl.enableVertexAttribArray(this.positionAttributeLocation);

@@ -20,7 +20,7 @@ export default class WglTexture {
         /** @type {!number} */
         this.pixelType = pixelType;
         /** @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>} */
-        this._textureAndFrameBufferSlot = new WglMortalValueSlot(ctx => this._textureAndFramebufferInitializer(ctx.gl));
+        this._textureAndFrameBufferSlot = new WglMortalValueSlot(() => this._textureAndFramebufferInitializer());
     };
 
     /**
@@ -38,12 +38,12 @@ export default class WglTexture {
     }
 
     /**
-     * @param {!WebGLRenderingContext} gl
      * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
      * @private
      */
-    _textureAndFramebufferInitializer(gl) {
+    _textureAndFramebufferInitializer() {
         const GL = WebGLRenderingContext;
+        let gl = initializedWglContext().gl;
 
         let result = {
             texture: gl.createTexture(),

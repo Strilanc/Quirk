@@ -185,6 +185,10 @@ Symbol.iterator = {};
  */
 class WebGLTexture {}
 
+class WebGLUniformLocation {}
+
+class WebGLProgram {}
+
 class performance {
     /**
      * @returns {!number}

@@ -3,9 +3,9 @@ import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 
 /** @type {!WglMortalValueSlot} */
-const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(ctx => {
+const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
     const GL = WebGLRenderingContext;
-    let gl = ctx.gl;
+    let gl = initializedWglContext().gl;
 
     let positionBuffer = gl.createBuffer();
     let positions = new Float32Array([
