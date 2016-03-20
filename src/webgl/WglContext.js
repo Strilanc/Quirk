@@ -29,7 +29,7 @@ const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(ctx => {
 });
 
 /**
- * A WebGLRenderingContext wrapped with metadata helpers and lifetime information.
+ * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.
  */
 class WglContext {
     /**

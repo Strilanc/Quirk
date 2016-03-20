@@ -19,8 +19,7 @@ export default class WglTexture {
         /** @type {!number} */
         this.pixelType = pixelType;
         /** @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>} */
-        this._textureAndFrameBufferSlot = new WglMortalValueSlot(
-                wglContext => this.textureAndFramebufferInitializer(wglContext));
+        this._textureAndFrameBufferSlot = new WglMortalValueSlot(ctx => this._textureAndFramebufferInitializer(ctx));
     };
 
     /**
@@ -34,12 +33,13 @@ export default class WglTexture {
     }
 
     /**
+     * @param {!WglContext} ctx
      * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
      * @private
      */
-    textureAndFramebufferInitializer(wglContext) {
+    _textureAndFramebufferInitializer(ctx) {
         const GL = WebGLRenderingContext;
-        let gl = wglContext.gl;
+        let gl = ctx.gl;
 
         let result = {
             texture: gl.createTexture(),
@@ -67,13 +67,13 @@ export default class WglTexture {
 
     /**
      * Binds, after initializing if necessary, the frame buffer representing this texture to the webgl context related
-     * to the given wglContext.
-     * @param {!WglContext} wglContext
+     * to the given WglContext.
+     * @param {!WglContext} ctx
      */
-    bindFramebufferFor(wglContext) {
+    bindFramebufferFor(ctx) {
         const GL = WebGLRenderingContext;
-        let gl = wglContext.gl;
-        gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(wglContext).framebuffer);
+        let gl = ctx.gl;
+        gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(ctx).framebuffer);
         checkGetErrorResult(gl.getError(), "framebufferTexture2D");
         checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
     }
