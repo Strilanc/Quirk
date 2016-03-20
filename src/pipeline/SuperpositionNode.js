@@ -197,7 +197,7 @@ export default class SuperpositionNode {
     read() {
         return new SuperpositionReadNode(new PipelineNode(
             [this.pipelineNode],
-            inputs => initializedWglContext().readPixelColorFloats(inputs[0])));
+            inputs => inputs[0].readPixels()));
     };
 
     /**

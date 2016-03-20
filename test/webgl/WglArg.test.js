@@ -14,12 +14,12 @@ suite.webGlTest("bool", ctx => {
         }`);
 
     ctx.render(texture, shader, [WglArg.bool("arg", true)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0
     ]));
 
     ctx.render(texture, shader, [WglArg.bool("arg", false)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         -1, 0, 0, 0
     ]));
 });
@@ -33,12 +33,12 @@ suite.webGlTest("float", ctx => {
         }`);
 
     ctx.render(texture, shader, [WglArg.float("arg", Math.PI)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         Math.PI, 0, 0, 0
     ]));
 
     ctx.render(texture, shader, [WglArg.float("arg", Math.E)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         Math.E, 0, 0, 0
     ]));
 });
@@ -52,12 +52,12 @@ suite.webGlTest("int", ctx => {
         }`);
 
     ctx.render(texture, shader, [WglArg.int("arg", 2)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         2, 0, 0, 0
     ]));
 
     ctx.render(texture, shader, [WglArg.int("arg", 3)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         3, 0, 0, 0
     ]));
 });
@@ -71,12 +71,12 @@ suite.webGlTest("vec2", ctx => {
         }`);
 
     ctx.render(texture, shader, [WglArg.vec2("arg", 2, 3)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         2, 3, 0, 0
     ]));
 
     ctx.render(texture, shader, [WglArg.vec2("arg", Math.E, Math.PI)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         Math.E, Math.PI, 0, 0
     ]));
 });
@@ -90,12 +90,12 @@ suite.webGlTest("vec4", ctx => {
         }`);
 
     ctx.render(texture, shader, [WglArg.vec4("arg", 2, 3, 5, 7)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         2, 3, 5, 7
     ]));
 
     ctx.render(texture, shader, [WglArg.vec4("arg", Math.E, Math.PI, Infinity, NaN)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         Math.E, Math.PI, Infinity, NaN
     ]));
 });
@@ -118,7 +118,7 @@ suite.webGlTest("mat4", ctx => {
 
     let vals = new Float32Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
     ctx.render(texture, shader, [WglArg.mat4("arg", vals)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(vals);
+    assertThat(texture.readPixels()).isEqualTo(vals);
 });
 
 suite.webGlTest("texture", ctx => {
@@ -132,7 +132,7 @@ suite.webGlTest("texture", ctx => {
         }`);
 
     ctx.render(texture, shader, [WglArg.texture("arg", srcTexture, 0)]);
-    assertThat(ctx.readPixelColorFloats(texture)).isEqualTo(new Float32Array([
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         1, 2, 3, 5
     ]));
 });

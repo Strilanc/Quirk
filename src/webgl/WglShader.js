@@ -57,7 +57,7 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
         let gl = c.gl;
         gl.uniform1i(loc, val.unit);
         gl.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.instanceFor(c).texture);
+        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.initializedTexture());
     },
     [WglArg.RAW_TEXTURE_TYPE]: (c, loc, val) => {
         if (val.unit >= c.maxTextureUnits) {

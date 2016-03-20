@@ -1,5 +1,6 @@
 import WglArg from "src/webgl/WglArg.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
+import { initializedWglContext }  from "src/webgl/WglContext.js"
 import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 
 /**
@@ -9,7 +10,7 @@ export default class WglTexture {
     /**
      * @param {!int} width
      * @param {!int} height
-     * @param {!int} pixelType WebGLRenderingContext.FLOAT or WebGLRenderingContext.UNSIGNED_BYTE
+     * @param {!int} pixelType FLOAT or UNSIGNED_BYTE
      */
     constructor(width, height, pixelType = WebGLRenderingContext.FLOAT) {
         /** @type {!int} */
@@ -19,27 +20,30 @@ export default class WglTexture {
         /** @type {!number} */
         this.pixelType = pixelType;
         /** @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>} */
-        this._textureAndFrameBufferSlot = new WglMortalValueSlot(ctx => this._textureAndFramebufferInitializer(ctx));
+        this._textureAndFrameBufferSlot = new WglMortalValueSlot(ctx => this._textureAndFramebufferInitializer(ctx.gl));
     };
 
     /**
-     * Returns, after initializing if necessary, the resources representing this texture bound to the given context.
-     * @param {!WglContext} wglContext
-     * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
+     * @returns {!WebGLTexture}
      */
-    instanceFor(wglContext) {
-        return /** @type {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}} */ (
-            this._textureAndFrameBufferSlot.initializedValue(wglContext));
+    initializedTexture() {
+        return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext()).texture;
     }
 
     /**
-     * @param {!WglContext} ctx
+     * @returns {!WebGLFramebuffer}
+     */
+    initializedFramebuffer() {
+        return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext()).framebuffer;
+    }
+
+    /**
+     * @param {!WebGLRenderingContext} gl
      * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
      * @private
      */
-    _textureAndFramebufferInitializer(ctx) {
+    _textureAndFramebufferInitializer(gl) {
         const GL = WebGLRenderingContext;
-        let gl = ctx.gl;
 
         let result = {
             texture: gl.createTexture(),
@@ -48,33 +52,50 @@ export default class WglTexture {
 
         gl.bindTexture(GL.TEXTURE_2D, result.texture);
         gl.bindFramebuffer(GL.FRAMEBUFFER, result.framebuffer);
-
-        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
-        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
-        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
-        gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
-        checkGetErrorResult(gl.getError(), "texImage2D");
-        gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
-        checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-        checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
-
-        gl.bindTexture(GL.TEXTURE_2D, null);
-        gl.bindFramebuffer(GL.FRAMEBUFFER, null);
+        try {
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+            gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
+            checkGetErrorResult(gl.getError(), "texImage2D");
+            gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
+            checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+            checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+        } finally {
+            gl.bindTexture(GL.TEXTURE_2D, null);
+            gl.bindFramebuffer(GL.FRAMEBUFFER, null);
+        }
 
         return result;
     }
 
     /**
-     * Binds, after initializing if necessary, the frame buffer representing this texture to the webgl context related
-     * to the given WglContext.
-     * @param {!WglContext} ctx
+     * Performs a blocking read of the pixel color data in this texture.
+     * @returns {!Uint8Array|!Float32Array}
      */
-    bindFramebufferFor(ctx) {
+    readPixels() {
+        let gl = initializedWglContext().gl;
         const GL = WebGLRenderingContext;
-        let gl = ctx.gl;
-        gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(ctx).framebuffer);
+
+        let outputBuffer;
+        switch (this.pixelType) {
+            case GL.UNSIGNED_BYTE:
+                outputBuffer = new Uint8Array(this.width * this.height * 4);
+                break;
+            case GL.FLOAT:
+                outputBuffer = new Float32Array(this.width * this.height * 4);
+                break;
+            default:
+                throw new Error("Unrecognized pixel type.");
+        }
+
+        gl.bindFramebuffer(GL.FRAMEBUFFER, this.initializedFramebuffer());
         checkGetErrorResult(gl.getError(), "framebufferTexture2D");
         checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
-    }
+        gl.readPixels(0, 0, this.width, this.height, GL.RGBA, this.pixelType, outputBuffer);
+        checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
+
+        return outputBuffer;
+    };
 }

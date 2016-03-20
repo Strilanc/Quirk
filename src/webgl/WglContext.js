@@ -1,6 +1,6 @@
 import Rect from "src/math/Rect.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
-import { checkGetErrorResult } from "src/webgl/WglUtil.js"
+import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 
 /** @type {!WglMortalValueSlot} */
 const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(ctx => {
@@ -151,56 +151,16 @@ class WglContext {
      * @param {!(!WglArg[])} uniformArguments
      */
     render(texture, shader, uniformArguments) {
+        const GL = WebGLRenderingContext;
+        let gl = this.gl;
+
         ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(this);
-        texture.bindFramebufferFor(this);
+        gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
+        checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+        checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
         shader.bindInstanceFor(this, uniformArguments);
 
-        const GL = WebGLRenderingContext;
-        this.gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
-    };
-
-    /**
-     * @param {!WglTexture} texture
-     * @param {!Rect=} rect
-     * @param {!Uint8Array=} destinationBuffer
-     * @returns {!Uint8Array}
-     */
-    readPixelColorBytes(texture, rect = undefined, destinationBuffer = undefined) {
-        const GL = WebGLRenderingContext;
-        if (texture.pixelType !== GL.UNSIGNED_BYTE) {
-            throw "Asked to read bytes from a texture with non-byte pixels."
-        }
-        rect = rect || new Rect(0, 0, texture.width, texture.height);
-        destinationBuffer = destinationBuffer || new Uint8Array(rect.w * rect.h * 4);
-
-        let gl = this.gl;
-        texture.bindFramebufferFor(this);
-        gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.UNSIGNED_BYTE, destinationBuffer);
-        checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
-
-        return destinationBuffer;
-    };
-
-    /**
-     * @param {!WglTexture} texture
-     * @param {!Rect=} rect
-     * @param {!Float32Array=} destinationBuffer
-     * @returns {!Float32Array}
-     */
-    readPixelColorFloats(texture, rect = undefined, destinationBuffer = undefined) {
-        const GL = WebGLRenderingContext;
-        if (texture.pixelType !== GL.FLOAT) {
-            throw "Asked to read floats from a texture with non-float pixels."
-        }
-        rect = rect || new Rect(0, 0, texture.width, texture.height);
-        destinationBuffer = destinationBuffer || new Float32Array(rect.w * rect.h * 4);
-
-        let gl = this.gl;
-        texture.bindFramebufferFor(this);
-        gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.FLOAT, destinationBuffer);
-        checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, FLOAT, ...)");
-
-        return destinationBuffer;
+        gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
     };
 }
 
