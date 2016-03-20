@@ -1,5 +1,5 @@
 import WglArg from "src/webgl/WglArg.js"
-import WglCache from "src/webgl/WglCache.js"
+import WglContext from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglUtil from "src/webgl/WglUtil.js"
 
@@ -20,26 +20,27 @@ export default class WglTexture {
         /** @type {!number} */
         this.pixelType = pixelType;
         /** @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>} */
-        this._textureAndFrameBufferSlot = new WglMortalValueSlot(cache => this.textureAndFramebufferInitializer(cache));
+        this._textureAndFrameBufferSlot = new WglMortalValueSlot(
+                wglContext => this.textureAndFramebufferInitializer(wglContext));
     };
 
     /**
      * Returns, after initializing if necessary, the resources representing this texture bound to the given context.
-     * @param {!WglCache} cache
+     * @param {!WglContext} wglContext
      * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
      */
-    instanceFor(cache) {
+    instanceFor(wglContext) {
         return /** @type {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}} */ (
-            this._textureAndFrameBufferSlot.initializedValue(cache));
+            this._textureAndFrameBufferSlot.initializedValue(wglContext));
     }
 
     /**
      * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
      * @private
      */
-    textureAndFramebufferInitializer(cache) {
+    textureAndFramebufferInitializer(wglContext) {
         const GL = WebGLRenderingContext;
-        let gl = cache.gl;
+        let gl = wglContext.gl;
 
         let result = {
             texture: gl.createTexture(),
@@ -67,13 +68,13 @@ export default class WglTexture {
 
     /**
      * Binds, after initializing if necessary, the frame buffer representing this texture to the webgl context related
-     * to the given cache.
-     * @param {!WglCache} cache
+     * to the given wglContext.
+     * @param {!WglContext} wglContext
      */
-    bindFramebufferFor(cache) {
+    bindFramebufferFor(wglContext) {
         const GL = WebGLRenderingContext;
-        let gl = cache.gl;
-        gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(cache).framebuffer);
+        let gl = wglContext.gl;
+        gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(wglContext).framebuffer);
         WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
         WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
     }

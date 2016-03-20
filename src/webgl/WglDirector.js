@@ -1,5 +1,6 @@
 import Rect from "src/math/Rect.js"
-import WglCache from "src/webgl/WglCache.js"
+import WglContext from "src/webgl/WglContext.js"
+import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import WglUtil from "src/webgl/WglUtil.js"
@@ -8,7 +9,6 @@ class WglDirectorSharedContext {
     constructor() {
         /** @type {!HTMLCanvasElement} */
         this.canvas = document.createElement('canvas');
-
 
         let gl = /** @type {!WebGLRenderingContext} */
             this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
@@ -21,14 +21,14 @@ class WglDirectorSharedContext {
             throw new Error("WebGL support for 32-bit floats not present.")
         }
 
-        /** @type {!WglCache} */
-        this.cache = new WglCache(gl);
+        /** @type {!WglContext} */
+        this.wglContext = new WglContext(gl);
 
         this.canvas.addEventListener(
             "webglcontextrestored",
             event => {
                 event.preventDefault();
-                this.cache.lifetimeCounter++;
+                this.wglContext.lifetimeCounter++;
             },
             false);
 
@@ -36,7 +36,7 @@ class WglDirectorSharedContext {
             'webglcontextlost',
             event => {
                 event.preventDefault();
-                this.cache.lifetimeCounter++;
+                this.wglContext.lifetimeCounter++;
             },
             false);
     };
@@ -63,15 +63,16 @@ export default class WglDirector {
         this.canvas = shared.canvas;
 
         /**
-         * @type {!WebGLRenderingContext}
-         * @private
+         * @type {!WglContext}
          */
-        this.g = shared.g;
+        this.wglContext = shared.wglContext;
 
         /**
-         * @type {!WglCache}
+         * @type {!WglMortalValueSlot}
+         * @private
          */
-        this.cache = shared.cache;
+        this._boundPositionAndIndexBuffersSlot = new WglMortalValueSlot(
+            ctx => WglDirector.ensureAttributesAreBoundInitializer(ctx));
     };
 
     /**
@@ -83,7 +84,7 @@ export default class WglDirector {
      */
     useRawDataTextureIn(width, height, pixelColorData, func) {
         let GL = WebGLRenderingContext;
-        let gl = this.cache.gl;
+        let gl = this.wglContext.gl;
         let t = gl.createTexture();
         try {
             gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, t);
@@ -103,13 +104,13 @@ export default class WglDirector {
      * @param {!(!WglArg[])} uniformArguments
      */
     render(texture, shader, uniformArguments) {
-        let c = this.cache;
-        c.ensureAttributesAreBound();
-        texture.bindFramebufferFor(c);
-        shader.bindInstanceFor(c, uniformArguments);
+        let ctx = this.wglContext;
+        this._boundPositionAndIndexBuffersSlot.ensureInitialized(ctx);
+        texture.bindFramebufferFor(ctx);
+        shader.bindInstanceFor(ctx, uniformArguments);
 
         const GL = WebGLRenderingContext;
-        c.gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
+        ctx.gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
     };
 
     /**
@@ -126,9 +127,9 @@ export default class WglDirector {
         rect = rect || new Rect(0, 0, texture.width, texture.height);
         destinationBuffer = destinationBuffer || new Uint8Array(rect.w * rect.h * 4);
 
-        let c = this.cache;
-        let gl = c.gl;
-        texture.bindFramebufferFor(c);
+        let ctx = this.wglContext;
+        let gl = ctx.gl;
+        texture.bindFramebufferFor(ctx);
         gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.UNSIGNED_BYTE, destinationBuffer);
         WglUtil.checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
 
@@ -149,12 +150,42 @@ export default class WglDirector {
         rect = rect || new Rect(0, 0, texture.width, texture.height);
         destinationBuffer = destinationBuffer || new Float32Array(rect.w * rect.h * 4);
 
-        let c = this.cache;
-        let gl = c.gl;
-        texture.bindFramebufferFor(c);
+        let ctx = this.wglContext;
+        let gl = ctx.gl;
+        texture.bindFramebufferFor(ctx);
         gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.FLOAT, destinationBuffer);
         WglUtil.checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, FLOAT, ...)");
 
         return destinationBuffer;
     };
+
+
+    /**
+     * @param {!WglContext} ctx
+     * @private
+     */
+    static ensureAttributesAreBoundInitializer(ctx) {
+        const GL = WebGLRenderingContext;
+        let gl = ctx.gl;
+
+        let positionBuffer = gl.createBuffer();
+        let positions = new Float32Array([
+            -1, +1,
+            +1, +1,
+            -1, -1,
+            +1, -1]);
+        gl.bindBuffer(GL.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
+        // Note: ARRAY_BUFFER should not be rebound anywhere else.
+
+        let indexBuffer = gl.createBuffer();
+        let indices = new Uint16Array([
+            0, 2, 1,
+            2, 3, 1]);
+        gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
+        // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
+
+        return {positionBuffer, indexBuffer};
+    }
 }

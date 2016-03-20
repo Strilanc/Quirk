@@ -1,6 +1,6 @@
 import Config from "src/Config.js"
 import WglArg from "src/webgl/WglArg.js"
-import WglCache from "src/webgl/WglCache.js"
+import WglContext from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -22,7 +22,7 @@ export default class WglShader {
     /**
      * Sets the active shader, for the given context, to a compiled version of this shader with the given uniform
      * arguments.
-     * @param {!WglCache} context
+     * @param {!WglContext} context
      * @param {!(!WglArg[])} uniformArguments
      */
     bindInstanceFor(context, uniformArguments) {
@@ -76,7 +76,7 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
  */
 class WglShaderContext {
     /**
-     * @param {!WglCache} cache
+     * @param {!WglContext} cache
      * @param {!string} fragmentShaderSource
      * @param {!Array.<!string>|!Iterable.<!string>} uniformParameterNames
      *
@@ -132,7 +132,7 @@ class WglShaderContext {
     };
 
     /**
-     * @param {!WglCache} context
+     * @param {!WglContext} context
      * @param {!(!WglArg[])} uniformArgs
      */
     load(context, uniformArgs) {
