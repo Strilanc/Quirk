@@ -80,9 +80,9 @@ class Seq {
         if (other === this) {
             return true;
         }
-        var iter2 = other[Symbol.iterator]();
+        let iter2 = other[Symbol.iterator]();
         for (let e1 of this) {
-            var e2 = iter2.next();
+            let e2 = iter2.next();
             if (e2.done || !comparator(e1, e2.value)) {
                 return false;
             }

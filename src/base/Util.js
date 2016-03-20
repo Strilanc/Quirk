@@ -14,7 +14,7 @@ export default class Util {
                 "(not provided)" :
                 `[${ Array.prototype.slice.call(args).join(", ") }]` ;
             let msgDesc = message === undefined ? "(not provided)" : message;
-            var msg = "Precondition failed" +
+            let msg = "Precondition failed" +
                 "\n\nMessage: " + msgDesc +
                 "\n\nArgs: " + argDesc;
             throw new Error(msg);
@@ -85,8 +85,8 @@ export default class Util {
         if (i < 0) {
             return Util.powerOfTwoness(-i);
         }
-        var lowMask = i ^ (i - 1);
-        var lowBit = i & lowMask;
+        let lowMask = i ^ (i - 1);
+        let lowBit = i & lowMask;
         return Math.round(Math.log2(lowBit));
     };
 

@@ -129,9 +129,9 @@ function equate_Indexables(subject, other) {
  * @returns {!boolean}
  */
 function equate_Iterables(subject, other) {
-    var otherIter = other[Symbol.iterator]();
+    let otherIter = other[Symbol.iterator]();
     for (let subjectItem of subject) {
-        var otherItemDone = otherIter.next();
+        let otherItemDone = otherIter.next();
         if (otherItemDone.done || !equate(subjectItem, otherItemDone.value)) {
             return false;
         }
@@ -185,7 +185,7 @@ function equate_Sets(subject, other) {
  * @returns {!Set}
  */
 function objectKeys(obj) {
-    var result = new Set();
+    let result = new Set();
     for (let k in obj) {
         if (obj.hasOwnProperty(k)) {
             result.add(k);
@@ -200,7 +200,7 @@ function objectKeys(obj) {
  * @returns {!boolean}
  */
 function equate_Objects(subject, other) {
-    var keys = objectKeys(subject);
+    let keys = objectKeys(subject);
     if (!equate_Sets(keys, objectKeys(other))) {
         return false;
     }

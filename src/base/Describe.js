@@ -54,7 +54,7 @@ export default describe;
  * @returns {!string}
  */
 function describe_Map(map, limit) {
-    var entries = [];
+    let entries = [];
     for (let [k, v] of map.entries()) {
         if (entries.length > COLLECTION_CUTOFF) {
             entries.push("[...]");
@@ -75,7 +75,7 @@ function describe_Map(map, limit) {
  * @returns {!string}
  */
 function describe_Set(set, limit) {
-    var entries = [];
+    let entries = [];
     for (let e of set) {
         if (entries.length > COLLECTION_CUTOFF) {
             entries.push("[...]");
@@ -110,7 +110,7 @@ function describe_Iterable(seq, limit) {
  * @returns {!string}
  */
 function describe_Object(value, limit) {
-    var entries = [];
+    let entries = [];
     for (let k in value) {
         if (!value.hasOwnProperty(k)) {
             continue;

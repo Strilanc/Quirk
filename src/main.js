@@ -30,12 +30,12 @@ window.onerror = function myErrorHandler(errorMsg, url, lineNumber, columnNumber
     }
 
     //noinspection JSUnresolvedVariable
-    var location = (errorObj instanceof Object) ? errorObj.stack : undefined;
+    let location = (errorObj instanceof Object) ? errorObj.stack : undefined;
     if (location === undefined) {
         location = url + ":" + lineNumber + ":" + columnNumber;
     }
 
-    var msg = "Uh oh, something's acting wonky!\n\n" +
+    let msg = "Uh oh, something's acting wonky!\n\n" +
         "=== Advanced Recovery Strategies ===\n" +
         "- hit Ctrl+Z (undo)\n" +
         "- flail the mouse around\n" +

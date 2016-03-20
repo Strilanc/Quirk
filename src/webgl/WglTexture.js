@@ -30,9 +30,9 @@ export default class WglTexture {
     instanceFor(cache) {
         return cache.retrieveOrCreateAssociatedData(this.contextStash, () => {
             const Ctx = WebGLRenderingContext;
-            var ctx = cache.gl;
+            let ctx = cache.gl;
 
-            var result = {
+            let result = {
                 texture: ctx.createTexture(),
                 framebuffer: ctx.createFramebuffer()
             };

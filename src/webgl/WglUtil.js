@@ -5,11 +5,11 @@ export default class WglUtil {
      * @param {!string} previousOperationDescription
      */
     static checkErrorCode(code, previousOperationDescription) {
-        var s = WebGLRenderingContext;
+        let s = WebGLRenderingContext;
         if (code === s.NO_ERROR) {
             return;
         }
-        var m = {
+        let m = {
             [s.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
             [s.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
             [s.OUT_OF_MEMORY]: "OUT_OF_MEMORY",
@@ -18,16 +18,16 @@ export default class WglUtil {
             [s.INVALID_OPERATION]: "INVALID_OPERATION",
             [s.INVALID_FRAMEBUFFER_OPERATION]: "INVALID_FRAMEBUFFER_OPERATION"
         };
-        var d = m[code] !== undefined ? m[code] : "?";
+        let d = m[code] !== undefined ? m[code] : "?";
         throw new Error(`gl.getError() returned ${code} (${d}) after ${previousOperationDescription}.`);
     }
 
     static checkFrameBufferStatusCode(code) {
-        var s = WebGLRenderingContext;
+        let s = WebGLRenderingContext;
         if (code === s.FRAMEBUFFER_COMPLETE) {
             return;
         }
-        var m = {
+        let m = {
             [0]: "Argument wasn't a frame buffer",
             [s.INVALID_ENUM]: "INVALID_ENUM",
             [s.FRAMEBUFFER_INCOMPLETE_ATTACHMENT]: "FRAMEBUFFER_INCOMPLETE_ATTACHMENT",
@@ -35,7 +35,7 @@ export default class WglUtil {
             [s.FRAMEBUFFER_INCOMPLETE_DIMENSIONS]: "FRAMEBUFFER_INCOMPLETE_DIMENSIONS",
             [s.FRAMEBUFFER_UNSUPPORTED]: "FRAMEBUFFER_UNSUPPORTED"
         };
-        var d = m[code] !== undefined ? m[code] : "?";
+        let d = m[code] !== undefined ? m[code] : "?";
         throw new Error(`checkFramebufferStatus() returned ${code} (${d}).`);
     }
 }

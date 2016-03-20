@@ -60,10 +60,10 @@ export default class WglCache {
      * @returns {!string}
      */
     getMaximumShaderFloatPrecision() {
-        var gl = this.gl;
-        var s = WebGLRenderingContext;
+        let gl = this.gl;
+        let s = WebGLRenderingContext;
 
-        var isHighPrecisionAvailable =
+        let isHighPrecisionAvailable =
             gl.getShaderPrecisionFormat(s.VERTEX_SHADER, s.HIGH_FLOAT).precision > 0 &&
             gl.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.HIGH_FLOAT).precision > 0;
         if (isHighPrecisionAvailable) {
@@ -71,7 +71,7 @@ export default class WglCache {
         }
 
         console.warn('WebGL high precision not available.');
-        var isMediumPrecisionAvailable =
+        let isMediumPrecisionAvailable =
             gl.getShaderPrecisionFormat(s.VERTEX_SHADER, s.MEDIUM_FLOAT).precision > 0 &&
             gl.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.MEDIUM_FLOAT).precision > 0;
         if (isMediumPrecisionAvailable) {
@@ -84,23 +84,23 @@ export default class WglCache {
 
     ensureAttributesAreBound() {
         this.retrieveOrCreateAssociatedData(this._attributesStash, () => {
-            var g = this.gl;
-            var result = {
+            let g = this.gl;
+            let result = {
                 positionBuffer: g.createBuffer(),
                 indexBuffer: g.createBuffer()
             };
 
-            var positions = new Float32Array([
+            let positions = new Float32Array([
                 -1, +1,
                 +1, +1,
                 -1, -1,
                 +1, -1]);
-            var s = WebGLRenderingContext;
+            let s = WebGLRenderingContext;
             g.bindBuffer(s.ARRAY_BUFFER, result.positionBuffer);
             g.bufferData(s.ARRAY_BUFFER, positions, s.STATIC_DRAW);
             // Note: ARRAY_BUFFER should not be rebound anywhere else.
 
-            var indices = new Uint16Array([
+            let indices = new Uint16Array([
                 0, 2, 1,
                 2, 3, 1]);
             g.bindBuffer(s.ELEMENT_ARRAY_BUFFER, result.indexBuffer);

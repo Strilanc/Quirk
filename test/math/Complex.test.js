@@ -6,7 +6,7 @@ import Format from "src/base/Format.js"
 let suite = new Suite("Complex");
 
 suite.test("isEqualTo", () => {
-    var c = new Complex(5, 7);
+    let c = new Complex(5, 7);
     assertThat(c).isEqualTo(c);
     assertThat(c).isNotEqualTo(null);
     assertThat(c).isNotEqualTo("");
@@ -44,7 +44,7 @@ suite.test("polar", () => {
 });
 
 suite.test("isApproximatelyEqualTo", () => {
-    var c = new Complex(5, 7);
+    let c = new Complex(5, 7);
     assertThat(c).isApproximatelyEqualTo(c, 0);
     assertThat(c).isApproximatelyEqualTo(c, 1);
     assertThat(c).isNotApproximatelyEqualTo(new Complex(5, 6), 0.5);

@@ -26,7 +26,7 @@ export default class WglShader {
      */
     bindInstanceFor(context, uniformArguments) {
         //noinspection JSCheckFunctionSignatures,JSUnresolvedVariable
-        var compiled = context.retrieveOrCreateAssociatedData(this.contextStash, () =>
+        let compiled = context.retrieveOrCreateAssociatedData(this.contextStash, () =>
             new WglShaderContext(context, this.fragmentShaderSource, uniformArguments.map(e => e.name)));
 
         compiled.load(context, uniformArguments);
