@@ -85,7 +85,7 @@ export default class WglDirector {
      */
     useRawDataTextureIn(width, height, pixelColorData, func) {
         let s = WebGLRenderingContext;
-        let g = this.cache.webGLRenderingContext;
+        let g = this.cache.gl;
         let t = g.createTexture();
         try {
             g.bindTexture(WebGLRenderingContext.TEXTURE_2D, t);
@@ -111,7 +111,7 @@ export default class WglDirector {
         shader.bindInstanceFor(c, uniformArguments);
 
         let s = WebGLRenderingContext;
-        c.webGLRenderingContext.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
+        c.gl.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
     };
 
     /**
@@ -129,7 +129,7 @@ export default class WglDirector {
         destinationBuffer = destinationBuffer || new Uint8Array(rect.w * rect.h * 4);
 
         let c = this.cache;
-        let g = c.webGLRenderingContext;
+        let g = c.gl;
         texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, destinationBuffer);
         WglUtil.checkErrorCode(g.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
@@ -152,7 +152,7 @@ export default class WglDirector {
         destinationBuffer = destinationBuffer || new Float32Array(rect.w * rect.h * 4);
 
         let c = this.cache;
-        let g = c.webGLRenderingContext;
+        let g = c.gl;
         texture.bindFramebufferFor(c);
         g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.FLOAT, destinationBuffer);
         WglUtil.checkErrorCode(g.getError(), "readPixels(..., RGBA, FLOAT, ...)");

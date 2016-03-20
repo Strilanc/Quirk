@@ -10,7 +10,7 @@ export default class WglCache {
      * @param {!int} permanentIdentifier
      * @param {!int} temporaryIdentifier
      *
-     * @property {!WebGLRenderingContext} webGLRenderingContext
+     * @property {!WebGLRenderingContext} gl
      * @property {!int} permanentIdentifier
      * @property {!int} temporaryIdentifier
      * @property {!int} maxTextureUnits
@@ -18,7 +18,7 @@ export default class WglCache {
      */
     constructor(webGLRenderingContext, permanentIdentifier, temporaryIdentifier) {
         /** @type {!WebGLRenderingContext} */
-        this.webGLRenderingContext = webGLRenderingContext;
+        this.gl = webGLRenderingContext;
         /** @type {!int} */
         this.permanentIdentifier = permanentIdentifier;
         /** @type {!int} */
@@ -60,20 +60,20 @@ export default class WglCache {
      * @returns {!string}
      */
     getMaximumShaderFloatPrecision() {
-        var g = this.webGLRenderingContext;
+        var gl = this.gl;
         var s = WebGLRenderingContext;
 
         var isHighPrecisionAvailable =
-            g.getShaderPrecisionFormat(s.VERTEX_SHADER, s.HIGH_FLOAT).precision > 0 &&
-            g.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.HIGH_FLOAT).precision > 0;
+            gl.getShaderPrecisionFormat(s.VERTEX_SHADER, s.HIGH_FLOAT).precision > 0 &&
+            gl.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.HIGH_FLOAT).precision > 0;
         if (isHighPrecisionAvailable) {
             return 'highp';
         }
 
         console.warn('WebGL high precision not available.');
         var isMediumPrecisionAvailable =
-            g.getShaderPrecisionFormat(s.VERTEX_SHADER, s.MEDIUM_FLOAT).precision > 0 &&
-            g.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.MEDIUM_FLOAT).precision > 0;
+            gl.getShaderPrecisionFormat(s.VERTEX_SHADER, s.MEDIUM_FLOAT).precision > 0 &&
+            gl.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.MEDIUM_FLOAT).precision > 0;
         if (isMediumPrecisionAvailable) {
             return 'mediump';
         }
@@ -84,7 +84,7 @@ export default class WglCache {
 
     ensureAttributesAreBound() {
         this.retrieveOrCreateAssociatedData(this._attributesStash, () => {
-            var g = this.webGLRenderingContext;
+            var g = this.gl;
             var result = {
                 positionBuffer: g.createBuffer(),
                 indexBuffer: g.createBuffer()

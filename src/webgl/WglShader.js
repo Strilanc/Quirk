@@ -34,12 +34,12 @@ export default class WglShader {
 }
 
 const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
-    [WglArg.BOOL_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val ? 1 : 0),
-    [WglArg.INT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1i(loc, val),
-    [WglArg.FLOAT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val),
-    [WglArg.VEC2_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform2f(loc, val[0], val[1]),
-    [WglArg.VEC4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform4f(loc, val[0], val[1], val[2], val[3]),
-    [WglArg.MAT4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniformMatrix4fv(loc, false, val),
+    [WglArg.BOOL_TYPE]: (c, loc, val) => c.gl.uniform1f(loc, val ? 1 : 0),
+    [WglArg.INT_TYPE]: (c, loc, val) => c.gl.uniform1i(loc, val),
+    [WglArg.FLOAT_TYPE]: (c, loc, val) => c.gl.uniform1f(loc, val),
+    [WglArg.VEC2_TYPE]: (c, loc, val) => c.gl.uniform2f(loc, val[0], val[1]),
+    [WglArg.VEC4_TYPE]: (c, loc, val) => c.gl.uniform4f(loc, val[0], val[1], val[2], val[3]),
+    [WglArg.MAT4_TYPE]: (c, loc, val) => c.gl.uniformMatrix4fv(loc, false, val),
     [WglArg.TEXTURE_TYPE]: (c, loc, val) => {
         if (val.unit >= c.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
@@ -48,19 +48,19 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
             throw new Error(`Uniform texture argument is ${val.texture.width}x${val.texture.height}, but max ` +
                 `texture diameter is ${c.maxTextureSize}.`);
         }
-        let g = c.webGLRenderingContext;
-        g.uniform1i(loc, val.unit);
-        g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.instanceFor(c).texture);
+        let gl = c.gl;
+        gl.uniform1i(loc, val.unit);
+        gl.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
+        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.instanceFor(c).texture);
     },
     [WglArg.RAW_TEXTURE_TYPE]: (c, loc, val) => {
         if (val.unit >= c.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
         }
-        let g = c.webGLRenderingContext;
-        g.uniform1i(loc, val.unit);
-        g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture);
+        let gl = c.gl;
+        gl.uniform1i(loc, val.unit);
+        gl.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
+        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture);
     }
 };
 
@@ -92,7 +92,7 @@ class WglShaderContext {
             ${fragmentShaderSource}`;
 
         let s = WebGLRenderingContext;
-        let g = context.webGLRenderingContext;
+        let g = context.gl;
         let glVertexShader = WglShaderContext.compileShader(g, s.VERTEX_SHADER, vertexShader);
         let glFragmentShader = WglShaderContext.compileShader(g, s.FRAGMENT_SHADER, fullFragmentShader);
 
@@ -129,7 +129,7 @@ class WglShaderContext {
      * @param {!(!WglArg[])} uniformArgs
      */
     load(context, uniformArgs) {
-        let g = context.webGLRenderingContext;
+        let g = context.gl;
         g.useProgram(this.program);
 
         for (let arg of uniformArgs) {

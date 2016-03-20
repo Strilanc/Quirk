@@ -30,7 +30,7 @@ export default class WglTexture {
     instanceFor(cache) {
         return cache.retrieveOrCreateAssociatedData(this.contextStash, () => {
             const Ctx = WebGLRenderingContext;
-            var ctx = cache.webGLRenderingContext;
+            var ctx = cache.gl;
 
             var result = {
                 texture: ctx.createTexture(),
@@ -64,7 +64,7 @@ export default class WglTexture {
      */
     bindFramebufferFor(cache) {
         const Ctx = WebGLRenderingContext;
-        let ctx = cache.webGLRenderingContext;
+        let ctx = cache.gl;
         ctx.bindFramebuffer(Ctx.FRAMEBUFFER, this.instanceFor(cache).framebuffer);
         WglUtil.checkErrorCode(ctx.getError(), "framebufferTexture2D");
         WglUtil.checkFrameBufferStatusCode(ctx.checkFramebufferStatus(Ctx.FRAMEBUFFER));
