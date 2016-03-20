@@ -1,41 +1,47 @@
 export default class WglUtil {
     /**
-     * Checks if the given code is an error or not, and throws a descriptive message if so.
+     * Checks if the given code, returned by gl.getError, is an error or not.
+     * Throws an error with a descriptive message if the code represents an error.
      * @param {!number} code
      * @param {!string} previousOperationDescription
      */
-    static checkErrorCode(code, previousOperationDescription) {
-        let s = WebGLRenderingContext;
-        if (code === s.NO_ERROR) {
+    static checkGetErrorResult(code, previousOperationDescription) {
+        const GL = WebGLRenderingContext;
+        if (code === GL.NO_ERROR) {
             return;
         }
-        let m = {
-            [s.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
-            [s.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
-            [s.OUT_OF_MEMORY]: "OUT_OF_MEMORY",
-            [s.INVALID_ENUM]: "INVALID_ENUM",
-            [s.INVALID_VALUE]: "INVALID_VALUE",
-            [s.INVALID_OPERATION]: "INVALID_OPERATION",
-            [s.INVALID_FRAMEBUFFER_OPERATION]: "INVALID_FRAMEBUFFER_OPERATION"
+        const msgs = {
+            [GL.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
+            [GL.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
+            [GL.OUT_OF_MEMORY]: "OUT_OF_MEMORY",
+            [GL.INVALID_ENUM]: "INVALID_ENUM",
+            [GL.INVALID_VALUE]: "INVALID_VALUE",
+            [GL.INVALID_OPERATION]: "INVALID_OPERATION",
+            [GL.INVALID_FRAMEBUFFER_OPERATION]: "INVALID_FRAMEBUFFER_OPERATION"
         };
-        let d = m[code] !== undefined ? m[code] : "?";
+        let d = msgs[code] !== undefined ? msgs[code] : "?";
         throw new Error(`gl.getError() returned ${code} (${d}) after ${previousOperationDescription}.`);
     }
 
-    static checkFrameBufferStatusCode(code) {
-        let s = WebGLRenderingContext;
-        if (code === s.FRAMEBUFFER_COMPLETE) {
+    /**
+     * Checks if the given code, returned by gl.checkFramebufferStatus, is an error or not.
+     * Throws an error with a descriptive message if the code represents an error.
+     * @param {!number} code
+     */
+    static checkFrameBufferStatusResult(code) {
+        const GL = WebGLRenderingContext;
+        if (code === GL.FRAMEBUFFER_COMPLETE) {
             return;
         }
-        let m = {
+        const msgs = {
             [0]: "Argument wasn't a frame buffer",
-            [s.INVALID_ENUM]: "INVALID_ENUM",
-            [s.FRAMEBUFFER_INCOMPLETE_ATTACHMENT]: "FRAMEBUFFER_INCOMPLETE_ATTACHMENT",
-            [s.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT]: "FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT",
-            [s.FRAMEBUFFER_INCOMPLETE_DIMENSIONS]: "FRAMEBUFFER_INCOMPLETE_DIMENSIONS",
-            [s.FRAMEBUFFER_UNSUPPORTED]: "FRAMEBUFFER_UNSUPPORTED"
+            [GL.INVALID_ENUM]: "INVALID_ENUM",
+            [GL.FRAMEBUFFER_INCOMPLETE_ATTACHMENT]: "FRAMEBUFFER_INCOMPLETE_ATTACHMENT",
+            [GL.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT]: "FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT",
+            [GL.FRAMEBUFFER_INCOMPLETE_DIMENSIONS]: "FRAMEBUFFER_INCOMPLETE_DIMENSIONS",
+            [GL.FRAMEBUFFER_UNSUPPORTED]: "FRAMEBUFFER_UNSUPPORTED"
         };
-        let d = m[code] !== undefined ? m[code] : "?";
+        let d = msgs[code] !== undefined ? msgs[code] : "?";
         throw new Error(`checkFramebufferStatus() returned ${code} (${d}).`);
     }
 }

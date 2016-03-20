@@ -17,7 +17,10 @@ export default class WglCache {
      * @property {!int} maxTextureSize
      */
     constructor(webGLRenderingContext, permanentIdentifier, temporaryIdentifier) {
-        /** @type {!WebGLRenderingContext} */
+        /**
+         * The WebGLRenderingContext instance associated with this WglCache.
+         * @type {!WebGLRenderingContext}
+         */
         this.gl = webGLRenderingContext;
         /** @type {!int} */
         this.permanentIdentifier = permanentIdentifier;
@@ -61,19 +64,19 @@ export default class WglCache {
      */
     getMaximumShaderFloatPrecision() {
         let gl = this.gl;
-        let s = WebGLRenderingContext;
+        const GL = WebGLRenderingContext;
 
         let isHighPrecisionAvailable =
-            gl.getShaderPrecisionFormat(s.VERTEX_SHADER, s.HIGH_FLOAT).precision > 0 &&
-            gl.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.HIGH_FLOAT).precision > 0;
+            gl.getShaderPrecisionFormat(GL.VERTEX_SHADER, GL.HIGH_FLOAT).precision > 0 &&
+            gl.getShaderPrecisionFormat(GL.FRAGMENT_SHADER, GL.HIGH_FLOAT).precision > 0;
         if (isHighPrecisionAvailable) {
             return 'highp';
         }
 
         console.warn('WebGL high precision not available.');
         let isMediumPrecisionAvailable =
-            gl.getShaderPrecisionFormat(s.VERTEX_SHADER, s.MEDIUM_FLOAT).precision > 0 &&
-            gl.getShaderPrecisionFormat(s.FRAGMENT_SHADER, s.MEDIUM_FLOAT).precision > 0;
+            gl.getShaderPrecisionFormat(GL.VERTEX_SHADER, GL.MEDIUM_FLOAT).precision > 0 &&
+            gl.getShaderPrecisionFormat(GL.FRAGMENT_SHADER, GL.MEDIUM_FLOAT).precision > 0;
         if (isMediumPrecisionAvailable) {
             return 'mediump';
         }
@@ -84,10 +87,10 @@ export default class WglCache {
 
     ensureAttributesAreBound() {
         this.retrieveOrCreateAssociatedData(this._attributesStash, () => {
-            let g = this.gl;
+            let gl = this.gl;
             let result = {
-                positionBuffer: g.createBuffer(),
-                indexBuffer: g.createBuffer()
+                positionBuffer: gl.createBuffer(),
+                indexBuffer: gl.createBuffer()
             };
 
             let positions = new Float32Array([
@@ -95,16 +98,16 @@ export default class WglCache {
                 +1, +1,
                 -1, -1,
                 +1, -1]);
-            let s = WebGLRenderingContext;
-            g.bindBuffer(s.ARRAY_BUFFER, result.positionBuffer);
-            g.bufferData(s.ARRAY_BUFFER, positions, s.STATIC_DRAW);
+            let GL = WebGLRenderingContext;
+            gl.bindBuffer(GL.ARRAY_BUFFER, result.positionBuffer);
+            gl.bufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
             // Note: ARRAY_BUFFER should not be rebound anywhere else.
 
             let indices = new Uint16Array([
                 0, 2, 1,
                 2, 3, 1]);
-            g.bindBuffer(s.ELEMENT_ARRAY_BUFFER, result.indexBuffer);
-            g.bufferData(s.ELEMENT_ARRAY_BUFFER, indices, s.STATIC_DRAW);
+            gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, result.indexBuffer);
+            gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
             // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
 
             return undefined;

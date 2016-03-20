@@ -84,17 +84,17 @@ export default class WglDirector {
      * @param {!Float32Array} pixelColorData
      */
     useRawDataTextureIn(width, height, pixelColorData, func) {
-        let s = WebGLRenderingContext;
-        let g = this.cache.gl;
-        let t = g.createTexture();
+        let GL = WebGLRenderingContext;
+        let gl = this.cache.gl;
+        let t = gl.createTexture();
         try {
-            g.bindTexture(WebGLRenderingContext.TEXTURE_2D, t);
-            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MAG_FILTER, s.NEAREST);
-            g.texParameteri(s.TEXTURE_2D, s.TEXTURE_MIN_FILTER, s.NEAREST);
-            g.texImage2D(s.TEXTURE_2D, 0, s.RGBA, width, height, 0, s.RGBA, s.FLOAT, pixelColorData);
+            gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, t);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
+            gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, width, height, 0, GL.RGBA, GL.FLOAT, pixelColorData);
             func(t);
         } finally {
-            g.deleteTexture(t);
+            gl.deleteTexture(t);
         }
     }
 
@@ -110,8 +110,8 @@ export default class WglDirector {
         texture.bindFramebufferFor(c);
         shader.bindInstanceFor(c, uniformArguments);
 
-        let s = WebGLRenderingContext;
-        c.gl.drawElements(s.TRIANGLES, 6, s.UNSIGNED_SHORT, 0);
+        const GL = WebGLRenderingContext;
+        c.gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
     };
 
     /**
@@ -121,18 +121,18 @@ export default class WglDirector {
      * @returns {!Uint8Array}
      */
     readPixelColorBytes(texture, rect = undefined, destinationBuffer = undefined) {
-        let s = WebGLRenderingContext;
-        if (texture.pixelType !== s.UNSIGNED_BYTE) {
+        const GL = WebGLRenderingContext;
+        if (texture.pixelType !== GL.UNSIGNED_BYTE) {
             throw "Asked to read bytes from a texture with non-byte pixels."
         }
         rect = rect || new Rect(0, 0, texture.width, texture.height);
         destinationBuffer = destinationBuffer || new Uint8Array(rect.w * rect.h * 4);
 
         let c = this.cache;
-        let g = c.gl;
+        let gl = c.gl;
         texture.bindFramebufferFor(c);
-        g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.UNSIGNED_BYTE, destinationBuffer);
-        WglUtil.checkErrorCode(g.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
+        gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.UNSIGNED_BYTE, destinationBuffer);
+        WglUtil.checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
 
         return destinationBuffer;
     };
@@ -144,18 +144,18 @@ export default class WglDirector {
      * @returns {!Float32Array}
      */
     readPixelColorFloats(texture, rect = undefined, destinationBuffer = undefined) {
-        let s = WebGLRenderingContext;
-        if (texture.pixelType !== s.FLOAT) {
+        const GL = WebGLRenderingContext;
+        if (texture.pixelType !== GL.FLOAT) {
             throw "Asked to read floats from a texture with non-float pixels."
         }
         rect = rect || new Rect(0, 0, texture.width, texture.height);
         destinationBuffer = destinationBuffer || new Float32Array(rect.w * rect.h * 4);
 
         let c = this.cache;
-        let g = c.gl;
+        let gl = c.gl;
         texture.bindFramebufferFor(c);
-        g.readPixels(rect.x, rect.y, rect.w, rect.h, s.RGBA, s.FLOAT, destinationBuffer);
-        WglUtil.checkErrorCode(g.getError(), "readPixels(..., RGBA, FLOAT, ...)");
+        gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.FLOAT, destinationBuffer);
+        WglUtil.checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, FLOAT, ...)");
 
         return destinationBuffer;
     };

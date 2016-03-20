@@ -69,7 +69,7 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
  */
 class WglShaderContext {
     /**
-     * @param {!WglCache} context
+     * @param {!WglCache} cache
      * @param {!string} fragmentShaderSource
      * @param {!Iterable.<!string>} uniformParameterNames
      *
@@ -77,8 +77,8 @@ class WglShaderContext {
      * @property {*} positionAttributeLocation
      * @property {*} program
      */
-    constructor(context, fragmentShaderSource, uniformParameterNames) {
-        let precision = context.getMaximumShaderFloatPrecision();
+    constructor(cache, fragmentShaderSource, uniformParameterNames) {
+        let precision = cache.getMaximumShaderFloatPrecision();
         let vertexShader = `
             precision ${precision} float;
             precision ${precision} int;
@@ -91,36 +91,36 @@ class WglShaderContext {
             precision ${precision} int;
             ${fragmentShaderSource}`;
 
-        let s = WebGLRenderingContext;
-        let g = context.gl;
-        let glVertexShader = WglShaderContext.compileShader(g, s.VERTEX_SHADER, vertexShader);
-        let glFragmentShader = WglShaderContext.compileShader(g, s.FRAGMENT_SHADER, fullFragmentShader);
+        const GL = WebGLRenderingContext;
+        let gl = cache.gl;
+        let glVertexShader = WglShaderContext.compileShader(gl, GL.VERTEX_SHADER, vertexShader);
+        let glFragmentShader = WglShaderContext.compileShader(gl, GL.FRAGMENT_SHADER, fullFragmentShader);
 
-        let program = g.createProgram();
-        g.attachShader(program, glVertexShader);
-        g.attachShader(program, glFragmentShader);
-        g.linkProgram(program);
+        let program = gl.createProgram();
+        gl.attachShader(program, glVertexShader);
+        gl.attachShader(program, glFragmentShader);
+        gl.linkProgram(program);
 
-        let warnings = g.getProgramInfoLog(program);
+        let warnings = gl.getProgramInfoLog(program);
         if (warnings !== '' && Config.SUPPRESSED_GLSL_WARNING_PATTERNS.every(e => !e.test(warnings))) {
             console.warn('gl.getProgramInfoLog()', warnings);
         }
 
-        if (g.getProgramParameter(program, s.LINK_STATUS) === false) {
+        if (gl.getProgramParameter(program, GL.LINK_STATUS) === false) {
             throw new Error(
                 "Failed to link shader program." +
                 "\n" +
                 "\n" +
-                `gl.VALIDATE_STATUS: ${g.getProgramParameter(program, s.VALIDATE_STATUS)}` +
+                `gl.VALIDATE_STATUS: ${gl.getProgramParameter(program, GL.VALIDATE_STATUS)}` +
                 "\n" +
-                `gl.getError(): ${g.getError()}`);
+                `gl.getError(): ${gl.getError()}`);
         }
 
-        g.deleteShader(glVertexShader);
-        g.deleteShader(glFragmentShader);
+        gl.deleteShader(glVertexShader);
+        gl.deleteShader(glFragmentShader);
 
-        this.uniformLocations = new Seq(uniformParameterNames).toMap(e => e, e => g.getUniformLocation(program, e));
-        this.positionAttributeLocation = g.getAttribLocation(program, 'position');
+        this.uniformLocations = new Seq(uniformParameterNames).toMap(e => e, e => gl.getUniformLocation(program, e));
+        this.positionAttributeLocation = gl.getAttribLocation(program, 'position');
         this.program = program;
     };
 
@@ -129,8 +129,8 @@ class WglShaderContext {
      * @param {!(!WglArg[])} uniformArgs
      */
     load(context, uniformArgs) {
-        let g = context.gl;
-        g.useProgram(this.program);
+        let gl = context.gl;
+        gl.useProgram(this.program);
 
         for (let arg of uniformArgs) {
             let location = this.uniformLocations.get(arg.name);
@@ -140,29 +140,29 @@ class WglShaderContext {
             WGL_ARG_TYPE_UNIFORM_ACTION_MAP[arg.type](context, location, arg.value);
         }
 
-        g.enableVertexAttribArray(this.positionAttributeLocation);
-        g.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.positionAttributeLocation);
+        gl.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
     };
 
     /**
-     * @param {!WebGLRenderingContext} g
+     * @param {!WebGLRenderingContext} gl
      * @param {number} shaderType
      * @param {!string} sourceCode
      * @returns {!WebGLShader}
      */
-    static compileShader(g, shaderType, sourceCode) {
-        let shader = g.createShader(shaderType);
+    static compileShader(gl, shaderType, sourceCode) {
+        let shader = gl.createShader(shaderType);
 
-        g.shaderSource(shader, sourceCode);
-        g.compileShader(shader);
+        gl.shaderSource(shader, sourceCode);
+        gl.compileShader(shader);
 
-        if (g.getShaderInfoLog(shader) !== '') {
-            console.warn('WebGLShader: gl.getShaderInfoLog()', g.getShaderInfoLog(shader));
+        if (gl.getShaderInfoLog(shader) !== '') {
+            console.warn('WebGLShader: gl.getShaderInfoLog()', gl.getShaderInfoLog(shader));
             console.warn(sourceCode);
         }
 
-        if (g.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS) === false) {
-            throw new Error(`WebGLShader: Shader compile failed: ${sourceCode} ${g.getError()}`);
+        if (gl.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS) === false) {
+            throw new Error(`WebGLShader: Shader compile failed: ${sourceCode} ${gl.getError()}`);
         }
 
         return shader;

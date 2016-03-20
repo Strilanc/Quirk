@@ -29,29 +29,29 @@ export default class WglTexture {
      */
     instanceFor(cache) {
         return cache.retrieveOrCreateAssociatedData(this.contextStash, () => {
-            const Ctx = WebGLRenderingContext;
-            let ctx = cache.gl;
+            const GL = WebGLRenderingContext;
+            let gl = cache.gl;
 
             let result = {
-                texture: ctx.createTexture(),
-                framebuffer: ctx.createFramebuffer()
+                texture: gl.createTexture(),
+                framebuffer: gl.createFramebuffer()
             };
 
-            ctx.bindTexture(Ctx.TEXTURE_2D, result.texture);
-            ctx.bindFramebuffer(Ctx.FRAMEBUFFER, result.framebuffer);
+            gl.bindTexture(GL.TEXTURE_2D, result.texture);
+            gl.bindFramebuffer(GL.FRAMEBUFFER, result.framebuffer);
 
-            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_MAG_FILTER, Ctx.NEAREST);
-            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_MIN_FILTER, Ctx.NEAREST);
-            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_WRAP_S, Ctx.CLAMP_TO_EDGE);
-            ctx.texParameteri(Ctx.TEXTURE_2D, Ctx.TEXTURE_WRAP_T, Ctx.CLAMP_TO_EDGE);
-            ctx.texImage2D(Ctx.TEXTURE_2D, 0, Ctx.RGBA, this.width, this.height, 0, Ctx.RGBA, this.pixelType, null);
-            WglUtil.checkErrorCode(ctx.getError(), "texImage2D");
-            ctx.framebufferTexture2D(Ctx.FRAMEBUFFER, Ctx.COLOR_ATTACHMENT0, Ctx.TEXTURE_2D, result.texture, 0);
-            WglUtil.checkErrorCode(ctx.getError(), "framebufferTexture2D");
-            WglUtil.checkFrameBufferStatusCode(ctx.checkFramebufferStatus(Ctx.FRAMEBUFFER));
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
+            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+            gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
+            WglUtil.checkGetErrorResult(gl.getError(), "texImage2D");
+            gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
+            WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+            WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
 
-            ctx.bindTexture(Ctx.TEXTURE_2D, null);
-            ctx.bindFramebuffer(Ctx.FRAMEBUFFER, null);
+            gl.bindTexture(GL.TEXTURE_2D, null);
+            gl.bindFramebuffer(GL.FRAMEBUFFER, null);
 
             return result;
         });
@@ -63,10 +63,10 @@ export default class WglTexture {
      * @param {!WglCache} cache
      */
     bindFramebufferFor(cache) {
-        const Ctx = WebGLRenderingContext;
-        let ctx = cache.gl;
-        ctx.bindFramebuffer(Ctx.FRAMEBUFFER, this.instanceFor(cache).framebuffer);
-        WglUtil.checkErrorCode(ctx.getError(), "framebufferTexture2D");
-        WglUtil.checkFrameBufferStatusCode(ctx.checkFramebufferStatus(Ctx.FRAMEBUFFER));
+        const GL = WebGLRenderingContext;
+        let gl = cache.gl;
+        gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(cache).framebuffer);
+        WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+        WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
     }
 }
