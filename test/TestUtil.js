@@ -1,6 +1,7 @@
 // Cheat a little bit on the testing library being independent from what it tests
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
+import { initializedWglContext }from "src/webgl/WglContext.js"
 
 let assertionSubjectIndexInCurrentTest = 0;
 
@@ -245,7 +246,7 @@ export function assertThrows(func, extraArgCatcher) {
 }
 
 /** @type {boolean|undefined} */
-let webGLSupportPresent = undefined;
+let __webGLSupportPresent = undefined;
 
 let promiseImageDataFromSrc = src => {
     let img = document.createElement('img');
@@ -300,26 +301,26 @@ export class Suite {
 
     /**
      * @param {!string} name
-     * @param {!function(!{ warn_only: !boolean|!string })} method
+     * @param {!function(!WglContext, !{ warn_only: !boolean|!string })} method
      */
     webGlTest(name, method) {
         let wrappedMethod = status => {
-            if (webGLSupportPresent === undefined) {
+            if (__webGLSupportPresent === undefined) {
                 if (window.WebGLRenderingContext === undefined) {
-                    webGLSupportPresent = false;
+                    __webGLSupportPresent = false;
                 } else {
                     let canvas = document.createElement('canvas');
                     let context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                    webGLSupportPresent = context instanceof WebGLRenderingContext;
+                    __webGLSupportPresent = context instanceof WebGLRenderingContext;
                 }
             }
 
-            if (!webGLSupportPresent) {
+            if (!__webGLSupportPresent) {
                 console.warn(`Skipping ${this.name}.${name} due to lack of WebGL support.`);
                 return;
             }
 
-            method(status);
+            method(initializedWglContext(), status);
         };
 
         this.test(name, wrappedMethod);

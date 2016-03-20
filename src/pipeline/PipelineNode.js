@@ -1,4 +1,3 @@
-import WglDirector from "src/webgl/WglDirector.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Util from "src/base/Util.js"

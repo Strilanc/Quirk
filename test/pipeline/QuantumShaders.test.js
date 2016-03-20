@@ -6,24 +6,22 @@ import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
 import Matrix from "src/math/Matrix.js"
 import WglTexture from "src/webgl/WglTexture.js"
-import WglDirector from "src/webgl/WglDirector.js"
 
 let suite = new Suite("QuantumShaders");
 
-suite.webGlTest("renderUniformColor", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderUniformColor", ctx => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
-    QuantumShaders.renderUniformColor(director, texture2x2, 2, 3, -5, 7.5);
-    QuantumShaders.renderUniformColor(director, texture2x4, 1.5, 2, 0, 121);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderUniformColor(ctx, texture2x2, 2, 3, -5, 7.5);
+    QuantumShaders.renderUniformColor(ctx, texture2x4, 1.5, 2, 0, 121);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         2, 3, -5, 7.5,
         2, 3, -5, 7.5,
         2, 3, -5, 7.5,
         2, 3, -5, 7.5
     ]));
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
         1.5, 2, 0, 121,
         1.5, 2, 0, 121,
         1.5, 2, 0, 121,
@@ -35,45 +33,44 @@ suite.webGlTest("renderUniformColor", () => {
     ]));
 });
 
-suite.webGlTest("renderClassicalState", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderClassicalState", ctx => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
-    QuantumShaders.renderClassicalState(director, texture2x2, 0);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderClassicalState(ctx, texture2x2, 0);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderClassicalState(director, texture2x2, 1);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderClassicalState(ctx, texture2x2, 1);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderClassicalState(director, texture2x2, 2);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderClassicalState(ctx, texture2x2, 2);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderClassicalState(director, texture2x2, 3);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderClassicalState(ctx, texture2x2, 3);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderClassicalState(director, texture2x4, 0);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+    QuantumShaders.renderClassicalState(ctx, texture2x4, 0);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -84,8 +81,8 @@ suite.webGlTest("renderClassicalState", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderClassicalState(director, texture2x4, 5);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+    QuantumShaders.renderClassicalState(ctx, texture2x4, 5);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -97,8 +94,7 @@ suite.webGlTest("renderClassicalState", () => {
     ]));
 });
 
-suite.webGlTest("renderPixelColorData", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderPixelColorData", ctx => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
@@ -108,21 +104,20 @@ suite.webGlTest("renderPixelColorData", () => {
         1, 0.5, -1, -2,
         Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
     ]);
-    QuantumShaders.renderPixelColorData(director, texture2x2, data2x2);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(data2x2);
+    QuantumShaders.renderPixelColorData(ctx, texture2x2, data2x2);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(data2x2);
 
     let data2x4 = new Float32Array(Seq.range(2*4*4).map(e => e*e + (e - Math.sqrt(2)) / 3).toArray());
-    QuantumShaders.renderPixelColorData(director, texture2x4, data2x4);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(data2x4);
+    QuantumShaders.renderPixelColorData(ctx, texture2x4, data2x4);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(data2x4);
 
-    QuantumShaders.renderPixelColorData(director, texture2x4, data2x4);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(data2x4);
+    QuantumShaders.renderPixelColorData(ctx, texture2x4, data2x4);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(data2x4);
 
-    assertThrows(() => QuantumShaders.renderPixelColorData(director, texture2x2, data2x4));
+    assertThrows(() => QuantumShaders.renderPixelColorData(ctx, texture2x2, data2x4));
 });
 
-suite.webGlTest("renderFloatsToBytes", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderFloatsToBytes", ctx => {
     let texture2x2 = new WglTexture(2, 2);
     let texture4x4Bytes = new WglTexture(4, 4, WebGLRenderingContext.UNSIGNED_BYTE);
 
@@ -132,56 +127,54 @@ suite.webGlTest("renderFloatsToBytes", () => {
         1, 0.5, -1, -2,
         Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
     ]);
-    QuantumShaders.renderPixelColorData(director, texture2x2, data2x2);
-    QuantumShaders.renderFloatsToEncodedBytes(director, texture4x4Bytes, texture2x2);
-    let pixels = director.readPixelColorBytes(texture4x4Bytes);
+    QuantumShaders.renderPixelColorData(ctx, texture2x2, data2x2);
+    QuantumShaders.renderFloatsToEncodedBytes(ctx, texture4x4Bytes, texture2x2);
+    let pixels = ctx.readPixelColorBytes(texture4x4Bytes);
     let pixels2 = QuantumShaders.decodeBytesToFloats(pixels, 2, 2);
     assertThat(pixels2).isEqualTo(data2x2);
 });
 
-suite.webGlTest("renderOverlayed", () => {
-    let director = new WglDirector();
-
+suite.webGlTest("renderOverlayed", ctx => {
     let fore = new WglTexture(2, 2);
     let back = new WglTexture(4, 4);
-    QuantumShaders.renderPixelColorData(director, fore, new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray()));
-    QuantumShaders.renderPixelColorData(director, back, new Float32Array(Seq.range(4*4*4).map(e => -e).toArray()));
+    QuantumShaders.renderPixelColorData(ctx, fore, new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray()));
+    QuantumShaders.renderPixelColorData(ctx, back, new Float32Array(Seq.range(4*4*4).map(e => -e).toArray()));
 
     let out = new WglTexture(4, 4);
-    QuantumShaders.renderOverlayed(director, out, 0, 0, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderOverlayed(ctx, out, 0, 0, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         900, 901, 902, 903, 904, 905, 906, 907,  -8,  -9, -10, -11, -12, -13, -14, -15,
         908, 909, 910, 911, 912, 913, 914, 915, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderOverlayed(director, out, 1, 0, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderOverlayed(ctx, out, 1, 0, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3, 900, 901, 902, 903, 904, 905, 906, 907, -12, -13, -14, -15,
         -16, -17, -18, -19, 908, 909, 910, 911, 912, 913, 914, 915, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderOverlayed(director, out, 0, 1, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderOverlayed(ctx, out, 0, 1, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         900, 901, 902, 903, 904, 905, 906, 907, -24, -25, -26, -27, -28, -29, -30, -31,
         908, 909, 910, 911, 912, 913, 914, 915, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderOverlayed(director, out, 2, 1, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderOverlayed(ctx, out, 2, 1, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         -16, -17, -18, -19, -20, -21, -22, -23, 900, 901, 902, 903, 904, 905, 906, 907,
         -32, -33, -34, -35, -36, -37, -38, -39, 908, 909, 910, 911, 912, 913, 914, 915,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderOverlayed(director, out, 2, 2, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderOverlayed(ctx, out, 2, 2, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, 900, 901, 902, 903, 904, 905, 906, 907,
@@ -189,57 +182,55 @@ suite.webGlTest("renderOverlayed", () => {
     ]));
 });
 
-suite.webGlTest("renderLinearOverlay", () => {
-    let director = new WglDirector();
-
+suite.webGlTest("renderLinearOverlay", ctx => {
     let fore = new WglTexture(2, 2);
     let back = new WglTexture(4, 4);
-    QuantumShaders.renderPixelColorData(director, fore, new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray()));
-    QuantumShaders.renderPixelColorData(director, back, new Float32Array(Seq.range(4*4*4).map(e => -e).toArray()));
+    QuantumShaders.renderPixelColorData(ctx, fore, new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray()));
+    QuantumShaders.renderPixelColorData(ctx, back, new Float32Array(Seq.range(4*4*4).map(e => -e).toArray()));
 
     let out = new WglTexture(4, 4);
-    QuantumShaders.renderLinearOverlay(director, out, 0, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderLinearOverlay(ctx, out, 0, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderLinearOverlay(director, out, 1, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderLinearOverlay(ctx, out, 1, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,  -1,  -2,  -3,  900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911,
         912, 913, 914, 915, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderLinearOverlay(director, out, 2, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderLinearOverlay(ctx, out, 2, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,  900, 901, 902, 903, 904, 905, 906, 907,
         908, 909, 910, 911, 912, 913, 914, 915, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderLinearOverlay(director, out, 4, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderLinearOverlay(ctx, out, 4, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911, 912, 913, 914, 915,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    QuantumShaders.renderLinearOverlay(director, out, 12, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderLinearOverlay(ctx, out, 12, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911, 912, 913, 914, 915
     ]));
 
-    QuantumShaders.renderLinearOverlay(director, out, 13, fore, back);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderLinearOverlay(ctx, out, 13, fore, back);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
@@ -247,61 +238,60 @@ suite.webGlTest("renderLinearOverlay", () => {
     ]));
 });
 
-suite.webGlTest("renderSingleBitConstraintControlMask", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderSingleBitConstraintControlMask", ctx => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x2, 0, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x2, 0, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x2, 0, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x2, 0, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x2, 1, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x2, 1, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x2, 1, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x2, 1, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x2, 2, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x2, 2, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x2, 2, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x2, 2, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x4, 0, false);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x4, 0, false);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
@@ -312,8 +302,8 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x4, 1, false);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x4, 1, false);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
@@ -324,8 +314,8 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x4, 2, false);
-    assertThat(director.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x4, 2, false);
+    assertThat(ctx.readPixelColorFloats(texture2x4)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -337,54 +327,53 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
     ]));
 });
 
-suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", ctx => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let noControl = new WglTexture(1 << 1, 1 << 1);
-    QuantumShaders.renderSingleBitConstraintControlMask(director, noControl, 2, false);
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, noControl, 2, false);
 
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, noControl, 0, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, noControl, 0, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, noControl, 0, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, noControl, 0, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, noControl, 1, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, noControl, 1, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, noControl, 1, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, noControl, 1, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, noControl, 2, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, noControl, 2, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0,
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, noControl, 2, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, noControl, 2, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -393,16 +382,16 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
 
     // If control is already not allowing anything, result is stuck with it.
     let allControl = new WglTexture(1 << 1, 1 << 1);
-    QuantumShaders.renderSingleBitConstraintControlMask(director, allControl, 2, true);
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, allControl, 0, false);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, allControl, 2, true);
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, allControl, 0, false);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x2, allControl, 0, true);
-    assertThat(director.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x2, allControl, 0, true);
+    assertThat(ctx.readPixelColorFloats(texture2x2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -410,17 +399,16 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
     ]));
 });
 
-suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderAddBitConstraintToControlMask_buildup", ctx => {
     let texture2x4_0 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_1 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_2 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_3 = new WglTexture(1 << 2, 1 << 1);
-    QuantumShaders.renderSingleBitConstraintControlMask(director, texture2x4_0, 0, false);
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x4_1, texture2x4_0, 1, true);
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x4_2, texture2x4_1, 2, true);
-    QuantumShaders.renderAddBitConstraintToControlMask(director, texture2x4_3, texture2x4_2, 1, false);
-    assertThat(director.readPixelColorFloats(texture2x4_0)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, texture2x4_0, 0, false);
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x4_1, texture2x4_0, 1, true);
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x4_2, texture2x4_1, 2, true);
+    QuantumShaders.renderAddBitConstraintToControlMask(ctx, texture2x4_3, texture2x4_2, 1, false);
+    assertThat(ctx.readPixelColorFloats(texture2x4_0)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
@@ -430,7 +418,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
-    assertThat(director.readPixelColorFloats(texture2x4_1)).isEqualTo(new Float32Array([
+    assertThat(ctx.readPixelColorFloats(texture2x4_1)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
@@ -440,7 +428,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
-    assertThat(director.readPixelColorFloats(texture2x4_2)).isEqualTo(new Float32Array([
+    assertThat(ctx.readPixelColorFloats(texture2x4_2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -450,7 +438,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
-    assertThat(director.readPixelColorFloats(texture2x4_3)).isEqualTo(new Float32Array([
+    assertThat(ctx.readPixelColorFloats(texture2x4_3)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -462,37 +450,36 @@ suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
     ]));
 });
 
-suite.webGlTest("renderControlMask", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderControlMask", ctx => {
     let texA = new WglTexture(2, 2);
     let texB = new WglTexture(2, 2);
 
-    let r = QuantumShaders.renderControlMask(director, new QuantumControlMask(0x3, 0x1), texA, texB);
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
+    let r = QuantumShaders.renderControlMask(ctx, new QuantumControlMask(0x3, 0x1), texA, texB);
+    assertThat(ctx.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    r = QuantumShaders.renderControlMask(director, new QuantumControlMask(0x3, 0x0), texA, texB);
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
+    r = QuantumShaders.renderControlMask(ctx, new QuantumControlMask(0x3, 0x0), texA, texB);
+    assertThat(ctx.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    r = QuantumShaders.renderControlMask(director, new QuantumControlMask(0x1, 0x0), texA, texB);
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
+    r = QuantumShaders.renderControlMask(ctx, new QuantumControlMask(0x1, 0x0), texA, texB);
+    assertThat(ctx.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    r = QuantumShaders.renderControlMask(director, new QuantumControlMask(0x5, 0x4), new WglTexture(4, 2), new WglTexture(4, 2));
-    assertThat(director.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
+    r = QuantumShaders.renderControlMask(ctx, new QuantumControlMask(0x5, 0x4), new WglTexture(4, 2), new WglTexture(4, 2));
+    assertThat(ctx.readPixelColorFloats(r.result)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -504,10 +491,9 @@ suite.webGlTest("renderControlMask", () => {
     ]));
 });
 
-suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderProbabilitiesFromAmplitudes", ctx => {
     let amps = new WglTexture(4, 2);
-    QuantumShaders.renderPixelColorData(director, amps, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, amps, new Float32Array([
         2, 3, 0, 0,
         0.5, 0.5, 0, 0,
         1, 2, 3, 4,
@@ -519,8 +505,8 @@ suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
     ]));
 
     let out = new WglTexture(4, 2);
-    QuantumShaders.renderProbabilitiesFromAmplitudes(director, out, amps);
-    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo(new Float32Array([
+    QuantumShaders.renderProbabilitiesFromAmplitudes(ctx, out, amps);
+    assertThat(ctx.readPixelColorFloats(out)).isApproximatelyEqualTo(new Float32Array([
         13, 0, 0, 0,
         0.5, 0, 0, 0,
         30, 0, 0, 0,
@@ -532,10 +518,9 @@ suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
     ]));
 });
 
-suite.webGlTest("renderScaled", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderScaled", ctx => {
     let amps = new WglTexture(4, 2);
-    QuantumShaders.renderPixelColorData(director, amps, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, amps, new Float32Array([
         2, 3, 0, 0,
         0.5, 0.5, 0, 0,
         1, 2, 3, 4,
@@ -547,8 +532,8 @@ suite.webGlTest("renderScaled", () => {
     ]));
 
     let out = new WglTexture(4, 2);
-    QuantumShaders.renderScaled(director, out, amps, 3);
-    assertThat(director.readPixelColorFloats(out)).isApproximatelyEqualTo(new Float32Array([
+    QuantumShaders.renderScaled(ctx, out, amps, 3);
+    assertThat(ctx.readPixelColorFloats(out)).isApproximatelyEqualTo(new Float32Array([
         6, 9, 0, 0,
         1.5, 1.5, 0, 0,
         3, 6, 9, 12,
@@ -560,10 +545,9 @@ suite.webGlTest("renderScaled", () => {
     ]));
 });
 
-suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderConditionalProbabilitiesPipeline", ctx => {
     let inp = new WglTexture(4, 2);
-    QuantumShaders.renderPixelColorData(director, inp, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, inp, new Float32Array([
         2, 0, 0, 0,
         3, 0, 0, 0,
         5, 0, 0, 0,
@@ -575,8 +559,8 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
     ]));
 
     let mid1 = new WglTexture(4, 2);
-    QuantumShaders.renderConditionalProbabilitiesPipeline(director, mid1, inp, 0, true);
-    assertThat(director.readPixelColorFloats(mid1)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesPipeline(ctx, mid1, inp, 0, true);
+    assertThat(ctx.readPixelColorFloats(mid1)).isEqualTo(new Float32Array([
         5, 0, 0, 0,
         3, 0, 0, 0,
         12, 0, 0, 0,
@@ -587,8 +571,8 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
         19, 0, 0, 0
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesPipeline(director, mid1, inp, 0, false);
-    assertThat(director.readPixelColorFloats(mid1)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesPipeline(ctx, mid1, inp, 0, false);
+    assertThat(ctx.readPixelColorFloats(mid1)).isEqualTo(new Float32Array([
         5, 0, 0, 0,
         2, 0, 0, 0,
         12, 0, 0, 0,
@@ -600,8 +584,8 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
     ]));
 
     let mid2 = new WglTexture(4, 2);
-    QuantumShaders.renderConditionalProbabilitiesPipeline(director, mid2, mid1, 1, false);
-    assertThat(director.readPixelColorFloats(mid2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesPipeline(ctx, mid2, mid1, 1, false);
+    assertThat(ctx.readPixelColorFloats(mid2)).isEqualTo(new Float32Array([
         17, 0, 0, 0,
         7, 0, 0, 0,
         5, 0, 0, 0,
@@ -612,8 +596,8 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
         11, 0, 0, 0
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesPipeline(director, mid2, mid1, 1, true);
-    assertThat(director.readPixelColorFloats(mid2)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesPipeline(ctx, mid2, mid1, 1, true);
+    assertThat(ctx.readPixelColorFloats(mid2)).isEqualTo(new Float32Array([
         17, 0, 0, 0,
         7, 0, 0, 0,
         12, 0, 0, 0,
@@ -625,8 +609,8 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
     ]));
 
     let mid3 = new WglTexture(4, 2);
-    QuantumShaders.renderConditionalProbabilitiesPipeline(director, mid3, mid2, 2, false);
-    assertThat(director.readPixelColorFloats(mid3)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesPipeline(ctx, mid3, mid2, 2, false);
+    assertThat(ctx.readPixelColorFloats(mid3)).isEqualTo(new Float32Array([
         77, 0, 0, 0,
         35, 0, 0, 0,
         48, 0, 0, 0,
@@ -637,8 +621,8 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
         5, 0, 0, 0
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesPipeline(director, mid3, mid2, 2, true);
-    assertThat(director.readPixelColorFloats(mid3)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesPipeline(ctx, mid3, mid2, 2, true);
+    assertThat(ctx.readPixelColorFloats(mid3)).isEqualTo(new Float32Array([
         77, 0, 0, 0,
         35, 0, 0, 0,
         48, 0, 0, 0,
@@ -650,10 +634,9 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
     ]));
 });
 
-suite.webGlTest("renderControlCombinationProbabilities", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderControlCombinationProbabilities", ctx => {
     let inp = new WglTexture(4, 2);
-    QuantumShaders.renderPixelColorData(director, inp, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, inp, new Float32Array([
         0, 1, 0, 0,
         2, 0, 0, 0,
         3, 0, 0, 0,
@@ -667,47 +650,46 @@ suite.webGlTest("renderControlCombinationProbabilities", () => {
     let ta = new WglTexture(4, 2);
     let tb = new WglTexture(4, 2);
     let r = new WglTexture(2, 2);
-    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(7, 7), inp);
-    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+    QuantumShaders.renderControlCombinationProbabilities(ctx, r, ta, tb, new QuantumControlMask(7, 7), inp);
+    assertThat(ctx.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
         204, 120, 64, 113,
         204, 138, 64, 100,
         204, 174, 64, 80
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(3, 1), inp);
-    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+    QuantumShaders.renderControlCombinationProbabilities(ctx, r, ta, tb, new QuantumControlMask(3, 1), inp);
+    assertThat(ctx.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
         204, 120, 40, 66,
         204, 66, 40, 120,
         204, 30, 40, 4
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(1, 1), inp);
-    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+    QuantumShaders.renderControlCombinationProbabilities(ctx, r, ta, tb, new QuantumControlMask(1, 1), inp);
+    assertThat(ctx.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
         204, 120, 120, 204,
         204, 66, 120, 40,
         204, 30, 120, 20
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, QuantumControlMask.NO_CONTROLS, inp);
-    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+    QuantumShaders.renderControlCombinationProbabilities(ctx, r, ta, tb, QuantumControlMask.NO_CONTROLS, inp);
+    assertThat(ctx.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
         204, 84, 204, 84,
         204, 66, 204, 66,
         204, 30, 204, 30
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(director, r, ta, tb, new QuantumControlMask(4, 4), inp);
-    assertThat(director.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
+    QuantumShaders.renderControlCombinationProbabilities(ctx, r, ta, tb, new QuantumControlMask(4, 4), inp);
+    assertThat(ctx.readPixelColorFloats(r).slice(0, 12)).isEqualTo(new Float32Array([
         204, 84, 174, 74,
         204, 66, 174, 61,
         204, 174, 174, 204
     ]));
 });
 
-suite.webGlTest("renderConditionalProbabilitiesFinalize", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderConditionalProbabilitiesFinalize", ctx => {
     let inp = new WglTexture(4, 4);
     let dst = new WglTexture(2, 2);
-    QuantumShaders.renderPixelColorData(director, inp, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, inp, new Float32Array([
         -1, 0, 0, 0,
         1, 0, 0, 0,
         2, 0, 0, 0,
@@ -726,32 +708,32 @@ suite.webGlTest("renderConditionalProbabilitiesFinalize", () => {
         15, 0, 0, 0
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 0);
-    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesFinalize(ctx, dst, inp, 0);
+    assertThat(ctx.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
         -1, 1, -1, 1,
         -1, 2, -1, 2,
         -1, 4, -1, 4,
         -1, 8, -1, 8
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 1);
-    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesFinalize(ctx, dst, inp, 1);
+    assertThat(ctx.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
         -1, 1, 1, -1,
         -1, 2, 1, 2+1,
         -1, 4, 1, 4+1,
         -1, 8, 1, 8+1
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 2);
-    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesFinalize(ctx, dst, inp, 2);
+    assertThat(ctx.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
         -1, 1, 2, 1+2,
         -1, 2, 2, -1,
         -1, 4, 2, 4+2,
         -1, 8, 2, 8+2
     ]));
 
-    QuantumShaders.renderConditionalProbabilitiesFinalize(director, dst, inp, 5);
-    assertThat(director.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
+    QuantumShaders.renderConditionalProbabilitiesFinalize(ctx, dst, inp, 5);
+    assertThat(ctx.readPixelColorFloats(dst)).isEqualTo(new Float32Array([
         -1, 1, 5, 1+4-1,
         -1, 2, 5, 2+5,
         -1, 4, 5, 4-4+1,
@@ -759,12 +741,11 @@ suite.webGlTest("renderConditionalProbabilitiesFinalize", () => {
     ]));
 });
 
-suite.webGlTest("renderQubitOperation", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderQubitOperation", ctx => {
     let cnt = new WglTexture(4, 2);
     let out = new WglTexture(4, 2);
     let inp = new WglTexture(4, 2);
-    QuantumShaders.renderPixelColorData(director, inp, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, inp, new Float32Array([
         2, 3, 0, 0,
         4, 5, 0, 0,
         6, 7, 0, 0,
@@ -775,9 +756,9 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 3, false);
-    QuantumShaders.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 3, false);
+    QuantumShaders.renderQubitOperation(ctx, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         7, -1, 0, 0,
         -7, -3, 0, 0,
         15, -1, 0, 0,
@@ -788,9 +769,9 @@ suite.webGlTest("renderQubitOperation", () => {
         -30, -8, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 1, false);
-    QuantumShaders.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 1, false);
+    QuantumShaders.renderQubitOperation(ctx, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         7, -1, 0, 0,
         -7, -3, 0, 0,
         6, 7, 0, 0,
@@ -801,9 +782,9 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 1, true);
-    QuantumShaders.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 1, true);
+    QuantumShaders.renderQubitOperation(ctx, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         2, 3, 0, 0,
         4, 5, 0, 0,
         15, -1, 0, 0,
@@ -814,9 +795,9 @@ suite.webGlTest("renderQubitOperation", () => {
         -30, -8, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 2, false);
-    QuantumShaders.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 2, false);
+    QuantumShaders.renderQubitOperation(ctx, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         7, -1, 0, 0,
         -7, -3, 0, 0,
         15, -1, 0, 0,
@@ -827,9 +808,9 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 3, false);
-    QuantumShaders.renderQubitOperation(director, out, inp, Matrix.square([0, 0, 0, 0]), 0, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 3, false);
+    QuantumShaders.renderQubitOperation(ctx, out, inp, Matrix.square([0, 0, 0, 0]), 0, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -840,9 +821,9 @@ suite.webGlTest("renderQubitOperation", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 3, false);
-    QuantumShaders.renderQubitOperation(director, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 1, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 3, false);
+    QuantumShaders.renderQubitOperation(ctx, out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 1, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         9, -3, 0, 0,
         13, -3, 0, 0,
         -9, -5, 0, 0,
@@ -854,44 +835,42 @@ suite.webGlTest("renderQubitOperation", () => {
     ]));
 });
 
-suite.webGlTest("renderQubitOperation_flows", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderQubitOperation_flows", ctx => {
     let out1 = new WglTexture(2, 1);
     let inp1 = new WglTexture(2, 1);
     let cnt1 = new WglTexture(2, 1);
-    QuantumShaders.renderPixelColorData(director, inp1, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, inp1, new Float32Array([
         1, 2, 0, 0,
         3, 27, 0, 0
     ]));
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt1, 1, false);
-    QuantumShaders.renderQubitOperation(director, out1, inp1, Matrix.square([1, 0, 0, 0]), 0, cnt1);
-    assertThat(director.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt1, 1, false);
+    QuantumShaders.renderQubitOperation(ctx, out1, inp1, Matrix.square([1, 0, 0, 0]), 0, cnt1);
+    assertThat(ctx.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
         1, 2, 0, 0,
         0, 0, 0, 0
     ]));
-    QuantumShaders.renderQubitOperation(director, out1, inp1, Matrix.square([0, 1, 0, 0]), 0, cnt1);
-    assertThat(director.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
+    QuantumShaders.renderQubitOperation(ctx, out1, inp1, Matrix.square([0, 1, 0, 0]), 0, cnt1);
+    assertThat(ctx.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
         3, 27, 0, 0,
         0, 0, 0, 0
     ]));
-    QuantumShaders.renderQubitOperation(director, out1, inp1, Matrix.square([0, 0, 1, 0]), 0, cnt1);
-    assertThat(director.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
+    QuantumShaders.renderQubitOperation(ctx, out1, inp1, Matrix.square([0, 0, 1, 0]), 0, cnt1);
+    assertThat(ctx.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 2, 0, 0
     ]));
-    QuantumShaders.renderQubitOperation(director, out1, inp1, Matrix.square([0, 0, 0, 1]), 0, cnt1);
-    assertThat(director.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
+    QuantumShaders.renderQubitOperation(ctx, out1, inp1, Matrix.square([0, 0, 0, 1]), 0, cnt1);
+    assertThat(ctx.readPixelColorFloats(out1)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         3, 27, 0, 0
     ]));
 });
 
-suite.webGlTest("renderSwapOperation", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderSwapOperation", ctx => {
     let out = new WglTexture(1<<2, 1<<1);
     let inp = new WglTexture(1<<2, 1<<1);
     let cnt = new WglTexture(1<<2, 1<<1);
-    QuantumShaders.renderPixelColorData(director, inp, new Float32Array([
+    QuantumShaders.renderPixelColorData(ctx, inp, new Float32Array([
         11, 12, 13, 14, //000
         21, 22, 23, 24, //001
         31, 32, 33, 34, //010
@@ -902,9 +881,9 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.renderUniformColor(director, cnt, 1, 0, 0, 0);
-    QuantumShaders.renderSwapOperation(director, out, inp, 0, 1, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderUniformColor(ctx, cnt, 1, 0, 0, 0);
+    QuantumShaders.renderSwapOperation(ctx, out, inp, 0, 1, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         31, 32, 33, 34, //010
         21, 22, 23, 24, //001
@@ -915,9 +894,9 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 2, false);
-    QuantumShaders.renderSwapOperation(director, out, inp, 0, 1, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 2, false);
+    QuantumShaders.renderSwapOperation(ctx, out, inp, 0, 1, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         31, 32, 33, 34, //010
         21, 22, 23, 24, //001
@@ -928,9 +907,9 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.renderUniformColor(director, cnt, 1, 0, 0, 0);
-    QuantumShaders.renderSwapOperation(director, out, inp, 0, 2, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderUniformColor(ctx, cnt, 1, 0, 0, 0);
+    QuantumShaders.renderSwapOperation(ctx, out, inp, 0, 2, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         51, 52, 53, 54, //100
         31, 32, 33, 34, //010
@@ -941,9 +920,9 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 1, false);
-    QuantumShaders.renderSwapOperation(director, out, inp, 0, 2, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 1, false);
+    QuantumShaders.renderSwapOperation(ctx, out, inp, 0, 2, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         51, 52, 53, 54, //100
         31, 32, 33, 34, //010
@@ -954,9 +933,9 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.renderSingleBitConstraintControlMask(director, cnt, 1, true);
-    QuantumShaders.renderSwapOperation(director, out, inp, 0, 2, cnt);
-    assertThat(director.readPixelColorFloats(out)).isEqualTo(new Float32Array([
+    QuantumShaders.renderSingleBitConstraintControlMask(ctx, cnt, 1, true);
+    QuantumShaders.renderSwapOperation(ctx, out, inp, 0, 2, cnt);
+    assertThat(ctx.readPixelColorFloats(out)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         21, 22, 23, 24, //001
         31, 32, 33, 34, //010
@@ -968,8 +947,7 @@ suite.webGlTest("renderSwapOperation", () => {
     ]));
 });
 
-suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
-    let director = new WglDirector();
+suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", ctx => {
     let nsize = 4;
     let size1 = 1 << nsize;
     let size2 = 1 << nsize;
@@ -992,13 +970,13 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
         flatten().
         flatMap(e => [e.real, e.imag, 0, 0]).
         toArray();
-    QuantumShaders.renderPixelColorData(director, inp, new Float32Array(inputPixelData));
+    QuantumShaders.renderPixelColorData(ctx, inp, new Float32Array(inputPixelData));
     let kept = Seq.range(nsize).toArray();
     let margined = Seq.range(nsize).map(i => i + nsize).toArray();
     let controlled = QuantumControlMask.NO_CONTROLS;
-    QuantumShaders.renderSuperpositionToDensityMatrix(director, out, inp, kept, margined, controlled);
+    QuantumShaders.renderSuperpositionToDensityMatrix(ctx, out, inp, kept, margined, controlled);
 
-    let outputPixelData = director.readPixelColorFloats(out);
+    let outputPixelData = ctx.readPixelColorFloats(out);
     let computed = Matrix.square(new Seq(outputPixelData).partitioned(4).map(p => new Complex(p[0], p[1])).toArray());
     assertThat(computed).isApproximatelyEqualTo(expected, 0.0001);
 });

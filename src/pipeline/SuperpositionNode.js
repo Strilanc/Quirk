@@ -4,7 +4,7 @@ import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Seq from "src/base/Seq.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
 import Util from "src/base/Util.js"
-import WglDirector from "src/webgl/WglDirector.js"
+import { initializedWglContext } from "src/webgl/WglContext.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
 /**
@@ -61,7 +61,7 @@ export default class SuperpositionNode {
         let qubitCount = Util.bitSize(amplitudes.length - 1);
         return SuperpositionNode.input(
             qubitCount,
-            t => QuantumShaders.renderPixelColorData(getSharedDirector(), t, dataArray));
+            t => QuantumShaders.renderPixelColorData(initializedWglContext(), t, dataArray));
     };
 
     /**
@@ -75,7 +75,7 @@ export default class SuperpositionNode {
         Util.need(stateIndex >= 0 && stateIndex < (1 << qubitCount), "stateMask >= 0 && stateMask < (1 << qubitCount)");
 
         return SuperpositionNode.input(qubitCount, t =>
-            QuantumShaders.renderClassicalState(getSharedDirector(), t, stateIndex));
+            QuantumShaders.renderClassicalState(initializedWglContext(), t, stateIndex));
     };
 
     /**
@@ -91,12 +91,12 @@ export default class SuperpositionNode {
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
             let control = QuantumShaders.renderControlMask(
-                getSharedDirector(),
+                initializedWglContext(),
                 controlMask,
                 allocTexture(this.width, this.height),
                 allocTexture(this.width, this.height));
             QuantumShaders.renderQubitOperation(
-                getSharedDirector(),
+                initializedWglContext(),
                 control.available,
                 input[0],
                 operation,
@@ -120,12 +120,12 @@ export default class SuperpositionNode {
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
             let control = QuantumShaders.renderControlMask(
-                getSharedDirector(),
+                initializedWglContext(),
                 controlMask,
                 allocTexture(this.width, this.height),
                 allocTexture(this.width, this.height));
             QuantumShaders.renderSwapOperation(
-                getSharedDirector(),
+                initializedWglContext(),
                 control.available,
                 input[0],
                 qubitIndex1,
@@ -153,7 +153,7 @@ export default class SuperpositionNode {
             let workspace1 = allocTexture(this.width, this.height);
             let workspace2 = allocTexture(this.width, this.height);
             QuantumShaders.renderControlCombinationProbabilities(
-                getSharedDirector(),
+                initializedWglContext(),
                 result,
                 workspace1,
                 workspace2,
@@ -180,7 +180,7 @@ export default class SuperpositionNode {
         return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
             let result = allocTexture(w, h);
             QuantumShaders.renderSuperpositionToDensityMatrix(
-                getSharedDirector(),
+                initializedWglContext(),
                 result,
                 inputs[0],
                 wires,
@@ -197,7 +197,7 @@ export default class SuperpositionNode {
     read() {
         return new SuperpositionReadNode(new PipelineNode(
             [this.pipelineNode],
-            inputs => getSharedDirector().readPixelColorFloats(inputs[0])));
+            inputs => initializedWglContext().readPixelColorFloats(inputs[0])));
     };
 
     /**
@@ -236,7 +236,7 @@ export default class SuperpositionNode {
 
         let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
             let t = allocTexture(plan.width, plan.height);
-            QuantumShaders.renderUniformColor(getSharedDirector(), t, 0, 0, 0, 0);
+            QuantumShaders.renderUniformColor(initializedWglContext(), t, 0, 0, 0, 0);
             return t;
         });
         let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
@@ -249,7 +249,7 @@ export default class SuperpositionNode {
                 let [a, e] = textures;
                 let t = allocTexture(plan.width, plan.height);
                 let r = plan.placeMap.get(eNode.pipelineNode.id);
-                QuantumShaders.renderLinearOverlay(getSharedDirector(), t, r, e, a);
+                QuantumShaders.renderLinearOverlay(initializedWglContext(), t, r, e, a);
                 return t;
             });
 
@@ -399,16 +399,6 @@ export class SuperpositionReadNode {
         });
     };
 }
-
-/** @type {undefined|!WglDirector} */
-let CACHED_SHARED_DIRECTOR = undefined;
-/** @returns {!WglDirector} */
-let getSharedDirector = () => {
-    if (CACHED_SHARED_DIRECTOR === undefined) {
-        CACHED_SHARED_DIRECTOR = new WglDirector();
-    }
-    return CACHED_SHARED_DIRECTOR;
-};
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 let TEXTURE_POOL = new Map();
