@@ -1,6 +1,6 @@
 import Rect from "src/math/Rect.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
-import WglUtil from "src/webgl/WglUtil.js"
+import { checkGetErrorResult } from "src/webgl/WglUtil.js"
 
 /** @type {!WglMortalValueSlot} */
 const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(ctx => {
@@ -176,7 +176,7 @@ class WglContext {
         let gl = this.gl;
         texture.bindFramebufferFor(this);
         gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.UNSIGNED_BYTE, destinationBuffer);
-        WglUtil.checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
+        checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
 
         return destinationBuffer;
     };
@@ -198,7 +198,7 @@ class WglContext {
         let gl = this.gl;
         texture.bindFramebufferFor(this);
         gl.readPixels(rect.x, rect.y, rect.w, rect.h, GL.RGBA, GL.FLOAT, destinationBuffer);
-        WglUtil.checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, FLOAT, ...)");
+        checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, FLOAT, ...)");
 
         return destinationBuffer;
     };

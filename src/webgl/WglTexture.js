@@ -1,6 +1,6 @@
 import WglArg from "src/webgl/WglArg.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
-import WglUtil from "src/webgl/WglUtil.js"
+import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 
 /**
  * Stores pixel data for/from/on the gpu... or something along those lines. You can render to and pull data out of it.
@@ -54,10 +54,10 @@ export default class WglTexture {
         gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
         gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
         gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
-        WglUtil.checkGetErrorResult(gl.getError(), "texImage2D");
+        checkGetErrorResult(gl.getError(), "texImage2D");
         gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
-        WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-        WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+        checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+        checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
 
         gl.bindTexture(GL.TEXTURE_2D, null);
         gl.bindFramebuffer(GL.FRAMEBUFFER, null);
@@ -74,7 +74,7 @@ export default class WglTexture {
         const GL = WebGLRenderingContext;
         let gl = wglContext.gl;
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.instanceFor(wglContext).framebuffer);
-        WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-        WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+        checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+        checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
     }
 }
