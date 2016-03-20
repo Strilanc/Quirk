@@ -1,5 +1,4 @@
 import WglArg from "src/webgl/WglArg.js"
-import WglContext from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglUtil from "src/webgl/WglUtil.js"
 

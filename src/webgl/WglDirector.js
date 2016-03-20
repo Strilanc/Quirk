@@ -5,74 +5,34 @@ import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import WglUtil from "src/webgl/WglUtil.js"
 
-class WglDirectorSharedContext {
-    constructor() {
-        /** @type {!HTMLCanvasElement} */
-        this.canvas = document.createElement('canvas');
+/**
+ * @type {undefined|!WglContext}
+ * @private
+ */
+let ___sharedContext = undefined;
 
-        let gl = /** @type {!WebGLRenderingContext} */
-            this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
-        if (/** @type {null|!WebGLRenderingContext} */ gl === null) {
-            document.removeChild(this.canvas);
-            throw new Error('Error creating WebGL context.');
-        }
-        if (gl.getExtension('OES_texture_float') === undefined) {
-            document.removeChild(this.canvas);
-            throw new Error("WebGL support for 32-bit floats not present.")
-        }
-
-        /** @type {!WglContext} */
-        this.wglContext = new WglContext(gl);
-
-        this.canvas.addEventListener(
-            "webglcontextrestored",
-            event => {
-                event.preventDefault();
-                this.wglContext.lifetimeCounter++;
-            },
-            false);
-
-        this.canvas.addEventListener(
-            'webglcontextlost',
-            event => {
-                event.preventDefault();
-                this.wglContext.lifetimeCounter++;
-            },
-            false);
-    };
+/**
+ * @returns {!WglContext}
+ */
+function makeWglContext() {
+    if (___sharedContext === undefined) {
+        // Tests fail if too many contexts are created, and it's wasteful to make so many canvases when only one
+        // is required. Not aware of any downsides, other than differing side effects (i.e. number of canvases added
+        // to the DOM).
+        ___sharedContext = new WglContext();
+    }
+    return ___sharedContext;
 }
-
-let shared = undefined;
 
 /**
  * A context for telling webgl to do useful things with shaders and textures, like rendering.
  */
 export default class WglDirector {
     constructor() {
-        if (shared === undefined) {
-            // Tests fail if too many directors are created, and it's wasteful to make so many canvases when only one
-            // is required. Not aware of any downsides, other than differing side effects (i.e. number of canvases added
-            // to the DOM).
-            shared = new WglDirectorSharedContext();
-        }
-
-        /**
-         * @type {!HTMLCanvasElement}
-         * @private
-         */
-        this.canvas = shared.canvas;
-
         /**
          * @type {!WglContext}
          */
-        this.wglContext = shared.wglContext;
-
-        /**
-         * @type {!WglMortalValueSlot}
-         * @private
-         */
-        this._boundPositionAndIndexBuffersSlot = new WglMortalValueSlot(
-            ctx => WglDirector.ensureAttributesAreBoundInitializer(ctx));
+        this.wglContext = makeWglContext();
     };
 
     /**
@@ -105,6 +65,14 @@ export default class WglDirector {
      */
     render(texture, shader, uniformArguments) {
         let ctx = this.wglContext;
+        if (this._boundPositionAndIndexBuffersSlot === undefined) {
+            /**
+             * @type {undefined|!WglMortalValueSlot}
+             * @private
+             */
+            this._boundPositionAndIndexBuffersSlot = new WglMortalValueSlot(
+                    ctx => WglDirector.ensureAttributesAreBoundInitializer(ctx));
+        }
         this._boundPositionAndIndexBuffersSlot.ensureInitialized(ctx);
         texture.bindFramebufferFor(ctx);
         shader.bindInstanceFor(ctx, uniformArguments);

@@ -1,6 +1,5 @@
 import Config from "src/Config.js"
 import WglArg from "src/webgl/WglArg.js"
-import WglContext from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -30,7 +29,7 @@ export default class WglShader {
             // We just learned the parameter names.
             let parameterNames = uniformArguments.map(e => e.name);
             this._shaderContextSlot = new WglMortalValueSlot(
-                    cache => new WglShaderContext(cache, this.fragmentShaderSource, parameterNames));
+                    ctx => new WglShaderContext(ctx, this.fragmentShaderSource, parameterNames));
         }
         this._shaderContextSlot.initializedValue(context).load(context, uniformArguments);
     };
@@ -76,7 +75,7 @@ const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
  */
 class WglShaderContext {
     /**
-     * @param {!WglContext} cache
+     * @param {!WglContext} ctx
      * @param {!string} fragmentShaderSource
      * @param {!Array.<!string>|!Iterable.<!string>} uniformParameterNames
      *
@@ -84,8 +83,8 @@ class WglShaderContext {
      * @property {*} positionAttributeLocation
      * @property {*} program
      */
-    constructor(cache, fragmentShaderSource, uniformParameterNames) {
-        let precision = cache.getMaximumShaderFloatPrecision();
+    constructor(ctx, fragmentShaderSource, uniformParameterNames) {
+        let precision = ctx.maximumShaderFloatPrecision;
         let vertexShader = `
             precision ${precision} float;
             precision ${precision} int;
@@ -99,7 +98,7 @@ class WglShaderContext {
             ${fragmentShaderSource}`;
 
         const GL = WebGLRenderingContext;
-        let gl = cache.gl;
+        let gl = ctx.gl;
         let glVertexShader = WglShaderContext.compileShader(gl, GL.VERTEX_SHADER, vertexShader);
         let glFragmentShader = WglShaderContext.compileShader(gl, GL.FRAGMENT_SHADER, fullFragmentShader);
 

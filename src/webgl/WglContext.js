@@ -1,31 +1,75 @@
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 
 /**
- * Wraps a WebGLRenderingContext with metadata helpers and lifetime information.
+ * A WebGLRenderingContext wrapped with metadata helpers and lifetime information.
  */
 export default class WglContext {
     /**
-     * @param {!WebGLRenderingContext} webGLRenderingContext
+     * Creates and wraps a WebGLRenderingContext.
      */
-    constructor(webGLRenderingContext) {
+    constructor() {
         /**
-         * The WebGLRenderingContext instance associated with this WglContext.
+         * A hidden canvas backing the WglContext.
+         * @type {!HTMLCanvasElement}
+         */
+        this.canvas = document.createElement('canvas');
+
+        /**
+         * The WebGLRenderingContext instance associated with the WglContext.
          * @type {!WebGLRenderingContext}
          */
-        this.gl = webGLRenderingContext;
+        this.gl = /** @type {!WebGLRenderingContext} */
+            this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
+        if (/** @type {null|!WebGLRenderingContext} */ this.gl === null) {
+            document.removeChild(this.canvas);
+            throw new Error('Error creating WebGL context.');
+        }
+        if (this.gl.getExtension('OES_texture_float') === undefined) {
+            document.removeChild(this.canvas);
+            throw new Error("WebGL support for 32-bit floats not present.")
+        }
+
         /**
-         * Changed when the webgl context is lost and things need to be re-created.
+         * Changed when the wrapped WebGLRenderingContext is lost/restored and things need to be re-created.
          * @type {!int}
          */
         this.lifetimeCounter = 0;
-        /** @type {Number} */
-        this.maxTextureUnits = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
-        /** @type {Number} */
-        this.maxTextureSize = webGLRenderingContext.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
+
+        // Wire lifetime updates.
+        this.canvas.addEventListener(
+            "webglcontextrestored",
+            event => {
+                event.preventDefault();
+                this.lifetimeCounter++;
+            },
+            false);
+        this.canvas.addEventListener(
+            'webglcontextlost',
+            event => {
+                event.preventDefault();
+                this.recomputeProperties();
+            },
+            false);
+
+        this.recomputeProperties();
     };
 
     /**
+     * @private
+     */
+    recomputeProperties() {
+        this.lifetimeCounter++;
+        /** @type {Number} */
+        this.maxTextureUnits = this.gl.getParameter(WebGLRenderingContext.MAX_TEXTURE_IMAGE_UNITS);
+        /** @type {Number} */
+        this.maxTextureSize = this.gl.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
+        /** @type {!string} */
+        this.maximumShaderFloatPrecision = this.getMaximumShaderFloatPrecision();
+    }
+
+    /**
      * @returns {!string}
+     * @private
      */
     getMaximumShaderFloatPrecision() {
         let gl = this.gl;
