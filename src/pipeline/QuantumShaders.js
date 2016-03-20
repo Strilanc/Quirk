@@ -58,51 +58,41 @@ export default class QuantumShaders {
     };
 
     /**
-     * Renders a texture by, effectively, drawing the given background texture then overlaying the given foreground
-     * texture over the background using the given offset.
+     * Overlays a foreground texture's pixels over a background texture's pixels, with an offset.
      *
-     * @param {!WglTexture} destinationTexture
      * @param {!int} foregroundX
      * @param {!int} foregroundY
      * @param {!WglTexture} foregroundTexture
      * @param {!WglTexture} backgroundTexture
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static renderOverlayed(
-            destinationTexture,
-            foregroundX,
-            foregroundY,
-            foregroundTexture,
-            backgroundTexture) {
-        GLSL_OVERLAY.withArgs(
+    static overlay(foregroundX, foregroundY, foregroundTexture, backgroundTexture) {
+        return GLSL_OVERLAY.withArgs(
             WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
             WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
             WglArg.texture("backgroundTexture", backgroundTexture, 0),
             WglArg.texture("foregroundTexture", foregroundTexture, 1),
             WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
-        ).renderTo(destinationTexture);
+        );
     }
 
     /**
      * Renders a texture with the given background texture, but with the given foreground texture's data scanned
      * linearly into the background.
      *
-     * @param {!WglTexture} destinationTexture
      * @param {!int} offset
      * @param {!WglTexture} foregroundTexture
      * @param {!WglTexture} backgroundTexture
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static renderLinearOverlay(
-            destinationTexture,
-            offset,
-            foregroundTexture,
-            backgroundTexture) {
-        GLSL_LINEAR_OVERLAY.withArgs(
+    static linearOverlay(offset, foregroundTexture, backgroundTexture) {
+        return GLSL_LINEAR_OVERLAY.withArgs(
             WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
             WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
             WglArg.texture("backgroundTexture", backgroundTexture, 0),
             WglArg.texture("foregroundTexture", foregroundTexture, 1),
             WglArg.int("offset", offset)
-        ).renderTo(destinationTexture);
+        );
     }
 
     /**
@@ -110,16 +100,17 @@ export default class QuantumShaders {
      * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
      * blocked.
      *
-     * @param {!WglTexture} destinationTexture
      * @param {!int} targetBit
      * @param {!boolean} desiredBitValue
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static renderSingleBitConstraintControlMask(destinationTexture, targetBit, desiredBitValue) {
-        GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT.withArgs(
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.float("targetBitPositionMask", 1 << targetBit),
-            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ).renderTo(destinationTexture);
+    static singleBitConstraintControlMask(targetBit, desiredBitValue) {
+        return {renderTo: destinationTexture =>
+            GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT.withArgs(
+                WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+                WglArg.float("targetBitPositionMask", 1 << targetBit),
+                WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
+            ).renderTo(destinationTexture)};
     };
 
     /**
@@ -234,7 +225,7 @@ export default class QuantumShaders {
                 workspace2 = workspace1;
                 workspace1 = t;
             } else {
-                QuantumShaders.renderSingleBitConstraintControlMask(workspace1, i, b);
+                QuantumShaders.singleBitConstraintControlMask(i, b).renderTo(workspace1);
                 hasFirst = true;
             }
         }

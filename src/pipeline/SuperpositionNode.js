@@ -243,7 +243,7 @@ export default class SuperpositionNode {
                 let [a, e] = textures;
                 let t = allocTexture(plan.width, plan.height);
                 let r = plan.placeMap.get(eNode.pipelineNode.id);
-                QuantumShaders.renderLinearOverlay(t, r, e, a);
+                QuantumShaders.linearOverlay(r, e, a).renderTo(t);
                 return t;
             });
 
