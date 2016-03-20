@@ -12,8 +12,7 @@ class WglDirectorSharedContext {
 
         let gl = /** @type {!WebGLRenderingContext} */
             this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
-        //noinspection JSValidateTypes
-        if (gl === null) {
+        if (/** @type {null|!WebGLRenderingContext} */ gl === null) {
             document.removeChild(this.canvas);
             throw new Error('Error creating WebGL context.');
         }
@@ -23,27 +22,26 @@ class WglDirectorSharedContext {
         }
 
         /** @type {!WglCache} */
-        this.cache = new WglCache(gl, nextUniqueId++, 0);
+        this.cache = new WglCache(gl);
 
         this.canvas.addEventListener(
             "webglcontextrestored",
-                event => {
+            event => {
                 event.preventDefault();
-                this.cache.temporaryIdentifier++;
+                this.cache.lifetimeCounter++;
             },
             false);
 
         this.canvas.addEventListener(
             'webglcontextlost',
-                event => {
+            event => {
                 event.preventDefault();
-                this.cache.temporaryIdentifier++;
+                this.cache.lifetimeCounter++;
             },
             false);
     };
 }
 
-let nextUniqueId = 0;
 let shared = undefined;
 
 /**

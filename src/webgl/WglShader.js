@@ -1,8 +1,9 @@
 import Config from "src/Config.js"
-import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
+import WglCache from "src/webgl/WglCache.js"
+import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglTexture from "src/webgl/WglTexture.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 /**
  * A shader program definition, used to render outputs onto textures based on the given GLSL source code.
@@ -14,8 +15,8 @@ export default class WglShader {
     constructor(fragmentShaderSource) {
         /** @type {!string} */
         this.fragmentShaderSource = fragmentShaderSource;
-        /** @type {!ContextStash} */
-        this.contextStash = new Map();
+        /** @type {undefined|!WglMortalValueSlot.<!WglShaderContext>} */
+        this._shaderContextSlot = undefined; // Wait for someone to tell us the parameter names.
     };
 
     /**
@@ -25,11 +26,18 @@ export default class WglShader {
      * @param {!(!WglArg[])} uniformArguments
      */
     bindInstanceFor(context, uniformArguments) {
-        let compiled = context.retrieveOrCreateAssociatedData(this.contextStash, () =>
-            new WglShaderContext(context, this.fragmentShaderSource, uniformArguments.map(e => e.name)));
-
-        compiled.load(context, uniformArguments);
+        if (this._shaderContextSlot === undefined) {
+            // We just learned the parameter names.
+            let parameterNames = uniformArguments.map(e => e.name);
+            this._shaderContextSlot = new WglMortalValueSlot(
+                    cache => new WglShaderContext(cache, this.fragmentShaderSource, parameterNames));
+        }
+        this._shaderContextSlot.initializedValue(context).load(context, uniformArguments);
     };
+
+    toString() {
+        return `WglShader(fragmentShaderSource: ${this.fragmentShaderSource})`;
+    }
 }
 
 const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {

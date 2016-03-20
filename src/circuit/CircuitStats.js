@@ -131,6 +131,7 @@ export default class CircuitStats{
         return this._conditionalWireProbabilityData[t][wireIndex];
     }
 
+    //noinspection JSUnusedGlobalSymbols
     static emptyAtTime(circuitDefinition, time) {
         return new CircuitStats(circuitDefinition, time, [], [], new Map(), []);
     }

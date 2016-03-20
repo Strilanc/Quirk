@@ -77,6 +77,7 @@ class Map {
         throw new Error("Just a doc class " + this);
     }
 
+    //noinspection JSUnusedGlobalSymbols
     /**
      * @returns {!Iterator.<[K, V]>}
      * @template K, V
@@ -85,6 +86,20 @@ class Map {
         throw new Error("Just a doc class " + this);
     }
 }
+
+class WebGLRenderingContext {
+    /**
+     * @param {!number} shaderType FRAGMENT_SHADER or VERTEX_SHADER
+     * @param {!number} precisionType LOW_FLOAT, MEDIUM_FLOAT, HIGH_FLOAT, LOW_INT, MEDIUM_INT, or HIGH_INT
+     * @returns {!{rangeMin: !float, rangeMax: !float, precision: !float}} A WebGLShaderPrecisionFormat object.
+     */
+    function getShaderPrecisionFormat(shaderType, precisionType) {
+        throw new Error("Just a doc class." + shaderType + precisionType + this);
+    }
+}
+
+class WebGLFramebuffer {}
+class WebGLShader {}
 
 /**
  * A collection of distinct keys, with efficient membership testing.

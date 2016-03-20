@@ -1,5 +1,6 @@
 import WglArg from "src/webgl/WglArg.js"
 import WglCache from "src/webgl/WglCache.js"
+import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglUtil from "src/webgl/WglUtil.js"
 
 /**
@@ -18,43 +19,50 @@ export default class WglTexture {
         this.height = height;
         /** @type {!number} */
         this.pixelType = pixelType;
-        /** @type {!ContextStash} */
-        this.contextStash = new Map();
+        /** @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>} */
+        this._textureAndFrameBufferSlot = new WglMortalValueSlot(cache => this.textureAndFramebufferInitializer(cache));
     };
 
     /**
      * Returns, after initializing if necessary, the resources representing this texture bound to the given context.
      * @param {!WglCache} cache
-     * @returns {!{texture:*, framebuffer:*, renderbuffer:*}}
+     * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
      */
     instanceFor(cache) {
-        return cache.retrieveOrCreateAssociatedData(this.contextStash, () => {
-            const GL = WebGLRenderingContext;
-            let gl = cache.gl;
+        return /** @type {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}} */ (
+            this._textureAndFrameBufferSlot.initializedValue(cache));
+    }
 
-            let result = {
-                texture: gl.createTexture(),
-                framebuffer: gl.createFramebuffer()
-            };
+    /**
+     * @returns {!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}}
+     * @private
+     */
+    textureAndFramebufferInitializer(cache) {
+        const GL = WebGLRenderingContext;
+        let gl = cache.gl;
 
-            gl.bindTexture(GL.TEXTURE_2D, result.texture);
-            gl.bindFramebuffer(GL.FRAMEBUFFER, result.framebuffer);
+        let result = {
+            texture: gl.createTexture(),
+            framebuffer: gl.createFramebuffer()
+        };
 
-            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
-            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
-            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-            gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
-            gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
-            WglUtil.checkGetErrorResult(gl.getError(), "texImage2D");
-            gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
-            WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-            WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+        gl.bindTexture(GL.TEXTURE_2D, result.texture);
+        gl.bindFramebuffer(GL.FRAMEBUFFER, result.framebuffer);
 
-            gl.bindTexture(GL.TEXTURE_2D, null);
-            gl.bindFramebuffer(GL.FRAMEBUFFER, null);
+        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
+        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
+        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+        gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
+        WglUtil.checkGetErrorResult(gl.getError(), "texImage2D");
+        gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
+        WglUtil.checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+        WglUtil.checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
 
-            return result;
-        });
+        gl.bindTexture(GL.TEXTURE_2D, null);
+        gl.bindFramebuffer(GL.FRAMEBUFFER, null);
+
+        return result;
     }
 
     /**
