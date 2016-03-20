@@ -28,13 +28,13 @@ export default class WglMortalValueSlot {
 
     /**
      * Returns the mortal value stored in the slot, initializing or re-initializing it if necessary.
-     * @param {!WglContext} ctx
+     * @param {!int} lifetimeCounter
      * @returns T
      */
-    initializedValue(ctx) {
-        if (this.lifetimeId !== ctx.lifetimeCounter) {
-            this.lifetimeId = ctx.lifetimeCounter;
-            this.mortalValue = this.initializer(ctx);
+    initializedValue(lifetimeCounter) {
+        if (this.lifetimeId !== lifetimeCounter) {
+            this.lifetimeId = lifetimeCounter;
+            this.mortalValue = this.initializer();
         }
 
         return this.mortalValue;
@@ -42,9 +42,9 @@ export default class WglMortalValueSlot {
 
     /**
      * Initializes or re-initializes the stored mortal value, if necessary.
-     * @param {!WglContext} ctx
+     * @param {!int} lifetimeCounter
      */
-    ensureInitialized(ctx) {
-        this.initializedValue(ctx);
+    ensureInitialized(lifetimeCounter) {
+        this.initializedValue(lifetimeCounter);
     }
 }

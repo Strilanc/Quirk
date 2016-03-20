@@ -5,7 +5,7 @@ import WglTexture from "src/webgl/WglTexture.js"
 
 let suite = new Suite("WglTexture");
 
-suite.webGlTest("readPixels_bytes", ctx => {
+suite.webGlTest("readPixels_bytes", () => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`
@@ -16,7 +16,7 @@ suite.webGlTest("readPixels_bytes", ctx => {
 
     let texture = new WglTexture(w, h, WebGLRenderingContext.UNSIGNED_BYTE);
 
-    ctx.render(texture, shader, [WglArg.float("v", 10/255)]);
+    shader.withArgs(WglArg.float("v", 10/255)).renderTo(texture);
     assertThat(texture.readPixels()).isEqualTo(new Uint8Array([
         0, 0, 10, 128,
         1, 0, 10, 128,
@@ -25,7 +25,7 @@ suite.webGlTest("readPixels_bytes", ctx => {
     ]));
 });
 
-suite.webGlTest("readPixels_floats", ctx => {
+suite.webGlTest("readPixels_floats", () => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`
@@ -36,7 +36,7 @@ suite.webGlTest("readPixels_floats", ctx => {
 
     let texture = new WglTexture(w, h);
 
-    ctx.render(texture, shader, [WglArg.float("v", 192.25)]);
+    shader.withArgs(WglArg.float("v", 192.25)).renderTo(texture);
     assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         0.5, 0.5, 192.25, 254.5,
         1.5, 0.5, 192.25, 254.5,

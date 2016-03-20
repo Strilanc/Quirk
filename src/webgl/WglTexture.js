@@ -27,14 +27,14 @@ export default class WglTexture {
      * @returns {!WebGLTexture}
      */
     initializedTexture() {
-        return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext()).texture;
+        return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext().lifetimeCounter).texture;
     }
 
     /**
      * @returns {!WebGLFramebuffer}
      */
     initializedFramebuffer() {
-        return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext()).framebuffer;
+        return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext().lifetimeCounter).framebuffer;
     }
 
     /**

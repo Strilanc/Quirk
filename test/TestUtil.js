@@ -1,7 +1,6 @@
 // Cheat a little bit on the testing library being independent from what it tests
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
-import { initializedWglContext }from "src/webgl/WglContext.js"
 
 let assertionSubjectIndexInCurrentTest = 0;
 
@@ -301,7 +300,7 @@ export class Suite {
 
     /**
      * @param {!string} name
-     * @param {!function(!WglContext, !{ warn_only: !boolean|!string })} method
+     * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     webGlTest(name, method) {
         let wrappedMethod = status => {
@@ -320,7 +319,7 @@ export class Suite {
                 return;
             }
 
-            method(initializedWglContext(), status);
+            method(status);
         };
 
         this.test(name, wrappedMethod);

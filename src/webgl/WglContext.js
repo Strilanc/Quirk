@@ -2,32 +2,6 @@ import Rect from "src/math/Rect.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 
-/** @type {!WglMortalValueSlot} */
-const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
-    const GL = WebGLRenderingContext;
-    let gl = initializedWglContext().gl;
-
-    let positionBuffer = gl.createBuffer();
-    let positions = new Float32Array([
-        -1, +1,
-        +1, +1,
-        -1, -1,
-        +1, -1]);
-    gl.bindBuffer(GL.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
-    // Note: ARRAY_BUFFER should not be rebound anywhere else.
-
-    let indexBuffer = gl.createBuffer();
-    let indices = new Uint16Array([
-        0, 2, 1,
-        2, 3, 1]);
-    gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
-    // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
-
-    return {positionBuffer, indexBuffer};
-});
-
 /**
  * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.
  */
@@ -143,25 +117,6 @@ class WglContext {
             gl.deleteTexture(t);
         }
     }
-
-    /**
-     * Overwrites the given texture with the output of the given shader when given the given uniform arguments.
-     * @param {!WglTexture} texture
-     * @param {!WglShader} shader
-     * @param {!(!WglArg[])} uniformArguments
-     */
-    render(texture, shader, uniformArguments) {
-        const GL = WebGLRenderingContext;
-        let gl = this.gl;
-
-        ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(this);
-        gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
-        checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-        checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
-        shader.bindInstanceFor(this, uniformArguments);
-
-        gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
-    };
 }
 
 // We really only ever want one instance to exist.

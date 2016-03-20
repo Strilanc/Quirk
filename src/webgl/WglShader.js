@@ -3,7 +3,34 @@ import WglArg from "src/webgl/WglArg.js"
 import { initializedWglContext }  from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglTexture from "src/webgl/WglTexture.js"
+import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 import {seq, Seq} from "src/base/Seq.js"
+
+/** @type {!WglMortalValueSlot} */
+const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
+    const GL = WebGLRenderingContext;
+    let gl = initializedWglContext().gl;
+
+    let positionBuffer = gl.createBuffer();
+    let positions = new Float32Array([
+        -1, +1,
+        +1, +1,
+        -1, -1,
+        +1, -1]);
+    gl.bindBuffer(GL.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
+    // Note: ARRAY_BUFFER should not be rebound anywhere else.
+
+    let indexBuffer = gl.createBuffer();
+    let indices = new Uint16Array([
+        0, 2, 1,
+        2, 3, 1]);
+    gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
+    // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
+
+    return {positionBuffer, indexBuffer};
+});
 
 /**
  * A shader program definition, used to render outputs onto textures based on the given GLSL source code.
@@ -16,24 +43,59 @@ export default class WglShader {
         /** @type {!string} */
         this.fragmentShaderSource = fragmentShaderSource;
         /** @type {undefined|!WglMortalValueSlot.<!WglCompiledShader>} */
-        this._shaderContextSlot = undefined; // Wait for someone to tell us the parameter names.
+        this._compiledShaderSlot = undefined; // Wait for someone to tell us the parameter names.
     };
 
     /**
      * Sets the active shader, for the given context, to a compiled version of this shader with the given uniform
      * arguments.
-     * @param {!WglContext} context
+     * @param {!WglContext} ctx
      * @param {!(!WglArg[])} uniformArguments
      */
-    bindInstanceFor(context, uniformArguments) {
-        if (this._shaderContextSlot === undefined) {
+    bindInstanceFor(ctx, uniformArguments) {
+        if (this._compiledShaderSlot === undefined) {
             // We just learned the parameter names.
             let parameterNames = uniformArguments.map(e => e.name);
-            this._shaderContextSlot = new WglMortalValueSlot(
+            this._compiledShaderSlot = new WglMortalValueSlot(
                 () => new WglCompiledShader(this.fragmentShaderSource, parameterNames));
         }
-        this._shaderContextSlot.initializedValue(context).load(context, uniformArguments);
+        this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
     };
+
+    /**
+     * Overwrites the given texture with the output of the given shader when given the given uniform arguments.
+     * @param {!WglArg} uniformArguments
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
+     */
+    withArgs(...uniformArguments) {
+        // Learn the parameter names.
+        if (this._compiledShaderSlot === undefined) {
+            let parameterNames = uniformArguments.map(e => e.name);
+            this._compiledShaderSlot = new WglMortalValueSlot(
+                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames));
+        }
+
+        return {
+            renderTo: texture => {
+                const GL = WebGLRenderingContext;
+                let ctx = initializedWglContext();
+                let gl = ctx.gl;
+
+                ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(ctx.lifetimeCounter);
+
+                // Bind frame buffer.
+                gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
+                checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+                checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+
+                // Compile and bind shader.
+                this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
+
+                gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
+                checkGetErrorResult(gl.getError(), "drawElements");
+            }
+        }
+    }
 
     toString() {
         return `WglShader(fragmentShaderSource: ${this.fragmentShaderSource})`;
@@ -100,11 +162,11 @@ class WglCompiledShader {
     };
 
     /**
-     * @param {!WglContext} context
+     * @param {!WglContext} ctx
      * @param {!(!WglArg[])} uniformArgs
      */
-    load(context, uniformArgs) {
-        let gl = context.gl;
+    load(ctx, uniformArgs) {
+        let gl = ctx.gl;
         gl.useProgram(this.program);
 
         for (let arg of uniformArgs) {
@@ -112,7 +174,7 @@ class WglCompiledShader {
             if (location === undefined) {
                 throw new Error(`Unexpected argument: ${arg}`)
             }
-            WglArg.INPUT_ACTION_MAP.get(arg.type)(context, location, arg.value);
+            WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value);
         }
 
         gl.enableVertexAttribArray(this.positionAttributeLocation);
