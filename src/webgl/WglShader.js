@@ -47,22 +47,6 @@ export default class WglShader {
     };
 
     /**
-     * Sets the active shader, for the given context, to a compiled version of this shader with the given uniform
-     * arguments.
-     * @param {!WglContext} ctx
-     * @param {!(!WglArg[])} uniformArguments
-     */
-    bindInstanceFor(ctx, uniformArguments) {
-        if (this._compiledShaderSlot === undefined) {
-            // We just learned the parameter names.
-            let parameterNames = uniformArguments.map(e => e.name);
-            this._compiledShaderSlot = new WglMortalValueSlot(
-                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames));
-        }
-        this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
-    };
-
-    /**
      * Overwrites the given texture with the output of the given shader when given the given uniform arguments.
      * @param {!WglArg} uniformArguments
      * @returns {!{renderTo: !function(!WglTexture) : void}}

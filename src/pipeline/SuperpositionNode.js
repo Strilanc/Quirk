@@ -61,7 +61,7 @@ export default class SuperpositionNode {
         let qubitCount = Util.bitSize(amplitudes.length - 1);
         return SuperpositionNode.input(
             qubitCount,
-            t => QuantumShaders.renderPixelColorData(t, dataArray));
+            t => QuantumShaders.data(dataArray).renderTo(t));
     };
 
     /**
@@ -75,7 +75,7 @@ export default class SuperpositionNode {
         Util.need(stateIndex >= 0 && stateIndex < (1 << qubitCount), "stateMask >= 0 && stateMask < (1 << qubitCount)");
 
         return SuperpositionNode.input(qubitCount, t =>
-            QuantumShaders.renderClassicalState(t, stateIndex));
+            QuantumShaders.classicalState(stateIndex).renderTo(t));
     };
 
     /**
@@ -230,7 +230,7 @@ export default class SuperpositionNode {
 
         let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
             let t = allocTexture(plan.width, plan.height);
-            QuantumShaders.renderUniformColor(t, 0, 0, 0, 0);
+            QuantumShaders.color(0, 0, 0, 0).renderTo(t);
             return t;
         });
         let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
