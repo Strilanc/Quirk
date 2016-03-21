@@ -1,8 +1,9 @@
 import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
+import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Seq from "src/base/Seq.js"
-import PipelineNode from "src/pipeline/PipelineNode.js"
+import SimpleShaders from "src/pipeline/SimpleShaders.js"
 import Util from "src/base/Util.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 import WglTexture from "src/webgl/WglTexture.js"
@@ -61,7 +62,7 @@ export default class SuperpositionNode {
         let qubitCount = Util.bitSize(amplitudes.length - 1);
         return SuperpositionNode.input(
             qubitCount,
-            t => QuantumShaders.data(dataArray).renderTo(t));
+            t => SimpleShaders.data(dataArray).renderTo(t));
     };
 
     /**
@@ -230,7 +231,7 @@ export default class SuperpositionNode {
 
         let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
             let t = allocTexture(plan.width, plan.height);
-            QuantumShaders.color(0, 0, 0, 0).renderTo(t);
+            SimpleShaders.color(0, 0, 0, 0).renderTo(t);
             return t;
         });
         let accumulateCombined = (aNode, eNode) => new SuperpositionNode(

@@ -1,6 +1,7 @@
 import Matrix from "src/math/Matrix.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
+import SimpleShaders from "src/pipeline/SimpleShaders.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
@@ -10,19 +11,6 @@ import { initializedWglContext } from "src/webgl/WglContext.js"
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
  */
 export default class QuantumShaders {
-    /**
-     * Returns a parameterized shader that renders a uniform color over the entire destination texture.
-     *
-     * @param {!number} r
-     * @param {!number} g
-     * @param {!number} b
-     * @param {!number} a
-     * @returns {!{renderTo: !function(!WglTexture) : void}}
-     */
-    static color(r, g, b, a) {
-        return GLSL_UNIFORM_COLOR.withArgs(WglArg.vec4("color", r, g, b, a));
-    };
-
     /**
      * Returns a parameterized shader that renders the superposition corresponding to a classical state.
      *
@@ -38,47 +26,6 @@ export default class QuantumShaders {
             }
         }
     };
-
-    /**
-     * Returns a parameterized shader that overlays the destination texture with the given data.
-     *
-     * @param {!Float32Array} rgbaData
-     * @returns {!{renderTo: !function(!WglTexture) : void}}
-     */
-    static data(rgbaData) {
-        return {
-            renderTo: destinationTexture => {
-                let [w, h] = [destinationTexture.width, destinationTexture.height];
-                Util.need(rgbaData.length === w * h * 4, "rgbaData.length === w * h * 4");
-
-                initializedWglContext().useRawDataTextureIn(w, h, rgbaData, tempDataTexture =>
-                        GLSL_PASS_THROUGH.withArgs(
-                            WglArg.vec2("textureSize", w, h),
-                            WglArg.rawTexture("sourceTexture", tempDataTexture, 0)
-                        ).renderTo(destinationTexture)
-                );
-            }
-        };
-    };
-
-    /**
-     * Overlays a foreground texture's pixels over a background texture's pixels, with an offset.
-     *
-     * @param {!int} foregroundX
-     * @param {!int} foregroundY
-     * @param {!WglTexture} foregroundTexture
-     * @param {!WglTexture} backgroundTexture
-     * @returns {!{renderTo: !function(!WglTexture) : void}}
-     */
-    static overlay(foregroundX, foregroundY, foregroundTexture, backgroundTexture) {
-        return GLSL_OVERLAY.withArgs(
-            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
-            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-            WglArg.texture("backgroundTexture", backgroundTexture, 0),
-            WglArg.texture("foregroundTexture", foregroundTexture, 1),
-            WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
-        );
-    }
 
     /**
      * Renders a texture with the given background texture, but with the given foreground texture's data scanned
@@ -152,21 +99,6 @@ export default class QuantumShaders {
     };
 
     /**
-     * Returns a parameterized shader that renders the input texture to destination texture, but scaled by a constant.
-     *
-     * @param {!WglTexture} inputTexture
-     * @param {!number} factor
-     * @returns {!{renderTo: !function(!WglTexture) : void}}
-     */
-    static scale(inputTexture, factor) {
-        return GLSL_SCALE.withArgs(
-            WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("factor", factor)
-        );
-    };
-
-    /**
      * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
      * sum of all probabilities matching a mask.
      *
@@ -214,7 +146,7 @@ export default class QuantumShaders {
     static renderControlMask(controlMask, workspace1, workspace2) {
         // Special case: no constraints.
         if (controlMask.inclusionMask === 0) {
-            QuantumShaders.color(1, 0, 0, 0).renderTo(workspace1);
+            SimpleShaders.color(1, 0, 0, 0).renderTo(workspace1);
             return {result: workspace1, available: workspace2};
         }
 
@@ -458,14 +390,6 @@ const snippets = {
         }`
 };
 
-const GLSL_UNIFORM_COLOR = new WglShader(`
-    /** The uniform color to render. */
-    uniform vec4 color;
-
-    void main() {
-        gl_FragColor = color;
-    }`);
-
 const GLSL_SET_SINGLE_PIXEL = new WglShader(`
     /** The location of the single pixel to set. */
     uniform vec2 pixel;
@@ -474,18 +398,6 @@ const GLSL_SET_SINGLE_PIXEL = new WglShader(`
         vec2 d = gl_FragCoord.xy - vec2(0.5, 0.5) - pixel;
         float f = float(d == vec2(0.0, 0.0));
         gl_FragColor = vec4(f, 0.0, 0.0, 0.0);
-    }`);
-
-const GLSL_PASS_THROUGH = new WglShader(`
-    /** The width and height of the textures being operated on. */
-    uniform vec2 textureSize;
-
-    /** The texture to pass through. */
-    uniform sampler2D inputTexture;
-
-    void main() {
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        gl_FragColor = texture2D(inputTexture, uv);
     }`);
 
 const GLSL_FLOATS_TO_BYTES = new WglShader(`
@@ -543,47 +455,6 @@ const GLSL_FLOATS_TO_BYTES = new WglShader(`
         }
 
         gl_FragColor = encode_float(f);
-    }`);
-
-const GLSL_SCALE = new WglShader(`
-    /** The width and height of the textures being operated on. */
-    uniform vec2 textureSize;
-
-    /** The texture to pass through. */
-    uniform sampler2D inputTexture;
-
-    /** Scaling factor. */
-    uniform float factor;
-
-    void main() {
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        gl_FragColor = texture2D(inputTexture, uv) * factor;
-    }`);
-
-const GLSL_OVERLAY = new WglShader(`
-    /** The size of the covered texture. */
-    uniform vec2 backgroundTextureSize;
-
-    /** The size of the covering texture. */
-    uniform vec2 foregroundTextureSize;
-
-    /** The larger covered texture. */
-    uniform sampler2D backgroundTexture;
-
-    /** The smaller covering texture that can be positioned. */
-    uniform sampler2D foregroundTexture;
-
-    /** The top-left corner of the area where the foreground is overlaid over the background. */
-    uniform vec2 foregroundOffset;
-
-    void main() {
-        vec2 uv = (gl_FragCoord.xy - foregroundOffset) / foregroundTextureSize.xy;
-        if (uv.x >= 0.0 && uv.y >= 0.0 && uv.x < 1.0 && uv.y < 1.0) {
-          gl_FragColor = texture2D(foregroundTexture, uv);
-        } else {
-          uv = gl_FragCoord.xy / backgroundTextureSize;
-          gl_FragColor = texture2D(backgroundTexture, uv);
-        }
     }`);
 
 const GLSL_LINEAR_OVERLAY = new WglShader(`
