@@ -328,9 +328,7 @@ QuantumShaders.renderControlMask = (controlMask, workspace1, workspace2) => {
         let b = /** @type {!boolean} */ c;
         if (hasFirst) {
             QuantumShaders.controlMaskWithBit(workspace1, i, b).renderTo(workspace2);
-            let t = workspace2;
-            workspace2 = workspace1;
-            workspace1 = t;
+            [workspace1, workspace2] = [workspace2, workspace1]
         } else {
             QuantumShaders.controlMaskForBit(i, b).renderTo(workspace1);
             hasFirst = true;

@@ -25,6 +25,21 @@ const COLOR_SHADER = new WglShader(`
     }`);
 
 /**
+ * Returns a parameterized shader that just draws the input texture's contents.
+ * @param {!WglTexture} inputTexture
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
+ */
+SimpleShaders.passthrough = inputTexture => PASSTHROUGH_SHADER.withArgs(
+    WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
+    WglArg.texture("dataTexture", inputTexture, 0));
+const PASSTHROUGH_SHADER = new WglShader(`
+    uniform vec2 textureSize;
+    uniform sampler2D dataTexture;
+    void main() {
+        gl_FragColor = texture2D(dataTexture, gl_FragCoord.xy / textureSize.xy);
+    }`);
+
+/**
  * Returns a parameterized shader that overlays the destination texture with the given data.
  * @param {!Float32Array} rgbaData
  * @returns {!{renderTo: !function(!WglTexture) : void}}
@@ -41,13 +56,6 @@ SimpleShaders.data = rgbaData => ({
             ).renderTo(destinationTexture));
     }
 });
-const PASSTHROUGH_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-    uniform sampler2D dataTexture;
-    void main() {
-        gl_FragColor = texture2D(dataTexture, gl_FragCoord.xy / textureSize.xy);
-    }`);
-
 
 /**
  * Returns a parameterized shader that overlays a foreground texture's pixels over a background texture's pixels, with

@@ -5,6 +5,7 @@ import Complex from "src/math/Complex.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
 import Matrix from "src/math/Matrix.js"
+import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
 let suite = new Suite("QuantumShaders");
@@ -30,6 +31,22 @@ suite.webGlTest("color", () => {
         1.5, 2, 0, 121,
         1.5, 2, 0, 121,
         1.5, 2, 0, 121
+    ]));
+});
+
+suite.webGlTest("passthrough", () => {
+    let input = new WglTexture(2, 2);
+    let output = new WglTexture(2, 2);
+    new WglShader('void main(){gl_FragColor=vec4(gl_FragCoord.x, gl_FragCoord.y, 0.0, 0.0);}').
+        withArgs().
+        renderTo(input);
+
+    SimpleShaders.passthrough(input).renderTo(output);
+    assertThat(output.readPixels()).isEqualTo(new Float32Array([
+        0.5, 0.5, 0, 0,
+        1.5, 0.5, 0, 0,
+        0.5, 1.5, 0, 0,
+        1.5, 1.5, 0, 0
     ]));
 });
 
