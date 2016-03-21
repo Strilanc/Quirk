@@ -65,9 +65,6 @@ export default class WglShader {
                 const GL = WebGLRenderingContext;
                 let ctx = initializedWglContext();
                 let gl = ctx.gl;
-                if (ctx.canvas.width < texture.width || ctx.canvas.height < texture.height) {
-                    throw new Error("Trying to render to a texture that's larger than the context canvas.");
-                }
 
                 ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(ctx.lifetimeCounter);
 
@@ -79,6 +76,7 @@ export default class WglShader {
                 // Compile and bind shader.
                 this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
 
+                gl.viewport(0, 0, texture.width, texture.height);
                 gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
                 checkGetErrorResult(gl.getError(), "drawElements");
             }
