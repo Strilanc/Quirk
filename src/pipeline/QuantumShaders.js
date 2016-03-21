@@ -108,7 +108,7 @@ export default class QuantumShaders {
      * @param {!boolean} desiredBitValue
      * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static singleBitConstraintControlMask(targetBit, desiredBitValue) {
+    static controlMaskForBit(targetBit, desiredBitValue) {
         return {
             renderTo: destinationTexture =>
                 GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT.withArgs(
@@ -123,47 +123,47 @@ export default class QuantumShaders {
      * Renders a combined control mask onto the destination texture, augmenting the given control mask with a new bit
      * constraint.
      *
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} controlMask
+     * @param {!WglTexture} originalMaskTexture
      * @param {!int} targetBit
      * @param {!boolean} desiredBitValue
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static renderAddBitConstraintToControlMask(destinationTexture, controlMask, targetBit, desiredBitValue) {
-        GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT.withArgs(
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("oldControlMaskTexture", controlMask, 0),
+    static controlMaskWithBit(originalMaskTexture, targetBit, desiredBitValue) {
+        return GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT.withArgs(
+            WglArg.vec2("textureSize", originalMaskTexture.width, originalMaskTexture.height),
+            WglArg.texture("oldControlMaskTexture", originalMaskTexture, 0),
             WglArg.float("targetBitPositionMask", 1 << targetBit),
             WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ).renderTo(destinationTexture);
+        );
     };
 
     /**
-     * Renders a texture with each pixel storing the probability associated with the amplitude from the corresponding
-     * pixel in the input texture.
+     * Returns a parameterized shader that dot-products each pixel's rgba vector against itself, rendering the result
+     * over the red component of the destination texture (and zero-ing the other components).
      *
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputAmplitudeTexture
+     * @param {!WglTexture} inputTexture
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static renderProbabilitiesFromAmplitudes(destinationTexture, inputAmplitudeTexture) {
-        GLSL_FROM_AMPLITUDES_TO_PROBABILITIES.withArgs(
-            WglArg.vec2("textureSize", inputAmplitudeTexture.width, inputAmplitudeTexture.height),
-            WglArg.texture("inputTexture", inputAmplitudeTexture, 0)
-        ).renderTo(destinationTexture);
+    static squaredMagnitude(inputTexture) {
+        return GLSL_FROM_AMPLITUDES_TO_PROBABILITIES.withArgs(
+            WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
+            WglArg.texture("inputTexture", inputTexture, 0)
+        );
     };
 
     /**
-     * Renders a texture with each pixel's individual color values from the source texture scaled by the given factor.
+     * Returns a parameterized shader that renders the input texture to destination texture, but scaled by a constant.
      *
-     * @param {!WglTexture} destinationTexture
      * @param {!WglTexture} inputTexture
      * @param {!number} factor
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    static renderScaled(destinationTexture, inputTexture, factor) {
-        GLSL_SCALE.withArgs(
+    static scale(inputTexture, factor) {
+        return GLSL_SCALE.withArgs(
             WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
             WglArg.texture("inputTexture", inputTexture, 0),
             WglArg.float("factor", factor)
-        ).renderTo(destinationTexture);
+        );
     };
 
     /**
@@ -226,12 +226,12 @@ export default class QuantumShaders {
             }
             let b = /** @type {!boolean} */ c;
             if (hasFirst) {
-                QuantumShaders.renderAddBitConstraintToControlMask(workspace2, workspace1, i, b);
+                QuantumShaders.controlMaskWithBit(workspace1, i, b).renderTo(workspace2);
                 let t = workspace2;
                 workspace2 = workspace1;
                 workspace1 = t;
             } else {
-                QuantumShaders.singleBitConstraintControlMask(i, b).renderTo(workspace1);
+                QuantumShaders.controlMaskForBit(i, b).renderTo(workspace1);
                 hasFirst = true;
             }
         }
@@ -253,7 +253,7 @@ export default class QuantumShaders {
                                                  workspace2,
                                                  controlMask,
                                                  amplitudes) {
-        QuantumShaders.renderProbabilitiesFromAmplitudes(workspace1, amplitudes);
+        QuantumShaders.squaredMagnitude(amplitudes).renderTo(workspace1);
         let n = amplitudes.width * amplitudes.height;
         for (let i = 0; (1 << i) < n; i++) {
             QuantumShaders.renderConditionalProbabilitiesPipeline(

@@ -238,11 +238,11 @@ suite.webGlTest("linearOverlay", () => {
     ]));
 });
 
-suite.webGlTest("renderSingleBitConstraintControlMask", () => {
+suite.webGlTest("controlMaskForBit", () => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let texture2x4 = new WglTexture(1 << 2, 1 << 1);
 
-    QuantumShaders.singleBitConstraintControlMask(0, false).renderTo(texture2x2);
+    QuantumShaders.controlMaskForBit(0, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
@@ -250,7 +250,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(0, true).renderTo(texture2x2);
+    QuantumShaders.controlMaskForBit(0, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
@@ -258,7 +258,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, false).renderTo(texture2x2);
+    QuantumShaders.controlMaskForBit(1, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -266,7 +266,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, true).renderTo(texture2x2);
+    QuantumShaders.controlMaskForBit(1, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -274,7 +274,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(2, false).renderTo(texture2x2);
+    QuantumShaders.controlMaskForBit(2, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -282,7 +282,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(2, true).renderTo(texture2x2);
+    QuantumShaders.controlMaskForBit(2, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -290,7 +290,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(0, false).renderTo(texture2x4);
+    QuantumShaders.controlMaskForBit(0, false).renderTo(texture2x4);
     assertThat(texture2x4.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
@@ -302,7 +302,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, false).renderTo(texture2x4);
+    QuantumShaders.controlMaskForBit(1, false).renderTo(texture2x4);
     assertThat(texture2x4.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -314,7 +314,7 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(2, false).renderTo(texture2x4);
+    QuantumShaders.controlMaskForBit(2, false).renderTo(texture2x4);
     assertThat(texture2x4.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -327,12 +327,12 @@ suite.webGlTest("renderSingleBitConstraintControlMask", () => {
     ]));
 });
 
-suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
+suite.webGlTest("controlMaskWithBit_fromTrivialMask", () => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
     let noControl = new WglTexture(1 << 1, 1 << 1);
-    QuantumShaders.singleBitConstraintControlMask(2, false).renderTo(noControl);
+    QuantumShaders.controlMaskForBit(2, false).renderTo(noControl);
 
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, noControl, 0, false);
+    QuantumShaders.controlMaskWithBit(noControl, 0, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
@@ -340,7 +340,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, noControl, 0, true);
+    QuantumShaders.controlMaskWithBit(noControl, 0, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
@@ -348,7 +348,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, noControl, 1, false);
+    QuantumShaders.controlMaskWithBit(noControl, 1, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -356,7 +356,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, noControl, 1, true);
+    QuantumShaders.controlMaskWithBit(noControl, 1, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -364,7 +364,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, noControl, 2, false);
+    QuantumShaders.controlMaskWithBit(noControl, 2, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         1, 0, 0, 0,
@@ -372,7 +372,7 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
         1, 0, 0, 0
     ]));
 
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, noControl, 2, true);
+    QuantumShaders.controlMaskWithBit(noControl, 2, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -382,15 +382,15 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
 
     // If control is already not allowing anything, result is stuck with it.
     let allControl = new WglTexture(1 << 1, 1 << 1);
-    QuantumShaders.singleBitConstraintControlMask(2, true).renderTo(allControl);
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, allControl, 0, false);
+    QuantumShaders.controlMaskForBit(2, true).renderTo(allControl);
+    QuantumShaders.controlMaskWithBit(allControl, 0, false).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x2, allControl, 0, true);
+    QuantumShaders.controlMaskWithBit(allControl, 0, true).renderTo(texture2x2);
     assertThat(texture2x2.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -399,15 +399,15 @@ suite.webGlTest("renderAddBitConstraintToControlMask_fromTrivialMask", () => {
     ]));
 });
 
-suite.webGlTest("renderAddBitConstraintToControlMask_buildup", () => {
+suite.webGlTest("controlMaskWithBit_buildup", () => {
     let texture2x4_0 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_1 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_2 = new WglTexture(1 << 2, 1 << 1);
     let texture2x4_3 = new WglTexture(1 << 2, 1 << 1);
-    QuantumShaders.singleBitConstraintControlMask(0, false).renderTo(texture2x4_0);
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x4_1, texture2x4_0, 1, true);
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x4_2, texture2x4_1, 2, true);
-    QuantumShaders.renderAddBitConstraintToControlMask(texture2x4_3, texture2x4_2, 1, false);
+    QuantumShaders.controlMaskForBit(0, false).renderTo(texture2x4_0);
+    QuantumShaders.controlMaskWithBit(texture2x4_0, 1, true).renderTo(texture2x4_1);
+    QuantumShaders.controlMaskWithBit(texture2x4_1, 2, true).renderTo(texture2x4_2);
+    QuantumShaders.controlMaskWithBit(texture2x4_2, 1, false).renderTo(texture2x4_3);
     assertThat(texture2x4_0.readPixels()).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
@@ -491,7 +491,7 @@ suite.webGlTest("renderControlMask", () => {
     ]));
 });
 
-suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
+suite.webGlTest("squaredMagnitude", () => {
     let amps = new WglTexture(4, 2);
     QuantumShaders.data(new Float32Array([
         2, 3, 0, 0,
@@ -505,7 +505,7 @@ suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
     ])).renderTo(amps);
 
     let out = new WglTexture(4, 2);
-    QuantumShaders.renderProbabilitiesFromAmplitudes(out, amps);
+    QuantumShaders.squaredMagnitude(amps).renderTo(out);
     assertThat(out.readPixels()).isApproximatelyEqualTo(new Float32Array([
         13, 0, 0, 0,
         0.5, 0, 0, 0,
@@ -518,7 +518,7 @@ suite.webGlTest("renderProbabilitiesFromAmplitudes", () => {
     ]));
 });
 
-suite.webGlTest("renderScaled", () => {
+suite.webGlTest("scale", () => {
     let amps = new WglTexture(4, 2);
     QuantumShaders.data(new Float32Array([
         2, 3, 0, 0,
@@ -532,7 +532,7 @@ suite.webGlTest("renderScaled", () => {
     ])).renderTo(amps);
 
     let out = new WglTexture(4, 2);
-    QuantumShaders.renderScaled(out, amps, 3);
+    QuantumShaders.scale(amps, 3).renderTo(out);
     assertThat(out.readPixels()).isApproximatelyEqualTo(new Float32Array([
         6, 9, 0, 0,
         1.5, 1.5, 0, 0,
@@ -756,7 +756,7 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ])).renderTo(inp);
 
-    QuantumShaders.singleBitConstraintControlMask(3, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(3, false).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         7, -1, 0, 0,
@@ -769,7 +769,7 @@ suite.webGlTest("renderQubitOperation", () => {
         -30, -8, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(1, false).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         7, -1, 0, 0,
@@ -782,7 +782,7 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, true).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(1, true).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         2, 3, 0, 0,
@@ -795,7 +795,7 @@ suite.webGlTest("renderQubitOperation", () => {
         -30, -8, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(2, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(2, false).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         7, -1, 0, 0,
@@ -808,7 +808,7 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(3, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(3, false).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([0, 0, 0, 0]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
@@ -821,7 +821,7 @@ suite.webGlTest("renderQubitOperation", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(3, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(3, false).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 1, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         9, -3, 0, 0,
@@ -843,7 +843,7 @@ suite.webGlTest("renderQubitOperation_flows", () => {
         1, 2, 0, 0,
         3, 27, 0, 0
     ])).renderTo(inp1);
-    QuantumShaders.singleBitConstraintControlMask(1, false).renderTo(cnt1);
+    QuantumShaders.controlMaskForBit(1, false).renderTo(cnt1);
     QuantumShaders.renderQubitOperation(out1, inp1, Matrix.square([1, 0, 0, 0]), 0, cnt1);
     assertThat(out1.readPixels()).isEqualTo(new Float32Array([
         1, 2, 0, 0,
@@ -894,7 +894,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(2, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(2, false).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 1, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -920,7 +920,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, false).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(1, false).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 2, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -933,7 +933,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.singleBitConstraintControlMask(1, true).renderTo(cnt);
+    QuantumShaders.controlMaskForBit(1, true).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 2, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000

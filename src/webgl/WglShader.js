@@ -47,7 +47,8 @@ export default class WglShader {
     };
 
     /**
-     * Overwrites the given texture with the output of the given shader when given the given uniform arguments.
+     * Returns the same shader, but parameterized by the given arguments. Call renderTo on the result to render to a
+     * destination texture.
      * @param {!WglArg} uniformArguments
      * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
