@@ -65,6 +65,9 @@ export default class WglShader {
                 const GL = WebGLRenderingContext;
                 let ctx = initializedWglContext();
                 let gl = ctx.gl;
+                if (ctx.canvas.width < texture.width || ctx.canvas.height < texture.height) {
+                    throw new Error("Trying to render to a texture that's larger than the context canvas.");
+                }
 
                 ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(ctx.lifetimeCounter);
 

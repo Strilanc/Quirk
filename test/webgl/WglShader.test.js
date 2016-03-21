@@ -5,8 +5,8 @@ import Seq from "src/base/Seq.js"
 
 let suite = new Suite("WglTexture");
 
-suite.webGlTest("renderTo_huge", () => {
-    let tex = new WglTexture(1024, 1024, WebGLRenderingContext.UNSIGNED_BYTE);
+suite.webGlTest("renderTo_large", () => {
+    let tex = new WglTexture(128, 128, WebGLRenderingContext.UNSIGNED_BYTE);
 
     // If the size of the canvas being used for the WebGLRenderingContext is too small, this will fail.
     // e.g. the default canvas height is 150px, so any textures 256px tall or taller would not be properly rendered.

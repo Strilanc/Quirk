@@ -177,8 +177,8 @@ suite.webGlTest("controlMask", () => {
 });
 
 suite.webGlTest("controlMask_largeReference", () => {
-    let tex = new WglTexture(1 << 7, 1 << 10);
-    let mask = new QuantumControlMask(0b10111010101010111, 0b10011000001010001);
+    let tex = new WglTexture(1 << 7, 1 << 5);
+    let mask = new QuantumControlMask(0b101110110111, 0b100110010001);
     let expected = new Float32Array(Seq.range(tex.width * tex.height).
         map(i => mask.allowsState(i) ? 1 : 0).
         flatMap(e => [e, 0, 0, 0]).
