@@ -5,7 +5,7 @@ import WglShader from "src/webgl/WglShader.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 
 /**
- * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
+ * Exposes methods for creating/parameterizing shaders that render various simple things.
  */
 export default class SimpleShaders {}
 
