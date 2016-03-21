@@ -100,3 +100,126 @@ const SCALE_SHADER = new WglShader(`
     void main() {
         gl_FragColor = texture2D(inputTexture, gl_FragCoord.xy / textureSize.xy) * factor;
     }`);
+
+/**
+ * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar
+ * to IEEE 754.
+ * @param {!WglTexture} inputTexture
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
+ */
+SimpleShaders.encodeFloatsIntoBytes = inputTexture => ({
+    renderTo: destinationTexture => {
+        Util.need(inputTexture.pixelType === WebGLRenderingContext.FLOAT, "input tex should have floats");
+        Util.need(destinationTexture.pixelType === WebGLRenderingContext.UNSIGNED_BYTE, "output tex should take bytes");
+        Util.need(destinationTexture.width === inputTexture.width * 2 &&
+            destinationTexture.height === inputTexture.height * 2,
+            "output tex should be double the width and height of the input");
+
+        FLOATS_TO_ENCODED_BYTES_SHADER.withArgs(
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height)
+        ).renderTo(destinationTexture);
+    }
+});
+const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
+    /**
+     * The width and height of the input texture.
+     * The output texture should be twice as large in each direction.
+     */
+    uniform vec2 inputTextureSize;
+
+    /** The float texture to encode into bytes. */
+    uniform sampler2D inputTexture;
+
+    /**
+     * Encodes a single-precision float into four bytes.
+     * The format used is similar to the standard IEEE 754 format, except the sign bit is on the opposite end.
+     * Also, zero is represented as all-1s because NaN is hard to detect and ends up all-0s.
+     */
+    vec4 encode_float(float val) {
+        float sign = val > 0.0 ? 0.0 : 1.0;
+
+        if (val == 0.0) return vec4(1.0, 1.0, 1.0, 1.0); // Zero
+        if (val*2.0 == val) return vec4(1.0, 0.0, 0.0, sign/255.0); // Infinity
+
+        val = abs(val);
+        float exponent = floor(log2(val));
+        float mantissa = val * exp2(-exponent) - 1.0;
+
+        float a = exponent + 127.0;
+        float b = floor(mantissa * 256.0);
+        float c = floor(mod(mantissa * 65536.0, 256.0));
+        float d = mod(mantissa * 16777216.0, 256.0) + sign;
+        return vec4(a, b, c, d) / 255.0;
+    }
+
+    void main() {
+        vec2 uv = gl_FragCoord.xy / inputTextureSize.xy;
+        vec4 c = texture2D(inputTexture, vec2(mod(uv.x, 1.0), mod(uv.y, 1.0)));
+        float f = 0.0;
+        if (uv.x < 1.0) {
+            if (uv.y < 1.0) {
+                f = c.r;
+            } else {
+                f = c.g;
+            }
+        } else {
+            if (uv.y < 1.0) {
+                f = c.b;
+            } else {
+                f = c.a;
+            }
+        }
+        gl_FragColor = encode_float(f);
+    }`);
+
+/**
+ * @param {!int} a
+ * @param {!int} b
+ * @param {!int} c
+ * @param {!int} d
+ * @returns {!number}
+ */
+const decodeByteToFloat = (a, b, c, d) => {
+    if (a === 0 && b === 0 && c === 0 && d === 0) {
+        return NaN;
+    }
+    if (a === 255 && b === 255 && c === 255 && d === 255) {
+        return 0;
+    }
+    if (a === 255 && b === 0 && c === 0 && d === 0) {
+        return Infinity;
+    }
+    if (a === 255 && b === 0 && c === 0 && d === 1) {
+        return -Infinity;
+    }
+
+    let exponent = a - 127;
+    let sign = d & 1;
+    let mantissa = 1 + (b / 256.0 + c / 65536.0 + (d - sign) / 16777216.0);
+    return mantissa * Math.pow(2, exponent) * (sign === 1 ? -1 : +1);
+};
+
+/**
+ * @param {!Uint8Array} bytes
+ * @param {!int} width The width of the rgba byte texture this byte buffer was read from.
+ * @param {!int} height The height of the rgba byte texture this byte buffer was read from.
+ * @returns {!Float32Array}
+ */
+SimpleShaders.decodeByteBufferToFloatBuffer = (bytes, width, height) => {
+    let decodeAt = (x, y) => {
+        let i = y*width*8 + x*4;
+        return decodeByteToFloat(bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]);
+    };
+    let result = new Float32Array(bytes.length/4);
+    let n = 0;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            result[n++] = decodeAt(x, y);
+            result[n++] = decodeAt(x, y+height);
+            result[n++] = decodeAt(x+width, y);
+            result[n++] = decodeAt(x+width, y+height);
+        }
+    }
+    return result;
+};

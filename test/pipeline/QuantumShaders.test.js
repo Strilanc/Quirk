@@ -71,23 +71,6 @@ suite.webGlTest("classicalState", () => {
     ]));
 });
 
-suite.webGlTest("renderFloatsToBytes", () => {
-    let texture2x2 = new WglTexture(2, 2);
-    let texture4x4Bytes = new WglTexture(4, 4, WebGLRenderingContext.UNSIGNED_BYTE);
-
-    let data2x2 = new Float32Array([
-        0, NaN, Infinity, -Infinity,
-        Math.PI, Math.E, Math.sqrt(2), 0.1,
-        1, 0.5, -1, -2,
-        Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
-    ]);
-    SimpleShaders.data(data2x2).renderTo(texture2x2);
-    QuantumShaders.renderFloatsToEncodedBytes(texture4x4Bytes, texture2x2);
-    let pixels = texture4x4Bytes.readPixels();
-    let pixels2 = QuantumShaders.decodeBytesToFloats(pixels, 2, 2);
-    assertThat(pixels2).isEqualTo(data2x2);
-});
-
 suite.webGlTest("linearOverlay", () => {
     let fore = new WglTexture(2, 2);
     let back = new WglTexture(4, 4);

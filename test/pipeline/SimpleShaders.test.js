@@ -130,3 +130,20 @@ suite.webGlTest("scale", () => {
         3, 0, 0, 0
     ]));
 });
+
+suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer", () => {
+    let texture2x2 = new WglTexture(2, 2);
+    let texture4x4Bytes = new WglTexture(4, 4, WebGLRenderingContext.UNSIGNED_BYTE);
+
+    let data2x2 = new Float32Array([
+        0, NaN, Infinity, -Infinity,
+        Math.PI, Math.E, Math.sqrt(2), 0.1,
+        1, 0.5, -1, -2,
+        Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
+    ]);
+    SimpleShaders.data(data2x2).renderTo(texture2x2);
+    SimpleShaders.encodeFloatsIntoBytes(texture2x2).renderTo(texture4x4Bytes);
+    let pixels = texture4x4Bytes.readPixels();
+    let pixels2 = SimpleShaders.decodeByteBufferToFloatBuffer(pixels, 2, 2);
+    assertThat(pixels2).isEqualTo(data2x2);
+});
