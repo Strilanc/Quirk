@@ -123,80 +123,6 @@ const LINEAR_OVERLAY_SHADER = new WglShader(`
     }`);
 
 /**
- * Renders a control mask onto the destination texture, used elsewhere for determining whether or not an operation
- * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
- * blocked.
- *
- * @param {!int} targetBit The index of the target bit.
- * @param {!boolean} desiredBitValue
- * @returns {!{renderTo: !function(!WglTexture) : void}}
- */
-QuantumShaders.controlMaskForBit = (targetBit, desiredBitValue) => ({
-    renderTo: destinationTexture =>
-        CONTROL_MASK_FOR_BIT_SHADER.withArgs(
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.float("targetBitPositionMask", 1 << targetBit),
-            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ).renderTo(destinationTexture)
-});
-const CONTROL_MASK_FOR_BIT_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-
-    /** A power of two (2^n) with the exponent n determined by the index of the qubit acting as a control. */
-    uniform float targetBitPositionMask;
-
-    /** The value that the qubit must have for the control to be satisfied. */
-    uniform float desiredBitValue;
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
-        bool targetBitIsOn = mod(state, targetBitPositionMask * 2.0) > targetBitPositionMask - 0.5;
-        float match = mod(float(targetBitIsOn) + desiredBitValue + 1.0, 2.0);
-
-        gl_FragColor = vec4(match, 0.0, 0.0, 0.0);
-    }`);
-
-/**
- * Renders a combined control mask onto the destination texture, augmenting the given control mask with a new bit
- * constraint.
- *
- * @param {!WglTexture} originalMaskTexture
- * @param {!int} targetBit
- * @param {!boolean} desiredBitValue
- * @returns {!{renderTo: !function(!WglTexture) : void}}
- */
-QuantumShaders.controlMaskWithBit = (originalMaskTexture, targetBit, desiredBitValue) =>
-    CONTROL_MASK_WITH_BIT_SHADER.withArgs(
-        WglArg.vec2("textureSize", originalMaskTexture.width, originalMaskTexture.height),
-        WglArg.texture("oldControlMaskTexture", originalMaskTexture, 0),
-        WglArg.float("targetBitPositionMask", 1 << targetBit),
-        WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0));
-const CONTROL_MASK_WITH_BIT_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-
-    /** The previous control mask, without the bit constraint to be added. */
-    uniform sampler2D controlTexture;
-
-    /** A power of two (2^n) with the exponent n determined by the index of the qubit acting as a control. */
-    uniform float targetBitPositionMask;
-
-    /** The value that the qubit must have for the control to be satisfied. */
-    uniform float desiredBitValue;
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
-        bool targetBitIsOn = mod(state, targetBitPositionMask * 2.0) > targetBitPositionMask - 0.5;
-        float match = mod(float(targetBitIsOn) + desiredBitValue + 1.0, 2.0);
-
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        float oldMatch = texture2D(controlTexture, uv).x;
-
-        gl_FragColor = vec4(match * oldMatch, 0.0, 0.0, 0.0);
-    }`);
-
-/**
  * Returns a parameterized shader that dot-products each pixel's rgba vector against itself, rendering the result
  * over the red component of the destination texture (and zero-ing the other components).
  *
@@ -303,40 +229,61 @@ const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
     }`);
 
 /**
- * Renders a control mask texture corresponding to the given control mask.
- * Two workspace textures are needed in order to build up the result; the result of the method indicates which one
- * contains the final result.
- *
+ * Returns a parameterized shader that renders a control mask texture corresponding to the given control mask, with 1s
+ * at pixels meeting the control and 0s at pixels not meeting the control.
  * @param {!QuantumControlMask} controlMask
- * @param {!WglTexture} workspace1
- * @param {!WglTexture} workspace2
- * @returns {!{result: !WglTexture, available: !WglTexture}}
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
  */
-QuantumShaders.renderControlMask = (controlMask, workspace1, workspace2) => {
-    // Special case: no constraints.
-    if (controlMask.inclusionMask === 0) {
-        SimpleShaders.color(1, 0, 0, 0).renderTo(workspace1);
-        return {result: workspace1, available: workspace2};
+QuantumShaders.controlMask = controlMask => {
+    if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
+        return SimpleShaders.color(1, 0, 0, 0);
     }
 
-    let hasFirst = false;
-    for (let i = 0; (1 << i) <= controlMask.inclusionMask; i++) {
-        let c = controlMask.desiredValueFor(i);
-        if (c === null) {
-            continue;
-        }
-        let b = /** @type {!boolean} */ c;
-        if (hasFirst) {
-            QuantumShaders.controlMaskWithBit(workspace1, i, b).renderTo(workspace2);
-            [workspace1, workspace2] = [workspace2, workspace1]
-        } else {
-            QuantumShaders.controlMaskForBit(i, b).renderTo(workspace1);
-            hasFirst = true;
+    return {
+        renderTo: destinationTexture => {
+            if (destinationTexture.width * destinationTexture.height > (1 << 20)) {
+                throw new Error("QuantumShaders.controlMask needs to be updated to allow more qubits.");
+            }
+            let xMask = destinationTexture.width - 1;
+            let xLen = Math.floor(Math.log2(destinationTexture.width));
+            CONTROL_MASK_SHADER.withArgs(
+                WglArg.float('usedX', controlMask.inclusionMask & xMask),
+                WglArg.float('desiredX', controlMask.desiredValueMask & xMask),
+                WglArg.float('usedY', controlMask.inclusionMask >> xLen),
+                WglArg.float('desiredY', controlMask.desiredValueMask >> xLen)
+            ).renderTo(destinationTexture);
         }
     }
-
-    return {result: workspace1, available: workspace2};
 };
+const CONTROL_MASK_SHADER = new WglShader(`
+    uniform float usedX;
+    uniform float desiredX;
+
+    uniform float usedY;
+    uniform float desiredY;
+
+    /**
+     * Returns 1 if (val & used == desired & used), else returns 0.
+     * Note: ignores bits past the first 10.
+     */
+    float check(float val, float used, float desired) {
+        float pass = 1.0;
+        float bit = 1.0;
+        for (int i = 0; i < 10; i++) {
+            float v = mod(floor(val/bit), 2.0);
+            float u = mod(floor(used/bit), 2.0);
+            float d = mod(floor(desired/bit), 2.0);
+            pass *= 1.0 - abs(v-d)*u;
+            bit *= 2.0;
+        }
+        return pass;
+    }
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float pass = check(xy.x, usedX, desiredX) * check(xy.y, usedY, desiredY);
+        gl_FragColor = vec4(pass, 0.0, 0.0, 0.0);
+    }`);
 
 /**
  * Renders a texture with probability sums corresponding to states matching various combinations of controls.

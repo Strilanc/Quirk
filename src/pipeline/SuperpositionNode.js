@@ -91,18 +91,17 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = QuantumShaders.renderControlMask(
-                controlMask,
-                allocTexture(this.width, this.height),
-                allocTexture(this.width, this.height));
+            let controlTexture = allocTexture(this.width, this.height);
+            let resultTexture = allocTexture(this.width, this.height);
+            QuantumShaders.controlMask(controlMask).renderTo(controlTexture);
             QuantumShaders.renderQubitOperation(
-                control.available,
+                resultTexture,
                 input[0],
                 operation,
                 qubitIndex,
-                control.result);
-            reuseTexture(control.result);
-            return control.available;
+                controlTexture);
+            reuseTexture(controlTexture);
+            return resultTexture;
         });
     };
 
@@ -118,18 +117,17 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = QuantumShaders.renderControlMask(
-                controlMask,
-                allocTexture(this.width, this.height),
-                allocTexture(this.width, this.height));
+            let control = allocTexture(this.width, this.height);
+            QuantumShaders.controlMask(controlMask).renderTo(control);
+            let result = allocTexture(this.width, this.height);
             QuantumShaders.renderSwapOperation(
-                control.available,
+                result,
                 input[0],
                 qubitIndex1,
                 qubitIndex2,
-                control.result);
-            reuseTexture(control.result);
-            return control.available;
+                control);
+            reuseTexture(control);
+            return result;
         });
     }
 
