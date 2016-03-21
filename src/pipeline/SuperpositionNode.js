@@ -91,7 +91,7 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let controlTexture = allocTexture(this.width, this.height);
+            let controlTexture = allocTexture(this.width, this.height, WebGLRenderingContext.UNSIGNED_BYTE);
             let resultTexture = allocTexture(this.width, this.height);
             QuantumShaders.controlMask(controlMask).renderTo(controlTexture);
             QuantumShaders.renderQubitOperation(
@@ -117,7 +117,7 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = allocTexture(this.width, this.height);
+            let control = allocTexture(this.width, this.height, WebGLRenderingContext.UNSIGNED_BYTE);
             QuantumShaders.controlMask(controlMask).renderTo(control);
             let result = allocTexture(this.width, this.height);
             QuantumShaders.renderSwapOperation(
@@ -399,10 +399,11 @@ let TEXTURE_POOL = new Map();
 /**
  * @param {!int} width
  * @param {!int} height
+ * @param {!int} pixelType
  * @returns {!WglTexture}
  */
-let allocTexture = (width, height) => {
-    let k = width + ":" + height;
+let allocTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) => {
+    let k = width + ":" + height + ":" + pixelType;
 
     if (!TEXTURE_POOL.has(k)) {
         TEXTURE_POOL.set(k, []);
@@ -412,13 +413,13 @@ let allocTexture = (width, height) => {
         return pool.pop();
     }
 
-    return new WglTexture(width, height);
+    return new WglTexture(width, height, pixelType);
 };
 
 /**
  * @param {!WglTexture} texture
  */
 let reuseTexture = texture => {
-    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height);
+    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
     pool.push(texture);
 };

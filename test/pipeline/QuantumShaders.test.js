@@ -174,6 +174,15 @@ suite.webGlTest("controlMask", () => {
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
+
+    let tex3 = new WglTexture(2, 2, WebGLRenderingContext.UNSIGNED_BYTE);
+    QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).renderTo(tex3);
+    assertThat(tex3.readPixels()).isEqualTo(new Uint8Array([
+        255, 0, 0, 0,
+        0, 0, 0, 0,
+        255, 0, 0, 0,
+        0, 0, 0, 0
+    ]));
 });
 
 suite.webGlTest("controlMask_largeReference", () => {
