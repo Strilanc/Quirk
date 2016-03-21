@@ -71,7 +71,7 @@ suite.test("isEqualTo", () => {
     assertFalse(new Seq([]).isEqualTo(new Seq([1])));
 
     // Acts like a grouping along expected boundaries.
-    var groups = [
+    let groups = [
         [new Seq([]), new Seq([]), Seq.fromGenerator(function*(){ }), new Seq(new Int32Array([]))],
         [new Seq(["a"]), new Seq(["a"]), Seq.fromGenerator(function*(){ yield "a"; })],
         [new Seq([2.5]), Seq.fromGenerator(function*(){ yield 2.5; }), new Seq(new Float32Array([2.5]))],

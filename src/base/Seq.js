@@ -6,7 +6,6 @@ export const THROW_IF_EMPTY = { if_same_instance_as_this_then_throw: true };
  */
 const EMPTY_SYGIL = { not_a_normal_value: true };
 
-//noinspection JSUnresolvedVariable
 const GENERIC_ARRAY_TYPES = [
     Float32Array,
     Float64Array,
@@ -80,9 +79,9 @@ class Seq {
         if (other === this) {
             return true;
         }
-        var iter2 = other[Symbol.iterator]();
+        let iter2 = other[Symbol.iterator]();
         for (let e1 of this) {
-            var e2 = iter2.next();
+            let e2 = iter2.next();
             if (e2.done || !comparator(e1, e2.value)) {
                 return false;
             }
@@ -459,7 +458,6 @@ class Seq {
         return !this.any(e => !predicate(e));
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * Determines if the sequence contains a given value or not, as determined by the <code>===</code> operator.
      * @param {T|*} value
@@ -536,7 +534,6 @@ class Seq {
         });
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns a sequence that iterates the receiving sequence's items and then the given iterable's items.
      * @param {*|!(A[])|!Seq.<A>} other
@@ -842,7 +839,6 @@ class Seq {
         return emptyErrorAlternative;
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * Returns the last item in the sequence.
      * @param {=A} emptyErrorAlternative The value to return if the sequence is empty. If not provided, an error

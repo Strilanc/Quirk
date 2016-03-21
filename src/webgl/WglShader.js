@@ -1,8 +1,36 @@
 import Config from "src/Config.js"
-import WglCache from "src/webgl/WglCache.js"
 import WglArg from "src/webgl/WglArg.js"
+import { initializedWglContext }  from "src/webgl/WglContext.js"
+import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import WglTexture from "src/webgl/WglTexture.js"
-import Seq from "src/base/Seq.js"
+import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
+import {seq, Seq} from "src/base/Seq.js"
+
+/** @type {!WglMortalValueSlot} */
+const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
+    const GL = WebGLRenderingContext;
+    let gl = initializedWglContext().gl;
+
+    let positionBuffer = gl.createBuffer();
+    let positions = new Float32Array([
+        -1, +1,
+        +1, +1,
+        -1, -1,
+        +1, -1]);
+    gl.bindBuffer(GL.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
+    // Note: ARRAY_BUFFER should not be rebound anywhere else.
+
+    let indexBuffer = gl.createBuffer();
+    let indices = new Uint16Array([
+        0, 2, 1,
+        2, 3, 1]);
+    gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
+    // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
+
+    return {positionBuffer, indexBuffer};
+});
 
 /**
  * A shader program definition, used to render outputs onto textures based on the given GLSL source code.
@@ -14,70 +42,65 @@ export default class WglShader {
     constructor(fragmentShaderSource) {
         /** @type {!string} */
         this.fragmentShaderSource = fragmentShaderSource;
-        /** @type {!ContextStash} */
-        this.contextStash = new Map();
+        /** @type {undefined|!WglMortalValueSlot.<!WglCompiledShader>} */
+        this._compiledShaderSlot = undefined; // Wait for someone to tell us the parameter names.
     };
 
     /**
-     * Sets the active shader, for the given context, to a compiled version of this shader with the given uniform
-     * arguments.
-     * @param {!WglCache} context
-     * @param {!(!WglArg[])} uniformArguments
+     * Returns the same shader, but parameterized by the given arguments. Call renderTo on the result to render to a
+     * destination texture.
+     * @param {!WglArg} uniformArguments
+     * @returns {!{renderTo: !function(!WglTexture) : void}}
      */
-    bindInstanceFor(context, uniformArguments) {
-        //noinspection JSCheckFunctionSignatures,JSUnresolvedVariable
-        var compiled = context.retrieveOrCreateAssociatedData(this.contextStash, () =>
-            new WglShaderContext(context, this.fragmentShaderSource, uniformArguments.map(e => e.name)));
+    withArgs(...uniformArguments) {
+        // Learn the parameter names.
+        if (this._compiledShaderSlot === undefined) {
+            let parameterNames = uniformArguments.map(e => e.name);
+            this._compiledShaderSlot = new WglMortalValueSlot(
+                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames));
+        }
 
-        compiled.load(context, uniformArguments);
-    };
-}
+        return {
+            renderTo: texture => {
+                const GL = WebGLRenderingContext;
+                let ctx = initializedWglContext();
+                let gl = ctx.gl;
+                if (ctx.canvas.width < texture.width || ctx.canvas.height < texture.height) {
+                    throw new Error("Trying to render to a texture that's larger than the context canvas.");
+                }
 
-const WGL_ARG_TYPE_UNIFORM_ACTION_MAP = {
-    [WglArg.BOOL_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val ? 1 : 0),
-    [WglArg.INT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1i(loc, val),
-    [WglArg.FLOAT_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform1f(loc, val),
-    [WglArg.VEC2_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform2f(loc, val[0], val[1]),
-    [WglArg.VEC4_TYPE]: (c, loc, val) => c.webGLRenderingContext.uniform4f(loc, val[0], val[1], val[2], val[3]),
-    [WglArg.TEXTURE_TYPE]: (c, loc, val) => {
-        if (val.unit >= c.maxTextureUnits) {
-            throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
+                ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(ctx.lifetimeCounter);
+
+                // Bind frame buffer.
+                gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
+                checkGetErrorResult(gl.getError(), "framebufferTexture2D");
+                checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+
+                // Compile and bind shader.
+                this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
+
+                gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
+                checkGetErrorResult(gl.getError(), "drawElements");
+            }
         }
-        if (val.texture.width > c.maxTextureSize || val.texture.height > c.maxTextureSize) {
-            throw new Error(`Uniform texture argument is ${val.texture.width}x${val.texture.height}, but max ` +
-                `texture diameter is ${c.maxTextureSize}.`);
-        }
-        let g = c.webGLRenderingContext;
-        g.uniform1i(loc, val.unit);
-        g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture.instanceFor(c).texture);
-    },
-    [WglArg.RAW_TEXTURE_TYPE]: (c, loc, val) => {
-        if (val.unit >= c.maxTextureUnits) {
-            throw new Error(`Uniform texture argument uses texture unit ${val.unit} but max is ${c.maxTextureUnits}.`);
-        }
-        let g = c.webGLRenderingContext;
-        g.uniform1i(loc, val.unit);
-        g.activeTexture(WebGLRenderingContext.TEXTURE0 + val.unit);
-        g.bindTexture(WebGLRenderingContext.TEXTURE_2D, val.texture);
     }
-};
+
+    toString() {
+        return `WglShader(fragmentShaderSource: ${this.fragmentShaderSource})`;
+    }
+}
 
 /**
  * A compiled shader program definition that can be bound to / used by a webgl context.
  */
-class WglShaderContext {
+class WglCompiledShader {
     /**
-     * @param {!WglCache} context
      * @param {!string} fragmentShaderSource
-     * @param {!Iterable.<!string>} uniformParameterNames
-     *
-     * @property {!Map} uniformLocations
-     * @property {*} positionAttributeLocation
-     * @property {*} program
+     * @param {!Array.<!string>|!Iterable.<!string>} uniformParameterNames
      */
-    constructor(context, fragmentShaderSource, uniformParameterNames) {
-        let precision = context.getMaximumShaderFloatPrecision();
+    constructor(fragmentShaderSource, uniformParameterNames) {
+        let ctx = initializedWglContext();
+        let precision = ctx.maximumShaderFloatPrecision;
         let vertexShader = `
             precision ${precision} float;
             precision ${precision} int;
@@ -90,78 +113,81 @@ class WglShaderContext {
             precision ${precision} int;
             ${fragmentShaderSource}`;
 
-        let s = WebGLRenderingContext;
-        let g = context.webGLRenderingContext;
-        let glVertexShader = WglShaderContext.compileShader(g, s.VERTEX_SHADER, vertexShader);
-        let glFragmentShader = WglShaderContext.compileShader(g, s.FRAGMENT_SHADER, fullFragmentShader);
+        const GL = WebGLRenderingContext;
+        let gl = ctx.gl;
+        let glVertexShader = WglCompiledShader.compileShader(gl, GL.VERTEX_SHADER, vertexShader);
+        let glFragmentShader = WglCompiledShader.compileShader(gl, GL.FRAGMENT_SHADER, fullFragmentShader);
 
-        let program = g.createProgram();
-        g.attachShader(program, glVertexShader);
-        g.attachShader(program, glFragmentShader);
-        g.linkProgram(program);
+        let program = gl.createProgram();
+        gl.attachShader(program, glVertexShader);
+        gl.attachShader(program, glFragmentShader);
+        gl.linkProgram(program);
 
-        let warnings = g.getProgramInfoLog(program);
+        let warnings = gl.getProgramInfoLog(program);
         if (warnings !== '' && Config.SUPPRESSED_GLSL_WARNING_PATTERNS.every(e => !e.test(warnings))) {
             console.warn('gl.getProgramInfoLog()', warnings);
         }
 
-        if (g.getProgramParameter(program, s.LINK_STATUS) === false) {
+        if (gl.getProgramParameter(program, GL.LINK_STATUS) === false) {
             throw new Error(
                 "Failed to link shader program." +
                 "\n" +
                 "\n" +
-                `gl.VALIDATE_STATUS: ${g.getProgramParameter(program, s.VALIDATE_STATUS)}` +
+                `gl.VALIDATE_STATUS: ${gl.getProgramParameter(program, GL.VALIDATE_STATUS)}` +
                 "\n" +
-                `gl.getError(): ${g.getError()}`);
+                `gl.getError(): ${gl.getError()}`);
         }
 
-        g.deleteShader(glVertexShader);
-        g.deleteShader(glFragmentShader);
+        gl.deleteShader(glVertexShader);
+        gl.deleteShader(glFragmentShader);
 
-        this.uniformLocations = new Seq(uniformParameterNames).toMap(e => e, e => g.getUniformLocation(program, e));
-        this.positionAttributeLocation = g.getAttribLocation(program, 'position');
+        /** @type {!Map.<!string, !WebGLUniformLocation>} */
+        this.uniformLocations = new Seq(uniformParameterNames).toMap(e => e, e => gl.getUniformLocation(program, e));
+        /** @type {!Number} */
+        this.positionAttributeLocation = gl.getAttribLocation(program, 'position');
+        /** @type {!WebGLProgram} */
         this.program = program;
     };
 
     /**
-     * @param {!WglCache} context
+     * @param {!WglContext} ctx
      * @param {!(!WglArg[])} uniformArgs
      */
-    load(context, uniformArgs) {
-        let g = context.webGLRenderingContext;
-        g.useProgram(this.program);
+    load(ctx, uniformArgs) {
+        let gl = ctx.gl;
+        gl.useProgram(this.program);
 
         for (let arg of uniformArgs) {
             let location = this.uniformLocations.get(arg.name);
             if (location === undefined) {
                 throw new Error(`Unexpected argument: ${arg}`)
             }
-            WGL_ARG_TYPE_UNIFORM_ACTION_MAP[arg.type](context, location, arg.value);
+            WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value);
         }
 
-        g.enableVertexAttribArray(this.positionAttributeLocation);
-        g.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.positionAttributeLocation);
+        gl.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
     };
 
     /**
-     * @param {!WebGLRenderingContext} g
+     * @param {!WebGLRenderingContext} gl
      * @param {number} shaderType
      * @param {!string} sourceCode
      * @returns {!WebGLShader}
      */
-    static compileShader(g, shaderType, sourceCode) {
-        let shader = g.createShader(shaderType);
+    static compileShader(gl, shaderType, sourceCode) {
+        let shader = gl.createShader(shaderType);
 
-        g.shaderSource(shader, sourceCode);
-        g.compileShader(shader);
+        gl.shaderSource(shader, sourceCode);
+        gl.compileShader(shader);
 
-        if (g.getShaderInfoLog(shader) !== '') {
-            console.warn('WebGLShader: gl.getShaderInfoLog()', g.getShaderInfoLog(shader));
+        if (gl.getShaderInfoLog(shader) !== '') {
+            console.warn('WebGLShader: gl.getShaderInfoLog()', gl.getShaderInfoLog(shader));
             console.warn(sourceCode);
         }
 
-        if (g.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS) === false) {
-            throw new Error(`WebGLShader: Shader compile failed: ${sourceCode} ${g.getError()}`);
+        if (gl.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS) === false) {
+            throw new Error(`WebGLShader: Shader compile failed: ${sourceCode} ${gl.getError()}`);
         }
 
         return shader;

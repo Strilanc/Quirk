@@ -28,7 +28,6 @@ export function fail(message) {
  * @throws
  */
 function sanityCheck(subject) {
-    //noinspection JSUnresolvedVariable
     if (subject instanceof Map) {
         for (let k in subject) {
             if (subject.hasOwnProperty(k)) {
@@ -164,7 +163,6 @@ export class AssertionSubject {
         }
     };
 
-    //noinspection JSUnusedGlobalSymbols
     /**
      * @param {*} other
      */
@@ -247,7 +245,7 @@ export function assertThrows(func, extraArgCatcher) {
 }
 
 /** @type {boolean|undefined} */
-let webGLSupportPresent = undefined;
+let __webGLSupportPresent = undefined;
 
 let promiseImageDataFromSrc = src => {
     let img = document.createElement('img');
@@ -306,17 +304,17 @@ export class Suite {
      */
     webGlTest(name, method) {
         let wrappedMethod = status => {
-            if (webGLSupportPresent === undefined) {
+            if (__webGLSupportPresent === undefined) {
                 if (window.WebGLRenderingContext === undefined) {
-                    webGLSupportPresent = false;
+                    __webGLSupportPresent = false;
                 } else {
                     let canvas = document.createElement('canvas');
                     let context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                    webGLSupportPresent = context instanceof WebGLRenderingContext;
+                    __webGLSupportPresent = context instanceof WebGLRenderingContext;
                 }
             }
 
-            if (!webGLSupportPresent) {
+            if (!__webGLSupportPresent) {
                 console.warn(`Skipping ${this.name}.${name} due to lack of WebGL support.`);
                 return;
             }

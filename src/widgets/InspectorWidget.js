@@ -178,7 +178,6 @@ export default class InspectorWidget {
     }
 
     needsContinuousRedraw() {
-        //noinspection JSUnresolvedFunction
         return this.toolboxWidget.needsContinuousRedraw(this.hand) ||
             (this.hand.heldGates !== null && new Seq(this.hand.heldGates.gates).any(g => g.isTimeBased()) ||
             this.circuitWidget.needsContinuousRedraw());

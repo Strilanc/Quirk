@@ -147,12 +147,10 @@ export default class Painter {
 
         let fontSize;
         let ascendingHeightOf = metric => {
-            //noinspection JSUnresolvedVariable
             let d = metric.fontBoundingBoxAscent;
             return d === undefined ? fontSize * 0.75 : d;
         };
         let descendingHeightOf = metric => {
-            //noinspection JSUnresolvedVariable
             let d = metric.fontBoundingBoxDescent;
             return d === undefined ? fontSize * 0.25 : d;
         };
@@ -215,12 +213,10 @@ export default class Painter {
 
         let fontSize;
         let ascendingHeightOf = metric => {
-            //noinspection JSUnresolvedVariable
             let d = metric.fontBoundingBoxAscent;
             return d === undefined ? fontSize * 0.75 : d;
         };
         let descendingHeightOf = metric => {
-            //noinspection JSUnresolvedVariable
             let d = metric.fontBoundingBoxDescent;
             return d === undefined ? fontSize * 0.25 : d;
         };

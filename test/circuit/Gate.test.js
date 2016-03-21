@@ -9,13 +9,13 @@ suite.test("isEqualTo", () => {
     //noinspection JSUnusedLocalSymbols
     let f = _ => {};
 
-    var g1 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", f);
-    var g2 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", f);
-    var h1 = new Gate("DIF_symbol", Matrix.PAULI_X, "name", "blurb", f);
-    var h2 = new Gate("symbol", t => Matrix.square([t, 0, 0, 0]), "name", "blurb", f);
-    var h3 = new Gate("symbol", Matrix.PAULI_X, "DIF_name", "blurb", f);
-    var h4 = new Gate("symbol", Matrix.PAULI_X, "name", "DIF_blurb", f);
-    var h5 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", _ => { throw null; });
+    let g1 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", f);
+    let g2 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", f);
+    let h1 = new Gate("DIF_symbol", Matrix.PAULI_X, "name", "blurb", f);
+    let h2 = new Gate("symbol", t => Matrix.square([t, 0, 0, 0]), "name", "blurb", f);
+    let h3 = new Gate("symbol", Matrix.PAULI_X, "DIF_name", "blurb", f);
+    let h4 = new Gate("symbol", Matrix.PAULI_X, "name", "DIF_blurb", f);
+    let h5 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", _ => { throw null; });
 
     assertThat(g1).isEqualTo(g1);
     assertThat(g1).isEqualTo(g2);

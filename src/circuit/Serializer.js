@@ -82,8 +82,7 @@ let fromJson_Matrix = json => {
     if (typeof json !== "string") {
         throw new Error("Not a packed matrix string: " + json);
     }
-    //noinspection JSCheckFunctionSignatures
-    return Matrix.parse(json);
+    return Matrix.parse(/** @type {!string} */ json);
 };
 
 /**

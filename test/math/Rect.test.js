@@ -6,7 +6,7 @@ import Point from "src/math/Point.js"
 let suite = new Suite("Rect");
 
 suite.test("isEqualTo", () => {
-    var r = new Rect(2, 3, 5, 7);
+    let r = new Rect(2, 3, 5, 7);
     assertThat(r).isEqualTo(r);
     assertThat(r).isEqualTo(new Rect(2, 3, 5, 7));
     assertThat(new Rect(1, 2, 3, 4)).isEqualTo(new Rect(1, 2, 3, 4));
@@ -24,7 +24,7 @@ suite.test("isEqualTo", () => {
 });
 
 suite.test("isApproximatelyEqualTo", () => {
-    var r = new Rect(2, 3, 5, 7);
+    let r = new Rect(2, 3, 5, 7);
 
     assertFalse(r.isApproximatelyEqualTo(null, 0));
     assertFalse(r.isApproximatelyEqualTo("", 0));
@@ -179,7 +179,7 @@ suite.test("paddedBy", () => {
 });
 
 suite.test("containsPoint", () => {
-    var r = new Rect(2, 3, 5, 7);
+    let r = new Rect(2, 3, 5, 7);
     assertTrue(r.containsPoint(r.center()));
 
     // Strictness

@@ -48,7 +48,7 @@ class Complex {
      */
     isApproximatelyEqualTo(other, epsilon) {
         if (other instanceof Complex || typeof other === "number") {
-            var d = this.minus(Complex.from(other));
+            let d = this.minus(Complex.from(other));
             return Math.abs(d.real) <= epsilon &&
                 Math.abs(d.imag) <= epsilon &&
                 d.abs() <= epsilon;
@@ -135,11 +135,11 @@ class Complex {
             }
         }
 
-        var separator = this.imag >= 0 ? "+" : "-";
-        var imagFactor = format.allowAbbreviation && Math.abs(Math.abs(this.imag) - 1) <= format.maxAbbreviationError ?
+        let separator = this.imag >= 0 ? "+" : "-";
+        let imagFactor = format.allowAbbreviation && Math.abs(Math.abs(this.imag) - 1) <= format.maxAbbreviationError ?
             "" :
             format.formatFloat(Math.abs(this.imag));
-        var prefix = format.allowAbbreviation || format.fixedDigits === undefined || this.real < 0 ? "" : "+";
+        let prefix = format.allowAbbreviation || format.fixedDigits === undefined || this.real < 0 ? "" : "+";
         return prefix + format.formatFloat(this.real) + separator + imagFactor + "i";
     };
 
@@ -224,7 +224,7 @@ class Complex {
      * @returns {!Complex}
      */
     unit() {
-        var m = this.norm2();
+        let m = this.norm2();
         if (m < 0.00001) {
             return Complex.polar(1, this.phase());
         }
@@ -237,7 +237,7 @@ class Complex {
      * @returns {!Complex}
      */
     plus(v) {
-        var c = Complex.from(v);
+        let c = Complex.from(v);
         return new Complex(this.real + c.real, this.imag + c.imag);
     };
 
@@ -247,7 +247,7 @@ class Complex {
      * @returns {!Complex}
      */
     minus(v) {
-        var c = Complex.from(v);
+        let c = Complex.from(v);
         return new Complex(this.real - c.real, this.imag - c.imag);
     };
 
@@ -257,7 +257,7 @@ class Complex {
      * @returns {!Complex}
      */
     times(v) {
-        var c = Complex.from(v);
+        let c = Complex.from(v);
         return new Complex(
             this.real * c.real - this.imag * c.imag,
             this.real * c.imag + this.imag * c.real);
@@ -269,13 +269,13 @@ class Complex {
      * @returns {!Complex}
      */
     dividedBy(v) {
-        var c = Complex.from(v);
-        var d = c.norm2();
+        let c = Complex.from(v);
+        let d = c.norm2();
         if (d === 0) {
             throw new Error("Division by Zero");
         }
 
-        var n = this.times(c.conjugate());
+        let n = this.times(c.conjugate());
         return new Complex(n.real / d, n.imag / d);
     };
 

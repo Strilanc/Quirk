@@ -47,12 +47,12 @@ export default class Format {
             return Math.sqrt(Format.parseFloat(text.substr(1)));
         }
 
-        var fraction = match(UNICODE_FRACTIONS, e => e.character === text);
+        let fraction = match(UNICODE_FRACTIONS, e => e.character === text);
         if (fraction !== undefined) {
             return fraction.value;
         }
 
-        var result = parseFloat(text);
+        let result = parseFloat(text);
         if (isNaN(result)) {
             throw new Error("Not a number: '" + text + "'")
         }
@@ -69,17 +69,17 @@ export default class Format {
             return -Format.simplifyByRounding(-value, epsilon);
         }
 
-        var r = value % 1;
+        let r = value % 1;
         if (r <= epsilon || 1 - r <= epsilon) {
             return Math.round(value);
         }
 
-        var fraction = match(UNICODE_FRACTIONS, e => Math.abs(e.value - value) <= epsilon);
+        let fraction = match(UNICODE_FRACTIONS, e => Math.abs(e.value - value) <= epsilon);
         if (fraction !== undefined) {
             return fraction.value;
         }
 
-        var rootFraction = match(UNICODE_FRACTIONS, e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
+        let rootFraction = match(UNICODE_FRACTIONS, e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
         if (rootFraction !== undefined) {
             return Math.sqrt(rootFraction.value);
         }
@@ -139,12 +139,12 @@ function abbreviateFloat(value, epsilon, digits) {
         return "-" + abbreviateFloat(-value, epsilon, digits);
     }
 
-    var fraction = match(UNICODE_FRACTIONS, e => Math.abs(e.value - value) <= epsilon);
+    let fraction = match(UNICODE_FRACTIONS, e => Math.abs(e.value - value) <= epsilon);
     if (fraction !== undefined) {
         return fraction.character;
     }
 
-    var rootFraction = match(UNICODE_FRACTIONS, e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
+    let rootFraction = match(UNICODE_FRACTIONS, e => Math.abs(Math.sqrt(e.value) - value) <= epsilon);
     if (rootFraction !== undefined) {
         return "\u221A" + rootFraction.character;
     }

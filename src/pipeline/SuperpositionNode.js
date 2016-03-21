@@ -1,10 +1,11 @@
 import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
+import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Seq from "src/base/Seq.js"
-import PipelineNode from "src/pipeline/PipelineNode.js"
+import SimpleShaders from "src/pipeline/SimpleShaders.js"
 import Util from "src/base/Util.js"
-import WglDirector from "src/webgl/WglDirector.js"
+import { initializedWglContext } from "src/webgl/WglContext.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
 /**
@@ -61,7 +62,7 @@ export default class SuperpositionNode {
         let qubitCount = Util.bitSize(amplitudes.length - 1);
         return SuperpositionNode.input(
             qubitCount,
-            t => QuantumShaders.renderPixelColorData(getSharedDirector(), t, dataArray));
+            t => SimpleShaders.data(dataArray).renderTo(t));
     };
 
     /**
@@ -75,7 +76,7 @@ export default class SuperpositionNode {
         Util.need(stateIndex >= 0 && stateIndex < (1 << qubitCount), "stateMask >= 0 && stateMask < (1 << qubitCount)");
 
         return SuperpositionNode.input(qubitCount, t =>
-            QuantumShaders.renderClassicalState(getSharedDirector(), t, stateIndex));
+            QuantumShaders.classicalState(stateIndex).renderTo(t));
     };
 
     /**
@@ -90,20 +91,17 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = QuantumShaders.renderControlMask(
-                getSharedDirector(),
-                controlMask,
-                allocTexture(this.width, this.height),
-                allocTexture(this.width, this.height));
+            let controlTexture = allocTexture(this.width, this.height);
+            let resultTexture = allocTexture(this.width, this.height);
+            QuantumShaders.controlMask(controlMask).renderTo(controlTexture);
             QuantumShaders.renderQubitOperation(
-                getSharedDirector(),
-                control.available,
+                resultTexture,
                 input[0],
                 operation,
                 qubitIndex,
-                control.result);
-            reuseTexture(control.result);
-            return control.available;
+                controlTexture);
+            reuseTexture(controlTexture);
+            return resultTexture;
         });
     };
 
@@ -119,20 +117,17 @@ export default class SuperpositionNode {
         Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
 
         return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = QuantumShaders.renderControlMask(
-                getSharedDirector(),
-                controlMask,
-                allocTexture(this.width, this.height),
-                allocTexture(this.width, this.height));
+            let control = allocTexture(this.width, this.height);
+            QuantumShaders.controlMask(controlMask).renderTo(control);
+            let result = allocTexture(this.width, this.height);
             QuantumShaders.renderSwapOperation(
-                getSharedDirector(),
-                control.available,
+                result,
                 input[0],
                 qubitIndex1,
                 qubitIndex2,
-                control.result);
-            reuseTexture(control.result);
-            return control.available;
+                control);
+            reuseTexture(control);
+            return result;
         });
     }
 
@@ -153,7 +148,6 @@ export default class SuperpositionNode {
             let workspace1 = allocTexture(this.width, this.height);
             let workspace2 = allocTexture(this.width, this.height);
             QuantumShaders.renderControlCombinationProbabilities(
-                getSharedDirector(),
                 result,
                 workspace1,
                 workspace2,
@@ -180,7 +174,6 @@ export default class SuperpositionNode {
         return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
             let result = allocTexture(w, h);
             QuantumShaders.renderSuperpositionToDensityMatrix(
-                getSharedDirector(),
                 result,
                 inputs[0],
                 wires,
@@ -197,7 +190,7 @@ export default class SuperpositionNode {
     read() {
         return new SuperpositionReadNode(new PipelineNode(
             [this.pipelineNode],
-            inputs => getSharedDirector().readPixelColorFloats(inputs[0])));
+            inputs => inputs[0].readPixels()));
     };
 
     /**
@@ -236,7 +229,7 @@ export default class SuperpositionNode {
 
         let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
             let t = allocTexture(plan.width, plan.height);
-            QuantumShaders.renderUniformColor(getSharedDirector(), t, 0, 0, 0, 0);
+            SimpleShaders.color(0, 0, 0, 0).renderTo(t);
             return t;
         });
         let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
@@ -249,7 +242,7 @@ export default class SuperpositionNode {
                 let [a, e] = textures;
                 let t = allocTexture(plan.width, plan.height);
                 let r = plan.placeMap.get(eNode.pipelineNode.id);
-                QuantumShaders.renderLinearOverlay(getSharedDirector(), t, r, e, a);
+                QuantumShaders.linearOverlay(r, e, a).renderTo(t);
                 return t;
             });
 
@@ -399,16 +392,6 @@ export class SuperpositionReadNode {
         });
     };
 }
-
-/** @type {undefined|!WglDirector} */
-let CACHED_SHARED_DIRECTOR = undefined;
-/** @returns {!WglDirector} */
-let getSharedDirector = () => {
-    if (CACHED_SHARED_DIRECTOR === undefined) {
-        CACHED_SHARED_DIRECTOR = new WglDirector();
-    }
-    return CACHED_SHARED_DIRECTOR;
-};
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 let TEXTURE_POOL = new Map();

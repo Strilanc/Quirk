@@ -131,6 +131,7 @@ export default class CircuitStats{
         return this._conditionalWireProbabilityData[t][wireIndex];
     }
 
+    //noinspection JSUnusedGlobalSymbols
     static emptyAtTime(circuitDefinition, time) {
         return new CircuitStats(circuitDefinition, time, [], [], new Map(), []);
     }
@@ -198,7 +199,6 @@ export default class CircuitStats{
             outputDensityGroups: pixelDataNodes.outputDensityGroups.map(g => g.map(e => e.asDensityMatrix()))
         };
 
-        //noinspection JSCheckFunctionSignatures
         let values = Util.objectifyArrayFunc(PipelineNode.computePipeline)(valueNodes);
 
         let knownDensityMatrices = new Seq(values.outputDensityGroups).

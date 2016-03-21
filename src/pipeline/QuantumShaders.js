@@ -1,388 +1,16 @@
 import Matrix from "src/math/Matrix.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
+import SimpleShaders from "src/pipeline/SimpleShaders.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
-import WglDirector from "src/webgl/WglDirector.js"
+import { initializedWglContext } from "src/webgl/WglContext.js"
 
 /**
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
  */
-export default class QuantumShaders {
-    /**
-     * Renders the given color components onto the entire destination texture.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!number} r
-     * @param {!number} g
-     * @param {!number} b
-     * @param {!number} a
-     */
-    static renderUniformColor(director, destinationTexture, r, g, b, a) {
-        director.render(destinationTexture, GLSL_UNIFORM_COLOR, [
-            WglArg.vec4("color", r, g, b, a)
-        ]);
-    };
-
-    /**
-     * Renders the given color components onto the entire destination texture.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!int} state
-     */
-    static renderClassicalState(director, destinationTexture, state) {
-        let x = state % destinationTexture.width;
-        let y = (state - x) / destinationTexture.width;
-        director.render(destinationTexture, GLSL_SET_SINGLE_PIXEL, [
-            WglArg.vec2("pixel", x, y)
-        ]);
-    };
-
-    /**
-     * Renders the given color data onto the destination texture.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!Float32Array} pixelColorData
-     */
-    static renderPixelColorData(director, destinationTexture, pixelColorData) {
-        let [w, h] = [destinationTexture.width, destinationTexture.height];
-        Util.need(pixelColorData.length === w * h * 4, "pixelColorData.length === w * h * 4");
-
-        director.useRawDataTextureIn(w, h, pixelColorData, texture => {
-            director.render(destinationTexture, GLSL_PASS_THROUGH, [
-                WglArg.vec2("textureSize", w, h),
-                WglArg.rawTexture("sourceTexture", texture, 0)
-            ]);
-        });
-    };
-
-    /**
-     * Renders a texture by, effectively, drawing the given background texture then overlaying the given foreground
-     * texture over the background using the given offset.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!int} foregroundX
-     * @param {!int} foregroundY
-     * @param {!WglTexture} foregroundTexture
-     * @param {!WglTexture} backgroundTexture
-     */
-    static renderOverlayed(
-            director,
-            destinationTexture,
-            foregroundX,
-            foregroundY,
-            foregroundTexture,
-            backgroundTexture) {
-        director.render(destinationTexture, GLSL_OVERLAY, [
-            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
-            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-            WglArg.texture("backgroundTexture", backgroundTexture, 0),
-            WglArg.texture("foregroundTexture", foregroundTexture, 1),
-            WglArg.vec2("foregroundOffset", foregroundX, foregroundY)
-        ]);
-    }
-
-    /**
-     * Renders a texture with the given background texture, but with the given foreground texture's data scanned
-     * linearly into the background.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!int} offset
-     * @param {!WglTexture} foregroundTexture
-     * @param {!WglTexture} backgroundTexture
-     */
-    static renderLinearOverlay(
-            director,
-            destinationTexture,
-            offset,
-            foregroundTexture,
-            backgroundTexture) {
-        director.render(destinationTexture, GLSL_LINEAR_OVERLAY, [
-            WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
-            WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-            WglArg.texture("backgroundTexture", backgroundTexture, 0),
-            WglArg.texture("foregroundTexture", foregroundTexture, 1),
-            WglArg.int("offset", offset)
-        ]);
-    }
-
-    /**
-     * Renders a control mask onto the destination texture, used elsewhere for determining whether or not an operation
-     * applies to each pixel. Wherever the control mask's red component is 0, instead of 1, controllable operations are
-     * blocked.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!int} targetBit
-     * @param {!boolean} desiredBitValue
-     */
-    static renderSingleBitConstraintControlMask(director, destinationTexture, targetBit, desiredBitValue) {
-        director.render(destinationTexture, GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.float("targetBitPositionMask", 1 << targetBit),
-            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ]);
-    };
-
-    /**
-     * Renders a combined control mask onto the destination texture, augmenting the given control mask with a new bit
-     * constraint.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} controlMask
-     * @param {!int} targetBit
-     * @param {!boolean} desiredBitValue
-     */
-    static renderAddBitConstraintToControlMask(director, destinationTexture, controlMask, targetBit, desiredBitValue) {
-        director.render(destinationTexture, GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("oldControlMaskTexture", controlMask, 0),
-            WglArg.float("targetBitPositionMask", 1 << targetBit),
-            WglArg.float("desiredBitValue", desiredBitValue ? 1 : 0)
-        ]);
-    };
-
-    /**
-     * Renders a texture with each pixel storing the probability associated with the amplitude from the corresponding
-     * pixel in the input texture.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputAmplitudeTexture
-     */
-    static renderProbabilitiesFromAmplitudes(director, destinationTexture, inputAmplitudeTexture) {
-        director.render(destinationTexture, GLSL_FROM_AMPLITUDES_TO_PROBABILITIES, [
-            WglArg.vec2("textureSize", inputAmplitudeTexture.width, inputAmplitudeTexture.height),
-            WglArg.texture("inputTexture", inputAmplitudeTexture, 0)
-        ]);
-    };
-
-    /**
-     * Renders a texture with each pixel's individual color values from the source texture scaled by the given factor.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!number} factor
-     */
-    static renderScaled(director, destinationTexture, inputTexture, factor) {
-        director.render(destinationTexture, GLSL_SCALE, [
-            WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("factor", factor)
-        ]);
-    };
-
-    /**
-     * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
-     * sum of all probabilities matching a mask.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!int} step
-     * @param {!boolean} requiredBitValue
-     */
-    static renderConditionalProbabilitiesPipeline(director, destinationTexture, inputTexture, step, requiredBitValue) {
-        director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_PIPELINE, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("stepPower", 1 << step),
-            WglArg.bool("conditionValue", requiredBitValue)
-        ]);
-    };
-
-    /**
-     * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
-     * sum of all probabilities matching a mask.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!int} controlInclusionMask
-     */
-    static renderConditionalProbabilitiesFinalize(director, destinationTexture, inputTexture, controlInclusionMask) {
-        director.render(destinationTexture, GLSL_CONDITIONAL_PROBABILITIES_FINALIZE, [
-            WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height),
-            WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("controlInclusionMask", controlInclusionMask)
-        ]);
-    };
-
-    /**
-     * Renders a control mask texture corresponding to the given control mask.
-     * Two workspace textures are needed in order to build up the result; the result of the method indicates which one
-     * contains the final result.
-     *
-     * @param {!WglDirector} director
-     * @param {!QuantumControlMask} controlMask
-     * @param {!WglTexture} workspace1
-     * @param {!WglTexture} workspace2
-     * @returns {!{result: !WglTexture, available: !WglTexture}}
-     */
-    static renderControlMask(director, controlMask, workspace1, workspace2) {
-        // Special case: no constraints.
-        if (controlMask.inclusionMask === 0) {
-            QuantumShaders.renderUniformColor(director, workspace1, 1, 0, 0, 0);
-            return {result: workspace1, available: workspace2};
-        }
-
-        let hasFirst = false;
-        for (let i = 0; (1 << i) <= controlMask.inclusionMask; i++) {
-            let c = controlMask.desiredValueFor(i);
-            if (c === null) {
-                continue;
-            }
-            //noinspection JSValidateTypes
-            /** @type {!boolean} */
-            let b = c;
-            if (hasFirst) {
-                QuantumShaders.renderAddBitConstraintToControlMask(director, workspace2, workspace1, i, b);
-                let t = workspace2;
-                workspace2 = workspace1;
-                workspace1 = t;
-            } else {
-                QuantumShaders.renderSingleBitConstraintControlMask(director, workspace1, i, b);
-                hasFirst = true;
-            }
-        }
-
-        return {result: workspace1, available: workspace2};
-    };
-
-    /**
-     * Renders a texture with probability sums corresponding to states matching various combinations of controls.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} workspace1
-     * @param {!WglTexture} workspace2
-     * @param {!QuantumControlMask} controlMask
-     * @param {!WglTexture} amplitudes
-     */
-    static renderControlCombinationProbabilities(director,
-                                                 destinationTexture,
-                                                 workspace1,
-                                                 workspace2,
-                                                 controlMask,
-                                                 amplitudes) {
-        QuantumShaders.renderProbabilitiesFromAmplitudes(director, workspace1, amplitudes);
-        let n = amplitudes.width * amplitudes.height;
-        for (let i = 0; (1 << i) < n; i++) {
-            QuantumShaders.renderConditionalProbabilitiesPipeline(
-                director,
-                workspace2,
-                workspace1,
-                i,
-                (controlMask.desiredValueMask & (1 << i)) !== 0);
-            let t = workspace2;
-            workspace2 = workspace1;
-            workspace1 = t;
-        }
-
-        QuantumShaders.renderConditionalProbabilitiesFinalize(
-            director,
-            destinationTexture,
-            workspace1,
-            controlMask.inclusionMask);
-    };
-
-    /**
-     * Renders the result of applying a custom controlled single-qubit operation to a superposition.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!Matrix} operation
-     * @param {!int} qubitIndex
-     * @param {!WglTexture} controlTexture
-     */
-    static renderQubitOperation(director, destinationTexture, inputTexture, operation, qubitIndex, controlTexture) {
-        Util.need(operation.width() === 2 && operation.height() === 2);
-        let [[a, b], [c, d]] = operation.rows();
-        director.render(destinationTexture, GLSL_APPLY_CUSTOM_QUBIT_OPERATION, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("qubitIndexMask", 1 << qubitIndex),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.vec2("matrix_a", a.real, a.imag),
-            WglArg.vec2("matrix_b", b.real, b.imag),
-            WglArg.vec2("matrix_c", c.real, c.imag),
-            WglArg.vec2("matrix_d", d.real, d.imag)
-        ]);
-    };
-
-    /**
-     * Renders the result of applying a controlled swap operation to a superposition.
-     *
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!int} qubitIndex1
-     * @param {!int} qubitIndex2
-     * @param {!WglTexture} controlTexture
-     */
-    static renderSwapOperation(director, destinationTexture, inputTexture, qubitIndex1, qubitIndex2, controlTexture) {
-        director.render(destinationTexture, GLSL_SWAP_QUBITS, [
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
-            WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
-            WglArg.texture("controlTexture", controlTexture, 1)
-        ]);
-    };
-
-    /**
-     * @param {!WglDirector} director
-     * @param {!WglTexture} destinationTexture
-     * @param {!WglTexture} inputTexture
-     * @param {!Array.<!int>} keptBits
-     * @param {!Array.<!int>} marginalizedBits
-     * @param {!QuantumControlMask} controlMask
-     */
-    static renderSuperpositionToDensityMatrix(director,
-                                              destinationTexture,
-                                              inputTexture,
-                                              keptBits,
-                                              marginalizedBits,
-                                              controlMask) {
-        Util.need(keptBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0), "kept bits overlap controls");
-        Util.need(marginalizedBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0),
-            "marginalized bits overlap controls");
-        Util.need(keptBits.every(b => marginalizedBits.indexOf(b) === -1), "kept bits overlap marginalized bits");
-        Util.need(1 << (controlMask.includedBitCount() + keptBits.length + marginalizedBits.length) ===
-            inputTexture.width * inputTexture.height, "all bits must be kept, marginalized, or controls");
-        Util.need(1 << (2*keptBits.length) === destinationTexture.width * destinationTexture.height,
-            "destination texture has wrong size for density matrix");
-
-        let specializedShader = MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX(marginalizedBits.length, keptBits.length);
-        let bitArg = (k, n) => {
-            let r = n % inputTexture.width;
-            let q = (n - r) / inputTexture.width;
-            return WglArg.vec2(k, r, q);
-        };
-        let args = new Seq([
-            [
-                WglArg.texture("superpositionTexture", inputTexture, 0),
-                WglArg.vec2("superpositionTextureSize", inputTexture.width, inputTexture.height),
-                WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
-                bitArg("control_bits_offset", controlMask.desiredValueMask)
-            ],
-            new Seq(keptBits).mapWithIndex((b, i) => bitArg("kept_bit_" + i, 1 << b)),
-            new Seq(marginalizedBits).mapWithIndex((b, i) => bitArg("margin_bit_" + i, 1 << b))
-        ]).flatten().toArray();
-
-        director.render(destinationTexture, specializedShader, args);
-    };
-}
+export default class QuantumShaders {}
 
 const snippets = {
     /**
@@ -430,15 +58,22 @@ const snippets = {
         }`
 };
 
-const GLSL_UNIFORM_COLOR = new WglShader(`
-    /** The uniform color to render. */
-    uniform vec4 color;
-
-    void main() {
-        gl_FragColor = color;
-    }`);
-
-const GLSL_SET_SINGLE_PIXEL = new WglShader(`
+/**
+ * Returns a parameterized shader that renders the superposition corresponding to a classical state.
+ *
+ * @param {!int} stateBitMask
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
+ */
+QuantumShaders.classicalState = stateBitMask => ({
+    renderTo: destinationTexture => {
+        let x = stateBitMask % destinationTexture.width;
+        let y = (stateBitMask - x) / destinationTexture.width;
+        SET_SINGLE_PIXEL_SHADER.
+            withArgs(WglArg.vec2("pixel", x, y)).
+            renderTo(destinationTexture);
+    }
+});
+const SET_SINGLE_PIXEL_SHADER = new WglShader(`
     /** The location of the single pixel to set. */
     uniform vec2 pixel;
 
@@ -448,70 +83,26 @@ const GLSL_SET_SINGLE_PIXEL = new WglShader(`
         gl_FragColor = vec4(f, 0.0, 0.0, 0.0);
     }`);
 
-const GLSL_PASS_THROUGH = new WglShader(`
-    /** The width and height of the textures being operated on. */
-    uniform vec2 textureSize;
-
-    /** The texture to pass through. */
-    uniform sampler2D inputTexture;
-
-    void main() {
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        gl_FragColor = texture2D(inputTexture, uv);
-    }`);
-
-const GLSL_SCALE = new WglShader(`
-    /** The width and height of the textures being operated on. */
-    uniform vec2 textureSize;
-
-    /** The texture to pass through. */
-    uniform sampler2D inputTexture;
-
-    /** Scaling factor. */
-    uniform float factor;
-
-    void main() {
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        gl_FragColor = texture2D(inputTexture, uv) * factor;
-    }`);
-
-const GLSL_OVERLAY = new WglShader(`
-    /** The size of the covered texture. */
+/**
+ * Renders a texture with the given background texture, but with the given foreground texture's data scanned
+ * linearly into the background.
+ *
+ * @param {!int} offset
+ * @param {!WglTexture} foregroundTexture
+ * @param {!WglTexture} backgroundTexture
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
+ */
+QuantumShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
+    WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
+    WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
+    WglArg.texture("backgroundTexture", backgroundTexture, 0),
+    WglArg.texture("foregroundTexture", foregroundTexture, 1),
+    WglArg.int("offset", offset));
+const LINEAR_OVERLAY_SHADER = new WglShader(`
     uniform vec2 backgroundTextureSize;
-
-    /** The size of the covering texture. */
     uniform vec2 foregroundTextureSize;
 
-    /** The larger covered texture. */
     uniform sampler2D backgroundTexture;
-
-    /** The smaller covering texture that can be positioned. */
-    uniform sampler2D foregroundTexture;
-
-    /** The top-left corner of the area where the foreground is overlaid over the background. */
-    uniform vec2 foregroundOffset;
-
-    void main() {
-        vec2 uv = (gl_FragCoord.xy - foregroundOffset) / foregroundTextureSize.xy;
-        if (uv.x >= 0.0 && uv.y >= 0.0 && uv.x < 1.0 && uv.y < 1.0) {
-          gl_FragColor = texture2D(foregroundTexture, uv);
-        } else {
-          uv = gl_FragCoord.xy / backgroundTextureSize;
-          gl_FragColor = texture2D(backgroundTexture, uv);
-        }
-    }`);
-
-const GLSL_LINEAR_OVERLAY = new WglShader(`
-    /** The size of the covered texture. */
-    uniform vec2 backgroundTextureSize;
-
-    /** The size of the covering texture. */
-    uniform vec2 foregroundTextureSize;
-
-    /** The larger covered texture. */
-    uniform sampler2D backgroundTexture;
-
-    /** The smaller covering texture that can be positioned. */
     uniform sampler2D foregroundTexture;
 
     /** The starting index of the range where the foreground data should be copied. */
@@ -531,69 +122,43 @@ const GLSL_LINEAR_OVERLAY = new WglShader(`
         }
     }`);
 
-const GLSL_CONTROL_MASK_SINGLE_BIT_CONSTRAINT = new WglShader(`
-    /** The width and height of the textures being operated on. */
+/**
+ * Returns a parameterized shader that dot-products each pixel's rgba vector against itself, rendering the result
+ * over the red component of the destination texture (and zero-ing the other components).
+ *
+ * @param {!WglTexture} inputTexture
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
+ */
+QuantumShaders.squaredMagnitude = inputTexture => SQUARED_MAGNITUDE_SHADER.withArgs(
+    WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
+    WglArg.texture("inputTexture", inputTexture, 0));
+const SQUARED_MAGNITUDE_SHADER = new WglShader(`
     uniform vec2 textureSize;
-
-    /** A power of two (2^n) with the exponent n determined by the index of the qubit acting as a control. */
-    uniform float targetBitPositionMask;
-
-    /** The value that the qubit must have for the control to be satisfied. */
-    uniform float desiredBitValue;
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
-        bool targetBitIsOn = mod(state, targetBitPositionMask * 2.0) > targetBitPositionMask - 0.5;
-
-        float match = mod(float(targetBitIsOn) + desiredBitValue + 1.0, 2.0);
-        gl_FragColor = vec4(match, 0.0, 0.0, 0.0);
-    }`);
-
-const GLSL_CONTROL_MASK_ADD_BIT_CONSTRAINT = new WglShader(`
-    /** The width and height of the textures being operated on. */
-    uniform vec2 textureSize;
-
-    /** The previous control mask, without the bit constraint to be added. */
-    uniform sampler2D controlTexture;
-
-    /** A power of two (2^n) with the exponent n determined by the index of the qubit acting as a control. */
-    uniform float targetBitPositionMask;
-
-    /** The value that the qubit must have for the control to be satisfied. */
-    uniform float desiredBitValue;
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
-        bool targetBitIsOn = mod(state, targetBitPositionMask * 2.0) > targetBitPositionMask - 0.5;
-        float match = mod(float(targetBitIsOn) + desiredBitValue + 1.0, 2.0);
-
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        float oldMatch = texture2D(controlTexture, uv).x;
-
-        gl_FragColor = vec4(match * oldMatch, 0.0, 0.0, 0.0);
-    }`);
-
-const GLSL_FROM_AMPLITUDES_TO_PROBABILITIES = new WglShader(`
-    /** The width and height of the textures being operated on. */
-    uniform vec2 textureSize;
-
-    /** The texture of amplitudes, to be converted into probabilities. */
     uniform sampler2D inputTexture;
-
     void main() {
-        vec2 uv = gl_FragCoord.xy / textureSize.xy;
-        vec4 amps = texture2D(inputTexture, uv);
-        float p = dot(amps, amps);
-        gl_FragColor = vec4(p, 0.0, 0.0, 0.0);
+        vec4 v = texture2D(inputTexture, gl_FragCoord.xy / textureSize.xy);
+        float m = dot(v, v);
+        gl_FragColor = vec4(m, 0.0, 0.0, 0.0);
     }`);
 
-const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
-    /** The width and height of the textures being operated on. */
+/**
+ * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
+ * sum of all probabilities matching a mask.
+ *
+ * @param {!WglTexture} destinationTexture
+ * @param {!WglTexture} inputTexture
+ * @param {!int} step
+ * @param {!boolean} requiredBitValue
+ */
+QuantumShaders.renderConditionalProbabilitiesPipeline = (destinationTexture, inputTexture, step, requiredBitValue) =>
+    CONDITIONAL_PROBABILITIES_PIPELINE_SHADER.withArgs(
+        WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.float("stepPower", 1 << step),
+        WglArg.bool("conditionValue", requiredBitValue)
+    ).renderTo(destinationTexture);
+const CONDITIONAL_PROBABILITIES_PIPELINE_SHADER = new WglShader(`
     uniform vec2 textureSize;
-
-    /** The input texture, or output of the previous step. */
     uniform sampler2D inputTexture;
 
     /** A mask with the qubit being operated on in this step of the pipeline set. */
@@ -621,7 +186,22 @@ const GLSL_CONDITIONAL_PROBABILITIES_PIPELINE = new WglShader(`
         }
     }`);
 
-const GLSL_CONDITIONAL_PROBABILITIES_FINALIZE = new WglShader(`
+/**
+ * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
+ * sum of all probabilities matching a mask.
+ *
+ * @param {!WglTexture} destinationTexture
+ * @param {!WglTexture} inputTexture
+ * @param {!int} controlInclusionMask
+ */
+QuantumShaders.renderConditionalProbabilitiesFinalize = (destinationTexture, inputTexture, controlInclusionMask) =>
+    CONDITIONAL_PROBABILITIES_FINALIZE_SHADER.withArgs(
+        WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height),
+        WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
+        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.float("controlInclusionMask", controlInclusionMask)
+    ).renderTo(destinationTexture);
+const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
     uniform vec2 inputTextureSize;
     uniform vec2 outputTextureSize;
     uniform sampler2D inputTexture;
@@ -648,7 +228,116 @@ const GLSL_CONDITIONAL_PROBABILITIES_FINALIZE = new WglShader(`
             texture2D(inputTexture, stateToInputPixelUv(toggleBit(controlInclusionMask, bit))).x);
     }`);
 
-const GLSL_APPLY_CUSTOM_QUBIT_OPERATION = new WglShader(`
+/**
+ * Returns a parameterized shader that renders a control mask texture corresponding to the given control mask, with 1s
+ * at pixels meeting the control and 0s at pixels not meeting the control.
+ * @param {!QuantumControlMask} controlMask
+ * @returns {!{renderTo: !function(!WglTexture) : void}}
+ */
+QuantumShaders.controlMask = controlMask => {
+    if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
+        return SimpleShaders.color(1, 0, 0, 0);
+    }
+
+    return {
+        renderTo: destinationTexture => {
+            if (destinationTexture.width * destinationTexture.height > (1 << 20)) {
+                throw new Error("QuantumShaders.controlMask needs to be updated to allow more qubits.");
+            }
+            let xMask = destinationTexture.width - 1;
+            let xLen = Math.floor(Math.log2(destinationTexture.width));
+            CONTROL_MASK_SHADER.withArgs(
+                WglArg.float('usedX', controlMask.inclusionMask & xMask),
+                WglArg.float('desiredX', controlMask.desiredValueMask & xMask),
+                WglArg.float('usedY', controlMask.inclusionMask >> xLen),
+                WglArg.float('desiredY', controlMask.desiredValueMask >> xLen)
+            ).renderTo(destinationTexture);
+        }
+    }
+};
+const CONTROL_MASK_SHADER = new WglShader(`
+    uniform float usedX;
+    uniform float desiredX;
+
+    uniform float usedY;
+    uniform float desiredY;
+
+    /**
+     * Returns 1 if (val & used == desired & used), else returns 0.
+     * Note: ignores bits past the first 10.
+     */
+    float check(float val, float used, float desired) {
+        float pass = 1.0;
+        float bit = 1.0;
+        for (int i = 0; i < 10; i++) {
+            float v = mod(floor(val/bit), 2.0);
+            float u = mod(floor(used/bit), 2.0);
+            float d = mod(floor(desired/bit), 2.0);
+            pass *= 1.0 - abs(v-d)*u;
+            bit *= 2.0;
+        }
+        return pass;
+    }
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float pass = check(xy.x, usedX, desiredX) * check(xy.y, usedY, desiredY);
+        gl_FragColor = vec4(pass, 0.0, 0.0, 0.0);
+    }`);
+
+/**
+ * Renders a texture with probability sums corresponding to states matching various combinations of controls.
+ *
+ * @param {!WglTexture} dst
+ * @param {!WglTexture} workspace1
+ * @param {!WglTexture} workspace2
+ * @param {!QuantumControlMask} controlMask
+ * @param {!WglTexture} amplitudes
+ */
+QuantumShaders.renderControlCombinationProbabilities = (dst, workspace1, workspace2, controlMask, amplitudes) => {
+    QuantumShaders.squaredMagnitude(amplitudes).renderTo(workspace1);
+    let n = amplitudes.width * amplitudes.height;
+    for (let i = 0; (1 << i) < n; i++) {
+        QuantumShaders.renderConditionalProbabilitiesPipeline(
+            workspace2,
+            workspace1,
+            i,
+            (controlMask.desiredValueMask & (1 << i)) !== 0);
+        let t = workspace2;
+        workspace2 = workspace1;
+        workspace1 = t;
+    }
+
+    QuantumShaders.renderConditionalProbabilitiesFinalize(
+        dst,
+        workspace1,
+        controlMask.inclusionMask);
+};
+
+/**
+ * Renders the result of applying a custom controlled single-qubit operation to a superposition.
+ *
+ * @param {!WglTexture} destinationTexture
+ * @param {!WglTexture} inputTexture
+ * @param {!Matrix} operation
+ * @param {!int} qubitIndex
+ * @param {!WglTexture} controlTexture
+ */
+QuantumShaders.renderQubitOperation = (destinationTexture, inputTexture, operation, qubitIndex, controlTexture) => {
+    Util.need(operation.width() === 2 && operation.height() === 2);
+    let [[a, b], [c, d]] = operation.rows();
+    CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
+        WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.float("qubitIndexMask", 1 << qubitIndex),
+        WglArg.texture("controlTexture", controlTexture, 1),
+        WglArg.vec2("matrix_a", a.real, a.imag),
+        WglArg.vec2("matrix_b", b.real, b.imag),
+        WglArg.vec2("matrix_c", c.real, c.imag),
+        WglArg.vec2("matrix_d", d.real, d.imag)
+    ).renderTo(destinationTexture);
+};
+const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
     /**
      * A texture holding the complex coefficients of the superposition to operate on.
      * The real components are in the red component, and the imaginary components are in the green component.
@@ -720,10 +409,27 @@ const GLSL_APPLY_CUSTOM_QUBIT_OPERATION = new WglShader(`
                                     dot(amplitudeCombo, dotImag));
 
         gl_FragColor = vec4(outputAmplitude, 0.0, 0.0);
-
     }`);
 
-const GLSL_SWAP_QUBITS = new WglShader(`
+
+/**
+ * Renders the result of applying a controlled swap operation to a superposition.
+ *
+ * @param {!WglTexture} destinationTexture
+ * @param {!WglTexture} inputTexture
+ * @param {!int} qubitIndex1
+ * @param {!int} qubitIndex2
+ * @param {!WglTexture} controlTexture
+ */
+QuantumShaders.renderSwapOperation = (destinationTexture, inputTexture, qubitIndex1, qubitIndex2, controlTexture) =>
+    SWAP_QUBITS_SHADER.withArgs(
+        WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
+        WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
+        WglArg.texture("controlTexture", controlTexture, 1)
+    ).renderTo(destinationTexture);
+const SWAP_QUBITS_SHADER = new WglShader(`
     /**
      * A texture holding the complex coefficients of the superposition to operate on.
      * The real components are in the red component, and the imaginary components are in the green component.
@@ -777,7 +483,42 @@ const GLSL_SWAP_QUBITS = new WglShader(`
         gl_FragColor = texture2D(inputTexture, srcPixelUv);
     }`);
 
+/**
+ * @param {!WglTexture} dst
+ * @param {!WglTexture} inputTexture
+ * @param {!Array.<!int>} keptBits
+ * @param {!Array.<!int>} marginalizedBits
+ * @param {!QuantumControlMask} controlMask
+ */
+QuantumShaders.renderSuperpositionToDensityMatrix = (dst, inputTexture, keptBits, marginalizedBits, controlMask) => {
+    Util.need(keptBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0), "kept bits overlap controls");
+    Util.need(marginalizedBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0),
+        "marginalized bits overlap controls");
+    Util.need(keptBits.every(b => marginalizedBits.indexOf(b) === -1), "kept bits overlap marginalized bits");
+    Util.need(1 << (controlMask.includedBitCount() + keptBits.length + marginalizedBits.length) ===
+        inputTexture.width * inputTexture.height, "all bits must be kept, marginalized, or controls");
+    Util.need(1 << (2*keptBits.length) === dst.width * dst.height,
+        "destination texture has wrong size for density matrix");
 
+    let specializedShader = MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX(marginalizedBits.length, keptBits.length);
+    let bitArg = (k, n) => {
+        let r = n % inputTexture.width;
+        let q = (n - r) / inputTexture.width;
+        return WglArg.vec2(k, r, q);
+    };
+    let args = new Seq([
+        [
+            WglArg.texture("superpositionTexture", inputTexture, 0),
+            WglArg.vec2("superpositionTextureSize", inputTexture.width, inputTexture.height),
+            WglArg.vec2("outputTextureSize", dst.width, dst.height),
+            bitArg("control_bits_offset", controlMask.desiredValueMask)
+        ],
+        new Seq(keptBits).mapWithIndex((b, i) => bitArg("kept_bit_" + i, 1 << b)),
+        new Seq(marginalizedBits).mapWithIndex((b, i) => bitArg("margin_bit_" + i, 1 << b))
+    ]).flatten().toArray();
+
+    specializedShader.withArgs(...args).renderTo(dst);
+};
 const PATTERN_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX = `
     /** Stores the input as 2**n amplitudes defining the state of n qubits. */
     uniform sampler2D superpositionTexture;
@@ -813,7 +554,6 @@ const PATTERN_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX = `
             gl_FragColor += vec4(a.x*b.x + a.y*b.y, a.x*b.y - a.y*b.x, 0.0, 0.0);
         }
     }`;
-
 let __MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX__cache = new Map();
 let MAKE_GLSL_SUPERPOSITION_TO_DENSITY_MATRIX = (num_margin, num_kept) => {
     let try_replace = (target, key, num) => {

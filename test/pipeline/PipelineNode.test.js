@@ -206,10 +206,10 @@ suite.test("compute_cross", () => {
     let cross1 = new PipelineNode([], maker(1), free);
     let cross2 = new PipelineNode([], maker(2), free);
     let cross3 = new PipelineNode([cross1, cross2], maker(3), free);
-    //noinspection JSUnusedLocalSymbols
     let cross4 = new PipelineNode([cross3], maker(4), free);
     let cross5 = new PipelineNode([cross3], maker(5), free);
 
+    assertThat(cross4).isNotEqualTo(undefined);
     assertThat(cross5.compute()).isEqualTo("5");
     assertThat(history).isEqualTo([
         "make 1",

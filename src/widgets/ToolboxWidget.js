@@ -55,20 +55,19 @@ class ToolboxWidget {
 
     /**
      *
-     * @param {?Point} p
+     * @param {?Point} pt
      *
      * @returns {?{groupIndex: !int, gateIndex: !int, gate: !Gate}}
      */
-    findGateAt(p) {
-        if (p === null) {
+    findGateAt(pt) {
+        if (pt === null) {
             return null;
         }
         for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
             let group = Gates.Sets[groupIndex];
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
-                //noinspection JSCheckFunctionSignatures
-                if (gate !== null && this.gateDrawRect(groupIndex, gateIndex).containsPoint(p)) {
+                if (gate !== null && this.gateDrawRect(groupIndex, gateIndex).containsPoint(Util.notNull(pt))) {
                     return {groupIndex: groupIndex, gateIndex: gateIndex, gate: Util.notNull(gate)};
                 }
             }

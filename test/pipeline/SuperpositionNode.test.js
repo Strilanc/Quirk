@@ -199,10 +199,8 @@ suite.webGlTest("planPackingIntoSingleTexture", () => {
 });
 
 suite.webGlTest("mergedReadFloats", () => {
-    //noinspection JSCheckFunctionSignatures
     let textureNodes = Seq.range(8).map(i => SuperpositionNode.fromClassicalStateInRegisterOfSize(i, 3)).toArray();
     let readNodes = SuperpositionNode.mergedReadFloats(textureNodes).values();
-    //noinspection JSUnresolvedFunction
     let amplitudeNodes = new Seq(readNodes).map(e => e.asRenormalizedAmplitudes()).toArray();
     let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
     assertThat(amplitudeArrays).isEqualTo([
@@ -235,9 +233,7 @@ suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
         (a, e) => a.withQubitOperationApplied(e[0], e[1], e[2])
     ).toArray();
 
-    //noinspection JSCheckFunctionSignatures
     let readNodes = SuperpositionNode.mergedReadFloats(stateNodes).values();
-    //noinspection JSUnresolvedFunction
     let amplitudeNodes = new Seq(readNodes).map(e => e.asRenormalizedAmplitudes()).toArray();
     let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
     let s = Math.sqrt(0.5);

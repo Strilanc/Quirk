@@ -4,7 +4,7 @@ import Point from "src/math/Point.js"
 let suite = new Suite("Point");
 
 suite.test("isEqualTo", () => {
-    var p = new Point(2, 3);
+    let p = new Point(2, 3);
     assertTrue(p.isEqualTo(p));
     assertFalse(p.isEqualTo(null));
     assertFalse(p.isEqualTo(""));

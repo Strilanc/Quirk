@@ -45,7 +45,6 @@ export default class CycleCircuitStats {
         if (this._cachedCircuitStatsByTime[i] === null) {
             this._cachedCircuitStatsByTime[i] = this._computeStateForBucket(i);
         }
-        //noinspection JSValidateTypes
         return this._cachedCircuitStatsByTime[i].withTime(t);
     }
 }

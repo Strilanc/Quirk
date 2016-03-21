@@ -10,8 +10,8 @@ import Matrix from "src/math/Matrix.js"
 
 export default class MathPainter {
     static describeProbability(p, fractionalDigits) {
-        var v = p * 100;
-        var e = Math.pow(10, -fractionalDigits);
+        let v = p * 100;
+        let e = Math.pow(10, -fractionalDigits);
 
         if (v > 100 - e / 2) {
             return "On";

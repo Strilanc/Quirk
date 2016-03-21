@@ -8,7 +8,7 @@ import Seq from "src/base/Seq.js"
 let suite = new Suite("Matrix");
 
 suite.test("isEqualTo", () => {
-    var m = Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]);
+    let m = Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(17, 19)]]);
     assertThat(m).isEqualTo(m);
     assertThat(m).isNotEqualTo(null);
     assertThat(m).isNotEqualTo("");
@@ -26,8 +26,8 @@ suite.test("isEqualTo", () => {
     assertThat(m).isNotEqualTo(
         Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)], [new Complex(11, 13), new Complex(-17, 19)]]));
 
-    var col = Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)]]);
-    var row = Matrix.fromRows([[new Complex(2, 3)], [new Complex(5, 7)]]);
+    let col = Matrix.fromRows([[new Complex(2, 3), new Complex(5, 7)]]);
+    let row = Matrix.fromRows([[new Complex(2, 3)], [new Complex(5, 7)]]);
     assertThat(col).isEqualTo(col);
     assertThat(row).isEqualTo(row);
     assertThat(row).isNotEqualTo(col);
@@ -100,14 +100,14 @@ suite.test("generate", () => {
 });
 
 suite.test("getColumn", () => {
-    var m = Matrix.square([2, 3, 5, 7]);
+    let m = Matrix.square([2, 3, 5, 7]);
     assertThat(m.getColumn(0)).isEqualTo([2, 5]);
     assertThat(m.getColumn(1)).isEqualTo([3, 7]);
     assertThat(Matrix.col([1, 2, 3]).getColumn(0)).isEqualTo([1, 2, 3]);
 });
 
 suite.test("square", () => {
-    var m = Matrix.square([1, new Complex(2, 3), -5.5, 0]);
+    let m = Matrix.square([1, new Complex(2, 3), -5.5, 0]);
     assertThat(m.rows()).isEqualTo([[1, new Complex(2, 3)], [-5.5, 0]]);
 
     assertThat(Matrix.square([1]).rows()).isEqualTo([[1]]);
@@ -155,17 +155,17 @@ suite.test("isApproximatelyUnitary", () => {
 });
 
 suite.test("adjoint", () => {
-    var v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
+    let v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);
-    var a = Matrix.square([new Complex(2, -3), new Complex(11, -13),
+    let a = Matrix.square([new Complex(2, -3), new Complex(11, -13),
                           new Complex(5, -7), new Complex(17, -19)]);
     assertThat(v.adjoint()).isEqualTo(a);
 });
 
 suite.test("scaledBy", () => {
-    var v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
+    let v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);
-    var a = Matrix.square([new Complex(-2, -3), new Complex(-5, -7),
+    let a = Matrix.square([new Complex(-2, -3), new Complex(-5, -7),
                           new Complex(-11, -13), new Complex(-17, -19)]);
     assertThat(v.scaledBy(-1)).isEqualTo(a);
     assertThat(v.scaledBy(0)).isEqualTo(Matrix.square([0, 0, 0, 0]));
@@ -189,7 +189,7 @@ suite.test("times", () => {
     assertTrue(Matrix.square([2, 3, 5, 7]).times(Matrix.square([11, 13, 17, 19]))
         .isEqualTo(Matrix.square([73, 83, 174, 198])));
 
-    var x = Matrix.square([new Complex(0.5, -0.5), new Complex(0.5, 0.5),
+    let x = Matrix.square([new Complex(0.5, -0.5), new Complex(0.5, 0.5),
                           new Complex(0.5, 0.5), new Complex(0.5, -0.5)]);
     assertTrue(x.times(x.adjoint()).isEqualTo(Matrix.identity(2)));
     assertTrue(Matrix.PAULI_X.times(Matrix.PAULI_Y).times(Matrix.PAULI_Z).scaledBy(new Complex(0, -1))
@@ -198,8 +198,8 @@ suite.test("times", () => {
 
 suite.test("times_ColRow", () => {
     // When one is a column vector and the other is a row vector...
-    var r = Matrix.row([2, 3, 5]);
-    var c = Matrix.col([11, 13, 17]);
+    let r = Matrix.row([2, 3, 5]);
+    let c = Matrix.col([11, 13, 17]);
 
     // Inner product
     assertThat(r.times(c).toString()).isEqualTo("{{146}}");
@@ -326,15 +326,15 @@ suite.test("fromPauliRotation", () => {
         isApproximatelyEqualTo(Matrix.identity(2));
 
     // Doubling rotation is like squaring
-    var s1 = Matrix.fromPauliRotation(0.1, 0.15, 0.25);
-    var s2 = Matrix.fromPauliRotation(0.2, 0.3, 0.5);
+    let s1 = Matrix.fromPauliRotation(0.1, 0.15, 0.25);
+    let s2 = Matrix.fromPauliRotation(0.2, 0.3, 0.5);
     assertThat(s1.times(s1)).isApproximatelyEqualTo(s2);
 });
 
 suite.test("fromWireSwap", () => {
     assertThat(Matrix.fromWireSwap(2, 0, 1).toString()).
         isEqualTo("{{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}");
-    var _ = 0;
+    let _ = 0;
     assertThat(Matrix.square([
         1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, //____
         _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, //___1
@@ -367,8 +367,8 @@ suite.test("identity", () => {
 });
 
 suite.test("rotation", () => {
-    var s = Math.sqrt(0.5);
-    var t = Math.PI * 2;
+    let s = Math.sqrt(0.5);
+    let t = Math.PI * 2;
     assertThat(Matrix.rotation(0)).isApproximatelyEqualTo(Matrix.square([1, 0, 0, 1]));
     assertThat(Matrix.rotation(t / 8)).isApproximatelyEqualTo(Matrix.square([s, -s, s, s]));
     assertThat(Matrix.rotation(t * 2 / 8)).isApproximatelyEqualTo(Matrix.square([0, -1, 1, 0]));
@@ -381,18 +381,18 @@ suite.test("rotation", () => {
 });
 
 suite.test("singularValueDecomposition_2x2", () => {
-    var z = Matrix.square([0, 0, 0, 0]).singularValueDecomposition();
+    let z = Matrix.square([0, 0, 0, 0]).singularValueDecomposition();
     assertThat(z.u).isApproximatelyEqualTo(Matrix.identity(2));
     assertThat(z.s).isApproximatelyEqualTo(Matrix.square([0, 0, 0, 0]));
     assertThat(z.v).isApproximatelyEqualTo(Matrix.identity(2));
 
-    var i = Matrix.identity(2).singularValueDecomposition();
+    let i = Matrix.identity(2).singularValueDecomposition();
     assertThat(i.u).isApproximatelyEqualTo(Matrix.identity(2));
     assertThat(i.s).isApproximatelyEqualTo(Matrix.identity(2));
     assertThat(i.v).isApproximatelyEqualTo(Matrix.identity(2));
 
-    var am = Matrix.square([1, Complex.I.times(2), 3, 4]);
-    var ad = am.singularValueDecomposition();
+    let am = Matrix.square([1, Complex.I.times(2), 3, 4]);
+    let ad = am.singularValueDecomposition();
     assertThat(ad.u.times(ad.s).times(ad.v)).isApproximatelyEqualTo(am);
     assertThat(ad.s).isApproximatelyEqualTo(Matrix.square([5.305935, 0, 0, 1.359063]));
 });
