@@ -268,7 +268,8 @@ class Matrix {
     };
 
     /**
-     * Returns the sum of the matrix' diagonal elements.
+     * Returns the matrix' trace (i.e. the sum of its diagonal elements, i.e. the sum of its eigenvalues
+     * if it's square).
      * @returns {!Complex}
      */
     trace() {
@@ -612,7 +613,7 @@ class Matrix {
     }
 
     /**
-     * Returns the square matrix' determinant.
+     * Returns the square matrix' determinant (i.e. the product of its eigenvalues).
      * @returns {!Complex}
      */
     determinant() {
