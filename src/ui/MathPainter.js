@@ -83,13 +83,14 @@ export default class MathPainter {
                 for (let row = 0; row < numRows; row++) {
                     for (let col = 0; col < numCols; col++) {
                         let i = (row * numCols + col) * 2;
-                        let mag = Math.sqrt(buf[i] * buf[i] + buf[i + 1] * buf[i + 1]);
+                        let p = buf[i] * buf[i] + buf[i + 1] * buf[i + 1];
+                        let mag = Math.sqrt(p);
                         if (isNaN(mag) || mag < ε) {
                             continue;
                         }
                         let x1 = x + diam * col;
                         let x2 = x + diam * (col + 1);
-                        let y1 = y + diam * (row + 1 - mag);
+                        let y1 = y + diam * (row + 1 - p);
                         let y2 = y + diam * (row + 1);
                         trace.polygonCoords([
                             x1, y1,
@@ -311,14 +312,15 @@ export default class MathPainter {
             for (let row = 0; row < numRows; row++) {
                 for (let col = 0; col < numCols; col++) {
                     let i = (row*numCols + col)*2;
-                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
+                    let p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+                    let mag = Math.sqrt(p);
                     if (isNaN(mag) || mag < ε) {
                         continue;
                     }
                     if (row === col) {
                         let x1 = x + diam * col;
                         let x2 = x + diam * (col + 1);
-                        let y1 = y + diam * (row + 1 - mag);
+                        let y1 = y + diam * (row + 1 - p);
                         let y2 = y + diam * (row + 1);
                         trace.polygonCoords([
                             x1, y1,

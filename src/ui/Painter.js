@@ -118,6 +118,50 @@ export default class Painter {
     }
 
     /**
+     * Draws some text in a bounded area.
+     * @param {!string} text The text to print.
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} boundingWidth The text will be scaled down so it doesn't exceed this width.
+     * @param {!number} boundingHeight The text will be scaled down so it doesn't exceed this width.
+     * @param {!string} textAlign Horizontal alignment. Options: start, end, left, right, center.
+     * @param {!string} textBaseline Vertical alignment. Options: top, hanging, middle, alphabetic, ideographic, bottom.
+     * @param {!string} fillStyle Text color.
+     * @param {!string} font
+     * @param {!function(!number, !number) : void} afterMeasureBeforeDraw
+     */
+    print(text,
+          x,
+          y,
+          textAlign,
+          textBaseline,
+          fillStyle,
+          font,
+          boundingWidth,
+          boundingHeight,
+          afterMeasureBeforeDraw = undefined) {
+
+        this.ctx.font = font;
+        let naiveWidth = this.ctx.measureText(text).width;
+        //noinspection JSSuspiciousNameCombination
+        let naiveHeight = this.ctx.measureText("W").width * 2.5;
+        let scale = Math.min(Math.min(boundingWidth / naiveWidth, boundingHeight / naiveHeight), 1);
+
+        if (afterMeasureBeforeDraw !== undefined) {
+            afterMeasureBeforeDraw(naiveWidth * scale, naiveHeight * scale);
+        }
+        this.ctx.save();
+        this.ctx.textAlign = textAlign;
+        this.ctx.textBaseline = textBaseline;
+        this.ctx.font = font;
+        this.ctx.fillStyle = fillStyle;
+        this.ctx.translate(x, y);
+        this.ctx.scale(scale, scale);
+        this.ctx.fillText(text, 0, 0);
+        this.ctx.restore();
+    }
+
+    /**
      * Draws some text within the given rectangular area, aligned based on the given proportional center, with
      * line breaking and (if line breaking isn't enough) font size reduction to make things fit.
      *
