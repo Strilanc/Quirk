@@ -39,7 +39,7 @@ let inspector = InspectorWidget.empty(
 
 /** @param {!string} jsonText */
 let updateCircuitLink = jsonText => {
-    document.title = `QCircuit (${inspector.circuitWidget.circuitDefinition.readableHash()})`;
+    document.title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
 
     let url = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
 
