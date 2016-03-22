@@ -117,15 +117,12 @@ Gates.Named = {
                 let [p, q] = [x + c, y + s];
 
                 // Draw the dial and shaft.
-                args.painter.ctx.beginPath();
-                args.painter.ctx.arc(x, y, r, τ/2, τ);
-                args.painter.ctx.moveTo(x, y);
-                args.painter.ctx.lineTo(p, q);
-                args.painter.ctx.strokeStyle = 'black';
-                args.painter.ctx.lineWidth = 1;
-                args.painter.ctx.stroke();
+                args.painter.trace(trace => {
+                    trace.ctx.arc(x, y, r, τ/2, τ);
+                    trace.line(x, y, p, q);
+                }).thenStroke('black');
                 // Draw the indicator head.
-                args.painter.fillArrowHead(p, q, r*0.3, a, τ/4, 'black');
+                args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
             }),
 
         SwapHalf: new Gate(

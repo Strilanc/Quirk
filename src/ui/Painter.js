@@ -347,25 +347,6 @@ export default class Painter {
         this.ctx.fillStyle = fillColor;
         this.ctx.fill();
     }
-
-    /**
-     * @param {!number} x The x-position of the center of the arrow head.
-     * @param {number} y The y-position of the center of the arrow head.
-     * @param {number} radius The radius of the circle the arrow head is inscribed inside.
-     * @param {number} facingAngle The direction the arrow head is pointing towards.
-     * @param {number} sweptAngle The angle swept out by the back of the arrow head, relative to its center (not the
-     * point at the front).
-     * @param fillColor
-     */
-    fillArrowHead(x, y, radius, facingAngle, sweptAngle, fillColor = 'black') {
-        let a1 = facingAngle + sweptAngle/2 + Math.PI;
-        let a2 = facingAngle - sweptAngle/2 + Math.PI;
-        this.fillPolygon([
-            new Point(x + Math.cos(facingAngle)*radius, y + Math.sin(facingAngle)*radius),
-            new Point(x + Math.cos(a1)*radius, y + Math.sin(a1)*radius),
-            new Point(x + Math.cos(a2)*radius, y + Math.sin(a2)*radius)
-        ], fillColor);
-    }
 }
 
 /**
@@ -416,14 +397,15 @@ class Tracer {
     }
 
     /**
-     * @param {!Point} center The center of the ellipse.
+     * @param {!number} x The x-coordinate of the center of the ellipse.
+     * @param {!number} y The y-coordinate of the center of the ellipse.
      * @param {!number} horizontal_radius The horizontal distance from the center of the ellipse to its side.
      * @param {!number} vertical_radius The vertical distance from the center of the ellipse to its side.
      */
-    ellipse(center, horizontal_radius, vertical_radius) {
+    ellipse(x, y, horizontal_radius, vertical_radius) {
         this.ctx.save();
 
-        this.ctx.translate(center.x - horizontal_radius, center.y - vertical_radius);
+        this.ctx.translate(x - horizontal_radius, y - vertical_radius);
         this.ctx.scale(horizontal_radius, vertical_radius);
         this.ctx.moveTo(2, 1);
         this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
@@ -457,7 +439,7 @@ class Tracer {
     /**
      * @param {!Array.<!number>|!Float32Array} interleavedCoordinates
      */
-    polygonCoords(interleavedCoordinates) {
+    polygon(interleavedCoordinates) {
         if (interleavedCoordinates.length === 0) {
             return;
         }
@@ -468,6 +450,25 @@ class Tracer {
             this.ctx.lineTo(interleavedCoordinates[i], interleavedCoordinates[i+1]);
         }
     }
+
+    /**
+     * @param {!number} x The x-position of the center of the arrow head.
+     * @param {number} y The y-position of the center of the arrow head.
+     * @param {number} radius The radius of the circle the arrow head is inscribed inside.
+     * @param {number} facingAngle The direction the arrow head is pointing towards.
+     * @param {number} sweptAngle The angle swept out by the back of the arrow head, relative to its center (not the
+     * point at the front).
+     */
+    arrowHead(x, y, radius, facingAngle, sweptAngle) {
+        let a1 = facingAngle + sweptAngle/2 + Math.PI;
+        let a2 = facingAngle - sweptAngle/2 + Math.PI;
+        this.polygon([
+            x + Math.cos(facingAngle)*radius, y + Math.sin(facingAngle)*radius,
+            x + Math.cos(a1)*radius, y + Math.sin(a1)*radius,
+            x + Math.cos(a2)*radius, y + Math.sin(a2)*radius
+        ]);
+    }
+
 }
 
 /**

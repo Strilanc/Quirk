@@ -92,7 +92,7 @@ export default class MathPainter {
                         let x2 = x + diam * (col + 1);
                         let y1 = y + diam * (row + 1 - p);
                         let y2 = y + diam * (row + 1);
-                        trace.polygonCoords([
+                        trace.polygon([
                             x1, y1,
                             x2, y1,
                             x2, y2,
@@ -158,8 +158,8 @@ export default class MathPainter {
         painter.fillCircle(c, u, backgroundColor);
         painter.trace(trace => {
             trace.circle(c.x, c.y, u);
-            trace.ellipse(c, dx.x, dy.y);
-            trace.ellipse(c, dy.x, dz.y);
+            trace.ellipse(c.x, c.y, dx.x, dy.y);
+            trace.ellipse(c.x, c.y, dy.x, dz.y);
             for (let d of [dx, dy, dz]) {
                 trace.line(c.x - d.x, c.y - d.y, c.x + d.x, c.y + d.y);
             }
@@ -217,8 +217,8 @@ export default class MathPainter {
 
         painter.trace(trace => {
             trace.circle(c.x, c.y, u);
-            trace.ellipse(c, u, u / 3);
-            trace.ellipse(c, u / 3, u);
+            trace.ellipse(c.x, c.y, u, u / 3);
+            trace.ellipse(c.x, c.y, u / 3, u);
             for (let a of axes) {
                 let d = projToPt(a);
                 trace.line(c.x - d.x, c.y - d.y, c.x + d.x, c.y + d.y);
