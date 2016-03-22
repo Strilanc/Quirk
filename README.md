@@ -1,6 +1,13 @@
 Quantum Circuit Inspector
 =========================
 
+| master | dev |
+|--------|-----|
+| [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector)      | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=dev)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector) |
+
+
+
+
 A toy for exploring the behavior of small quantum circuits.
 
 Features:
@@ -68,8 +75,3 @@ The example terminal commands have been tested on a fresh Ubuntu install.
     `firefox out/index.html`
 
 0. **Copy `out/index.html` and `out/all_src.js` to wherever you want**.
-
-Older version snapshots, usable on JSFiddle
-===========================================
-
-Dec 6, 2014: http://jsfiddle.net/c4f5z73v/2/
