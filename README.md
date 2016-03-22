@@ -1,6 +1,13 @@
 Quantum Circuit Inspector
 =========================
 
+| master | dev |
+|--------|-----|
+| [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector)      | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=dev)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector) |
+
+
+
+
 A toy for exploring the behavior of small quantum circuits.
 
 Features:
@@ -32,9 +39,11 @@ The example terminal commands have been tested on a fresh Ubuntu install.
 
 0. **[Have git and Node.js installed](https://nodejs.org/en/download/)**.
 
-    ```sudo add-apt-repository universe
-    sudo apt-get update
-    sudo apt-get install --yes git npm nodejs-legacy```
+    `sudo add-apt-repository universe`
+    
+    `sudo apt-get update`
+    
+    `sudo apt-get install --yes git npm nodejs-legacy`
 
     *(The first two commands are only needed for REALLY fresh installs. Still-a-Live-CD fresh. nodejs-legacy is needed
     to workaround [an issue in grunt.js](https://github.com/nodejs/node-v0.x-archive/issues/3911).)*
@@ -45,8 +54,9 @@ The example terminal commands have been tested on a fresh Ubuntu install.
 
 0. **Install the project's dev dependencies**.
 
-    ```cd Quantum-Circuit-Inspector
-    npm install```
+    `cd Quantum-Circuit-Inspector`
+    
+    `npm install`
 
     *(If you're on Windows, you'll need to work around
       [this bug in grunt-traceur](https://github.com/aaronfrost/grunt-traceur/issues/66) by going to line 49 of
@@ -65,8 +75,3 @@ The example terminal commands have been tested on a fresh Ubuntu install.
     `firefox out/index.html`
 
 0. **Copy `out/index.html` and `out/all_src.js` to wherever you want**.
-
-Older version snapshots, usable on JSFiddle
-===========================================
-
-Dec 6, 2014: http://jsfiddle.net/c4f5z73v/2/
