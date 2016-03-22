@@ -214,6 +214,40 @@ suite.test("isIdentity", () => {
     assertTrue(Matrix.square([1, 0, 0, 0, 1, 0, 0, 0, 1]).isIdentity());
 });
 
+suite.test("isPhasedPermutation", () => {
+    let i = Complex.I;
+
+    assertTrue(Matrix.col([-1]).isPhasedPermutation());
+    assertTrue(Matrix.col([0]).isPhasedPermutation());
+    assertTrue(Matrix.col([1]).isPhasedPermutation());
+    assertTrue(Matrix.col([i]).isPhasedPermutation());
+    assertTrue(Matrix.col([2]).isPhasedPermutation());
+
+    assertFalse(Matrix.row([1, 0]).isPhasedPermutation());
+    assertFalse(Matrix.row([1, 1]).isPhasedPermutation());
+    assertFalse(Matrix.col([1, 0]).isPhasedPermutation());
+    assertFalse(Matrix.col([1, 1]).isPhasedPermutation());
+
+    assertTrue(Matrix.PAULI_X.isPhasedPermutation());
+    assertTrue(Matrix.PAULI_Y.isPhasedPermutation());
+    assertTrue(Matrix.PAULI_Z.isPhasedPermutation());
+    assertFalse(Matrix.HADAMARD.isPhasedPermutation());
+
+    assertTrue(Matrix.square([1, 0, 0, 1]).isPhasedPermutation());
+    assertFalse(Matrix.square([1, 1, 1, 1]).isPhasedPermutation());
+    assertFalse(Matrix.square([1, 1, 1.5, 1]).isPhasedPermutation());
+    assertFalse(Matrix.square([1, 1, 1.5, 1]).isPhasedPermutation());
+    assertFalse(Matrix.square([1, i, i, 1]).isPhasedPermutation());
+    assertFalse(Matrix.square([1, i, i.neg(), 1]).isPhasedPermutation());
+
+    assertTrue(Matrix.square([1, 0, 0, 0, 1, 0, 0, 0, 1]).isPhasedPermutation());
+    assertTrue(Matrix.square([1, 0, 0, 0, 0, i, 0, 1, 0]).isPhasedPermutation());
+
+    assertFalse(Matrix.square([1, 0.1, 0, 1]).isPhasedPermutation(0));
+    assertFalse(Matrix.square([1, 0.1, 0, 1]).isPhasedPermutation(0.05));
+    assertTrue(Matrix.square([1, 0.1, 0, 1]).isPhasedPermutation(0.2));
+});
+
 suite.test("adjoint", () => {
     let v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);

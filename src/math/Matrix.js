@@ -240,6 +240,41 @@ class Matrix {
     };
 
     /**
+     * Determines if the matrix can be factored into a permutation matrix times a diagonal matrix.
+     * @param {!number=} epsilon
+     * @returns {!boolean}
+     */
+    isPhasedPermutation(epsilon = 0) {
+        if (this._width !== this._height) {
+            return false;
+        }
+
+        let n = this._width;
+        let colCounts = new Uint32Array(n);
+        let rowCounts = new Uint32Array(n);
+
+        // Count number of non-zero elements in each row and column.
+        for (let col = 0; col < n; col++) {
+            for (let row = 0; row < n; row++) {
+                let i = (row*n + col)*2;
+                if (Math.max(Math.abs(this._buffer[i]), Math.abs(this._buffer[i+1])) > epsilon) {
+                    colCounts[col] += 1;
+                    rowCounts[row] += 1;
+                }
+            }
+        }
+
+        // Phased permutations have at most one entry in each row and column.
+        for (let i = 0; i < n; i++) {
+            if (colCounts[i] > 1 || rowCounts[i] > 1) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Determines if the matrix is approximately equal to its own conjugate transpose or not.
      * @param {!number} epsilon Maximum error per entry.
      * @returns {!boolean}
