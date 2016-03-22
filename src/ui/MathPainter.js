@@ -111,8 +111,7 @@ export default class MathPainter {
                     if (isNaN(mag) || mag < ε) {
                         continue;
                     }
-                    let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
-                    trace.circle(c, unitRadius * mag);
+                    trace.circle(x + diam*(col+0.5), y + diam*(row+0.5), unitRadius * mag);
                 }
             }
         }).thenFill(amplitudeCircleFillColor).thenStroke(amplitudeCircleStrokeColor, 0.5);
@@ -126,9 +125,10 @@ export default class MathPainter {
                     if (isNaN(mag) || mag < ε) {
                         continue;
                     }
-                    let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
+                    let x1 = x + diam*(col+0.5);
+                    let y1 = y + diam*(row+0.5);
                     let clampedRadius = Math.max(unitRadius, 4/mag);
-                    trace.line(c, c.offsetBy(clampedRadius * buf[i], clampedRadius * buf[i+1]));
+                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * buf[i+1]);
                 }
             }
         }).thenStroke('black');
@@ -157,11 +157,11 @@ export default class MathPainter {
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
         painter.trace(trace => {
-            trace.circle(c, u);
+            trace.circle(c.x, c.y, u);
             trace.ellipse(c, dx.x, dy.y);
             trace.ellipse(c, dy.x, dz.y);
             for (let d of [dx, dy, dz]) {
-                trace.line(c.plus(d.times(-1)), c.plus(d));
+                trace.line(c.x - d.x, c.y - d.y, c.x + d.x, c.y + d.y);
             }
         }).thenStroke('#BBB');
         if (isNaN(qubitDensityMatrix.cell(0, 0).real)) {
@@ -216,12 +216,12 @@ export default class MathPainter {
         painter.fillCircle(c, u, backgroundColor);
 
         painter.trace(trace => {
-            trace.circle(c, u);
+            trace.circle(c.x, c.y, u);
             trace.ellipse(c, u, u / 3);
             trace.ellipse(c, u / 3, u);
             for (let a of axes) {
                 let d = projToPt(a);
-                trace.line(c.plus(d.times(-1)), c.plus(d));
+                trace.line(c.x - d.x, c.y - d.y, c.x + d.x, c.y + d.y);
             }
         }).thenStroke('#BBB');
 
@@ -317,18 +317,9 @@ export default class MathPainter {
                         continue;
                     }
                     if (row === col) {
-                        let x1 = x + diam * col;
-                        let x2 = x + diam * (col + 1);
-                        let y1 = y + diam * (row + 1 - buf[i]);
-                        let y2 = y + diam * (row + 1);
-                        trace.polygonCoords([
-                            x1, y1,
-                            x2, y1,
-                            x2, y2,
-                            x1, y2]);
+                        trace.rect(x + diam*col, y + diam * (col + 1), diam, -diam * buf[i]);
                     } else {
-                        let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
-                        trace.circle(c, unitRadius * mag);
+                        trace.circle(x + diam*(col+0.5), y + diam*(row+0.5), unitRadius * mag);
                     }
                 }
             }
@@ -346,9 +337,10 @@ export default class MathPainter {
                     if (isNaN(mag) || mag < ε) {
                         continue;
                     }
-                    let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
+                    let x1 = x + diam*(col+0.5);
+                    let y1 = y + diam*(row+0.5);
                     let clampedRadius = Math.max(unitRadius, 4/mag);
-                    trace.line(c, c.offsetBy(clampedRadius * buf[i], clampedRadius * buf[i+1]));
+                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * buf[i+1]);
                 }
             }
         }).thenStroke('black');
