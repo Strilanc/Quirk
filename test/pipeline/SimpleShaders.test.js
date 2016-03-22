@@ -8,7 +8,7 @@ import Matrix from "src/math/Matrix.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
-let suite = new Suite("QuantumShaders");
+let suite = new Suite("SimpleShaders");
 
 suite.webGlTest("color", () => {
     let texture2x2 = new WglTexture(1 << 1, 1 << 1);
