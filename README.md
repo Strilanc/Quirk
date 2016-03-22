@@ -1,29 +1,18 @@
-Quantum Circuit Inspector
-=========================
+# Quirk
 
 | master | dev |
 |--------|-----|
 | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector)      | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=dev)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector) |
 
+A toy for exploring and understanding the behavior of small quantum circuits.
 
+Defining features:
 
-
-A toy for exploring the behavior of small quantum circuits.
-
-Features:
-
-- Drag-and-drop to place gates.
-- Simulates and animates in real time.
-- Up to 12 qubits.
+- Runs in web browsers.
+- Drag-and-drop circuit editing.
+- Simulates and animates the effects of operations on up to 12 qubits in real time.
+- Inline displays for conditional and marginal states.
 - Bookmarkable circuits.
-- Measurement, controls, and postselection.
-- Conditional state displays.
-
-Notable missing features:
-
-- Re-cohering a measured qubit. (That would require the simulation to use density matrices, squaring the cost.)
-- Eigendecomposition of mixed states. (Too expensive.)
-- Showing numbers instead of figures. (It's a toy.)
 
 Recording of the inspector simulating quantum teleportation:
 
@@ -32,9 +21,7 @@ Recording of the inspector simulating quantum teleportation:
 Building and Running
 ====================
 
-This is unnecessarily complicated because the nodejs dependency ecosystem is a bit of a mess.
-Create an issue on the repo if the instructions don't work for you.
-
+Please open an issue if these instructions don't work for you.
 The example terminal commands have been tested on a fresh Ubuntu install.
 
 0. **[Have git and Node.js installed](https://nodejs.org/en/download/)**.

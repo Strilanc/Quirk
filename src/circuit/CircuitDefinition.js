@@ -258,11 +258,16 @@ class CircuitDefinition {
             }
         }
 
-        const t = 0.1234; // Pick a time that's unlikely to be on a corner case of a time-based gate.
-        const ε = 0.0001;
-        if (this.locIsMeasured(pt) && (this.colHasSingleWireControl(pt.x) || !g.matrixAt(t).isPhasedPermutation(ε))) {
-            // Measured qubits can't be re-superposed for implementation simplicity reasons.
-            return "no\nremix\n(sorry)";
+        // Measured qubits can't be re-superposed for implementation simplicity reasons.
+        if (this.locIsMeasured(pt)) {
+            let m = g.matrixAt(0.1234); // Pick a time that's unlikely to be on a corner case of a time-based gate.
+            const ε = 0.0001;
+            let doesSomething = !m.isIdentity();
+            let createsSuperpositions = !m.isPhasedPermutation(ε);
+            let hasQuantumControls = this.colHasSingleWireControl(pt.x);
+            if (doesSomething && (hasQuantumControls || createsSuperpositions)) {
+                return "no\nremix\n(sorry)";
+            }
         }
 
         return null;
