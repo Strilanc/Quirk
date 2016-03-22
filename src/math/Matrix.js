@@ -264,6 +264,28 @@ class Matrix {
     };
 
     /**
+     * Determines if the matrix is exactly an identity matrix.
+     * @returns {!boolean}
+     */
+    isIdentity() {
+        if (this._width !== this._height) {
+            return false;
+        }
+        for (let c = 0; c < this._width; c++) {
+            for (let r = 0; r < this._height; r++) {
+                let i = (this._width*r + c)*2;
+                if (this._buffer[i] !== (r === c ? 1 : 0)) {
+                    return false;
+                }
+                if (this._buffer[i+1] !== 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    /**
      * Returns the conjugate transpose of the receiving operation (the adjoint is the inverse when the matrix is unitary).
      * @returns {!Matrix}
      */

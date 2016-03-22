@@ -185,6 +185,35 @@ suite.test("isApproximatelyHermitian", () => {
     assertTrue(Matrix.square([1, i, i.times(-1.5), 1]).isApproximatelyHermitian(0.5));
 });
 
+suite.test("isIdentity", () => {
+    let i = Complex.I;
+
+    assertFalse(Matrix.col([-1]).isIdentity());
+    assertFalse(Matrix.col([0]).isIdentity());
+    assertTrue(Matrix.col([1]).isIdentity());
+    assertFalse(Matrix.col([i]).isIdentity());
+    assertFalse(Matrix.col([2]).isIdentity());
+
+    assertFalse(Matrix.row([1, 0]).isIdentity());
+    assertFalse(Matrix.row([1, 1]).isIdentity());
+    assertFalse(Matrix.col([1, 0]).isIdentity());
+    assertFalse(Matrix.col([1, 1]).isIdentity());
+
+    assertFalse(Matrix.PAULI_X.isIdentity());
+    assertFalse(Matrix.PAULI_Y.isIdentity());
+    assertFalse(Matrix.PAULI_Z.isIdentity());
+    assertFalse(Matrix.HADAMARD.isIdentity());
+
+    assertTrue(Matrix.square([1, 0, 0, 1]).isIdentity());
+    assertFalse(Matrix.square([1, 1, 1, 1]).isIdentity());
+    assertFalse(Matrix.square([1, 1, 1.5, 1]).isIdentity());
+    assertFalse(Matrix.square([1, 1, 1.5, 1]).isIdentity());
+    assertFalse(Matrix.square([1, i, i, 1]).isIdentity());
+    assertFalse(Matrix.square([1, i, i.neg(), 1]).isIdentity());
+
+    assertTrue(Matrix.square([1, 0, 0, 0, 1, 0, 0, 0, 1]).isIdentity());
+});
+
 suite.test("adjoint", () => {
     let v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);
