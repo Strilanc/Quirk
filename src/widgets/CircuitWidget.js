@@ -541,7 +541,7 @@ class CircuitWidget {
         let numWire = this.importantWireCount();
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
-        let amplitudeGrid = Matrix.generate(colCount, rowCount, (r, c) => stats.finalState[r*colCount + c]);
+        let amplitudeGrid = new Matrix(colCount, rowCount, stats.finalState.rawBuffer());
 
         let topRect = this.gateRect(0, col);
         let bottomRect = this.gateRect(numWire-1, col);

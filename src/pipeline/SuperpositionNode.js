@@ -297,7 +297,7 @@ export class SuperpositionReadNode {
 
     /**
      * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
-     * @returns {!PipelineNode.<!Array.<!Complex>>}
+     * @returns {!PipelineNode.<!Matrix>}
      */
     asRenormalizedAmplitudes() {
         return new PipelineNode([this.floatsNode], inputs => {
@@ -313,7 +313,13 @@ export class SuperpositionReadNode {
                 unity = NaN;
             }
 
-            return Seq.range(floats.length/4).map(i => new Complex(floats[i*4]/unity, floats[i*4+1]/unity)).toArray();
+            let n = floats.length / 4;
+            let buf = new Float32Array(n * 2);
+            for (let i = 0; i < buf.length; i++) {
+                buf[i*2] = floats[i*4]/unity;
+                buf[i*2+1] = floats[i*4+1]/unity;
+            }
+            return new Matrix(1, n, buf);
         });
     };
 

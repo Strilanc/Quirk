@@ -17,8 +17,8 @@ suite.webGlTest("fromAmplitudes", () => {
     let t = SuperpositionNode.fromAmplitudes([1.5, new Complex(1, -2), 0, Complex.I]);
     assertThat(t.read().raw().compute()).isEqualTo(new Float32Array([
         1.5, 0, 0, 0, 1, -2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]));
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo([
-        1.5/Math.sqrt(8.25), new Complex(1, -2).dividedBy(Math.sqrt(8.25)), 0, Complex.I.dividedBy(Math.sqrt(8.25))]);
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
+        1.5/Math.sqrt(8.25), new Complex(1, -2).dividedBy(Math.sqrt(8.25)), 0, Complex.I.dividedBy(Math.sqrt(8.25))]));
 
     assertThat(SuperpositionNode.fromAmplitudes(Seq.range(16).toArray()).read().raw().compute()).
         isEqualTo(new Float32Array(Seq.range(16).flatMap(e => [e, 0, 0, 0]).toArray()));
@@ -30,26 +30,26 @@ suite.webGlTest("fromClassicalStateInRegisterOfSize", () => {
     assertThrows(() => SuperpositionNode.fromClassicalStateInRegisterOfSize(9, 3));
 
     assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 4).read().asRenormalizedAmplitudes().compute()).
-        isEqualTo([
+        isEqualTo(Matrix.col([
             1, 0, 0, 0,
             0, 0, 0, 0,
             0, 0, 0, 0,
             0, 0, 0, 0
-        ]);
+        ]));
 
     assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(6, 4).read().asRenormalizedAmplitudes().compute()).
-        isEqualTo([
+        isEqualTo(Matrix.col([
             0, 0, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 0,
             0, 0, 0, 0
-        ]);
+        ]));
 
     assertThat(SuperpositionNode.fromClassicalStateInRegisterOfSize(3, 2).read().asRenormalizedAmplitudes().compute()).
-        isEqualTo([
+        isEqualTo(Matrix.col([
             0, 0,
             0, 1
-        ]);
+        ]));
 });
 
 suite.webGlTest("withQubitOperationApplied", () => {
@@ -58,29 +58,29 @@ suite.webGlTest("withQubitOperationApplied", () => {
     let noControls = SuperpositionNode.control(3, QuantumControlMask.NO_CONTROLS);
 
     t = t.withQubitOperationApplied(0, Matrix.HADAMARD, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 0, 0, 0, 0, 0, s, -s]));
 
     t = t.withQubitOperationApplied(1, Matrix.HADAMARD, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 0, 0, 0, 0.5, -0.5, -0.5, 0.5]));
 
     t = t.withQubitOperationApplied(2, Matrix.HADAMARD, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         s/2, -s/2, -s/2, s/2, -s/2, s/2, s/2, -s/2]));
 
     t = t.withQubitOperationApplied(
         1,
         Matrix.HADAMARD,
         SuperpositionNode.control(3, QuantumControlMask.fromBitIs(0, true)));
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         s/2, 0, -s/2, -0.5, -s/2, 0, s/2, 0.5]));
 
     t = t.withQubitOperationApplied(
         2,
         Matrix.HADAMARD,
         SuperpositionNode.control(3, new QuantumControlMask(0x3, 0)));
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 0, -s/2, -0.5, 0.5, 0, s/2, 0.5]));
 });
 
@@ -89,19 +89,19 @@ suite.webGlTest("withSwapApplied", () => {
     let noControls = SuperpositionNode.control(3, QuantumControlMask.NO_CONTROLS);
 
     t = t.withSwap(0, 1, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 0, 1, 0, 0, 0, 0, 0]));
 
     t = t.withSwap(0, 1, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 1, 0, 0, 0, 0, 0, 0]));
 
     t = t.withSwap(0, 2, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 0, 0, 0, 1, 0, 0, 0]));
 
     t = t.withSwap(1, 2, noControls);
-    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
         0, 0, 1, 0, 0, 0, 0, 0]));
 });
 
@@ -212,14 +212,14 @@ suite.webGlTest("mergedReadFloats", () => {
     let amplitudeNodes = new Seq(readNodes).map(e => e.asRenormalizedAmplitudes()).toArray();
     let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
     assertThat(amplitudeArrays).isEqualTo([
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1]
+        Matrix.col([1, 0, 0, 0, 0, 0, 0, 0]),
+        Matrix.col([0, 1, 0, 0, 0, 0, 0, 0]),
+        Matrix.col([0, 0, 1, 0, 0, 0, 0, 0]),
+        Matrix.col([0, 0, 0, 1, 0, 0, 0, 0]),
+        Matrix.col([0, 0, 0, 0, 1, 0, 0, 0]),
+        Matrix.col([0, 0, 0, 0, 0, 1, 0, 0]),
+        Matrix.col([0, 0, 0, 0, 0, 0, 1, 0]),
+        Matrix.col([0, 0, 0, 0, 0, 0, 0, 1])
     ]);
 });
 
@@ -246,15 +246,15 @@ suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
     let amplitudeArrays = PipelineNode.computePipeline(amplitudeNodes);
     let s = Math.sqrt(0.5);
     assertThat(amplitudeArrays).isApproximatelyEqualTo([
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [s, s, 0, 0, 0, 0, 0, 0],
-        [0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0],
-        [s/2, s/2, s/2, s/2, s/2, s/2, s/2, s/2],
-        [s/2, s/2, s/2, s/2, s/2, s/2, s/2, s/2],
-        [s/2, 0.5, s/2, 0, s/2, 0.5, s/2, 0],
-        [s/2, 0.5, s/2, 0, s/2, 0, s/2, 0.5],
-        [s/2, 0.5, s/2, 0, 0, s/2, 0.5, s/2],
-        [s/2, Math.sqrt(3/8), s/2, 0.20412412285804749, 0, 0, 0.5, 0.28867512941360474],
-        [Math.sqrt(1/8), Math.sqrt(3/8), Math.sqrt(3/8), Math.sqrt(1/8), 0, 0, 0, 0]
+        Matrix.col([1, 0, 0, 0, 0, 0, 0, 0]),
+        Matrix.col([s, s, 0, 0, 0, 0, 0, 0]),
+        Matrix.col([0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0]),
+        Matrix.col([s/2, s/2, s/2, s/2, s/2, s/2, s/2, s/2]),
+        Matrix.col([s/2, s/2, s/2, s/2, s/2, s/2, s/2, s/2]),
+        Matrix.col([s/2, 0.5, s/2, 0, s/2, 0.5, s/2, 0]),
+        Matrix.col([s/2, 0.5, s/2, 0, s/2, 0, s/2, 0.5]),
+        Matrix.col([s/2, 0.5, s/2, 0, 0, s/2, 0.5, s/2]),
+        Matrix.col([s/2, Math.sqrt(3/8), s/2, 0.20412412285804749, 0, 0, 0.5, 0.28867512941360474]),
+        Matrix.col([Math.sqrt(1/8), Math.sqrt(3/8), Math.sqrt(3/8), Math.sqrt(1/8), 0, 0, 0, 0])
     ]);
 });

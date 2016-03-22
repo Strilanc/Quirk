@@ -4,6 +4,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import Gates from "src/ui/Gates.js"
+import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("CircuitStats");
 
@@ -23,7 +24,7 @@ suite.webGlTest("smoke", () => {
     assertThat(s.controlledWireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0.5);
     assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(1);
     assertThat(s.controlledWireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(0.5);
-    assertThat(s.finalState).isApproximatelyEqualTo([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]);
+    assertThat(s.finalState).isApproximatelyEqualTo(Matrix.col([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]));
 });
 
 suite.webGlTest("wireProbabilityJustAfter", () => {

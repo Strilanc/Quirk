@@ -11,7 +11,8 @@ class Matrix {
     /**
      * @param {int} width
      * @param {int} height
-     * @param {!Float64Array} buffer Complex value data, packed row-wise with real and imaginary coefficients adjacent.
+     * @param {!Float64Array|!Float32Array} buffer Complex value data, packed row-wise with real and imaginary
+     * coefficients interleaved.
      */
     constructor(width, height, buffer) {
         Util.need(width*height*2 === buffer.length);
