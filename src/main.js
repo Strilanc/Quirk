@@ -78,25 +78,22 @@ let advanceCircuitTime = () => {
     circuitTime %= 1;
     prevAdvanceTime = t;
 };
-/** @type {!number|null} */
-let ticker = null;
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
+/** @type {!number|undefined} */
+let tickWhenAppropriateTicker = undefined;
 let currentCircuitStatsCache =
     new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
 let tickWhenAppropriate = () => {
-    let shouldBeTicking = inspector.needsContinuousRedraw();
-
-    let isTicking = ticker !== null;
-    if (isTicking === shouldBeTicking) {
-        return;
+    if (tickWhenAppropriateTicker !== undefined) {
+        clearTimeout(tickWhenAppropriateTicker);
+        tickWhenAppropriateTicker = undefined;
     }
-    if (shouldBeTicking) {
-        ticker = window.setInterval(() => redrawThrottle.trigger(), Config.REFRESH_DURATION_MS);
-    } else {
-        window.clearInterval(ticker);
-        ticker = null;
+    if (inspector.needsContinuousRedraw()) {
+        // Delay animating when the user has just modified the circuit.
+        // We don't want to start doing work just before they drag a bit more.
+        tickWhenAppropriateTicker = window.setTimeout(() => redrawThrottle.trigger(), Config.REFRESH_DURATION_MS);
     }
 };
 
