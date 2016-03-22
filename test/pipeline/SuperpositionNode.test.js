@@ -55,44 +55,52 @@ suite.webGlTest("fromClassicalStateInRegisterOfSize", () => {
 suite.webGlTest("withQubitOperationApplied", () => {
     let s = Math.sqrt(0.5);
     let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(7, 3);
+    let noControls = SuperpositionNode.control(3, QuantumControlMask.NO_CONTROLS);
 
-    t = t.withQubitOperationApplied(0, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS);
+    t = t.withQubitOperationApplied(0, Matrix.HADAMARD, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 0, 0, 0, 0, s, -s]));
 
-    t = t.withQubitOperationApplied(1, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS);
+    t = t.withQubitOperationApplied(1, Matrix.HADAMARD, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 0, 0, 0.5, -0.5, -0.5, 0.5]));
 
-    t = t.withQubitOperationApplied(2, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS);
+    t = t.withQubitOperationApplied(2, Matrix.HADAMARD, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         s/2, -s/2, -s/2, s/2, -s/2, s/2, s/2, -s/2]));
 
-    t = t.withQubitOperationApplied(1, Matrix.HADAMARD, QuantumControlMask.fromBitIs(0, true));
+    t = t.withQubitOperationApplied(
+        1,
+        Matrix.HADAMARD,
+        SuperpositionNode.control(3, QuantumControlMask.fromBitIs(0, true)));
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         s/2, 0, -s/2, -0.5, -s/2, 0, s/2, 0.5]));
 
-    t = t.withQubitOperationApplied(2, Matrix.HADAMARD, new QuantumControlMask(0x3, 0));
+    t = t.withQubitOperationApplied(
+        2,
+        Matrix.HADAMARD,
+        SuperpositionNode.control(3, new QuantumControlMask(0x3, 0)));
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, -s/2, -0.5, 0.5, 0, s/2, 0.5]));
 });
 
 suite.webGlTest("withSwapApplied", () => {
     let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(1, 3);
+    let noControls = SuperpositionNode.control(3, QuantumControlMask.NO_CONTROLS);
 
-    t = t.withSwap(0, 1, QuantumControlMask.NO_CONTROLS);
+    t = t.withSwap(0, 1, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 1, 0, 0, 0, 0, 0]));
 
-    t = t.withSwap(0, 1, QuantumControlMask.NO_CONTROLS);
+    t = t.withSwap(0, 1, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 1, 0, 0, 0, 0, 0, 0]));
 
-    t = t.withSwap(0, 2, QuantumControlMask.NO_CONTROLS);
+    t = t.withSwap(0, 2, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 0, 0, 1, 0, 0, 0]));
 
-    t = t.withSwap(1, 2, QuantumControlMask.NO_CONTROLS);
+    t = t.withSwap(1, 2, noControls);
     assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(new Float32Array([
         0, 0, 1, 0, 0, 0, 0, 0]));
 });
@@ -230,7 +238,7 @@ suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
 
     let stateNodes = new Seq(ops).scan(
         SuperpositionNode.fromClassicalStateInRegisterOfSize(0, 3),
-        (a, e) => a.withQubitOperationApplied(e[0], e[1], e[2])
+        (a, e) => a.withQubitOperationApplied(e[0], e[1], SuperpositionNode.control(3, e[2]))
     ).toArray();
 
     let readNodes = SuperpositionNode.mergedReadFloats(stateNodes).values();

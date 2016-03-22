@@ -77,3 +77,6 @@ Config.DEFAULT_TEXT_COLOR = 'black';
 Config.DEFAULT_FONT_SIZE = 12;
 Config.DEFAULT_FONT_FAMILY = 'Helvetica';
 Config.DEFAULT_STROKE_THICKNESS = 1;
+
+// Calling WebGLRenderingContext.getError forces a CPU/GPU sync. It's very expensive.
+Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = false;

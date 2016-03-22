@@ -17,7 +17,7 @@ export default class SuperpositionNode {
 
     /**
      * @param {!(!PipelineNode[])} inputNodes
-     * @param {!function(!(!WglTexture[])) : !WglTexture} operation
+     * @param {!function(!Array.<!WglTexture>) : !WglTexture} operation
      * @param {!int} width
      * @param {!int} height
      *
@@ -80,55 +80,61 @@ export default class SuperpositionNode {
     };
 
     /**
+     * @param {!int} qubitCount
+     * @param {!QuantumControlMask} mask
+     * @returns {!SuperpositionNode}
+     */
+    static control(qubitCount, mask) {
+        return SuperpositionNode.input(qubitCount, tex => QuantumShaders.controlMask(mask).renderTo(tex));
+    }
+
+    /**
      * Returns a texture holding the result of applying a single-qubit operation to the receiving texture's quantum
      * state.
      * @param {!int} qubitIndex The index of the qubit to apply the operation to.
      * @param {!Matrix} operation A 2x2 matrix.
-     * @param {!QuantumControlMask} controlMask
+     * @param {!SuperpositionNode} controlMaskNode
      * @returns {!SuperpositionNode}
      */
-    withQubitOperationApplied(qubitIndex, operation, controlMask) {
-        Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
-
-        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let controlTexture = allocTexture(this.width, this.height, WebGLRenderingContext.UNSIGNED_BYTE);
-            let resultTexture = allocTexture(this.width, this.height);
-            QuantumShaders.controlMask(controlMask).renderTo(controlTexture);
-            QuantumShaders.renderQubitOperation(
-                resultTexture,
-                input[0],
-                operation,
-                qubitIndex,
-                controlTexture);
-            reuseTexture(controlTexture);
-            return resultTexture;
-        });
+    withQubitOperationApplied(qubitIndex, operation, controlMaskNode) {
+        return new SuperpositionNode(
+            this.width,
+            this.height,
+            [this.pipelineNode, controlMaskNode.pipelineNode],
+            ([inputTexture, controlTexture]) => {
+                let resultTexture = allocTexture(this.width, this.height);
+                QuantumShaders.renderQubitOperation(
+                    resultTexture,
+                    inputTexture,
+                    operation,
+                    qubitIndex,
+                    controlTexture);
+                return resultTexture;
+            });
     };
 
     /**
      * Returns a texture holding the result of applying a swap operation.
      * @param {!int} qubitIndex1 The index of one of the qubits to swap.
      * @param {!int} qubitIndex2 The index of the other qubit to swap.
-     * @param {!QuantumControlMask} controlMask
+     * @param {!SuperpositionNode} controlMaskNode
      * @returns {!SuperpositionNode}
      */
-    withSwap(qubitIndex1, qubitIndex2, controlMask) {
-        Util.need(controlMask.desiredValueFor(qubitIndex1) === null, "Controlled with qubit being modified.");
-        Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
-
-        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = allocTexture(this.width, this.height, WebGLRenderingContext.UNSIGNED_BYTE);
-            QuantumShaders.controlMask(controlMask).renderTo(control);
-            let result = allocTexture(this.width, this.height);
-            QuantumShaders.renderSwapOperation(
-                result,
-                input[0],
-                qubitIndex1,
-                qubitIndex2,
-                control);
-            reuseTexture(control);
-            return result;
-        });
+    withSwap(qubitIndex1, qubitIndex2, controlMaskNode) {
+        return new SuperpositionNode(
+            this.width,
+            this.height,
+            [this.pipelineNode, controlMaskNode.pipelineNode],
+            ([inputTexture, controlTexture]) => {
+                let result = allocTexture(this.width, this.height);
+                QuantumShaders.renderSwapOperation(
+                    result,
+                    inputTexture,
+                    qubitIndex1,
+                    qubitIndex2,
+                    controlTexture);
+                return result;
+            });
     }
 
     /**

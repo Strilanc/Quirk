@@ -1,10 +1,18 @@
+import Config from "src/Config.js"
+
 /**
  * Checks if the given code, returned by gl.getError, is an error or not.
  * Throws an error with a descriptive message if the code represents an error.
- * @param {!number} code
+ * @param {!WebGLRenderingContext} gl
  * @param {!string} previousOperationDescription
+ * @param {!boolean} isOnHotPath
  */
-export function checkGetErrorResult(code, previousOperationDescription) {
+export function checkGetErrorResult(gl, previousOperationDescription, isOnHotPath = false) {
+    if (isOnHotPath && !Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS) {
+        return;
+    }
+
+    let code = gl.getError();
     const GL = WebGLRenderingContext;
     if (code === GL.NO_ERROR) {
         return;
@@ -25,10 +33,16 @@ export function checkGetErrorResult(code, previousOperationDescription) {
 /**
  * Checks if the given code, returned by gl.checkFramebufferStatus, is an error or not.
  * Throws an error with a descriptive message if the code represents an error.
- * @param {!number} code
+ * @param {!WebGLRenderingContext} gl
+ * @param {!boolean} isOnHotPath
  */
-export function checkFrameBufferStatusResult(code) {
+export function checkFrameBufferStatusResult(gl, isOnHotPath = false) {
+    if (isOnHotPath && !Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS) {
+        return;
+    }
+
     const GL = WebGLRenderingContext;
+    let code = gl.checkFramebufferStatus(GL.FRAMEBUFFER);
     if (code === GL.FRAMEBUFFER_COMPLETE) {
         return;
     }

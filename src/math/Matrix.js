@@ -232,6 +232,30 @@ class Matrix {
     };
 
     /**
+     * Determines if the matrix is approximately equal to its own conjugate transpose or not.
+     * @param {!number} epsilon Maximum error per entry.
+     * @returns {!boolean}
+     */
+    isApproximatelyHermitian(epsilon) {
+        if (this._width !== this._height) {
+            return false;
+        }
+        for (let c = 0; c < this._width; c++) {
+            for (let r = 0; r < this._height; r++) {
+                let i = (this._width*r + c)*2;
+                let j = (this._width*c + r)*2;
+                if (Math.abs(this._buffer[i] - this._buffer[j]) > epsilon) {
+                    return false;
+                }
+                if (Math.abs(this._buffer[i+1] + this._buffer[j+1]) > epsilon) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    /**
      * Returns the conjugate transpose of the receiving operation (the adjoint is the inverse when the matrix is unitary).
      * @returns {!Matrix}
      */
@@ -248,9 +272,14 @@ class Matrix {
      * @returns {!Complex}
      */
     trace() {
-        return Seq.range(Math.min(this.width(), this.height())).
-            map(i => this.cell(i, i)).
-            aggregate(Complex.ZERO, (a, e) => a.plus(e));
+        let total_r = 0;
+        let total_i = 0;
+        let d = this._width*2 + 2;
+        for (let i = 0; i < this._buffer.length; i += d) {
+            total_r += this._buffer[i];
+            total_i += this._buffer[i+1];
+        }
+        return new Complex(total_r, total_i);
     };
 
     /**
@@ -565,22 +594,21 @@ class Matrix {
     }
 
     /**
-     * Returns the bloch sphere vector (as a matrix columns) corresponding to this density matrix.
-     * @returns {!Matrix}
+     * Returns the bloch sphere vector (as an x,y,z array) corresponding to this density matrix.
+     * @returns {!Array.<!number>}
      */
     qubitDensityMatrixToBlochVector() {
-        Util.need(this.width() === 2 && this.height() === 2, "Need a 2x2 density matrix.");
-        Util.need(this.adjoint().isApproximatelyEqualTo(this, 0.01), "Density matrix should be Hermitian.");
+        Util.need(this._width === 2 && this._height === 2, "Need a 2x2 density matrix.");
+        Util.need(this.isApproximatelyHermitian(0.01), "Density matrix should be Hermitian.");
         Util.need(this.trace().isApproximatelyEqualTo(1, 0.01), "Density matrix should have unit trace.");
 
         // Density matrix from bloch vector equation: M = 1/2 (I + vσ)
-        let vσ = this.scaledBy(2).minus(Matrix.identity(2)).rows();
-        let [[a, b],
-             [c, d]] = vσ;
-        let x = c.plus(b).real/2;
-        let y = c.minus(b).imag/2;
-        let z = a.minus(d).real/2;
-        return Matrix.col([x, y, z]);
+        //noinspection JSUnusedLocalSymbols
+        let [ar, ai, br, bi, cr, ci, dr, di] = this._buffer;
+        let x = (cr + br);
+        let y = (ci - bi);
+        let z = (ar - dr);
+        return [x, y, z];
     }
 
     /**

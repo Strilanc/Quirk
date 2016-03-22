@@ -58,10 +58,10 @@ export default class WglTexture {
             gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
             gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
             gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, this.width, this.height, 0, GL.RGBA, this.pixelType, null);
-            checkGetErrorResult(gl.getError(), "texImage2D");
+            checkGetErrorResult(gl, "texImage2D");
             gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, result.texture, 0);
-            checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-            checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+            checkGetErrorResult(gl, "framebufferTexture2D");
+            checkFrameBufferStatusResult(gl);
         } finally {
             gl.bindTexture(GL.TEXTURE_2D, null);
             gl.bindFramebuffer(GL.FRAMEBUFFER, null);
@@ -91,10 +91,10 @@ export default class WglTexture {
         }
 
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.initializedFramebuffer());
-        checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-        checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+        checkGetErrorResult(gl, "framebufferTexture2D", true);
+        checkFrameBufferStatusResult(gl, true);
         gl.readPixels(0, 0, this.width, this.height, GL.RGBA, this.pixelType, outputBuffer);
-        checkGetErrorResult(gl.getError(), "readPixels(..., RGBA, UNSIGNED_BYTE, ...)");
+        checkGetErrorResult(gl, "readPixels(..., RGBA, UNSIGNED_BYTE, ...)", true);
 
         return outputBuffer;
     };

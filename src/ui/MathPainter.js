@@ -167,8 +167,7 @@ export default class MathPainter {
             return;
         }
 
-        let [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector().getColumn(0);
-        [x, y, z] = [x.real, y.real, z.real];
+        let [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector();
         let pxy = c.plus(dx.times(x)).plus(dy.times(y));
         let p = pxy.plus(dz.times(z));
         let r = 4 / (1 + y / 8);

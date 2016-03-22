@@ -156,7 +156,7 @@ export default class CircuitStats{
                 SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires),
                 (stateNode, col) => {
                     let gateCol = circuitDefinition.columns[col];
-                    let mask = gateCol.controls();
+                    let mask = SuperpositionNode.control(circuitDefinition.numWires, gateCol.controls());
                     for (let op of circuitDefinition.singleQubitOperationsInColAt(col, time)) {
                         stateNode = stateNode.withQubitOperationApplied(op.i, op.m, mask)
                     }

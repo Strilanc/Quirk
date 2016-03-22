@@ -154,6 +154,37 @@ suite.test("isApproximatelyUnitary", () => {
     assertTrue(Matrix.HADAMARD.isApproximatelyUnitary(0.001));
 });
 
+suite.test("isApproximatelyHermitian", () => {
+    let i = Complex.I;
+
+    assertFalse(Matrix.row([1, 1]).isApproximatelyHermitian(999));
+    assertFalse(Matrix.col([1, 1]).isApproximatelyHermitian(999));
+
+    assertTrue(Matrix.row([1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.row([0]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.row([-1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.row([-2]).isApproximatelyHermitian(0));
+    assertFalse(Matrix.row([i]).isApproximatelyHermitian(0));
+    assertFalse(Matrix.row([i]).isApproximatelyHermitian(0.5));
+    assertTrue(Matrix.row([i]).isApproximatelyHermitian(999));
+
+    assertTrue(Matrix.PAULI_X.isApproximatelyHermitian(0));
+    assertTrue(Matrix.PAULI_Y.isApproximatelyHermitian(0));
+    assertTrue(Matrix.PAULI_Z.isApproximatelyHermitian(0));
+    assertTrue(Matrix.HADAMARD.isApproximatelyHermitian(0.001));
+
+    assertTrue(Matrix.square([1, 0, 0, 1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.square([1, 1, 1, 1]).isApproximatelyHermitian(0));
+    assertFalse(Matrix.square([1, 1, 1.5, 1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.square([1, 1, 1.5, 1]).isApproximatelyHermitian(0.5));
+
+    assertFalse(Matrix.square([1, i, i, 1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.square([1, i, i.neg(), 1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.square([1, i.neg(), i, 1]).isApproximatelyHermitian(0));
+    assertFalse(Matrix.square([1, i, i.times(-1.5), 1]).isApproximatelyHermitian(0));
+    assertTrue(Matrix.square([1, i, i.times(-1.5), 1]).isApproximatelyHermitian(0.5));
+});
+
 suite.test("adjoint", () => {
     let v = Matrix.square([new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19)]);
@@ -495,18 +526,18 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
 
     // Maximally mixed state.
     assertThat(Matrix.identity(2).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
-        isEqualTo(Matrix.col([0, 0, 0]));
+        isEqualTo([0, 0, 0]);
 
     // Pure states as vectors along each axis.
     let f = m => Matrix.col(m).times(Matrix.col(m).adjoint());
     let i = Complex.I;
     let mi = i.times(-1);
-    assertThat(f([1, 0]).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, 0, 1]));
-    assertThat(f([0, 1]).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, 0, -1]));
-    assertThat(f([1, 1]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([1, 0, 0]));
-    assertThat(f([1, -1]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([-1, 0, 0]));
-    assertThat(f([1, i]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, 1, 0]));
-    assertThat(f([1, mi]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo(Matrix.col([0, -1, 0]));
+    assertThat(f([1, 0]).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, 1]);
+    assertThat(f([0, 1]).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, -1]);
+    assertThat(f([1, 1]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([1, 0, 0]);
+    assertThat(f([1, -1]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([-1, 0, 0]);
+    assertThat(f([1, i]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, 1, 0]);
+    assertThat(f([1, mi]).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, -1, 0]);
 });
 
 suite.test("determinant", () => {

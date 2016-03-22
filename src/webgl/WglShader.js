@@ -70,15 +70,15 @@ export default class WglShader {
 
                 // Bind frame buffer.
                 gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
-                checkGetErrorResult(gl.getError(), "framebufferTexture2D");
-                checkFrameBufferStatusResult(gl.checkFramebufferStatus(GL.FRAMEBUFFER));
+                checkGetErrorResult(gl, "framebufferTexture2D", true);
+                checkFrameBufferStatusResult(gl, true);
 
                 // Compile and bind shader.
                 this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
 
                 gl.viewport(0, 0, texture.width, texture.height);
                 gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
-                checkGetErrorResult(gl.getError(), "drawElements");
+                checkGetErrorResult(gl, "drawElements", true);
             }
         }
     }
