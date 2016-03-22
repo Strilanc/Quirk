@@ -51,7 +51,6 @@ class Seq {
          * The generator, array, or other iterable object wrapped by this Seq instance.
          * @type {!(T[])|!Iterable.<T>|*}
          * @template T
-         * @private
          */
         this._iterable = iterable; // Avoid double-wrapping.
 
