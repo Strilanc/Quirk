@@ -347,122 +347,6 @@ export default class Painter {
         this.ctx.fillStyle = fillColor;
         this.ctx.fill();
     }
-
-    /**
-     * @param {!number} x The x-position of the center of the arrow head.
-     * @param {number} y The y-position of the center of the arrow head.
-     * @param {number} radius The radius of the circle the arrow head is inscribed inside.
-     * @param {number} facingAngle The direction the arrow head is pointing towards.
-     * @param {number} sweptAngle The angle swept out by the back of the arrow head, relative to its center (not the
-     * point at the front).
-     * @param fillColor
-     */
-    fillArrowHead(x, y, radius, facingAngle, sweptAngle, fillColor = 'black') {
-        let a1 = facingAngle + sweptAngle/2 + Math.PI;
-        let a2 = facingAngle - sweptAngle/2 + Math.PI;
-        this.fillPolygon([
-            new Point(x + Math.cos(facingAngle)*radius, y + Math.sin(facingAngle)*radius),
-            new Point(x + Math.cos(a1)*radius, y + Math.sin(a1)*radius),
-            new Point(x + Math.cos(a2)*radius, y + Math.sin(a2)*radius)
-        ], fillColor);
-    }
-
-
-    /**
-     * @param {!Point} p1
-     * @param {!Point} p2
-     */
-    line(p1, p2) {
-        this.ctx.moveTo(p1.x, p1.y);
-        this.ctx.lineTo(p2.x, p2.y);
-    }
-
-    /**
-     * @param {!Rect} rect
-     */
-    rect(rect) {
-        this.ctx.moveTo(rect.x, rect.y);
-        this.ctx.lineTo(rect.x + rect.w, rect.y);
-        this.ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
-        this.ctx.lineTo(rect.x, rect.y + rect.h);
-        this.ctx.lineTo(rect.x, rect.y);
-    }
-
-    /**
-     * @param {!Point} center The center of the circle.
-     * @param {!number} radius The distance from the center of the circle to its side.
-     */
-    circle(center, radius) {
-        this.ctx.moveTo(center.x + radius, center.y);
-        this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
-    }
-
-    /**
-     * @param {!Point} center The center of the ellipse.
-     * @param {!number} horizontal_radius The horizontal distance from the center of the ellipse to its side.
-     * @param {!number} vertical_radius The vertical distance from the center of the ellipse to its side.
-     */
-    ellipse(center, horizontal_radius, vertical_radius) {
-        this.ctx.save();
-
-        this.ctx.translate(center.x - horizontal_radius, center.y - vertical_radius);
-        this.ctx.scale(horizontal_radius, vertical_radius);
-        this.ctx.moveTo(2, 1);
-        this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
-
-        this.ctx.restore();
-    }
-
-    /**
-     * @param {!Rect} topLeftCell
-     * @param {!number} cols
-     * @param {!number} rows
-     */
-    grid(topLeftCell, cols, rows) {
-        let x = topLeftCell.x;
-        let y = topLeftCell.y;
-        let dw = topLeftCell.w;
-        let dh = topLeftCell.h;
-        let x2 = x + cols * dw;
-        let y2 = y + rows * dh;
-        for (let c = 0; c <= cols; c++) {
-            this.ctx.moveTo(x + c * dw, y);
-            this.ctx.lineTo(x + c * dw, y2);
-        }
-        for (let r = 0; r <= rows; r++) {
-            this.ctx.moveTo(x, y + r * dh);
-            this.ctx.lineTo(x2, y + r * dh);
-        }
-    }
-
-    /**
-     * @param {!(!Point[])} vertices
-     */
-    polygon(vertices) {
-        if (vertices.length === 0) {
-            return;
-        }
-        let last = vertices[vertices.length - 1];
-
-        this.ctx.moveTo(last.x, last.y);
-        for (let p of vertices) {
-            this.ctx.lineTo(p.x, p.y);
-        }
-    }
-
-    /**
-     * @param {!(!Point[])} vertices
-     */
-    path(vertices) {
-        if (vertices.length === 0) {
-            return;
-        }
-
-        this.ctx.moveTo(vertices[0].x, vertices[0].y);
-        for (let p of vertices.slice(1)) {
-            this.ctx.lineTo(p.x, p.y);
-        }
-    }
 }
 
 /**
@@ -478,43 +362,50 @@ class Tracer {
     }
 
     /**
-     * @param {!Point} p1
-     * @param {!Point} p2
+     * @param {!number} x1
+     * @param {!number} y1
+     * @param {!number} x2
+     * @param {!number} y2
      */
-    line(p1, p2) {
-        this.ctx.moveTo(p1.x, p1.y);
-        this.ctx.lineTo(p2.x, p2.y);
+    line(x1, y1, x2, y2) {
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
     }
 
     /**
-     * @param {!Rect} rect
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} w
+     * @param {!number} h
      */
-    rect(rect) {
-        this.ctx.moveTo(rect.x, rect.y);
-        this.ctx.lineTo(rect.x + rect.w, rect.y);
-        this.ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
-        this.ctx.lineTo(rect.x, rect.y + rect.h);
-        this.ctx.lineTo(rect.x, rect.y);
+    rect(x, y, w, h) {
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x + w, y);
+        this.ctx.lineTo(x + w, y + h);
+        this.ctx.lineTo(x, y + h);
+        this.ctx.lineTo(x, y);
     }
 
     /**
-     * @param {!Point} center The center of the circle.
+     * @param {!number} x The x-coordinate of the center of the circle.
+     * @param {!number} y The y-coordinate of the center of the circle.
      * @param {!number} radius The distance from the center of the circle to its side.
      */
-    circle(center, radius) {
-        this.ctx.moveTo(center.x + radius, center.y);
-        this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+    circle(x, y, radius) {
+        this.ctx.moveTo(x + radius, y);
+        this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
     }
 
     /**
-     * @param {!Point} center The center of the ellipse.
+     * @param {!number} x The x-coordinate of the center of the ellipse.
+     * @param {!number} y The y-coordinate of the center of the ellipse.
      * @param {!number} horizontal_radius The horizontal distance from the center of the ellipse to its side.
      * @param {!number} vertical_radius The vertical distance from the center of the ellipse to its side.
      */
-    ellipse(center, horizontal_radius, vertical_radius) {
+    ellipse(x, y, horizontal_radius, vertical_radius) {
         this.ctx.save();
 
-        this.ctx.translate(center.x - horizontal_radius, center.y - vertical_radius);
+        this.ctx.translate(x - horizontal_radius, y - vertical_radius);
         this.ctx.scale(horizontal_radius, vertical_radius);
         this.ctx.moveTo(2, 1);
         this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
@@ -548,7 +439,7 @@ class Tracer {
     /**
      * @param {!Array.<!number>|!Float32Array} interleavedCoordinates
      */
-    polygonCoords(interleavedCoordinates) {
+    polygon(interleavedCoordinates) {
         if (interleavedCoordinates.length === 0) {
             return;
         }
@@ -559,6 +450,25 @@ class Tracer {
             this.ctx.lineTo(interleavedCoordinates[i], interleavedCoordinates[i+1]);
         }
     }
+
+    /**
+     * @param {!number} x The x-position of the center of the arrow head.
+     * @param {number} y The y-position of the center of the arrow head.
+     * @param {number} radius The radius of the circle the arrow head is inscribed inside.
+     * @param {number} facingAngle The direction the arrow head is pointing towards.
+     * @param {number} sweptAngle The angle swept out by the back of the arrow head, relative to its center (not the
+     * point at the front).
+     */
+    arrowHead(x, y, radius, facingAngle, sweptAngle) {
+        let a1 = facingAngle + sweptAngle/2 + Math.PI;
+        let a2 = facingAngle - sweptAngle/2 + Math.PI;
+        this.polygon([
+            x + Math.cos(facingAngle)*radius, y + Math.sin(facingAngle)*radius,
+            x + Math.cos(a1)*radius, y + Math.sin(a1)*radius,
+            x + Math.cos(a2)*radius, y + Math.sin(a2)*radius
+        ]);
+    }
+
 }
 
 /**

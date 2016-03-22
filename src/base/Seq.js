@@ -26,12 +26,25 @@ class Seq {
      * Wraps the given array, collection, or other iterable.
      * Use fromGenerator for wrapping generator functions.
      *
-     * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
+     * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} obj
+     * @param {!boolean=} isIterator
      * @template T
      */
-    constructor(iterable) {
-        if (iterable[Symbol.iterator] === undefined) {
-            throw new Error(`Not iterable: ${iterable}`);
+    constructor(obj, isIterator=false) {
+        let iterable;
+        let iterator;
+        if (obj instanceof Seq) {
+            iterable = obj._iterable;
+            iterator = obj[Symbol.iterator];
+        } else if (isIterator) {
+            iterable = {[Symbol.iterator]: obj};
+            iterator = obj;
+        } else {
+            if (obj[Symbol.iterator] === undefined) {
+                throw new Error(`Not iterable: ${obj}`);
+            }
+            iterable = obj;
+            iterator = obj[Symbol.iterator].bind(obj);
         }
 
         /**
@@ -39,17 +52,14 @@ class Seq {
          * @type {!(T[])|!Iterable.<T>|*}
          * @template T
          */
-        this.iterable = iterable instanceof Seq ? iterable.iterable : iterable; // Avoid double-wrapping.
-    }
+        this._iterable = iterable; // Avoid double-wrapping.
 
-    //noinspection JSUnusedGlobalSymbols
-    /**
-     * Iterates over the sequence's items.
-     * @returns {!Iterator.<T>}
-     * @template T
-     */
-    [Symbol.iterator]() {
-        return this.iterable[Symbol.iterator]();
+        /**
+         * Iterates over the sequence's items.
+         * @returns {!Iterator.<T>}
+         * @template T
+         */
+        this[Symbol.iterator] = iterator;
     }
 
     /**
@@ -63,7 +73,7 @@ class Seq {
      * @template T
      */
     static fromGenerator(generatorFunction) {
-        return new Seq({ [Symbol.iterator]: generatorFunction });
+        return new Seq(generatorFunction, true);
     };
 
     /**
@@ -80,7 +90,7 @@ class Seq {
             return true;
         }
         let iter2 = other[Symbol.iterator]();
-        for (let e1 of this) {
+        for (let e1 of this._iterable) {
             let e2 = iter2.next();
             if (e2.done || !comparator(e1, e2.value)) {
                 return false;
@@ -95,7 +105,7 @@ class Seq {
      * @template T
      */
     toArray() {
-        return Array.from(this);
+        return Array.from(this._iterable);
     };
 
     /**
@@ -104,7 +114,7 @@ class Seq {
      * @template T
      */
     toSet() {
-        return new Set(this.iterable);
+        return new Set(this._iterable);
     };
 
     /**
@@ -194,11 +204,11 @@ class Seq {
             Uint32Array
         ];
 
-        if (Array.isArray(this.iterable)) {
+        if (Array.isArray(this._iterable)) {
             return this;
         }
         for (let t of knownSolidTypes) {
-            if (this.iterable instanceof t) {
+            if (this._iterable instanceof t) {
                 return this;
             }
         }
@@ -212,7 +222,7 @@ class Seq {
      * @template T, R
      */
     map(projection) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             for (let e of seq) {
                 yield projection(e);
@@ -228,7 +238,7 @@ class Seq {
      * @template T, R
      */
     mapWithIndex(projection) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let i = 0;
             for (let e of seq) {
@@ -246,7 +256,7 @@ class Seq {
      * @template T, R
      */
     flatMap(sequenceProjection) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             for (let e of seq) {
                 yield* sequenceProjection(e);
@@ -262,7 +272,7 @@ class Seq {
      * @template T
      */
     filter(predicate) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             for (let e of seq) {
                 if (predicate(e)) {
@@ -280,7 +290,7 @@ class Seq {
      * @template T
      */
     filterWithIndex(predicate) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let i = 0;
             for (let e of seq) {
@@ -303,7 +313,7 @@ class Seq {
      */
     fold(combiner, emptyErrorAlternative = THROW_IF_EMPTY) {
         let accumulator = EMPTY_SYGIL;
-        for (let e of this) {
+        for (let e of this._iterable) {
             accumulator = accumulator === EMPTY_SYGIL ? e : combiner(accumulator, e);
         }
         if (accumulator !== EMPTY_SYGIL) {
@@ -325,7 +335,7 @@ class Seq {
      */
     aggregate(seed, aggregator) {
         let accumulator = seed;
-        for (let e of this) {
+        for (let e of this._iterable) {
             accumulator = aggregator(accumulator, e);
         }
         return accumulator;
@@ -343,7 +353,7 @@ class Seq {
      * @template T, T2, R
      */
     zip(other, combiner) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let iter2 = other[Symbol.iterator]();
             for (let item1 of seq) {
@@ -393,7 +403,7 @@ class Seq {
     maxBy(projection, emptyErrorAlternative = THROW_IF_EMPTY, isALessThanBComparator = (e1, e2) => e1 < e2) {
         let curMaxItem = EMPTY_SYGIL;
         let curMaxScore = EMPTY_SYGIL;
-        for (let item of this) {
+        for (let item of this._iterable) {
             // Delay computing the score for the first item, so that singleton lists never touch the score function.
             if (curMaxItem === EMPTY_SYGIL) {
                 curMaxItem = item;
@@ -440,7 +450,7 @@ class Seq {
      * @template T
      */
     any(predicate) {
-        for (let e of this) {
+        for (let e of this._iterable) {
             if (predicate(e)) {
                 return true;
             }
@@ -499,7 +509,7 @@ class Seq {
      * @template T, A
      */
     scan(seed, aggregator) {
-        let seq = this.iterable;
+        let seq = this._iterable;
 
         return Seq.fromGenerator(function*() {
             let accumulator = seed;
@@ -526,7 +536,7 @@ class Seq {
      * @template C
      */
     flatten() {
-        let seqSeq = this.iterable;
+        let seqSeq = this._iterable;
         return Seq.fromGenerator(function*() {
             for (let seq of seqSeq) {
                 yield* seq;
@@ -541,7 +551,7 @@ class Seq {
      * @template T, A
      */
     concat(other) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             yield* seq;
             yield* other;
@@ -566,7 +576,7 @@ class Seq {
                 throw new Error("needed index <= count");
             }
             let i = 0;
-            for (let e of self.iterable) {
+            for (let e of self._iterable) {
                 yield i === index ? overlayedItem : e;
                 i++;
             }
@@ -595,7 +605,7 @@ class Seq {
                 throw new Error("needed index <= count");
             }
             let i = 0;
-            for (let e of self.iterable) {
+            for (let e of self._iterable) {
                 yield i === index ? itemTransformation(e) : e;
                 i++;
             }
@@ -626,7 +636,7 @@ class Seq {
                 throw new Error("needed index <= count");
             }
             let i = 0;
-            for (let e of self.iterable) {
+            for (let e of self._iterable) {
                 if (i == index) {
                     yield item;
                 }
@@ -650,7 +660,7 @@ class Seq {
      * @template T
      */
     takeWhile(predicate) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             for (let e of seq) {
                 if (!predicate(e)) {
@@ -669,7 +679,7 @@ class Seq {
      * @template T
      */
     skipTailWhile(predicate) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let tail = [];
             for (let e of seq) {
@@ -692,7 +702,7 @@ class Seq {
      * @template T
      */
     skipWhile(predicate) {
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let matched = true;
             for (let e of seq) {
@@ -717,7 +727,7 @@ class Seq {
         if (maxTakeCount === 0) {
             return new Seq([]);
         }
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let i = 0;
             for (let e of seq) {
@@ -744,7 +754,7 @@ class Seq {
             return this;
         }
 
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let i = 0;
             for (let e of seq) {
@@ -849,7 +859,7 @@ class Seq {
     last(emptyErrorAlternative = THROW_IF_EMPTY) {
         //noinspection JSUnusedAssignment
         let result = EMPTY_SYGIL;
-        for (let e of this) {
+        for (let e of this._iterable) {
             result = e;
         }
 
@@ -870,11 +880,11 @@ class Seq {
      * It is guaranteed that the sequence will not be iterated by this method.
      */
     tryPeekCount() {
-        if (Array.isArray(this.iterable) || !GENERIC_ARRAY_TYPES.every(t => !(this.iterable instanceof t))) {
-            return this.iterable.length;
+        if (Array.isArray(this._iterable) || !GENERIC_ARRAY_TYPES.every(t => !(this._iterable instanceof t))) {
+            return this._iterable.length;
         }
-        if (this.iterable instanceof Map || this.iterable instanceof Set) {
-            return this.iterable.size;
+        if (this._iterable instanceof Map || this._iterable instanceof Set) {
+            return this._iterable.size;
         }
         return undefined;
     }
@@ -892,7 +902,7 @@ class Seq {
 
         let n = 0;
         //noinspection JSUnusedLocalSymbols
-        for (let _ of this.iterable) {
+        for (let _ of this._iterable) {
             n++;
         }
         return n;
@@ -910,7 +920,7 @@ class Seq {
         if (minCount < 0) {
             throw new Error("needed minCount >= 0");
         }
-        let seq = this.iterable;
+        let seq = this._iterable;
         return Seq.fromGenerator(function*() {
             let remaining = minCount;
             for (let e of seq) {
@@ -953,7 +963,7 @@ class Seq {
      */
     toMap(keySelector, valueSelector) {
         let map = new Map();
-        for (let item of this) {
+        for (let item of this._iterable) {
             let key = keySelector(item);
             let val = valueSelector(item);
 
@@ -988,7 +998,7 @@ class Seq {
      */
     groupBy(keySelector) {
         let map = new Map();
-        for (let item of this) {
+        for (let item of this._iterable) {
             let key = keySelector(item);
             if (!map.has(key)) {
                 map.set(key, []);

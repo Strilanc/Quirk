@@ -305,8 +305,8 @@ export class SuperpositionReadNode {
 
             // Renormalization factor. For better answers when non-unitary gates are used.
             let unity = 0;
-            for (let f of floats) {
-                unity += f*f;
+            for (let i = 0; i < floats.length; i += 4) {
+                unity += floats[i]*floats[i] + floats[i+1]*floats[i+1];
             }
             unity = Math.sqrt(unity);
             if (unity < 0.000001) {

@@ -283,7 +283,7 @@ class CircuitWidget {
                 (new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt)) && this.compressedColumnIndex === null) ||
                 this.compressedColumnIndex === col;
             gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
-            let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row), stats.time);
+            let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== null) {
                 if (canGrab) {
                     painter.ctx.globalAlpha /= 2;

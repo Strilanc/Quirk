@@ -168,8 +168,7 @@ class CircuitDefinition {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
             filter(pt => this.gateAtLoc(pt) === Gates.Named.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt, 0) !== null) &&
-            pts.count() == 2;
+        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== null) && pts.count() == 2;
     }
 
     /**
@@ -206,53 +205,40 @@ class CircuitDefinition {
     }
 
     /**
-     * @param {!Gate} gate
-     * @param {!number} time
-     * @returns {boolean}
-     * @private
-     */
-    static _isGateAllowedAfterMeasurement(gate, time) {
-        return Matrix.identity(2).isEqualTo(gate.matrixAt(time));
-    }
-
-    /**
-     * @param {!Gate} gate
-     * @param {!number} time
-     * @returns {boolean}
-     * @private
-     */
-    static _isGateAllowedAfterMeasurementIfNoQuantumControls(gate, time) {
-        let m = gate.matrixAt(time);
-        let n = m.width();
-        if (m.height() !== n) {
-            return false; // Uh... not square? Very strange.
-        }
-        let isLonely = seq => seq.filter(v => !v.isApproximatelyEqualTo(0, 0.00000001)).count() <= 1;
-        let isPhasedPermutation = Seq.range(n).every(k => {
-            let col = new Seq(m.getColumn(k));
-            let row = Seq.range(n).map(r => m.cell(k, r));
-            return isLonely(col) && isLonely(row);
-        });
-        return isPhasedPermutation;
-    }
-
-    /**
-     *
      * @param {!Point} pt
-     * @param {!number} time
-     * @returns {!string|null}
+     * @returns {null|!string}
      */
-    gateAtLocIsDisabledReason(pt, time) {
+    gateAtLocIsDisabledReason(pt) {
+        /**
+         * @type {undefined|!Map<!string, null|!string>}
+         * @private
+         */
+        this._cache_gateAtLocIsDisabledReason = this._cache_gateAtLocIsDisabledReason || new Map();
+        let key = pt.x + ":" + pt.y;
+        if (!this._cache_gateAtLocIsDisabledReason.has(key)) {
+            this._cache_gateAtLocIsDisabledReason.set(key, this._uncached_gateAtLocIsDisabledReason(pt));
+        }
+        return this._cache_gateAtLocIsDisabledReason.get(key);
+    }
+
+    /**
+     * @param {!Point} pt
+     * @returns {null|!string}
+     * @private
+     */
+    _uncached_gateAtLocIsDisabledReason(pt) {
         let g = this.gateAtLoc(pt);
 
-        if (g !== null && g.name === "Parse Error") {
+        if (g === null) {
+            return null;
+        }
+
+        if (g.name === "Parse Error") {
             return "parse\nerror";
         }
 
-        if (g === Gates.Named.Special.Measurement) {
-            if (this.colHasControls(pt.x)) {
-                return "can't\ncontrol\n(sorry)";
-            }
+        if (g === Gates.Named.Special.Measurement && this.colHasControls(pt.x)) {
+            return "can't\ncontrol\n(sorry)";
         }
 
         if (g === Gates.Named.Special.SwapHalf) {
@@ -272,14 +258,10 @@ class CircuitDefinition {
             }
         }
 
-        if (this.locIsMeasured(pt) && g !== null && !CircuitDefinition._isGateAllowedAfterMeasurement(g, time)) {
-            // Half-turns make sense and don't un-measure, as long as all controls are also measured.
-            if (!this.colHasSingleWireControl(pt.x) &&
-                    CircuitDefinition._isGateAllowedAfterMeasurementIfNoQuantumControls(g, time)) {
-                return null;
-            }
-
-            // Measured qubits are locked for implementation simplicity reasons.
+        const t = 0.1234; // Pick a time that's unlikely to be on a corner case of a time-based gate.
+        const ε = 0.0001;
+        if (this.locIsMeasured(pt) && (this.colHasSingleWireControl(pt.x) || !g.matrixAt(t).isPhasedPermutation(ε))) {
+            // Measured qubits can't be re-superposed for implementation simplicity reasons.
             return "no\nremix\n(sorry)";
         }
 
@@ -296,12 +278,11 @@ class CircuitDefinition {
             return [];
         }
 
-        let I = Matrix.identity(2);
         let col = this.columns[colIndex];
         return new Seq(col.gates).
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
-                if (gate === null || this.gateAtLocIsDisabledReason(pt, time) !== null) {
+                if (gate === null || this.gateAtLocIsDisabledReason(pt) !== null) {
                     return null;
                 }
                 let m = gate.matrixAt(time);
