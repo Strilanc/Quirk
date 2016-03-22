@@ -169,7 +169,6 @@ suite.test("gateAtLocIsDisabledReason_swaps", () => {
 
 suite.test("gateAtLocIsDisabledReason_recohere", () => {
     let W = Gates.Named.Special.SwapHalf;
-    console.log("RECOHERE TIME");
     let circuit = CircuitDefinition.from([
         [M, M, _, _],
         [X, Y, Z, H],
