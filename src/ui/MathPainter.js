@@ -50,56 +50,6 @@ export default class MathPainter {
     }
 
     /**
-     * Draws a complex value, assuming it's magnitude is less than 1.
-     *
-     * @param {!Painter} painter
-     * @param {!Rect} area The drawing area, where the amplitude will be represented visually.
-     * @param {!Complex} amplitude The complex value to represent visually. Its magnitude should be at most 1.
-     * @param {!string} amplitudeCircleFillColor
-     * @param {!string} amplitudeCircleStrokeColor
-     * @param {!string|undefined} amplitudeProbabilityFillColor
-     */
-    static paintAmplitude(painter,
-                          amplitude,
-                          area,
-                          amplitudeCircleFillColor,
-                          amplitudeCircleStrokeColor,
-                          amplitudeProbabilityFillColor) {
-        let c = area.center();
-        let magnitude = amplitude.abs();
-        let p = amplitude.norm2();
-        let d = Math.min(area.w, area.h) / 2;
-        let r = d * magnitude;
-        let dx = d * amplitude.real;
-        let dy = d * amplitude.imag;
-
-        if (magnitude <= 0.0001) {
-            return; // Even showing a tiny dot is too much.
-        }
-        if (isNaN(magnitude)) {
-            painter.printParagraph("NaN", area, new Point(0.5, 0.5), "red");
-        }
-        if (magnitude == Infinity) {
-            painter.printParagraph("\u221E", area, new Point(0.5, 0.5), "red");
-        }
-        if (magnitude == -Infinity) {
-            painter.printParagraph("-\u221E", area, new Point(0.5, 0.5), "red");
-        }
-
-        // fill rect from bottom to top as the amplitude becomes more probable
-        if (amplitudeProbabilityFillColor !== undefined) {
-            let fillRect = area.takeBottom(p * area.h);
-            painter.fillRect(fillRect, amplitudeProbabilityFillColor);
-            painter.strokeLine(fillRect.topLeft(), fillRect.topRight(), amplitudeCircleStrokeColor);
-        }
-
-        // show the direction and magnitude as a circle with a line indicator
-        painter.fillCircle(c, r, amplitudeCircleFillColor);
-        painter.strokeCircle(c, r, amplitudeCircleStrokeColor);
-        painter.strokeLine(c, new Point(c.x + dx, c.y - dy));
-    }
-
-    /**
      * Draws a visual representation of a complex matrix.
      * @param {!Painter} painter
      * @param {!Matrix} matrix The matrix to draw.
@@ -118,24 +68,73 @@ export default class MathPainter {
                        backColor = Config.DISPLAY_GATE_BACK_COLOR) {
         let numCols = matrix.width();
         let numRows = matrix.height();
-        let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / numCols, drawArea.h / numRows);
+        let buf = matrix.rawBuffer();
+        let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
+        let unitRadius = diam/2;
+        let x = drawArea.x;
+        let y = drawArea.y;
+        const ε = 0.000001;
 
         painter.fillRect(drawArea, backColor);
 
-        // Contents
-        for (let c = 0; c < numCols; c++) {
-            for (let r = 0; r < numRows; r++) {
-                MathPainter.paintAmplitude(
-                    painter,
-                    matrix.cell(c, r),
-                    topLeftCell.proportionalShiftedBy(c, r),
-                    amplitudeCircleFillColor,
-                    amplitudeCircleStrokeColor,
-                    amplitudeProbabilityFillColor);
-            }
+        // Draw squared magnitude levels.
+        if (amplitudeProbabilityFillColor !== undefined) {
+            painter.trace(trace => {
+                for (let row = 0; row < numRows; row++) {
+                    for (let col = 0; col < numCols; col++) {
+                        let i = (row * numCols + col) * 2;
+                        let mag = Math.sqrt(buf[i] * buf[i] + buf[i + 1] * buf[i + 1]);
+                        if (isNaN(mag) || mag < ε) {
+                            continue;
+                        }
+                        let x1 = x + diam * col;
+                        let x2 = x + diam * (col + 1);
+                        let y1 = y + diam * (row + 1 - mag);
+                        let y2 = y + diam * (row + 1);
+                        trace.polygonCoords([
+                            x1, y1,
+                            x2, y1,
+                            x2, y2,
+                            x1, y2]);
+                    }
+                }
+            }).thenFill(amplitudeProbabilityFillColor).thenStroke('black', 0.5);
         }
 
-        painter.strokeGrid(topLeftCell, numCols, numRows, 'lightgray');
+        // Draw magnitude circles.
+        painter.trace(trace => {
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    let i = (row*numCols + col)*2;
+                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
+                    if (isNaN(mag) || mag < ε) {
+                        continue;
+                    }
+                    let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
+                    trace.circle(c, unitRadius * mag);
+                }
+            }
+        }).thenFill(amplitudeCircleFillColor).thenStroke(amplitudeCircleStrokeColor, 0.5);
+
+        // Draw phase lines.
+        painter.trace(trace => {
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    let i = (row*numCols + col)*2;
+                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
+                    if (isNaN(mag) || mag < ε) {
+                        continue;
+                    }
+                    let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
+                    let clampedRadius = Math.max(unitRadius, 4/mag);
+                    trace.line(c, c.offsetBy(clampedRadius * buf[i], clampedRadius * buf[i+1]));
+                }
+            }
+        }).thenStroke('black');
+
+        // Dividers.
+        painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
+            thenStroke('lightgray');
     }
 
     /**
@@ -156,12 +155,14 @@ export default class MathPainter {
 
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
-        painter.strokeCircle(c, u, '#BBB');
-        painter.strokeEllipse(c, new Point(dx.x, dy.y), '#BBB');
-        painter.strokeEllipse(c, new Point(dy.x, dz.y), '#BBB');
-        for (let d of [dx, dy, dz]) {
-            painter.strokeLine(c.plus(d.times(-1)), c.plus(d), '#BBB');
-        }
+        painter.trace(trace => {
+            trace.circle(c, u);
+            trace.ellipse(c, dx.x, dy.y);
+            trace.ellipse(c, dy.x, dz.y);
+            for (let d of [dx, dy, dz]) {
+                trace.line(c.plus(d.times(-1)), c.plus(d));
+            }
+        }).thenStroke('#BBB');
         if (isNaN(qubitDensityMatrix.cell(0, 0).real)) {
             painter.printParagraph("NaN", drawArea, new Point(0.5, 0.5), 'red');
             return;
@@ -173,10 +174,8 @@ export default class MathPainter {
         let r = 4 / (1 + y / 8);
 
         // Draw state indicators (also in not-quite-correct 3d).
-        painter.strokeLine(c, pxy, '#666');
-        painter.strokeLine(pxy, p, '#666');
-        painter.strokeLine(c, c.plus(dz.times(z)), '#666');
-        painter.strokeLine(p, c.plus(dz.times(z)), '#666');
+        let cz = c.plus(dz.times(z));
+        painter.strokePolygon([cz, c, pxy, p], '#666');
         painter.strokeLine(c, p, 'black', 2);
         painter.fillCircle(p, r, fillColor);
         painter.ctx.globalAlpha = Math.min(1, Math.max(0, 1-x*x-y*y-z*z));
@@ -214,13 +213,16 @@ export default class MathPainter {
 
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
-        painter.strokeCircle(c, u, '#BBB');
-        painter.strokeEllipse(c, new Point(u, u / 3), '#BBB');
-        painter.strokeEllipse(c, new Point(u / 3, u), '#BBB');
-        for (let a of axes) {
-            let d = projToPt(a);
-            painter.strokeLine(c.plus(d.times(-1)), c.plus(d), '#BBB');
-        }
+
+        painter.trace(trace => {
+            trace.circle(c, u);
+            trace.ellipse(c, u, u / 3);
+            trace.ellipse(c, u / 3, u);
+            for (let a of axes) {
+                let d = projToPt(a);
+                trace.line(c.plus(d.times(-1)), c.plus(d));
+            }
+        }).thenStroke('#BBB');
 
         let {angle, axis} = operation.qubitOperationToAngleAxisRotation();
         let axisVec = Matrix.col(axis);
@@ -293,65 +295,65 @@ export default class MathPainter {
                               drawArea,
                               backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
                               fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
+        let numCols = matrix.width();
+        let numRows = matrix.height();
+        let buf = matrix.rawBuffer();
+        let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
+        let unitRadius = diam/2;
+        let x = drawArea.x;
+        let y = drawArea.y;
+        const ε = 0.000001;
+
         painter.fillRect(drawArea, backgroundColor);
 
-        let n = matrix.width();
-        let topLeftCell = new Rect(drawArea.x, drawArea.y, drawArea.w / n, drawArea.h / n);
-
-        // Off-diagonal contents.
-        let unitRadius = Math.min(topLeftCell.w, topLeftCell.h) / 2;
-        for (let x = 0; x < n; x++) {
-            for (let y = 0; y < n; y++) {
-                if (x == y) {
-                    continue;
+        // Draw fills and outlines.
+        painter.trace(trace => {
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    let i = (row*numCols + col)*2;
+                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
+                    if (isNaN(mag) || mag < ε) {
+                        continue;
+                    }
+                    if (row === col) {
+                        let x1 = x + diam * col;
+                        let x2 = x + diam * (col + 1);
+                        let y1 = y + diam * (row + 1 - mag);
+                        let y2 = y + diam * (row + 1);
+                        trace.polygonCoords([
+                            x1, y1,
+                            x2, y1,
+                            x2, y2,
+                            x1, y2]);
+                    } else {
+                        let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
+                        trace.circle(c, unitRadius * mag);
+                    }
                 }
+            }
+        }).thenFill(fillColor).thenStroke('#040', 0.5);
 
-                let r = topLeftCell.proportionalShiftedBy(x, y);
-                let v = matrix.cell(x, y).times(Math.PI / 2);
-
-                let mag = v.abs();
-                if (isNaN(mag)) {
-                    painter.printParagraph("NaN", r, new Point(0.5, 0.5), "red");
-                    continue;
+        // Draw phase lines.
+        painter.trace(trace => {
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    if (row === col) {
+                        continue;
+                    }
+                    let i = (row*numCols + col)*2;
+                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
+                    if (isNaN(mag) || mag < ε) {
+                        continue;
+                    }
+                    let c = new Point(x + diam*(col+0.5), y + diam*(row+0.5));
+                    let clampedRadius = Math.max(unitRadius, 4/mag);
+                    trace.line(c, c.offsetBy(clampedRadius * buf[i], clampedRadius * buf[i+1]));
                 }
-                if (mag < 0.0001) {
-                    continue; // Too small to see.
-                }
-
-                // show the direction and magnitude as a circle with a line indicator
-                let c = r.center();
-                painter.fillCircle(c, unitRadius * mag, fillColor);
-                painter.strokeCircle(c, unitRadius * mag, '#040');
-                painter.strokeLine(c, c.offsetBy(unitRadius * v.real, unitRadius * v.imag));
             }
-        }
+        }).thenStroke('black');
 
-        // Main diagonal
-        for (let d = 0; d < n; d++) {
-            let p = matrix.cell(d, d).abs();
-            if (p < 0.0001) {
-                continue; // Too small to see.
-            }
-            let r = topLeftCell.proportionalShiftedBy(d, d);
-            if (isNaN(p)) {
-                painter.fillPolygon([r.bottomLeft(), r.topLeft(), r.topRight()], fillColor);
-                painter.printParagraph("NaN", r, new Point(0.5, 0.5), "red");
-            } else {
-                let b = r.takeBottomProportion(p);
-                painter.fillRect(b, fillColor);
-                painter.strokeLine(b.topLeft(), b.topRight(), '#040');
-            }
-        }
-
-        // Outline
-        painter.strokeRect(drawArea, 'lightgray');
-
-        // Inline
-        for (let i = 1; i < n; i++) {
-            let x = drawArea.x + drawArea.w / n * i;
-            let y = drawArea.y + drawArea.h / n * i;
-            painter.strokeLine(new Point(drawArea.x, y), new Point(drawArea.right(), y), 'lightgray');
-            painter.strokeLine(new Point(x, drawArea.y), new Point(x, drawArea.bottom()), 'lightgray');
-        }
+        // Dividers.
+        painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
+            thenStroke('lightgray');
     }
 }

@@ -44,6 +44,13 @@ class Matrix {
     }
 
     /**
+     * @returns {!Float64Array}
+     */
+    rawBuffer() {
+        return this._buffer;
+    }
+
+    /**
      * @returns {!Array.<!Array.<Complex>>}
      */
     rows() {

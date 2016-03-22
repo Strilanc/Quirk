@@ -179,14 +179,6 @@ suite.canvasAppearanceTest("printLine_aligned", 40, 40, canvas => {
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
 
-suite.canvasAppearanceTest("strokeGrid", 40, 40, canvas => {
-    let painter = new Painter(canvas);
-    painter.strokeGrid(new Rect(2.5, 4.5, 5, 7), 3, 2, "red", 1);
-    painter.strokeGrid(new Rect(20, 20, 10, 10), 2, 1, "blue", 2);
-}, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAYklEQVRYhe3WsQkAIAxE0dt/KUeLC1h5pyTwH6QJFr8' +
-'KSkATJa2S6nLWj8BK7uIIdBHoGhHozJfA5C6OQBeBrgmBvX8zOdY5PUzruGeByXdRBLoIdBHoGhPY9lC/iAQAtLYBSqaxXIyuGfwAAAAASUVORK5CYII' +
-'=');
-
 suite.canvasAppearanceTest("strokePolygon", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.strokePolygon([

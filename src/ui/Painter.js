@@ -16,6 +16,8 @@ export default class Painter {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
         this.deferred = [];
+        this.traceAction = new TraceAction(this.ctx);
+        this.tracer = new Tracer(this.ctx);
     }
 
     defer(tooltipPainter) {
@@ -93,24 +95,13 @@ export default class Painter {
     }
 
     /**
-     * Draws the outside of an ellipse.
-     * @param {!Point} center The center of the ellipse.
-     * @param {!Point} radii The horizontal and vertical distance from the center of the ellipse to its side.
-     * @param {!string=} color The stroke color.
-     * @param {!number=} thickness The stroke thickness.
+     * @param {!function(!Tracer) : void} tracerFunc
+     * @returns {!TraceAction}
      */
-    strokeEllipse(center, radii, color = Config.DEFAULT_STROKE_COLOR, thickness = Config.DEFAULT_STROKE_THICKNESS) {
-        this.ctx.save();
+    trace(tracerFunc) {
         this.ctx.beginPath();
-
-        this.ctx.translate(center.x - radii.x, center.y - radii.y);
-        this.ctx.scale(radii.x, radii.y);
-        this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
-
-        this.ctx.restore();
-        this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = thickness;
-        this.ctx.stroke();
+        tracerFunc(this.tracer);
+        return this.traceAction;
     }
 
     /**
@@ -247,40 +238,6 @@ export default class Painter {
     }
 
     /**
-     * Draws a grid.
-     * @param {!Rect} topLeftCell
-     * @param {!number} cols
-     * @param {!number} rows
-     * @param {=string} strokeColor
-     * @param {=number} strokeThickness
-     */
-    strokeGrid(topLeftCell,
-               cols,
-               rows,
-               strokeColor = Config.DEFAULT_STROKE_COLOR,
-               strokeThickness = Config.DEFAULT_STROKE_THICKNESS) {
-        let x = topLeftCell.x;
-        let y = topLeftCell.y;
-        let dw = topLeftCell.w;
-        let dh = topLeftCell.h;
-        let x2 = x + cols * dw;
-        let y2 = y + rows * dh;
-        this.ctx.beginPath();
-        for (let c = 0; c <= cols; c++) {
-            this.ctx.moveTo(x + c * dw, y);
-            this.ctx.lineTo(x + c * dw, y2);
-        }
-        for (let r = 0; r <= rows; r++) {
-            this.ctx.moveTo(x, y + r * dh);
-            this.ctx.lineTo(x2, y + r * dh);
-        }
-
-        this.ctx.strokeStyle = strokeColor;
-        this.ctx.lineWidth = strokeThickness;
-        this.ctx.stroke();
-    };
-
-    /**
      * Draws the outside of a polygon.
      * @param {!(!Point[])} vertices
      * @param {!string=} strokeColor The stroke color.
@@ -364,5 +321,229 @@ export default class Painter {
             new Point(x + Math.cos(a1)*radius, y + Math.sin(a1)*radius),
             new Point(x + Math.cos(a2)*radius, y + Math.sin(a2)*radius)
         ], fillColor);
+    }
+
+
+    /**
+     * @param {!Point} p1
+     * @param {!Point} p2
+     */
+    line(p1, p2) {
+        this.ctx.moveTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+    }
+
+    /**
+     * @param {!Rect} rect
+     */
+    rect(rect) {
+        this.ctx.moveTo(rect.x, rect.y);
+        this.ctx.lineTo(rect.x + rect.w, rect.y);
+        this.ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
+        this.ctx.lineTo(rect.x, rect.y + rect.h);
+        this.ctx.lineTo(rect.x, rect.y);
+    }
+
+    /**
+     * @param {!Point} center The center of the circle.
+     * @param {!number} radius The distance from the center of the circle to its side.
+     */
+    circle(center, radius) {
+        this.ctx.moveTo(center.x + radius, center.y);
+        this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+    }
+
+    /**
+     * @param {!Point} center The center of the ellipse.
+     * @param {!number} horizontal_radius The horizontal distance from the center of the ellipse to its side.
+     * @param {!number} vertical_radius The vertical distance from the center of the ellipse to its side.
+     */
+    ellipse(center, horizontal_radius, vertical_radius) {
+        this.ctx.save();
+
+        this.ctx.translate(center.x - horizontal_radius, center.y - vertical_radius);
+        this.ctx.scale(horizontal_radius, vertical_radius);
+        this.ctx.moveTo(2, 1);
+        this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+
+        this.ctx.restore();
+    }
+
+    /**
+     * @param {!Rect} topLeftCell
+     * @param {!number} cols
+     * @param {!number} rows
+     */
+    grid(topLeftCell, cols, rows) {
+        let x = topLeftCell.x;
+        let y = topLeftCell.y;
+        let dw = topLeftCell.w;
+        let dh = topLeftCell.h;
+        let x2 = x + cols * dw;
+        let y2 = y + rows * dh;
+        for (let c = 0; c <= cols; c++) {
+            this.ctx.moveTo(x + c * dw, y);
+            this.ctx.lineTo(x + c * dw, y2);
+        }
+        for (let r = 0; r <= rows; r++) {
+            this.ctx.moveTo(x, y + r * dh);
+            this.ctx.lineTo(x2, y + r * dh);
+        }
+    }
+
+    /**
+     * @param {!(!Point[])} vertices
+     */
+    polygon(vertices) {
+        if (vertices.length === 0) {
+            return;
+        }
+        let last = vertices[vertices.length - 1];
+
+        this.ctx.moveTo(last.x, last.y);
+        for (let p of vertices) {
+            this.ctx.lineTo(p.x, p.y);
+        }
+    }
+
+    /**
+     * @param {!(!Point[])} vertices
+     */
+    path(vertices) {
+        if (vertices.length === 0) {
+            return;
+        }
+
+        this.ctx.moveTo(vertices[0].x, vertices[0].y);
+        for (let p of vertices.slice(1)) {
+            this.ctx.lineTo(p.x, p.y);
+        }
+    }
+}
+
+/**
+ * Has various helper methods for tracing shapes and paths in a CanvasRenderingContext2D.
+ */
+class Tracer {
+    /**
+     * @param {!CanvasRenderingContext2D} ctx
+     */
+    constructor(ctx) {
+        /** @type {!CanvasRenderingContext2D} */
+        this.ctx = ctx;
+    }
+
+    /**
+     * @param {!Point} p1
+     * @param {!Point} p2
+     */
+    line(p1, p2) {
+        this.ctx.moveTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+    }
+
+    /**
+     * @param {!Rect} rect
+     */
+    rect(rect) {
+        this.ctx.moveTo(rect.x, rect.y);
+        this.ctx.lineTo(rect.x + rect.w, rect.y);
+        this.ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
+        this.ctx.lineTo(rect.x, rect.y + rect.h);
+        this.ctx.lineTo(rect.x, rect.y);
+    }
+
+    /**
+     * @param {!Point} center The center of the circle.
+     * @param {!number} radius The distance from the center of the circle to its side.
+     */
+    circle(center, radius) {
+        this.ctx.moveTo(center.x + radius, center.y);
+        this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+    }
+
+    /**
+     * @param {!Point} center The center of the ellipse.
+     * @param {!number} horizontal_radius The horizontal distance from the center of the ellipse to its side.
+     * @param {!number} vertical_radius The vertical distance from the center of the ellipse to its side.
+     */
+    ellipse(center, horizontal_radius, vertical_radius) {
+        this.ctx.save();
+
+        this.ctx.translate(center.x - horizontal_radius, center.y - vertical_radius);
+        this.ctx.scale(horizontal_radius, vertical_radius);
+        this.ctx.moveTo(2, 1);
+        this.ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+
+        this.ctx.restore();
+    }
+
+    /**
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} w
+     * @param {!number} h
+     * @param {!int} numCols
+     * @param {!int} numRows
+     */
+    grid(x, y, w, h, numCols, numRows) {
+        let dw = w / numCols;
+        let dh = h / numRows;
+        let x2 = x + numCols * dw;
+        let y2 = y + numRows * dh;
+        for (let c = 0; c <= numCols; c++) {
+            this.ctx.moveTo(x + c * dw, y);
+            this.ctx.lineTo(x + c * dw, y2);
+        }
+        for (let r = 0; r <= numRows; r++) {
+            this.ctx.moveTo(x, y + r * dh);
+            this.ctx.lineTo(x2, y + r * dh);
+        }
+    }
+
+    /**
+     * @param {!Array.<!number>|!Float32Array} interleavedCoordinates
+     */
+    polygonCoords(interleavedCoordinates) {
+        if (interleavedCoordinates.length === 0) {
+            return;
+        }
+
+        let n = interleavedCoordinates.length;
+        this.ctx.moveTo(interleavedCoordinates[n-2], interleavedCoordinates[n-1]);
+        for (let i = 0; i < n; i += 2) {
+            this.ctx.lineTo(interleavedCoordinates[i], interleavedCoordinates[i+1]);
+        }
+    }
+}
+
+/**
+ * Strokes/fills a traced path.
+ */
+class TraceAction {
+    constructor(ctx) {
+        this.ctx = ctx;
+    }
+
+    /**
+     * @param {!string} fillStyle
+     * @returns {!TraceAction}
+     */
+    thenFill(fillStyle) {
+        this.ctx.fillStyle = fillStyle;
+        this.ctx.fill();
+        return this;
+    }
+
+    /**
+     * @param {!string} strokeStyle
+     * @param {!number=} lineWidth
+     * @returns {!TraceAction}
+     */
+    thenStroke(strokeStyle, lineWidth = 1) {
+        this.ctx.strokeStyle = strokeStyle;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.stroke();
+        return this;
     }
 }
