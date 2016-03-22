@@ -15,7 +15,7 @@ class Matrix {
      * coefficients interleaved.
      */
     constructor(width, height, buffer) {
-        Util.need(width*height*2 === buffer.length);
+        Util.need(width*height*2 === buffer.length, "width*height*2 === buffer.length");
         /**
          * @type {int}
          * @private
