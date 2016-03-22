@@ -55,7 +55,7 @@ class CircuitDefinition {
         if (allGates.length === 0) {
             return "empty";
         }
-        let allGatesString = `${allGates.length}/${this.numWires}:${allGates.join("")}`;
+        let allGatesString = `${allGates.length}/${this.numWires}:${allGates.join("").split("^").join("")}`;
         if (allGatesString.length <= 40) {
             return allGatesString;
         }
