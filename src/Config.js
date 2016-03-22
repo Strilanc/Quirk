@@ -10,7 +10,6 @@ Config.URL_CIRCUIT_PARAM_KEY = 'circuit';
 // Gate background colors.
 Config.GATE_FILL_COLOR = 'white';
 Config.HIGHLIGHTED_GATE_FILL_COLOR = 'orange';
-Config.NON_UNITARY_GATE_FILL_COLOR = 'pink';
 
 // Mixed-state displays are green.
 Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR = '#4F4';

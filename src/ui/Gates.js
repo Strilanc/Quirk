@@ -151,85 +151,85 @@ Gates.Named = {
 
     QuarterTurns: {
         Down: new Gate(
-            "X^+½",
+            "X^½",
             Matrix.fromPauliRotation(0.25, 0, 0),
             "√X Gate",
             "Principle square root of Not.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Up: new Gate(
             "X^-½",
             Matrix.fromPauliRotation(0.75, 0, 0),
             "X^-½ Gate",
             "Adjoint square root of Not.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Right: new Gate(
-            "Y^+½",
+            "Y^½",
             Matrix.fromPauliRotation(0, 0.25, 0),
             "√Y Gate",
             "Principle square root of Y.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Left: new Gate(
             "Y^-½",
             Matrix.fromPauliRotation(0, 0.75, 0),
             "Y^-½ Gate",
             "Adjoint square root of Y.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         CounterClockwise: new Gate(
-            "Z^+½",
+            "Z^½",
             Matrix.fromPauliRotation(0, 0, 0.25),
             "√Z Gate",
             "Principle square root of Z.\nAlso known as the 'S' gate.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Clockwise: new Gate(
             "Z^-½",
             Matrix.fromPauliRotation(0, 0, 0.75),
             "Z^-½ Gate",
             "Adjoint square root of Z.",
-            GateFactory.POWER_DRAWER)
+            GateFactory.DEFAULT_DRAWER)
     },
 
     OtherZ: {
         Z3: new Gate(
-            "Z^+⅓",
+            "Z^⅓",
             Matrix.fromPauliRotation(0, 0, 1 / 6),
-            "Z^+⅓ Gate",
+            "Z^⅓ Gate",
             "Principle third root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z3i: new Gate(
             "Z^-⅓",
             Matrix.fromPauliRotation(0, 0, -1 / 6),
             "Z^-⅓ Gate",
             "Adjoint third root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z4: new Gate(
-            "Z^+¼",
+            "Z^¼",
             Matrix.fromPauliRotation(0, 0, 1 / 8),
-            "Z^+¼ Gate",
+            "Z^¼ Gate",
             "Principle fourth root of Z.\nAlso known as the 'T' gate.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z4i: new Gate(
             "Z^-¼",
             Matrix.fromPauliRotation(0, 0, -1 / 8),
             "Z^-¼ Gate",
             "Adjoint fourth root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z8: new Gate(
-            "Z^+⅛",
+            "Z^⅛",
             Matrix.fromPauliRotation(0, 0, 1 / 16),
-            "Z^+⅛ Gate",
+            "Z^⅛ Gate",
             "Principle eighth root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z8i: new Gate(
             "Z^-⅛",
             Matrix.fromPauliRotation(0, 0, -1 / 16),
             "Z^-⅛ Gate",
             "Adjoint eighth root of Z.",
-            GateFactory.POWER_DRAWER)
+            GateFactory.DEFAULT_DRAWER)
     },
 
     HalfTurns: {
@@ -301,7 +301,7 @@ Gates.Named = {
             GateFactory.CYCLE_DRAWER),
 
         XBackward: new Gate(
-            "e^+iXt",
+            "e^iXt",
                 t => Matrix.PAULI_X.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
             "X-Exponentiating Gate (backward)",
             "A continuous left-handed rotation around the X axis.\n" +
@@ -317,7 +317,7 @@ Gates.Named = {
             GateFactory.CYCLE_DRAWER),
 
         YBackward: new Gate(
-            "e^+iYt",
+            "e^iYt",
             t => Matrix.PAULI_Y.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
             "Y-Exponentiating Gate (backward)",
             "A continuous left-handed rotation around the Y axis.\n" +
@@ -333,7 +333,7 @@ Gates.Named = {
             GateFactory.CYCLE_DRAWER),
 
         ZBackward: new Gate(
-            "e^+iZt",
+            "e^iZt",
             t => Matrix.PAULI_Z.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
             "Z-Exponentiating Gate (backward)",
             "A continuous left-handed rotation around the Z axis.\n" +

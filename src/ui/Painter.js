@@ -144,7 +144,7 @@ export default class Painter {
         this.ctx.font = font;
         let naiveWidth = this.ctx.measureText(text).width;
         //noinspection JSSuspiciousNameCombination
-        let naiveHeight = this.ctx.measureText("W").width * 2.5;
+        let naiveHeight = this.ctx.measureText("0").width * 2.5;
         let scale = Math.min(Math.min(boundingWidth / naiveWidth, boundingHeight / naiveHeight), 1);
 
         if (afterMeasureBeforeDraw !== undefined) {
@@ -153,7 +153,7 @@ export default class Painter {
         this.ctx.save();
         this.ctx.textAlign = textAlign;
         this.ctx.textBaseline = textBaseline;
-        this.ctx.font = font;
+        this.ctx.font = font; // Re-set the font, because the 'afterMeasureBeforeDraw' callback may have changed it.
         this.ctx.fillStyle = fillStyle;
         this.ctx.translate(x, y);
         this.ctx.scale(scale, scale);

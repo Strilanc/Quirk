@@ -15,21 +15,12 @@ export default class GateFactory {
 
 GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR) => args => {
     let backColor = args.isInToolbox ? toolboxFillColor : Config.GATE_FILL_COLOR;
-    if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
-        backColor = Config.NON_UNITARY_GATE_FILL_COLOR;
-    }
     if (args.isHighlighted) {
         backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
     }
     args.painter.fillRect(args.rect, backColor);
     args.painter.strokeRect(args.rect);
-    let fontSize = 16;
-    args.painter.printLine(
-        args.gate.symbol,
-        args.rect.paddedBy(-2).takeTopProportion(0.85),
-        0.5,
-        Config.DEFAULT_TEXT_COLOR,
-        fontSize);
+    paintGateSymbol(args.painter, args.gate.symbol, args.rect);
 };
 
 /**
@@ -38,41 +29,59 @@ GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR
 GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
 
 /**
- * @param {!GateDrawParams} args
+ * @param {!Painter} painter
+ * @param {!string} symbol
+ * @param {!Rect} rect
  */
-GateFactory.POWER_DRAWER = args => {
-    let parts = args.gate.symbol.split("^");
-    if (parts.length != 2) {
-        GateFactory.DEFAULT_DRAWER(args);
+const paintGateSymbol = (painter, symbol, rect) => {
+    const font = '16px Helvetica';
+    rect = rect.paddedBy(-2);
+
+    let parts = symbol.split("^");
+    if (parts.length != 2 || parts[0] === "" || parts[1] === "") {
+        painter.print(
+            symbol,
+            rect.x + rect.w/2,
+            rect.y + rect.h/2,
+            'center',
+            'middle',
+            'black',
+            font,
+            rect.w,
+            rect.h);
         return;
     }
 
-    let backColor = Config.GATE_FILL_COLOR;
-    if (!args.isInToolbox && !args.gate.matrixAt(args.stats.time).isApproximatelyUnitary(0.001)) {
-        backColor = Config.NON_UNITARY_GATE_FILL_COLOR;
-    }
-    if (args.isHighlighted) {
-        backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
-    }
-    args.painter.fillRect(args.rect, backColor);
-    args.painter.strokeRect(args.rect);
-    let fontSize = 16;
-    args.painter.printLine(
-        parts[0],
-        args.rect.paddedBy(-2).takeBottomProportion(0.6).takeLeftProportion(0.4),
-        0.8,
-        Config.DEFAULT_TEXT_COLOR,
-        fontSize);
-    args.painter.printLine(
-        parts[1],
-        args.rect.paddedBy(-2).takeTopProportion(0.6).takeRightProportion(0.8),
-        0.3,
-        Config.DEFAULT_TEXT_COLOR,
-        fontSize);
+    let [baseText, expText] = parts;
+    painter.ctx.font = font;
+    let baseWidth = painter.ctx.measureText(baseText).width;
+    let expWidth = painter.ctx.measureText(expText).width;
+    let scaleDown = Math.min(rect.w, baseWidth + expWidth) / (baseWidth + expWidth);
+    let divider = rect.w/2 + (baseWidth - expWidth)*scaleDown/2;
+    painter.print(
+        baseText,
+        rect.x + divider,
+        rect.y + rect.h/2,
+        'right',
+        'hanging',
+        'black',
+        font,
+        divider,
+        rect.h);
+    painter.print(
+        expText,
+        rect.x + divider,
+        rect.y + rect.h/2,
+        'left',
+        'alphabetic',
+        'black',
+        font,
+        rect.w - divider,
+        rect.h);
 };
 
 GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
-    GateFactory.POWER_DRAWER(args);
+    GateFactory.DEFAULT_DRAWER(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
@@ -150,15 +159,14 @@ GateFactory.POST_SELECT_DRAWER = args => {
  * @param {!GateDrawParams} args
  */
 GateFactory.CYCLE_DRAWER = args => {
+    GateFactory.DEFAULT_DRAWER(args);
+
     if (args.isInToolbox && !args.isHighlighted) {
-        GateFactory.POWER_DRAWER(args);
         return;
     }
     let t = args.stats.time * 2 * Math.PI;
     let c = args.rect.center();
     let r = 0.4 * args.rect.w;
-
-    GateFactory.POWER_DRAWER(args);
 
     args.painter.ctx.beginPath();
     args.painter.ctx.moveTo(c.x, c.y);
