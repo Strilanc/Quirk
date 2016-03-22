@@ -541,7 +541,11 @@ class CircuitWidget {
         let numWire = this.importantWireCount();
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
-        let amplitudeGrid = Matrix.generate(colCount, rowCount, (r, c) => stats.finalState[r*colCount + c]);
+        let outputStateBuffer = stats.finalState.rawBuffer();
+        if (stats.circuitDefinition.numWires !== this.importantWireCount()) {
+            outputStateBuffer = outputStateBuffer.slice(0, outputStateBuffer.length/2);
+        }
+        let amplitudeGrid = new Matrix(colCount, rowCount, outputStateBuffer);
 
         let topRect = this.gateRect(0, col);
         let bottomRect = this.gateRect(numWire-1, col);
@@ -562,11 +566,12 @@ class CircuitWidget {
 
         // Row labels.
         for (let i = 0; i < rowCount; i++) {
-            let labelRect = expandedRect.skipLeft(gridRect.w + 2).skipTop(dh*i).skipRight(2).withH(dh);
             let label = "_".repeat(colWires) + bin(i, rowWires);
-            labelRect = painter.printLine(label, labelRect, undefined, undefined, undefined, undefined, 0.5);
-            painter.fillRect(labelRect.paddedBy(2), 'lightgray');
-            painter.printLine(label, labelRect);
+            let x = gridRect.right();
+            let y = expandedRect.y + dh*(i+0.5);
+            painter.print(label, x + 2, y, 'left', 'middle', 'black', '12px monospace', 50, dh, (w, h) => {
+                painter.fillRect(new Rect(x, y-h/2, w + 4, h), 'lightgray');
+            });
         }
 
         // Column labels.
@@ -575,17 +580,20 @@ class CircuitWidget {
         for (let i = 0; i < colCount; i++) {
             let labelRect = expandedRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
             labelRect = new Rect(labelRect.y, -labelRect.x-labelRect.w, labelRect.h, labelRect.w);
+
             let label = bin(i, colWires) + "_".repeat(rowWires);
-            labelRect = painter.printLine(label, labelRect, undefined, undefined, undefined, undefined, 0.5);
-            painter.fillRect(labelRect.paddedBy(2), 'lightgray');
-            painter.printLine(label, labelRect);
+            let x = expandedRect.x + dw*(i+0.5);
+            let y = gridRect.bottom();
+            painter.print(label, y + 2, -x, 'left', 'middle', 'black', '12px monospace', 50, dw, (w, h) => {
+                painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray');
+            });
         }
         painter.ctx.restore();
 
         // Hint text.
         painter.printParagraph(
             "ALL final amplitudes\n(ignoring measurement)",
-            expandedRect.withY(expandedRect.bottom()).withH(40).withW(200),
+            expandedRect.withY(expandedRect.bottom() + 10).withH(40).withW(200),
             new Point(0, 0),
             'gray');
     }

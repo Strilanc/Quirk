@@ -16,15 +16,15 @@ export default class CooldownThrottle {
         this.cooldownDuration = cooldownMs;
 
         /**
-         * @type {null|!{id: !number, cancel: !boolean}}
+         * @type {!string}
          * @private
          */
-        this._timeoutState = null;
+        this._state = 'idle';
         /**
          * @type {!number}
          * @private
          */
-        this._nextAllowedCallTime = performance.now();
+        this._lastCompletionTime = -Infinity;
     }
 
     /**
@@ -32,51 +32,47 @@ export default class CooldownThrottle {
      * (No effect if the action was already requested but not performed yet.)
      */
     trigger() {
-        // Give it a try.
-        let dt = this._tryCallWithoutScheduling();
-        if (dt === null) {
-            return; // It worked!
+        switch (this._state) {
+            case 'idle':
+                let remainingCooldownDuration = this.cooldownDuration - (performance.now() - this._lastCompletionTime);
+                if (remainingCooldownDuration > 0) {
+                    this._state = 'waiting';
+                    this._forceIdleTriggerAfter(remainingCooldownDuration);
+                } else {
+                    this._state = 'running';
+                    this.action();
+                    this._lastCompletionTime = performance.now();
+                    if (this._state === 'running-and-triggered') {
+                        this._state = 'waiting';
+                        this._forceIdleTriggerAfter(this.cooldownDuration);
+                    } else {
+                        this._state = 'idle';
+                    }
+                }
+                break;
+            case 'waiting':
+                // Already triggered. Do nothing.
+                break;
+            case 'running':
+                // Re-trigger.
+                this._state = 'running-and-triggered';
+                break;
+            case 'running-and-triggered':
+                // Already re-triggered. Do nothing.
+                break;
+            default:
+                throw new Error('Unrecognized throttle state: ' + this._state);
         }
-
-        // We need to wait.
-        if (this._timeoutState !== null) {
-            return; // Already scheduled.
-        }
-
-        // Schedule.
-        let state = {id: 0, cancel: false};
-        this._timeoutState = state;
-        state.id = setTimeout(() => {
-            if (!state.cancel) {
-                // Note: if the timer came back early, we need to re-schedule. So _tryCallWithoutScheduling won't do.
-                this._timeoutState = null;
-                this.trigger();
-            }
-        }, dt);
     }
 
     /**
-     * @returns {null|!number}
      * @private
      */
-    _tryCallWithoutScheduling() {
-        // Check cooldown.
-        let t = performance.now();
-        let dt = this._nextAllowedCallTime - t;
-        if (dt > 0) {
-            return dt;
-        }
-
-        // Preempt scheduled call.
-        if (this._timeoutState !== null) {
-            this._timeoutState.cancel = true;
-            clearTimeout(this._timeoutState.id);
-            this._timeoutState = null;
-        }
-
-        // Run.
-        this._nextAllowedCallTime = t + this.cooldownDuration;
-        this.action();
-        return null;
+    _forceIdleTriggerAfter(duration) {
+        setTimeout(() => {
+            this._state = 'idle';
+            this._lastCompletionTime = -Infinity;
+            this.trigger()
+        }, duration);
     }
 }

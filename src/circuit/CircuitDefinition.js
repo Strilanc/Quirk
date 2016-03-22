@@ -55,7 +55,7 @@ class CircuitDefinition {
         if (allGates.length === 0) {
             return "empty";
         }
-        let allGatesString = `${allGates.length}/${this.numWires}:${allGates.join("")}`;
+        let allGatesString = `${allGates.length}/${this.numWires}:${allGates.join("").split("^").join("")}`;
         if (allGatesString.length <= 40) {
             return allGatesString;
         }
@@ -298,17 +298,19 @@ class CircuitDefinition {
 
         let I = Matrix.identity(2);
         let col = this.columns[colIndex];
-        return Seq.
-            range(col.gates.length).
-            filter(row => {
-                let pt = new Point(colIndex, row);
-                if (col.gates[row] === null || this.gateAtLocIsDisabledReason(pt, time) !== null) {
-                    return false;
+        return new Seq(col.gates).
+            mapWithIndex((gate, i) => {
+                let pt = new Point(colIndex, i);
+                if (gate === null || this.gateAtLocIsDisabledReason(pt, time) !== null) {
+                    return null;
                 }
-                let m = col.gates[row].matrixAt(time);
-                return m.width() === 2 && m.height() === 2 && !m.isEqualTo(I);
+                let m = gate.matrixAt(time);
+                if (m.width() !== 2 || m.height() !== 2 || m.isIdentity()) {
+                    return null;
+                }
+                return {m, i};
             }).
-            map(i => ({m: col.gates[i].matrixAt(time), i})).
+            filter(e => e !== null).
             toArray();
     }
 

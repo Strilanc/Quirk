@@ -10,7 +10,6 @@ Config.URL_CIRCUIT_PARAM_KEY = 'circuit';
 // Gate background colors.
 Config.GATE_FILL_COLOR = 'white';
 Config.HIGHLIGHTED_GATE_FILL_COLOR = 'orange';
-Config.NON_UNITARY_GATE_FILL_COLOR = 'pink';
 
 // Mixed-state displays are green.
 Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR = '#4F4';
@@ -30,7 +29,7 @@ Config.SUPERPOSITION_FORE_COLOR = '#0BB';
 Config.CYCLE_DURATION_MS = 8000; // How long it takes for evolving gates to cycle, in milliseconds.
 Config.TIME_CACHE_GRANULARITY = 196; // The number of buckets the cycle is divided into.
 Config.REFRESH_DURATION_MS = 50; // How often time-driven circuits cause redraw.
-Config.REDRAW_COOLDOWN_MS = 15; // How often user-driven actions can cause redraw.
+Config.REDRAW_COOLDOWN_MS = 5; // How often user-driven actions can cause redraw.
 
 /** Half of the span of a drawn gate, width-wise and height-wise.
 * @type {!number} */
@@ -77,3 +76,6 @@ Config.DEFAULT_TEXT_COLOR = 'black';
 Config.DEFAULT_FONT_SIZE = 12;
 Config.DEFAULT_FONT_FAMILY = 'Helvetica';
 Config.DEFAULT_STROKE_THICKNESS = 1;
+
+// Calling WebGLRenderingContext.getError forces a CPU/GPU sync. It's very expensive.
+Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = false;

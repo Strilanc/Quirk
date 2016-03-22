@@ -16,10 +16,6 @@ class WglContext {
          */
         this.canvas = document.createElement('canvas');
 
-        // Make canvas large so rendering of large textures works.
-        this.canvas.width = 128;
-        this.canvas.height = 128;
-
         /**
          * The WebGLRenderingContext instance associated with the WglContext.
          * @type {!WebGLRenderingContext}

@@ -151,85 +151,85 @@ Gates.Named = {
 
     QuarterTurns: {
         Down: new Gate(
-            "X^+½",
+            "X^½",
             Matrix.fromPauliRotation(0.25, 0, 0),
             "√X Gate",
             "Principle square root of Not.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Up: new Gate(
             "X^-½",
             Matrix.fromPauliRotation(0.75, 0, 0),
             "X^-½ Gate",
             "Adjoint square root of Not.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Right: new Gate(
-            "Y^+½",
+            "Y^½",
             Matrix.fromPauliRotation(0, 0.25, 0),
             "√Y Gate",
             "Principle square root of Y.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Left: new Gate(
             "Y^-½",
             Matrix.fromPauliRotation(0, 0.75, 0),
             "Y^-½ Gate",
             "Adjoint square root of Y.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         CounterClockwise: new Gate(
-            "Z^+½",
+            "Z^½",
             Matrix.fromPauliRotation(0, 0, 0.25),
             "√Z Gate",
             "Principle square root of Z.\nAlso known as the 'S' gate.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
 
         Clockwise: new Gate(
             "Z^-½",
             Matrix.fromPauliRotation(0, 0, 0.75),
             "Z^-½ Gate",
             "Adjoint square root of Z.",
-            GateFactory.POWER_DRAWER)
+            GateFactory.DEFAULT_DRAWER)
     },
 
     OtherZ: {
         Z3: new Gate(
-            "Z^+⅓",
+            "Z^⅓",
             Matrix.fromPauliRotation(0, 0, 1 / 6),
-            "Z^+⅓ Gate",
+            "Z^⅓ Gate",
             "Principle third root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z3i: new Gate(
             "Z^-⅓",
             Matrix.fromPauliRotation(0, 0, -1 / 6),
             "Z^-⅓ Gate",
             "Adjoint third root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z4: new Gate(
-            "Z^+¼",
+            "Z^¼",
             Matrix.fromPauliRotation(0, 0, 1 / 8),
-            "Z^+¼ Gate",
+            "Z^¼ Gate",
             "Principle fourth root of Z.\nAlso known as the 'T' gate.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z4i: new Gate(
             "Z^-¼",
             Matrix.fromPauliRotation(0, 0, -1 / 8),
             "Z^-¼ Gate",
             "Adjoint fourth root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z8: new Gate(
-            "Z^+⅛",
+            "Z^⅛",
             Matrix.fromPauliRotation(0, 0, 1 / 16),
-            "Z^+⅛ Gate",
+            "Z^⅛ Gate",
             "Principle eighth root of Z.",
-            GateFactory.POWER_DRAWER),
+            GateFactory.DEFAULT_DRAWER),
         Z8i: new Gate(
             "Z^-⅛",
             Matrix.fromPauliRotation(0, 0, -1 / 16),
             "Z^-⅛ Gate",
             "Adjoint eighth root of Z.",
-            GateFactory.POWER_DRAWER)
+            GateFactory.DEFAULT_DRAWER)
     },
 
     HalfTurns: {
@@ -294,15 +294,23 @@ Gates.Named = {
     Exponentiating: {
         XForward: new Gate(
             "e^-iXt",
-            t => Matrix.PAULI_X.liftApply(c => c.times(τ * -t).times(Complex.I).exp()),
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([c, 0, 0, -s, 0, -s, c, 0]));
+            },
             "X-Exponentiating Gate (forward)",
             "A continuous right-handed rotation around the X axis.\n" +
                 "Passes through ±iX instead of X.",
             GateFactory.CYCLE_DRAWER),
 
         XBackward: new Gate(
-            "e^+iXt",
-                t => Matrix.PAULI_X.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
+            "e^iXt",
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([c, 0, 0, s, 0, s, c, 0]));
+            },
             "X-Exponentiating Gate (backward)",
             "A continuous left-handed rotation around the X axis.\n" +
                 "Passes through ±iX instead of X.",
@@ -310,15 +318,23 @@ Gates.Named = {
 
         YForward: new Gate(
             "e^-iYt",
-                t => Matrix.PAULI_Y.liftApply(c => c.times(τ * -t).times(Complex.I).exp()),
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([c, 0, -s, 0, s, 0, c, 0]));
+            },
             "Y-Exponentiating Gate (forward)",
             "A continuous right-handed rotation around the Y axis.\n" +
                 "Passes through ±iY instead of Y.",
             GateFactory.CYCLE_DRAWER),
 
         YBackward: new Gate(
-            "e^+iYt",
-            t => Matrix.PAULI_Y.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
+            "e^iYt",
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([c, 0, s, 0, -s, 0, c, 0]));
+            },
             "Y-Exponentiating Gate (backward)",
             "A continuous left-handed rotation around the Y axis.\n" +
                 "Passes through ±iY instead of Y.",
@@ -326,59 +342,91 @@ Gates.Named = {
 
         ZForward: new Gate(
             "e^-iZt",
-                t => Matrix.PAULI_Z.liftApply(c => c.times(τ * -t).times(Complex.I).exp()),
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([c, -s, 0, 0, 0, 0, c, s]));
+            },
             "Z-Exponentiating Gate (forward)",
             "A continuous right-handed rotation around the Z axis.\n" +
                 "Passes through ±iZ instead of Z.",
             GateFactory.CYCLE_DRAWER),
 
         ZBackward: new Gate(
-            "e^+iZt",
-            t => Matrix.PAULI_Z.liftApply(c => c.times(τ * t).times(Complex.I).exp()),
+            "e^iZt",
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([c, s, 0, 0, 0, 0, c, -s]));
+            },
             "Z-Exponentiating Gate (backward)",
             "A continuous left-handed rotation around the Z axis.\n" +
                 "Passes through ±iZ instead of Z.",
             GateFactory.CYCLE_DRAWER)
     },
     Powering: {
-        X: new Gate(
+        XForward: new Gate(
             "X^t",
-            t => Matrix.PAULI_X.liftApply(c => c.raisedTo(t * 2)),
+            t => {
+                let c = Math.cos(τ * t) / 2;
+                let s = Math.sin(τ * t) / 2;
+                return new Matrix(2, 2, new Float32Array([0.5+c, s, 0.5-c, -s, 0.5-c, -s, 0.5+c, s]));
+            },
             "X-Raising Gate (forward)",
             "A continuous right-handed cycle between the X gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
-        AntiX: new Gate(
+        XBackward: new Gate(
             "X^-t",
-            t => Matrix.PAULI_X.liftApply(c => c.raisedTo(-t * 2)),
+            t => {
+                let c = Math.cos(τ * -t) / 2;
+                let s = Math.sin(τ * -t) / 2;
+                return new Matrix(2, 2, new Float32Array([0.5+c, s, 0.5-c, -s, 0.5-c, -s, 0.5+c, s]));
+            },
             "X-Raising Gate (backward)",
             "A continuous left-handed cycle between the X gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
-        Y: new Gate(
+        YForward: new Gate(
             "Y^t",
-            t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(t * 2)),
+            t => {
+                let c = Math.cos(τ * t) / 2;
+                let s = Math.sin(τ * t) / 2;
+                return new Matrix(2, 2, new Float32Array([0.5+c, s, -s, c-0.5, s, 0.5-c, 0.5+c, s]));
+            },
             "Y-Raising Gate (forward)",
             "A continuous right-handed cycle between the Y gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
-        AntiY: new Gate(
+        YBackward: new Gate(
             "Y^-t",
-            t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(-t * 2)),
+            t => {
+                let c = Math.cos(τ * -t) / 2;
+                let s = Math.sin(τ * -t) / 2;
+                return new Matrix(2, 2, new Float32Array([0.5+c, s, -s, c-0.5, s, 0.5-c, 0.5+c, s]));
+            },
             "Y-Raising Gate (backward)",
             "A continuous left-handed cycle between the Y gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
-        Z: new Gate(
+        ZForward: new Gate(
             "Z^t",
-            t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(t * 2)),
+            t => {
+                let c = Math.cos(τ * t);
+                let s = Math.sin(τ * t);
+                return new Matrix(2, 2, new Float32Array([1, 0, 0, 0, 0, 0, c, s]));
+            },
             "Z-Raising Gate (forward)",
             "A continuous right-handed cycle between the Z gate and no-op.",
             GateFactory.CYCLE_DRAWER),
 
-        AntiZ: new Gate(
+        ZBackward: new Gate(
             "Z^-t",
-            t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(-t * 2)),
+            t => {
+                let c = Math.cos(τ * -t);
+                let s = Math.sin(τ * -t);
+                return new Matrix(2, 2, new Float32Array([1, 0, 0, 0, 0, 0, c, s]));
+            },
             "Z-Raising Gate (backward)",
             "A continuous left-handed cycle between the Z gate and no-op.",
             GateFactory.CYCLE_DRAWER)
@@ -490,12 +538,12 @@ Gates.Sets = [
     {
         hint: "Raising",
         gates: [
-            Gates.Named.Powering.X,
-            Gates.Named.Powering.Y,
-            Gates.Named.Powering.Z,
-            Gates.Named.Powering.AntiX,
-            Gates.Named.Powering.AntiY,
-            Gates.Named.Powering.AntiZ
+            Gates.Named.Powering.XForward,
+            Gates.Named.Powering.YForward,
+            Gates.Named.Powering.ZForward,
+            Gates.Named.Powering.XBackward,
+            Gates.Named.Powering.YBackward,
+            Gates.Named.Powering.ZBackward
         ]
     },
     {
@@ -557,12 +605,12 @@ Gates.KnownToSerializer = [
     Gates.Named.QuarterTurns.Up,
     Gates.Named.QuarterTurns.Left,
     Gates.Named.QuarterTurns.Clockwise,
-    Gates.Named.Powering.X,
-    Gates.Named.Powering.Y,
-    Gates.Named.Powering.Z,
-    Gates.Named.Powering.AntiX,
-    Gates.Named.Powering.AntiY,
-    Gates.Named.Powering.AntiZ,
+    Gates.Named.Powering.XForward,
+    Gates.Named.Powering.YForward,
+    Gates.Named.Powering.ZForward,
+    Gates.Named.Powering.XBackward,
+    Gates.Named.Powering.YBackward,
+    Gates.Named.Powering.ZBackward,
     Gates.Named.Exponentiating.XBackward,
     Gates.Named.Exponentiating.YBackward,
     Gates.Named.Exponentiating.ZBackward,

@@ -143,7 +143,7 @@ let fromJson_Gate = json => {
         // Err, okay... probably a bad matrix. Let the parse fail below.
     }
 
-    let drawer = symbol === "" ? GateFactory.MATRIX_DRAWER : GateFactory.POWER_DRAWER;
+    let drawer = symbol === "" ? GateFactory.MATRIX_DRAWER : GateFactory.DEFAULT_DRAWER;
     let matrix;
     try {
         matrix = fromJson_Matrix(matrixProp);

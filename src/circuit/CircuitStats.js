@@ -14,7 +14,7 @@ export default class CircuitStats{
      * @param {!(!number[])} wireProbabilityData
      * @param {!(!number[])} conditionalWireProbabilityData
      * @param {!Map.<!String, !Matrix>} knownDensityMatrices
-     * @param {!((!Complex)[])} finalState
+     * @param {!Matrix} finalState
      */
     constructor(circuitDefinition,
                 time,
@@ -51,8 +51,8 @@ export default class CircuitStats{
          */
         this._knownDensityMatrices = knownDensityMatrices;
         /**
-         * The output quantum superposition.
-         * @type {!((!Complex)[])}
+         * The output quantum superposition, as a column vector.
+         * @type {!Matrix}
          */
         this.finalState = finalState;
     }
@@ -156,7 +156,7 @@ export default class CircuitStats{
                 SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires),
                 (stateNode, col) => {
                     let gateCol = circuitDefinition.columns[col];
-                    let mask = gateCol.controls();
+                    let mask = SuperpositionNode.control(circuitDefinition.numWires, gateCol.controls());
                     for (let op of circuitDefinition.singleQubitOperationsInColAt(col, time)) {
                         stateNode = stateNode.withQubitOperationApplied(op.i, op.m, mask)
                     }

@@ -325,16 +325,16 @@ QuantumShaders.renderControlCombinationProbabilities = (dst, workspace1, workspa
  */
 QuantumShaders.renderQubitOperation = (destinationTexture, inputTexture, operation, qubitIndex, controlTexture) => {
     Util.need(operation.width() === 2 && operation.height() === 2);
-    let [[a, b], [c, d]] = operation.rows();
+    let [ar, ai, br, bi, cr, ci, dr, di] = operation.rawBuffer();
     CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
         WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
         WglArg.texture("inputTexture", inputTexture, 0),
         WglArg.float("qubitIndexMask", 1 << qubitIndex),
         WglArg.texture("controlTexture", controlTexture, 1),
-        WglArg.vec2("matrix_a", a.real, a.imag),
-        WglArg.vec2("matrix_b", b.real, b.imag),
-        WglArg.vec2("matrix_c", c.real, c.imag),
-        WglArg.vec2("matrix_d", d.real, d.imag)
+        WglArg.vec2("matrix_a", ar, ai),
+        WglArg.vec2("matrix_b", br, bi),
+        WglArg.vec2("matrix_c", cr, ci),
+        WglArg.vec2("matrix_d", dr, di)
     ).renderTo(destinationTexture);
 };
 const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`

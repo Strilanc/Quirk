@@ -17,7 +17,7 @@ export default class SuperpositionNode {
 
     /**
      * @param {!(!PipelineNode[])} inputNodes
-     * @param {!function(!(!WglTexture[])) : !WglTexture} operation
+     * @param {!function(!Array.<!WglTexture>) : !WglTexture} operation
      * @param {!int} width
      * @param {!int} height
      *
@@ -80,55 +80,61 @@ export default class SuperpositionNode {
     };
 
     /**
+     * @param {!int} qubitCount
+     * @param {!QuantumControlMask} mask
+     * @returns {!SuperpositionNode}
+     */
+    static control(qubitCount, mask) {
+        return SuperpositionNode.input(qubitCount, tex => QuantumShaders.controlMask(mask).renderTo(tex));
+    }
+
+    /**
      * Returns a texture holding the result of applying a single-qubit operation to the receiving texture's quantum
      * state.
      * @param {!int} qubitIndex The index of the qubit to apply the operation to.
      * @param {!Matrix} operation A 2x2 matrix.
-     * @param {!QuantumControlMask} controlMask
+     * @param {!SuperpositionNode} controlMaskNode
      * @returns {!SuperpositionNode}
      */
-    withQubitOperationApplied(qubitIndex, operation, controlMask) {
-        Util.need(controlMask.desiredValueFor(qubitIndex) === null, "Controlled with qubit being modified.");
-
-        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let controlTexture = allocTexture(this.width, this.height);
-            let resultTexture = allocTexture(this.width, this.height);
-            QuantumShaders.controlMask(controlMask).renderTo(controlTexture);
-            QuantumShaders.renderQubitOperation(
-                resultTexture,
-                input[0],
-                operation,
-                qubitIndex,
-                controlTexture);
-            reuseTexture(controlTexture);
-            return resultTexture;
-        });
+    withQubitOperationApplied(qubitIndex, operation, controlMaskNode) {
+        return new SuperpositionNode(
+            this.width,
+            this.height,
+            [this.pipelineNode, controlMaskNode.pipelineNode],
+            ([inputTexture, controlTexture]) => {
+                let resultTexture = allocTexture(this.width, this.height);
+                QuantumShaders.renderQubitOperation(
+                    resultTexture,
+                    inputTexture,
+                    operation,
+                    qubitIndex,
+                    controlTexture);
+                return resultTexture;
+            });
     };
 
     /**
      * Returns a texture holding the result of applying a swap operation.
      * @param {!int} qubitIndex1 The index of one of the qubits to swap.
      * @param {!int} qubitIndex2 The index of the other qubit to swap.
-     * @param {!QuantumControlMask} controlMask
+     * @param {!SuperpositionNode} controlMaskNode
      * @returns {!SuperpositionNode}
      */
-    withSwap(qubitIndex1, qubitIndex2, controlMask) {
-        Util.need(controlMask.desiredValueFor(qubitIndex1) === null, "Controlled with qubit being modified.");
-        Util.need(controlMask.desiredValueFor(qubitIndex2) === null, "Controlled with qubit being modified.");
-
-        return new SuperpositionNode(this.width, this.height, [this.pipelineNode], input => {
-            let control = allocTexture(this.width, this.height);
-            QuantumShaders.controlMask(controlMask).renderTo(control);
-            let result = allocTexture(this.width, this.height);
-            QuantumShaders.renderSwapOperation(
-                result,
-                input[0],
-                qubitIndex1,
-                qubitIndex2,
-                control);
-            reuseTexture(control);
-            return result;
-        });
+    withSwap(qubitIndex1, qubitIndex2, controlMaskNode) {
+        return new SuperpositionNode(
+            this.width,
+            this.height,
+            [this.pipelineNode, controlMaskNode.pipelineNode],
+            ([inputTexture, controlTexture]) => {
+                let result = allocTexture(this.width, this.height);
+                QuantumShaders.renderSwapOperation(
+                    result,
+                    inputTexture,
+                    qubitIndex1,
+                    qubitIndex2,
+                    controlTexture);
+                return result;
+            });
     }
 
     /**
@@ -291,7 +297,7 @@ export class SuperpositionReadNode {
 
     /**
      * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
-     * @returns {!PipelineNode.<!Array.<!Complex>>}
+     * @returns {!PipelineNode.<!Matrix>}
      */
     asRenormalizedAmplitudes() {
         return new PipelineNode([this.floatsNode], inputs => {
@@ -307,7 +313,13 @@ export class SuperpositionReadNode {
                 unity = NaN;
             }
 
-            return Seq.range(floats.length/4).map(i => new Complex(floats[i*4]/unity, floats[i*4+1]/unity)).toArray();
+            let n = floats.length / 4;
+            let buf = new Float32Array(n * 2);
+            for (let i = 0; i < buf.length; i++) {
+                buf[i*2] = floats[i*4]/unity;
+                buf[i*2+1] = floats[i*4+1]/unity;
+            }
+            return new Matrix(1, n, buf);
         });
     };
 
@@ -399,10 +411,11 @@ let TEXTURE_POOL = new Map();
 /**
  * @param {!int} width
  * @param {!int} height
+ * @param {!int} pixelType
  * @returns {!WglTexture}
  */
-let allocTexture = (width, height) => {
-    let k = width + ":" + height;
+let allocTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) => {
+    let k = width + ":" + height + ":" + pixelType;
 
     if (!TEXTURE_POOL.has(k)) {
         TEXTURE_POOL.set(k, []);
@@ -412,13 +425,13 @@ let allocTexture = (width, height) => {
         return pool.pop();
     }
 
-    return new WglTexture(width, height);
+    return new WglTexture(width, height, pixelType);
 };
 
 /**
  * @param {!WglTexture} texture
  */
 let reuseTexture = texture => {
-    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height);
+    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
     pool.push(texture);
 };
