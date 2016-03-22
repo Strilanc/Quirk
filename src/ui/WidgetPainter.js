@@ -97,7 +97,7 @@ export default class WidgetPainter {
         }
 
         // Bloch sphere interpretation.
-        if (curMatrix.width() === 2 && curMatrix.isApproximatelyUnitary(0.000000001)) {
+        if (curMatrix.width() === 2 && curMatrix.isApproximatelyUnitary(0.0001)) {
             pushRect(painter.printParagraph(
                 'As rotation:',
                 new Rect(pad, maxY, w, 18),
