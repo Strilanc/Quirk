@@ -61,7 +61,7 @@ suite.test("roundTrip_GateColumn", () => {
         new GateColumn([
             null,
             Gates.Named.HalfTurns.X,
-            Gates.Named.Powering.X,
+            Gates.Named.Powering.XForward,
             Gates.Named.Special.SwapHalf,
             Gates.Named.Special.Control,
             null]),

@@ -101,7 +101,7 @@ suite.test("singleQubitOperationsInColAt", () => {
     ]).singleQubitOperationsInColAt(0, 0)).isEqualTo([]);
 
     let t0 = CircuitDefinition.from([[
-        Gates.Named.Powering.X
+        Gates.Named.Powering.XForward
     ]]).singleQubitOperationsInColAt(0, 0);
     if (t0.length !== 0) {
         assertThat(t0).isApproximatelyEqualTo([
@@ -109,12 +109,12 @@ suite.test("singleQubitOperationsInColAt", () => {
         ]);
     }
     assertThat(CircuitDefinition.from([[
-        Gates.Named.Powering.X
+        Gates.Named.Powering.XForward
     ]]).singleQubitOperationsInColAt(0, 0.25)).isApproximatelyEqualTo([
         {m: Matrix.fromPauliRotation(0.25, 0, 0), i: 0}
     ]);
     assertThat(CircuitDefinition.from([
-        [Gates.Named.Powering.X]
+        [Gates.Named.Powering.XForward]
     ]).singleQubitOperationsInColAt(0, 0.5)).isApproximatelyEqualTo([
         {m: Matrix.PAULI_X, i: 0}
     ]);
