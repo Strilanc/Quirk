@@ -53,13 +53,13 @@ class CircuitDefinition {
             .map(e => e.symbol)
             .toArray();
         if (allGates.length === 0) {
-            return "empty";
+            return "A Toy Quantum Circuit Inspector";
         }
-        let allGatesString = `${allGates.length}/${this.numWires}:${allGates.join("").split("^").join("")}`;
+        let allGatesString = `${this.numWires} wires, ${allGates.length} ops, ${allGates.join("").split("^").join("")}`;
         if (allGatesString.length <= 40) {
             return allGatesString;
         }
-        return allGatesString.substring(0, 40) + "…";
+        return allGatesString.substring(0, 40) + `…`;
     }
 
     withColumns(columns) {
