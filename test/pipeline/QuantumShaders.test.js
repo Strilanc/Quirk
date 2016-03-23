@@ -110,77 +110,72 @@ suite.webGlTest("linearOverlay", () => {
 });
 
 suite.webGlTest("controlMask", () => {
-    let tex = new WglTexture(2, 2);
+    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x1)).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            0, 0, 0, 0,
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
+        ]));
 
-    QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x1)).renderTo(tex);
-    assertThat(tex.readPixels()).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x1)).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            0, 0, 0, 0,
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
+        ]));
 
-    QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x1)).renderTo(tex);
-    assertThat(tex.readPixels()).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x0)).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
+        ]));
 
-    QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x0)).renderTo(tex);
-    assertThat(tex.readPixels()).isEqualTo(new Float32Array([
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            1, 0, 0, 0,
+            0, 0, 0, 0
+        ]));
 
-    QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).renderTo(tex);
-    assertThat(tex.readPixels()).isEqualTo(new Float32Array([
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x5, 0x4)).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            1, 0, 0, 0,
+            0, 0, 0, 0
+        ]));
 
-    let tex2 = new WglTexture(4, 2);
-    QuantumShaders.controlMask(new QuantumControlMask(0x5, 0x4)).renderTo(tex2);
-    assertThat(tex2.readPixels()).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
-
-    let tex3 = new WglTexture(2, 2, WebGLRenderingContext.UNSIGNED_BYTE);
-    QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).renderTo(tex3);
-    assertThat(tex3.readPixels()).isEqualTo(new Uint8Array([
-        255, 0, 0, 0,
-        0, 0, 0, 0,
-        255, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).readByteOutputs(2, 2)).
+        isEqualTo(new Uint8Array([
+            255, 0, 0, 0,
+            0, 0, 0, 0,
+            255, 0, 0, 0,
+            0, 0, 0, 0
+        ]));
 });
 
 suite.webGlTest("controlMask_largeReference", () => {
-    let tex = new WglTexture(1 << 7, 1 << 10);
+    let w = 1 << 7;
+    let h = 1 << 10;
     let mask = new QuantumControlMask(0b10111010101010111, 0b10011000001010001);
-    let expected = new Float32Array(Seq.range(tex.width * tex.height).
+    let expected = new Float32Array(Seq.range(w * h).
         map(i => mask.allowsState(i) ? 1 : 0).
         flatMap(e => [e, 0, 0, 0]).
         toArray());
-    QuantumShaders.controlMask(mask).renderTo(tex);
-    assertThat(tex.readPixels()).isEqualTo(expected);
+    assertThat(QuantumShaders.controlMask(mask).readFloatOutputs(w, h)).isEqualTo(expected);
 });
 
 suite.webGlTest("squaredMagnitude", () => {
-    let amps = new WglTexture(4, 2);
-    SimpleShaders.data(new Float32Array([
+    let amps = SimpleShaders.data(new Float32Array([
         2, 3, 0, 0,
         0.5, 0.5, 0, 0,
         1, 2, 3, 4,
@@ -189,11 +184,9 @@ suite.webGlTest("squaredMagnitude", () => {
         0, Math.sqrt(1/3), 0, 0,
         3/5, 4/5, 0, 0,
         1, 0, 0, 0
-    ])).renderTo(amps);
+    ])).toFloatTexture(4, 2);
 
-    let out = new WglTexture(4, 2);
-    QuantumShaders.squaredMagnitude(amps).renderTo(out);
-    assertThat(out.readPixels()).isApproximatelyEqualTo(new Float32Array([
+    assertThat(QuantumShaders.squaredMagnitude(amps).readFloatOutputs(4, 2)).isApproximatelyEqualTo(new Float32Array([
         13, 0, 0, 0,
         0.5, 0, 0, 0,
         30, 0, 0, 0,
@@ -206,8 +199,7 @@ suite.webGlTest("squaredMagnitude", () => {
 });
 
 suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
-    let inp = new WglTexture(4, 2);
-    SimpleShaders.data(new Float32Array([
+    let inp = SimpleShaders.data(new Float32Array([
         2, 0, 0, 0,
         3, 0, 0, 0,
         5, 0, 0, 0,
@@ -216,7 +208,7 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
         13, 0, 0, 0,
         17, 0, 0, 0,
         19, 0, 0, 0
-    ])).renderTo(inp);
+    ])).toFloatTexture(4, 2);
 
     let mid1 = new WglTexture(4, 2);
     QuantumShaders.renderConditionalProbabilitiesPipeline(mid1, inp, 0, true);
@@ -295,8 +287,7 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
 });
 
 suite.webGlTest("renderControlCombinationProbabilities", () => {
-    let inp = new WglTexture(4, 2);
-    SimpleShaders.data(new Float32Array([
+    let inp = SimpleShaders.data(new Float32Array([
         0, 1, 0, 0,
         2, 0, 0, 0,
         3, 0, 0, 0,
@@ -305,7 +296,7 @@ suite.webGlTest("renderControlCombinationProbabilities", () => {
         6, 0, 0, 0,
         7, 0, 0, 0,
         8, 0, 0, 0
-    ])).renderTo(inp);
+    ])).toFloatTexture(4, 2);
 
     let ta = new WglTexture(4, 2);
     let tb = new WglTexture(4, 2);

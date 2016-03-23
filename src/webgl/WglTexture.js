@@ -4,7 +4,8 @@ import { initializedWglContext }  from "src/webgl/WglContext.js"
 import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
 
 /**
- * Stores pixel data for/from/on the gpu... or something along those lines. You can render to and pull data out of it.
+ * Stores pixel data for/from the gpu.
+ * You can render to and pull data out of it.
  */
 export default class WglTexture {
     /**
