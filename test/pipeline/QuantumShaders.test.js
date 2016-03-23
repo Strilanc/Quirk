@@ -631,3 +631,106 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
     let computed = Matrix.square(new Seq(outputPixelData).partitioned(4).map(p => new Complex(p[0], p[1])).toArray());
     assertThat(computed).isApproximatelyEqualTo(expected, 0.0001);
 });
+
+suite.webGlTest("controlSelect_simple", () => {
+    let coords = SimpleShaders.coords.toFloatTexture(4, 4);
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.NO_CONTROLS, coords).readFloatOutputs(4, 4)).
+        isEqualTo(new Float32Array([
+            0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
+            0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,
+            0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0,
+            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(0, false), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0,0,0,0, 2,0,0,0,
+            0,1,0,0, 2,1,0,0,
+            0,2,0,0, 2,2,0,0,
+            0,3,0,0, 2,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(0, true), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            1,0,0,0, 3,0,0,0,
+            1,1,0,0, 3,1,0,0,
+            1,2,0,0, 3,2,0,0,
+            1,3,0,0, 3,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, false), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0,0,0,0, 1,0,0,0,
+            0,1,0,0, 1,1,0,0,
+            0,2,0,0, 1,2,0,0,
+            0,3,0,0, 1,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, true), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            2,0,0,0, 3,0,0,0,
+            2,1,0,0, 3,1,0,0,
+            2,2,0,0, 3,2,0,0,
+            2,3,0,0, 3,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(2, false), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
+            0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(2, true), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,
+            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(3, false), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
+            0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(3, true), coords).readFloatOutputs(4, 2)).
+        isEqualTo(new Float32Array([
+            0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0,
+            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
+        ]));
+});
+
+suite.webGlTest("controlSelect_skewed", () => {
+    let coords = SimpleShaders.coords.toFloatTexture(2, 8);
+    let shader = QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, true), coords);
+    let r1 = shader.readFloatOutputs(8, 1);
+    let r2 = shader.readFloatOutputs(4, 2);
+    let r3 = shader.readFloatOutputs(2, 4);
+    let r4 = shader.readFloatOutputs(1, 8);
+    assertThat(r1).isEqualTo(new Float32Array([
+        0,1,0,0, 1,1,0,0,
+        0,3,0,0, 1,3,0,0,
+        0,5,0,0, 1,5,0,0,
+        0,7,0,0, 1,7,0,0
+    ]));
+    assertThat(r2).isEqualTo(r1);
+    assertThat(r3).isEqualTo(r1);
+    assertThat(r4).isEqualTo(r1);
+});
+
+suite.webGlTest("controlSelect_multiple", () => {
+    let coords = SimpleShaders.coords.toFloatTexture(4, 4);
+    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0x3, 0x3), coords).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            3,0,0,0,
+            3,1,0,0,
+            3,2,0,0,
+            3,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0x3, 0x2), coords).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            2,0,0,0,
+            2,1,0,0,
+            2,2,0,0,
+            2,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0xC, 0xC), coords).readFloatOutputs(2, 2)).
+        isEqualTo(new Float32Array([
+            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
+        ]));
+    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0xF, 0x3), coords).readFloatOutputs(1, 1)).
+        isEqualTo(new Float32Array([
+            3,0,0,0
+        ]));
+});

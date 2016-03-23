@@ -289,6 +289,76 @@ const CONTROL_MASK_SHADER = new WglShader(`
     }`);
 
 /**
+ * Returns a parameterized shader that renders only the control-matching parts of an input texture to a smaller output
+ * texture. This allows later shaders to omit any control-masking steps (and to work on less data).
+ * @param {!QuantumControlMask} controlMask
+ * @param {!WglTexture} dataTexture
+ * @returns {!WglConfiguredShader}
+ */
+QuantumShaders.controlSelect = (controlMask, dataTexture) => {
+    if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
+        return SimpleShaders.passthrough(dataTexture);
+    }
+
+    return new WglConfiguredShader(destinationTexture => {
+        if (dataTexture.width * dataTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
+            throw new Error("QuantumShaders.controlSelect needs to be updated to allow more qubits.");
+        }
+        let maskX = dataTexture.width - 1;
+        let lenX = Math.floor(Math.log2(dataTexture.width));
+        let usedX = controlMask.inclusionMask & maskX;
+        let remainingXAfterCompaction = lenX - Util.numberOfSetBits(usedX);
+        CONTROL_SELECT_SHADER.withArgs(
+            WglArg.texture('inputTexture', dataTexture, 0),
+            WglArg.vec2('inputSize', dataTexture.width, dataTexture.height),
+            WglArg.float('inputWidthAfterCompaction', 1 << remainingXAfterCompaction),
+            WglArg.float('outputWidth', destinationTexture.width),
+            WglArg.vec2('used', usedX, controlMask.inclusionMask >> lenX),
+            WglArg.vec2('desired', controlMask.desiredValueMask & maskX, controlMask.desiredValueMask >> lenX)
+        ).renderTo(destinationTexture);
+    });
+};
+const CONTROL_SELECT_SHADER = new WglShader(`
+    uniform float inputWidthAfterCompaction;
+    uniform float outputWidth;
+    uniform vec2 inputSize;
+    uniform sampler2D inputTexture;
+
+    uniform vec2 used;
+    uniform vec2 desired;
+
+    /**
+     * Re-inserts control bits into a controls-omitted compacted value.
+     */
+    float merge(float val, float used, float desired) {
+        float maskPos = 1.0;
+        float coordPos = 1.0;
+        float result = 0.0;
+        for (int i = 0; i < ${HALF_QUBIT_LIMIT}; i++) {
+            float v = mod(floor(val/coordPos), 2.0);
+            float u = mod(floor(used/maskPos), 2.0);
+            float d = mod(floor(desired/maskPos), 2.0);
+            result += (v + u*(d-v)) * maskPos;
+            coordPos *= 2.0-u;
+            maskPos *= 2.0;
+        }
+        return result;
+    }
+
+    void main() {
+        float i = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
+
+        float x = mod(i, inputWidthAfterCompaction);
+        float y = floor(i / inputWidthAfterCompaction);
+
+        float x2 = merge(x, used.x, desired.x);
+        float y2 = merge(y, used.y, desired.y);
+
+        vec2 uv = vec2(x2 + 0.5, y2 + 0.5) / inputSize;
+        gl_FragColor = texture2D(inputTexture, uv);
+    }`);
+
+/**
  * Renders a texture with probability sums corresponding to states matching various combinations of controls.
  *
  * @param {!WglTexture} dst
