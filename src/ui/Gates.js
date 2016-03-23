@@ -13,13 +13,15 @@ const τ = Math.PI * 2;
 let Gates = {};
 export default Gates;
 
+/**
+ * Gates that have special behavior requiring custom code / logic to handle.
+ */
 Gates.Special = {
     Control: new Gate(
         "•",
         Matrix.identity(2),
         "Control",
-        "Conditions on a qubit being ON.\n" +
-            "Gates in the same column will only apply to states meeting the condition.",
+        "Conditions on a qubit being ON.\nGates in the same column will only apply to states meeting the condition.",
         args => {
             if (args.isInToolbox || args.isHighlighted) {
                 GateFactory.DEFAULT_DRAWER(args);
@@ -31,8 +33,7 @@ Gates.Special = {
         "◦",
         Matrix.identity(2),
         "Anti-Control",
-        "Conditions on a qubit being OFF.\n" +
-            "Gates in the same column will only apply to states meeting the condition.",
+        "Conditions on a qubit being OFF.\nGates in the same column will only apply to states meeting the condition.",
         args => {
             if (args.isInToolbox || args.isHighlighted) {
                 GateFactory.DEFAULT_DRAWER(args);
@@ -40,59 +41,6 @@ Gates.Special = {
             let p = args.rect.center();
             args.painter.fillCircle(p, 5);
             args.painter.strokeCircle(p, 5);
-        }),
-
-    ChanceDisplay: new Gate(
-        "Chance",
-        Matrix.identity(2),
-        "Probability Display",
-        "Shows the chance that measuring a wire would return ON.\n" +
-            "Use controls to see conditional probabilities.",
-        args => {
-            if (args.positionInCircuit === null || args.isHighlighted) {
-                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                return;
-            }
-
-            let {row, col} = args.positionInCircuit;
-            MathPainter.paintProbabilityBox(
-                args.painter,
-                args.stats.controlledWireProbabilityJustAfter(row, col),
-                args.rect);
-        }),
-
-    BlochSphereDisplay: new Gate(
-        "Bloch",
-        Matrix.identity(2),
-        "Bloch Sphere Display",
-        "Shows a wire's local state as a point on the Bloch Sphere.\n" +
-            "Use controls to see conditional states.",
-        args => {
-            if (args.positionInCircuit === null || args.isHighlighted) {
-                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                return;
-            }
-
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.densityMatrixAfterIfAvailable([row], col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
-        }),
-
-    DensityMatrixDisplay: new Gate(
-        "Density",
-        Matrix.identity(2),
-        "Density Matrix Display",
-        "Shows a wire's local state as a density matrix.\n" +
-            "Use controls to see conditional states.",
-        args => {
-            if (args.positionInCircuit === null || args.isHighlighted) {
-                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                return;
-            }
-
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.densityMatrixAfterIfAvailable([row], col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
         }),
 
     Measurement: new Gate(
@@ -131,57 +79,179 @@ Gates.Special = {
             0, 1, 0, 0,
             0, 0, 0, 1]),
         "Swap Gate [Half]",
-        "Swaps the values of two qubits.\n" +
-            "Place two swap gate halves in the same column to form a swap gate.",
+        "Swaps the values of two qubits.\nPlace two swap gate halves in the same column to form a swap gate.",
         args => {
             if (args.isInToolbox || args.isHighlighted) {
                 GateFactory.DEFAULT_DRAWER(args);
                 return;
             }
 
+            // A swap gate half is shown as a small X (joined by a line to the other half; that's handled elsewhere).
             let swapRect = Rect.centeredSquareWithRadius(args.rect.center(), args.rect.w / 6);
             args.painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
             args.painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
         })
 };
 
+/**
+ * Gates that display information without affecting the state.
+ * (In reality these would require multiple runs of the circuit to do tomography.)
+ */
+Gates.Displays = {
+    ChanceDisplay: new Gate(
+        "Chance",
+        Matrix.identity(2),
+        "Probability Display",
+        "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.",
+        args => {
+            if (args.positionInCircuit === null || args.isHighlighted) {
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                return;
+            }
+
+            let {row, col} = args.positionInCircuit;
+            MathPainter.paintProbabilityBox(
+                args.painter,
+                args.stats.controlledWireProbabilityJustAfter(row, col),
+                args.rect);
+        }),
+
+    BlochSphereDisplay: new Gate(
+        "Bloch",
+        Matrix.identity(2),
+        "Bloch Sphere Display",
+        "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.",
+        args => {
+            if (args.positionInCircuit === null || args.isHighlighted) {
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                return;
+            }
+
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.densityMatrixAfterIfAvailable([row], col);
+            MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
+        }),
+
+    DensityMatrixDisplay: new Gate(
+        "Density",
+        Matrix.identity(2),
+        "Density Matrix Display",
+        "Shows a wire's local state as a density matrix.\nUse controls to see conditional states.",
+        args => {
+            if (args.positionInCircuit === null || args.isHighlighted) {
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                return;
+            }
+
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.densityMatrixAfterIfAvailable([row], col);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
+        })
+};
+
+/**
+ * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
+ */
+Gates.HalfTurns = {
+    X: new Gate(
+        "X",
+        Matrix.PAULI_X,
+        "Pauli X Gate",
+        "Toggles between ON and OFF.\nAlso known as the Not gate.",
+        args => {
+            // The X gate is drawn as a crossed circle when it has controls.
+
+            let hasSingleWireControl =
+                args.positionInCircuit !== null &&
+                args.stats.circuitDefinition.colHasSingleWireControl(args.positionInCircuit.col);
+            let hasDoubleWireControl =
+                args.positionInCircuit !== null &&
+                args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
+            if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
+                GateFactory.DEFAULT_DRAWER(args);
+                return;
+            }
+
+            let drawArea = args.rect.scaledOutwardBy(0.6);
+            args.painter.fillCircle(drawArea.center(), drawArea.w / 2);
+            args.painter.strokeCircle(drawArea.center(), drawArea.w / 2);
+            if (hasSingleWireControl) {
+                args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
+            }
+            if (hasDoubleWireControl) {
+                args.painter.strokeLine(drawArea.topCenter().offsetBy(-1, 0), drawArea.bottomCenter().offsetBy(-1, 0));
+                args.painter.strokeLine(drawArea.topCenter().offsetBy(+1, 0), drawArea.bottomCenter().offsetBy(+1, 0));
+            }
+            let isMeasured = args.stats.circuitDefinition.locIsMeasured(
+                new Point(args.positionInCircuit.col, args.positionInCircuit.row));
+            if (isMeasured) {
+                args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, -1), drawArea.centerRight().offsetBy(0, -1));
+                args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, +1), drawArea.centerRight().offsetBy(0, +1));
+            } else {
+                args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
+            }
+        }),
+
+    Y: new Gate(
+        "Y",
+        Matrix.PAULI_Y,
+        "Pauli Y Gate",
+        "A combination of the X and Z gates.",
+        GateFactory.DEFAULT_DRAWER),
+
+    Z: new Gate(
+        "Z",
+        Matrix.PAULI_Z,
+        "Pauli Z Gate",
+        "Negates the amplitude of states where the qubit is ON.\nAlso known as the Phase Flip gate.",
+        GateFactory.DEFAULT_DRAWER),
+
+    H: new Gate(
+        "H",
+        Matrix.HADAMARD,
+        "Hadamard Gate",
+        "The simplest non-classical gate.\n" +
+        "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.",
+        GateFactory.DEFAULT_DRAWER)
+};
+
 Gates.QuarterTurns = {
-    Down: new Gate(
+    SqrtXForward: new Gate(
         "X^½",
         Matrix.fromPauliRotation(0.25, 0, 0),
         "√X Gate",
         "Principle square root of Not.",
         GateFactory.DEFAULT_DRAWER),
 
-    Up: new Gate(
+    SqrtXBackward: new Gate(
         "X^-½",
         Matrix.fromPauliRotation(0.75, 0, 0),
         "X^-½ Gate",
         "Adjoint square root of Not.",
         GateFactory.DEFAULT_DRAWER),
 
-    Right: new Gate(
+    SqrtYForward: new Gate(
         "Y^½",
         Matrix.fromPauliRotation(0, 0.25, 0),
         "√Y Gate",
         "Principle square root of Y.",
         GateFactory.DEFAULT_DRAWER),
 
-    Left: new Gate(
+    SqrtYBackward: new Gate(
         "Y^-½",
         Matrix.fromPauliRotation(0, 0.75, 0),
         "Y^-½ Gate",
         "Adjoint square root of Y.",
         GateFactory.DEFAULT_DRAWER),
 
-    CounterClockwise: new Gate(
+    SqrtZForward: new Gate(
         "Z^½",
         Matrix.fromPauliRotation(0, 0, 0.25),
         "√Z Gate",
         "Principle square root of Z.\nAlso known as the 'S' gate.",
         GateFactory.DEFAULT_DRAWER),
 
-    Clockwise: new Gate(
+    SqrtZBackward: new Gate(
         "Z^-½",
         Matrix.fromPauliRotation(0, 0, 0.75),
         "Z^-½ Gate",
@@ -228,66 +298,6 @@ Gates.OtherZ = {
         GateFactory.DEFAULT_DRAWER)
 };
 
-Gates.HalfTurns = {
-    X: new Gate(
-        "X",
-        Matrix.PAULI_X,
-        "Pauli X Gate",
-        "Toggles between ON and OFF.\nAlso known as the Not gate.",
-        args => {
-            let hasSingleWireControl =
-                args.positionInCircuit !== null &&
-                args.stats.circuitDefinition.colHasSingleWireControl(args.positionInCircuit.col);
-            let hasDoubleWireControl =
-                args.positionInCircuit !== null &&
-                args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
-            if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
-                GateFactory.DEFAULT_DRAWER(args);
-                return;
-            }
-
-            let drawArea = args.rect.scaledOutwardBy(0.6);
-            args.painter.fillCircle(drawArea.center(), drawArea.w / 2);
-            args.painter.strokeCircle(drawArea.center(), drawArea.w / 2);
-            if (hasSingleWireControl) {
-                args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
-            }
-            if (hasDoubleWireControl) {
-                args.painter.strokeLine(drawArea.topCenter().offsetBy(-1, 0), drawArea.bottomCenter().offsetBy(-1, 0));
-                args.painter.strokeLine(drawArea.topCenter().offsetBy(+1, 0), drawArea.bottomCenter().offsetBy(+1, 0));
-            }
-            let isMeasured = args.stats.circuitDefinition.locIsMeasured(new Point(args.positionInCircuit.col, args.positionInCircuit.row));
-            if (isMeasured) {
-                args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, -1), drawArea.centerRight().offsetBy(0, -1));
-                args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, +1), drawArea.centerRight().offsetBy(0, +1));
-            } else {
-                args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
-            }
-        }),
-
-    Y: new Gate(
-        "Y",
-        Matrix.PAULI_Y,
-        "Pauli Y Gate",
-        "A combination of the X and Z gates.",
-        GateFactory.DEFAULT_DRAWER),
-
-    Z: new Gate(
-        "Z",
-        Matrix.PAULI_Z,
-        "Pauli Z Gate",
-        "Negates the amplitude of states where the qubit is ON.\nAlso known as the Phase Flip gate.",
-        GateFactory.DEFAULT_DRAWER),
-
-    H: new Gate(
-        "H",
-        Matrix.HADAMARD,
-        "Hadamard Gate",
-        "The simplest non-classical gate.\n" +
-            "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.",
-        GateFactory.DEFAULT_DRAWER)
-};
-
 Gates.Exponentiating = {
     XForward: new Gate(
         "e^-iXt",
@@ -297,8 +307,7 @@ Gates.Exponentiating = {
             return new Matrix(2, 2, new Float32Array([c, 0, 0, -s, 0, -s, c, 0]));
         },
         "X-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the X axis.\n" +
-            "Passes through ±iX instead of X.",
+        "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X.",
         GateFactory.CYCLE_DRAWER),
 
     XBackward: new Gate(
@@ -309,8 +318,7 @@ Gates.Exponentiating = {
             return new Matrix(2, 2, new Float32Array([c, 0, 0, s, 0, s, c, 0]));
         },
         "X-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the X axis.\n" +
-            "Passes through ±iX instead of X.",
+        "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X.",
         GateFactory.CYCLE_DRAWER),
 
     YForward: new Gate(
@@ -321,8 +329,7 @@ Gates.Exponentiating = {
             return new Matrix(2, 2, new Float32Array([c, 0, -s, 0, s, 0, c, 0]));
         },
         "Y-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the Y axis.\n" +
-            "Passes through ±iY instead of Y.",
+        "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y.",
         GateFactory.CYCLE_DRAWER),
 
     YBackward: new Gate(
@@ -333,8 +340,7 @@ Gates.Exponentiating = {
             return new Matrix(2, 2, new Float32Array([c, 0, s, 0, -s, 0, c, 0]));
         },
         "Y-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the Y axis.\n" +
-            "Passes through ±iY instead of Y.",
+        "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y.",
         GateFactory.CYCLE_DRAWER),
 
     ZForward: new Gate(
@@ -345,8 +351,7 @@ Gates.Exponentiating = {
             return new Matrix(2, 2, new Float32Array([c, -s, 0, 0, 0, 0, c, s]));
         },
         "Z-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the Z axis.\n" +
-            "Passes through ±iZ instead of Z.",
+        "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
         GateFactory.CYCLE_DRAWER),
 
     ZBackward: new Gate(
@@ -357,8 +362,7 @@ Gates.Exponentiating = {
             return new Matrix(2, 2, new Float32Array([c, s, 0, 0, 0, 0, c, -s]));
         },
         "Z-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the Z axis.\n" +
-            "Passes through ±iZ instead of Z.",
+        "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
         GateFactory.CYCLE_DRAWER)
 };
 
@@ -449,14 +453,14 @@ Gates.Silly = {
         "|0⟩⟨0|",
         Matrix.square([1, 0, 0, 0]),
         "Post-selection Gate [Off]",
-        "Keeps OFF states, discards ON states, and renormalizes.\n",
+        "Keeps OFF states, discards ON states, and renormalizes.",
         GateFactory.POST_SELECT_DRAWER),
 
     POST_SELECT_ON: new Gate(
         "|1⟩⟨1|",
         Matrix.square([0, 0, 0, 1]),
         "Post-selection Gate [On]",
-        "Keeps ON states, discards OFF states, and renormalizes.\n",
+        "Keeps ON states, discards OFF states, and renormalizes.",
         GateFactory.POST_SELECT_DRAWER),
 
     CLOCK: new Gate(
@@ -479,6 +483,7 @@ Gates.Silly = {
         "Spacer",
         "A gate with no effect.",
         args => {
+            // Drawn as an ellipsis.
             if (args.isInToolbox || args.isHighlighted) {
                 let backColor = Config.GATE_FILL_COLOR;
                 if (args.isHighlighted) {
@@ -505,10 +510,10 @@ Gates.Sets = [
         gates: [
             Gates.Special.Control,
             Gates.Special.Measurement,
-            Gates.Special.ChanceDisplay,
+            Gates.Displays.ChanceDisplay,
             Gates.Special.AntiControl,
-            Gates.Special.DensityMatrixDisplay,
-            Gates.Special.BlochSphereDisplay
+            Gates.Displays.DensityMatrixDisplay,
+            Gates.Displays.BlochSphereDisplay
         ]
     },
     {
@@ -525,12 +530,12 @@ Gates.Sets = [
     {
         hint: "Quarter Turns",
         gates: [
-            Gates.QuarterTurns.Down,
-            Gates.QuarterTurns.Right,
-            Gates.QuarterTurns.CounterClockwise,
-            Gates.QuarterTurns.Up,
-            Gates.QuarterTurns.Left,
-            Gates.QuarterTurns.Clockwise
+            Gates.QuarterTurns.SqrtXForward,
+            Gates.QuarterTurns.SqrtYForward,
+            Gates.QuarterTurns.SqrtZForward,
+            Gates.QuarterTurns.SqrtXBackward,
+            Gates.QuarterTurns.SqrtYBackward,
+            Gates.QuarterTurns.SqrtZBackward
         ]
     },
     {
@@ -583,11 +588,11 @@ Gates.Sets = [
 Gates.KnownToSerializer = [
     Gates.Special.Control,
     Gates.Special.SwapHalf,
-    Gates.Special.ChanceDisplay,
-    Gates.Special.DensityMatrixDisplay,
-    Gates.Special.BlochSphereDisplay,
     Gates.Special.Measurement,
     Gates.Special.AntiControl,
+    Gates.Displays.ChanceDisplay,
+    Gates.Displays.DensityMatrixDisplay,
+    Gates.Displays.BlochSphereDisplay,
     Gates.Silly.SPACER,
     Gates.Silly.CLOCK,
     Gates.Silly.CLOCK_QUARTER_PHASE,
@@ -597,12 +602,12 @@ Gates.KnownToSerializer = [
     Gates.HalfTurns.X,
     Gates.HalfTurns.Y,
     Gates.HalfTurns.Z,
-    Gates.QuarterTurns.Down,
-    Gates.QuarterTurns.Right,
-    Gates.QuarterTurns.CounterClockwise,
-    Gates.QuarterTurns.Up,
-    Gates.QuarterTurns.Left,
-    Gates.QuarterTurns.Clockwise,
+    Gates.QuarterTurns.SqrtXForward,
+    Gates.QuarterTurns.SqrtYForward,
+    Gates.QuarterTurns.SqrtZForward,
+    Gates.QuarterTurns.SqrtXBackward,
+    Gates.QuarterTurns.SqrtYBackward,
+    Gates.QuarterTurns.SqrtZBackward,
     Gates.Powering.XForward,
     Gates.Powering.YForward,
     Gates.Powering.ZForward,
