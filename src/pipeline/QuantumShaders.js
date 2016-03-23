@@ -304,37 +304,31 @@ QuantumShaders.controlSelect = (controlMask, dataTexture) => {
         if (dataTexture.width * dataTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
             throw new Error("QuantumShaders.controlSelect needs to be updated to allow more qubits.");
         }
-        let maskX = dataTexture.width - 1;
-        let lenX = Math.floor(Math.log2(dataTexture.width));
-        let usedX = controlMask.inclusionMask & maskX;
-        let remainingXAfterCompaction = lenX - Util.numberOfSetBits(usedX);
         CONTROL_SELECT_SHADER.withArgs(
             WglArg.texture('inputTexture', dataTexture, 0),
             WglArg.vec2('inputSize', dataTexture.width, dataTexture.height),
-            WglArg.float('inputWidthAfterCompaction', 1 << remainingXAfterCompaction),
             WglArg.float('outputWidth', destinationTexture.width),
-            WglArg.vec2('used', usedX, controlMask.inclusionMask >> lenX),
-            WglArg.vec2('desired', controlMask.desiredValueMask & maskX, controlMask.desiredValueMask >> lenX)
+            WglArg.float('used', controlMask.inclusionMask),
+            WglArg.float('desired', controlMask.desiredValueMask)
         ).renderTo(destinationTexture);
     });
 };
 const CONTROL_SELECT_SHADER = new WglShader(`
-    uniform float inputWidthAfterCompaction;
     uniform float outputWidth;
     uniform vec2 inputSize;
     uniform sampler2D inputTexture;
 
-    uniform vec2 used;
-    uniform vec2 desired;
+    uniform float used;
+    uniform float desired;
 
     /**
-     * Re-inserts control bits into a controls-omitted compacted value.
+     * Inserts bits from the given value into the holes between used bits in the desired mask.
      */
-    float merge(float val, float used, float desired) {
+    float scatter(float val, float used, float desired) {
         float maskPos = 1.0;
         float coordPos = 1.0;
         float result = 0.0;
-        for (int i = 0; i < ${HALF_QUBIT_LIMIT}; i++) {
+        for (int i = 0; i < ${HALF_QUBIT_LIMIT*2}; i++) {
             float v = mod(floor(val/coordPos), 2.0);
             float u = mod(floor(used/maskPos), 2.0);
             float d = mod(floor(desired/maskPos), 2.0);
@@ -346,13 +340,16 @@ const CONTROL_SELECT_SHADER = new WglShader(`
     }
 
     void main() {
-        float i = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
+        float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
+        float inIndex = scatter(outIndex, used, desired);
 
-        float x = mod(i, inputWidthAfterCompaction);
-        float y = floor(i / inputWidthAfterCompaction);
+        float x = mod(inIndex, inputSize.x);
+        float y = floor(inIndex / inputSize.x);
+        vec2 uv = vec2(x + 0.5, y + 0.5) / inputSize;
 
-        float x2 = merge(x, used.x, desired.x);
-        float y2 = merge(y, used.y, desired.y);
+        gl_FragColor = texture2D(inputTexture, uv);
+
+
 
         vec2 uv = vec2(x2 + 0.5, y2 + 0.5) / inputSize;
         gl_FragColor = texture2D(inputTexture, uv);
