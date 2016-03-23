@@ -11,7 +11,7 @@ import { initializedWglContext } from "src/webgl/WglContext.js"
 export default class SimpleShaders {}
 
 /**
- * Returns a parameterized shader that renders a uniform color over the entire destination texture.
+ * Returns a configured shader that renders a uniform color over the entire destination texture.
  * @param {!number} r
  * @param {!number} g
  * @param {!number} b
@@ -26,7 +26,7 @@ const COLOR_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a parameterized shader that just draws the input texture's contents.
+ * Returns a configured shader that just draws the input texture's contents.
  * @param {!WglTexture} inputTexture
  * @returns {!WglConfiguredShader}
  */
@@ -41,7 +41,29 @@ const PASSTHROUGH_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a parameterized shader that sets each pixel's components to its position in the texture.
+ * Returns a configured shader that renders teh result of adding each source pixel to the source pixel a fixed offset
+ * away.
+ * @param {!WglTexture} inputTexture
+ * @param {!int} dx
+ * @param {!int} dy
+ * @returns {!WglConfiguredShader}
+ */
+SimpleShaders.sumFold = (inputTexture, dx, dy) => SUM_FOLD_SHADER.withArgs(
+    WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
+    WglArg.vec2("offset", dx, dy),
+    WglArg.texture("inputTexture", inputTexture, 0));
+const SUM_FOLD_SHADER = new WglShader(`
+    uniform vec2 inputSize;
+    uniform sampler2D inputTexture;
+    uniform vec2 offset;
+    void main() {
+        vec2 uv0 = gl_FragCoord.xy / inputSize;
+        vec2 uv1 = uv0 + offset / inputSize;
+        gl_FragColor = texture2D(inputTexture, uv0) + texture2D(inputTexture, uv1);
+    }`);
+
+/**
+ * Returns a configured shader that sets each pixel's components to its position in the texture.
  * @type {!WglConfiguredShader}
  */
 SimpleShaders.coords = new WglShader(`
@@ -50,7 +72,7 @@ SimpleShaders.coords = new WglShader(`
     }`).withArgs();
 
 /**
- * Returns a parameterized shader that overlays the destination texture with the given data.
+ * Returns a configured shader that overlays the destination texture with the given data.
  * @param {!Float32Array} rgbaData
  * @returns {!WglConfiguredShader}
  */
@@ -66,7 +88,7 @@ SimpleShaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
 });
 
 /**
- * Returns a parameterized shader that overlays a foreground texture's pixels over a background texture's pixels, with
+ * Returns a configured shader that overlays a foreground texture's pixels over a background texture's pixels, with
  * an offset.
  * @param {!int} foregroundX
  * @param {!int} foregroundY
@@ -100,7 +122,7 @@ const OVERLAY_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a parameterized shader that renders the input texture to destination texture, but scaled by a constant.
+ * Returns a configured shader that renders the input texture to destination texture, but scaled by a constant.
  * @param {!WglTexture} inputTexture
  * @param {!number} factor
  * @returns {!WglConfiguredShader}
