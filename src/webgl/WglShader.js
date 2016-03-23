@@ -237,10 +237,12 @@ export class WglConfiguredShader {
      */
     readFloatOutputs(width, height) {
         let texture = new WglTexture(width, height);
-        this.renderTo(texture);
-        let result = texture.readPixels();
-        texture.ensureDeinitialized();
-        return result;
+        try {
+            this.renderTo(texture);
+            return texture.readPixels();
+        } finally {
+            texture.ensureDeinitialized();
+        }
     }
 
     /**
