@@ -15,40 +15,40 @@ suite.test("timeBased_matchUnoptimized", () => {
     let i = Complex.I;
     let τ = Math.PI * 2;
     matches(
-        Gates.Named.Exponentiating.XForward,
+        Gates.Exponentiating.XForward,
         t => Matrix.PAULI_X.liftApply(c => c.times(τ * -t).times(i).exp()));
     matches(
-        Gates.Named.Exponentiating.XBackward,
+        Gates.Exponentiating.XBackward,
         t => Matrix.PAULI_X.liftApply(c => c.times(τ * t).times(i).exp()));
     matches(
-        Gates.Named.Exponentiating.YForward,
+        Gates.Exponentiating.YForward,
         t => Matrix.PAULI_Y.liftApply(c => c.times(τ * -t).times(i).exp()));
     matches(
-        Gates.Named.Exponentiating.YBackward,
+        Gates.Exponentiating.YBackward,
         t => Matrix.PAULI_Y.liftApply(c => c.times(τ * t).times(i).exp()));
     matches(
-        Gates.Named.Exponentiating.ZForward,
+        Gates.Exponentiating.ZForward,
         t => Matrix.PAULI_Z.liftApply(c => c.times(τ * -t).times(i).exp()));
     matches(
-        Gates.Named.Exponentiating.ZBackward,
+        Gates.Exponentiating.ZBackward,
         t => Matrix.PAULI_Z.liftApply(c => c.times(τ * t).times(i).exp()));
 
     matches(
-        Gates.Named.Powering.XForward,
+        Gates.Powering.XForward,
         t => Matrix.PAULI_X.liftApply(c => c.raisedTo(t * 2)));
     matches(
-        Gates.Named.Powering.XBackward,
+        Gates.Powering.XBackward,
         t => Matrix.PAULI_X.liftApply(c => c.raisedTo(-t * 2)));
     matches(
-        Gates.Named.Powering.YForward,
+        Gates.Powering.YForward,
         t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(t * 2)));
     matches(
-        Gates.Named.Powering.YBackward,
+        Gates.Powering.YBackward,
         t => Matrix.PAULI_Y.liftApply(c => c.raisedTo(-t * 2)));
     matches(
-        Gates.Named.Powering.ZForward,
+        Gates.Powering.ZForward,
         t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(t * 2)));
     matches(
-        Gates.Named.Powering.ZBackward,
+        Gates.Powering.ZBackward,
         t => Matrix.PAULI_Z.liftApply(c => c.raisedTo(-t * 2)));
 });

@@ -322,7 +322,7 @@ class CircuitWidget {
             i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i));
 
         let isMatchedSwap = i =>
-            hasTwoSwaps && gs[i] === Gates.Named.Special.SwapHalf;
+            hasTwoSwaps && gs[i] === Gates.Special.SwapHalf;
 
         let t1 = Seq.range(n).filter(canBeControlled).first(null);
         let t2 = Seq.range(n).filter(canBeControlled).last(null);

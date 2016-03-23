@@ -9,14 +9,14 @@ import Seq from "src/base/Seq.js"
 
 let suite = new Suite("CircuitStats");
 
-let X = Gates.Named.HalfTurns.X;
-let Y = Gates.Named.HalfTurns.Y;
-let Z = Gates.Named.HalfTurns.Z;
-let H = Gates.Named.HalfTurns.H;
-let C = Gates.Named.Special.Control;
-let A = Gates.Named.Special.AntiControl;
+let X = Gates.HalfTurns.X;
+let Y = Gates.HalfTurns.Y;
+let Z = Gates.HalfTurns.Z;
+let H = Gates.HalfTurns.H;
+let C = Gates.Special.Control;
+let A = Gates.Special.AntiControl;
 let _ = null;
-let M = Gates.Named.Special.Measurement;
+let M = Gates.Special.Measurement;
 
 suite.test("isEqualTo", () => {
     let c1 = new CircuitDefinition(2, [
@@ -94,14 +94,14 @@ suite.test("singleQubitOperationsInColAt", () => {
         {m: Matrix.PAULI_X, i: 1}
     ]);
     assertThat(CircuitDefinition.from([[
-        C, Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf
+        C, Gates.Special.AntiControl, Gates.Special.SwapHalf
     ]]).singleQubitOperationsInColAt(0, 0)).isEqualTo([]);
     assertThat(CircuitDefinition.from([
-        [Gates.Named.Special.SwapHalf, Gates.Named.Special.SwapHalf]
+        [Gates.Special.SwapHalf, Gates.Special.SwapHalf]
     ]).singleQubitOperationsInColAt(0, 0)).isEqualTo([]);
 
     let t0 = CircuitDefinition.from([[
-        Gates.Named.Powering.XForward
+        Gates.Powering.XForward
     ]]).singleQubitOperationsInColAt(0, 0);
     if (t0.length !== 0) {
         assertThat(t0).isApproximatelyEqualTo([
@@ -109,12 +109,12 @@ suite.test("singleQubitOperationsInColAt", () => {
         ]);
     }
     assertThat(CircuitDefinition.from([[
-        Gates.Named.Powering.XForward
+        Gates.Powering.XForward
     ]]).singleQubitOperationsInColAt(0, 0.25)).isApproximatelyEqualTo([
         {m: Matrix.fromPauliRotation(0.25, 0, 0), i: 0}
     ]);
     assertThat(CircuitDefinition.from([
-        [Gates.Named.Powering.XForward]
+        [Gates.Powering.XForward]
     ]).singleQubitOperationsInColAt(0, 0.5)).isApproximatelyEqualTo([
         {m: Matrix.PAULI_X, i: 0}
     ]);
@@ -136,7 +136,7 @@ suite.test("singleQubitOperationsInColAt", () => {
 });
 
 suite.test("gateAtLocIsDisabledReason_swaps", () => {
-    let W = Gates.Named.Special.SwapHalf;
+    let W = Gates.Special.SwapHalf;
     let circuit = CircuitDefinition.from([
         [W, W, _, _],
         [W, W, W, _], // too many
@@ -168,7 +168,7 @@ suite.test("gateAtLocIsDisabledReason_swaps", () => {
 });
 
 suite.test("gateAtLocIsDisabledReason_recohere", () => {
-    let W = Gates.Named.Special.SwapHalf;
+    let W = Gates.Special.SwapHalf;
     let circuit = CircuitDefinition.from([
         [M, M, _, _],
         [X, Y, Z, H],

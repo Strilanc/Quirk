@@ -165,8 +165,8 @@ let fromJson_Gate = json => {
             json);
     }
 
-    if (symbol === Gates.Named.Silly.FUZZ_SYMBOL && matrix !== undefined) {
-        let r = Gates.Named.Silly.FUZZ_MAKER();
+    if (symbol === Gates.Silly.FUZZ_SYMBOL && matrix !== undefined) {
+        let r = Gates.Silly.FUZZ_MAKER();
         r.matrixOrFunc = matrix;
         return r;
     }

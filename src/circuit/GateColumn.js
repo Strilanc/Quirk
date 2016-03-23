@@ -54,7 +54,7 @@ class GateColumn {
     swapPairs() {
         let swapIndices = Seq.
             range(this.gates.length).
-            filter(i => this.gates[i] === Gates.Named.Special.SwapHalf).
+            filter(i => this.gates[i] === Gates.Special.SwapHalf).
             toArray();
         if (swapIndices.length !== 2) {
             return [];
@@ -69,8 +69,8 @@ class GateColumn {
         return Seq.
             range(this.gates.length).
             map(i =>
-                this.gates[i] === Gates.Named.Special.Control ? QuantumControlMask.fromBitIs(i, true) :
-                this.gates[i] === Gates.Named.Special.AntiControl ? QuantumControlMask.fromBitIs(i, false) :
+                this.gates[i] === Gates.Special.Control ? QuantumControlMask.fromBitIs(i, true) :
+                this.gates[i] === Gates.Special.AntiControl ? QuantumControlMask.fromBitIs(i, false) :
                 QuantumControlMask.NO_CONTROLS).
             aggregate(QuantumControlMask.NO_CONTROLS, (a, e) => a.combine(e));
     }

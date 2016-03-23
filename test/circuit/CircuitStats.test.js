@@ -10,8 +10,8 @@ let suite = new Suite("CircuitStats");
 
 suite.webGlTest("smoke", () => {
     let circuit = new CircuitDefinition.from([
-        [null, Gates.Named.HalfTurns.H],
-        [Gates.Named.HalfTurns.X, Gates.Named.Special.Control]
+        [null, Gates.HalfTurns.H],
+        [Gates.HalfTurns.X, Gates.Special.Control]
     ]);
     let s = CircuitStats.fromCircuitAtTime(circuit, 0.5);
     assertThat(s.circuitDefinition).isEqualTo(circuit);
@@ -28,10 +28,10 @@ suite.webGlTest("smoke", () => {
 });
 
 suite.webGlTest("wireProbabilityJustAfter", () => {
-    let X = Gates.Named.HalfTurns.X;
-    let H = Gates.Named.HalfTurns.H;
-    let IsOn = Gates.Named.Special.Control;
-    let IsOff = Gates.Named.Special.AntiControl;
+    let X = Gates.HalfTurns.X;
+    let H = Gates.HalfTurns.H;
+    let IsOn = Gates.Special.Control;
+    let IsOff = Gates.Special.AntiControl;
 
     let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
         [H, null, null],
@@ -66,9 +66,9 @@ suite.webGlTest("wireProbabilityJustAfter", () => {
 });
 
 suite.webGlTest("controlledWireProbabilityJustAfter_independent", () => {
-    let H = Gates.Named.HalfTurns.H;
-    let IsOn = Gates.Named.Special.Control;
-    let IsOff = Gates.Named.Special.AntiControl;
+    let H = Gates.HalfTurns.H;
+    let IsOn = Gates.Special.Control;
+    let IsOff = Gates.Special.AntiControl;
     let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
         [H, H, H],
         [IsOn, IsOff, null]
@@ -96,10 +96,10 @@ suite.webGlTest("controlledWireProbabilityJustAfter_independent", () => {
 });
 
 suite.webGlTest("controlledWireProbabilityJustAfter_dependent", () => {
-    let X = Gates.Named.HalfTurns.X;
-    let H = Gates.Named.HalfTurns.H;
-    let IsOn = Gates.Named.Special.Control;
-    let IsOff = Gates.Named.Special.AntiControl;
+    let X = Gates.HalfTurns.X;
+    let H = Gates.HalfTurns.H;
+    let IsOn = Gates.Special.Control;
+    let IsOff = Gates.Special.AntiControl;
 
     let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
         [H, null, null],
@@ -138,7 +138,7 @@ suite.webGlTest("controlledWireProbabilityJustAfter_dependent", () => {
 });
 
 suite.webGlTest("wireProbabilities_inControl", () => {
-    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([[Gates.Named.Special.Control]]), 0);
+    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([[Gates.Special.Control]]), 0);
     assertThat(s.wireProbabilityJustAfter(0, -1)).isEqualTo(0);
     assertThat(s.wireProbabilityJustAfter(0, 0)).isEqualTo(0);
     assertThat(s.wireProbabilityJustAfter(0, 1)).isEqualTo(0);
@@ -149,7 +149,7 @@ suite.webGlTest("wireProbabilities_inControl", () => {
 
 suite.webGlTest("wireProbabilities_severalQubits", () => {
     let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
-        [null, null, null, null, Gates.Named.HalfTurns.X]
+        [null, null, null, null, Gates.HalfTurns.X]
     ]), 0);
     assertThat(s.wireProbabilityJustAfter(0, Infinity)).isEqualTo(0);
     assertThat(s.wireProbabilityJustAfter(1, Infinity)).isEqualTo(0);

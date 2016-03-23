@@ -97,7 +97,7 @@ class CircuitDefinition {
                 range(this.numWires).
                 map(r => Seq.
                     range(this.columns.length).
-                    skipWhile(c => this.columns[c].gates[r] !== Gates.Named.Special.Measurement ||
+                    skipWhile(c => this.columns[c].gates[r] !== Gates.Special.Measurement ||
                         this.colHasControls(c)).
                     first(Infinity)).
                 toArray();
@@ -139,7 +139,7 @@ class CircuitDefinition {
      */
     locIsControl(pt) {
         let gate = this.gateAtLoc(pt);
-        return gate === Gates.Named.Special.Control || gate === Gates.Named.Special.AntiControl;
+        return gate === Gates.Special.Control || gate === Gates.Special.AntiControl;
     }
 
     /**
@@ -167,7 +167,7 @@ class CircuitDefinition {
     colHasPairedSwapGate(col) {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
-            filter(pt => this.gateAtLoc(pt) === Gates.Named.Special.SwapHalf);
+            filter(pt => this.gateAtLoc(pt) === Gates.Special.SwapHalf);
         return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== null) && pts.count() == 2;
     }
 
@@ -178,10 +178,10 @@ class CircuitDefinition {
     locHasControllableGate(pt) {
         let g = this.gateAtLoc(pt);
         return g !== null &&
-            g !== Gates.Named.Special.Control &&
-            g !== Gates.Named.Special.AntiControl &&
-            g !== Gates.Named.Silly.SPACER &&
-            (g !== Gates.Named.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
+            g !== Gates.Special.Control &&
+            g !== Gates.Special.AntiControl &&
+            g !== Gates.Silly.SPACER &&
+            (g !== Gates.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
     }
 
     colHasControls(col) {
@@ -237,14 +237,14 @@ class CircuitDefinition {
             return "parse\nerror";
         }
 
-        if (g === Gates.Named.Special.Measurement && this.colHasControls(pt.x)) {
+        if (g === Gates.Special.Measurement && this.colHasControls(pt.x)) {
             return "can't\ncontrol\n(sorry)";
         }
 
-        if (g === Gates.Named.Special.SwapHalf) {
+        if (g === Gates.Special.SwapHalf) {
             let pts = Seq.range(this.numWires).
                 map(row => new Point(pt.x, row)).
-                filter(pt => this.gateAtLoc(pt) === Gates.Named.Special.SwapHalf);
+                filter(pt => this.gateAtLoc(pt) === Gates.Special.SwapHalf);
             if (pts.count() === 1) {
                 return "need\nother\nswap";
             }
