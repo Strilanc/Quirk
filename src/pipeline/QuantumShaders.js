@@ -5,7 +5,14 @@ import SimpleShaders from "src/pipeline/SimpleShaders.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
+import { WglConfiguredShader } from "src/webgl/WglShader.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
+
+/**
+ * Some shaders do work for each qubit. They iterate this many times (horizontally and vertically).
+ * @type {!int}
+ */
+const HALF_QUBIT_LIMIT = 10;
 
 /**
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
@@ -62,17 +69,15 @@ const snippets = {
  * Returns a parameterized shader that renders the superposition corresponding to a classical state.
  *
  * @param {!int} stateBitMask
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
-QuantumShaders.classicalState = stateBitMask => ({
-    renderTo: destinationTexture => {
+QuantumShaders.classicalState = stateBitMask => new WglConfiguredShader(destinationTexture => {
         let x = stateBitMask % destinationTexture.width;
         let y = (stateBitMask - x) / destinationTexture.width;
         SET_SINGLE_PIXEL_SHADER.
             withArgs(WglArg.vec2("pixel", x, y)).
             renderTo(destinationTexture);
-    }
-});
+    });
 const SET_SINGLE_PIXEL_SHADER = new WglShader(`
     /** The location of the single pixel to set. */
     uniform vec2 pixel;
@@ -90,7 +95,7 @@ const SET_SINGLE_PIXEL_SHADER = new WglShader(`
  * @param {!int} offset
  * @param {!WglTexture} foregroundTexture
  * @param {!WglTexture} backgroundTexture
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 QuantumShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
     WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
@@ -127,7 +132,7 @@ const LINEAR_OVERLAY_SHADER = new WglShader(`
  * over the red component of the destination texture (and zero-ing the other components).
  *
  * @param {!WglTexture} inputTexture
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 QuantumShaders.squaredMagnitude = inputTexture => SQUARED_MAGNITUDE_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
@@ -232,28 +237,26 @@ const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
  * Returns a parameterized shader that renders a control mask texture corresponding to the given control mask, with 1s
  * at pixels meeting the control and 0s at pixels not meeting the control.
  * @param {!QuantumControlMask} controlMask
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 QuantumShaders.controlMask = controlMask => {
     if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
         return SimpleShaders.color(1, 0, 0, 0);
     }
 
-    return {
-        renderTo: destinationTexture => {
-            if (destinationTexture.width * destinationTexture.height > (1 << 20)) {
-                throw new Error("QuantumShaders.controlMask needs to be updated to allow more qubits.");
-            }
-            let xMask = destinationTexture.width - 1;
-            let xLen = Math.floor(Math.log2(destinationTexture.width));
-            CONTROL_MASK_SHADER.withArgs(
-                WglArg.float('usedX', controlMask.inclusionMask & xMask),
-                WglArg.float('desiredX', controlMask.desiredValueMask & xMask),
-                WglArg.float('usedY', controlMask.inclusionMask >> xLen),
-                WglArg.float('desiredY', controlMask.desiredValueMask >> xLen)
-            ).renderTo(destinationTexture);
+    return new WglConfiguredShader(destinationTexture => {
+        if (destinationTexture.width * destinationTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
+            throw new Error("QuantumShaders.controlMask needs to be updated to allow more qubits.");
         }
-    }
+        let xMask = destinationTexture.width - 1;
+        let xLen = Math.floor(Math.log2(destinationTexture.width));
+        CONTROL_MASK_SHADER.withArgs(
+            WglArg.float('usedX', controlMask.inclusionMask & xMask),
+            WglArg.float('desiredX', controlMask.desiredValueMask & xMask),
+            WglArg.float('usedY', controlMask.inclusionMask >> xLen),
+            WglArg.float('desiredY', controlMask.desiredValueMask >> xLen)
+        ).renderTo(destinationTexture);
+    })
 };
 const CONTROL_MASK_SHADER = new WglShader(`
     uniform float usedX;
@@ -269,7 +272,7 @@ const CONTROL_MASK_SHADER = new WglShader(`
     float check(float val, float used, float desired) {
         float pass = 1.0;
         float bit = 1.0;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < ${HALF_QUBIT_LIMIT}; i++) {
             float v = mod(floor(val/bit), 2.0);
             float u = mod(floor(used/bit), 2.0);
             float d = mod(floor(desired/bit), 2.0);

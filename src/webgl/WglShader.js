@@ -30,7 +30,7 @@ const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
     // Note: ELEMENT_ARRAY_BUFFER should not be rebound anywhere else.
 
     return {positionBuffer, indexBuffer};
-});
+}, () => {});
 
 /**
  * A shader program definition, used to render outputs onto textures based on the given GLSL source code.
@@ -50,37 +50,36 @@ export default class WglShader {
      * Returns the same shader, but parameterized by the given arguments. Call renderTo on the result to render to a
      * destination texture.
      * @param {!WglArg} uniformArguments
-     * @returns {!{renderTo: !function(!WglTexture) : void}}
+     * @returns {!WglConfiguredShader}
      */
     withArgs(...uniformArguments) {
         // Learn the parameter names.
         if (this._compiledShaderSlot === undefined) {
             let parameterNames = uniformArguments.map(e => e.name);
             this._compiledShaderSlot = new WglMortalValueSlot(
-                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames));
+                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames),
+                compiledShader => compiledShader.free());
         }
 
-        return {
-            renderTo: texture => {
-                const GL = WebGLRenderingContext;
-                let ctx = initializedWglContext();
-                let gl = ctx.gl;
+        return new WglConfiguredShader(texture => {
+            const GL = WebGLRenderingContext;
+            let ctx = initializedWglContext();
+            let gl = ctx.gl;
 
-                ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(ctx.lifetimeCounter);
+            ENSURE_ATTRIBUTES_BOUND_SLOT.ensureInitialized(ctx.lifetimeCounter);
 
-                // Bind frame buffer.
-                gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
-                checkGetErrorResult(gl, "framebufferTexture2D", true);
-                checkFrameBufferStatusResult(gl, true);
+            // Bind frame buffer.
+            gl.bindFramebuffer(GL.FRAMEBUFFER, texture.initializedFramebuffer());
+            checkGetErrorResult(gl, "framebufferTexture2D", true);
+            checkFrameBufferStatusResult(gl, true);
 
-                // Compile and bind shader.
-                this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
+            // Compile and bind shader.
+            this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
 
-                gl.viewport(0, 0, texture.width, texture.height);
-                gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
-                checkGetErrorResult(gl, "drawElements", true);
-            }
-        }
+            gl.viewport(0, 0, texture.width, texture.height);
+            gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
+            checkGetErrorResult(gl, "drawElements", true);
+        });
     }
 
     toString() {
@@ -167,6 +166,11 @@ class WglCompiledShader {
         gl.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
     };
 
+    free() {
+        let gl = initializedWglContext().gl;
+        gl.deleteProgram(this.program);
+    }
+
     /**
      * @param {!WebGLRenderingContext} gl
      * @param {number} shaderType
@@ -190,4 +194,67 @@ class WglCompiledShader {
 
         return shader;
     };
+}
+
+/**
+ * A shader with all its arguments provided, ready to render to a texture.
+ */
+export class WglConfiguredShader {
+    /**
+     * @param {!function(!WglTexture) : void} renderToFunc
+     */
+    constructor(renderToFunc) {
+        /** @type {!function(!WglTexture) : void} */
+        this.renderToFunc = renderToFunc;
+    }
+
+    /**
+     * Runs the configured renderer, placing its outputs into the given texture.
+     * @param {!WglTexture} texture
+     */
+    renderTo(texture) {
+        this.renderToFunc(texture);
+    }
+
+    /**
+     * Renders into a new float texture of the given size, and returns the texture.
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!WglTexture}
+     */
+    toFloatTexture(width, height) {
+        let texture = new WglTexture(width, height);
+        this.renderTo(texture);
+        return texture;
+    }
+
+    /**
+     * Renders the result into a float texture, reads the pixels, and returns the result.
+     * This method is slow (because it uses readPixels) and mainly exists for easy testing.
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!Float32Array|!Uint8Array}
+     */
+    readFloatOutputs(width, height) {
+        let texture = new WglTexture(width, height);
+        this.renderTo(texture);
+        let result = texture.readPixels();
+        texture.ensureDeinitialized();
+        return result;
+    }
+
+    /**
+     * Renders the result into an unsigned byte texture, reads the pixels, and returns the result.
+     * This method is slow (because it uses readPixels) and mainly exists for easy testing.
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!Float32Array|!Uint8Array}
+     */
+    readByteOutputs(width, height) {
+        let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
+        this.renderTo(texture);
+        let result = texture.readPixels();
+        texture.ensureDeinitialized();
+        return result;
+    }
 }

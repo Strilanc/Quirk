@@ -21,12 +21,34 @@ export default class Util {
         }
     }
 
+    static numberOfSetBits(i) {
+        if (i < 0) { throw new Error("i < 0"); }
+        if (!Number.isInteger(i)) { throw new Error("!Number.isInteger(i)"); }
+        if (i > 0xFFFFFFFF) { throw new Error("i > 0xFFFFFFFF"); }
+
+        // Start with each bit representing its own pop count.
+        // Merge adjacent 1-bit pop counts into 2-bit pop counts.
+        i = (i & 0x55555555) + ((i >> 1) & 0x55555555);
+        // Merge adjacent 2-bit pop counts into 4-bit pop counts.
+        i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+        // Merge adjacent 4-bit pop counts into 8-bit pop counts.
+        // Because log(8) < 4, the count won't overflow in to the adjacent 4-bit count. Masking can happen after.
+        i = (i + (i >> 4)) & 0x0F0F0F0F;
+        // Merge adjacent 8-bit pop counts into 16-bit pop counts.
+        // Because log(48) < 8, we no longer need to mask while merging.
+        i += i >> 8;
+        // Merge adjacent 16-bit pop counts into 32-bit pop counts.
+        i += i >> 16;
+        // Done. The total is in the low byte (the others contain noise due to lack of masking during later merges).
+        return i & 0xFF;
+    }
+
     /**
-    * Forced cast from nullable to non-nullable, throwing an exception on failure.
-    * @param {?T} v
-    * @returns {!T}
-    * @template T
-    */
+     * Forced cast from nullable to non-nullable, throwing an exception on failure.
+     * @param {?T} v
+     * @returns {!T}
+     * @template T
+     */
     static notNull(v) {
         Util.need(v !== null, "notNull");
         //noinspection JSValidateTypes

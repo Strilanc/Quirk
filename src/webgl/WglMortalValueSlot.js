@@ -5,14 +5,20 @@
 export default class WglMortalValueSlot {
     /**
      * @param {!function(void) : T} initializer
+     * @param {!function(T) : void} deinitializer
      * @template T
      */
-    constructor(initializer) {
+    constructor(initializer, deinitializer) {
         /**
          * @type {!(function(void): T)}
          * @template T
          */
         this.initializer = initializer;
+        /**
+         * @type {!(function(T): void)}
+         * @template T
+         */
+        this.deinitializer = deinitializer;
         /**
          * @type {undefined|!int}
          * @private
@@ -46,5 +52,17 @@ export default class WglMortalValueSlot {
      */
     ensureInitialized(lifetimeCounter) {
         this.initializedValue(lifetimeCounter);
+    }
+
+    /**
+     * Cleans up the stored mortal value, if necessary.
+     */
+    ensureDeinitialized() {
+        if (this.lifetimeId !== undefined) {
+            let val = this.mortalValue;
+            this.lifetimeId = undefined;
+            this.mortalValue = undefined;
+            this.deinitializer(val);
+        }
     }
 }

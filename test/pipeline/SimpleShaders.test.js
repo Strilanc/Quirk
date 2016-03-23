@@ -34,6 +34,43 @@ suite.webGlTest("color", () => {
     ]));
 });
 
+suite.webGlTest("coords", () => {
+    let tex2x2 = new WglTexture(2, 2);
+    SimpleShaders.coords.renderTo(tex2x2);
+    assertThat(tex2x2.readPixels()).isEqualTo(new Float32Array([
+        0,0,0,0,
+        1,0,0,0,
+        0,1,0,0,
+        1,1,0,0
+    ]));
+
+    let tex4x2 = new WglTexture(4, 2);
+    SimpleShaders.coords.renderTo(tex4x2);
+    assertThat(tex4x2.readPixels()).isEqualTo(new Float32Array([
+        0,0,0,0,
+        1,0,0,0,
+        2,0,0,0,
+        3,0,0,0,
+        0,1,0,0,
+        1,1,0,0,
+        2,1,0,0,
+        3,1,0,0
+    ]));
+
+    let tex2x4 = new WglTexture(2, 4);
+    SimpleShaders.coords.renderTo(tex2x4);
+    assertThat(tex2x4.readPixels()).isEqualTo(new Float32Array([
+        0,0,0,0,
+        1,0,0,0,
+        0,1,0,0,
+        1,1,0,0,
+        0,2,0,0,
+        1,2,0,0,
+        0,3,0,0,
+        1,3,0,0
+    ]));
+});
+
 suite.webGlTest("passthrough", () => {
     let input = new WglTexture(2, 2);
     let output = new WglTexture(2, 2);

@@ -2,6 +2,7 @@ import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
+import { WglConfiguredShader } from "src/webgl/WglShader.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 
 /**
@@ -15,7 +16,7 @@ export default class SimpleShaders {}
  * @param {!number} g
  * @param {!number} b
  * @param {!number} a
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 SimpleShaders.color = (r, g, b, a) => COLOR_SHADER.withArgs(WglArg.vec4("color", r, g, b, a));
 const COLOR_SHADER = new WglShader(`
@@ -27,7 +28,7 @@ const COLOR_SHADER = new WglShader(`
 /**
  * Returns a parameterized shader that just draws the input texture's contents.
  * @param {!WglTexture} inputTexture
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 SimpleShaders.passthrough = inputTexture => PASSTHROUGH_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
@@ -40,21 +41,28 @@ const PASSTHROUGH_SHADER = new WglShader(`
     }`);
 
 /**
+ * Returns a parameterized shader that sets each pixel's components to its position in the texture.
+ * @type {!WglConfiguredShader}
+ */
+SimpleShaders.coords = new WglShader(`
+    void main() {
+        gl_FragColor = vec4(gl_FragCoord.x-0.5, gl_FragCoord.y-0.5, 0.0, 0.0);
+    }`).withArgs();
+
+/**
  * Returns a parameterized shader that overlays the destination texture with the given data.
  * @param {!Float32Array} rgbaData
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
-SimpleShaders.data = rgbaData => ({
-    renderTo: destinationTexture => {
-        let [w, h] = [destinationTexture.width, destinationTexture.height];
-        Util.need(rgbaData.length === w * h * 4, "rgbaData.length === w * h * 4");
+SimpleShaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
+    let [w, h] = [destinationTexture.width, destinationTexture.height];
+    Util.need(rgbaData.length === w * h * 4, "rgbaData.length === w * h * 4");
 
-        initializedWglContext().useRawDataTextureIn(w, h, rgbaData, tempDataTexture =>
-            PASSTHROUGH_SHADER.withArgs(
-                WglArg.vec2("textureSize", w, h),
-                WglArg.rawTexture("dataTexture", tempDataTexture, 0)
-            ).renderTo(destinationTexture));
-    }
+    initializedWglContext().useRawDataTextureIn(w, h, rgbaData, tempDataTexture =>
+        PASSTHROUGH_SHADER.withArgs(
+            WglArg.vec2("textureSize", w, h),
+            WglArg.rawTexture("dataTexture", tempDataTexture, 0)
+        ).renderTo(destinationTexture));
 });
 
 /**
@@ -64,7 +72,7 @@ SimpleShaders.data = rgbaData => ({
  * @param {!int} foregroundY
  * @param {!WglTexture} foregroundTexture
  * @param {!WglTexture} backgroundTexture
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 SimpleShaders.overlay = (foregroundX, foregroundY, foregroundTexture, backgroundTexture) => OVERLAY_SHADER.withArgs(
     WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
@@ -95,7 +103,7 @@ const OVERLAY_SHADER = new WglShader(`
  * Returns a parameterized shader that renders the input texture to destination texture, but scaled by a constant.
  * @param {!WglTexture} inputTexture
  * @param {!number} factor
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
 SimpleShaders.scale = (inputTexture, factor) => SCALE_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
@@ -113,21 +121,19 @@ const SCALE_SHADER = new WglShader(`
  * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar
  * to IEEE 754.
  * @param {!WglTexture} inputTexture
- * @returns {!{renderTo: !function(!WglTexture) : void}}
+ * @returns {!WglConfiguredShader}
  */
-SimpleShaders.encodeFloatsIntoBytes = inputTexture => ({
-    renderTo: destinationTexture => {
-        Util.need(inputTexture.pixelType === WebGLRenderingContext.FLOAT, "input tex should have floats");
-        Util.need(destinationTexture.pixelType === WebGLRenderingContext.UNSIGNED_BYTE, "output tex should take bytes");
-        Util.need(destinationTexture.width === inputTexture.width * 2 &&
-            destinationTexture.height === inputTexture.height * 2,
-            "output tex should be double the width and height of the input");
+SimpleShaders.encodeFloatsIntoBytes = inputTexture => new WglConfiguredShader(destinationTexture => {
+    Util.need(inputTexture.pixelType === WebGLRenderingContext.FLOAT, "input tex should have floats");
+    Util.need(destinationTexture.pixelType === WebGLRenderingContext.UNSIGNED_BYTE, "output tex should take bytes");
+    Util.need(destinationTexture.width === inputTexture.width * 2 &&
+        destinationTexture.height === inputTexture.height * 2,
+        "output tex should be double the width and height of the input");
 
-        FLOATS_TO_ENCODED_BYTES_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height)
-        ).renderTo(destinationTexture);
-    }
+    FLOATS_TO_ENCODED_BYTES_SHADER.withArgs(
+        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height)
+    ).renderTo(destinationTexture);
 });
 const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
     /**
