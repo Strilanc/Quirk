@@ -5,6 +5,7 @@ import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import SimpleShaders from "src/pipeline/SimpleShaders.js"
 import Rect from "src/math/Rect.js"
 import Seq from "src/base/Seq.js"
 
@@ -257,4 +258,23 @@ suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
         Matrix.col([s/2, Math.sqrt(3/8), s/2, 0.20412412285804749, 0, 0, 0.5, 0.28867512941360474]),
         Matrix.col([Math.sqrt(1/8), Math.sqrt(3/8), Math.sqrt(3/8), Math.sqrt(1/8), 0, 0, 0, 0])
     ]);
+});
+
+suite.webGlTest("powerSum", () => {
+    let q = 0.25;
+    let h = 0.5;
+    let _ = 0;
+    let inp = SimpleShaders.data(new Float32Array([
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
+        q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
+        q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
+    ])).toFloatTexture(8, 4);
+    assertThat(SuperpositionNode.powerSum(inp, 4).readPixels()).isEqualTo(new Float32Array([
+        1,0,0,0, h,h,0,h, h,0,h,h, 0,0,0,1
+    ]));
 });

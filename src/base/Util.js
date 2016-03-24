@@ -87,7 +87,7 @@ export default class Util {
         if (i <= 1) {
             return 1;
         }
-        return 1 << Util.bitSize(i - 1);
+        return 1 << Math.ceil(Math.log2(i));
     };
 
     /**

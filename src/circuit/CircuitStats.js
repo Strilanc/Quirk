@@ -2,8 +2,9 @@ import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"
 import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
-import Seq from "src/base/Seq.js"
-import SuperpositionNode from "src/pipeline/SuperpositionNode.js"
+import QuantumShaders from "src/pipeline/QuantumShaders.js"
+import { seq, Seq } from "src/base/Seq.js"
+import SuperTex from "src/pipeline/SuperTex.js"
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
 
@@ -94,6 +95,7 @@ export default class CircuitStats{
      * @returns {!number}
      */
     wireProbabilityJustAfter(wireIndex, colIndex) {
+        return 0.5;
         Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
 
         // The initial state is all-qubits-off.
@@ -115,6 +117,7 @@ export default class CircuitStats{
      * @returns {!number}
      */
     controlledWireProbabilityJustAfter(wireIndex, colIndex) {
+        return 0.5;
         Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
 
         // The initial state is all-qubits-off.
@@ -129,11 +132,6 @@ export default class CircuitStats{
 
         let t = Math.min(colIndex, this._conditionalWireProbabilityData.length - 1);
         return this._conditionalWireProbabilityData[t][wireIndex];
-    }
-
-    //noinspection JSUnusedGlobalSymbols
-    static emptyAtTime(circuitDefinition, time) {
-        return new CircuitStats(circuitDefinition, time, [], [], new Map(), []);
     }
 
     /**
@@ -151,83 +149,96 @@ export default class CircuitStats{
     }
 
     static fromCircuitAtTime(circuitDefinition, time) {
-        let stateScanNodes = Seq.range(circuitDefinition.columns.length).
+        let numWires = circuitDefinition.numWires;
+        /** @type {!Array.<!WglTexture>} */
+        let stateTextures = Seq.range(circuitDefinition.columns.length).
             scan(
-                SuperpositionNode.fromClassicalStateInRegisterOfSize(0, circuitDefinition.numWires),
-                (stateNode, col) => {
+                SuperTex.zero(numWires),
+                (stateTex, col) => {
                     let gateCol = circuitDefinition.columns[col];
-                    let mask = SuperpositionNode.control(circuitDefinition.numWires, gateCol.controls());
-                    for (let op of circuitDefinition.singleQubitOperationsInColAt(col, time)) {
-                        stateNode = stateNode.withQubitOperationApplied(op.i, op.m, mask)
-                    }
-                    for (let op of gateCol.swapPairs()) {
-                        stateNode = stateNode.withSwap(op[0], op[1], mask);
-                    }
-                    return stateNode;
+                    let controlTex = SuperTex.control(numWires, gateCol.controls());
+                    stateTex = SuperTex.aggregateWithIntermediateReuse(
+                        stateTex,
+                        circuitDefinition.singleQubitOperationsInColAt(col, time),
+                        (accTex, e) => SuperTex.singleQubitOperation(accTex, controlTex, e.i, e.m));
+                    stateTex = SuperTex.aggregateWithReuse(
+                        stateTex,
+                        gateCol.swapPairs(),
+                        (a, e) => SuperTex.afterSwapOperation(a, controlTex, e[0], e[1]));
+                    return stateTex;
                 }).
             toArray();
 
-        let masks = circuitDefinition.columns.map(e => e.controls());
-        let outputNode = stateScanNodes[stateScanNodes.length - 1];
+        //let masks = circuitDefinition.columns.map(e => e.controls());
+        let outputTex = stateTextures[stateTextures.length - 1];
 
         let textureNodes = {
-            outputSuperposition: outputNode,
-            postProbabilities: new Seq(stateScanNodes).
-                skip(1).
-                zip(masks, (stateNode, mask) => stateNode.controlledProbabilities(mask)).
-                toArray(),
-            outputDensityGroups: Seq.range(Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS).
-                map(power => 1 << power).
-                map(groupSize => Seq.range(circuitDefinition.numWires).
-                    partitioned(groupSize).
-                    filter(e => e.length === groupSize).
-                    map(wireGroup => outputNode.densityMatrixForWires(wireGroup, QuantumControlMask.NO_CONTROLS)).
-                    toArray()).
-                toArray()
+            outputSuperposition: outputTex,
+            //postProbabilities: new Seq(stateTextures).
+            //    skip(1).
+            //    zip(masks, (stateNode, mask) => stateNode.controlledProbabilities(mask)).
+            //    toArray(),
+            qubitDensities: SuperTex.superpositionToQubitDensities(outputTex)
+            //outputDensityGroups: Seq.range(Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS).
+            //    map(power => 1 << power).
+            //    map(groupSize => Seq.range(circuitDefinition.numWires).
+            //        partitioned(groupSize).
+            //        filter(e => e.length === groupSize).
+            //        map(wireGroup => outputTex.densityMatrixForWires(wireGroup, QuantumControlMask.NO_CONTROLS)).
+            //        toArray()).
+            //    toArray()
         };
 
-        let pixelDataNodes = Util.objectifyArrayFunc(SuperpositionNode.mergedReadFloats)(textureNodes);
+        console.log("errr", textureNodes.qubitDensities.readPixels());
+        let pixelData = Util.objectifyArrayFunc(SuperTex.mergedReadFloats)(textureNodes);
+        console.log("errr2", pixelData.qubitDensities);
 
-        let valueNodes = {
-            outputSuperposition: pixelDataNodes.outputSuperposition.asRenormalizedAmplitudes(),
-            wireProbabilities: new Seq(pixelDataNodes.postProbabilities).
-                zip(masks, (e, m) => e.asRenormalizedPerQubitProbabilities(m, circuitDefinition.numWires)).
-                toArray(),
-            conditionalWireProbabilities: new Seq(pixelDataNodes.postProbabilities).
-                zip(masks, (e, m) => e.asRenormalizedConditionalPerQubitProbabilities(m, circuitDefinition.numWires)).
-                toArray(),
-            outputDensityGroups: pixelDataNodes.outputDensityGroups.map(g => g.map(e => e.asDensityMatrix()))
-        };
+        let unity = 1; //pixelData.qubitDensities[0] + pixelData.qubitDensities[3];
+        let outputSuperposition = SuperTex.pixelsToAmplitudes(pixelData.outputSuperposition, unity);
+        //let wireProbabilities = new Seq(pixelDataNodes.postProbabilities).
+        //        zip(masks, (e, m) => e.asRenormalizedPerQubitProbabilities(m, numWires)).
+        //        toArray();
+        //let conditionalWireProbabilities = new Seq(pixelDataNodes.postProbabilities).
+        //        zip(masks, (e, m) => e.asRenormalizedConditionalPerQubitProbabilities(m, numWires)).
+        //        toArray();
+        let qubitDensities = SuperTex.pixelsToDensityMatrices(pixelData.qubitDensities, numWires);
+            //outputDensityGroups: pixelDataNodes.outputDensityGroups.map(g => g.map(e => e.asDensityMatrix()))
 
-        let values = Util.objectifyArrayFunc(PipelineNode.computePipeline)(valueNodes);
-
-        let knownDensityMatrices = new Seq(values.outputDensityGroups).
-            flatMap(g => new Seq(g).
-                mapWithIndex((m, i) => {
-                    let n = m.width();
-                    let span = Math.round(Math.log2(n));
-                    let measuredMask = Seq.range(span).
-                        map(j => circuitDefinition.wireMeasuredColumns()[i*span + j] < Infinity).
-                        mapWithIndex((b, k) => b ? 1 << k : 0).
-                        sum();
-                    return {
-                        key: circuitDefinition.columns.length + ";" + Seq.range(span).map(e => e + i*span).join(";"),
-                        val: Matrix.generate(n, n, (c, r) => {
-                            let v = m.cell(c, r);
-                            return (c & measuredMask) === (r & measuredMask) ?
-                                v :
-                                v.times(0); // Note: preserves NaN.
-                        })
-                    };
-                })).
+        let knownDensityMatrices = seq(qubitDensities).
+            mapWithIndex((m, i) => {
+                return {
+                    key: circuitDefinition.columns.length + ";" + i,
+                    val: m
+                };
+            }).
             toMap(e => e.key, e => e.val);
+        //knownDensityMatrices = new Seq(values.outputDensityGroups).
+        //    flatMap(g => new Seq(g).
+        //        mapWithIndex((m, i) => {
+        //            let n = m.width();
+        //            let span = Math.round(Math.log2(n));
+        //            let measuredMask = Seq.range(span).
+        //                map(j => circuitDefinition.wireMeasuredColumns()[i*span + j] < Infinity).
+        //                mapWithIndex((b, k) => b ? 1 << k : 0).
+        //                sum();
+        //            return {
+        //                key: circuitDefinition.columns.length + ";" + Seq.range(span).map(e => e + i*span).join(";"),
+        //                val: Matrix.generate(n, n, (c, r) => {
+        //                    let v = m.cell(c, r);
+        //                    return (c & measuredMask) === (r & measuredMask) ?
+        //                        v :
+        //                        v.times(0); // Note: preserves NaN.
+        //                })
+        //            };
+        //        })).
+        //    toMap(e => e.key, e => e.val);
 
         return new CircuitStats(
             circuitDefinition,
             time,
-            values.wireProbabilities,
-            values.conditionalWireProbabilities,
+            undefined, //wireProbabilities,
+            undefined, //conditionalWireProbabilities,
             knownDensityMatrices,
-            values.outputSuperposition);
+            outputSuperposition);
     }
 }
