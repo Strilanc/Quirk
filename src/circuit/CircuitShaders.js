@@ -17,7 +17,7 @@ const HALF_QUBIT_LIMIT = 10;
 /**
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
  */
-export default class QuantumShaders {}
+export default class CircuitShaders {}
 
 const snippets = {
     /**
@@ -71,7 +71,7 @@ const snippets = {
  * @param {!int} stateBitMask
  * @returns {!WglConfiguredShader}
  */
-QuantumShaders.classicalState = stateBitMask => new WglConfiguredShader(destinationTexture => {
+CircuitShaders.classicalState = stateBitMask => new WglConfiguredShader(destinationTexture => {
         let x = stateBitMask % destinationTexture.width;
         let y = (stateBitMask - x) / destinationTexture.width;
         SET_SINGLE_PIXEL_SHADER.
@@ -97,7 +97,7 @@ const SET_SINGLE_PIXEL_SHADER = new WglShader(`
  * @param {!WglTexture} backgroundTexture
  * @returns {!WglConfiguredShader}
  */
-QuantumShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
+CircuitShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
     WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
     WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
     WglArg.texture("backgroundTexture", backgroundTexture, 0),
@@ -134,7 +134,7 @@ const LINEAR_OVERLAY_SHADER = new WglShader(`
  * @param {!WglTexture} inputTexture
  * @returns {!WglConfiguredShader}
  */
-QuantumShaders.squaredMagnitude = inputTexture => SQUARED_MAGNITUDE_SHADER.withArgs(
+CircuitShaders.squaredMagnitude = inputTexture => SQUARED_MAGNITUDE_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
     WglArg.texture("inputTexture", inputTexture, 0));
 const SQUARED_MAGNITUDE_SHADER = new WglShader(`
@@ -155,7 +155,7 @@ const SQUARED_MAGNITUDE_SHADER = new WglShader(`
  * @param {!int} step
  * @param {!boolean} requiredBitValue
  */
-QuantumShaders.renderConditionalProbabilitiesPipeline = (destinationTexture, inputTexture, step, requiredBitValue) =>
+CircuitShaders.renderConditionalProbabilitiesPipeline = (destinationTexture, inputTexture, step, requiredBitValue) =>
     CONDITIONAL_PROBABILITIES_PIPELINE_SHADER.withArgs(
         WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
         WglArg.texture("inputTexture", inputTexture, 0),
@@ -199,7 +199,7 @@ const CONDITIONAL_PROBABILITIES_PIPELINE_SHADER = new WglShader(`
  * @param {!WglTexture} inputTexture
  * @param {!int} controlInclusionMask
  */
-QuantumShaders.renderConditionalProbabilitiesFinalize = (destinationTexture, inputTexture, controlInclusionMask) =>
+CircuitShaders.renderConditionalProbabilitiesFinalize = (destinationTexture, inputTexture, controlInclusionMask) =>
     CONDITIONAL_PROBABILITIES_FINALIZE_SHADER.withArgs(
         WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height),
         WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
@@ -239,14 +239,14 @@ const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
  * @param {!Controls} controlMask
  * @returns {!WglConfiguredShader}
  */
-QuantumShaders.controlMask = controlMask => {
+CircuitShaders.controlMask = controlMask => {
     if (controlMask.isEqualTo(Controls.NONE)) {
         return Shaders.color(1, 0, 0, 0);
     }
 
     return new WglConfiguredShader(destinationTexture => {
         if (destinationTexture.width * destinationTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
-            throw new Error("QuantumShaders.controlMask needs to be updated to allow more qubits.");
+            throw new Error("CircuitShaders.controlMask needs to be updated to allow more qubits.");
         }
         let xMask = destinationTexture.width - 1;
         let xLen = Math.floor(Math.log2(destinationTexture.width));
@@ -295,14 +295,14 @@ const CONTROL_MASK_SHADER = new WglShader(`
  * @param {!WglTexture} dataTexture
  * @returns {!WglConfiguredShader}
  */
-QuantumShaders.controlSelect = (controlMask, dataTexture) => {
+CircuitShaders.controlSelect = (controlMask, dataTexture) => {
     if (controlMask.isEqualTo(Controls.NONE)) {
         return Shaders.passthrough(dataTexture);
     }
 
     return new WglConfiguredShader(destinationTexture => {
         if (dataTexture.width * dataTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
-            throw new Error("QuantumShaders.controlSelect needs to be updated to allow more qubits.");
+            throw new Error("CircuitShaders.controlSelect needs to be updated to allow more qubits.");
         }
         CONTROL_SELECT_SHADER.withArgs(
             WglArg.texture('inputTexture', dataTexture, 0),
@@ -350,7 +350,7 @@ const CONTROL_SELECT_SHADER = new WglShader(`
         gl_FragColor = texture2D(inputTexture, uv);
     }`);
 
-QuantumShaders.allQubitDensities = inputTexture => {
+CircuitShaders.allQubitDensities = inputTexture => {
     let ceilQubitCount = 1 << Math.ceil(Math.log2(Math.log2(inputTexture.width * inputTexture.height)));
     return new WglConfiguredShader(destinationTexture => {
         return ALL_QUBIT_DENSITIES.withArgs(
@@ -408,11 +408,11 @@ const ALL_QUBIT_DENSITIES = new WglShader(`
  * @param {!Controls} controlMask
  * @param {!WglTexture} amplitudes
  */
-QuantumShaders.renderControlCombinationProbabilities = (dst, workspace1, workspace2, controlMask, amplitudes) => {
-    QuantumShaders.squaredMagnitude(amplitudes).renderTo(workspace1);
+CircuitShaders.renderControlCombinationProbabilities = (dst, workspace1, workspace2, controlMask, amplitudes) => {
+    CircuitShaders.squaredMagnitude(amplitudes).renderTo(workspace1);
     let n = amplitudes.width * amplitudes.height;
     for (let i = 0; (1 << i) < n; i++) {
-        QuantumShaders.renderConditionalProbabilitiesPipeline(
+        CircuitShaders.renderConditionalProbabilitiesPipeline(
             workspace2,
             workspace1,
             i,
@@ -422,7 +422,7 @@ QuantumShaders.renderControlCombinationProbabilities = (dst, workspace1, workspa
         workspace1 = t;
     }
 
-    QuantumShaders.renderConditionalProbabilitiesFinalize(
+    CircuitShaders.renderConditionalProbabilitiesFinalize(
         dst,
         workspace1,
         controlMask.inclusionMask);
@@ -437,7 +437,7 @@ QuantumShaders.renderControlCombinationProbabilities = (dst, workspace1, workspa
  * @param {!int} qubitIndex
  * @param {!WglTexture} controlTexture
  */
-QuantumShaders.renderQubitOperation = (destinationTexture, inputTexture, operation, qubitIndex, controlTexture) => {
+CircuitShaders.renderQubitOperation = (destinationTexture, inputTexture, operation, qubitIndex, controlTexture) => {
     Util.need(operation.width() === 2 && operation.height() === 2);
     let [ar, ai, br, bi, cr, ci, dr, di] = operation.rawBuffer();
     CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
@@ -535,7 +535,7 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
  * @param {!int} qubitIndex2
  * @param {!WglTexture} controlTexture
  */
-QuantumShaders.renderSwapOperation = (destinationTexture, inputTexture, qubitIndex1, qubitIndex2, controlTexture) =>
+CircuitShaders.renderSwapOperation = (destinationTexture, inputTexture, qubitIndex1, qubitIndex2, controlTexture) =>
     SWAP_QUBITS_SHADER.withArgs(
         WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
         WglArg.texture("inputTexture", inputTexture, 0),
@@ -604,7 +604,7 @@ const SWAP_QUBITS_SHADER = new WglShader(`
  * @param {!Array.<!int>} marginalizedBits
  * @param {!Controls} controlMask
  */
-QuantumShaders.renderSuperpositionToDensityMatrix = (dst, inputTexture, keptBits, marginalizedBits, controlMask) => {
+CircuitShaders.renderSuperpositionToDensityMatrix = (dst, inputTexture, keptBits, marginalizedBits, controlMask) => {
     Util.need(keptBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0), "kept bits overlap controls");
     Util.need(marginalizedBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0),
         "marginalized bits overlap controls");

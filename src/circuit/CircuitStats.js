@@ -1,9 +1,9 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
-import QuantumShaders from "src/pipeline/QuantumShaders.js"
+import CircuitShaders from "src/circuit/CircuitShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
-import SuperTex from "src/pipeline/SuperTex.js"
+import SuperTex from "src/circuit/SuperTex.js"
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
 

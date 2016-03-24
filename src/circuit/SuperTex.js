@@ -1,5 +1,5 @@
 import Matrix from "src/math/Matrix.js"
-import QuantumShaders from "src/pipeline/QuantumShaders.js"
+import CircuitShaders from "src/circuit/CircuitShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
 import WglTexture from "src/webgl/WglTexture.js"
@@ -77,7 +77,7 @@ SuperTex.allocSame = tex => {
  */
 SuperTex.zero = qubitCount => {
     let tex = SuperTex.alloc(qubitCount);
-    QuantumShaders.classicalState(0).renderTo(tex);
+    CircuitShaders.classicalState(0).renderTo(tex);
     return tex;
 };
 
@@ -88,7 +88,7 @@ SuperTex.zero = qubitCount => {
  */
 SuperTex.control = (qubitCount, mask) => {
     let tex = SuperTex.alloc(qubitCount);
-    QuantumShaders.controlMask(mask).renderTo(tex);
+    CircuitShaders.controlMask(mask).renderTo(tex);
     return tex;
 };
 
@@ -105,7 +105,7 @@ SuperTex.mergedReadFloats = textures => {
     combinedTex = SuperTex.aggregateWithReuse(combinedTex, Seq.range(textures.length), (accTex, i) => {
         let inputTex = textures[i];
         let nextTex = SuperTex.alloc(lgTotal);
-        QuantumShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
+        CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
         reuseTexture(inputTex);
         return nextTex;
     });
@@ -129,7 +129,7 @@ SuperTex.mergedReadFloats = textures => {
  */
 SuperTex.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
     let result = SuperTex.allocSame(stateTex);
-    QuantumShaders.renderQubitOperation(
+    CircuitShaders.renderQubitOperation(
         result,
         stateTex,
         qubitOperation,
@@ -219,7 +219,7 @@ SuperTex._superpositionTexToUnsummedQubitDensitiesTex = superpositionTex => {
     let q = SuperTex.qubitCount(superpositionTex);
     let qu = Util.ceilingPowerOf2(q);
     let inter = SuperTex.alloc(q + Math.log2(qu) - 1);
-    QuantumShaders.allQubitDensities(superpositionTex).renderTo(inter);
+    CircuitShaders.allQubitDensities(superpositionTex).renderTo(inter);
     let result = SuperTex._powerSum(inter, qu);
     reuseTexture(inter);
     return result;
@@ -281,7 +281,7 @@ SuperTex.pixelsToDensityMatrices = (buffer, qubitCount) => {
 
 SuperTex.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
     let result = SuperTex.allocSame(stateTex);
-    QuantumShaders.renderSwapOperation(
+    CircuitShaders.renderSwapOperation(
         result,
         stateTex,
         qubitIndex1,
