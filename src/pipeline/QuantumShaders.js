@@ -353,9 +353,6 @@ const CONTROL_SELECT_SHADER = new WglShader(`
 QuantumShaders.allQubitDensities = inputTexture => {
     let ceilQubitCount = 1 << Math.ceil(Math.log2(Math.log2(inputTexture.width * inputTexture.height)));
     return new WglConfiguredShader(destinationTexture => {
-        console.log('inputSize', inputTexture.width, inputTexture.height);
-        console.log('outputWidth', destinationTexture.width);
-        console.log('qubitCountCeilPow2', ceilQubitCount);
         return ALL_QUBIT_DENSITIES.withArgs(
             WglArg.texture('inputTexture', inputTexture, 0),
             WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
@@ -396,7 +393,7 @@ const ALL_QUBIT_DENSITIES = new WglShader(`
         // Compute density matrix components.
         float a = dot(w1, w1);
         float br = dot(w1, w2);
-        float bi = dot(vec2(w1.y, -w1.x), w2);
+        float bi = dot(vec2(-w1.y, w1.x), w2);
         float d = dot(w2, w2);
 
         gl_FragColor = vec4(a, br, bi, d);

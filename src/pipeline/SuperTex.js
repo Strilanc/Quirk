@@ -1,12 +1,9 @@
-import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
-import PipelineNode from "src/pipeline/PipelineNode.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
 import SimpleShaders from "src/pipeline/SimpleShaders.js"
-import Util from "src/base/Util.js"
-import { initializedWglContext } from "src/webgl/WglContext.js"
 import WglTexture from "src/webgl/WglTexture.js"
+import Util from "src/base/Util.js"
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 const TEXTURE_POOL = new Map();
@@ -28,6 +25,7 @@ const allocTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) =>
         return pool.pop();
     }
 
+    console.warn("texture alloc: " + k);
     return new WglTexture(width, height, pixelType);
 };
 
@@ -48,6 +46,7 @@ export default class SuperTex {}
 
 /**
  * @param {!int} qubitCount
+ * @returns {!WglTexture}
  */
 SuperTex.alloc = qubitCount => {
     let w = 1 << Math.ceil(qubitCount / 2);
@@ -57,6 +56,7 @@ SuperTex.alloc = qubitCount => {
 
 /**
  * @param {!WglTexture} tex
+ * @returns {void}
  */
 SuperTex.reuseTexture = tex => {
     reuseTexture(tex);
@@ -72,6 +72,7 @@ SuperTex.allocSame = tex => {
 
 /**
  * @param {!int} qubitCount
+ * @returns {!WglTexture}
  */
 SuperTex.zero = qubitCount => {
     let tex = SuperTex.alloc(qubitCount);
@@ -82,6 +83,7 @@ SuperTex.zero = qubitCount => {
 /**
  * @param {!int} qubitCount
  * @param {!QuantumControlMask} mask
+ * @returns {!WglTexture}
  */
 SuperTex.control = (qubitCount, mask) => {
     let tex = SuperTex.alloc(qubitCount);
@@ -103,10 +105,12 @@ SuperTex.mergedReadFloats = textures => {
         let inputTex = textures[i];
         let nextTex = SuperTex.alloc(lgTotal);
         QuantumShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
+        reuseTexture(inputTex);
         return nextTex;
     });
 
     let combinedPixels = combinedTex.readPixels();
+    reuseTexture(combinedTex);
 
     return Seq.range(textures.length).map(i => {
         let offset = pixelOffsets[i] * 4;
@@ -122,7 +126,7 @@ SuperTex.mergedReadFloats = textures => {
  * @param {!Matrix} qubitOperation
  * @returns {!WglTexture}
  */
-SuperTex.singleQubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
+SuperTex.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
     let result = SuperTex.allocSame(stateTex);
     QuantumShaders.renderQubitOperation(
         result,
@@ -144,7 +148,7 @@ SuperTex.aggregateWithIntermediateReuse = (seedTex, items, aggregateFunc) => {
     let out = seq(items).aggregate(seedTex, (a, e) => {
         let next = aggregateFunc(a, e);
         if (a !== seedTex) {
-            //reuseTexture(a);
+            reuseTexture(a);
         }
         return next;
     });
@@ -164,14 +168,14 @@ SuperTex.aggregateWithIntermediateReuse = (seedTex, items, aggregateFunc) => {
 SuperTex.aggregateWithReuse = (seedTex, items, aggregateFunc) => {
     return seq(items).aggregate(seedTex, (a, e) => {
         let next = aggregateFunc(a, e);
-        //reuseTexture(a);
+        reuseTexture(a);
         return next;
     });
 };
 
 /**
  * @param {!Float32Array} pixels
- * @param {!float} unity
+ * @param {!number} unity
  * @returns {!Matrix}
  */
 SuperTex.pixelsToAmplitudes = (pixels, unity) => {
@@ -180,11 +184,12 @@ SuperTex.pixelsToAmplitudes = (pixels, unity) => {
         unity = NaN;
     }
 
+    let d = Math.sqrt(unity);
     let n = pixels.length / 4;
     let buf = new Float32Array(n * 2);
     for (let i = 0; i < n; i++) {
-        buf[i*2] = pixels[i*4]/unity;
-        buf[i*2+1] = pixels[i*4+1]/unity;
+        buf[i*2] = pixels[i*4]/d;
+        buf[i*2+1] = pixels[i*4+1]/d;
     }
     return new Matrix(1, n, buf);
 };
@@ -198,12 +203,9 @@ SuperTex.qubitCount = superpositionTex => {
  * @returns {!WglTexture}
  */
 SuperTex.superpositionToQubitDensities = stateTex => {
-    console.log("stateTex", stateTex.readPixels());
     let n = SuperTex.qubitCount(stateTex);
     let unsummed = SuperTex._superpositionTexToUnsummedQubitDensitiesTex(stateTex);
-    console.log("unsummed", unsummed.readPixels());
     let result = SuperTex._powerSum(unsummed, n);
-    console.log("result", result.readPixels());
     reuseTexture(unsummed);
     return result;
 };
@@ -215,11 +217,10 @@ SuperTex.superpositionToQubitDensities = stateTex => {
 SuperTex._superpositionTexToUnsummedQubitDensitiesTex = superpositionTex => {
     let q = SuperTex.qubitCount(superpositionTex);
     let qu = Util.ceilingPowerOf2(q);
-    console.log("q", q, "qu", qu);
     let inter = SuperTex.alloc(q + Math.log2(qu) - 1);
     QuantumShaders.allQubitDensities(superpositionTex).renderTo(inter);
     let result = SuperTex._powerSum(inter, qu);
-    //reuseTexture(inter);
+    reuseTexture(inter);
     return result;
 };
 
@@ -245,7 +246,7 @@ SuperTex._powerSum = (tex, qubitCount) => {
             SimpleShaders.sumFold(cur, 0, h).renderTo(next);
         }
         if (cur !== tex) {
-            //SuperTex.reuseTexture(cur);
+            SuperTex.reuseTexture(cur);
         }
         cur = next;
     }
@@ -275,7 +276,7 @@ SuperTex.pixelsToDensityMatrices = (buffer, qubitCount) => {
     }).toArray();
 };
 
-SuperTex.afterSwapOperation = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
+SuperTex.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
     let result = SuperTex.allocSame(stateTex);
     QuantumShaders.renderSwapOperation(
         result,
@@ -285,366 +286,3 @@ SuperTex.afterSwapOperation = (stateTex, controlTex, qubitIndex1, qubitIndex2) =
         controlTex);
     return result;
 };
-
-//    };
-
-//    /**
-//     * @param {!int} qubitCount
-//     * @param {!function(!WglTexture)} render
-//     * @returns {!SuperpositionNode}
-//     */
-//    static input(qubitCount, render) {
-//        let w = 1 << Math.ceil(qubitCount / 2);
-//        let h = 1 << Math.floor(qubitCount / 2);
-//        return new SuperpositionNode(w, h, [], () => {
-//            let result = allocTexture(w, h);
-//            render(result);
-//            return result;
-//        });
-//    }
-//
-//    /**
-//     * Creates a superposition with the given amplitudes for each possible state.
-//     * @param {!(!Complex[])|!(!number[])} amplitudes
-//     * @returns {!SuperpositionNode}
-//     */
-//    static fromAmplitudes(amplitudes) {
-//        Util.need(Util.isPowerOf2(amplitudes.length), "isPowerOf2(amplitudes.length)");
-//
-//        let dataArray = new Float32Array(amplitudes.length * 4);
-//        for (let i = 0; i < amplitudes.length; i++) {
-//            dataArray[i*4] = Complex.realPartOf(amplitudes[i]);
-//            dataArray[i*4 + 1] = Complex.imagPartOf(amplitudes[i]);
-//        }
-//        let qubitCount = Util.bitSize(amplitudes.length - 1);
-//        return SuperpositionNode.input(
-//            qubitCount,
-//            t => SimpleShaders.data(dataArray).renderTo(t));
-//    };
-//
-//    /**
-//     * Creates a superposition initialized into a classical state.
-//     * @param {!int} qubitCount
-//     * @param {!int} stateIndex
-//     * @returns {!SuperpositionNode}
-//     */
-//    static fromClassicalStateInRegisterOfSize(stateIndex, qubitCount) {
-//        Util.need(qubitCount >= 0, "qubitCount >= 0");
-//        Util.need(stateIndex >= 0 && stateIndex < (1 << qubitCount), "stateMask >= 0 && stateMask < (1 << qubitCount)");
-//
-//        return SuperpositionNode.input(qubitCount, t =>
-//            QuantumShaders.classicalState(stateIndex).renderTo(t));
-//    };
-//
-//    /**
-//     * @param {!int} qubitCount
-//     * @param {!QuantumControlMask} mask
-//     * @returns {!SuperpositionNode}
-//     */
-//    static control(qubitCount, mask) {
-//        return SuperpositionNode.input(qubitCount, tex => QuantumShaders.controlMask(mask).renderTo(tex));
-//    }
-//
-//    /**
-//     * Returns a texture holding the result of applying a single-qubit operation to the receiving texture's quantum
-//     * state.
-//     * @param {!int} qubitIndex The index of the qubit to apply the operation to.
-//     * @param {!Matrix} operation A 2x2 matrix.
-//     * @param {!SuperpositionNode} controlMaskNode
-//     * @returns {!SuperpositionNode}
-//     */
-//    withQubitOperationApplied(qubitIndex, operation, controlMaskNode) {
-//        return new SuperpositionNode(
-//            this.width,
-//            this.height,
-//            [this.pipelineNode, controlMaskNode.pipelineNode],
-//            ([inputTexture, controlTexture]) => {
-//                let resultTexture = allocTexture(this.width, this.height);
-//                QuantumShaders.renderQubitOperation(
-//                    resultTexture,
-//                    inputTexture,
-//                    operation,
-//                    qubitIndex,
-//                    controlTexture);
-//                return resultTexture;
-//            });
-//    };
-//
-//    /**
-//     * Returns a texture holding the result of applying a swap operation.
-//     * @param {!int} qubitIndex1 The index of one of the qubits to swap.
-//     * @param {!int} qubitIndex2 The index of the other qubit to swap.
-//     * @param {!SuperpositionNode} controlMaskNode
-//     * @returns {!SuperpositionNode}
-//     */
-//
-//    /**
-//     * Returns a texture containing probabilities that the superposition would match various control masks if measured.
-//     *
-//     * @param {!QuantumControlMask} controlMask
-//     * @returns {!SuperpositionNode}
-//     */
-//    controlledProbabilities(controlMask) {
-//        let qubitCount = Util.bitSize(this.width * this.height - 1);
-//        let qubitCountLg2 = Util.bitSize(qubitCount - 1);
-//        let w = 1 << Math.ceil(qubitCountLg2 / 2);
-//        let h = 1 << Math.floor(qubitCountLg2 / 2);
-//
-//        return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
-//            let result = allocTexture(w, h);
-//            let workspace1 = allocTexture(this.width, this.height);
-//            let workspace2 = allocTexture(this.width, this.height);
-//            QuantumShaders.renderControlCombinationProbabilities(
-//                result,
-//                workspace1,
-//                workspace2,
-//                controlMask,
-//                inputs[0]);
-//            reuseTexture(workspace1);
-//            reuseTexture(workspace2);
-//            return result;
-//        });
-//    };
-//
-//    /**
-//     * Returns a texture containing probabilities that the superposition would match various control masks if measured.
-//     *
-//     * @param {!Array.<!int>} wires
-//     * @param {!QuantumControlMask} controlMask
-//     * @returns {!SuperpositionNode}
-//     */
-//    densityMatrixForWires(wires, controlMask) {
-//        let qubitCount = Util.bitSize(this.width * this.height - 1);
-//        let w = 1 << wires.length;
-//        let h = 1 << wires.length;
-//
-//        return new SuperpositionNode(w, h, [this.pipelineNode], inputs => {
-//            let result = allocTexture(w, h);
-//            QuantumShaders.renderSuperpositionToDensityMatrix(
-//                result,
-//                inputs[0],
-//                wires,
-//                Seq.range(qubitCount).filter(e => wires.indexOf(e) === -1).toArray(),
-//                controlMask);
-//            return result;
-//        });
-//    };
-//
-//    /**
-//     * Returns a node with operations for extending the pipeline after the eventual pixel data read occurs.
-//     * @returns {!SuperpositionReadNode}
-//     */
-//    read() {
-//        return new SuperpositionReadNode(new PipelineNode(
-//            [this.pipelineNode],
-//            inputs => inputs[0].readPixels()));
-//    };
-//
-//    /**
-//     * Figures out how large of a texture is needed to aggregate all the desired results, and the offset where those
-//     * results will end up in the output.
-//     *
-//     * @param {!Map.<K, !{width: !int, height: !int}>} sizeMap
-//     * @returns {!{width: !int, height: !int, placeMap: !Map.<K, !int>}}
-//     * @template K
-//     */
-//    static planPackingIntoSingleTexture(sizeMap) {
-//        let total = 0;
-//
-//        let placeMap = new Map();
-//        for (let [key, size] of sizeMap) {
-//            //noinspection JSUnusedAssignment
-//            let {width: w, height: h} = size;
-//            //noinspection JSUnusedAssignment
-//            placeMap.set(key, total);
-//            total += w * h;
-//        }
-//
-//        let width = Util.ceilingPowerOf2(Math.ceil(Math.sqrt(total)));
-//        let height = Util.ceilingPowerOf2(Math.ceil(total / width));
-//
-//        return {width, height, placeMap};
-//    };
-//
-//    /**
-//     * @param {!(!SuperpositionNode[])} superpositionNodes
-//     * @returns {!(!SuperpositionReadNode[])}
-//     */
-//    static mergedReadFloats(superpositionNodes) {
-//        let sizes = new Seq(superpositionNodes).keyedBy(e => e.pipelineNode.id);
-//        let plan = SuperpositionNode.planPackingIntoSingleTexture(sizes);
-//
-//        let seedCombined = new SuperpositionNode(plan.width, plan.height, [], () => {
-//            let t = allocTexture(plan.width, plan.height);
-//            SimpleShaders.color(0, 0, 0, 0).renderTo(t);
-//            return t;
-//        });
-//        let accumulateCombined = (aNode, eNode) => new SuperpositionNode(
-//            plan.width,
-//            plan.height,
-//            [aNode.pipelineNode, eNode.pipelineNode],
-//            textures => {
-//                // Note: this would be more efficient if the merging was done in a balanced way.
-//                // This will do for now, despite being quadratic instead of n log n.
-//                let [a, e] = textures;
-//                let t = allocTexture(plan.width, plan.height);
-//                let r = plan.placeMap.get(eNode.pipelineNode.id);
-//                QuantumShaders.linearOverlay(r, e, a).renderTo(t);
-//                return t;
-//            });
-//
-//        // Hope they're in the right order (as opposed to doing a topological sort)...
-//        let combined = new Seq(superpositionNodes).aggregate(seedCombined, accumulateCombined).read();
-//
-//        return new Seq(superpositionNodes).map(
-//            e => new SuperpositionReadNode(new PipelineNode([combined.floatsNode], inputs => {
-//                let floats = inputs[0];
-//                let offset = plan.placeMap.get(e.pipelineNode.id) * 4;
-//                let length = e.width * e.height * 4;
-//
-//                if (floats.slice) {
-//                    return floats.slice(offset, offset + length);
-//                }
-//
-//                // The above fails in chrome, so we need this fallback. For now.
-//                let result = new Float32Array(length);
-//                for (let i = 0; i < length; i++) {
-//                    result[i] = floats[i + offset];
-//                }
-//                return result;
-//            }))).toArray();
-//    }
-//
-//    toAllSingleQubitDensities() {
-//        let q = Math.log2(this.width * this.height);
-//        let qu = Util.ceilingPowerOf2(q);
-//        let n = this.width * this.height * qu;
-//        let w = 1 << Math.ceil(Math.log2(n) / 2);
-//        let h = 1 << Math.floor(Math.log2(n) / 2);
-//        return new SuperpositionNode(
-//            qu,
-//            1,
-//            [this.pipelineNode],
-//            ([inputTexture]) => {
-//                let inter = allocTexture(w, h);
-//                QuantumShaders.allQubitDensities(inputTexture).renderTo(inter);
-//                let result = SuperpositionNode.powerSum(inter, qu);
-//                reuseTexture(inter);
-//                return result;
-//            });
-//    }
-//}
-//
-///**
-// * Represents an array of amplitudes or probabilities to be computed when the surrounding pipeline is run.
-// */
-//export class SuperpositionReadNode {
-//    /**
-//     * @param {!PipelineNode<!Array.<!number>|!Float32Array>} floatsNode
-//     * @property {!PipelineNode<!Array.<!number>|!Float32Array>} floatsNode
-//     */
-//    constructor(floatsNode) {
-//        this.floatsNode = floatsNode;
-//    }
-//
-//    /**
-//     * Just the read texture's color component float data.
-//     * @returns {!PipelineNode<!(!Complex[])>}
-//     */
-//    raw() {
-//        return this.floatsNode;
-//    };
-//
-//    /**
-//     * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
-//     * @returns {!PipelineNode.<!Matrix>}
-//     */
-//
-//    /**
-//     * Reads the amplitudes associated with the texture data (red component for reals, blue for imaginaries).
-//     * @returns {!PipelineNode.<!Array.<!Complex>>}
-//     */
-//    asDensityMatrix() {
-//        return new PipelineNode([this.floatsNode], inputs => {
-//            let floats = inputs[0];
-//
-//            let n = Math.round(Math.sqrt(floats.length/4));
-//            if (!Util.isPowerOf2(n) || !n*n*4 === floats.length) {
-//                throw new Error("Need a square number of entries.")
-//            }
-//
-//            let matrix = Matrix.generate(n, n, (r, c) => new Complex(floats[(r*n + c)*4], floats[(r*n + c)*4 + 1]));
-//
-//            // Renormalization factor. For better answers when non-unitary gates are used.
-//            let unity = matrix.trace();
-//            if (unity.abs() < 0.00001) {
-//                return matrix.scaledBy(NaN);
-//            }
-//
-//            return matrix.scaledBy(Complex.ONE.dividedBy(unity));
-//        });
-//    };
-//
-//    toAllSingleQubitDensityMatricesRaw(qubitCount) {
-//        return new PipelineNode([this.floatsNode], ([floats]) => {
-//            return SuperpositionNode.toAllSingleQubitDensityMatricesRaw(floats, qubitCount);
-//        });
-//    };
-//
-//    /**
-//     * Reads the probability that each qubit would end up true, if measured, based on the texture data being
-//     * control combination data.
-//     * @param {!QuantumControlMask} mask The mask that was used when combining the probabilities.
-//     * @param {!int} qubitCount
-//     * @returns {!PipelineNode.<!Array.<!number>>}
-//     */
-//    asRenormalizedPerQubitProbabilities(mask, qubitCount) {
-//        return new PipelineNode([this.floatsNode], inputs => {
-//            let floats = inputs[0];
-//            return Seq.range(qubitCount).
-//                map(i => {
-//                    let invertedProbability = (mask.desiredValueMask & (1 << i)) === 0;
-//                    let unity = floats[4 * i];
-//                    if (unity < 0.000001) {
-//                        return NaN;
-//                    }
-//                    let p = floats[4 * i + 1] / unity;
-//                    p = Math.max(0, Math.min(1, p));
-//                    return invertedProbability ? 1 - p : p;
-//                }).
-//                toArray();
-//        });
-//    };
-//
-//    /**
-//     * Reads the probability that each qubit would end up true, given that the mask's conrols were satisfied,
-//     * based on the texture data being corresponding control combination data.
-//     * @param {!QuantumControlMask} mask
-//     * @param {!int} qubitCount
-//     * @returns {!PipelineNode.<!Array.<!number>>}
-//     */
-//    asRenormalizedConditionalPerQubitProbabilities(mask, qubitCount) {
-//        return new PipelineNode([this.floatsNode], inputs => {
-//            let floats = inputs[0];
-//            let r = Seq.range(qubitCount).
-//                map(i => {
-//                    let reversedValues = (mask.inclusionMask & (1 << i)) === 0;
-//                    let invertedProbability = (mask.desiredValueMask & (1 << i)) === 0;
-//                    let pMatch = floats[4 * i + 2];
-//                    let pEither = floats[4 * i + 3];
-//                    if (reversedValues) {
-//                        [pEither, pMatch] = [pMatch, pEither]
-//                    }
-//                    if (pEither <= 0) {
-//                        return NaN;
-//                    }
-//                    let p = pMatch / pEither;
-//                    p = Math.max(0, Math.min(1, p));
-//                    return invertedProbability ? 1 - p : p;
-//                }).
-//                toArray();
-//            return r;
-//        });
-//    };
-//}
-

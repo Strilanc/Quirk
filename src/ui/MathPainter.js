@@ -130,7 +130,7 @@ export default class MathPainter {
                     let x1 = x + diam*(col+0.5);
                     let y1 = y + diam*(row+0.5);
                     let clampedRadius = Math.max(unitRadius, 4/mag);
-                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * buf[i+1]);
+                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * -buf[i+1]);
                 }
             }
         }).thenStroke('black');

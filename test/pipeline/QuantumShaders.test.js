@@ -767,10 +767,10 @@ suite.webGlTest("allQubitDensities", () => {
         [h,0,h,h]);
     assertAmpsToDensities(
         [_,s,_,_, s,_,_,_],
-        [h,0,h,h]);
+        [h,0,-h,h]);
     assertAmpsToDensities(
         [_,s,_,_, -s,_,_,_],
-        [h,0,-h,h]);
+        [h,0,h,h]);
     assertAmpsToDensities(
         [0.4,_,_,_, _,0.6,_,_],
         [0.16,0,0.24,0.36]);
