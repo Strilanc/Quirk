@@ -201,6 +201,7 @@ const decodeByteToFloat = (a, b, c, d) => {
 };
 
 /**
+ * Decodes the bytes in a Uint8Array (from a float-encoded-as-bytes texture) back into the desired Float32Array.
  * @param {!Uint8Array} bytes
  * @param {!int} width The width of the rgba byte texture this byte buffer was read from.
  * @param {!int} height The height of the rgba byte texture this byte buffer was read from.
