@@ -134,7 +134,7 @@ let redraw = () => {
 
     tickWhenAppropriate();
 };
-redrawThrottle = new CooldownThrottle(redraw, Config.REDRAW_COOLDOWN_MS);
+redrawThrottle = new CooldownThrottle(redraw.bind(undefined), Config.REDRAW_COOLDOWN_MS);
 
 let useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
