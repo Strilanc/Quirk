@@ -64,40 +64,6 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
 });
 
 /**
- * Returns a configured shader that overlays a foreground texture's pixels over a background texture's pixels, with
- * an offset.
- * @param {!int} foregroundX
- * @param {!int} foregroundY
- * @param {!WglTexture} foregroundTexture
- * @param {!WglTexture} backgroundTexture
- * @returns {!WglConfiguredShader}
- */
-Shaders.overlay = (foregroundX, foregroundY, foregroundTexture, backgroundTexture) => OVERLAY_SHADER.withArgs(
-    WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
-    WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-    WglArg.texture("backgroundTexture", backgroundTexture, 0),
-    WglArg.texture("foregroundTexture", foregroundTexture, 1),
-    WglArg.vec2("foregroundOffset", foregroundX, foregroundY));
-const OVERLAY_SHADER = new WglShader(`
-    uniform vec2 backgroundTextureSize;
-    uniform vec2 foregroundTextureSize;
-    uniform sampler2D backgroundTexture;
-    uniform sampler2D foregroundTexture;
-
-    /** The top-left corner of the area where the foreground is overlaid over the background. */
-    uniform vec2 foregroundOffset;
-
-    void main() {
-        vec2 uv = (gl_FragCoord.xy - foregroundOffset) / foregroundTextureSize.xy;
-        if (uv.x >= 0.0 && uv.y >= 0.0 && uv.x < 1.0 && uv.y < 1.0) {
-          gl_FragColor = texture2D(foregroundTexture, uv);
-        } else {
-          uv = gl_FragCoord.xy / backgroundTextureSize;
-          gl_FragColor = texture2D(backgroundTexture, uv);
-        }
-    }`);
-
-/**
  * Returns a configured shader that renders the input texture to destination texture, but scaled by a constant.
  * @param {!WglTexture} inputTexture
  * @param {!number} factor
