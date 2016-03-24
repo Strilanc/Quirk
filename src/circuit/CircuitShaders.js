@@ -147,93 +147,6 @@ const SQUARED_MAGNITUDE_SHADER = new WglShader(`
     }`);
 
 /**
- * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
- * sum of all probabilities matching a mask.
- *
- * @param {!WglTexture} destinationTexture
- * @param {!WglTexture} inputTexture
- * @param {!int} step
- * @param {!boolean} requiredBitValue
- */
-CircuitShaders.renderConditionalProbabilitiesPipeline = (destinationTexture, inputTexture, step, requiredBitValue) =>
-    CONDITIONAL_PROBABILITIES_PIPELINE_SHADER.withArgs(
-        WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-        WglArg.texture("inputTexture", inputTexture, 0),
-        WglArg.float("stepPower", 1 << step),
-        WglArg.bool("conditionValue", requiredBitValue)
-    ).renderTo(destinationTexture);
-const CONDITIONAL_PROBABILITIES_PIPELINE_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-    uniform sampler2D inputTexture;
-
-    /** A mask with the qubit being operated on in this step of the pipeline set. */
-    uniform float stepPower;
-
-    /** The desired value of this step's qubit. */
-    uniform bool conditionValue;
-
-    ${snippets.bitMaskToPixelDeltaUv}
-    ${snippets.filterBit}
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        vec2 pixelUv = gl_FragCoord.xy / textureSize;
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
-
-        float hasBit = filterBit(state, stepPower);
-        vec2 duv = bitMaskToPixelDeltaUv(stepPower);
-        if (hasBit == 0.0) {
-            gl_FragColor = texture2D(inputTexture, pixelUv) + texture2D(inputTexture, pixelUv + duv);
-        } else if (conditionValue) {
-            gl_FragColor = texture2D(inputTexture, pixelUv);
-        } else {
-            gl_FragColor = texture2D(inputTexture, pixelUv - duv);
-        }
-    }`);
-
-/**
- * Incrementally combines probabilities so that each pixel ends up corresponding to a mask and their value is the
- * sum of all probabilities matching a mask.
- *
- * @param {!WglTexture} destinationTexture
- * @param {!WglTexture} inputTexture
- * @param {!int} controlInclusionMask
- */
-CircuitShaders.renderConditionalProbabilitiesFinalize = (destinationTexture, inputTexture, controlInclusionMask) =>
-    CONDITIONAL_PROBABILITIES_FINALIZE_SHADER.withArgs(
-        WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height),
-        WglArg.vec2("outputTextureSize", destinationTexture.width, destinationTexture.height),
-        WglArg.texture("inputTexture", inputTexture, 0),
-        WglArg.float("controlInclusionMask", controlInclusionMask)
-    ).renderTo(destinationTexture);
-const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
-    uniform vec2 inputTextureSize;
-    uniform vec2 outputTextureSize;
-    uniform sampler2D inputTexture;
-    uniform float controlInclusionMask;
-
-    ${snippets.filterBit}
-    ${snippets.toggleBit}
-
-    vec2 stateToInputPixelUv(float state) {
-        float c = state + 0.5;
-        float r = mod(c, inputTextureSize.x);
-        float d = floor(c / inputTextureSize.x) + 0.5;
-        return vec2(r, d) / inputTextureSize.xy;
-    }
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float bit = pow(2.0, pixelXy.y * outputTextureSize.x + pixelXy.x);
-
-        gl_FragColor = vec4(
-            texture2D(inputTexture, vec2(0.0, 0.0)).x,
-            texture2D(inputTexture, stateToInputPixelUv(bit)).x,
-            texture2D(inputTexture, stateToInputPixelUv(controlInclusionMask)).x,
-            texture2D(inputTexture, stateToInputPixelUv(toggleBit(controlInclusionMask, bit))).x);
-    }`);
-
-/**
  * Returns a parameterized shader that renders a control mask texture corresponding to the given control mask, with 1s
  * at pixels meeting the control and 0s at pixels not meeting the control.
  * @param {!Controls} controlMask
@@ -398,35 +311,6 @@ const ALL_QUBIT_DENSITIES = new WglShader(`
 
         gl_FragColor = vec4(a, br, bi, d);
     }`);
-
-/**
- * Renders a texture with probability sums corresponding to states matching various combinations of controls.
- *
- * @param {!WglTexture} dst
- * @param {!WglTexture} workspace1
- * @param {!WglTexture} workspace2
- * @param {!Controls} controlMask
- * @param {!WglTexture} amplitudes
- */
-CircuitShaders.renderControlCombinationProbabilities = (dst, workspace1, workspace2, controlMask, amplitudes) => {
-    CircuitShaders.squaredMagnitude(amplitudes).renderTo(workspace1);
-    let n = amplitudes.width * amplitudes.height;
-    for (let i = 0; (1 << i) < n; i++) {
-        CircuitShaders.renderConditionalProbabilitiesPipeline(
-            workspace2,
-            workspace1,
-            i,
-            (controlMask.desiredValueMask & (1 << i)) !== 0);
-        let t = workspace2;
-        workspace2 = workspace1;
-        workspace1 = t;
-    }
-
-    CircuitShaders.renderConditionalProbabilitiesFinalize(
-        dst,
-        workspace1,
-        controlMask.inclusionMask);
-};
 
 /**
  * Renders the result of applying a custom controlled single-qubit operation to a superposition.
