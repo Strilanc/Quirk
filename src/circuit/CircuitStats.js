@@ -3,7 +3,7 @@ import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
-import SuperTex from "src/circuit/SuperTex.js"
+import CircuitTextures from "src/circuit/CircuitTextures.js"
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
 
@@ -153,34 +153,34 @@ export default class CircuitStats {
 
     static fromCircuitAtTime(circuitDefinition, time) {
         let numWires = circuitDefinition.numWires;
-        let outputTex = SuperTex.aggregateWithReuse(
-            SuperTex.zero(numWires),
+        let outputTex = CircuitTextures.aggregateWithReuse(
+            CircuitTextures.zero(numWires),
             Seq.range(circuitDefinition.columns.length),
             (stateTex, col) => {
                 let gateCol = circuitDefinition.columns[col];
-                let controlTex = SuperTex.control(numWires, gateCol.controls());
-                stateTex = SuperTex.aggregateWithIntermediateReuse(
+                let controlTex = CircuitTextures.control(numWires, gateCol.controls());
+                stateTex = CircuitTextures.aggregateWithIntermediateReuse(
                     stateTex,
                     circuitDefinition.singleQubitOperationsInColAt(col, time),
-                    (accTex, {i, m}) => SuperTex.qubitOperation(accTex, controlTex, i, m));
-                stateTex = SuperTex.aggregateWithReuse(
+                    (accTex, {i, m}) => CircuitTextures.qubitOperation(accTex, controlTex, i, m));
+                stateTex = CircuitTextures.aggregateWithReuse(
                     stateTex,
                     gateCol.swapPairs(),
-                    (accTex, [i1, i2]) => SuperTex.swap(accTex, controlTex, i1, i2));
-                SuperTex.reuseTexture(controlTex);
+                    (accTex, [i1, i2]) => CircuitTextures.swap(accTex, controlTex, i1, i2));
+                CircuitTextures.reuseTexture(controlTex);
                 return stateTex;
             });
 
         let textureNodes = {
             outputSuperposition: outputTex,
-            qubitDensities: SuperTex.superpositionToQubitDensities(outputTex)
+            qubitDensities: CircuitTextures.superpositionToQubitDensities(outputTex)
         };
 
-        let pixelData = Util.objectifyArrayFunc(SuperTex.mergedReadFloats)(textureNodes);
+        let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)(textureNodes);
 
         let unity = pixelData.qubitDensities[0] + pixelData.qubitDensities[3];
-        let outputSuperposition = SuperTex.pixelsToAmplitudes(pixelData.outputSuperposition, unity);
-        let qubitDensities = SuperTex.pixelsToDensityMatrices(pixelData.qubitDensities, numWires);
+        let outputSuperposition = CircuitTextures.pixelsToAmplitudes(pixelData.outputSuperposition, unity);
+        let qubitDensities = CircuitTextures.pixelsToDensityMatrices(pixelData.qubitDensities, numWires);
 
         let knownDensityMatrices = seq(qubitDensities).
             mapWithIndex((m, i) => {
