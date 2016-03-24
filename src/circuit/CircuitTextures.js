@@ -268,16 +268,15 @@ CircuitTextures._powerSum = (tex, qubitCount) => {
 
 CircuitTextures.pixelsToDensityMatrices = (buffer, qubitCount) => {
     return Seq.range(qubitCount).map(i => {
-        i *= 4;
-        let a = buffer[i];
-        let d = buffer[i + 3];
+        let a = buffer[i*4];
+        let d = buffer[i*4 + 3];
         let unity = a + d;
-        if (unity === 0) {
+        if (unity === 0 || isNaN(unity)) {
             return new Matrix(2, 2, new Float32Array([NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]));
         }
 
-        let br = buffer[i + 1] / unity;
-        let bi = buffer[i + 2] / unity;
+        let br = buffer[i*4 + 1] / unity;
+        let bi = buffer[i*4 + 2] / unity;
         return new Matrix(2, 2, new Float32Array([a / unity, 0, br, bi, br, -bi, d / unity, 0]));
     }).toArray();
 };
