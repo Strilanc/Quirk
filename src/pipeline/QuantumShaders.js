@@ -240,7 +240,7 @@ const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
  * @returns {!WglConfiguredShader}
  */
 QuantumShaders.controlMask = controlMask => {
-    if (controlMask.isEqualTo(Controls.NO_CONTROLS)) {
+    if (controlMask.isEqualTo(Controls.NONE)) {
         return Shaders.color(1, 0, 0, 0);
     }
 
@@ -296,7 +296,7 @@ const CONTROL_MASK_SHADER = new WglShader(`
  * @returns {!WglConfiguredShader}
  */
 QuantumShaders.controlSelect = (controlMask, dataTexture) => {
-    if (controlMask.isEqualTo(Controls.NO_CONTROLS)) {
+    if (controlMask.isEqualTo(Controls.NONE)) {
         return Shaders.passthrough(dataTexture);
     }
 

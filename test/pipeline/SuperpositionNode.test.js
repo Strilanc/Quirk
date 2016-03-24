@@ -56,7 +56,7 @@
 //suite.webGlTest("withQubitOperationApplied", () => {
 //    let s = Math.sqrt(0.5);
 //    let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(7, 3);
-//    let noControls = SuperpositionNode.control(3, Controls.NO_CONTROLS);
+//    let noControls = SuperpositionNode.control(3, Controls.NONE);
 //
 //    t = t.withQubitOperationApplied(0, Matrix.HADAMARD, noControls);
 //    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
@@ -87,7 +87,7 @@
 //
 //suite.webGlTest("withSwapApplied", () => {
 //    let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(1, 3);
-//    let noControls = SuperpositionNode.control(3, Controls.NO_CONTROLS);
+//    let noControls = SuperpositionNode.control(3, Controls.NONE);
 //
 //    t = t.withSwap(0, 1, noControls);
 //    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
@@ -226,9 +226,9 @@
 //
 //suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
 //    let ops = [
-//        [0, Matrix.HADAMARD, Controls.NO_CONTROLS],
-//        [1, Matrix.HADAMARD, Controls.NO_CONTROLS],
-//        [2, Matrix.HADAMARD, Controls.NO_CONTROLS],
+//        [0, Matrix.HADAMARD, Controls.NONE],
+//        [1, Matrix.HADAMARD, Controls.NONE],
+//        [2, Matrix.HADAMARD, Controls.NONE],
 //        [0, Matrix.PAULI_X, Controls.fromBitIs(1, true)],
 //        [1, Matrix.HADAMARD, Controls.fromBitIs(0, true)],
 //        [1, Matrix.PAULI_X, new Controls(5, 5)],

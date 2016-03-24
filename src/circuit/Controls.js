@@ -106,6 +106,6 @@ class Controls {
 }
 
 /** @type {!Controls} */
-Controls.NO_CONTROLS = new Controls(0, 0);
+Controls.NONE = new Controls(0, 0);
 
 export default Controls;

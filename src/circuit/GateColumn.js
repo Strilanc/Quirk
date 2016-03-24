@@ -71,8 +71,8 @@ class GateColumn {
             map(i =>
                 this.gates[i] === Gates.Special.Control ? Controls.fromBitIs(i, true) :
                 this.gates[i] === Gates.Special.AntiControl ? Controls.fromBitIs(i, false) :
-                Controls.NO_CONTROLS).
-            aggregate(Controls.NO_CONTROLS, (a, e) => a.combine(e));
+                Controls.NONE).
+            aggregate(Controls.NONE, (a, e) => a.combine(e));
     }
 
     /**

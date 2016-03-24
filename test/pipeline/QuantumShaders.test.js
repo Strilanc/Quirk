@@ -322,7 +322,7 @@ suite.webGlTest("renderControlCombinationProbabilities", () => {
         204, 30, 120, 20
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, Controls.NO_CONTROLS, inp);
+    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, Controls.NONE, inp);
     assertThat(r.readPixels().slice(0, 12)).isEqualTo(new Float32Array([
         204, 84, 204, 84,
         204, 66, 204, 66,
@@ -624,7 +624,7 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
     Shaders.data(new Float32Array(inputPixelData)).renderTo(inp);
     let kept = Seq.range(nsize).toArray();
     let margined = Seq.range(nsize).map(i => i + nsize).toArray();
-    let controlled = Controls.NO_CONTROLS;
+    let controlled = Controls.NONE;
     QuantumShaders.renderSuperpositionToDensityMatrix(out, inp, kept, margined, controlled);
 
     let outputPixelData = out.readPixels();
@@ -634,7 +634,7 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
 
 suite.webGlTest("controlSelect_simple", () => {
     let coords = Shaders.coords.toFloatTexture(4, 4);
-    assertThat(QuantumShaders.controlSelect(Controls.NO_CONTROLS, coords).readFloatOutputs(4, 4)).
+    assertThat(QuantumShaders.controlSelect(Controls.NONE, coords).readFloatOutputs(4, 4)).
         isEqualTo(new Float32Array([
             0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
             0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,

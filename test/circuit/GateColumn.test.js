@@ -70,9 +70,9 @@ suite.test("swapPairs", () => {
 });
 
 suite.test("controls", () => {
-    assertThat(new GateColumn([]).controls()).isEqualTo(Controls.NO_CONTROLS);
-    assertThat(new GateColumn([null, null]).controls()).isEqualTo(Controls.NO_CONTROLS);
-    assertThat(new GateColumn([null, Gates.HalfTurns.X]).controls()).isEqualTo(Controls.NO_CONTROLS);
+    assertThat(new GateColumn([]).controls()).isEqualTo(Controls.NONE);
+    assertThat(new GateColumn([null, null]).controls()).isEqualTo(Controls.NONE);
+    assertThat(new GateColumn([null, Gates.HalfTurns.X]).controls()).isEqualTo(Controls.NONE);
     assertThat(new GateColumn([
         Gates.Special.Control, Gates.Special.AntiControl, Gates.Special.SwapHalf
     ]).controls()).isEqualTo(new Controls(3, 1));

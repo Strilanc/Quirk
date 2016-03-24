@@ -16,12 +16,12 @@ suite.test("isEqualTo", () => {
     assertFalse(s.isEqualTo(new Controls(0xF, 0xF)));
     assertFalse(s.isEqualTo(new Controls(0xE, 0xE)));
     assertTrue(new Controls(0x3, 0x2).isEqualTo(new Controls(0x3, 0x2)));
-    assertTrue(Controls.NO_CONTROLS.isEqualTo(new Controls(0, 0)));
+    assertTrue(Controls.NONE.isEqualTo(new Controls(0, 0)));
 });
 
 suite.test("allowsState", () => {
-    assertTrue(Controls.NO_CONTROLS.allowsState(0));
-    assertTrue(Controls.NO_CONTROLS.allowsState(1));
+    assertTrue(Controls.NONE.allowsState(0));
+    assertTrue(Controls.NONE.allowsState(1));
 
     let m = new Controls(0x5, 0x1);
     assertFalse(m.allowsState(0));
@@ -37,8 +37,8 @@ suite.test("allowsState", () => {
 });
 
 suite.test("desiredValueFor", () => {
-    assertThat(Controls.NO_CONTROLS.desiredValueFor(0)).isEqualTo(null);
-    assertThat(Controls.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
+    assertThat(Controls.NONE.desiredValueFor(0)).isEqualTo(null);
+    assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(null);
 
     let m = new Controls(0x5, 0x1);
     assertThat(m.desiredValueFor(0)).isEqualTo(true);
@@ -55,19 +55,19 @@ suite.test("fromBitIs", () => {
 });
 
 suite.test("combine", () => {
-    assertThat(Controls.NO_CONTROLS.combine(Controls.NO_CONTROLS)).isEqualTo(Controls.NO_CONTROLS);
-    assertThat(Controls.NO_CONTROLS.desiredValueFor(1)).isEqualTo(null);
+    assertThat(Controls.NONE.combine(Controls.NONE)).isEqualTo(Controls.NONE);
+    assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(null);
 
     let m = new Controls(0x5, 0x1);
     assertThat(Controls.fromBitIs(0, true).combine(Controls.fromBitIs(2, false))).isEqualTo(m);
     assertThat(Controls.fromBitIs(2, false).combine(Controls.fromBitIs(0, true))).isEqualTo(m);
-    assertThat(Controls.NO_CONTROLS.combine(m)).isEqualTo(m);
+    assertThat(Controls.NONE.combine(m)).isEqualTo(m);
     assertThat(m.combine(m)).isEqualTo(m);
 
     assertThrows(() => Controls.fromBitIs(0, true).combine(Controls.fromBitIs(0, false)));
 });
 
 suite.test("toString", () => {
-    assertTrue(typeof(Controls.NO_CONTROLS.toString()) === "string");
+    assertTrue(typeof(Controls.NONE.toString()) === "string");
     assertTrue(typeof(new Controls(0x5, 0x1).toString()) === "string");
 });
