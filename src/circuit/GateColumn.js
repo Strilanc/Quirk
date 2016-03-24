@@ -1,7 +1,7 @@
 import Gate from "src/circuit/Gate.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Controls from "src/circuit/Controls.js"
 import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
@@ -63,16 +63,16 @@ class GateColumn {
     }
 
     /**
-     * @returns {!QuantumControlMask}
+     * @returns {!Controls}
      */
     controls() {
         return Seq.
             range(this.gates.length).
             map(i =>
-                this.gates[i] === Gates.Special.Control ? QuantumControlMask.fromBitIs(i, true) :
-                this.gates[i] === Gates.Special.AntiControl ? QuantumControlMask.fromBitIs(i, false) :
-                QuantumControlMask.NO_CONTROLS).
-            aggregate(QuantumControlMask.NO_CONTROLS, (a, e) => a.combine(e));
+                this.gates[i] === Gates.Special.Control ? Controls.fromBitIs(i, true) :
+                this.gates[i] === Gates.Special.AntiControl ? Controls.fromBitIs(i, false) :
+                Controls.NO_CONTROLS).
+            aggregate(Controls.NO_CONTROLS, (a, e) => a.combine(e));
     }
 
     /**

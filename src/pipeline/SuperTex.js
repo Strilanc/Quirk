@@ -83,7 +83,7 @@ SuperTex.zero = qubitCount => {
 
 /**
  * @param {!int} qubitCount
- * @param {!QuantumControlMask} mask
+ * @param {!Controls} mask
  * @returns {!WglTexture}
  */
 SuperTex.control = (qubitCount, mask) => {

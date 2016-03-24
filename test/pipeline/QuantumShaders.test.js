@@ -2,7 +2,7 @@ import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 
 import Complex from "src/math/Complex.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Controls from "src/circuit/Controls.js"
 import Seq from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
 import Matrix from "src/math/Matrix.js"
@@ -110,7 +110,7 @@ suite.webGlTest("linearOverlay", () => {
 });
 
 suite.webGlTest("controlMask", () => {
-    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x1)).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlMask(new Controls(0x3, 0x1)).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             0, 0, 0, 0,
             1, 0, 0, 0,
@@ -118,7 +118,7 @@ suite.webGlTest("controlMask", () => {
             0, 0, 0, 0
         ]));
 
-    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x1)).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlMask(new Controls(0x3, 0x1)).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             0, 0, 0, 0,
             1, 0, 0, 0,
@@ -126,7 +126,7 @@ suite.webGlTest("controlMask", () => {
             0, 0, 0, 0
         ]));
 
-    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x3, 0x0)).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlMask(new Controls(0x3, 0x0)).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             1, 0, 0, 0,
             0, 0, 0, 0,
@@ -134,7 +134,7 @@ suite.webGlTest("controlMask", () => {
             0, 0, 0, 0
         ]));
 
-    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlMask(new Controls(0x1, 0x0)).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             1, 0, 0, 0,
             0, 0, 0, 0,
@@ -142,7 +142,7 @@ suite.webGlTest("controlMask", () => {
             0, 0, 0, 0
         ]));
 
-    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x5, 0x4)).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlMask(new Controls(0x5, 0x4)).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0, 0, 0, 0,
             0, 0, 0, 0,
@@ -154,7 +154,7 @@ suite.webGlTest("controlMask", () => {
             0, 0, 0, 0
         ]));
 
-    assertThat(QuantumShaders.controlMask(new QuantumControlMask(0x1, 0x0)).readByteOutputs(2, 2)).
+    assertThat(QuantumShaders.controlMask(new Controls(0x1, 0x0)).readByteOutputs(2, 2)).
         isEqualTo(new Uint8Array([
             255, 0, 0, 0,
             0, 0, 0, 0,
@@ -166,7 +166,7 @@ suite.webGlTest("controlMask", () => {
 suite.webGlTest("controlMask_largeReference", () => {
     let w = 1 << 7;
     let h = 1 << 10;
-    let mask = new QuantumControlMask(0b10111010101010111, 0b10011000001010001);
+    let mask = new Controls(0b10111010101010111, 0b10011000001010001);
     let expected = new Float32Array(Seq.range(w * h).
         map(i => mask.allowsState(i) ? 1 : 0).
         flatMap(e => [e, 0, 0, 0]).
@@ -301,35 +301,35 @@ suite.webGlTest("renderControlCombinationProbabilities", () => {
     let ta = new WglTexture(4, 2);
     let tb = new WglTexture(4, 2);
     let r = new WglTexture(2, 2);
-    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new QuantumControlMask(7, 7), inp);
+    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new Controls(7, 7), inp);
     assertThat(r.readPixels().slice(0, 12)).isEqualTo(new Float32Array([
         204, 120, 64, 113,
         204, 138, 64, 100,
         204, 174, 64, 80
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new QuantumControlMask(3, 1), inp);
+    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new Controls(3, 1), inp);
     assertThat(r.readPixels().slice(0, 12)).isEqualTo(new Float32Array([
         204, 120, 40, 66,
         204, 66, 40, 120,
         204, 30, 40, 4
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new QuantumControlMask(1, 1), inp);
+    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new Controls(1, 1), inp);
     assertThat(r.readPixels().slice(0, 12)).isEqualTo(new Float32Array([
         204, 120, 120, 204,
         204, 66, 120, 40,
         204, 30, 120, 20
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, QuantumControlMask.NO_CONTROLS, inp);
+    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, Controls.NO_CONTROLS, inp);
     assertThat(r.readPixels().slice(0, 12)).isEqualTo(new Float32Array([
         204, 84, 204, 84,
         204, 66, 204, 66,
         204, 30, 204, 30
     ]));
 
-    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new QuantumControlMask(4, 4), inp);
+    QuantumShaders.renderControlCombinationProbabilities(r, ta, tb, new Controls(4, 4), inp);
     assertThat(r.readPixels().slice(0, 12)).isEqualTo(new Float32Array([
         204, 84, 174, 74,
         204, 66, 174, 61,
@@ -407,7 +407,7 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ])).renderTo(inp);
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(3, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(3, false)).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         7, -1, 0, 0,
@@ -420,7 +420,7 @@ suite.webGlTest("renderQubitOperation", () => {
         -30, -8, 0, 0
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(1, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(1, false)).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         7, -1, 0, 0,
@@ -433,7 +433,7 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(1, true)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(1, true)).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         2, 3, 0, 0,
@@ -446,7 +446,7 @@ suite.webGlTest("renderQubitOperation", () => {
         -30, -8, 0, 0
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(2, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(2, false)).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         7, -1, 0, 0,
@@ -459,7 +459,7 @@ suite.webGlTest("renderQubitOperation", () => {
         17, 19, 0, 0
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(3, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(3, false)).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([0, 0, 0, 0]), 0, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         0, 0, 0, 0,
@@ -472,7 +472,7 @@ suite.webGlTest("renderQubitOperation", () => {
         0, 0, 0, 0
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(3, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(3, false)).renderTo(cnt);
     QuantumShaders.renderQubitOperation(out, inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 1, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         9, -3, 0, 0,
@@ -494,7 +494,7 @@ suite.webGlTest("renderQubitOperation_flows", () => {
         1, 2, 0, 0,
         3, 27, 0, 0
     ])).renderTo(inp1);
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(1, false)).renderTo(cnt1);
+    QuantumShaders.controlMask(Controls.fromBitIs(1, false)).renderTo(cnt1);
     QuantumShaders.renderQubitOperation(out1, inp1, Matrix.square([1, 0, 0, 0]), 0, cnt1);
     assertThat(out1.readPixels()).isEqualTo(new Float32Array([
         1, 2, 0, 0,
@@ -545,7 +545,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(2, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(2, false)).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 1, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -571,7 +571,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(1, false)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(1, false)).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 2, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -584,7 +584,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    QuantumShaders.controlMask(QuantumControlMask.fromBitIs(1, true)).renderTo(cnt);
+    QuantumShaders.controlMask(Controls.fromBitIs(1, true)).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 2, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -624,7 +624,7 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
     Shaders.data(new Float32Array(inputPixelData)).renderTo(inp);
     let kept = Seq.range(nsize).toArray();
     let margined = Seq.range(nsize).map(i => i + nsize).toArray();
-    let controlled = QuantumControlMask.NO_CONTROLS;
+    let controlled = Controls.NO_CONTROLS;
     QuantumShaders.renderSuperpositionToDensityMatrix(out, inp, kept, margined, controlled);
 
     let outputPixelData = out.readPixels();
@@ -634,57 +634,57 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
 
 suite.webGlTest("controlSelect_simple", () => {
     let coords = Shaders.coords.toFloatTexture(4, 4);
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.NO_CONTROLS, coords).readFloatOutputs(4, 4)).
+    assertThat(QuantumShaders.controlSelect(Controls.NO_CONTROLS, coords).readFloatOutputs(4, 4)).
         isEqualTo(new Float32Array([
             0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
             0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,
             0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0,
             0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(0, false), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(0, false), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0,0,0,0, 2,0,0,0,
             0,1,0,0, 2,1,0,0,
             0,2,0,0, 2,2,0,0,
             0,3,0,0, 2,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(0, true), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(0, true), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             1,0,0,0, 3,0,0,0,
             1,1,0,0, 3,1,0,0,
             1,2,0,0, 3,2,0,0,
             1,3,0,0, 3,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, false), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(1, false), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0,0,0,0, 1,0,0,0,
             0,1,0,0, 1,1,0,0,
             0,2,0,0, 1,2,0,0,
             0,3,0,0, 1,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, true), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(1, true), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             2,0,0,0, 3,0,0,0,
             2,1,0,0, 3,1,0,0,
             2,2,0,0, 3,2,0,0,
             2,3,0,0, 3,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(2, false), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(2, false), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
             0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(2, true), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(2, true), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,
             0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(3, false), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(3, false), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
             0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(3, true), coords).readFloatOutputs(4, 2)).
+    assertThat(QuantumShaders.controlSelect(Controls.fromBitIs(3, true), coords).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0,
             0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
@@ -693,7 +693,7 @@ suite.webGlTest("controlSelect_simple", () => {
 
 suite.webGlTest("controlSelect_skewed", () => {
     let coords = Shaders.coords.toFloatTexture(2, 8);
-    let shader = QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, true), coords);
+    let shader = QuantumShaders.controlSelect(Controls.fromBitIs(1, true), coords);
     let r1 = shader.readFloatOutputs(8, 1);
     let r2 = shader.readFloatOutputs(4, 2);
     let r3 = shader.readFloatOutputs(2, 4);
@@ -711,25 +711,25 @@ suite.webGlTest("controlSelect_skewed", () => {
 
 suite.webGlTest("controlSelect_multiple", () => {
     let coords = Shaders.coords.toFloatTexture(4, 4);
-    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0x3, 0x3), coords).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlSelect(new Controls(0x3, 0x3), coords).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             3,0,0,0,
             3,1,0,0,
             3,2,0,0,
             3,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0x3, 0x2), coords).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlSelect(new Controls(0x3, 0x2), coords).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             2,0,0,0,
             2,1,0,0,
             2,2,0,0,
             2,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0xC, 0xC), coords).readFloatOutputs(2, 2)).
+    assertThat(QuantumShaders.controlSelect(new Controls(0xC, 0xC), coords).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
         ]));
-    assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0xF, 0x3), coords).readFloatOutputs(1, 1)).
+    assertThat(QuantumShaders.controlSelect(new Controls(0xF, 0x3), coords).readFloatOutputs(1, 1)).
         isEqualTo(new Float32Array([
             3,0,0,0
         ]));

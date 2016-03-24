@@ -1,13 +1,13 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Controls from "src/circuit/Controls.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
 import SuperTex from "src/pipeline/SuperTex.js"
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
 
-export default class CircuitStats{
+export default class CircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time

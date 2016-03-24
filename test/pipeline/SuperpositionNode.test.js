@@ -4,7 +4,7 @@
 //import Complex from "src/math/Complex.js"
 //import Matrix from "src/math/Matrix.js"
 //import PipelineNode from "src/pipeline/PipelineNode.js"
-//import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+//import Controls from "src/pipeline/Controls.js"
 //import Shaders from "src/webgl/Shaders.js"
 //import Rect from "src/math/Rect.js"
 //import Seq from "src/base/Seq.js"
@@ -56,7 +56,7 @@
 //suite.webGlTest("withQubitOperationApplied", () => {
 //    let s = Math.sqrt(0.5);
 //    let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(7, 3);
-//    let noControls = SuperpositionNode.control(3, QuantumControlMask.NO_CONTROLS);
+//    let noControls = SuperpositionNode.control(3, Controls.NO_CONTROLS);
 //
 //    t = t.withQubitOperationApplied(0, Matrix.HADAMARD, noControls);
 //    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
@@ -73,21 +73,21 @@
 //    t = t.withQubitOperationApplied(
 //        1,
 //        Matrix.HADAMARD,
-//        SuperpositionNode.control(3, QuantumControlMask.fromBitIs(0, true)));
+//        SuperpositionNode.control(3, Controls.fromBitIs(0, true)));
 //    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
 //        s/2, 0, -s/2, -0.5, -s/2, 0, s/2, 0.5]));
 //
 //    t = t.withQubitOperationApplied(
 //        2,
 //        Matrix.HADAMARD,
-//        SuperpositionNode.control(3, new QuantumControlMask(0x3, 0)));
+//        SuperpositionNode.control(3, new Controls(0x3, 0)));
 //    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
 //        0, 0, -s/2, -0.5, 0.5, 0, s/2, 0.5]));
 //});
 //
 //suite.webGlTest("withSwapApplied", () => {
 //    let t = SuperpositionNode.fromClassicalStateInRegisterOfSize(1, 3);
-//    let noControls = SuperpositionNode.control(3, QuantumControlMask.NO_CONTROLS);
+//    let noControls = SuperpositionNode.control(3, Controls.NO_CONTROLS);
 //
 //    t = t.withSwap(0, 1, noControls);
 //    assertThat(t.read().asRenormalizedAmplitudes().compute()).isApproximatelyEqualTo(Matrix.col([
@@ -109,19 +109,19 @@
 //suite.webGlTest("controlledProbabilities", () => {
 //    let s = SuperpositionNode.fromAmplitudes([1.5, new Complex(1, -2), 0, Complex.I]);
 //    let f = m => s.controlledProbabilities(m).read().raw().compute().slice(0, 8);
-//    assertThat(f(new QuantumControlMask(0, 0))).isEqualTo(new Float32Array([
+//    assertThat(f(new Controls(0, 0))).isEqualTo(new Float32Array([
 //        8.25, 2.25, 8.25, 2.25,
 //        8.25, 7.25, 8.25, 7.25]));
-//    assertThat(f(new QuantumControlMask(1, 0))).isEqualTo(new Float32Array([
+//    assertThat(f(new Controls(1, 0))).isEqualTo(new Float32Array([
 //        8.25, 2.25, 2.25, 8.25,
 //        8.25, 7.25, 2.25, 2.25]));
-//    assertThat(f(new QuantumControlMask(1, 1))).isEqualTo(new Float32Array([
+//    assertThat(f(new Controls(1, 1))).isEqualTo(new Float32Array([
 //        8.25, 6, 6, 8.25,
 //        8.25, 7.25, 6, 5]));
-//    assertThat(f(new QuantumControlMask(2, 2))).isEqualTo(new Float32Array([
+//    assertThat(f(new Controls(2, 2))).isEqualTo(new Float32Array([
 //        8.25, 2.25, 1, 0,
 //        8.25, 1, 1, 8.25]));
-//    assertThat(f(new QuantumControlMask(3, 3))).isEqualTo(new Float32Array([
+//    assertThat(f(new Controls(3, 3))).isEqualTo(new Float32Array([
 //        8.25, 6, 1, 1,
 //        8.25, 1, 1, 6]));
 //});
@@ -226,15 +226,15 @@
 //
 //suite.webGlTest("mergedReadFloats_compressionCircuit", () => {
 //    let ops = [
-//        [0, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS],
-//        [1, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS],
-//        [2, Matrix.HADAMARD, QuantumControlMask.NO_CONTROLS],
-//        [0, Matrix.PAULI_X, QuantumControlMask.fromBitIs(1, true)],
-//        [1, Matrix.HADAMARD, QuantumControlMask.fromBitIs(0, true)],
-//        [1, Matrix.PAULI_X, new QuantumControlMask(5, 5)],
-//        [0, Matrix.PAULI_X, QuantumControlMask.fromBitIs(2, true)],
-//        [2, Matrix.fromTargetedRotation(-1/3), QuantumControlMask.fromBitIs(0, true)],
-//        [2, Matrix.fromTargetedRotation(-2/3), QuantumControlMask.fromBitIs(1, true)]
+//        [0, Matrix.HADAMARD, Controls.NO_CONTROLS],
+//        [1, Matrix.HADAMARD, Controls.NO_CONTROLS],
+//        [2, Matrix.HADAMARD, Controls.NO_CONTROLS],
+//        [0, Matrix.PAULI_X, Controls.fromBitIs(1, true)],
+//        [1, Matrix.HADAMARD, Controls.fromBitIs(0, true)],
+//        [1, Matrix.PAULI_X, new Controls(5, 5)],
+//        [0, Matrix.PAULI_X, Controls.fromBitIs(2, true)],
+//        [2, Matrix.fromTargetedRotation(-1/3), Controls.fromBitIs(0, true)],
+//        [2, Matrix.fromTargetedRotation(-2/3), Controls.fromBitIs(1, true)]
 //    ];
 //
 //    let stateNodes = new Seq(ops).scan(

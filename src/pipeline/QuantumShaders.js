@@ -1,5 +1,5 @@
 import Matrix from "src/math/Matrix.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Controls from "src/circuit/Controls.js"
 import Seq from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
 import Util from "src/base/Util.js"
@@ -236,11 +236,11 @@ const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
 /**
  * Returns a parameterized shader that renders a control mask texture corresponding to the given control mask, with 1s
  * at pixels meeting the control and 0s at pixels not meeting the control.
- * @param {!QuantumControlMask} controlMask
+ * @param {!Controls} controlMask
  * @returns {!WglConfiguredShader}
  */
 QuantumShaders.controlMask = controlMask => {
-    if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
+    if (controlMask.isEqualTo(Controls.NO_CONTROLS)) {
         return Shaders.color(1, 0, 0, 0);
     }
 
@@ -291,12 +291,12 @@ const CONTROL_MASK_SHADER = new WglShader(`
 /**
  * Returns a parameterized shader that renders only the control-matching parts of an input texture to a smaller output
  * texture. This allows later shaders to omit any control-masking steps (and to work on less data).
- * @param {!QuantumControlMask} controlMask
+ * @param {!Controls} controlMask
  * @param {!WglTexture} dataTexture
  * @returns {!WglConfiguredShader}
  */
 QuantumShaders.controlSelect = (controlMask, dataTexture) => {
-    if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
+    if (controlMask.isEqualTo(Controls.NO_CONTROLS)) {
         return Shaders.passthrough(dataTexture);
     }
 
@@ -405,7 +405,7 @@ const ALL_QUBIT_DENSITIES = new WglShader(`
  * @param {!WglTexture} dst
  * @param {!WglTexture} workspace1
  * @param {!WglTexture} workspace2
- * @param {!QuantumControlMask} controlMask
+ * @param {!Controls} controlMask
  * @param {!WglTexture} amplitudes
  */
 QuantumShaders.renderControlCombinationProbabilities = (dst, workspace1, workspace2, controlMask, amplitudes) => {
@@ -602,7 +602,7 @@ const SWAP_QUBITS_SHADER = new WglShader(`
  * @param {!WglTexture} inputTexture
  * @param {!Array.<!int>} keptBits
  * @param {!Array.<!int>} marginalizedBits
- * @param {!QuantumControlMask} controlMask
+ * @param {!Controls} controlMask
  */
 QuantumShaders.renderSuperpositionToDensityMatrix = (dst, inputTexture, keptBits, marginalizedBits, controlMask) => {
     Util.need(keptBits.every(b => (controlMask.inclusionMask & (1 << b)) === 0), "kept bits overlap controls");

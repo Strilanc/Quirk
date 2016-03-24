@@ -6,7 +6,7 @@ import Seq from "src/base/Seq.js"
  *
  * Mostly used for specifying the controls on an operation, i.e. which wires must be ON or OFF for it to apply.
  */
-class QuantumControlMask {
+class Controls {
     /**
      * @param {!int} inclusionMask.
      * @param {!int} desiredValueMask
@@ -24,19 +24,19 @@ class QuantumControlMask {
     /**
      * @param {!int} bitIndex
      * @param {!boolean} desiredValue
-     * @returns {!QuantumControlMask}
+     * @returns {!Controls}
      */
     static fromBitIs(bitIndex, desiredValue) {
         U.need(bitIndex >= 0);
-        return new QuantumControlMask(1 << bitIndex, desiredValue ? (1 << bitIndex) : 0);
+        return new Controls(1 << bitIndex, desiredValue ? (1 << bitIndex) : 0);
     };
 
     /**
-     * @param {!QuantumControlMask|*} other
+     * @param {!Controls|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
-        return other instanceof QuantumControlMask &&
+        return other instanceof Controls &&
             this.inclusionMask == other.inclusionMask &&
             this.desiredValueMask == other.desiredValueMask;
     };
@@ -49,7 +49,7 @@ class QuantumControlMask {
             return "No Controls";
         }
 
-        return "QuantumControlMask: ...__" + Seq.naturals().
+        return "Controls: ...__" + Seq.naturals().
             takeWhile(i => (1<<i) <= this.inclusionMask).
             map(this.desiredValueFor.bind(this)).
             map(e => e === null ? "_" : e ? "1" : "0").
@@ -93,19 +93,19 @@ class QuantumControlMask {
     }
 
     /**
-     * @param {!QuantumControlMask} other
-     * @returns {!QuantumControlMask}
+     * @param {!Controls} other
+     * @returns {!Controls}
      */
     combine(other) {
         U.need((other.desiredValueMask & this.inclusionMask) === (this.desiredValueMask & other.inclusionMask),
             "Can't combine contradictory controls.");
-        return new QuantumControlMask(
+        return new Controls(
             this.inclusionMask | other.inclusionMask,
             this.desiredValueMask | other.desiredValueMask);
     };
 }
 
-/** @type {!QuantumControlMask} */
-QuantumControlMask.NO_CONTROLS = new QuantumControlMask(0, 0);
+/** @type {!Controls} */
+Controls.NO_CONTROLS = new Controls(0, 0);
 
-export default QuantumControlMask;
+export default Controls;
