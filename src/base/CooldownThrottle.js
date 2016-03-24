@@ -40,13 +40,16 @@ export default class CooldownThrottle {
                     this._forceIdleTriggerAfter(remainingCooldownDuration);
                 } else {
                     this._state = 'running';
-                    this.action();
-                    this._lastCompletionTime = performance.now();
-                    if (this._state === 'running-and-triggered') {
-                        this._state = 'waiting';
-                        this._forceIdleTriggerAfter(this.cooldownDuration);
-                    } else {
-                        this._state = 'idle';
+                    try {
+                        this.action();
+                    } finally {
+                        this._lastCompletionTime = performance.now();
+                        if (this._state === 'running-and-triggered') {
+                            this._state = 'waiting';
+                            this._forceIdleTriggerAfter(this.cooldownDuration);
+                        } else {
+                            this._state = 'idle';
+                        }
                     }
                 }
                 break;
