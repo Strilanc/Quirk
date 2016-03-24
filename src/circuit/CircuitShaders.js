@@ -529,20 +529,24 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
 /**
  * Renders the result of applying a controlled swap operation to a superposition.
  *
- * @param {!WglTexture} destinationTexture
  * @param {!WglTexture} inputTexture
  * @param {!int} qubitIndex1
  * @param {!int} qubitIndex2
  * @param {!WglTexture} controlTexture
  */
-CircuitShaders.renderSwapOperation = (destinationTexture, inputTexture, qubitIndex1, qubitIndex2, controlTexture) =>
-    SWAP_QUBITS_SHADER.withArgs(
-        WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-        WglArg.texture("inputTexture", inputTexture, 0),
-        WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
-        WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
-        WglArg.texture("controlTexture", controlTexture, 1)
-    ).renderTo(destinationTexture);
+CircuitShaders.swap = (inputTexture, qubitIndex1, qubitIndex2, controlTexture) =>
+    new WglConfiguredShader(destinationTexture => {
+        if (destinationTexture.width !== inputTexture.width || destinationTexture.height !== inputTexture.height) {
+            throw new Error("Texture sizes must match.");
+        }
+        SWAP_QUBITS_SHADER.withArgs(
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
+            WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
+            WglArg.texture("controlTexture", controlTexture, 1)
+        ).renderTo(destinationTexture)
+    });
 const SWAP_QUBITS_SHADER = new WglShader(`
     /**
      * A texture holding the complex coefficients of the superposition to operate on.

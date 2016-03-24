@@ -517,11 +517,8 @@ suite.webGlTest("renderQubitOperation_flows", () => {
     ]));
 });
 
-suite.webGlTest("renderSwapOperation", () => {
-    let out = new WglTexture(1<<2, 1<<1);
-    let inp = new WglTexture(1<<2, 1<<1);
-    let cnt = new WglTexture(1<<2, 1<<1);
-    Shaders.data(new Float32Array([
+suite.webGlTest("swap", () => {
+    let inp = Shaders.data(new Float32Array([
         11, 12, 13, 14, //000
         21, 22, 23, 24, //001
         31, 32, 33, 34, //010
@@ -530,11 +527,9 @@ suite.webGlTest("renderSwapOperation", () => {
         61, 62, 63, 64, //101
         71, 72, 73, 74, //110
         81, 82, 83, 84  //111
-    ])).renderTo(inp);
-
-    Shaders.color(1, 0, 0, 0).renderTo(cnt);
-    CircuitShaders.renderSwapOperation(out, inp, 0, 1, cnt);
-    assertThat(out.readPixels()).isEqualTo(new Float32Array([
+    ])).toFloatTexture(4, 2);
+    let cnt = Shaders.color(1, 0, 0, 0).toFloatTexture(4, 2);
+    assertThat(CircuitShaders.swap(inp, 0, 1, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         31, 32, 33, 34, //010
         21, 22, 23, 24, //001
@@ -546,8 +541,7 @@ suite.webGlTest("renderSwapOperation", () => {
     ]));
 
     CircuitShaders.controlMask(Controls.fromBitIs(2, false)).renderTo(cnt);
-    CircuitShaders.renderSwapOperation(out, inp, 0, 1, cnt);
-    assertThat(out.readPixels()).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.swap(inp, 0, 1, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         31, 32, 33, 34, //010
         21, 22, 23, 24, //001
@@ -559,8 +553,7 @@ suite.webGlTest("renderSwapOperation", () => {
     ]));
 
     Shaders.color(1, 0, 0, 0).renderTo(cnt);
-    CircuitShaders.renderSwapOperation(out, inp, 0, 2, cnt);
-    assertThat(out.readPixels()).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.swap(inp, 0, 2, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         51, 52, 53, 54, //100
         31, 32, 33, 34, //010
@@ -572,8 +565,7 @@ suite.webGlTest("renderSwapOperation", () => {
     ]));
 
     CircuitShaders.controlMask(Controls.fromBitIs(1, false)).renderTo(cnt);
-    CircuitShaders.renderSwapOperation(out, inp, 0, 2, cnt);
-    assertThat(out.readPixels()).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.swap(inp, 0, 2, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         51, 52, 53, 54, //100
         31, 32, 33, 34, //010
@@ -585,8 +577,7 @@ suite.webGlTest("renderSwapOperation", () => {
     ]));
 
     CircuitShaders.controlMask(Controls.fromBitIs(1, true)).renderTo(cnt);
-    CircuitShaders.renderSwapOperation(out, inp, 0, 2, cnt);
-    assertThat(out.readPixels()).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.swap(inp, 0, 2, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
         21, 22, 23, 24, //001
         31, 32, 33, 34, //010

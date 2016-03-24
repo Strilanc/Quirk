@@ -283,11 +283,6 @@ CircuitTextures.pixelsToDensityMatrices = (buffer, qubitCount) => {
 
 CircuitTextures.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
     let result = CircuitTextures.allocSame(stateTex);
-    CircuitShaders.renderSwapOperation(
-        result,
-        stateTex,
-        qubitIndex1,
-        qubitIndex2,
-        controlTex);
+    CircuitShaders.swap(stateTex, qubitIndex1, qubitIndex2, controlTex).renderTo(result);
     return result;
 };
