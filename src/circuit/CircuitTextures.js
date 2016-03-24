@@ -14,6 +14,8 @@ export default class CircuitTextures {
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 const TEXTURE_POOL = new Map();
 
+let allocNewTextureCount = 0;
+
 /**
  * @param {!int} width
  * @param {!int} height
@@ -31,7 +33,10 @@ const allocTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) =>
         return pool.pop();
     }
 
-    console.warn("texture alloc: " + k);
+    allocNewTextureCount++;
+    if (allocNewTextureCount > 1000) {
+        console.warn(`Allocated yet another texture (${k}). Failing to reuse textures?`);
+    }
     return new WglTexture(width, height, pixelType);
 };
 
