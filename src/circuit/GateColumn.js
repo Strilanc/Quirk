@@ -72,7 +72,7 @@ class GateColumn {
                 this.gates[i] === Gates.Special.Control ? Controls.fromBitIs(i, true) :
                 this.gates[i] === Gates.Special.AntiControl ? Controls.fromBitIs(i, false) :
                 Controls.NONE).
-            aggregate(Controls.NONE, (a, e) => a.combine(e));
+            aggregate(Controls.NONE, (a, e) => a.and(e));
     }
 
     /**

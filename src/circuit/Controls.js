@@ -1,5 +1,6 @@
-import U from "src/base/Util.js"
+import DetailedError from "src/base/DetailedError.js"
 import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /**
  * Stores a set of requirements that a state's bits must meet.
@@ -14,7 +15,9 @@ class Controls {
      * @property {!int} desiredValueMask
      */
     constructor(inclusionMask, desiredValueMask) {
-        U.need((desiredValueMask & ~inclusionMask) === 0, "Desired non-zero values but didn't include them.");
+        if ((desiredValueMask & ~inclusionMask) !== 0) {
+            throw new DetailedError("Desired un-included bits", {inclusionMask, desiredValueMask});
+        }
         /** @type {!int} */
         this.inclusionMask = inclusionMask;
         /** @type {!int} */
@@ -27,7 +30,9 @@ class Controls {
      * @returns {!Controls}
      */
     static fromBitIs(bitIndex, desiredValue) {
-        U.need(bitIndex >= 0);
+        if (bitIndex < 0) {
+            throw new DetailedError("Out of range", {bitIndex})
+        }
         return new Controls(1 << bitIndex, desiredValue ? (1 << bitIndex) : 0);
     };
 
@@ -80,25 +85,20 @@ class Controls {
      * @returns {!int|Infinity}
      */
     includedBitCount() {
-        let m = this.inclusionMask;
         if (m < 0) {
             return Infinity;
         }
-        let n = 0;
-        while (m > 0) {
-            m &= m - 1;
-            n++;
-        }
-        return n;
+        return Util.numberOfSetBits(this.inclusionMask);
     }
 
     /**
      * @param {!Controls} other
      * @returns {!Controls}
      */
-    combine(other) {
-        U.need((other.desiredValueMask & this.inclusionMask) === (this.desiredValueMask & other.inclusionMask),
-            "Can't combine contradictory controls.");
+    and(other) {
+        if ((other.desiredValueMask & this.inclusionMask) !== (this.desiredValueMask & other.inclusionMask)) {
+            throw new DetailedError("Contradictory controls.", {"this": this, other})
+        }
         return new Controls(
             this.inclusionMask | other.inclusionMask,
             this.desiredValueMask | other.desiredValueMask);

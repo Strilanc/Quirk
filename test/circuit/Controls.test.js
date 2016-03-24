@@ -54,17 +54,17 @@ suite.test("fromBitIs", () => {
     assertThat(Controls.fromBitIs(2, false)).isEqualTo(new Controls(0x4, 0x0));
 });
 
-suite.test("combine", () => {
-    assertThat(Controls.NONE.combine(Controls.NONE)).isEqualTo(Controls.NONE);
+suite.test("and", () => {
+    assertThat(Controls.NONE.and(Controls.NONE)).isEqualTo(Controls.NONE);
     assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(null);
 
     let m = new Controls(0x5, 0x1);
-    assertThat(Controls.fromBitIs(0, true).combine(Controls.fromBitIs(2, false))).isEqualTo(m);
-    assertThat(Controls.fromBitIs(2, false).combine(Controls.fromBitIs(0, true))).isEqualTo(m);
-    assertThat(Controls.NONE.combine(m)).isEqualTo(m);
-    assertThat(m.combine(m)).isEqualTo(m);
+    assertThat(Controls.fromBitIs(0, true).and(Controls.fromBitIs(2, false))).isEqualTo(m);
+    assertThat(Controls.fromBitIs(2, false).and(Controls.fromBitIs(0, true))).isEqualTo(m);
+    assertThat(Controls.NONE.and(m)).isEqualTo(m);
+    assertThat(m.and(m)).isEqualTo(m);
 
-    assertThrows(() => Controls.fromBitIs(0, true).combine(Controls.fromBitIs(0, false)));
+    assertThrows(() => Controls.fromBitIs(0, true).and(Controls.fromBitIs(0, false)));
 });
 
 suite.test("toString", () => {
