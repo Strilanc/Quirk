@@ -4,7 +4,7 @@ import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import Complex from "src/math/Complex.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
-import SimpleShaders from "src/pipeline/SimpleShaders.js"
+import Shaders from "src/webgl/Shaders.js"
 import Matrix from "src/math/Matrix.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
@@ -63,8 +63,8 @@ suite.webGlTest("classicalState", () => {
 });
 
 suite.webGlTest("linearOverlay", () => {
-    let fore = SimpleShaders.data(new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray())).toFloatTexture(2, 2);
-    let back = SimpleShaders.data(new Float32Array(Seq.range(4*4*4).map(e => -e).toArray())).toFloatTexture(4, 4);
+    let fore = Shaders.data(new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray())).toFloatTexture(2, 2);
+    let back = Shaders.data(new Float32Array(Seq.range(4*4*4).map(e => -e).toArray())).toFloatTexture(4, 4);
 
     assertThat(QuantumShaders.linearOverlay(0, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
         900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915,
@@ -175,7 +175,7 @@ suite.webGlTest("controlMask_largeReference", () => {
 });
 
 suite.webGlTest("squaredMagnitude", () => {
-    let amps = SimpleShaders.data(new Float32Array([
+    let amps = Shaders.data(new Float32Array([
         2, 3, 0, 0,
         0.5, 0.5, 0, 0,
         1, 2, 3, 4,
@@ -199,7 +199,7 @@ suite.webGlTest("squaredMagnitude", () => {
 });
 
 suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
-    let inp = SimpleShaders.data(new Float32Array([
+    let inp = Shaders.data(new Float32Array([
         2, 0, 0, 0,
         3, 0, 0, 0,
         5, 0, 0, 0,
@@ -287,7 +287,7 @@ suite.webGlTest("renderConditionalProbabilitiesPipeline", () => {
 });
 
 suite.webGlTest("renderControlCombinationProbabilities", () => {
-    let inp = SimpleShaders.data(new Float32Array([
+    let inp = Shaders.data(new Float32Array([
         0, 1, 0, 0,
         2, 0, 0, 0,
         3, 0, 0, 0,
@@ -340,7 +340,7 @@ suite.webGlTest("renderControlCombinationProbabilities", () => {
 suite.webGlTest("renderConditionalProbabilitiesFinalize", () => {
     let inp = new WglTexture(4, 4);
     let dst = new WglTexture(2, 2);
-    SimpleShaders.data(new Float32Array([
+    Shaders.data(new Float32Array([
         -1, 0, 0, 0,
         1, 0, 0, 0,
         2, 0, 0, 0,
@@ -396,7 +396,7 @@ suite.webGlTest("renderQubitOperation", () => {
     let cnt = new WglTexture(4, 2);
     let out = new WglTexture(4, 2);
     let inp = new WglTexture(4, 2);
-    SimpleShaders.data(new Float32Array([
+    Shaders.data(new Float32Array([
         2, 3, 0, 0,
         4, 5, 0, 0,
         6, 7, 0, 0,
@@ -490,7 +490,7 @@ suite.webGlTest("renderQubitOperation_flows", () => {
     let out1 = new WglTexture(2, 1);
     let inp1 = new WglTexture(2, 1);
     let cnt1 = new WglTexture(2, 1);
-    SimpleShaders.data(new Float32Array([
+    Shaders.data(new Float32Array([
         1, 2, 0, 0,
         3, 27, 0, 0
     ])).renderTo(inp1);
@@ -521,7 +521,7 @@ suite.webGlTest("renderSwapOperation", () => {
     let out = new WglTexture(1<<2, 1<<1);
     let inp = new WglTexture(1<<2, 1<<1);
     let cnt = new WglTexture(1<<2, 1<<1);
-    SimpleShaders.data(new Float32Array([
+    Shaders.data(new Float32Array([
         11, 12, 13, 14, //000
         21, 22, 23, 24, //001
         31, 32, 33, 34, //010
@@ -532,7 +532,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ])).renderTo(inp);
 
-    SimpleShaders.color(1, 0, 0, 0).renderTo(cnt);
+    Shaders.color(1, 0, 0, 0).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 1, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -558,7 +558,7 @@ suite.webGlTest("renderSwapOperation", () => {
         81, 82, 83, 84  //111
     ]));
 
-    SimpleShaders.color(1, 0, 0, 0).renderTo(cnt);
+    Shaders.color(1, 0, 0, 0).renderTo(cnt);
     QuantumShaders.renderSwapOperation(out, inp, 0, 2, cnt);
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         11, 12, 13, 14, //000
@@ -621,7 +621,7 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
         flatten().
         flatMap(e => [e.real, e.imag, 0, 0]).
         toArray();
-    SimpleShaders.data(new Float32Array(inputPixelData)).renderTo(inp);
+    Shaders.data(new Float32Array(inputPixelData)).renderTo(inp);
     let kept = Seq.range(nsize).toArray();
     let margined = Seq.range(nsize).map(i => i + nsize).toArray();
     let controlled = QuantumControlMask.NO_CONTROLS;
@@ -633,7 +633,7 @@ suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
 });
 
 suite.webGlTest("controlSelect_simple", () => {
-    let coords = SimpleShaders.coords.toFloatTexture(4, 4);
+    let coords = Shaders.coords.toFloatTexture(4, 4);
     assertThat(QuantumShaders.controlSelect(QuantumControlMask.NO_CONTROLS, coords).readFloatOutputs(4, 4)).
         isEqualTo(new Float32Array([
             0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
@@ -692,7 +692,7 @@ suite.webGlTest("controlSelect_simple", () => {
 });
 
 suite.webGlTest("controlSelect_skewed", () => {
-    let coords = SimpleShaders.coords.toFloatTexture(2, 8);
+    let coords = Shaders.coords.toFloatTexture(2, 8);
     let shader = QuantumShaders.controlSelect(QuantumControlMask.fromBitIs(1, true), coords);
     let r1 = shader.readFloatOutputs(8, 1);
     let r2 = shader.readFloatOutputs(4, 2);
@@ -710,7 +710,7 @@ suite.webGlTest("controlSelect_skewed", () => {
 });
 
 suite.webGlTest("controlSelect_multiple", () => {
-    let coords = SimpleShaders.coords.toFloatTexture(4, 4);
+    let coords = Shaders.coords.toFloatTexture(4, 4);
     assertThat(QuantumShaders.controlSelect(new QuantumControlMask(0x3, 0x3), coords).readFloatOutputs(2, 2)).
         isEqualTo(new Float32Array([
             3,0,0,0,
@@ -742,7 +742,7 @@ suite.webGlTest("allQubitDensities", () => {
     let _ = 0;
 
     let assertAmpsToDensities = (amps, dens) => {
-        let tex = SimpleShaders.data(new Float32Array(amps)).toFloatTexture(2, 1);
+        let tex = Shaders.data(new Float32Array(amps)).toFloatTexture(2, 1);
         assertThat(QuantumShaders.allQubitDensities(tex).readFloatOutputs(1, 1)).
             isApproximatelyEqualTo(new Float32Array(dens));
         tex.ensureDeinitialized();
@@ -775,7 +775,7 @@ suite.webGlTest("allQubitDensities", () => {
         [0.4,_,_,_, _,0.6,_,_],
         [0.16,0,0.24,0.36]);
 
-    let allQubitsZero = SimpleShaders.data(new Float32Array([
+    let allQubitsZero = Shaders.data(new Float32Array([
         1,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
@@ -792,7 +792,7 @@ suite.webGlTest("allQubitDensities", () => {
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
 
-    let ent = SimpleShaders.data(new Float32Array([
+    let ent = Shaders.data(new Float32Array([
         s,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
@@ -810,7 +810,7 @@ suite.webGlTest("allQubitDensities", () => {
     ]));
 
     // _, _+1, _+i1, 1
-    let mix = SimpleShaders.data(new Float32Array([
+    let mix = Shaders.data(new Float32Array([
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         h,_,_,_, _,_,_,_, h,_,_,_, _,_,_,_,

@@ -5,7 +5,7 @@
 //import Matrix from "src/math/Matrix.js"
 //import PipelineNode from "src/pipeline/PipelineNode.js"
 //import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
-//import SimpleShaders from "src/pipeline/SimpleShaders.js"
+//import Shaders from "src/webgl/Shaders.js"
 //import Rect from "src/math/Rect.js"
 //import Seq from "src/base/Seq.js"
 //
@@ -264,7 +264,7 @@
 //    let q = 0.25;
 //    let h = 0.5;
 //    let _ = 0;
-//    let inp = SimpleShaders.data(new Float32Array([
+//    let inp = Shaders.data(new Float32Array([
 //        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
 //        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
 //        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,

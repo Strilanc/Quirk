@@ -1,9 +1,17 @@
 import Matrix from "src/math/Matrix.js"
 import QuantumShaders from "src/pipeline/QuantumShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
-import SimpleShaders from "src/pipeline/SimpleShaders.js"
+import Shaders from "src/webgl/Shaders.js"
 import WglTexture from "src/webgl/WglTexture.js"
 import Util from "src/base/Util.js"
+
+/**
+ * Represents a WebGL texture containing amplitudes or probabilities, to be computed when the pipeline is run.
+ *
+ * Use mergedReadFloats to get pipeline nodes for the pixel data, instead of the not-so-useful textures.
+ */
+export default class SuperTex {
+}
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 const TEXTURE_POOL = new Map();
@@ -36,13 +44,6 @@ const reuseTexture = texture => {
     let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
     pool.push(texture);
 };
-
-/**
- * Represents a WebGL texture containing amplitudes or probabilities, to be computed when the pipeline is run.
- *
- * Use mergedReadFloats to get pipeline nodes for the pixel data, instead of the not-so-useful textures.
- */
-export default class SuperTex {}
 
 /**
  * @param {!int} qubitCount
@@ -100,7 +101,7 @@ SuperTex.mergedReadFloats = textures => {
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
     let lgTotal = Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1]));
     let combinedTex = SuperTex.alloc(lgTotal);
-    SimpleShaders.color(0, 0, 0, 0).renderTo(combinedTex);
+    Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
     combinedTex = SuperTex.aggregateWithReuse(combinedTex, Seq.range(textures.length), (accTex, i) => {
         let inputTex = textures[i];
         let nextTex = SuperTex.alloc(lgTotal);
@@ -154,7 +155,7 @@ SuperTex.aggregateWithIntermediateReuse = (seedTex, items, aggregateFunc) => {
     });
     if (out === seedTex) {
         out = SuperTex.allocSame(seedTex);
-        SimpleShaders.passthrough(seedTex).renderTo(out);
+        Shaders.passthrough(seedTex).renderTo(out);
     }
     return out;
 };
@@ -188,8 +189,8 @@ SuperTex.pixelsToAmplitudes = (pixels, unity) => {
     let n = pixels.length / 4;
     let buf = new Float32Array(n * 2);
     for (let i = 0; i < n; i++) {
-        buf[i*2] = pixels[i*4]/d;
-        buf[i*2+1] = pixels[i*4+1]/d;
+        buf[i * 2] = pixels[i * 4] / d;
+        buf[i * 2 + 1] = pixels[i * 4 + 1] / d;
     }
     return new Matrix(1, n, buf);
 };
@@ -231,7 +232,9 @@ SuperTex._superpositionTexToUnsummedQubitDensitiesTex = superpositionTex => {
  */
 SuperTex._powerSum = (tex, qubitCount) => {
     let stride = Util.ceilingPowerOf2(qubitCount);
-    if (stride > tex.width) { throw new Error("Unexpected: summing more than just the first row."); }
+    if (stride > tex.width) {
+        throw new Error("Unexpected: summing more than just the first row.");
+    }
 
     let cur = tex;
     while (cur.height > 1 || cur.width > stride) {
@@ -239,11 +242,11 @@ SuperTex._powerSum = (tex, qubitCount) => {
         if (cur.width > Math.max(stride, cur.height)) {
             let h = cur.width / 2;
             next = allocTexture(h, cur.height);
-            SimpleShaders.sumFold(cur, h, 0).renderTo(next);
+            Shaders.sumFold(cur, h, 0).renderTo(next);
         } else {
             let h = cur.height / 2;
             next = allocTexture(cur.width, h);
-            SimpleShaders.sumFold(cur, 0, h).renderTo(next);
+            Shaders.sumFold(cur, 0, h).renderTo(next);
         }
         if (cur !== tex) {
             SuperTex.reuseTexture(cur);
@@ -253,7 +256,7 @@ SuperTex._powerSum = (tex, qubitCount) => {
 
     if (cur === tex) {
         cur = SuperTex.allocSame(tex);
-        SimpleShaders.passthrough(tex).renderTo(cur);
+        Shaders.passthrough(tex).renderTo(cur);
     }
 
     return cur;
@@ -264,15 +267,15 @@ SuperTex.pixelsToDensityMatrices = (buffer, qubitCount) => {
     return Seq.range(qubitCount).map(i => {
         i *= 4;
         let a = buffer[i];
-        let d = buffer[i+3];
+        let d = buffer[i + 3];
         let unity = a + d;
         if (unity === 0) {
             return new Matrix(2, 2, new Float32Array([NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]));
         }
 
-        let br = buffer[i+1] / unity;
-        let bi = buffer[i+2] / unity;
-        return new Matrix(2, 2, new Float32Array([a/unity, 0, br, bi, br, -bi, d/unity, 0]));
+        let br = buffer[i + 1] / unity;
+        let bi = buffer[i + 2] / unity;
+        return new Matrix(2, 2, new Float32Array([a / unity, 0, br, bi, br, -bi, d / unity, 0]));
     }).toArray();
 };
 

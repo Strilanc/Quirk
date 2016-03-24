@@ -35,7 +35,7 @@ const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
 /**
  * A shader program definition, used to render outputs onto textures based on the given GLSL source code.
  */
-export default class WglShader {
+class WglShader {
     /**
      * @param {!string} fragmentShaderSource
      */
@@ -86,7 +86,6 @@ export default class WglShader {
         return `WglShader(fragmentShaderSource: ${this.fragmentShaderSource})`;
     }
 }
-
 /**
  * A compiled shader program definition that can be bound to / used by a webgl context.
  */
@@ -199,7 +198,7 @@ class WglCompiledShader {
 /**
  * A shader with all its arguments provided, ready to render to a texture.
  */
-export class WglConfiguredShader {
+class WglConfiguredShader {
     /**
      * @param {!function(!WglTexture) : void} renderToFunc
      */
@@ -260,3 +259,6 @@ export class WglConfiguredShader {
         return result;
     }
 }
+
+export default WglShader;
+export { WglShader, WglConfiguredShader };

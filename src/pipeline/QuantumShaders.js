@@ -1,7 +1,7 @@
 import Matrix from "src/math/Matrix.js"
 import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
 import Seq from "src/base/Seq.js"
-import SimpleShaders from "src/pipeline/SimpleShaders.js"
+import Shaders from "src/webgl/Shaders.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
@@ -241,7 +241,7 @@ const CONDITIONAL_PROBABILITIES_FINALIZE_SHADER = new WglShader(`
  */
 QuantumShaders.controlMask = controlMask => {
     if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
-        return SimpleShaders.color(1, 0, 0, 0);
+        return Shaders.color(1, 0, 0, 0);
     }
 
     return new WglConfiguredShader(destinationTexture => {
@@ -297,7 +297,7 @@ const CONTROL_MASK_SHADER = new WglShader(`
  */
 QuantumShaders.controlSelect = (controlMask, dataTexture) => {
     if (controlMask.isEqualTo(QuantumControlMask.NO_CONTROLS)) {
-        return SimpleShaders.passthrough(dataTexture);
+        return Shaders.passthrough(dataTexture);
     }
 
     return new WglConfiguredShader(destinationTexture => {
