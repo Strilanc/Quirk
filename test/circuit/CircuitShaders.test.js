@@ -598,40 +598,6 @@ suite.webGlTest("renderSwapOperation", () => {
     ]));
 });
 
-suite.webGlTest("renderSuperpositionToDensityMatrix_randomized", () => {
-    let nsize = 4;
-    let size1 = 1 << nsize;
-    let size2 = 1 << nsize;
-    let inp = new WglTexture(size1, size2);
-    let out = new WglTexture(size1, size2);
-
-    // Generate a set of random un-normalized superpositions.
-    let vecs = Seq.range(size1).
-        map(_ => Seq.range(size2).
-            map(__ => new Complex(Math.random()*2 - 1, Math.random()*2 - 1)).
-            toArray()).
-        toArray();
-
-    let expected = new Seq(vecs).
-        map(v => Matrix.col(v)).
-        map(c => c.times(c.adjoint())).
-        fold((m1, m2) => m1.plus(m2));
-
-    let inputPixelData = new Seq(vecs).
-        flatten().
-        flatMap(e => [e.real, e.imag, 0, 0]).
-        toArray();
-    Shaders.data(new Float32Array(inputPixelData)).renderTo(inp);
-    let kept = Seq.range(nsize).toArray();
-    let margined = Seq.range(nsize).map(i => i + nsize).toArray();
-    let controlled = Controls.NONE;
-    CircuitShaders.renderSuperpositionToDensityMatrix(out, inp, kept, margined, controlled);
-
-    let outputPixelData = out.readPixels();
-    let computed = Matrix.square(new Seq(outputPixelData).partitioned(4).map(p => new Complex(p[0], p[1])).toArray());
-    assertThat(computed).isApproximatelyEqualTo(expected, 0.0001);
-});
-
 suite.webGlTest("controlSelect_simple", () => {
     let coords = Shaders.coords.toFloatTexture(4, 4);
     assertThat(CircuitShaders.controlSelect(Controls.NONE, coords).readFloatOutputs(4, 4)).
