@@ -348,11 +348,53 @@ const CONTROL_SELECT_SHADER = new WglShader(`
         vec2 uv = vec2(x + 0.5, y + 0.5) / inputSize;
 
         gl_FragColor = texture2D(inputTexture, uv);
+    }`);
 
+QuantumShaders.allQubitDensities = inputTexture => {
+    let ceilQubitCount = 1 << Math.ceil(Math.log2(Math.log2(inputTexture.width * inputTexture.height)));
+    return new WglConfiguredShader(destinationTexture => ALL_QUBIT_DENSITIES.withArgs(
+        WglArg.texture('inputTexture', inputTexture, 0),
+        WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
+        WglArg.float('outputWidth', destinationTexture.width),
+        WglArg.float('qubitCountCeilPow2', ceilQubitCount)
+    ).renderTo(destinationTexture));
+};
+const ALL_QUBIT_DENSITIES = new WglShader(`
+    uniform float qubitCountCeilPow2;
+    uniform float outputWidth;
+    uniform vec2 inputSize;
+    uniform sampler2D inputTexture;
 
+    void main() {
+        float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
 
-        vec2 uv = vec2(x2 + 0.5, y2 + 0.5) / inputSize;
-        gl_FragColor = texture2D(inputTexture, uv);
+        float bitIndex = mod(outIndex, qubitCountCeilPow2);
+        float otherBits = floor(outIndex / qubitCountCeilPow2);
+        float bit = pow(2.0, bitIndex);
+
+        // Indices of the two complex values making up the current conditional ket.
+        float srcIndex0 = mod(otherBits, bit) + floor(otherBits / bit) * bit * 2.0;
+        float srcIndex1 = srcIndex0 + bit;
+
+        // Index to uv.
+        float x0 = mod(srcIndex0, inputSize.x);
+        float y0 = floor(srcIndex0 / inputSize.x);
+        float x1 = mod(srcIndex1, inputSize.x);
+        float y1 = floor(srcIndex1 / inputSize.x);
+        vec2 uv0 = vec2(x0+0.5, y0+0.5)/inputSize;
+        vec2 uv1 = vec2(x1+0.5, y1+0.5)/inputSize;
+
+        // Grab the two complex values.
+        vec2 w1 = texture2D(inputTexture, uv0).xy;
+        vec2 w2 = texture2D(inputTexture, uv1).xy;
+
+        // Compute density matrix components.
+        float a = dot(w1, w1);
+        float br = dot(w1, w2);
+        float bi = dot(w1, w2.yx);
+        float d = dot(w2, w2);
+
+        gl_FragColor = vec4(a, br, bi, d);
     }`);
 
 /**

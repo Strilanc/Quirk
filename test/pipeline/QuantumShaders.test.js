@@ -734,3 +734,96 @@ suite.webGlTest("controlSelect_multiple", () => {
             3,0,0,0
         ]));
 });
+
+suite.webGlTest("allQubitDensities", () => {
+    let s = Math.sqrt(0.5);
+    let q = 0.25;
+    let h = 0.5;
+    let _ = 0;
+
+    let assertAmpsToDensities = (amps, dens) => {
+        let tex = SimpleShaders.data(new Float32Array(amps)).toFloatTexture(2, 1);
+        assertThat(QuantumShaders.allQubitDensities(tex).readFloatOutputs(1, 1)).
+            isApproximatelyEqualTo(new Float32Array(dens));
+        tex.ensureDeinitialized();
+    };
+    assertAmpsToDensities(
+        [1,_,_,_, _,_,_,_],
+        [1,0,0,0]);
+    assertAmpsToDensities(
+        [_,1,_,_, _,_,_,_],
+        [1,0,0,0]);
+    assertAmpsToDensities(
+        [_,_,_,_, 1,_,_,_],
+        [0,0,0,1]);
+    assertAmpsToDensities(
+        [_,_,_,_, _,1,_,_],
+        [0,0,0,1]);
+    assertAmpsToDensities(
+        [s,_,_,_, s,_,_,_],
+        [h,h,0,h]);
+    assertAmpsToDensities(
+        [s,_,_,_, _,s,_,_],
+        [h,0,h,h]);
+    assertAmpsToDensities(
+        [_,s,_,_, s,_,_,_],
+        [h,0,h,h]);
+    assertAmpsToDensities(
+        [_,s,_,_, -s,_,_,_],
+        [h,0,-h,h]);
+    assertAmpsToDensities(
+        [0.4,_,_,_, _,0.6,_,_],
+        [0.16,0,0.24,0.36]);
+
+    let allQubitsZero = SimpleShaders.data(new Float32Array([
+        1,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
+    ])).toFloatTexture(4, 4);
+    assertThat(QuantumShaders.allQubitDensities(allQubitsZero).readFloatOutputs(32, 1)).isEqualTo(new Float32Array([
+        1,_,_,_, 1,_,_,_, 1,_,_,_, 1,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
+    ]));
+
+    let ent = SimpleShaders.data(new Float32Array([
+        s,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, s,_,_,_
+    ])).toFloatTexture(4, 4);
+    assertThat(QuantumShaders.allQubitDensities(ent).readFloatOutputs(32, 1)).isApproximatelyEqualTo(new Float32Array([
+        h,_,_,_, h,_,_,_, h,_,_,_, h,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,h, _,_,_,h, _,_,_,h, _,_,_,h
+    ]));
+
+    // _, _+1, _+i1, 1
+    let mix = SimpleShaders.data(new Float32Array([
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        h,_,_,_, _,_,_,_, h,_,_,_, _,_,_,_,
+        _,h,_,_, _,_,_,_, _,h,_,_, _,_,_,_
+    ])).toFloatTexture(4, 4);
+    assertThat(QuantumShaders.allQubitDensities(mix).readFloatOutputs(32, 1)).isApproximatelyEqualTo(new Float32Array([
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
+        q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
+        q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
+    ]));
+});
