@@ -539,6 +539,10 @@ class CircuitWidget {
      */
     drawOutputSuperpositionDisplay(painter, stats, col) {
         let numWire = this.importantWireCount();
+        if (numWire >= Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD) {
+            return;
+        }
+
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
         let outputStateBuffer = stats.finalState.rawBuffer();
@@ -555,9 +559,9 @@ class CircuitWidget {
             painter,
             amplitudeGrid,
             gridRect,
-            Config.SUPERPOSITION_MID_COLOR,
+            numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_MID_COLOR : undefined,
             'black',
-            Config.SUPERPOSITION_FORE_COLOR,
+            numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_FORE_COLOR : undefined,
             Config.SUPERPOSITION_BACK_COLOR);
 
         let expandedRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);

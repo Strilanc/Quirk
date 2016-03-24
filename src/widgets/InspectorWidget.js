@@ -73,8 +73,8 @@ export default class InspectorWidget {
     paint(painter, stats) {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
-        this.circuitWidget.paint(painter, this.hand, stats);
         this.toolboxWidget.paint(painter, stats, this.hand);
+        this.circuitWidget.paint(painter, this.hand, stats);
         this.paintHand(painter, stats);
     }
 

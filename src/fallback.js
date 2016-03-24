@@ -30,7 +30,7 @@ window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
     let y = (canvas.clientHeight - h) / 2;
 
     ctx.fillStyle = 'white';
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = 0.9;
     ctx.fillRect(x-10, y-10, w+20, h+20);
     ctx.globalAlpha = 1.0;
     ctx.strokeStyle = 'red';

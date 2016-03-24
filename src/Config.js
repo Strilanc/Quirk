@@ -3,8 +3,11 @@
  */
 export default class Config {}
 
+Config.MAX_WIRE_COUNT = 16; // Each qubit doubles costs (when actually used). Beware.
+Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 14;
+Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 17;
+
 Config.MIN_WIRE_COUNT = 2;
-Config.MAX_WIRE_COUNT = 12; // Note: at 14 I start hitting the pixel limit for textures. And 13 is slow.
 Config.URL_CIRCUIT_PARAM_KEY = 'circuit';
 
 // Gate background colors.
@@ -44,7 +47,7 @@ Config.WIRE_SPACING = 50;
  * Setting to 3 adds on the quadruplet states, but is not very useful because of the information overload.
  * Setting to 4 breaks everything.
  */
-Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS = 2;
+Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS = 1;
 
 Config.BACKGROUND_COLOR = 'white';
 Config.BACKGROUND_COLOR_CIRCUIT = 'white';
