@@ -104,6 +104,7 @@ export default class CircuitStats{
         if (colIndex >= n) {
             return this._knownDensityMatrices.get(n + ";" + wireIndex).rawBuffer()[6];
         }
+        return 0.5;
 
         let t = Math.min(colIndex, this._wireProbabilityData.length - 1);
         return this._wireProbabilityData[t][wireIndex];
@@ -130,6 +131,7 @@ export default class CircuitStats{
         if (colIndex >= this.circuitDefinition.columns.length) {
             return this.wireProbabilityJustAfter(wireIndex, colIndex);
         }
+        return 0.5;
 
         let t = Math.min(colIndex, this._conditionalWireProbabilityData.length - 1);
         return this._conditionalWireProbabilityData[t][wireIndex];
