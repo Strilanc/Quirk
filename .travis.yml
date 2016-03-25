@@ -1,11 +1,10 @@
 sudo: false
 language: node_js
 node_js: 5.1
-before_install: npm install -g grunt-cli
 install: npm install
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-script: grunt test-firefox
+script: npm run test-firefox
 addons:
   firefox: "latest"

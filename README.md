@@ -1,10 +1,10 @@
 # Quirk
 
+A toy for exploring and understanding the behavior of small quantum circuits.
+
 | master | dev |
 |--------|-----|
 | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector)      | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=dev)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector) |
-
-A toy for exploring and understanding the behavior of small quantum circuits.
 
 Defining features:
 
