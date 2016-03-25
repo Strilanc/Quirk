@@ -198,7 +198,7 @@ suite.webGlTest("squaredMagnitude", () => {
     ]));
 });
 
-suite.webGlTest("renderQubitOperation", () => {
+suite.webGlTest("qubitOperation", () => {
     let cnt = new WglTexture(4, 2);
     let inp = new WglTexture(4, 2);
     Shaders.data(new Float32Array([
@@ -225,6 +225,8 @@ suite.webGlTest("renderQubitOperation", () => {
             -30, -8, 0, 0
         ]));
 
+
+    CircuitShaders.controlMask(Controls.fromBitIs(1, false)).renderTo(cnt);
     assertThat(CircuitShaders.qubitOperation(inp, Matrix.square([1, Complex.I.times(-1), Complex.I, -1]), 0, cnt).
         readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
             7, -1, 0, 0,
@@ -290,7 +292,7 @@ suite.webGlTest("renderQubitOperation", () => {
         ]));
 });
 
-suite.webGlTest("renderQubitOperation_flows", () => {
+suite.webGlTest("qubitOperation_flows", () => {
     let inp1 = new WglTexture(2, 1);
     let cnt1 = new WglTexture(2, 1);
     Shaders.data(new Float32Array([
