@@ -1,4 +1,6 @@
+import DetailedError from "src/base/DetailedError.js"
 import Matrix from "src/math/Matrix.js"
+import Controls from "src/circuit/Controls.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
@@ -199,28 +201,52 @@ CircuitTextures.qubitCount = superpositionTex => {
 
 /**
  * @param {!WglTexture} stateTex
+ * @param {!Controls} controls
+ * @param {!int} keptBitMask
  * @returns {!WglTexture}
  */
-CircuitTextures.superpositionToQubitDensities = stateTex => {
-    let n = CircuitTextures.qubitCount(stateTex);
-    let unsummed = CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex(stateTex);
-    let result = CircuitTextures._powerSum(unsummed, n);
+CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
+    if (keptBitMask === 0) {
+        return CircuitTextures.alloc(0);
+    }
+    let hasControls = !controls.isEqualTo(Controls.NONE);
+    let reducedTex = stateTex;
+    if (hasControls) {
+        reducedTex = CircuitTextures.alloc(CircuitTextures.qubitCount(stateTex) - controls.includedBitCount());
+        CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
+    }
+    let p = 1;
+    for (let i = 1; i <= controls.inclusionMask; i <<= 1) {
+        if ((controls.inclusionMask & i) === 0) {
+            p <<= 1;
+        } else {
+            keptBitMask = (keptBitMask & (p - 1)) | ((keptBitMask & ~(p-1)) >> 1)
+        }
+    }
+    let unsummed = CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex(reducedTex, keptBitMask);
+    if (hasControls) {
+        reuseTexture(reducedTex);
+    }
+    let keptQubitCount = Util.numberOfSetBits(keptBitMask);
+    let result = CircuitTextures._powerSum(unsummed, keptQubitCount);
     reuseTexture(unsummed);
     return result;
 };
 
 /**
  * @param {!WglTexture} superpositionTex
+ * @param {!int} keptBitMask
  * @returns {!WglTexture}
  */
-CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = superpositionTex => {
-    let q = CircuitTextures.qubitCount(superpositionTex);
-    let qu = Util.ceilingPowerOf2(q);
-    let inter = CircuitTextures.alloc(q + Math.log2(qu) - 1);
-    CircuitShaders.allQubitDensities(superpositionTex).renderTo(inter);
-    let result = CircuitTextures._powerSum(inter, qu);
-    reuseTexture(inter);
-    return result;
+CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex, keptBitMask) => {
+    if (keptBitMask === 0) {
+        throw new DetailedError("keptBitMask === 0", {superpositionTex, keptBitMask});
+    }
+    let startingQubitCount = CircuitTextures.qubitCount(superpositionTex);
+    let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
+    let inter = CircuitTextures.alloc(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
+    CircuitShaders.allQubitDensities(superpositionTex, keptBitMask).renderTo(inter);
+    return inter;
 };
 
 /**
@@ -231,7 +257,7 @@ CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = superpositionTex 
 CircuitTextures._powerSum = (tex, qubitCount) => {
     let stride = Util.ceilingPowerOf2(qubitCount);
     if (stride > tex.width) {
-        throw new Error("Unexpected: summing more than just the first row.");
+        throw new DetailedError("Unexpected: summing more than just the first row.", {tex, qubitCount, stride});
     }
 
     let cur = tex;

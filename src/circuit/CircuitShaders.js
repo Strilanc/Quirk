@@ -267,31 +267,51 @@ const CONTROL_SELECT_SHADER = new WglShader(`
  * Returns a configured shader that renders the marginal states of each qubit, for each possible values of the other
  * qubits (i.e. folding still needs to be done), into a destination texture.
  * @param {!WglTexture} inputTexture
+ * @param {undefined|!int=} keptBitMask
  * @returns {!WglConfiguredShader}
  */
-CircuitShaders.allQubitDensities = inputTexture => {
-    let ceilQubitCount = 1 << Math.ceil(Math.log2(Math.log2(inputTexture.width * inputTexture.height)));
+CircuitShaders.allQubitDensities = (inputTexture, keptBitMask = undefined) => {
+    if (keptBitMask === undefined) {
+        keptBitMask = inputTexture.width * inputTexture.height - 1;
+    }
+    let ceilKeptQubitCount = 1 << Math.ceil(Math.log2(Util.numberOfSetBits(keptBitMask)));
     return new WglConfiguredShader(destinationTexture => {
         return ALL_QUBIT_DENSITIES.withArgs(
             WglArg.texture('inputTexture', inputTexture, 0),
             WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
             WglArg.float('outputWidth', destinationTexture.width),
-            WglArg.float('qubitCountCeilPow2', ceilQubitCount)
+            WglArg.float('keptWidth', ceilKeptQubitCount),
+            WglArg.float('keptBitMask', keptBitMask)
         ).renderTo(destinationTexture)
     });
 };
 const ALL_QUBIT_DENSITIES = new WglShader(`
-    uniform float qubitCountCeilPow2;
+    uniform float keptWidth;
     uniform float outputWidth;
+    uniform float keptBitMask;
     uniform vec2 inputSize;
     uniform sampler2D inputTexture;
+
+    float scatter(float val, float used) {
+        float result = 0.0;
+        float posUsed = 1.0;
+        float posVal = 1.0;
+        for (int i = 0; i < ${HALF_QUBIT_LIMIT*2}; i++) {
+            float u = mod(floor(used/posUsed), 2.0);
+            float v = mod(floor(val/posVal), 2.0);
+            result += u * v * posUsed;
+            posVal *= 1.0+u;
+            posUsed *= 2.0;
+        }
+        return result;
+    }
 
     void main() {
         float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
 
-        float bitIndex = mod(outIndex, qubitCountCeilPow2);
-        float otherBits = floor(outIndex / qubitCountCeilPow2);
-        float bit = pow(2.0, bitIndex);
+        float bitIndex = mod(outIndex, keptWidth);
+        float otherBits = floor(outIndex / keptWidth);
+        float bit = scatter(pow(2.0, bitIndex), keptBitMask);
 
         // Indices of the two complex values making up the current conditional ket.
         float srcIndex0 = mod(otherBits, bit) + floor(otherBits / bit) * bit * 2.0;

@@ -88,6 +88,14 @@ class GateColumn {
         (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
     }
 
+    wiresWithDisplaysMask() {
+        return Seq.range(this.gates.length).
+            filter(i => this.gates[i] === Gates.Displays.ChanceDisplay ||
+                this.gates[i] === Gates.Displays.BlochSphereDisplay ||
+                this.gates[i] === Gates.Displays.DensityMatrixDisplay).
+            aggregate(0, (a, i) => a | (1 << i));
+    }
+
     /**
      * @param {!int} inputMeasureMask
      * @param {!int} row

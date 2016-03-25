@@ -85,7 +85,7 @@ class Controls {
      * @returns {!int|Infinity}
      */
     includedBitCount() {
-        if (m < 0) {
+        if (this.inclusionMask < 0) {
             return Infinity;
         }
         return Util.numberOfSetBits(this.inclusionMask);
