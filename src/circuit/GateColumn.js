@@ -105,7 +105,7 @@ class GateColumn {
             return "parse\nerror";
         }
 
-        if (g === Gates.Special.Measurement && this.hasControl()) {
+        if (g === Gates.Special.Measurement && this.hasControl() && (inputMeasureMask & (1 << row)) === 0) {
             return "can't\ncontrol\n(sorry)";
         }
 
