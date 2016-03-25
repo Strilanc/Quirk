@@ -25,7 +25,7 @@
     "test": "grunt test",
     "test-firefox": "grunt test-firefox",
     "test-chrome": "grunt test-chrome",
-    "build": "grunt build_src"
+    "build": "grunt build-src"
   },
   "repository": {
     "type": "git",
