@@ -66,7 +66,7 @@ const snippets = {
 };
 
 /**
- * Returns a parameterized shader that renders the superposition corresponding to a classical state.
+ * Returns a configured shader that renders the superposition corresponding to a classical state.
  *
  * @param {!int} stateBitMask
  * @returns {!WglConfiguredShader}
@@ -128,7 +128,7 @@ const LINEAR_OVERLAY_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a parameterized shader that dot-products each pixel's rgba vector against itself, rendering the result
+ * Returns a configured shader that dot-products each pixel's rgba vector against itself, rendering the result
  * over the red component of the destination texture (and zero-ing the other components).
  *
  * @param {!WglTexture} inputTexture
@@ -147,7 +147,7 @@ const SQUARED_MAGNITUDE_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a parameterized shader that renders a control mask texture corresponding to the given control mask, with 1s
+ * Returns a configured shader that renders a control mask texture corresponding to the given control mask, with 1s
  * at pixels meeting the control and 0s at pixels not meeting the control.
  * @param {!Controls} controlMask
  * @returns {!WglConfiguredShader}
@@ -202,7 +202,7 @@ const CONTROL_MASK_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a parameterized shader that renders only the control-matching parts of an input texture to a smaller output
+ * Returns a configured shader that renders only the control-matching parts of an input texture to a smaller output
  * texture. This allows later shaders to omit any control-masking steps (and to work on less data).
  * @param {!Controls} controlMask
  * @param {!WglTexture} dataTexture
@@ -263,6 +263,12 @@ const CONTROL_SELECT_SHADER = new WglShader(`
         gl_FragColor = texture2D(inputTexture, uv);
     }`);
 
+/**
+ * Returns a configured shader that renders the marginal states of each qubit, for each possible values of the other
+ * qubits (i.e. folding still needs to be done), into a destination texture.
+ * @param {!WglTexture} inputTexture
+ * @returns {!WglConfiguredShader}
+ */
 CircuitShaders.allQubitDensities = inputTexture => {
     let ceilQubitCount = 1 << Math.ceil(Math.log2(Math.log2(inputTexture.width * inputTexture.height)));
     return new WglConfiguredShader(destinationTexture => {
@@ -315,26 +321,27 @@ const ALL_QUBIT_DENSITIES = new WglShader(`
 /**
  * Renders the result of applying a custom controlled single-qubit operation to a superposition.
  *
- * @param {!WglTexture} destinationTexture
  * @param {!WglTexture} inputTexture
  * @param {!Matrix} operation
  * @param {!int} qubitIndex
  * @param {!WglTexture} controlTexture
+ * @returns {!WglConfiguredShader}
  */
-CircuitShaders.renderQubitOperation = (destinationTexture, inputTexture, operation, qubitIndex, controlTexture) => {
-    Util.need(operation.width() === 2 && operation.height() === 2);
-    let [ar, ai, br, bi, cr, ci, dr, di] = operation.rawBuffer();
-    CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
-        WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
-        WglArg.texture("inputTexture", inputTexture, 0),
-        WglArg.float("qubitIndexMask", 1 << qubitIndex),
-        WglArg.texture("controlTexture", controlTexture, 1),
-        WglArg.vec2("matrix_a", ar, ai),
-        WglArg.vec2("matrix_b", br, bi),
-        WglArg.vec2("matrix_c", cr, ci),
-        WglArg.vec2("matrix_d", dr, di)
-    ).renderTo(destinationTexture);
-};
+CircuitShaders.qubitOperation = (inputTexture, operation, qubitIndex, controlTexture) =>
+    new WglConfiguredShader(destinationTexture => {
+        Util.need(operation.width() === 2 && operation.height() === 2);
+        let [ar, ai, br, bi, cr, ci, dr, di] = operation.rawBuffer();
+        CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
+            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.float("qubitIndexMask", 1 << qubitIndex),
+            WglArg.texture("controlTexture", controlTexture, 1),
+            WglArg.vec2("matrix_a", ar, ai),
+            WglArg.vec2("matrix_b", br, bi),
+            WglArg.vec2("matrix_c", cr, ci),
+            WglArg.vec2("matrix_d", dr, di)
+        ).renderTo(destinationTexture);
+    });
 const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
     /**
      * A texture holding the complex coefficients of the superposition to operate on.

@@ -132,12 +132,7 @@ CircuitTextures.mergedReadFloats = textures => {
  */
 CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
     let result = CircuitTextures.allocSame(stateTex);
-    CircuitShaders.renderQubitOperation(
-        result,
-        stateTex,
-        qubitOperation,
-        qubitIndex,
-        controlTex);
+    CircuitShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
     return result;
 };
 
