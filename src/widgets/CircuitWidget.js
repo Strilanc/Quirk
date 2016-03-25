@@ -523,12 +523,6 @@ class CircuitWidget {
             new Point(0.5, 0),
             'gray');
 
-        painter.printParagraph(
-            "Paired states\n(Density)",
-            new Rect(right+150, bottom+4, 190, 40),
-            new Point(0.5, 0),
-            'gray');
-
         this.drawOutputSuperpositionDisplay(painter, stats, offset);
     }
 
@@ -583,6 +577,7 @@ class CircuitWidget {
         // Column labels.
         painter.ctx.save();
         painter.ctx.rotate(Math.PI/2);
+        let maxY = 0;
         for (let i = 0; i < colCount; i++) {
             let labelRect = expandedRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
             labelRect = new Rect(labelRect.y, -labelRect.x-labelRect.w, labelRect.h, labelRect.w);
@@ -592,14 +587,16 @@ class CircuitWidget {
             let y = gridRect.bottom();
             painter.print(label, y + 2, -x, 'left', 'middle', 'black', '12px monospace', 50, dw, (w, h) => {
                 painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray');
+                maxY = Math.max(maxY, w + 8);
             });
         }
         painter.ctx.restore();
 
         // Hint text.
+        console.log(maxY);
         painter.printParagraph(
-            "ALL final amplitudes\n(ignoring measurement)",
-            expandedRect.withY(expandedRect.bottom() + 10).withH(40).withW(200),
+            "Final amplitudes\n(deferring measurement)",
+            expandedRect.withY(gridRect.bottom() + maxY).withH(40).withW(200),
             new Point(0, 0),
             'gray');
     }
