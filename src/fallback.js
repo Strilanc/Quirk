@@ -9,14 +9,16 @@ window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
 
     let location = ((errorObj instanceof Object) ? errorObj.stack : undefined) ||
         (url + ":" + lineNumber + ":" + columnNumber);
+    let details = errorObj !== undefined ? errorObj.details : undefined;
     let msg = "Uh oh, something's acting wonky!\n\n" +
         "=== Advanced Recovery Strategies ===\n" +
         "- hit Ctrl+Z (undo)\n" +
         "- flail the mouse around\n" +
         "- cry\n\n" +
         "=== Advanced Details ===\n" +
-        `Message: ${errorMsg}` +
-        `\nLocation: ${location.replace(/http.+\/(src|libs)\//g, '')}`;
+        `Message: ${errorMsg}\n` +
+        (details === undefined ? '' : `Details: ${errorObj.details}\n`) +
+        `Location: ${location.replace(/http.+\/(src|libs)\//g, '')}`;
 
     let ctx = canvas.getContext("2d");
     ctx.font = '12px monospace';
@@ -30,7 +32,7 @@ window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
     let y = (canvas.clientHeight - h) / 2;
 
     ctx.fillStyle = 'white';
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = 0.9;
     ctx.fillRect(x-10, y-10, w+20, h+20);
     ctx.globalAlpha = 1.0;
     ctx.strokeStyle = 'red';

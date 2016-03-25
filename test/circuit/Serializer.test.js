@@ -34,12 +34,12 @@ suite.test("roundTrip_Matrix", () => {
 });
 
 suite.test("roundTrip_Gate", () => {
-    assertRoundTrip(Gate, Gates.Named.HalfTurns.X, "X");
+    assertRoundTrip(Gate, Gates.HalfTurns.X, "X");
     for (let g of Gates.KnownToSerializer) {
         assertRoundTrip(Gate, g, g.symbol);
     }
 
-    let f = Gates.Named.Silly.FUZZ_MAKER();
+    let f = Gates.Silly.FUZZ_MAKER();
     assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
 
     let g = new Gate(
@@ -60,10 +60,10 @@ suite.test("roundTrip_GateColumn", () => {
         GateColumn,
         new GateColumn([
             null,
-            Gates.Named.HalfTurns.X,
-            Gates.Named.Powering.XForward,
-            Gates.Named.Special.SwapHalf,
-            Gates.Named.Special.Control,
+            Gates.HalfTurns.X,
+            Gates.Powering.XForward,
+            Gates.Special.SwapHalf,
+            Gates.Special.Control,
             null]),
         [1, "X", "X^t", "Swap", "\u2022", 1]);
 });
@@ -73,6 +73,6 @@ suite.test("roundTrip_circuitDefinition", () => {
         CircuitDefinition,
         new CircuitDefinition(
             3,
-            [new GateColumn([null, null, Gates.Named.HalfTurns.X])]),
+            [new GateColumn([null, null, Gates.HalfTurns.X])]),
         {cols: [[1, 1, "X"]]});
 });

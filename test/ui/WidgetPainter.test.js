@@ -14,7 +14,7 @@ suite.canvasAppearanceTest("paintGateTooltip", 100, 100, canvas => {
     WidgetPainter.paintGateTooltip(
         painter,
         new Rect(0, 0, 100, 100),
-        Gates.Named.QuarterTurns.Up,
+        Gates.QuarterTurns.SqrtXBackward,
         0);
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAJHUlEQVR4nO1csYrbTBDeFwikufKv1LlKk+oaN4ce4F' +
 'DiXIysg5BYcEXAbYgN10QJ5D9XfgTDce8QsItguP8R3MUv4Wb+woxuPJ5dreR1bi3rg8W2tDszu99qZnc1WLXbbRiNRk3xoLTbbVCj0Qga+IHRaNQQ4h' +

@@ -3,8 +3,11 @@
  */
 export default class Config {}
 
+Config.MAX_WIRE_COUNT = 16; // Each qubit doubles costs (when actually used). Beware.
+Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 14;
+Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 17;
+
 Config.MIN_WIRE_COUNT = 2;
-Config.MAX_WIRE_COUNT = 12; // Note: at 14 I start hitting the pixel limit for textures. And 13 is slow.
 Config.URL_CIRCUIT_PARAM_KEY = 'circuit';
 
 // Gate background colors.
@@ -35,16 +38,6 @@ Config.REDRAW_COOLDOWN_MS = 5; // How often user-driven actions can cause redraw
 * @type {!number} */
 Config.GATE_RADIUS = 20;
 Config.WIRE_SPACING = 50;
-
-/**
- * At level N we partition the wires into groups of size 2^N and show the density matrices for all the partitions.
- * Setting to 0 will show no density matrices.
- * Setting to 1 will show all the individual state density matrices.
- * Setting to 2 adds on the paired states.
- * Setting to 3 adds on the quadruplet states, but is not very useful because of the information overload.
- * Setting to 4 breaks everything.
- */
-Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS = 2;
 
 Config.BACKGROUND_COLOR = 'white';
 Config.BACKGROUND_COLOR_CIRCUIT = 'white';

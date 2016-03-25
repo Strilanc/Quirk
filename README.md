@@ -10,16 +10,25 @@ Defining features:
 
 - Runs in web browsers.
 - Drag-and-drop circuit editing.
-- Simulates and animates the effects of operations on up to 12 qubits in real time.
+- Simulates and animates the effects of operations on up to 16 qubits in real time.
 - Inline displays for conditional and marginal states.
 - Bookmarkable circuits.
 
-Recording of the inspector simulating quantum teleportation:
+# Screenshots
+
+Quantum teleportation circuit:
+
+![Quantum teleportation](/README_TeleportationLoop.gif)
+
+Quantum pigeonhole circuit:
 
 ![The Inspector](/README_TeleportationLoop.gif)
 
-Building and Running
-====================
+Working with ten qubits:
+
+![Ten qubits animation](/README_TenQubitsLoop.gif)
+
+# Building
 
 Please open an issue if these instructions don't work for you.
 The example terminal commands have been tested on a fresh Ubuntu install.

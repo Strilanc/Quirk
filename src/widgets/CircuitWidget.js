@@ -45,7 +45,7 @@ class CircuitWidget {
             this.circuitDefinition.columns.length + // Operations.
             1 + // Spacer.
             2 + // Wire chance and bloch sphere displays.
-            (1 << Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS) - 1 // Density matrix displays.
+            1 // Density matrix displays.
         );
         return r.x + CircuitWidget.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
     }
@@ -235,29 +235,36 @@ class CircuitWidget {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
 
         // Draw labelled wires
-        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
-            let wireRect = this.wireRect(i);
-            let y = Math.round(wireRect.center().y - 0.5) + 0.5;
+        for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+            let wireRect = this.wireRect(row);
             painter.printParagraph("|0⟩", wireRect.takeLeft(20), new Point(1, 0.5));
-            let x = this.circuitDefinition.wireMeasuredColumns()[i];
-            if (x === Infinity) {
-                painter.strokeLine(new Point(this.area.x + 25, y), new Point(this.area.right(), y));
-            } else {
-                x = this.opRect(x).center().x;
-                painter.strokeLine(new Point(this.area.x + 25, y), new Point(x, y));
-                painter.strokeLine(new Point(x, y-1), new Point(this.area.right(), y-1));
-                painter.strokeLine(new Point(x, y+1), new Point(this.area.right(), y+1));
-            }
-
         }
+        painter.trace(trace => {
+            for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+                let wireRect = this.wireRect(row);
+                let y = Math.round(wireRect.center().y - 0.5) + 0.5;
+                let lastX = this.area.x + 25;
+                //noinspection ForLoopThatDoesntUseLoopVariableJS
+                for (let col = 0; lastX < this.area.right(); col++) {
+                    let x = this.opRect(col).center().x;
+                    if (this.circuitDefinition.locIsMeasured(new Point(col, row))) {
+                        trace.line(lastX, y-1, x, y-1);
+                        trace.line(lastX, y+1, x, y+1);
+                    } else {
+                        trace.line(lastX, y, x, y);
+                    }
+                    lastX = x;
+                }
+            }
+        }).thenStroke('black');
 
         // Draw operations
-        for (let i = 0; i < this.circuitDefinition.columns.length; i++) {
-            this.drawCircuitOperation(painter, this.circuitDefinition.columns[i], i, hand, stats);
+        for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
+            this.drawCircuitOperation(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }
 
         // Draw output displays.
-        this.drawRightHandPeekGates(painter, stats);
+        this.drawOutputDisplays(painter, stats);
     }
 
     /**
@@ -284,7 +291,7 @@ class CircuitWidget {
                 this.compressedColumnIndex === col;
             gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
-            if (isDisabledReason !== null) {
+            if (isDisabledReason !== undefined) {
                 if (canGrab) {
                     painter.ctx.globalAlpha /= 2;
                 }
@@ -322,7 +329,7 @@ class CircuitWidget {
             i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i));
 
         let isMatchedSwap = i =>
-            hasTwoSwaps && gs[i] === Gates.Named.Special.SwapHalf;
+            hasTwoSwaps && gs[i] === Gates.Special.SwapHalf;
 
         let t1 = Seq.range(n).filter(canBeControlled).first(null);
         let t2 = Seq.range(n).filter(canBeControlled).last(null);
@@ -485,45 +492,34 @@ class CircuitWidget {
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
      */
-    drawRightHandPeekGates(painter, stats) {
+    drawOutputDisplays(painter, stats) {
         let colCount = this.circuitDefinition.columns.length + 1;
         let numWire = this.importantWireCount();
 
         for (let i = 0; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount));
-            let m = stats.densityMatrixAfterIfAvailable([i], Infinity);
+            let m = stats.qubitDensityMatrix(i, Infinity);
             if (m !== undefined) {
                 MathPainter.paintBlochSphere(painter, m, this.gateRect(i, colCount+1));
             }
         }
 
         let offset = colCount+2;
-        for (let g = 0; g < Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS; g++) {
-            let d = 1 << g;
-            for (let i = 0; i + d <= numWire; i += d) {
-                let m = stats.densityMatrixAfterIfAvailable(Seq.range(d).map(e => e + i).toArray(), Infinity);
-                if (m !== undefined) {
-                    let topLeft = this.gateRect(i, offset).topLeft();
-                    let wh = this.gateRect(i + d - 1, offset).bottom() - topLeft.y;
-                    let r = new Rect(topLeft.x, topLeft.y, wh, wh);
-                    MathPainter.paintDensityMatrix(painter, m, r);
-                }
-            }
-            offset += d;
+        for (let i = 0; i + 1 <= numWire; i++) {
+            let m = stats.qubitDensityMatrix(i, Infinity);
+            let topLeft = this.gateRect(i, offset).topLeft();
+            let wh = this.gateRect(i, offset).bottom() - topLeft.y;
+            let r = new Rect(topLeft.x, topLeft.y, wh, wh);
+            MathPainter.paintDensityMatrix(painter, m, r);
         }
+        offset += 1;
 
         let bottom = this.wireRect(numWire-1).bottom();
         let right = this.opRect(this.circuitDefinition.columns.length).x;
         painter.printParagraph(
             "Local wire states\n(Chance/Bloch/Density)",
             new Rect(right+25, bottom+4, 190, 40),
-            new Point(0.5, 0),
-            'gray');
-
-        painter.printParagraph(
-            "Paired states\n(Density)",
-            new Rect(right+150, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
 
@@ -539,6 +535,10 @@ class CircuitWidget {
      */
     drawOutputSuperpositionDisplay(painter, stats, col) {
         let numWire = this.importantWireCount();
+        if (numWire >= Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD) {
+            return;
+        }
+
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
         let outputStateBuffer = stats.finalState.rawBuffer();
@@ -555,9 +555,9 @@ class CircuitWidget {
             painter,
             amplitudeGrid,
             gridRect,
-            Config.SUPERPOSITION_MID_COLOR,
+            numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_MID_COLOR : undefined,
             'black',
-            Config.SUPERPOSITION_FORE_COLOR,
+            numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_FORE_COLOR : undefined,
             Config.SUPERPOSITION_BACK_COLOR);
 
         let expandedRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
@@ -577,6 +577,7 @@ class CircuitWidget {
         // Column labels.
         painter.ctx.save();
         painter.ctx.rotate(Math.PI/2);
+        let maxY = 0;
         for (let i = 0; i < colCount; i++) {
             let labelRect = expandedRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
             labelRect = new Rect(labelRect.y, -labelRect.x-labelRect.w, labelRect.h, labelRect.w);
@@ -586,14 +587,16 @@ class CircuitWidget {
             let y = gridRect.bottom();
             painter.print(label, y + 2, -x, 'left', 'middle', 'black', '12px monospace', 50, dw, (w, h) => {
                 painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray');
+                maxY = Math.max(maxY, w + 8);
             });
         }
         painter.ctx.restore();
 
         // Hint text.
+        console.log(maxY);
         painter.printParagraph(
-            "ALL final amplitudes\n(ignoring measurement)",
-            expandedRect.withY(expandedRect.bottom() + 10).withH(40).withW(200),
+            "Final amplitudes\n(deferring measurement)",
+            expandedRect.withY(gridRect.bottom() + maxY).withH(40).withW(200),
             new Point(0, 0),
             'gray');
     }

@@ -297,3 +297,37 @@ suite.test("snappedCosSin", () => {
     assertThat(Util.snappedCosSin(-2*r)).isEqualTo([0, -1]);
     assertThat(Util.snappedCosSin(-1*r)).isEqualTo([s, -s]);
 });
+
+suite.test("numberOfSetBits", () => {
+    assertThrows(() => Util.numberOfSetBits(-1));
+    assertThrows(() => Util.numberOfSetBits("what"));
+    assertThrows(() => Util.numberOfSetBits(NaN));
+    assertThrows(() => Util.numberOfSetBits(Infinity));
+    assertThrows(() => Util.numberOfSetBits(Math.pow(2, 32)));
+    assertThrows(() => Util.numberOfSetBits(0.1));
+
+    assertThat(Util.numberOfSetBits(0)).isEqualTo(0);
+    assertThat(Util.numberOfSetBits(1)).isEqualTo(1);
+    assertThat(Util.numberOfSetBits(2)).isEqualTo(1);
+    assertThat(Util.numberOfSetBits(3)).isEqualTo(2);
+    assertThat(Util.numberOfSetBits(4)).isEqualTo(1);
+    assertThat(Util.numberOfSetBits(5)).isEqualTo(2);
+    assertThat(Util.numberOfSetBits(6)).isEqualTo(2);
+    assertThat(Util.numberOfSetBits(7)).isEqualTo(3);
+    assertThat(Util.numberOfSetBits(8)).isEqualTo(1);
+    assertThat(Util.numberOfSetBits(9)).isEqualTo(2);
+    assertThat(Util.numberOfSetBits(10)).isEqualTo(2);
+    assertThat(Util.numberOfSetBits(11)).isEqualTo(3);
+    assertThat(Util.numberOfSetBits(12)).isEqualTo(2);
+    assertThat(Util.numberOfSetBits(13)).isEqualTo(3);
+    assertThat(Util.numberOfSetBits(14)).isEqualTo(3);
+    assertThat(Util.numberOfSetBits(15)).isEqualTo(4);
+    assertThat(Util.numberOfSetBits(16)).isEqualTo(1);
+    assertThat(Util.numberOfSetBits(17)).isEqualTo(2);
+
+    assertThat(Util.numberOfSetBits(0x11111111)).isEqualTo(8);
+    assertThat(Util.numberOfSetBits(0x22222222)).isEqualTo(8);
+    assertThat(Util.numberOfSetBits(0x01234567)).isEqualTo(12);
+    assertThat(Util.numberOfSetBits(0x89ABCDEF)).isEqualTo(20);
+    assertThat(Util.numberOfSetBits(0xFFFFFFFF)).isEqualTo(32);
+});

@@ -1,7 +1,8 @@
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
-import Format from "src/base/Format.js"
 import Complex from "src/math/Complex.js"
+import DetailedError from "src/base/DetailedError.js"
+import Format from "src/base/Format.js"
+import {seq, Seq} from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /**
  * A matrix of complex values.
@@ -15,7 +16,9 @@ class Matrix {
      * coefficients interleaved.
      */
     constructor(width, height, buffer) {
-        Util.need(width*height*2 === buffer.length, "width*height*2 === buffer.length");
+        if (width*height*2 !== buffer.length) {
+            throw new DetailedError("width*height*2 !== buffer.length", {width, height, len: buffer.length});
+        }
         /**
          * @type {int}
          * @private
@@ -39,7 +42,9 @@ class Matrix {
      * @returns {!Complex}
      */
     cell(col, row) {
-        Util.need(col >= 0 && col < this.width() && row >= 0 && row < this.height(), "Cell out of range");
+        if (col < 0 || row < 0 || col >= this._width || row >= this._height) {
+            throw new DetailedError("Cell out of range", {col, row, width: this._width, height: this._height});
+        }
         let i = (this._width*row + col)*2;
         return new Complex(this._buffer[i], this._buffer[i + 1]);
     }
@@ -69,7 +74,7 @@ class Matrix {
         Util.need(Array.isArray(rows) && rows.every(Array.isArray), "array rows", rows);
         Util.need(rows.length > 0, "non-zero height", arguments);
 
-        let seqRows = new Seq(rows);
+        let seqRows = seq(rows);
         let h = rows.length;
         let w = seqRows.map(e => e.length).distinct().single(0);
         Util.need(w > 0, "consistent non-zero width", rows);
@@ -422,7 +427,7 @@ class Matrix {
      * @returns {!number}
      */
     norm2() {
-        return new Seq(this.rows()).flatten().map(e => e.norm2()).sum();
+        return seq(this.rows()).flatten().map(e => e.norm2()).sum();
     };
 
     /**
@@ -716,7 +721,7 @@ class Matrix {
         let zφ = a.minus(d).dividedBy(Complex.I);
 
         // Cancel global phase factor, pushing all values onto the real line.
-        let φ = new Seq([wφ, xφ, yφ, zφ]).maxBy(e => e.abs()).unit().times(2);
+        let φ = seq([wφ, xφ, yφ, zφ]).maxBy(e => e.abs()).unit().times(2);
         let w = Math.min(1, Math.max(-1, wφ.dividedBy(φ).real));
         let x = xφ.dividedBy(φ).real;
         let y = yφ.dividedBy(φ).real;

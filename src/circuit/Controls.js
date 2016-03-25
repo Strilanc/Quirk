@@ -1,12 +1,13 @@
-import U from "src/base/Util.js"
+import DetailedError from "src/base/DetailedError.js"
 import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 /**
  * Stores a set of requirements that a state's bits must meet.
  *
  * Mostly used for specifying the controls on an operation, i.e. which wires must be ON or OFF for it to apply.
  */
-class QuantumControlMask {
+class Controls {
     /**
      * @param {!int} inclusionMask.
      * @param {!int} desiredValueMask
@@ -14,7 +15,9 @@ class QuantumControlMask {
      * @property {!int} desiredValueMask
      */
     constructor(inclusionMask, desiredValueMask) {
-        U.need((desiredValueMask & ~inclusionMask) === 0, "Desired non-zero values but didn't include them.");
+        if ((desiredValueMask & ~inclusionMask) !== 0) {
+            throw new DetailedError("Desired un-included bits", {inclusionMask, desiredValueMask});
+        }
         /** @type {!int} */
         this.inclusionMask = inclusionMask;
         /** @type {!int} */
@@ -24,19 +27,21 @@ class QuantumControlMask {
     /**
      * @param {!int} bitIndex
      * @param {!boolean} desiredValue
-     * @returns {!QuantumControlMask}
+     * @returns {!Controls}
      */
     static fromBitIs(bitIndex, desiredValue) {
-        U.need(bitIndex >= 0);
-        return new QuantumControlMask(1 << bitIndex, desiredValue ? (1 << bitIndex) : 0);
+        if (bitIndex < 0) {
+            throw new DetailedError("Out of range", {bitIndex})
+        }
+        return new Controls(1 << bitIndex, desiredValue ? (1 << bitIndex) : 0);
     };
 
     /**
-     * @param {!QuantumControlMask|*} other
+     * @param {!Controls|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
-        return other instanceof QuantumControlMask &&
+        return other instanceof Controls &&
             this.inclusionMask == other.inclusionMask &&
             this.desiredValueMask == other.desiredValueMask;
     };
@@ -49,7 +54,7 @@ class QuantumControlMask {
             return "No Controls";
         }
 
-        return "QuantumControlMask: ...__" + Seq.naturals().
+        return "Controls: ...__" + Seq.naturals().
             takeWhile(i => (1<<i) <= this.inclusionMask).
             map(this.desiredValueFor.bind(this)).
             map(e => e === null ? "_" : e ? "1" : "0").
@@ -80,32 +85,27 @@ class QuantumControlMask {
      * @returns {!int|Infinity}
      */
     includedBitCount() {
-        let m = this.inclusionMask;
-        if (m < 0) {
+        if (this.inclusionMask < 0) {
             return Infinity;
         }
-        let n = 0;
-        while (m > 0) {
-            m &= m - 1;
-            n++;
-        }
-        return n;
+        return Util.numberOfSetBits(this.inclusionMask);
     }
 
     /**
-     * @param {!QuantumControlMask} other
-     * @returns {!QuantumControlMask}
+     * @param {!Controls} other
+     * @returns {!Controls}
      */
-    combine(other) {
-        U.need((other.desiredValueMask & this.inclusionMask) === (this.desiredValueMask & other.inclusionMask),
-            "Can't combine contradictory controls.");
-        return new QuantumControlMask(
+    and(other) {
+        if ((other.desiredValueMask & this.inclusionMask) !== (this.desiredValueMask & other.inclusionMask)) {
+            throw new DetailedError("Contradictory controls.", {"this": this, other})
+        }
+        return new Controls(
             this.inclusionMask | other.inclusionMask,
             this.desiredValueMask | other.desiredValueMask);
     };
 }
 
-/** @type {!QuantumControlMask} */
-QuantumControlMask.NO_CONTROLS = new QuantumControlMask(0, 0);
+/** @type {!Controls} */
+Controls.NONE = new Controls(0, 0);
 
-export default QuantumControlMask;
+export default Controls;

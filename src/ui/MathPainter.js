@@ -54,9 +54,9 @@ export default class MathPainter {
      * @param {!Painter} painter
      * @param {!Matrix} matrix The matrix to draw.
      * @param {!Rect} drawArea The rectangle to draw the matrix within.
-     * @param {!string} amplitudeCircleFillColor
+     * @param {undefined|!string} amplitudeCircleFillColor
      * @param {!string} amplitudeCircleStrokeColor
-     * @param {!string|undefined} amplitudeProbabilityFillColor
+     * @param {undefined|!string} amplitudeProbabilityFillColor
      * @param {!string=} backColor
      */
     static paintMatrix(painter,
@@ -103,18 +103,20 @@ export default class MathPainter {
         }
 
         // Draw magnitude circles.
-        painter.trace(trace => {
-            for (let row = 0; row < numRows; row++) {
-                for (let col = 0; col < numCols; col++) {
-                    let i = (row*numCols + col)*2;
-                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
-                    if (isNaN(mag) || mag < ε) {
-                        continue;
+        if (amplitudeCircleFillColor !== undefined) {
+            painter.trace(trace => {
+                for (let row = 0; row < numRows; row++) {
+                    for (let col = 0; col < numCols; col++) {
+                        let i = (row * numCols + col) * 2;
+                        let mag = Math.sqrt(buf[i] * buf[i] + buf[i + 1] * buf[i + 1]);
+                        if (isNaN(mag) || mag < ε) {
+                            continue;
+                        }
+                        trace.circle(x + diam * (col + 0.5), y + diam * (row + 0.5), unitRadius * mag);
                     }
-                    trace.circle(x + diam*(col+0.5), y + diam*(row+0.5), unitRadius * mag);
                 }
-            }
-        }).thenFill(amplitudeCircleFillColor).thenStroke(amplitudeCircleStrokeColor, 0.5);
+            }).thenFill(amplitudeCircleFillColor).thenStroke(amplitudeCircleStrokeColor, 0.5);
+        }
 
         // Draw phase lines.
         painter.trace(trace => {
@@ -128,7 +130,7 @@ export default class MathPainter {
                     let x1 = x + diam*(col+0.5);
                     let y1 = y + diam*(row+0.5);
                     let clampedRadius = Math.max(unitRadius, 4/mag);
-                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * buf[i+1]);
+                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * -buf[i+1]);
                 }
             }
         }).thenStroke('black');

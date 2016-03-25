@@ -1,3 +1,4 @@
+import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
 import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
@@ -150,8 +151,12 @@ class Complex {
      */
     static parse(text) {
         let lowText = text.toLowerCase();
-        Util.need(text.trim().length !== 0, "Empty: " + text);
-        Util.need(lowText.indexOf("e_plus") === -1 && lowText.indexOf("e_minus") === -1, "Invalid: " + text);
+        if (text.trim().length === 0) {
+            throw new DetailedError("Empty", {text});
+        }
+        if (lowText.indexOf("e_plus") !== -1 || lowText.indexOf("e_minus") !== -1) {
+            throw new DetailedError("Invalid", {text});
+        }
 
         return new Seq(lowText.replace("e+", "e_plus").replace("e-", "e_minus").split("+")).
             flatMap(summand => new Seq(summand.split("-")).
@@ -168,7 +173,9 @@ class Complex {
                     }
 
                     let val = dif === "" ? 1 : Format.parseFloat(dif);
-                    Util.need(!isNaN(val), "Not a float: '" + dif + "'");
+                    if (isNaN(val)) {
+                        throw new DetailedError("Not a float", {text, dif});
+                    }
                     return Complex.from(val).
                         times(isImaginaryPart ? Complex.I : 1).
                         times(k === 0 ? 1 : -1);

@@ -3,7 +3,7 @@ import GateColumn from "src/circuit/GateColumn.js"
 
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
-import QuantumControlMask from "src/pipeline/QuantumControlMask.js"
+import Controls from "src/circuit/Controls.js"
 
 let suite = new Suite("GateColumn");
 
@@ -17,10 +17,10 @@ suite.test("isEqualTo", () => {
         [GateColumn.empty(0), GateColumn.empty(0), new GateColumn([]), new GateColumn([])],
         [GateColumn.empty(1), GateColumn.empty(1), new GateColumn([null]), new GateColumn([null])],
         [GateColumn.empty(2), GateColumn.empty(2), new GateColumn([null, null]), new GateColumn([null, null])],
-        [new GateColumn([Gates.Named.HalfTurns.X]), new GateColumn([Gates.Named.HalfTurns.X])],
-        [new GateColumn([Gates.Named.Special.Control]), new GateColumn([Gates.Named.Special.Control])],
-        [new GateColumn([Gates.Named.HalfTurns.X, null]), new GateColumn([Gates.Named.HalfTurns.X, null])],
-        [new GateColumn([null, Gates.Named.HalfTurns.X]), new GateColumn([null, Gates.Named.HalfTurns.X])]
+        [new GateColumn([Gates.HalfTurns.X]), new GateColumn([Gates.HalfTurns.X])],
+        [new GateColumn([Gates.Special.Control]), new GateColumn([Gates.Special.Control])],
+        [new GateColumn([Gates.HalfTurns.X, null]), new GateColumn([Gates.HalfTurns.X, null])],
+        [new GateColumn([null, Gates.HalfTurns.X]), new GateColumn([null, Gates.HalfTurns.X])]
     ];
     for (let g1 of groups) {
         for (let g2 of groups) {
@@ -47,39 +47,39 @@ suite.test("isEmpty", () => {
     assertTrue(new GateColumn([]).isEmpty());
     assertTrue(new GateColumn([null]).isEmpty());
     assertTrue(new GateColumn([null, null]).isEmpty());
-    assertFalse(new GateColumn([Gates.Named.Special.Control]).isEmpty());
-    assertFalse(new GateColumn([Gates.Named.Special.SwapHalf]).isEmpty());
-    assertFalse(new GateColumn([Gates.Named.HalfTurns.X]).isEmpty());
-    assertFalse(new GateColumn([Gates.Named.HalfTurns.X, null]).isEmpty());
-    assertFalse(new GateColumn([Gates.Named.HalfTurns.X, Gates.Named.HalfTurns.X]).isEmpty());
+    assertFalse(new GateColumn([Gates.Special.Control]).isEmpty());
+    assertFalse(new GateColumn([Gates.Special.SwapHalf]).isEmpty());
+    assertFalse(new GateColumn([Gates.HalfTurns.X]).isEmpty());
+    assertFalse(new GateColumn([Gates.HalfTurns.X, null]).isEmpty());
+    assertFalse(new GateColumn([Gates.HalfTurns.X, Gates.HalfTurns.X]).isEmpty());
 });
 
 suite.test("swapPairs", () => {
     assertThat(new GateColumn([]).swapPairs()).isEqualTo([]);
     assertThat(new GateColumn([null, null]).swapPairs()).isEqualTo([]);
-    assertThat(new GateColumn([Gates.Named.HalfTurns.X, null]).swapPairs()).isEqualTo([]);
+    assertThat(new GateColumn([Gates.HalfTurns.X, null]).swapPairs()).isEqualTo([]);
     assertThat(new GateColumn([
-        Gates.Named.Special.Control, Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf
+        Gates.Special.Control, Gates.Special.AntiControl, Gates.Special.SwapHalf
     ]).swapPairs()).isEqualTo([]);
     assertThat(new GateColumn([
-        Gates.Named.Special.SwapHalf, Gates.Named.Special.SwapHalf
+        Gates.Special.SwapHalf, Gates.Special.SwapHalf
     ]).swapPairs()).isEqualTo([[0, 1]]);
     assertThat(new GateColumn([
-        Gates.Named.Special.SwapHalf, null, Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf, null
+        Gates.Special.SwapHalf, null, Gates.Special.AntiControl, Gates.Special.SwapHalf, null
     ]).swapPairs()).isEqualTo([[0, 3]]);
 });
 
 suite.test("controls", () => {
-    assertThat(new GateColumn([]).controls()).isEqualTo(QuantumControlMask.NO_CONTROLS);
-    assertThat(new GateColumn([null, null]).controls()).isEqualTo(QuantumControlMask.NO_CONTROLS);
-    assertThat(new GateColumn([null, Gates.Named.HalfTurns.X]).controls()).isEqualTo(QuantumControlMask.NO_CONTROLS);
+    assertThat(new GateColumn([]).controls()).isEqualTo(Controls.NONE);
+    assertThat(new GateColumn([null, null]).controls()).isEqualTo(Controls.NONE);
+    assertThat(new GateColumn([null, Gates.HalfTurns.X]).controls()).isEqualTo(Controls.NONE);
     assertThat(new GateColumn([
-        Gates.Named.Special.Control, Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf
-    ]).controls()).isEqualTo(new QuantumControlMask(3, 1));
+        Gates.Special.Control, Gates.Special.AntiControl, Gates.Special.SwapHalf
+    ]).controls()).isEqualTo(new Controls(3, 1));
     assertThat(new GateColumn([
-        Gates.Named.Special.AntiControl, Gates.Named.Special.Control, Gates.Named.Special.SwapHalf
-    ]).controls()).isEqualTo(new QuantumControlMask(3, 2));
+        Gates.Special.AntiControl, Gates.Special.Control, Gates.Special.SwapHalf
+    ]).controls()).isEqualTo(new Controls(3, 2));
     assertThat(new GateColumn([
-        Gates.Named.Special.AntiControl, Gates.Named.Special.SwapHalf, Gates.Named.Special.Control
-    ]).controls()).isEqualTo(new QuantumControlMask(5, 4));
+        Gates.Special.AntiControl, Gates.Special.SwapHalf, Gates.Special.Control
+    ]).controls()).isEqualTo(new Controls(5, 4));
 });
