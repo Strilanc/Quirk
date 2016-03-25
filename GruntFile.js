@@ -123,5 +123,6 @@ module.exports = function(grunt) {
     grunt.registerTask('build', ['build-src', 'build-test']);
 
     grunt.registerTask('test-firefox', ['build-test', 'karma:unit-firefox']);
+    grunt.registerTask('test-chrome', ['build-test', 'karma:unit-chrome']);
     grunt.registerTask('test', ['build-test', 'karma:unit']);
 };
