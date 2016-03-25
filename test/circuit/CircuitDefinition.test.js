@@ -153,7 +153,7 @@ suite.test("gateAtLocIsDisabledReason_swaps", () => {
     ]);
     let pts = Seq.range(circuit.columns.length).
         flatMap(c => Seq.range(4).map(r => new Point(c, r))).
-        filter(pt => circuit.gateAtLocIsDisabledReason(pt) !== null).
+        filter(pt => circuit.gateAtLocIsDisabledReason(pt) !== undefined).
         map(pt => [pt.x, pt.y]).
         toArray();
     assertThat(pts).isEqualTo([
@@ -182,7 +182,7 @@ suite.test("gateAtLocIsDisabledReason_recohere", () => {
     ]);
     let pts = Seq.range(circuit.columns.length).
         flatMap(c => Seq.range(4).map(r => new Point(c, r))).
-        filter(pt => circuit.gateAtLocIsDisabledReason(pt) !== null).
+        filter(pt => circuit.gateAtLocIsDisabledReason(pt) !== undefined).
         map(pt => [pt.x, pt.y]).
         toArray();
     assertThat(pts).isEqualTo([

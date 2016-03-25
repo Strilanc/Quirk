@@ -1,3 +1,5 @@
+import DetailedError from "src/base/DetailedError.js"
+
 export const THROW_IF_EMPTY = { if_same_instance_as_this_then_throw: true };
 
 /**
@@ -141,8 +143,8 @@ class Seq {
      * @returns {!Seq.<!int>}
      */
     static range(count) {
-        if (count < 0) {
-            throw new Error("needed count >= 0");
+        if (!Number.isInteger(count) || count < 0) {
+            throw new DetailedError("bad count", {count});
         }
 
         return Seq.fromGenerator(function*() {

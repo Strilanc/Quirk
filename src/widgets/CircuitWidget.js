@@ -235,29 +235,36 @@ class CircuitWidget {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
 
         // Draw labelled wires
-        for (let i = 0; i < this.circuitDefinition.numWires; i++) {
-            let wireRect = this.wireRect(i);
-            let y = Math.round(wireRect.center().y - 0.5) + 0.5;
+        for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+            let wireRect = this.wireRect(row);
             painter.printParagraph("|0⟩", wireRect.takeLeft(20), new Point(1, 0.5));
-            let x = this.circuitDefinition.wireMeasuredColumns()[i];
-            if (x === Infinity) {
-                painter.strokeLine(new Point(this.area.x + 25, y), new Point(this.area.right(), y));
-            } else {
-                x = this.opRect(x).center().x;
-                painter.strokeLine(new Point(this.area.x + 25, y), new Point(x, y));
-                painter.strokeLine(new Point(x, y-1), new Point(this.area.right(), y-1));
-                painter.strokeLine(new Point(x, y+1), new Point(this.area.right(), y+1));
-            }
-
         }
+        painter.trace(trace => {
+            for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+                let wireRect = this.wireRect(row);
+                let y = Math.round(wireRect.center().y - 0.5) + 0.5;
+                let lastX = this.area.x + 25;
+                //noinspection ForLoopThatDoesntUseLoopVariableJS
+                for (let col = 0; lastX < this.area.right(); col++) {
+                    let x = this.opRect(col).center().x;
+                    if (this.circuitDefinition.locIsMeasured(new Point(col, row))) {
+                        trace.line(lastX, y-1, x, y-1);
+                        trace.line(lastX, y+1, x, y+1);
+                    } else {
+                        trace.line(lastX, y, x, y);
+                    }
+                    lastX = x;
+                }
+            }
+        }).thenStroke('black');
 
         // Draw operations
-        for (let i = 0; i < this.circuitDefinition.columns.length; i++) {
-            this.drawCircuitOperation(painter, this.circuitDefinition.columns[i], i, hand, stats);
+        for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
+            this.drawCircuitOperation(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }
 
         // Draw output displays.
-        this.drawRightHandPeekGates(painter, stats);
+        this.drawOutputDisplays(painter, stats);
     }
 
     /**
@@ -284,7 +291,7 @@ class CircuitWidget {
                 this.compressedColumnIndex === col;
             gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
-            if (isDisabledReason !== null) {
+            if (isDisabledReason !== undefined) {
                 if (canGrab) {
                     painter.ctx.globalAlpha /= 2;
                 }
@@ -485,7 +492,7 @@ class CircuitWidget {
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
      */
-    drawRightHandPeekGates(painter, stats) {
+    drawOutputDisplays(painter, stats) {
         let colCount = this.circuitDefinition.columns.length + 1;
         let numWire = this.importantWireCount();
 

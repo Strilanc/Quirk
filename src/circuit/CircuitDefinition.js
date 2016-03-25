@@ -1,8 +1,9 @@
+import DetailedError from "src/base/DetailedError.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
 class CircuitDefinition {
@@ -13,11 +14,36 @@ class CircuitDefinition {
      * @property {!Array<!GateColumn>} columns;
      */
     constructor(numWires, columns) {
-        Util.need(numWires >= 0, "numWires >= 0");
-        Util.need(columns.every(e => e instanceof GateColumn), "columns.every(e => e instanceof GateColumn)");
-        Util.need(columns.every(e => e.gates.length === numWires), "columns.every(e => e.gates.length === numWires)");
+        if (numWires < 0) {
+            throw new DetailedError("numWires < 0", {numWires})
+        }
+        if (!columns.every(e => e instanceof GateColumn)) {
+            throw new DetailedError("Not a GateColumn", {columns})
+        }
+        if (!columns.every(e => e.gates.length === numWires)) {
+            throw new DetailedError("Wrong gate count", {numWires, columns})
+        }
+
         this.numWires = numWires;
         this.columns = columns;
+
+        /**
+         * @type {!Array.<undefined|!string>}
+         * @private
+         */
+        this._disabledReasons = [];
+        /**
+         * @type {!Array.<undefined|!int>}
+         * @private
+         */
+        this._measureMasks = [0];
+        let mask = 0;
+        for (let col of columns) {
+            let reasons = col.disabledReasons(mask);
+            mask = col.nextMeasureMask(mask, reasons);
+            this._disabledReasons.push(reasons);
+            this._measureMasks.push(mask);
+        }
     }
 
     /**
@@ -62,10 +88,10 @@ class CircuitDefinition {
         return allGatesString.substring(0, 40) + `…`;
     }
 
-    withColumns(columns) {
+    withColumns(cols) {
         return new CircuitDefinition(
             this.numWires,
-            columns)
+            cols)
     }
 
     withoutEmpties() {
@@ -87,24 +113,6 @@ class CircuitDefinition {
                     toArray())));
     }
 
-    /**
-     * Determines at what point each wire is measured (if ever).
-     * @returns {!Array.<int>}
-     */
-    wireMeasuredColumns() {
-        if (this.__cachedMeasureIndices === undefined) {
-            this.__cachedMeasureIndices = Seq.
-                range(this.numWires).
-                map(r => Seq.
-                    range(this.columns.length).
-                    skipWhile(c => this.columns[c].gates[r] !== Gates.Special.Measurement ||
-                        this.colHasControls(c)).
-                    first(Infinity)).
-                toArray();
-        }
-        return this.__cachedMeasureIndices;
-    }
-
     isEqualTo(other) {
         if (this === other) {
             return true;
@@ -119,7 +127,12 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locIsMeasured(pt) {
-        return this.wireMeasuredColumns()[pt.y] <= pt.x;
+        let col = Math.min(this.columns.length, pt.x);
+        let row = pt.y;
+        if (col < 0 || row < 0 || row >= this.numWires) {
+            return false
+        }
+        return (this._measureMasks[col] & (1 << row)) !== 0;
     }
 
     /**
@@ -147,8 +160,7 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locStartsSingleControlWire(pt) {
-        return this.locIsControl(pt) &&
-            !this.locIsMeasured(pt);
+        return this.locIsControl(pt) && !this.locIsMeasured(pt);
     }
 
     /**
@@ -156,8 +168,7 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locStartsDoubleControlWire(pt) {
-        return this.locIsControl(pt) &&
-            this.locIsMeasured(pt);
+        return this.locIsControl(pt) && this.locIsMeasured(pt);
     }
 
     /**
@@ -168,7 +179,7 @@ class CircuitDefinition {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
             filter(pt => this.gateAtLoc(pt) === Gates.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== null) && pts.count() == 2;
+        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== undefined) && pts.count() == 2;
     }
 
     /**
@@ -185,7 +196,10 @@ class CircuitDefinition {
     }
 
     colHasControls(col) {
-        return Seq.range(this.numWires).any(row => this.locIsControl(new Point(col, row)));
+        if (col < 0 || col >= this.columns.length) {
+            return false;
+        }
+        return this.columns[col].hasControl();
     }
 
     /**
@@ -193,7 +207,10 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     colHasSingleWireControl(col) {
-        return Seq.range(this.numWires).any(row => this.locStartsSingleControlWire(new Point(col, row)));
+        if (col < 0 || col >= this.columns.length) {
+            return false;
+        }
+        return this.columns[col].hasCoherentControl(this._measureMasks[col]);
     }
 
     /**
@@ -201,76 +218,21 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     colHasDoubleWireControl(col) {
-        return Seq.range(this.numWires).any(row => this.locStartsDoubleControlWire(new Point(col, row)));
+        if (col < 0 || col >= this.columns.length) {
+            return false;
+        }
+        return this.columns[col].hasMeasuredControl(this._measureMasks[col]);
     }
 
     /**
      * @param {!Point} pt
-     * @returns {null|!string}
+     * @returns {undefined|!string}
      */
     gateAtLocIsDisabledReason(pt) {
-        /**
-         * @type {undefined|!Map<!string, null|!string>}
-         * @private
-         */
-        this._cache_gateAtLocIsDisabledReason = this._cache_gateAtLocIsDisabledReason || new Map();
-        let key = pt.x + ":" + pt.y;
-        if (!this._cache_gateAtLocIsDisabledReason.has(key)) {
-            this._cache_gateAtLocIsDisabledReason.set(key, this._uncached_gateAtLocIsDisabledReason(pt));
+        if (pt.x < 0 || pt.y < 0 || pt.x >= this._disabledReasons.length || pt.y >= this.numWires) {
+            return undefined;
         }
-        return this._cache_gateAtLocIsDisabledReason.get(key);
-    }
-
-    /**
-     * @param {!Point} pt
-     * @returns {null|!string}
-     * @private
-     */
-    _uncached_gateAtLocIsDisabledReason(pt) {
-        let g = this.gateAtLoc(pt);
-
-        if (g === null) {
-            return null;
-        }
-
-        if (g.name === "Parse Error") {
-            return "parse\nerror";
-        }
-
-        if (g === Gates.Special.Measurement && this.colHasControls(pt.x)) {
-            return "can't\ncontrol\n(sorry)";
-        }
-
-        if (g === Gates.Special.SwapHalf) {
-            let pts = Seq.range(this.numWires).
-                map(row => new Point(pt.x, row)).
-                filter(pt => this.gateAtLoc(pt) === Gates.Special.SwapHalf);
-            if (pts.count() === 1) {
-                return "need\nother\nswap";
-            }
-            if (pts.count() > 2) {
-                return "too\nmany\nswap";
-            }
-
-            if (pts.map(e => this.locIsMeasured(e)).distinct().count() !== 1) {
-                // Swapping a measured qubit for an unmeasured qubit could be allowed, but it's not implemented.
-                return "measure\ndiffers\n(sorry)";
-            }
-        }
-
-        // Measured qubits can't be re-superposed for implementation simplicity reasons.
-        if (this.locIsMeasured(pt)) {
-            let m = g.matrixAt(0.1234); // Pick a time that's unlikely to be on a corner case of a time-based gate.
-            const ε = 0.0001;
-            let doesSomething = !m.isIdentity();
-            let createsSuperpositions = !m.isPhasedPermutation(ε);
-            let hasQuantumControls = this.colHasSingleWireControl(pt.x);
-            if (doesSomething && (hasQuantumControls || createsSuperpositions)) {
-                return "no\nremix\n(sorry)";
-            }
-        }
-
-        return null;
+        return this._disabledReasons[pt.x][pt.y];
     }
 
     /**
@@ -287,7 +249,7 @@ class CircuitDefinition {
         return new Seq(col.gates).
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
-                if (gate === null || this.gateAtLocIsDisabledReason(pt) !== null) {
+                if (gate === null || this.gateAtLocIsDisabledReason(pt) !== undefined) {
                     return null;
                 }
                 let m = gate.matrixAt(time);
