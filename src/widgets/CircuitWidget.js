@@ -45,7 +45,7 @@ class CircuitWidget {
             this.circuitDefinition.columns.length + // Operations.
             1 + // Spacer.
             2 + // Wire chance and bloch sphere displays.
-            (1 << Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS) - 1 // Density matrix displays.
+            1 // Density matrix displays.
         );
         return r.x + CircuitWidget.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
     }
@@ -499,26 +499,21 @@ class CircuitWidget {
         for (let i = 0; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount));
-            let m = stats.densityMatrixAfterIfAvailable([i], Infinity);
+            let m = stats.qubitDensityMatrix(i, Infinity);
             if (m !== undefined) {
                 MathPainter.paintBlochSphere(painter, m, this.gateRect(i, colCount+1));
             }
         }
 
         let offset = colCount+2;
-        for (let g = 0; g < Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS; g++) {
-            let d = 1 << g;
-            for (let i = 0; i + d <= numWire; i += d) {
-                let m = stats.densityMatrixAfterIfAvailable(Seq.range(d).map(e => e + i).toArray(), Infinity);
-                if (m !== undefined) {
-                    let topLeft = this.gateRect(i, offset).topLeft();
-                    let wh = this.gateRect(i + d - 1, offset).bottom() - topLeft.y;
-                    let r = new Rect(topLeft.x, topLeft.y, wh, wh);
-                    MathPainter.paintDensityMatrix(painter, m, r);
-                }
-            }
-            offset += d;
+        for (let i = 0; i + 1 <= numWire; i++) {
+            let m = stats.qubitDensityMatrix(i, Infinity);
+            let topLeft = this.gateRect(i, offset).topLeft();
+            let wh = this.gateRect(i, offset).bottom() - topLeft.y;
+            let r = new Rect(topLeft.x, topLeft.y, wh, wh);
+            MathPainter.paintDensityMatrix(painter, m, r);
         }
+        offset += 1;
 
         let bottom = this.wireRect(numWire-1).bottom();
         let right = this.opRect(this.circuitDefinition.columns.length).x;

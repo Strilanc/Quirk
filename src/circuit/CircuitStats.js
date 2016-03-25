@@ -1,3 +1,4 @@
+import DetailedError from "src/base/DetailedError.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
@@ -57,57 +58,47 @@ export default class CircuitStats {
         this.finalState = finalState;
     }
 
-    /**
-     * @param {!Array.<!int>} wires
-     * @param {!int} colIndex
-     * @returns {!Matrix|undefined}
-     */
-    densityMatrixAfterIfAvailable(wires, colIndex) {
-        Util.need(new Seq(wires).min() >= 0, "bad wire index");
+    ///**
+    // * @param {!Array.<!int>} wires
+    // * @param {!int} colIndex
+    // * @returns {!Matrix|undefined}
+    // */
+    //densityMatrixAfterIfAvailable(wires, colIndex) {
+    //    Util.need(new Seq(wires).min() >= 0, "bad wire index");
+    //
+    //    colIndex = Math.min(colIndex, this.circuitDefinition.columns.length);
+    //    colIndex = Math.max(colIndex, 0);
+    //
+    //    if (colIndex === 0) {
+    //        let n = 1 << new Seq(wires).distinct().count();
+    //        return Matrix.generate(n, n, (r, c) => r === 0 && c === 0 ? 1 : 0);
+    //    }
+    //
+    //    let key = colIndex + ";" + new Seq(wires.map(e => e).sort()).distinct().join(";");
+    //    if (this._knownDensityMatrices.has(key)) {
+    //        return this._knownDensityMatrices.get(key);
+    //    }
+    //
+    //    if (wires.length === 1) {
+    //        let p = this.controlledWireProbabilityJustAfter(wires[0], colIndex);
+    //        return Matrix.square([1-p, 0, 0, p]);
+    //    }
+    //
+    //    return undefined;
+    //}
 
-        colIndex = Math.min(colIndex, this.circuitDefinition.columns.length);
-        colIndex = Math.max(colIndex, 0);
-
-        if (colIndex === 0) {
-            let n = 1 << new Seq(wires).distinct().count();
-            return Matrix.generate(n, n, (r, c) => r === 0 && c === 0 ? 1 : 0);
+    qubitDensityMatrix(wireIndex, colIndex) {
+        if (wireIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
+            throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
         }
 
-        let key = colIndex + ";" + new Seq(wires.map(e => e).sort()).distinct().join(";");
-        if (this._knownDensityMatrices.has(key)) {
-            return this._knownDensityMatrices.get(key);
+        if (colIndex < 0) {
+            return 0; // The initial state is all-qubits-off.
         }
 
-        if (wires.length === 1) {
-            let p = this.controlledWireProbabilityJustAfter(wires[0], colIndex);
-            return Matrix.square([1-p, 0, 0, p]);
-        }
-
-        return undefined;
-    }
-
-    /**
-     * Returns the probability that a wire would be on if it was measured just before a given column.
-     *
-     * @param {int} wireIndex
-     * @param {int|Infinity} colIndex
-     * @returns {!number}
-     */
-    wireProbabilityJustAfter(wireIndex, colIndex) {
-        Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
-        let n = this.circuitDefinition.columns.length;
-
-        // The initial state is all-qubits-off.
-        if (colIndex < 0 || n === 0) {
-            return 0;
-        }
-        if (colIndex >= n) {
-            return this._knownDensityMatrices.get(n + ";" + wireIndex).rawBuffer()[6];
-        }
-        return 0.5;
-
-        let t = Math.min(colIndex, this._wireProbabilityData.length - 1);
-        return this._wireProbabilityData[t][wireIndex];
+        let key = Math.min(colIndex, this.circuitDefinition.columns.length) + ";" + wireIndex;
+        let density = this._knownDensityMatrices.get(key);
+        return density || new Matrix(2, 2, [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]);
     }
 
     /**
@@ -120,21 +111,7 @@ export default class CircuitStats {
      * @returns {!number}
      */
     controlledWireProbabilityJustAfter(wireIndex, colIndex) {
-        Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires);
-
-        // The initial state is all-qubits-off.
-        if (colIndex < 0 || this.circuitDefinition.columns.length === 0) {
-            return 0;
-        }
-
-        // After the last column there are no controls to condition on.
-        if (colIndex >= this.circuitDefinition.columns.length) {
-            return this.wireProbabilityJustAfter(wireIndex, colIndex);
-        }
-        return 0.5;
-
-        let t = Math.min(colIndex, this._conditionalWireProbabilityData.length - 1);
-        return this._conditionalWireProbabilityData[t][wireIndex];
+        return this.qubitDensityMatrix(wireIndex, colIndex).rawBuffer()[6];
     }
 
     /**

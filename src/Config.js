@@ -39,16 +39,6 @@ Config.REDRAW_COOLDOWN_MS = 5; // How often user-driven actions can cause redraw
 Config.GATE_RADIUS = 20;
 Config.WIRE_SPACING = 50;
 
-/**
- * At level N we partition the wires into groups of size 2^N and show the density matrices for all the partitions.
- * Setting to 0 will show no density matrices.
- * Setting to 1 will show all the individual state density matrices.
- * Setting to 2 adds on the paired states.
- * Setting to 3 adds on the quadruplet states, but is not very useful because of the information overload.
- * Setting to 4 breaks everything.
- */
-Config.RIGHT_HAND_DENSITY_MATRIX_DISPLAY_LEVELS = 1;
-
 Config.BACKGROUND_COLOR = 'white';
 Config.BACKGROUND_COLOR_CIRCUIT = 'white';
 
