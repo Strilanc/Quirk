@@ -42,6 +42,10 @@ module.exports = function(grunt) {
             'unit-firefox': {
                 configFile: 'karma.conf.js',
                 browsers: ['Firefox']
+            },
+            'unit-chrome': {
+                configFile: 'karma.conf.js',
+                browsers: ['Chrome']
             }
         },
         concat: {
