@@ -22,7 +22,7 @@ Quantum teleportation circuit:
 
 Quantum pigeonhole circuit:
 
-![The Inspector](/README_TeleportationLoop.gif)
+![The Inspector](/README_Pigeonhole.png)
 
 Working with ten qubits:
 
