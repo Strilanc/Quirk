@@ -16,15 +16,15 @@ Defining features:
 
 # Screenshots
 
-Quantum teleportation circuit:
+Quantum teleportation circuit, with Bloch-sphere state displays inserted:
 
 ![Quantum teleportation](/README_TeleportationLoop.gif)
 
-Quantum pigeonhole circuit:
+Quantum pigeonhole circuit, showing the toolbox and default after-circuit state displays:
 
 ![The Inspector](/README_Pigeonhole.png)
 
-Working with ten qubits:
+Reacting and animating smoothly while working with ten qubits:
 
 ![Ten qubits animation](/README_TenQubitsLoop.gif)
 
