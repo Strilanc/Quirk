@@ -35,27 +35,27 @@ suite.test("isEqualTo", () => {
 
 suite.test("isApproximatelyEqualTo", () => {
     // Size must match
-    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.col([1, 1]), 0);
-    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.square(1, 1, 1, 1), 0);
-    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.row([1, 1, 1]), 0);
-    assertThat(Matrix.row([1, 1])).isApproximatelyEqualTo(Matrix.row([1, 1]), 0);
+    assertThat(Matrix.row(1, 1)).isNotApproximatelyEqualTo(Matrix.col([1, 1]), 0);
+    assertThat(Matrix.row(1, 1)).isNotApproximatelyEqualTo(Matrix.square(1, 1, 1, 1), 0);
+    assertThat(Matrix.row(1, 1)).isNotApproximatelyEqualTo(Matrix.row(1, 1, 1), 0);
+    assertThat(Matrix.row(1, 1)).isApproximatelyEqualTo(Matrix.row(1, 1), 0);
 
     // Error bound matters
-    assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 0);
-    assertThat(Matrix.row([1])).isApproximatelyEqualTo(Matrix.row([1]), 1/4);
-    assertThat(Matrix.row([1.25])).isApproximatelyEqualTo(Matrix.row([1]), 1/4);
-    assertThat(Matrix.row([0.75])).isApproximatelyEqualTo(Matrix.row([1]), 1/4);
-    assertThat(Matrix.row([1.26])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/4);
-    assertThat(Matrix.row([0.74])).isNotApproximatelyEqualTo(Matrix.row([1]), 1/4);
+    assertThat(Matrix.row(1)).isApproximatelyEqualTo(Matrix.row(1), 0);
+    assertThat(Matrix.row(1)).isApproximatelyEqualTo(Matrix.row(1), 1/4);
+    assertThat(Matrix.row(1.25)).isApproximatelyEqualTo(Matrix.row(1), 1/4);
+    assertThat(Matrix.row(0.75)).isApproximatelyEqualTo(Matrix.row(1), 1/4);
+    assertThat(Matrix.row(1.26)).isNotApproximatelyEqualTo(Matrix.row(1), 1/4);
+    assertThat(Matrix.row(0.74)).isNotApproximatelyEqualTo(Matrix.row(1), 1/4);
 
     // Error bound spreads
-    assertThat(Matrix.row([0, 0])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
-    assertThat(Matrix.row([1, 0])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
-    assertThat(Matrix.row([0, 1])).isApproximatelyEqualTo(Matrix.row([0, 0]), 1);
-    assertThat(Matrix.row([1, 1])).isNotApproximatelyEqualTo(Matrix.row([0, 0]), 1);
+    assertThat(Matrix.row(0, 0)).isApproximatelyEqualTo(Matrix.row(0, 0), 1);
+    assertThat(Matrix.row(1, 0)).isApproximatelyEqualTo(Matrix.row(0, 0), 1);
+    assertThat(Matrix.row(0, 1)).isApproximatelyEqualTo(Matrix.row(0, 0), 1);
+    assertThat(Matrix.row(1, 1)).isNotApproximatelyEqualTo(Matrix.row(0, 0), 1);
 
-    assertThat(Matrix.row([0])).isNotApproximatelyEqualTo(null);
-    assertThat(Matrix.row([0])).isNotApproximatelyEqualTo("");
+    assertThat(Matrix.row(0)).isNotApproximatelyEqualTo(null);
+    assertThat(Matrix.row(0)).isNotApproximatelyEqualTo("");
 });
 
 suite.test("toString", () => {
@@ -89,7 +89,7 @@ suite.test("parse", () => {
     assertThat(Matrix.parse("{{\u00BD-\u00BDi, 5}, {-i, 0}}")).isEqualTo(
         Matrix.square(new Complex(0.5, -0.5), 5, new Complex(0, -1), 0));
     assertThat(Matrix.parse("{{1, 2, i}}")).isEqualTo(
-        Matrix.row([1, 2, Complex.I]));
+        Matrix.row(1, 2, Complex.I));
     assertThat(Matrix.parse("{{1}, {2}, {i}}")).isEqualTo(
         Matrix.col([1, 2, Complex.I]));
 });
@@ -118,15 +118,15 @@ suite.test("col", () => {
 });
 
 suite.test("row", () => {
-    assertThat(Matrix.row([2, 3, new Complex(0, 5)]).toString()).isEqualTo("{{2, 3, 5i}}");
+    assertThat(Matrix.row(2, 3, new Complex(0, 5)).toString()).isEqualTo("{{2, 3, 5i}}");
 });
 
 suite.test("size", () => {
-    assertThat(Matrix.row([1, 1]).width()).isEqualTo(2);
-    assertThat(Matrix.row([1, 1]).height()).isEqualTo(1);
+    assertThat(Matrix.row(1, 1).width()).isEqualTo(2);
+    assertThat(Matrix.row(1, 1).height()).isEqualTo(1);
 
-    assertThat(Matrix.row([1, 1, 3]).width()).isEqualTo(3);
-    assertThat(Matrix.row([1, 1, 3]).height()).isEqualTo(1);
+    assertThat(Matrix.row(1, 1, 3).width()).isEqualTo(3);
+    assertThat(Matrix.row(1, 1, 3).height()).isEqualTo(1);
 
     assertThat(Matrix.col([1, 1]).width()).isEqualTo(1);
     assertThat(Matrix.col([1, 1]).height()).isEqualTo(2);
@@ -136,15 +136,15 @@ suite.test("size", () => {
 });
 
 suite.test("isApproximatelyUnitary", () => {
-    assertFalse(Matrix.row([1, 1]).isApproximatelyUnitary(999));
+    assertFalse(Matrix.row(1, 1).isApproximatelyUnitary(999));
     assertFalse(Matrix.col([1, 1]).isApproximatelyUnitary(999));
 
-    assertTrue(Matrix.row([1]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.row([Complex.I]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.row([-1]).isApproximatelyUnitary(0));
-    assertFalse(Matrix.row([-2]).isApproximatelyUnitary(0));
-    assertFalse(Matrix.row([0]).isApproximatelyUnitary(0));
-    assertTrue(Matrix.row([-2]).isApproximatelyUnitary(999));
+    assertTrue(Matrix.row(1).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row(Complex.I).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row(-1).isApproximatelyUnitary(0));
+    assertFalse(Matrix.row(-2).isApproximatelyUnitary(0));
+    assertFalse(Matrix.row(0).isApproximatelyUnitary(0));
+    assertTrue(Matrix.row(-2).isApproximatelyUnitary(999));
 
     assertTrue(Matrix.square(1, 0, 0, 1).isApproximatelyUnitary(0));
     assertTrue(Matrix.rotation(1).isApproximatelyUnitary(0.001));
@@ -157,16 +157,16 @@ suite.test("isApproximatelyUnitary", () => {
 suite.test("isApproximatelyHermitian", () => {
     let i = Complex.I;
 
-    assertFalse(Matrix.row([1, 1]).isApproximatelyHermitian(999));
+    assertFalse(Matrix.row(1, 1).isApproximatelyHermitian(999));
     assertFalse(Matrix.col([1, 1]).isApproximatelyHermitian(999));
 
-    assertTrue(Matrix.row([1]).isApproximatelyHermitian(0));
-    assertTrue(Matrix.row([0]).isApproximatelyHermitian(0));
-    assertTrue(Matrix.row([-1]).isApproximatelyHermitian(0));
-    assertTrue(Matrix.row([-2]).isApproximatelyHermitian(0));
-    assertFalse(Matrix.row([i]).isApproximatelyHermitian(0));
-    assertFalse(Matrix.row([i]).isApproximatelyHermitian(0.5));
-    assertTrue(Matrix.row([i]).isApproximatelyHermitian(999));
+    assertTrue(Matrix.row(1).isApproximatelyHermitian(0));
+    assertTrue(Matrix.row(0).isApproximatelyHermitian(0));
+    assertTrue(Matrix.row(-1).isApproximatelyHermitian(0));
+    assertTrue(Matrix.row(-2).isApproximatelyHermitian(0));
+    assertFalse(Matrix.row(i).isApproximatelyHermitian(0));
+    assertFalse(Matrix.row(i).isApproximatelyHermitian(0.5));
+    assertTrue(Matrix.row(i).isApproximatelyHermitian(999));
 
     assertTrue(Matrix.PAULI_X.isApproximatelyHermitian(0));
     assertTrue(Matrix.PAULI_Y.isApproximatelyHermitian(0));
@@ -194,8 +194,8 @@ suite.test("isIdentity", () => {
     assertFalse(Matrix.col([i]).isIdentity());
     assertFalse(Matrix.col([2]).isIdentity());
 
-    assertFalse(Matrix.row([1, 0]).isIdentity());
-    assertFalse(Matrix.row([1, 1]).isIdentity());
+    assertFalse(Matrix.row(1, 0).isIdentity());
+    assertFalse(Matrix.row(1, 1).isIdentity());
     assertFalse(Matrix.col([1, 0]).isIdentity());
     assertFalse(Matrix.col([1, 1]).isIdentity());
 
@@ -223,8 +223,8 @@ suite.test("isPhasedPermutation", () => {
     assertTrue(Matrix.col([i]).isPhasedPermutation());
     assertTrue(Matrix.col([2]).isPhasedPermutation());
 
-    assertFalse(Matrix.row([1, 0]).isPhasedPermutation());
-    assertFalse(Matrix.row([1, 1]).isPhasedPermutation());
+    assertFalse(Matrix.row(1, 0).isPhasedPermutation());
+    assertFalse(Matrix.row(1, 1).isPhasedPermutation());
     assertFalse(Matrix.col([1, 0]).isPhasedPermutation());
     assertFalse(Matrix.col([1, 1]).isPhasedPermutation());
 
@@ -266,7 +266,7 @@ suite.test("scaledBy", () => {
     assertThat(v.scaledBy(1)).isEqualTo(v);
 
     assertThat(Matrix.col([2, 3]).scaledBy(5)).isEqualTo(Matrix.col([10, 15]));
-    assertThat(Matrix.row([2, 3]).scaledBy(5)).isEqualTo(Matrix.row([10, 15]));
+    assertThat(Matrix.row(2, 3).scaledBy(5)).isEqualTo(Matrix.row(10, 15));
 });
 
 suite.test("plus", () => {
@@ -292,7 +292,7 @@ suite.test("times", () => {
 
 suite.test("times_ColRow", () => {
     // When one is a column vector and the other is a row vector...
-    let r = Matrix.row([2, 3, 5]);
+    let r = Matrix.row(2, 3, 5);
     let c = Matrix.col([11, 13, 17]);
 
     // Inner product
@@ -309,9 +309,9 @@ suite.test("times_ColRow", () => {
 });
 
 suite.test("norm2", () => {
-    assertThat(Matrix.row([1]).norm2()).isEqualTo(1);
-    assertThat(Matrix.row([2]).norm2()).isEqualTo(4);
-    assertThat(Matrix.row([1, 1]).norm2()).isEqualTo(2);
+    assertThat(Matrix.row(1).norm2()).isEqualTo(1);
+    assertThat(Matrix.row(2).norm2()).isEqualTo(4);
+    assertThat(Matrix.row(1, 1).norm2()).isEqualTo(2);
     assertThat(Matrix.col([1, 1]).norm2()).isEqualTo(2);
     assertThat(Matrix.square(1, 2, 3, 4).norm2()).isEqualTo(30);
 });
@@ -337,10 +337,10 @@ suite.test("tensorProduct", () => {
 });
 
 suite.test("tensorPower", () => {
-    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(0).toString()).isEqualTo("{{1}}");
-    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(1).toString()).isEqualTo("{{1, i}}");
-    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(2).toString()).isEqualTo("{{1, i, i, -1}}");
-    assertThat(Matrix.row([1, new Complex(0, 1)]).tensorPower(3).toString()).
+    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(0).toString()).isEqualTo("{{1}}");
+    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(1).toString()).isEqualTo("{{1, i}}");
+    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(2).toString()).isEqualTo("{{1, i, i, -1}}");
+    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(3).toString()).
         isEqualTo("{{1, i, i, -1, i, -1, -1, -i}}");
 });
 
@@ -605,7 +605,7 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
 
 suite.test("determinant", () => {
     assertThrows(() => Matrix.col([1, 2]).determinant());
-    assertThrows(() => Matrix.row([1, 2]).determinant());
+    assertThrows(() => Matrix.row(1, 2).determinant());
 
     assertThat(Matrix.square(1).determinant()).isEqualTo(1);
     assertThat(Matrix.square(2).determinant()).isEqualTo(2);

@@ -207,10 +207,10 @@ class Matrix {
 
     /**
      * Converts the array of complex coefficients into a row vector.
-     * @param {!Array<(!number|!Complex)>|!Array<!number>|!Array<!Complex>} coefs
+     * @param {!number|!Complex} coefs
      * @returns {!Matrix}
      */
-    static row(coefs) {
+    static row(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         return Matrix.generate(coefs.length, 1, (r, c) => coefs[c]);
     };

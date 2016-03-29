@@ -27,7 +27,7 @@ suite.test("roundTrip_Complex", () => {
 });
 
 suite.test("roundTrip_Matrix", () => {
-    assertRoundTrip(Matrix, Matrix.row([1, Complex.I]), "{{1,i}}");
+    assertRoundTrip(Matrix, Matrix.row(1, Complex.I), "{{1,i}}");
     assertRoundTrip(Matrix, Matrix.col([1, Complex.I]), "{{1},{i}}");
     assertRoundTrip(Matrix, Matrix.square(1/3+0.00001, Complex.I.plus(1), -1/3, 0),
         "{{0.3333433333333333,1+i},{-\u2153,0}}");
