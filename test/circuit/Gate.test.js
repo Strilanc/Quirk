@@ -12,7 +12,7 @@ suite.test("isEqualTo", () => {
     let g1 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", f);
     let g2 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", f);
     let h1 = new Gate("DIF_symbol", Matrix.PAULI_X, "name", "blurb", f);
-    let h2 = new Gate("symbol", t => Matrix.square([t, 0, 0, 0]), "name", "blurb", f);
+    let h2 = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb", f);
     let h3 = new Gate("symbol", Matrix.PAULI_X, "DIF_name", "blurb", f);
     let h4 = new Gate("symbol", Matrix.PAULI_X, "name", "DIF_blurb", f);
     let h5 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb", _ => { throw null; });
@@ -40,7 +40,7 @@ suite.test("toString_runsWithoutFailing", () => {
 
 suite.test("isTimeBased", () => {
     let m0 = new Gate("symbol", Matrix.HADAMARD, "name", "blurb", _ => {});
-    let mt = new Gate("symbol", t => Matrix.square([t, 0, 0, 0]), "name", "blurb", _ => {});
+    let mt = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb", _ => {});
 
     assertFalse(m0.isTimeBased());
     assertTrue(mt.isTimeBased());
@@ -48,11 +48,11 @@ suite.test("isTimeBased", () => {
 
 suite.test("matrixAt", () => {
     let m0 = new Gate("symbol", Matrix.HADAMARD, "name", "blurb", _ => {});
-    let mt = new Gate("symbol", t => Matrix.square([t, 0, 0, 0]), "name", "blurb", _ => {});
+    let mt = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb", _ => {});
 
     assertThat(m0.matrixAt(0)).isEqualTo(Matrix.HADAMARD);
     assertThat(m0.matrixAt(0.5)).isEqualTo(Matrix.HADAMARD);
 
-    assertThat(mt.matrixAt(0)).isEqualTo(Matrix.square([0, 0, 0, 0]));
-    assertThat(mt.matrixAt(0.5)).isEqualTo(Matrix.square([0.5, 0, 0, 0]));
+    assertThat(mt.matrixAt(0)).isEqualTo(Matrix.square(0, 0, 0, 0));
+    assertThat(mt.matrixAt(0.5)).isEqualTo(Matrix.square(0.5, 0, 0, 0));
 });

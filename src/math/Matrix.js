@@ -184,11 +184,11 @@ class Matrix {
 
     /**
      * Converts the given square block of coefficients into a square complex matrix.
-     * @param {!Array<(!number|!Complex)>|!Array<!number>|!Array<!Complex>} coefs The coefficients of the matrix, arranged in a flat array of
-     * square length with the coefficients (which can be numeric or complex) in row order.
+     * @param {!number|!Complex} coefs The coefficients of the matrix,
+     * arranged in a flat array of square length with the coefficients (which can be numeric or complex) in row order.
      * @returns {!Matrix}
      */
-    static square(coefs) {
+    static square(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         let n = Math.round(Math.sqrt(coefs.length));
         Util.need(n * n === coefs.length, "Matrix.square: non-square number of arguments");
@@ -553,7 +553,7 @@ class Matrix {
         let s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
         c = Format.simplifyByRounding(c, 0.00000000001);
         s = Format.simplifyByRounding(s, 0.00000000001);
-        return Matrix.square([c, -s, s, c]);
+        return Matrix.square(c, -s, s, c);
     };
 
     /**
@@ -600,9 +600,9 @@ class Matrix {
     static rotation(theta) {
         let c = Math.cos(theta);
         let s = Math.sin(theta);
-        return Matrix.square([
+        return Matrix.square(
             c, -s,
-            s, c]);
+            s, c);
     };
 
     /**
@@ -802,9 +802,9 @@ class Matrix {
          * @returns {!Matrix}
          */
         let phase_cancel_matrix = (p, q) => {
-            return Matrix.square([
+            return Matrix.square(
                 Complex.from(p).unit().conjugate(), 0,
-                0, Complex.from(q).unit().conjugate()]);
+                0, Complex.from(q).unit().conjugate());
         };
 
         /**
@@ -830,7 +830,7 @@ class Matrix {
 
             return {
                 u: Matrix.rotation(theta_0 - theta_d),
-                s: Matrix.square([s_0 + s_d, 0, 0, s_0 - s_d]),
+                s: Matrix.square(s_0 + s_d, 0, 0, s_0 - s_d),
                 v: Matrix.rotation(theta_0 + theta_d)
             };
         };
@@ -907,24 +907,24 @@ class Matrix {
  * The 2x2 Pauli X matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_X = Matrix.square([0, 1, 1, 0]);
+Matrix.PAULI_X = Matrix.square(0, 1, 1, 0);
 
 /**
  * The 2x2 Pauli Y matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_Y = Matrix.square([0, new Complex(0, -1), new Complex(0, 1), 0]);
+Matrix.PAULI_Y = Matrix.square(0, new Complex(0, -1), new Complex(0, 1), 0);
 
 /**
  * The 2x2 Pauli Z matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_Z = Matrix.square([1, 0, 0, -1]);
+Matrix.PAULI_Z = Matrix.square(1, 0, 0, -1);
 
 /**
  * The 2x2 Hadamard matrix.
  * @type {!Matrix}
  */
-Matrix.HADAMARD = Matrix.square([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
+Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).scaledBy(Math.sqrt(0.5));
 
 export default Matrix;

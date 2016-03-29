@@ -74,10 +74,10 @@ Gates.Special = {
 
     SwapHalf: new Gate(
         "Swap",
-        Matrix.square([1, 0, 0, 0,
+        Matrix.square(1, 0, 0, 0,
             0, 0, 1, 0,
             0, 1, 0, 0,
-            0, 0, 0, 1]),
+            0, 0, 0, 1),
         "Swap Gate [Half]",
         "Swaps the values of two qubits.\nPlace two swap gate halves in the same column to form a swap gate.",
         args => {
@@ -438,12 +438,12 @@ Gates.Silly = {
     FUZZ_SYMBOL: "Fuzz",
     FUZZ_MAKER: () => new Gate(
         Gates.Silly.FUZZ_SYMBOL,
-        Matrix.square([
+        Matrix.square(
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5)
-        ]).closestUnitary(),
+        ).closestUnitary(),
         "Fuzz Gate",
         "Every time you grab this out of the toolbox, you get a different random gate.\n" +
             "Duplicate gates in the circuit by holding shift before dragging.",
@@ -451,14 +451,14 @@ Gates.Silly = {
 
     POST_SELECT_OFF: new Gate(
         "|0⟩⟨0|",
-        Matrix.square([1, 0, 0, 0]),
+        Matrix.square(1, 0, 0, 0),
         "Post-selection Gate [Off]",
         "Keeps OFF states, discards ON states, and renormalizes.",
         GateFactory.POST_SELECT_DRAWER),
 
     POST_SELECT_ON: new Gate(
         "|1⟩⟨1|",
-        Matrix.square([0, 0, 0, 1]),
+        Matrix.square(0, 0, 0, 1),
         "Post-selection Gate [On]",
         "Keeps ON states, discards OFF states, and renormalizes.",
         GateFactory.POST_SELECT_DRAWER),
