@@ -197,10 +197,10 @@ class Matrix {
 
     /**
      * Converts the array of complex coefficients into a column vector.
-     * @param {!Array<(!number|!Complex)>|!Array<!number>|!Array<!Complex>} coefs
+     * @param {!number|!Complex} coefs
      * @returns {!Matrix}
      */
-    static col(coefs) {
+    static col(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         return Matrix.generate(1, coefs.length, r => coefs[r]);
     };
@@ -611,7 +611,7 @@ class Matrix {
      */
     eigenDecomposition() {
         if (this.width() !== 2 || this.height() !== 2) {
-            throw "Not implemented: non-2x2 eigen decomposition";
+            throw new Error("Not implemented: non-2x2 eigen decomposition");
         }
         let [[a, b],
              [c, d]] = this.rows();
@@ -624,8 +624,8 @@ class Matrix {
         }
         if (vals.length === 1) {
             return [
-                {val: vals[0], vec: Matrix.col([1, 0])},
-                {val: vals[0], vec: Matrix.col([0, 1])}
+                {val: vals[0], vec: Matrix.col(1, 0)},
+                {val: vals[0], vec: Matrix.col(0, 1)}
             ];
         }
         return vals.map(v => {
@@ -642,7 +642,7 @@ class Matrix {
             if (m === 0) {
                 throw new Error("Unexpected degenerate");
             }
-            return {val: v, vec: Matrix.col([x, y]).scaledBy(1/m)};
+            return {val: v, vec: Matrix.col(x, y).scaledBy(1/m)};
         });
     }
 
@@ -882,7 +882,7 @@ class Matrix {
         };
 
         if (this.width() !== 2 || this.height() !== 2) {
-            throw "Not implemented: non-2x2 singular value decomposition";
+            throw new Error("Not implemented: non-2x2 singular value decomposition");
         }
 
         return svd_2x2(this);

@@ -24,7 +24,7 @@ let suite = new Suite("CircuitStats");
 //    assertThat(s.controlledWireProbabilityJustAfter(1, 0)).isApproximatelyEqualTo(0.5);
 //    assertThat(s.controlledWireProbabilityJustAfter(0, 1)).isApproximatelyEqualTo(1);
 //    assertThat(s.controlledWireProbabilityJustAfter(1, 1)).isApproximatelyEqualTo(0.5);
-//    assertThat(s.finalState).isApproximatelyEqualTo(Matrix.col([Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)]));
+//    assertThat(s.finalState).isApproximatelyEqualTo(Matrix.col(Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)));
 //});
 //
 //suite.webGlTest("wireProbabilityJustAfter", () => {
