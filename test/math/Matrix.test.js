@@ -337,10 +337,10 @@ suite.test("tensorProduct", () => {
 });
 
 suite.test("tensorPower", () => {
-    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(0).toString()).isEqualTo("{{1}}");
-    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(1).toString()).isEqualTo("{{1, i}}");
-    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(2).toString()).isEqualTo("{{1, i, i, -1}}");
-    assertThat(Matrix.row(1, new Complex(0, 1)).tensorPower(3).toString()).
+    assertThat(Matrix.row(1, Complex.I).tensorPower(0).toString()).isEqualTo("{{1}}");
+    assertThat(Matrix.row(1, Complex.I).tensorPower(1).toString()).isEqualTo("{{1, i}}");
+    assertThat(Matrix.row(1, Complex.I).tensorPower(2).toString()).isEqualTo("{{1, i, i, -1}}");
+    assertThat(Matrix.row(1, Complex.I).tensorPower(3).toString()).
         isEqualTo("{{1, i, i, -1, i, -1, -1, -i}}");
 });
 

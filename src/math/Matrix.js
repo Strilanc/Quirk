@@ -922,7 +922,7 @@ Matrix.PAULI_X = Matrix.square(0, 1, 1, 0);
  * The 2x2 Pauli Y matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_Y = Matrix.square(0, new Complex(0, -1), new Complex(0, 1), 0);
+Matrix.PAULI_Y = Matrix.square(0, new Complex(0, -1), Complex.I, 0);
 
 /**
  * The 2x2 Pauli Z matrix.

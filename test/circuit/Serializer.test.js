@@ -18,7 +18,7 @@ let assertRoundTrip = (t, v, s) => {
 };
 
 suite.test("roundTrip_Complex", () => {
-    assertRoundTrip(Complex, new Complex(1, 0), "1");
+    assertRoundTrip(Complex, Complex.ONE, "1");
     assertRoundTrip(Complex, new Complex(2, -3), "2-3i");
     assertRoundTrip(Complex, Complex.I, "i");
     assertRoundTrip(Complex, new Complex(0, -1), "-i");
