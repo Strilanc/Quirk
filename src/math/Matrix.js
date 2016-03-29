@@ -183,6 +183,15 @@ class Matrix {
     };
 
     /**
+     * Returns a 1x1 matrix containing the given value.
+     * @param {number|!Complex} coef
+     * @returns {!Matrix}
+     */
+    static solo(coef) {
+        return new Matrix(1, 1, new Float64Array([Complex.realPartOf(coef), Complex.imagPartOf(coef)]));
+    };
+
+    /**
      * Converts the given square block of coefficients into a square complex matrix.
      * @param {!number|!Complex} coefs The coefficients of the matrix,
      * arranged in a flat array of square length with the coefficients (which can be numeric or complex) in row order.

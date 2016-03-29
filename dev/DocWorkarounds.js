@@ -230,3 +230,11 @@ function TouchList() {
  */
 function TouchEvent() {
 }
+
+/**
+ * @param {!Array.<!number>|!number} bufferOrLength
+ * @constructor
+ */
+function Float64Array(bufferOrLength) {
+    throw new Error(bufferOrLength + ":" + this);
+}
