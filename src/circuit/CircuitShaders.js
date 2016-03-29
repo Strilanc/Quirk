@@ -1,5 +1,6 @@
-import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
+import DetailedError from "src/base/DetailedError.js"
+import Matrix from "src/math/Matrix.js"
 import Seq from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
 import Util from "src/base/Util.js"
@@ -420,22 +421,29 @@ const SWAP_QUBITS_SHADER = new WglShader(`
 
 /**
  * Returns a configured shader that renders the marginal states of each qubit, for each possible values of the other
- * qubits (i.e. folding still needs to be done), into a destination texture.
- * @param {!WglTexture} inputTexture
- * @param {undefined|!int=} keptBitMask
+ * qubits (i.e. folding still needs to be done), into a destination texture. The marginal states are laid out in
+ * [a,br,bi,d] order within each pixel and represent the density matrix {{a, b},{b*, d}}.
+ * @param {!WglTexture} inputTexture A superposition texture.
+ * @param {undefined|!int=} keptBitMask A bit mask with a 1 at the positions corresponding to indicates of the desired
+ * qubit densities.
  * @returns {!WglConfiguredShader}
  */
 CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
     if (keptBitMask === undefined) {
         keptBitMask = inputTexture.width * inputTexture.height - 1;
     }
-    let ceilKeptQubitCount = 1 << Math.ceil(Math.log2(Util.numberOfSetBits(keptBitMask)));
+    let keptWidth = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
+
     return new WglConfiguredShader(destinationTexture => {
-        return QUBIT_DENSITIES_SHADER.withArgs(
+        let expectedOutputSize = keptWidth * inputTexture.width * inputTexture.height / 2;
+        if (destinationTexture.width * destinationTexture.height !== expectedOutputSize) {
+            throw new DetailedError("Wrong destination size.", {inputTexture, keptBitMask, destinationTexture});
+        }
+        QUBIT_DENSITIES_SHADER.withArgs(
             WglArg.texture('inputTexture', inputTexture, 0),
             WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
             WglArg.float('outputWidth', destinationTexture.width),
-            WglArg.float('keptWidth', ceilKeptQubitCount),
+            WglArg.float('keptWidth', keptWidth),
             WglArg.float('keptBitMask', keptBitMask)
         ).renderTo(destinationTexture)
     });

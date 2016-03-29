@@ -458,7 +458,7 @@ suite.webGlTest("swap", () => {
     ]));
 });
 
-suite.webGlTest("qubitDensities_all", () => {
+suite.webGlTest("qubitDensities", () => {
     let s = Math.sqrt(0.5);
     let q = 0.25;
     let h = 0.5;
@@ -531,6 +531,16 @@ suite.webGlTest("qubitDensities_all", () => {
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,h, _,_,_,h, _,_,_,h, _,_,_,h
     ]));
+    assertThat(CircuitShaders.qubitDensities(ent, 3).readFloatOutputs(16, 1)).isApproximatelyEqualTo(new Float32Array([
+        h,_,_,_, h,_,_,_,
+        _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_,
+        _,_,_,h, _,_,_,h
+    ]));
 
     // 0, 0+1, 0+i1, 1
     let mix = Shaders.data(new Float32Array([
@@ -547,6 +557,26 @@ suite.webGlTest("qubitDensities_all", () => {
         q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
         q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
+        q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
+    ]));
+    assertThat(CircuitShaders.qubitDensities(mix, 12).readFloatOutputs(16, 1)).isApproximatelyEqualTo(new Float32Array([
+        _,_,_,_, _,_,_,q,
+        _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,q,
+        _,_,_,_, _,_,_,_,
+        q,_,q,q, _,_,_,q,
+        _,_,_,_, _,_,_,_,
+        q,_,q,q, _,_,_,q,
+        _,_,_,_, _,_,_,_
+    ]));
+    assertThat(CircuitShaders.qubitDensities(mix, 13).readFloatOutputs(32, 1)).isApproximatelyEqualTo(new Float32Array([
+        _,_,_,_, _,_,_,_, _,_,_,q, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,q, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        q,_,_,_, q,_,q,q, _,_,_,q, _,_,_,_,
+        q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        q,_,_,_, q,_,q,q, _,_,_,q, _,_,_,_,
         q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
 });
