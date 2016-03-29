@@ -245,7 +245,7 @@ CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex
     let startingQubitCount = CircuitTextures.qubitCount(superpositionTex);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
     let inter = CircuitTextures.alloc(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
-    CircuitShaders.allQubitDensities(superpositionTex, keptBitMask).renderTo(inter);
+    CircuitShaders.qubitDensities(superpositionTex, keptBitMask).renderTo(inter);
     return inter;
 };
 

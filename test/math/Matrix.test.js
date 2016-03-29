@@ -99,6 +99,13 @@ suite.test("generate", () => {
         isEqualTo("{{0, 10, 20}, {1, 11, 21}}");
 });
 
+suite.test("zero", () => {
+    assertThat(Matrix.zero(1, 1).toString()).isEqualTo("{{0}}");
+    assertThat(Matrix.zero(2, 1).toString()).isEqualTo("{{0, 0}}");
+    assertThat(Matrix.zero(1, 2).toString()).isEqualTo("{{0}, {0}}");
+    assertThat(Matrix.zero(2, 2).toString()).isEqualTo("{{0, 0}, {0, 0}}");
+});
+
 suite.test("getColumn", () => {
     let m = Matrix.square(2, 3, 5, 7);
     assertThat(m.getColumn(0)).isEqualTo([2, 5]);

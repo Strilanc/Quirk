@@ -68,8 +68,8 @@ class GateColumn {
         return Seq.
             range(this.gates.length).
             map(i =>
-                this.gates[i] === Gates.Special.Control ? Controls.fromBitIs(i, true) :
-                this.gates[i] === Gates.Special.AntiControl ? Controls.fromBitIs(i, false) :
+                this.gates[i] === Gates.Special.Control ? Controls.bit(i, true) :
+                this.gates[i] === Gates.Special.AntiControl ? Controls.bit(i, false) :
                 Controls.NONE).
             aggregate(Controls.NONE, (a, e) => a.and(e));
     }

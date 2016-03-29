@@ -183,8 +183,18 @@ class Matrix {
     };
 
     /**
+     * Returns a zero matrix of the given size.
+     * @param {!number} width
+     * @param {!number} height
+     * @returns {!Matrix}
+     */
+    static zero(width, height) {
+        return new Matrix(width, height, new Float64Array(width*height*2));
+    };
+
+    /**
      * Returns a 1x1 matrix containing the given value.
-     * @param {number|!Complex} coef
+     * @param {!number|!Complex} coef
      * @returns {!Matrix}
      */
     static solo(coef) {
