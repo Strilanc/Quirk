@@ -97,7 +97,7 @@ export default class CircuitStats {
                     stateTex,
                     controls,
                     gateCol.wiresWithDisplaysMask()));
-                stateTex = CircuitTextures.aggregateWithIntermediateReuse(
+                stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.singleQubitOperationsInColAt(col, time),
                     (accTex, {i, m}) => CircuitTextures.qubitOperation(accTex, controlTex, i, m));

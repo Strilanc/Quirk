@@ -145,7 +145,7 @@ CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperati
  * @returns {!WglTexture}
  * @template T
  */
-CircuitTextures.aggregateWithIntermediateReuse = (seedTex, items, aggregateFunc) => {
+CircuitTextures.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) => {
     let out = seq(items).aggregate(seedTex, (a, e) => {
         let next = aggregateFunc(a, e);
         if (a !== seedTex) {
@@ -228,7 +228,7 @@ CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask
         reuseTexture(reducedTex);
     }
     let keptQubitCount = Util.numberOfSetBits(keptBitMask);
-    let result = CircuitTextures._powerSum(unsummed, keptQubitCount);
+    let result = CircuitTextures._sumDown(unsummed, keptQubitCount);
     reuseTexture(unsummed);
     return result;
 };
@@ -254,38 +254,24 @@ CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex
  * @param {!int} qubitCount
  * @returns {!WglTexture}
  */
-CircuitTextures._powerSum = (tex, qubitCount) => {
-    let stride = Util.ceilingPowerOf2(qubitCount);
-    if (stride > tex.width) {
-        throw new DetailedError("Unexpected: summing more than just the first row.", {tex, qubitCount, stride});
+CircuitTextures._sumDown = (tex, qubitCount) => {
+    let outWidth = Util.ceilingPowerOf2(qubitCount);
+    if (outWidth > tex.width) {
+        throw new DetailedError("Unexpected: output should fit in the first row.", {tex, qubitCount, outWidth});
     }
 
-    let cur = tex;
-    while (cur.height > 1 || cur.width > stride) {
-        let next;
-        if (cur.width > Math.max(stride, cur.height)) {
-            let h = cur.width / 2;
-            next = allocTexture(h, cur.height);
-            Shaders.sumFold(cur, h, 0).renderTo(next);
-        } else {
-            let h = cur.height / 2;
-            next = allocTexture(cur.width, h);
-            Shaders.sumFold(cur, 0, h).renderTo(next);
-        }
-        if (cur !== tex) {
-            CircuitTextures.reuseTexture(cur);
-        }
-        cur = next;
-    }
-
-    if (cur === tex) {
-        cur = CircuitTextures.allocSame(tex);
-        Shaders.passthrough(tex).renderTo(cur);
-    }
-
-    return cur;
+    return CircuitTextures.aggregateReusingIntermediates(
+        tex,
+        Seq.range(Math.log2(tex.width * tex.height / outWidth)),
+        accTex => {
+            let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
+                [accTex.width / 2, 0] :
+                [0, accTex.height / 2];
+            let halfTex = allocTexture(accTex.width - w, accTex.height - h);
+            Shaders.sumFold(accTex, w, h).renderTo(halfTex);
+            return halfTex;
+        });
 };
-
 
 CircuitTextures.pixelsToDensityMatrices = (buffer, qubitCount) => {
     return Seq.range(qubitCount).map(i => {
