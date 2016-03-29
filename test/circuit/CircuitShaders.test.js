@@ -174,30 +174,6 @@ suite.webGlTest("controlMask_largeReference", () => {
     assertThat(CircuitShaders.controlMask(mask).readFloatOutputs(w, h)).isEqualTo(expected);
 });
 
-suite.webGlTest("squaredMagnitude", () => {
-    let amps = Shaders.data(new Float32Array([
-        2, 3, 0, 0,
-        0.5, 0.5, 0, 0,
-        1, 2, 3, 4,
-        0.25, 0.5, 0, 0,
-        Math.sqrt(1/2), 0, 0, 0,
-        0, Math.sqrt(1/3), 0, 0,
-        3/5, 4/5, 0, 0,
-        1, 0, 0, 0
-    ])).toFloatTexture(4, 2);
-
-    assertThat(CircuitShaders.squaredMagnitude(amps).readFloatOutputs(4, 2)).isApproximatelyEqualTo(new Float32Array([
-        13, 0, 0, 0,
-        0.5, 0, 0, 0,
-        30, 0, 0, 0,
-        0.3125, 0, 0, 0,
-        0.5, 0, 0, 0,
-        1/3, 0, 0, 0,
-        1, 0, 0, 0,
-        1, 0, 0, 0
-    ]));
-});
-
 suite.webGlTest("qubitOperation", () => {
     let cnt = new WglTexture(4, 2);
     let inp = new WglTexture(4, 2);

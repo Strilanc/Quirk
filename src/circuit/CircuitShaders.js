@@ -128,25 +128,6 @@ const LINEAR_OVERLAY_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a configured shader that dot-products each pixel's rgba vector against itself, rendering the result
- * over the red component of the destination texture (and zero-ing the other components).
- *
- * @param {!WglTexture} inputTexture
- * @returns {!WglConfiguredShader}
- */
-CircuitShaders.squaredMagnitude = inputTexture => SQUARED_MAGNITUDE_SHADER.withArgs(
-    WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("inputTexture", inputTexture, 0));
-const SQUARED_MAGNITUDE_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-    uniform sampler2D inputTexture;
-    void main() {
-        vec4 v = texture2D(inputTexture, gl_FragCoord.xy / textureSize.xy);
-        float m = dot(v, v);
-        gl_FragColor = vec4(m, 0.0, 0.0, 0.0);
-    }`);
-
-/**
  * Returns a configured shader that renders a control mask texture corresponding to the given control mask, with 1s
  * at pixels meeting the control and 0s at pixels not meeting the control.
  * @param {!Controls} controlMask
