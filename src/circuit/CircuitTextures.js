@@ -24,7 +24,7 @@ let allocNewTextureCount = 0;
  * @param {!int} pixelType
  * @returns {!WglTexture}
  */
-const allocTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) => {
+const allocSizedTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) => {
     let k = width + ":" + height + ":" + pixelType;
 
     if (!TEXTURE_POOL.has(k)) {
@@ -43,21 +43,29 @@ const allocTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) =>
 };
 
 /**
- * @param {!WglTexture} texture
+ * @param {!WglTexture} tex
+ * @returns {!WglTexture}
  */
-const reuseTexture = texture => {
-    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
-    pool.push(texture);
+const allocSameSizedTexture = tex => {
+    return allocSizedTexture(tex.width, tex.height);
 };
 
 /**
  * @param {!int} qubitCount
  * @returns {!WglTexture}
  */
-CircuitTextures.alloc = qubitCount => {
+const allocQubitTexture = qubitCount => {
     let w = 1 << Math.ceil(qubitCount / 2);
     let h = 1 << Math.floor(qubitCount / 2);
-    return allocTexture(w, h);
+    return allocSizedTexture(w, h);
+};
+
+/**
+ * @param {!WglTexture} texture
+ */
+const reuseTexture = texture => {
+    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
+    pool.push(texture);
 };
 
 /**
@@ -69,19 +77,11 @@ CircuitTextures.reuseTexture = tex => {
 };
 
 /**
- * @param {!WglTexture} tex
- * @returns {!WglTexture}
- */
-CircuitTextures.allocSame = tex => {
-    return allocTexture(tex.width, tex.height);
-};
-
-/**
  * @param {!int} qubitCount
  * @returns {!WglTexture}
  */
 CircuitTextures.zero = qubitCount => {
-    let tex = CircuitTextures.alloc(qubitCount);
+    let tex = allocQubitTexture(qubitCount);
     CircuitShaders.classicalState(0).renderTo(tex);
     return tex;
 };
@@ -92,7 +92,7 @@ CircuitTextures.zero = qubitCount => {
  * @returns {!WglTexture}
  */
 CircuitTextures.control = (qubitCount, mask) => {
-    let tex = CircuitTextures.alloc(qubitCount);
+    let tex = allocQubitTexture(qubitCount);
     CircuitShaders.controlMask(mask).renderTo(tex);
     return tex;
 };
@@ -105,11 +105,11 @@ CircuitTextures.mergedReadFloats = textures => {
     let pixelCounts = textures.map(e => e.width * e.height);
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
     let lgTotal = Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1]));
-    let combinedTex = CircuitTextures.alloc(lgTotal);
+    let combinedTex = allocQubitTexture(lgTotal);
     Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
     combinedTex = CircuitTextures.aggregateWithReuse(combinedTex, Seq.range(textures.length), (accTex, i) => {
         let inputTex = textures[i];
-        let nextTex = CircuitTextures.alloc(lgTotal);
+        let nextTex = allocQubitTexture(lgTotal);
         CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
         reuseTexture(inputTex);
         return nextTex;
@@ -133,7 +133,7 @@ CircuitTextures.mergedReadFloats = textures => {
  * @returns {!WglTexture}
  */
 CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
-    let result = CircuitTextures.allocSame(stateTex);
+    let result = allocSameSizedTexture(stateTex);
     CircuitShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
     return result;
 };
@@ -154,7 +154,7 @@ CircuitTextures.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) 
         return next;
     });
     if (out === seedTex) {
-        out = CircuitTextures.allocSame(seedTex);
+        out = allocSameSizedTexture(seedTex);
         Shaders.passthrough(seedTex).renderTo(out);
     }
     return out;
@@ -207,12 +207,12 @@ CircuitTextures.qubitCount = superpositionTex => {
  */
 CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
     if (keptBitMask === 0) {
-        return CircuitTextures.alloc(0);
+        return allocQubitTexture(0);
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let reducedTex = stateTex;
     if (hasControls) {
-        reducedTex = CircuitTextures.alloc(CircuitTextures.qubitCount(stateTex) - controls.includedBitCount());
+        reducedTex = allocQubitTexture(CircuitTextures.qubitCount(stateTex) - controls.includedBitCount());
         CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
     }
     let p = 1;
@@ -244,35 +244,41 @@ CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex
     }
     let startingQubitCount = CircuitTextures.qubitCount(superpositionTex);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
-    let inter = CircuitTextures.alloc(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
+    let inter = allocQubitTexture(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
     CircuitShaders.qubitDensities(superpositionTex, keptBitMask).renderTo(inter);
     return inter;
 };
 
 /**
- * @param {!WglTexture} tex
- * @param {!int} qubitCount
+ * @param {!WglTexture} summandsTex
+ * @param {!int} outCount The number of interleaved slices being summed.
+ * The output will be a single row containing this many results (but padded up to a power of 2).
  * @returns {!WglTexture}
  */
-CircuitTextures._sumDown = (tex, qubitCount) => {
-    let outWidth = Util.ceilingPowerOf2(qubitCount);
-    if (outWidth > tex.width) {
-        throw new DetailedError("Unexpected: output should fit in the first row.", {tex, qubitCount, outWidth});
+CircuitTextures._sumDown = (summandsTex, outCount) => {
+    let outWidth = Util.ceilingPowerOf2(outCount);
+    if (outWidth > summandsTex.width) {
+        throw new DetailedError("Unexpected: output should fit in the first row.", {summandsTex, outCount, outWidth});
     }
 
     return CircuitTextures.aggregateReusingIntermediates(
-        tex,
-        Seq.range(Math.log2(tex.width * tex.height / outWidth)),
+        summandsTex,
+        Seq.range(Math.log2(summandsTex.width * summandsTex.height / outWidth)),
         accTex => {
             let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
                 [accTex.width / 2, 0] :
                 [0, accTex.height / 2];
-            let halfTex = allocTexture(accTex.width - w, accTex.height - h);
+            let halfTex = allocSizedTexture(accTex.width - w, accTex.height - h);
             Shaders.sumFold(accTex, w, h).renderTo(halfTex);
             return halfTex;
         });
 };
 
+/**
+ * @param {!Float32Array} buffer
+ * @param {!int} qubitCount
+ * @returns {!Array.<!Matrix>}
+ */
 CircuitTextures.pixelsToDensityMatrices = (buffer, qubitCount) => {
     return Seq.range(qubitCount).map(i => {
         let a = buffer[i*4];
@@ -288,8 +294,15 @@ CircuitTextures.pixelsToDensityMatrices = (buffer, qubitCount) => {
     }).toArray();
 };
 
+/**
+ * @param {!WglTexture} stateTex
+ * @param {!WglTexture} controlTex
+ * @param {!int} qubitIndex1
+ * @param {!int} qubitIndex2
+ * @returns {!WglTexture}
+ */
 CircuitTextures.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
-    let result = CircuitTextures.allocSame(stateTex);
+    let result = allocSameSizedTexture(stateTex);
     CircuitShaders.swap(stateTex, qubitIndex1, qubitIndex2, controlTex).renderTo(result);
     return result;
 };
