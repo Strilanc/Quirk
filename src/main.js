@@ -36,13 +36,14 @@ let inspector = InspectorWidget.empty(
     Config.MIN_WIRE_COUNT,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
-let historyFallbackAnchorTag = undefined;
+let historyFallback = false;
 /** @param {!string} jsonText */
 let updateCircuitLink = jsonText => {
     let title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
-    let url = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    if (historyFallbackAnchorTag !== undefined) {
-        historyFallbackAnchorTag.setAttribute('href', url);
+    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    if (historyFallback) {
+        document.location.hash = urlHash;
+        document.title = title;
         return;
     }
 
@@ -52,19 +53,17 @@ let updateCircuitLink = jsonText => {
             // We moved away from the original state the user was linked to. Keep it in the history.
             // I'm not sure if this is the correct thing to do. It makes the user press back twice to escape.
             // On the other hand, it allows them to get back to where they expect when they go back then forward.
-            history.pushState(jsonText, document.title, url);
+            history.pushState(jsonText, document.title, urlHash);
             wantToPushStateIfDiffersFrom = null;
         } else {
             // Intermediate states are too numerous to put in the history. (Users should use ctrl+Z instead.)
-            history.replaceState(jsonText, document.title, url);
+            history.replaceState(jsonText, document.title, urlHash);
         }
         document.title = title;
     } catch (ex) {
-        console.warn("Failed to update history to latest circuit. Falling back to 'current circuit' anchor.", ex);
-        historyFallbackAnchorTag = document.createElement('a');
-        historyFallbackAnchorTag.setAttribute('href', url);
-        historyFallbackAnchorTag.textContent = "Link to Current Circuit";
-        inspectorDiv.insertBefore(historyFallbackAnchorTag, canvasDiv);
+        console.warn("Touching 'history.replaceState' caused an error. Falling back to setting location.hash.", ex);
+        historyFallback = true;
+        document.location.hash = urlHash;
     }
 };
 
@@ -271,8 +270,8 @@ document.addEventListener("keydown", e => {
 });
 
 // Pull initial circuit out of URL '?x=y' arguments.
-let getSearchParameters = () => {
-    let paramsText = document.location.search.substr(1);
+let getHashParameters = () => {
+    let paramsText = document.location.hash.substr(1);
     let paramsObject = {};
     if (paramsText !== null && paramsText !== "") {
         let paramsKeyVal = paramsText.split("&");
@@ -290,7 +289,7 @@ let getSearchParameters = () => {
 };
 let loadCircuitFromUrl = () => {
     wantToPushStateIfDiffersFrom = null;
-    let params = getSearchParameters();
+    let params = getHashParameters();
     if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
         try {
             let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
@@ -298,7 +297,7 @@ let loadCircuitFromUrl = () => {
             useInspector(inspector.withCircuitDefinition(circuitDef), true);
             let state = snapshot();
             revision = new Revision(state);
-            wantToPushStateIfDiffersFrom = state;
+            wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : null;
         } catch (ex) {
             alert("Failed to load circuit: " + ex);
         }
