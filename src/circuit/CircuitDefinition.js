@@ -191,7 +191,7 @@ class CircuitDefinition {
         return g !== null &&
             g !== Gates.Special.Control &&
             g !== Gates.Special.AntiControl &&
-            g !== Gates.Silly.SPACER &&
+            g !== Gates.Silly.SpacerGate &&
             (g !== Gates.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
     }
 

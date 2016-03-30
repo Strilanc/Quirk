@@ -47,11 +47,11 @@ suite.test("desiredValueFor", () => {
     assertThat(m.desiredValueFor(3)).isEqualTo(null);
 });
 
-suite.test("fromBitIs", () => {
-    assertThat(Controls.fromBitIs(0, true)).isEqualTo(new Controls(0x1, 0x1));
-    assertThat(Controls.fromBitIs(0, false)).isEqualTo(new Controls(0x1, 0x0));
-    assertThat(Controls.fromBitIs(2, true)).isEqualTo(new Controls(0x4, 0x4));
-    assertThat(Controls.fromBitIs(2, false)).isEqualTo(new Controls(0x4, 0x0));
+suite.test("bit", () => {
+    assertThat(Controls.bit(0, true)).isEqualTo(new Controls(0x1, 0x1));
+    assertThat(Controls.bit(0, false)).isEqualTo(new Controls(0x1, 0x0));
+    assertThat(Controls.bit(2, true)).isEqualTo(new Controls(0x4, 0x4));
+    assertThat(Controls.bit(2, false)).isEqualTo(new Controls(0x4, 0x0));
 });
 
 suite.test("and", () => {
@@ -59,12 +59,12 @@ suite.test("and", () => {
     assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(null);
 
     let m = new Controls(0x5, 0x1);
-    assertThat(Controls.fromBitIs(0, true).and(Controls.fromBitIs(2, false))).isEqualTo(m);
-    assertThat(Controls.fromBitIs(2, false).and(Controls.fromBitIs(0, true))).isEqualTo(m);
+    assertThat(Controls.bit(0, true).and(Controls.bit(2, false))).isEqualTo(m);
+    assertThat(Controls.bit(2, false).and(Controls.bit(0, true))).isEqualTo(m);
     assertThat(Controls.NONE.and(m)).isEqualTo(m);
     assertThat(m.and(m)).isEqualTo(m);
 
-    assertThrows(() => Controls.fromBitIs(0, true).and(Controls.fromBitIs(0, false)));
+    assertThrows(() => Controls.bit(0, true).and(Controls.bit(0, false)));
 });
 
 suite.test("toString", () => {

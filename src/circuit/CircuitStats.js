@@ -97,7 +97,7 @@ export default class CircuitStats {
                     stateTex,
                     controls,
                     gateCol.wiresWithDisplaysMask()));
-                stateTex = CircuitTextures.aggregateWithIntermediateReuse(
+                stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.singleQubitOperationsInColAt(col, time),
                     (accTex, {i, m}) => CircuitTextures.qubitOperation(accTex, controlTex, i, m));
@@ -105,7 +105,7 @@ export default class CircuitStats {
                     stateTex,
                     gateCol.swapPairs(),
                     (accTex, [i1, i2]) => CircuitTextures.swap(accTex, controlTex, i1, i2));
-                CircuitTextures.reuseTexture(controlTex);
+                CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return stateTex;
             });
         displayTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, (1 << numWires) - 1));

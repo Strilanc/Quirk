@@ -183,12 +183,31 @@ class Matrix {
     };
 
     /**
-     * Converts the given square block of coefficients into a square complex matrix.
-     * @param {!Array<(!number|!Complex)>|!Array<!number>|!Array<!Complex>} coefs The coefficients of the matrix, arranged in a flat array of
-     * square length with the coefficients (which can be numeric or complex) in row order.
+     * Returns a zero matrix of the given size.
+     * @param {!number} width
+     * @param {!number} height
      * @returns {!Matrix}
      */
-    static square(coefs) {
+    static zero(width, height) {
+        return new Matrix(width, height, new Float64Array(width*height*2));
+    };
+
+    /**
+     * Returns a 1x1 matrix containing the given value.
+     * @param {!number|!Complex} coef
+     * @returns {!Matrix}
+     */
+    static solo(coef) {
+        return new Matrix(1, 1, new Float64Array([Complex.realPartOf(coef), Complex.imagPartOf(coef)]));
+    };
+
+    /**
+     * Converts the given square block of coefficients into a square complex matrix.
+     * @param {!number|!Complex} coefs The coefficients of the matrix,
+     * arranged in a flat array of square length with the coefficients (which can be numeric or complex) in row order.
+     * @returns {!Matrix}
+     */
+    static square(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         let n = Math.round(Math.sqrt(coefs.length));
         Util.need(n * n === coefs.length, "Matrix.square: non-square number of arguments");
@@ -197,20 +216,20 @@ class Matrix {
 
     /**
      * Converts the array of complex coefficients into a column vector.
-     * @param {!Array<(!number|!Complex)>|!Array<!number>|!Array<!Complex>} coefs
+     * @param {!number|!Complex} coefs
      * @returns {!Matrix}
      */
-    static col(coefs) {
+    static col(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         return Matrix.generate(1, coefs.length, r => coefs[r]);
     };
 
     /**
      * Converts the array of complex coefficients into a row vector.
-     * @param {!Array<(!number|!Complex)>|!Array<!number>|!Array<!Complex>} coefs
+     * @param {!number|!Complex} coefs
      * @returns {!Matrix}
      */
-    static row(coefs) {
+    static row(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         return Matrix.generate(coefs.length, 1, (r, c) => coefs[c]);
     };
@@ -236,7 +255,7 @@ class Matrix {
      * @param {!number} epsilon Distance away from unitary the matrix is allowed to be. Defaults to 0.
      * @returns {!boolean}
      */
-    isApproximatelyUnitary(epsilon) {
+    isUnitary(epsilon) {
         let n = this.width();
         if (this.height() !== n) {
             return false;
@@ -553,7 +572,7 @@ class Matrix {
         let s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
         c = Format.simplifyByRounding(c, 0.00000000001);
         s = Format.simplifyByRounding(s, 0.00000000001);
-        return Matrix.square([c, -s, s, c]);
+        return Matrix.square(c, -s, s, c);
     };
 
     /**
@@ -600,9 +619,9 @@ class Matrix {
     static rotation(theta) {
         let c = Math.cos(theta);
         let s = Math.sin(theta);
-        return Matrix.square([
+        return Matrix.square(
             c, -s,
-            s, c]);
+            s, c);
     };
 
     /**
@@ -611,7 +630,7 @@ class Matrix {
      */
     eigenDecomposition() {
         if (this.width() !== 2 || this.height() !== 2) {
-            throw "Not implemented: non-2x2 eigen decomposition";
+            throw new Error("Not implemented: non-2x2 eigen decomposition");
         }
         let [[a, b],
              [c, d]] = this.rows();
@@ -624,8 +643,8 @@ class Matrix {
         }
         if (vals.length === 1) {
             return [
-                {val: vals[0], vec: Matrix.col([1, 0])},
-                {val: vals[0], vec: Matrix.col([0, 1])}
+                {val: vals[0], vec: Matrix.col(1, 0)},
+                {val: vals[0], vec: Matrix.col(0, 1)}
             ];
         }
         return vals.map(v => {
@@ -642,7 +661,7 @@ class Matrix {
             if (m === 0) {
                 throw new Error("Unexpected degenerate");
             }
-            return {val: v, vec: Matrix.col([x, y]).scaledBy(1/m)};
+            return {val: v, vec: Matrix.col(x, y).scaledBy(1/m)};
         });
     }
 
@@ -710,7 +729,7 @@ class Matrix {
      */
     qubitOperationToAngleAxisRotation() {
         Util.need(this.width() === 2 && this.height() === 2, "Need a 2x2 matrix.");
-        Util.need(this.isApproximatelyUnitary(0.00001), "Need a unitary matrix.");
+        Util.need(this.isUnitary(0.01), "Need a unitary matrix.");
 
         // Extract orthogonal components, adjusting for factors of i.
         let [[a, b],
@@ -802,9 +821,9 @@ class Matrix {
          * @returns {!Matrix}
          */
         let phase_cancel_matrix = (p, q) => {
-            return Matrix.square([
+            return Matrix.square(
                 Complex.from(p).unit().conjugate(), 0,
-                0, Complex.from(q).unit().conjugate()]);
+                0, Complex.from(q).unit().conjugate());
         };
 
         /**
@@ -830,7 +849,7 @@ class Matrix {
 
             return {
                 u: Matrix.rotation(theta_0 - theta_d),
-                s: Matrix.square([s_0 + s_d, 0, 0, s_0 - s_d]),
+                s: Matrix.square(s_0 + s_d, 0, 0, s_0 - s_d),
                 v: Matrix.rotation(theta_0 + theta_d)
             };
         };
@@ -882,7 +901,7 @@ class Matrix {
         };
 
         if (this.width() !== 2 || this.height() !== 2) {
-            throw "Not implemented: non-2x2 singular value decomposition";
+            throw new Error("Not implemented: non-2x2 singular value decomposition");
         }
 
         return svd_2x2(this);
@@ -907,24 +926,24 @@ class Matrix {
  * The 2x2 Pauli X matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_X = Matrix.square([0, 1, 1, 0]);
+Matrix.PAULI_X = Matrix.square(0, 1, 1, 0);
 
 /**
  * The 2x2 Pauli Y matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_Y = Matrix.square([0, new Complex(0, -1), new Complex(0, 1), 0]);
+Matrix.PAULI_Y = Matrix.square(0, new Complex(0, -1), Complex.I, 0);
 
 /**
  * The 2x2 Pauli Z matrix.
  * @type {!Matrix}
  */
-Matrix.PAULI_Z = Matrix.square([1, 0, 0, -1]);
+Matrix.PAULI_Z = Matrix.square(1, 0, 0, -1);
 
 /**
  * The 2x2 Hadamard matrix.
  * @type {!Matrix}
  */
-Matrix.HADAMARD = Matrix.square([1, 1, 1, -1]).scaledBy(Math.sqrt(0.5));
+Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).scaledBy(Math.sqrt(0.5));
 
 export default Matrix;

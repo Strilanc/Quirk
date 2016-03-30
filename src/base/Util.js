@@ -301,6 +301,21 @@ export default class Util {
         }
         return [Math.cos(radians), Math.sin(radians)];
     }
+
+    /**
+     * Returns the math-style remainder, which is guaranteed to be in the range [0, denominator) even when the numerator
+     * is negative.
+     * @param {!number} numerator
+     * @param {!number} denominator
+     * @returns {!number}
+     */
+    static properMod(numerator, denominator) {
+        if (denominator <= 0) {
+            throw new DetailedError("denominator <= 0", {numerator, denominator});
+        }
+        let result = numerator % denominator;
+        return result + (result < 0 ? denominator : 0);
+    }
 }
 
 /**

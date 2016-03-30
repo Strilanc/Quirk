@@ -9,16 +9,17 @@
     "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector/issues"
   },
   "devDependencies": {
-    "grunt": "0.4.5",
-    "grunt-cli": "0.1.13",
-    "grunt-contrib-clean": "1.0.0",
-    "grunt-contrib-concat": "1.0.0",
-    "grunt-contrib-copy": "1.0.0",
-    "grunt-karma": "0.12.2",
-    "grunt-traceur": "0.5.4",
-    "karma": "0.13.22",
-    "karma-chrome-launcher": "0.2.2",
-    "karma-firefox-launcher": "0.1.7",
+    "grunt": "~0.4.5",
+    "grunt-cli": "~0.1.13",
+    "grunt-contrib-clean": "~1.0.0",
+    "grunt-contrib-concat": "~1.0.0",
+    "grunt-contrib-copy": "~1.0.0",
+    "grunt-contrib-uglify": "~1.0.1",
+    "grunt-karma": "~0.12.2",
+    "grunt-traceur": "~0.5.4",
+    "karma": "~0.13.22",
+    "karma-chrome-launcher": "~0.2.2",
+    "karma-firefox-launcher": "~0.1.7",
     "traceur": "0.0.104"
   },
   "scripts": {

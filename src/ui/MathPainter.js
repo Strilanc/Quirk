@@ -228,14 +228,14 @@ export default class MathPainter {
         }).thenStroke('#BBB');
 
         let {angle, axis} = operation.qubitOperationToAngleAxisRotation();
-        let axisVec = Matrix.col(axis);
+        let axisVec = Matrix.col(...axis);
         let dAxis = projToPt(axisVec);
 
         // Disambiguating 3d guide lines for axis, forming vertical rectangles.
         let guideDeltas = [
-            Matrix.col([axis[0], axis[1], 0]),
+            Matrix.col(axis[0], axis[1], 0),
             axisVec,
-            Matrix.col([0, 0, axis[2]])
+            Matrix.col(0, 0, axis[2])
         ].map(projToPt);
         painter.strokePolygon(new Seq(guideDeltas).
             reverse().

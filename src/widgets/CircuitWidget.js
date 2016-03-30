@@ -593,7 +593,6 @@ class CircuitWidget {
         painter.ctx.restore();
 
         // Hint text.
-        console.log(maxY);
         painter.printParagraph(
             "Final amplitudes\n(deferring measurement)",
             expandedRect.withY(gridRect.bottom() + maxY).withH(40).withW(200),

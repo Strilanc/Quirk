@@ -68,8 +68,8 @@ class GateColumn {
         return Seq.
             range(this.gates.length).
             map(i =>
-                this.gates[i] === Gates.Special.Control ? Controls.fromBitIs(i, true) :
-                this.gates[i] === Gates.Special.AntiControl ? Controls.fromBitIs(i, false) :
+                this.gates[i] === Gates.Special.Control ? Controls.bit(i, true) :
+                this.gates[i] === Gates.Special.AntiControl ? Controls.bit(i, false) :
                 Controls.NONE).
             aggregate(Controls.NONE, (a, e) => a.and(e));
     }
@@ -171,7 +171,7 @@ class GateColumn {
 
             // Post-selection gates un-measure (in that the simulator can then do coherent operations on the qubit
             // without getting the wrong answer, at least).
-            if (!this.hasControl() && (gate === Gates.Silly.POST_SELECT_ON || gate === Gates.Silly.POST_SELECT_OFF)) {
+            if (!this.hasControl() && (gate === Gates.Silly.PostSelectOn || gate === Gates.Silly.PostSelectOff)) {
                 return [measureMask & ~bit, prevSwap];
             }
 

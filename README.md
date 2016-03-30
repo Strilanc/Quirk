@@ -70,4 +70,4 @@ The example terminal commands have been tested on a fresh Ubuntu install.
 
     `firefox out/index.html`
 
-0. **Copy `out/index.html` and `out/all_src.js` to wherever you want**.
+0. **Copy `out/index.html` and `out/src.min.js` to wherever you want**.

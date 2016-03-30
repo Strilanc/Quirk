@@ -1,4 +1,5 @@
 import Config from "src/Config.js"
+import DetailedError from "src/base/DetailedError.js"
 import WglArg from "src/webgl/WglArg.js"
 import { initializedWglContext }  from "src/webgl/WglContext.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
@@ -74,11 +75,12 @@ class WglShader {
             checkFrameBufferStatusResult(gl, true);
 
             // Compile and bind shader.
-            this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).load(ctx, uniformArguments);
+            this._compiledShaderSlot.initializedValue(ctx.lifetimeCounter).useWithArgs(uniformArguments);
 
             gl.viewport(0, 0, texture.width, texture.height);
             gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
             checkGetErrorResult(gl, "drawElements", true);
+            texture.markRendered();
         });
     }
 
@@ -146,17 +148,18 @@ class WglCompiledShader {
     };
 
     /**
-     * @param {!WglContext} ctx
      * @param {!(!WglArg[])} uniformArgs
+     * @return {void}
      */
-    load(ctx, uniformArgs) {
+    useWithArgs(uniformArgs) {
+        let ctx = initializedWglContext();
         let gl = ctx.gl;
         gl.useProgram(this.program);
 
         for (let arg of uniformArgs) {
             let location = this.uniformLocations.get(arg.name);
             if (location === undefined) {
-                throw new Error(`Unexpected argument: ${arg}`)
+                throw new DetailedError("Unexpected uniform argument", {arg, uniformArgs});
             }
             WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value);
         }

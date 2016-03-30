@@ -1,6 +1,5 @@
 import {} from "src/fallback.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import CircuitStats from "src/circuit/CircuitStats.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
 import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
@@ -37,21 +36,35 @@ let inspector = InspectorWidget.empty(
     Config.MIN_WIRE_COUNT,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
+let historyFallbackAnchorTag = undefined;
 /** @param {!string} jsonText */
 let updateCircuitLink = jsonText => {
-    document.title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
-
+    let title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
     let url = "?" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    if (historyFallbackAnchorTag !== undefined) {
+        historyFallbackAnchorTag.setAttribute('href', url);
+        return;
+    }
 
-    if (wantToPushStateIfDiffersFrom !== null && jsonText !== wantToPushStateIfDiffersFrom) {
-        // We moved away from the original state the user was linked to. Keep it in the history.
-        // I'm not sure if this is the correct thing to do. It makes the user press back twice to escape.
-        // On the other hand, it allows them to get back to where they expect when they go back then forward.
-        history.pushState(jsonText, document.title, url);
-        wantToPushStateIfDiffersFrom = null;
-    } else {
-        // Intermediate states are too numerous to put in the history. (Users should use ctrl+Z instead.)
-        history.replaceState(jsonText, document.title, url);
+    //noinspection UnusedCatchParameterJS
+    try {
+        if (wantToPushStateIfDiffersFrom !== null && jsonText !== wantToPushStateIfDiffersFrom) {
+            // We moved away from the original state the user was linked to. Keep it in the history.
+            // I'm not sure if this is the correct thing to do. It makes the user press back twice to escape.
+            // On the other hand, it allows them to get back to where they expect when they go back then forward.
+            history.pushState(jsonText, document.title, url);
+            wantToPushStateIfDiffersFrom = null;
+        } else {
+            // Intermediate states are too numerous to put in the history. (Users should use ctrl+Z instead.)
+            history.replaceState(jsonText, document.title, url);
+        }
+        document.title = title;
+    } catch (ex) {
+        console.warn("Failed to update history to latest circuit. Falling back to 'current circuit' anchor.", ex);
+        historyFallbackAnchorTag = document.createElement('a');
+        historyFallbackAnchorTag.setAttribute('href', url);
+        historyFallbackAnchorTag.textContent = "Link to Current Circuit";
+        inspectorDiv.insertBefore(historyFallbackAnchorTag, canvasDiv);
     }
 };
 

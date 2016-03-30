@@ -1,5 +1,6 @@
-import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
+import DetailedError from "src/base/DetailedError.js"
+import Matrix from "src/math/Matrix.js"
 import Seq from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
 import Util from "src/base/Util.js"
@@ -128,25 +129,6 @@ const LINEAR_OVERLAY_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a configured shader that dot-products each pixel's rgba vector against itself, rendering the result
- * over the red component of the destination texture (and zero-ing the other components).
- *
- * @param {!WglTexture} inputTexture
- * @returns {!WglConfiguredShader}
- */
-CircuitShaders.squaredMagnitude = inputTexture => SQUARED_MAGNITUDE_SHADER.withArgs(
-    WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("inputTexture", inputTexture, 0));
-const SQUARED_MAGNITUDE_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-    uniform sampler2D inputTexture;
-    void main() {
-        vec4 v = texture2D(inputTexture, gl_FragCoord.xy / textureSize.xy);
-        float m = dot(v, v);
-        gl_FragColor = vec4(m, 0.0, 0.0, 0.0);
-    }`);
-
-/**
  * Returns a configured shader that renders a control mask texture corresponding to the given control mask, with 1s
  * at pixels meeting the control and 0s at pixels not meeting the control.
  * @param {!Controls} controlMask
@@ -261,81 +243,6 @@ const CONTROL_SELECT_SHADER = new WglShader(`
         vec2 uv = vec2(x + 0.5, y + 0.5) / inputSize;
 
         gl_FragColor = texture2D(inputTexture, uv);
-    }`);
-
-/**
- * Returns a configured shader that renders the marginal states of each qubit, for each possible values of the other
- * qubits (i.e. folding still needs to be done), into a destination texture.
- * @param {!WglTexture} inputTexture
- * @param {undefined|!int=} keptBitMask
- * @returns {!WglConfiguredShader}
- */
-CircuitShaders.allQubitDensities = (inputTexture, keptBitMask = undefined) => {
-    if (keptBitMask === undefined) {
-        keptBitMask = inputTexture.width * inputTexture.height - 1;
-    }
-    let ceilKeptQubitCount = 1 << Math.ceil(Math.log2(Util.numberOfSetBits(keptBitMask)));
-    return new WglConfiguredShader(destinationTexture => {
-        return ALL_QUBIT_DENSITIES.withArgs(
-            WglArg.texture('inputTexture', inputTexture, 0),
-            WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
-            WglArg.float('outputWidth', destinationTexture.width),
-            WglArg.float('keptWidth', ceilKeptQubitCount),
-            WglArg.float('keptBitMask', keptBitMask)
-        ).renderTo(destinationTexture)
-    });
-};
-const ALL_QUBIT_DENSITIES = new WglShader(`
-    uniform float keptWidth;
-    uniform float outputWidth;
-    uniform float keptBitMask;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
-
-    float scatter(float val, float used) {
-        float result = 0.0;
-        float posUsed = 1.0;
-        float posVal = 1.0;
-        for (int i = 0; i < ${HALF_QUBIT_LIMIT*2}; i++) {
-            float u = mod(floor(used/posUsed), 2.0);
-            float v = mod(floor(val/posVal), 2.0);
-            result += u * v * posUsed;
-            posVal *= 1.0+u;
-            posUsed *= 2.0;
-        }
-        return result;
-    }
-
-    void main() {
-        float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
-
-        float bitIndex = mod(outIndex, keptWidth);
-        float otherBits = floor(outIndex / keptWidth);
-        float bit = scatter(pow(2.0, bitIndex), keptBitMask);
-
-        // Indices of the two complex values making up the current conditional ket.
-        float srcIndex0 = mod(otherBits, bit) + floor(otherBits / bit) * bit * 2.0;
-        float srcIndex1 = srcIndex0 + bit;
-
-        // Index to uv.
-        float x0 = mod(srcIndex0, inputSize.x);
-        float y0 = floor(srcIndex0 / inputSize.x);
-        float x1 = mod(srcIndex1, inputSize.x);
-        float y1 = floor(srcIndex1 / inputSize.x);
-        vec2 uv0 = vec2(x0+0.5, y0+0.5)/inputSize;
-        vec2 uv1 = vec2(x1+0.5, y1+0.5)/inputSize;
-
-        // Grab the two complex values.
-        vec2 w1 = texture2D(inputTexture, uv0).xy;
-        vec2 w2 = texture2D(inputTexture, uv1).xy;
-
-        // Compute density matrix components.
-        float a = dot(w1, w1);
-        float br = dot(w1, w2);
-        float bi = dot(vec2(-w1.y, w1.x), w2);
-        float d = dot(w2, w2);
-
-        gl_FragColor = vec4(a, br, bi, d);
     }`);
 
 /**
@@ -510,4 +417,86 @@ const SWAP_QUBITS_SHADER = new WglShader(`
             srcPixelUv = pixelUv;
         }
         gl_FragColor = texture2D(inputTexture, srcPixelUv);
+    }`);
+
+/**
+ * Returns a configured shader that renders the marginal states of each qubit, for each possible values of the other
+ * qubits (i.e. folding still needs to be done), into a destination texture. The marginal states are laid out in
+ * [a,br,bi,d] order within each pixel and represent the density matrix {{a, b},{b*, d}}.
+ * @param {!WglTexture} inputTexture A superposition texture.
+ * @param {undefined|!int=} keptBitMask A bit mask with a 1 at the positions corresponding to indicates of the desired
+ * qubit densities.
+ * @returns {!WglConfiguredShader}
+ */
+CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
+    if (keptBitMask === undefined) {
+        keptBitMask = inputTexture.width * inputTexture.height - 1;
+    }
+    let keptWidth = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
+
+    return new WglConfiguredShader(destinationTexture => {
+        let expectedOutputSize = keptWidth * inputTexture.width * inputTexture.height / 2;
+        if (destinationTexture.width * destinationTexture.height !== expectedOutputSize) {
+            throw new DetailedError("Wrong destination size.", {inputTexture, keptBitMask, destinationTexture});
+        }
+        QUBIT_DENSITIES_SHADER.withArgs(
+            WglArg.texture('inputTexture', inputTexture, 0),
+            WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
+            WglArg.float('outputWidth', destinationTexture.width),
+            WglArg.float('keptWidth', keptWidth),
+            WglArg.float('keptBitMask', keptBitMask)
+        ).renderTo(destinationTexture)
+    });
+};
+const QUBIT_DENSITIES_SHADER = new WglShader(`
+    uniform float keptWidth;
+    uniform float outputWidth;
+    uniform float keptBitMask;
+    uniform vec2 inputSize;
+    uniform sampler2D inputTexture;
+
+    float scatter(float val, float used) {
+        float result = 0.0;
+        float posUsed = 1.0;
+        float posVal = 1.0;
+        for (int i = 0; i < ${HALF_QUBIT_LIMIT*2}; i++) {
+            float u = mod(floor(used/posUsed), 2.0);
+            float v = mod(floor(val/posVal), 2.0);
+            result += u * v * posUsed;
+            posVal *= 1.0+u;
+            posUsed *= 2.0;
+        }
+        return result;
+    }
+
+    void main() {
+        float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
+
+        float bitIndex = mod(outIndex, keptWidth);
+        float otherBits = floor(outIndex / keptWidth);
+        float bit = scatter(pow(2.0, bitIndex), keptBitMask);
+
+        // Indices of the two complex values making up the current conditional ket.
+        float srcIndex0 = mod(otherBits, bit) + floor(otherBits / bit) * bit * 2.0;
+        float srcIndex1 = srcIndex0 + bit;
+
+        // Index to uv.
+        float x0 = mod(srcIndex0, inputSize.x);
+        float y0 = floor(srcIndex0 / inputSize.x);
+        float x1 = mod(srcIndex1, inputSize.x);
+        float y1 = floor(srcIndex1 / inputSize.x);
+        vec2 uv0 = vec2(x0+0.5, y0+0.5)/inputSize;
+        vec2 uv1 = vec2(x1+0.5, y1+0.5)/inputSize;
+
+        // Grab the two complex values.
+        vec2 w1 = texture2D(inputTexture, uv0).xy;
+        vec2 w2 = texture2D(inputTexture, uv1).xy;
+
+        // Compute density matrix components.
+        float a = dot(w1, w1);
+        float br = dot(w1, w2);
+        float bi = dot(vec2(-w1.y, w1.x), w2);
+        float d = dot(w2, w2);
+
+        gl_FragColor = vec4(a, br, bi, d);
     }`);

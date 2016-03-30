@@ -29,7 +29,7 @@ class Controls {
      * @param {!boolean} desiredValue
      * @returns {!Controls}
      */
-    static fromBitIs(bitIndex, desiredValue) {
+    static bit(bitIndex, desiredValue) {
         if (bitIndex < 0) {
             throw new DetailedError("Out of range", {bitIndex})
         }

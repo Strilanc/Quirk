@@ -18,7 +18,7 @@ let assertRoundTrip = (t, v, s) => {
 };
 
 suite.test("roundTrip_Complex", () => {
-    assertRoundTrip(Complex, new Complex(1, 0), "1");
+    assertRoundTrip(Complex, Complex.ONE, "1");
     assertRoundTrip(Complex, new Complex(2, -3), "2-3i");
     assertRoundTrip(Complex, Complex.I, "i");
     assertRoundTrip(Complex, new Complex(0, -1), "-i");
@@ -27,9 +27,9 @@ suite.test("roundTrip_Complex", () => {
 });
 
 suite.test("roundTrip_Matrix", () => {
-    assertRoundTrip(Matrix, Matrix.row([1, Complex.I]), "{{1,i}}");
-    assertRoundTrip(Matrix, Matrix.col([1, Complex.I]), "{{1},{i}}");
-    assertRoundTrip(Matrix, Matrix.square([1/3+0.00001, Complex.I.plus(1), -1/3, 0]),
+    assertRoundTrip(Matrix, Matrix.row(1, Complex.I), "{{1,i}}");
+    assertRoundTrip(Matrix, Matrix.col(1, Complex.I), "{{1},{i}}");
+    assertRoundTrip(Matrix, Matrix.square(1/3+0.00001, Complex.I.plus(1), -1/3, 0),
         "{{0.3333433333333333,1+i},{-\u2153,0}}");
 });
 
@@ -39,15 +39,15 @@ suite.test("roundTrip_Gate", () => {
         assertRoundTrip(Gate, g, g.symbol);
     }
 
-    let f = Gates.Silly.FUZZ_MAKER();
+    let f = Gates.Silly.MysteryGateMaker();
     assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
 
     let g = new Gate(
         "custom_id",
-        Matrix.square([Complex.I, -1, 2, 3]),
+        Matrix.square(Complex.I, -1, 2, 3),
         "custom_name",
         "custom_blurb",
-        GateFactory.CYCLE_DRAWER);
+        GateFactory.DEFAULT_DRAWER);
     let v = Serializer.toJson(g);
     let g2 = Serializer.fromJson(Gate, v);
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});

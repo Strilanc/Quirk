@@ -69,7 +69,7 @@ class Complex {
         if (typeof v === "number") {
             return new Complex(v, 0);
         }
-        throw "Don't know how create a Complex equal to: " + v;
+        throw new DetailedError("Unrecognized value type.", {v});
     };
 
     /**
@@ -95,7 +95,7 @@ class Complex {
         if (typeof v === "number") {
             return v;
         }
-        throw "Don't know how to get real part of: " + v;
+        throw new DetailedError("Unrecognized value type.", {v});
     };
 
     /**
@@ -110,7 +110,7 @@ class Complex {
         if (typeof v === "number") {
             return 0;
         }
-        throw "Don't know how to get imaginary part of: " + v;
+        throw new DetailedError("Unrecognized value type.", {v});
     };
 
     /**
