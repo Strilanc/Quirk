@@ -47,7 +47,7 @@ suite.test("roundTrip_Gate", () => {
         Matrix.square(Complex.I, -1, 2, 3),
         "custom_name",
         "custom_blurb",
-        GateFactory.CYCLE_DRAWER);
+        GateFactory.DEFAULT_DRAWER);
     let v = Serializer.toJson(g);
     let g2 = Serializer.fromJson(Gate, v);
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});

@@ -331,3 +331,22 @@ suite.test("numberOfSetBits", () => {
     assertThat(Util.numberOfSetBits(0x89ABCDEF)).isEqualTo(20);
     assertThat(Util.numberOfSetBits(0xFFFFFFFF)).isEqualTo(32);
 });
+
+suite.test("properMod", () => {
+    assertThrows(() => Util.properMod(0, 0));
+    assertThrows(() => Util.properMod(1, 0));
+    assertThrows(() => Util.properMod(1, -1));
+
+    assertThat(Util.properMod(502, 501)).isEqualTo(1);
+    assertThat(Util.properMod(-502, 501)).isEqualTo(500);
+
+    assertThat(Util.properMod(-2, 1.5)).isEqualTo(1);
+    assertThat(Util.properMod(-1.5, 1.5)).isEqualTo(0);
+    assertThat(Util.properMod(-1, 1.5)).isEqualTo(0.5);
+    assertThat(Util.properMod(-0.5, 1.5)).isEqualTo(1);
+    assertThat(Util.properMod(0, 1.5)).isEqualTo(0);
+    assertThat(Util.properMod(0.5, 1.5)).isEqualTo(0.5);
+    assertThat(Util.properMod(1, 1.5)).isEqualTo(1);
+    assertThat(Util.properMod(1.5, 1.5)).isEqualTo(0);
+    assertThat(Util.properMod(2, 1.5)).isEqualTo(0.5);
+});

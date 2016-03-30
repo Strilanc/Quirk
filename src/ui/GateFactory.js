@@ -156,22 +156,24 @@ GateFactory.POST_SELECT_DRAWER = args => {
 };
 
 /**
- * @param {!GateDrawParams} args
+ * @param {!number} factor
+ * @returns {!function(!GateDrawParams) : *}
  */
-GateFactory.CYCLE_DRAWER = args => {
+GateFactory.makeCycleDrawer = factor => args => {
     GateFactory.DEFAULT_DRAWER(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
     }
-    let t = args.stats.time * 2 * Math.PI;
+    let τ = 2 * Math.PI;
+    let t = Util.properMod(-args.stats.time * τ * factor, τ);
     let c = args.rect.center();
     let r = 0.4 * args.rect.w;
 
     args.painter.ctx.beginPath();
     args.painter.ctx.moveTo(c.x, c.y);
-    args.painter.ctx.lineTo(c.x + r, c.y);
-    args.painter.ctx.arc(c.x, c.y, r, 0, -t, true);
+    args.painter.ctx.lineTo(c.x, c.y + r);
+    args.painter.ctx.arc(c.x, c.y, r, τ/4, τ/4 + t, factor > 0);
     args.painter.ctx.lineTo(c.x, c.y);
     args.painter.ctx.closePath();
 
@@ -182,6 +184,18 @@ GateFactory.CYCLE_DRAWER = args => {
     args.painter.ctx.fill();
     args.painter.ctx.globalAlpha = 1.0;
 };
+
+/**
+ * @param {!GateDrawParams} args
+ * @returns {void}
+ */
+GateFactory.MATHWISE_CYCLE_DRAWER = GateFactory.makeCycleDrawer(+1);
+
+/**
+ * @param {!GateDrawParams} args
+ * @returns {void}
+ */
+GateFactory.CLOCKWISE_CYCLE_DRAWER = GateFactory.makeCycleDrawer(-1);
 
 /**
  * @param {!GateDrawParams} args
