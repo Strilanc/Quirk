@@ -313,7 +313,8 @@ export default class Util {
         if (denominator <= 0) {
             throw new DetailedError("denominator <= 0", {numerator, denominator});
         }
-        return numerator % denominator + (numerator < 0 ? denominator : 0);
+        let result = numerator % denominator;
+        return result + (result < 0 ? denominator : 0);
     }
 }
 
