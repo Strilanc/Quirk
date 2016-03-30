@@ -104,16 +104,26 @@ Gates.Displays = {
         "Probability Display",
         "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.",
         args => {
-            if (args.positionInCircuit === null || args.isHighlighted) {
-                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                return;
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
+            if (showState) {
+                let {row, col} = args.positionInCircuit;
+                MathPainter.paintProbabilityBox(
+                    args.painter,
+                    args.stats.controlledWireProbabilityJustAfter(row, col),
+                    args.rect);
             }
 
-            let {row, col} = args.positionInCircuit;
-            MathPainter.paintProbabilityBox(
-                args.painter,
-                args.stats.controlledWireProbabilityJustAfter(row, col),
-                args.rect);
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.globalAlpha = 0.8;
+                }
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.globalAlpha = 1.0;
+                }
+            }
         }),
 
     BlochSphereDisplay: new Gate(
@@ -122,14 +132,24 @@ Gates.Displays = {
         "Bloch Sphere Display",
         "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.",
         args => {
-            if (args.positionInCircuit === null || args.isHighlighted) {
-                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                return;
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
+            if (showState) {
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.qubitDensityMatrix(row, col);
+                MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
             }
 
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.globalAlpha = 0.8;
+                }
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.globalAlpha = 1.0;
+                }
+            }
         }),
 
     DensityMatrixDisplay: new Gate(
@@ -138,14 +158,24 @@ Gates.Displays = {
         "Density Matrix Display",
         "Shows a wire's local state as a density matrix.\nUse controls to see conditional states.",
         args => {
-            if (args.positionInCircuit === null || args.isHighlighted) {
-                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                return;
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
+            if (showState) {
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.qubitDensityMatrix(row, col);
+                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
             }
 
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.globalAlpha = 0.8;
+                }
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.globalAlpha = 1.0;
+                }
+            }
         })
 };
 
