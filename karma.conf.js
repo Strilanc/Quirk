@@ -2,7 +2,7 @@ module.exports = function(config) {
     config.set({
         basePath: '',
         frameworks: [],
-        files: ['out/all_tests.js'],
+        files: ['out/test.js'],
         exclude: [],
         preprocessors: {},
         reporters: ['dots'],

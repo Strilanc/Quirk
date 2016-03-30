@@ -54,7 +54,7 @@ module.exports = function(grunt) {
                     'out/tmp/traceur/src/**/*.js',
                     'out/tmp/traceur/bootstrap_post_src/**/*.js'
                 ],
-                dest: 'out/all_src.js'
+                dest: 'out/tmp/all-src.js'
             },
             'concat-traceur-test': {
                 options: {
@@ -67,7 +67,17 @@ module.exports = function(grunt) {
                     'out/tmp/traceur/test/**/*.js',
                     'out/tmp/traceur/bootstrap_post_test/**/*.js'
                 ],
-                dest: 'out/all_tests.js'
+                dest: 'out/test.js'
+            }
+        },
+        uglify: {
+            'uglify-concated-src': {
+                options: {
+                    maxLineLen: 128
+                },
+                files: {
+                    'out/src.min.js': ['out/tmp/all-src.js']
+                }
             }
         },
         clean: {
@@ -101,6 +111,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-traceur');
 
@@ -109,6 +120,7 @@ module.exports = function(grunt) {
         'traceur:translate-src',
         'bootstrap-get-packages:src/**/*.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat-traceur-src',
+        'uglify:uglify-concated-src',
         'copy:copy-res-to-out',
         'clean:clean-tmp'
     ]);
