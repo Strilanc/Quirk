@@ -80,6 +80,7 @@ class WglShader {
             gl.viewport(0, 0, texture.width, texture.height);
             gl.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
             checkGetErrorResult(gl, "drawElements", true);
+            texture.markRendered();
         });
     }
 

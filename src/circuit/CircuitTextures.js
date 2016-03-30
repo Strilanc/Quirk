@@ -207,7 +207,9 @@ CircuitTextures.qubitCount = superpositionTex => {
  */
 CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
     if (keptBitMask === 0) {
-        return allocQubitTexture(0);
+        let empty = allocQubitTexture(0);
+        Shaders.color(0, 0, 0, 0).renderTo(empty);
+        return empty;
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let reducedTex = stateTex;

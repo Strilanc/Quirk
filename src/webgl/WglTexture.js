@@ -27,6 +27,11 @@ export default class WglTexture {
         /** @type {!number} */
         this.pixelType = pixelType;
         /**
+         * @type {!boolean}
+         * @private
+         */
+        this._hasBeenRenderedTo = false;
+        /**
          * @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>}
          * @private
          */
@@ -34,6 +39,10 @@ export default class WglTexture {
             () => this._textureAndFramebufferInitializer(),
             e => WglTexture._deinitialize(e));
     };
+
+    markRendered() {
+        this._hasBeenRenderedTo = true;
+    }
 
     /**
      * For catching use-after-free bugs, despite texture pooling.
@@ -53,6 +62,9 @@ export default class WglTexture {
      * @returns {!WebGLTexture}
      */
     initializedTexture() {
+        if (!this._hasBeenRenderedTo) {
+            throw new Error("Called initializedTexture on a texture that hasn't been rendered to.");
+        }
         return this._textureAndFrameBufferSlot.initializedValue(initializedWglContext().lifetimeCounter).texture;
     }
 
@@ -114,6 +126,10 @@ export default class WglTexture {
      * @returns {!Uint8Array|!Float32Array}
      */
     readPixels() {
+        if (!this._hasBeenRenderedTo) {
+            throw new Error("Called readPixels on a texture that hasn't been rendered to.");
+        }
+
         let gl = initializedWglContext().gl;
         const GL = WebGLRenderingContext;
 
