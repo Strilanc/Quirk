@@ -39,7 +39,7 @@ suite.test("roundTrip_Gate", () => {
         assertRoundTrip(Gate, g, g.symbol);
     }
 
-    let f = Gates.Silly.FUZZ_MAKER();
+    let f = Gates.Silly.MysteryGateMaker();
     assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
 
     let g = new Gate(

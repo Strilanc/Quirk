@@ -255,7 +255,7 @@ class Matrix {
      * @param {!number} epsilon Distance away from unitary the matrix is allowed to be. Defaults to 0.
      * @returns {!boolean}
      */
-    isApproximatelyUnitary(epsilon) {
+    isUnitary(epsilon) {
         let n = this.width();
         if (this.height() !== n) {
             return false;
@@ -729,7 +729,7 @@ class Matrix {
      */
     qubitOperationToAngleAxisRotation() {
         Util.need(this.width() === 2 && this.height() === 2, "Need a 2x2 matrix.");
-        Util.need(this.isApproximatelyUnitary(0.00001), "Need a unitary matrix.");
+        Util.need(this.isUnitary(0.01), "Need a unitary matrix.");
 
         // Extract orthogonal components, adjusting for factors of i.
         let [[a, b],

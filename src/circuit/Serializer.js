@@ -102,15 +102,17 @@ let toJson_Gate = gate => {
         return gate.tag;
     }
 
+    let matrix = gate.matrixAt(0.25);
+
     if (gate.symbol === "") {
         return {
-            matrix: toJson_Matrix(gate.matrixAt(0.25))
+            matrix: toJson_Matrix(matrix)
         };
     }
 
     return {
         id: gate.symbol,
-        matrix: toJson_Matrix(gate.matrixAt(0.25))
+        matrix: toJson_Matrix(matrix)
     };
 };
 
@@ -165,10 +167,8 @@ let fromJson_Gate = json => {
             json);
     }
 
-    if (symbol === Gates.Silly.FUZZ_SYMBOL && matrix !== undefined) {
-        let r = Gates.Silly.FUZZ_MAKER();
-        r.matrixOrFunc = matrix;
-        return r;
+    if (symbol === Gates.Silly.MysteryGateSymbol && matrix !== undefined) {
+        return Gates.Silly.MysteryGateMakerWithMatrix(matrix);
     }
 
     return new Gate(symbol, matrix, symbol, "", drawer);

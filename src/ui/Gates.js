@@ -6,7 +6,7 @@ import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 const τ = Math.PI * 2;
 
@@ -543,49 +543,50 @@ Gates.Powering = {
 };
 
 Gates.Silly = {
-    FUZZ_SYMBOL: "Fuzz",
-    FUZZ_MAKER: () => new Gate(
-        Gates.Silly.FUZZ_SYMBOL,
-        Matrix.square(
+    MysteryGateSymbol: "?",
+    MysteryGateMakerWithMatrix: matrix => new Gate(
+        Gates.Silly.MysteryGateSymbol,
+        matrix,
+        "Mystery Gate",
+        "Every time you grab this gate out of the toolbox, it changes.\n" +
+        "Duplicate gates in the circuit by holding shift before dragging.",
+        GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
+    MysteryGateMaker: () => Gates.Silly.MysteryGateMakerWithMatrix(Matrix.square(
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5)
-        ).closestUnitary(),
-        "Fuzz Gate",
-        "Every time you grab this out of the toolbox, you get a different random gate.\n" +
-            "Duplicate gates in the circuit by holding shift before dragging.",
-        GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
+        ).closestUnitary()),
 
-    POST_SELECT_OFF: new Gate(
+    PostSelectOff: new Gate(
         "|0⟩⟨0|",
         Matrix.square(1, 0, 0, 0),
         "Post-selection Gate [Off]",
         "Keeps OFF states, discards ON states, and renormalizes.",
         GateFactory.POST_SELECT_DRAWER),
 
-    POST_SELECT_ON: new Gate(
+    PostSelectOn: new Gate(
         "|1⟩⟨1|",
         Matrix.square(0, 0, 0, 1),
         "Post-selection Gate [On]",
         "Keeps ON states, discards OFF states, and renormalizes.",
         GateFactory.POST_SELECT_DRAWER),
 
-    CLOCK: new Gate(
+    ClockPulseGate: new Gate(
         "X^⌈t⌉",
         t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate",
         "Xors a square wave into the target wire.",
         GateFactory.SQUARE_WAVE_DRAWER_MAKER(0)),
 
-    CLOCK_QUARTER_PHASE: new Gate(
+    QuarterPhaseClockPulseGate: new Gate(
         "X^⌈t-¼⌉",
         t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate (Quarter Phase)",
         "Xors a quarter-phased square wave into the target wire.",
         GateFactory.SQUARE_WAVE_DRAWER_MAKER(0.75)),
 
-    SPACER: new Gate(
+    SpacerGate: new Gate(
         "…",
         Matrix.identity(2),
         "Spacer",
@@ -636,17 +637,6 @@ Gates.Sets = [
         ]
     },
     {
-        hint: 'Extra',
-        gates: [
-            Gates.Silly.SPACER,
-            Gates.Silly.FUZZ_MAKER(),
-            Gates.Silly.CLOCK,
-            Gates.Silly.POST_SELECT_OFF,
-            Gates.Silly.POST_SELECT_ON,
-            Gates.Silly.CLOCK_QUARTER_PHASE
-        ]
-    },
-    {
         hint: "Quarter Turns",
         gates: [
             Gates.QuarterTurns.SqrtXForward,
@@ -655,6 +645,17 @@ Gates.Sets = [
             Gates.QuarterTurns.SqrtXBackward,
             Gates.QuarterTurns.SqrtYBackward,
             Gates.QuarterTurns.SqrtZBackward
+        ]
+    },
+    {
+        hint: 'Misc',
+        gates: [
+            Gates.Silly.SpacerGate,
+            Gates.Silly.MysteryGateMaker(),
+            Gates.Silly.ClockPulseGate,
+            Gates.Silly.PostSelectOff,
+            Gates.Silly.PostSelectOn,
+            Gates.Silly.QuarterPhaseClockPulseGate
         ]
     },
     {
@@ -723,11 +724,11 @@ Gates.KnownToSerializer = [
     Gates.Displays.ChanceDisplay,
     Gates.Displays.DensityMatrixDisplay,
     Gates.Displays.BlochSphereDisplay,
-    Gates.Silly.SPACER,
-    Gates.Silly.CLOCK,
-    Gates.Silly.CLOCK_QUARTER_PHASE,
-    Gates.Silly.POST_SELECT_OFF,
-    Gates.Silly.POST_SELECT_ON,
+    Gates.Silly.SpacerGate,
+    Gates.Silly.ClockPulseGate,
+    Gates.Silly.QuarterPhaseClockPulseGate,
+    Gates.Silly.PostSelectOff,
+    Gates.Silly.PostSelectOn,
     Gates.HalfTurns.H,
     Gates.HalfTurns.X,
     Gates.HalfTurns.Y,

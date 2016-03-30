@@ -142,23 +142,23 @@ suite.test("size", () => {
     assertThat(Matrix.col(1, 1, 3).height()).isEqualTo(3);
 });
 
-suite.test("isApproximatelyUnitary", () => {
-    assertFalse(Matrix.row(1, 1).isApproximatelyUnitary(999));
-    assertFalse(Matrix.col(1, 1).isApproximatelyUnitary(999));
+suite.test("isUnitary", () => {
+    assertFalse(Matrix.row(1, 1).isUnitary(999));
+    assertFalse(Matrix.col(1, 1).isUnitary(999));
 
-    assertTrue(Matrix.solo(1).isApproximatelyUnitary(0));
-    assertTrue(Matrix.solo(Complex.I).isApproximatelyUnitary(0));
-    assertTrue(Matrix.solo(-1).isApproximatelyUnitary(0));
-    assertFalse(Matrix.solo(-2).isApproximatelyUnitary(0));
-    assertFalse(Matrix.solo(0).isApproximatelyUnitary(0));
-    assertTrue(Matrix.solo(-2).isApproximatelyUnitary(999));
+    assertTrue(Matrix.solo(1).isUnitary(0));
+    assertTrue(Matrix.solo(Complex.I).isUnitary(0));
+    assertTrue(Matrix.solo(-1).isUnitary(0));
+    assertFalse(Matrix.solo(-2).isUnitary(0));
+    assertFalse(Matrix.solo(0).isUnitary(0));
+    assertTrue(Matrix.solo(-2).isUnitary(999));
 
-    assertTrue(Matrix.square(1, 0, 0, 1).isApproximatelyUnitary(0));
-    assertTrue(Matrix.rotation(1).isApproximatelyUnitary(0.001));
-    assertTrue(Matrix.PAULI_X.isApproximatelyUnitary(0));
-    assertTrue(Matrix.PAULI_Y.isApproximatelyUnitary(0));
-    assertTrue(Matrix.PAULI_Z.isApproximatelyUnitary(0));
-    assertTrue(Matrix.HADAMARD.isApproximatelyUnitary(0.001));
+    assertTrue(Matrix.square(1, 0, 0, 1).isUnitary(0));
+    assertTrue(Matrix.rotation(1).isUnitary(0.001));
+    assertTrue(Matrix.PAULI_X.isUnitary(0));
+    assertTrue(Matrix.PAULI_Y.isUnitary(0));
+    assertTrue(Matrix.PAULI_Z.isUnitary(0));
+    assertTrue(Matrix.HADAMARD.isUnitary(0.001));
 });
 
 suite.test("isApproximatelyHermitian", () => {

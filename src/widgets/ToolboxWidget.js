@@ -147,8 +147,8 @@ class ToolboxWidget {
             return hand;
         }
 
-        if (f.gate.symbol === Gates.Silly.FUZZ_SYMBOL) {
-            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Silly.FUZZ_MAKER();
+        if (f.gate.symbol === Gates.Silly.MysteryGateSymbol) {
+            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Silly.MysteryGateMaker();
         }
         return hand.withHeldGates(new GateColumn([f.gate]));
     }

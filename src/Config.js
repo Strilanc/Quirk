@@ -3,7 +3,11 @@
  */
 export default class Config {}
 
-Config.MAX_WIRE_COUNT = 16; // Each qubit doubles costs (when actually used). Beware.
+// Each qubit (when actually used) doubles the cost of simulating each gate applied to the circuit.
+// Also each qubit tends to increase the amount of accuracy required.
+// I see obvious errors when I set this to 20, and things get pretty laggy past 16.
+// Beware setting it too high.
+Config.MAX_WIRE_COUNT = 16;
 Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 14;
 Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 17;
 
