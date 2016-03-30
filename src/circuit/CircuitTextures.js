@@ -61,19 +61,14 @@ const allocQubitTexture = qubitCount => {
 };
 
 /**
+ * Puts the texture back into the texture pool.
  * @param {!WglTexture} texture
- */
-const reuseTexture = texture => {
-    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
-    pool.push(texture);
-};
-
-/**
- * @param {!WglTexture} tex
+ * @param {*} detailsShownWhenUsedAfterDone
  * @returns {void}
  */
-CircuitTextures.reuseTexture = tex => {
-    reuseTexture(tex);
+CircuitTextures.doneWithTexture = (texture, detailsShownWhenUsedAfterDone) => {
+    let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
+    pool.push(texture.invalidateButMoveToNewInstance(detailsShownWhenUsedAfterDone));
 };
 
 /**
@@ -111,12 +106,12 @@ CircuitTextures.mergedReadFloats = textures => {
         let inputTex = textures[i];
         let nextTex = allocQubitTexture(lgTotal);
         CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
-        reuseTexture(inputTex);
+        CircuitTextures.doneWithTexture(inputTex, "inputTex in mergedReadFloats");
         return nextTex;
     });
 
     let combinedPixels = combinedTex.readPixels();
-    reuseTexture(combinedTex);
+    CircuitTextures.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
 
     return Seq.range(textures.length).map(i => {
         let offset = pixelOffsets[i] * 4;
@@ -146,18 +141,18 @@ CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperati
  * @template T
  */
 CircuitTextures.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) => {
-    let out = seq(items).aggregate(seedTex, (a, e) => {
-        let next = aggregateFunc(a, e);
-        if (a !== seedTex) {
-            reuseTexture(a);
+    let outTex = seq(items).aggregate(seedTex, (prevTex, item) => {
+        let nextTex = aggregateFunc(prevTex, item);
+        if (prevTex !== seedTex) {
+            CircuitTextures.doneWithTexture(prevTex, "prevTex in aggregateReusingIntermediates");
         }
-        return next;
+        return nextTex;
     });
-    if (out === seedTex) {
-        out = allocSameSizedTexture(seedTex);
-        Shaders.passthrough(seedTex).renderTo(out);
+    if (outTex === seedTex) {
+        outTex = allocSameSizedTexture(seedTex);
+        Shaders.passthrough(seedTex).renderTo(outTex);
     }
-    return out;
+    return outTex;
 };
 /**
  * @param {!WglTexture} seedTex
@@ -167,10 +162,10 @@ CircuitTextures.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) 
  * @template T
  */
 CircuitTextures.aggregateWithReuse = (seedTex, items, aggregateFunc) => {
-    return seq(items).aggregate(seedTex, (a, e) => {
-        let next = aggregateFunc(a, e);
-        reuseTexture(a);
-        return next;
+    return seq(items).aggregate(seedTex, (prevTex, item) => {
+        let nextTex = aggregateFunc(prevTex, item);
+        CircuitTextures.doneWithTexture(prevTex, "prevTex in aggregateWithReuse");
+        return nextTex;
     });
 };
 
@@ -195,6 +190,11 @@ CircuitTextures.pixelsToAmplitudes = (pixels, unity) => {
     return new Matrix(1, n, buf);
 };
 
+/**
+ * Counts the number of qubits in the superposition stored by the given texture, based on its size.
+ * @param {!WglTexture} superpositionTex
+ * @returns {!int}
+ */
 CircuitTextures.qubitCount = superpositionTex => {
     return Math.log2(superpositionTex.width * superpositionTex.height);
 };
@@ -223,13 +223,13 @@ CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask
             keptBitMask = (keptBitMask & (p - 1)) | ((keptBitMask & ~(p-1)) >> 1)
         }
     }
-    let unsummed = CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex(reducedTex, keptBitMask);
+    let unsummedTex = CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex(reducedTex, keptBitMask);
     if (hasControls) {
-        reuseTexture(reducedTex);
+        CircuitTextures.doneWithTexture(reducedTex, "reducedTex in superpositionToQubitDensities");
     }
     let keptQubitCount = Util.numberOfSetBits(keptBitMask);
-    let result = CircuitTextures._sumDown(unsummed, keptQubitCount);
-    reuseTexture(unsummed);
+    let result = CircuitTextures._sumDown(unsummedTex, keptQubitCount);
+    CircuitTextures.doneWithTexture(unsummedTex, "unsummedTex in superpositionToQubitDensities");
     return result;
 };
 

@@ -1,3 +1,5 @@
+import DetailedError from "src/base/DetailedError.js"
+import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
 import { initializedWglContext }  from "src/webgl/WglContext.js"
@@ -14,17 +16,38 @@ export default class WglTexture {
      * @param {!int} pixelType FLOAT or UNSIGNED_BYTE
      */
     constructor(width, height, pixelType = WebGLRenderingContext.FLOAT) {
+        if (!Util.isPowerOf2(width) || !Util.isPowerOf2(height)) {
+            throw new DetailedError("Sizes must be a power of 2.", {width, height, pixelType});
+        }
+
         /** @type {!int} */
         this.width = width;
         /** @type {!int} */
         this.height = height;
         /** @type {!number} */
         this.pixelType = pixelType;
-        /** @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>} */
+        /**
+         * @type {!WglMortalValueSlot.<!{texture: !WebGLTexture, framebuffer: !WebGLFramebuffer}>}
+         * @private
+         */
         this._textureAndFrameBufferSlot = new WglMortalValueSlot(
             () => this._textureAndFramebufferInitializer(),
             e => WglTexture._deinitialize(e));
     };
+
+    /**
+     * For catching use-after-free bugs, despite texture pooling.
+     * Moves the underlying WebGLTexture to a new instance, and marks this instance as invalidated.
+     * @param {*} details
+     * @returns {!WglTexture}
+     */
+    invalidateButMoveToNewInstance(details) {
+        let result = new WglTexture(this.width, this.height, this.pixelType);
+        result._textureAndFrameBufferSlot = this._textureAndFrameBufferSlot;
+        let invalidated = () => { throw new DetailedError("WglTexture's value accessed after invalidation.", details) };
+        this._textureAndFrameBufferSlot = new WglMortalValueSlot(invalidated, invalidated);
+        return result;
+    }
 
     /**
      * @returns {!WebGLTexture}
