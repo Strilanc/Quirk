@@ -14,6 +14,16 @@ Defining features:
 - Inline displays for conditional and marginal states.
 - Bookmarkable circuits.
 
+Notable limitations (a.k.a. future features):
+
+- User-defined custom gates.
+- Multi-wire gates and displays.
+- Putting measured wires back into superposition. Controlled measurement.
+
+# Try It
+
+[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)
+
 # Screenshots
 
 Quantum teleportation circuit, with Bloch-sphere state displays inserted:
@@ -44,11 +54,11 @@ The example terminal commands have been tested on a fresh Ubuntu install.
     *(The first two commands are only needed for REALLY fresh installs. Still-a-Live-CD fresh. nodejs-legacy is needed
     to workaround [an issue in grunt.js](https://github.com/nodejs/node-v0.x-archive/issues/3911).)*
 
-0. **Clone the quantum circuit inspector repository's contents**.
+0. **Clone the repository**.
 
     `git clone https://github.com/Strilanc/Quantum-Circuit-Inspector.git`
 
-0. **Install the project's dev dependencies**.
+0. **Install the dev dependencies**.
 
     `cd Quantum-Circuit-Inspector`
     
