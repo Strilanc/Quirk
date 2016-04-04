@@ -121,6 +121,17 @@ CircuitTextures.mergedReadFloats = textures => {
 };
 
 /**
+ * @param {!WglTexture} inputTex
+ * @param {!WglTexture} controlTex
+ * @param {!function(inputTex:!WglTexture,controlTex:!WglTexture):!WglConfiguredShader} customShader
+ */
+CircuitTextures.applyCustomShader = (customShader, inputTex, controlTex) => {
+    let result = allocSameSizedTexture(inputTex);
+    customShader(inputTex, controlTex).renderTo(result);
+    return result;
+};
+
+/**
  * @param {!WglTexture} stateTex
  * @param {!WglTexture} controlTex
  * @param {!int} qubitIndex

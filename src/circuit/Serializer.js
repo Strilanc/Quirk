@@ -91,7 +91,7 @@ let fromJson_Matrix = json => {
  */
 let toJson_Gate = gate => {
     if (new Seq(Gates.KnownToSerializer).contains(gate)) {
-        return gate.symbol;
+        return gate.serializedId;
     }
 
     if (gate.isTimeBased()) {
@@ -104,14 +104,14 @@ let toJson_Gate = gate => {
 
     let matrix = gate.matrixAt(0.25);
 
-    if (gate.symbol === "") {
+    if (gate.serializedId === "") {
         return {
             matrix: toJson_Matrix(matrix)
         };
     }
 
     return {
-        id: gate.symbol,
+        id: gate.serializedId,
         matrix: toJson_Matrix(matrix)
     };
 };
@@ -136,7 +136,7 @@ let fromJson_Gate = json => {
     if (matrixProp === undefined) {
         // Should be a built-in.
         let match = new Seq(Gates.KnownToSerializer).
-            filter(g => g.symbol === symbol).
+            filter(g => g.serializedId === symbol).
             first(null);
         if (match !== null) {
             return match;
@@ -162,16 +162,14 @@ let fromJson_Gate = json => {
             symbol,
             matrix,
             "Parse Error",
-            describe(ex),
-            drawer,
-            json);
+            describe(ex)).withCustomDrawer(drawer).withTag(json);
     }
 
-    if (symbol === Gates.Silly.MysteryGateSymbol && matrix !== undefined) {
-        return Gates.Silly.MysteryGateMakerWithMatrix(matrix);
+    if (symbol === Gates.Misc.MysteryGateSymbol && matrix !== undefined) {
+        return Gates.Misc.MysteryGateMakerWithMatrix(matrix);
     }
 
-    return new Gate(symbol, matrix, symbol, "", drawer);
+    return new Gate(symbol, matrix, symbol, "").withCustomDrawer(drawer);
 };
 
 /**

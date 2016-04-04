@@ -1,4 +1,5 @@
 import DetailedError from "src/base/DetailedError.js"
+import Gates from "src/ui/Gates.js"
 import Format from "src/base/Format.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"
@@ -99,12 +100,8 @@ export default class CircuitStats {
                     gateCol.wiresWithDisplaysMask()));
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
-                    circuitDefinition.singleQubitOperationsInColAt(col, time),
-                    (accTex, {i, m}) => CircuitTextures.qubitOperation(accTex, controlTex, i, m));
-                stateTex = CircuitTextures.aggregateWithReuse(
-                    stateTex,
-                    gateCol.swapPairs(),
-                    (accTex, [i1, i2]) => CircuitTextures.swap(accTex, controlTex, i1, i2));
+                    circuitDefinition.operationShadersInColAt(col, time),
+                    (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex));
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return stateTex;
             });

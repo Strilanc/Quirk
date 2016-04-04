@@ -2,6 +2,7 @@ import Util from "src/base/Util.js"
 import Gates from "src/ui/Gates.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
+import GateFactory from "src/ui/GateFactory.js"
 import Rect from "src/math/Rect.js"
 import Point from "src/math/Point.js"
 import Seq from "src/base/Seq.js"
@@ -107,7 +108,8 @@ class ToolboxWidget {
                 if (gate !== null) {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
                     let isHighlighted = new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
-                    gate.drawer(new GateDrawParams(painter, true, isHighlighted, r, Util.notNull(gate), stats, null));
+                    let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
+                    drawer(new GateDrawParams(painter, true, isHighlighted, r, Util.notNull(gate), stats, null));
                 }
             }
         }
@@ -147,8 +149,8 @@ class ToolboxWidget {
             return hand;
         }
 
-        if (f.gate.symbol === Gates.Silly.MysteryGateSymbol) {
-            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Silly.MysteryGateMaker();
+        if (f.gate.symbol === Gates.Misc.MysteryGateSymbol) {
+            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Misc.MysteryGateMaker();
         }
         return hand.withHeldGates(new GateColumn([f.gate]));
     }
