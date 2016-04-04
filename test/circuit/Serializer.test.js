@@ -36,7 +36,7 @@ suite.test("roundTrip_Matrix", () => {
 suite.test("roundTrip_Gate", () => {
     assertRoundTrip(Gate, Gates.HalfTurns.X, "X");
     for (let g of Gates.KnownToSerializer) {
-        assertRoundTrip(Gate, g, g.symbol);
+        assertRoundTrip(Gate, g, g.serializedId);
     }
 
     let f = Gates.Misc.MysteryGateMaker();

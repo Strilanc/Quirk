@@ -104,6 +104,7 @@ class Gate {
     isEqualTo(other) {
         return other instanceof Gate &&
             this.symbol === other.symbol &&
+            this.serializedId === other.serializedId &&
             ((this.matrixOrFunc instanceof Matrix && this.matrixOrFunc.isEqualTo(other.matrixOrFunc)) ||
             this.matrixOrFunc === other.matrixOrFunc) &&
             this.name === other.name &&
