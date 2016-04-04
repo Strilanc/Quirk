@@ -94,14 +94,14 @@ export default class CircuitStats {
                 let gateCol = circuitDefinition.columns[col];
                 let controls = gateCol.controls();
                 let controlTex = CircuitTextures.control(numWires, controls);
-                displayTexes.push(CircuitTextures.superpositionToQubitDensities(
-                    stateTex,
-                    controls,
-                    gateCol.wiresWithDisplaysMask()));
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
                     (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex));
+                displayTexes.push(CircuitTextures.superpositionToQubitDensities(
+                    stateTex,
+                    controls,
+                    gateCol.wiresWithDisplaysMask()));
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return stateTex;
             });
