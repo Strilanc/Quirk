@@ -43,7 +43,7 @@ Reacting and animating smoothly while working with ten qubits:
 Please open an issue if these instructions don't work for you.
 The example terminal commands have been tested on a fresh Ubuntu install.
 
-0. **[Have git and Node.js installed](https://nodejs.org/en/download/)**.
+1. **[Have git and Node.js installed](https://nodejs.org/en/download/)**.
 
     `sudo add-apt-repository universe`
     
@@ -54,11 +54,11 @@ The example terminal commands have been tested on a fresh Ubuntu install.
     *(The first two commands are only needed for REALLY fresh installs. Still-a-Live-CD fresh. nodejs-legacy is needed
     to workaround [an issue in grunt.js](https://github.com/nodejs/node-v0.x-archive/issues/3911).)*
 
-0. **Clone the repository**.
+2. **Clone the repository**.
 
     `git clone https://github.com/Strilanc/Quantum-Circuit-Inspector.git`
 
-0. **Install the dev dependencies**.
+3. **Install the dev dependencies**.
 
     `cd Quantum-Circuit-Inspector`
     
@@ -68,16 +68,16 @@ The example terminal commands have been tested on a fresh Ubuntu install.
       [this bug in grunt-traceur](https://github.com/aaronfrost/grunt-traceur/issues/66) by going to line 49 of
       `node_modules/grunt-traceur/tasks/traceur.js` and replacing the 'path.sep' with '"/"'. I wish I was joking.)*
 
-0. **(*Optional*) Run the tests**.
+4. **(*Optional*) Run the tests**.
 
     `npm run test-firefox`
 
-0. **Build the output files**.
+5. **Build the output files**.
 
     `npm run build`
 
-0. **Confirm the output works by opening `out/index.html` with a web browser**.
+6. **Confirm the output works by opening `out/index.html` with a web browser**.
 
     `firefox out/index.html`
 
-0. **Copy `out/index.html` and `out/src.min.js` to wherever you want**.
+7. **Copy `out/index.html`, `out/src.min.js`, and `out/favicon.ico` to wherever you want**.
