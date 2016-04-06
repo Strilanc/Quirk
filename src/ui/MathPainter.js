@@ -138,6 +138,19 @@ export default class MathPainter {
         // Dividers.
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
             thenStroke('lightgray');
+
+        if (isNaN(buf[0])) {
+            painter.print(
+                'NaN',
+                drawArea.x + drawArea.w/2,
+                drawArea.y + drawArea.h/2,
+                'center',
+                'middle',
+                'red',
+                '16px Helvetica',
+                drawArea.w,
+                drawArea.h);
+        }
     }
 
     /**
@@ -350,5 +363,18 @@ export default class MathPainter {
         // Dividers.
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
             thenStroke('lightgray');
+
+        if (isNaN(buf[0])) {
+            painter.print(
+                'NaN',
+                drawArea.x + drawArea.w/2,
+                drawArea.y + drawArea.h/2,
+                'center',
+                'middle',
+                'red',
+                '16px Helvetica',
+                drawArea.w,
+                drawArea.h);
+        }
     }
 }
