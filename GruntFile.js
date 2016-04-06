@@ -60,6 +60,17 @@ module.exports = function(grunt) {
                 ],
                 dest: 'out/tmp/all-src.js'
             },
+            'concat-traceur-debug': {
+                options: {
+                    separator: ';'
+                },
+                src: [
+                    'out/tmp/traceur/bootstrap_pre_src/**/*.js',
+                    'out/tmp/traceur/src/**/*.js',
+                    'out/tmp/traceur/bootstrap_post_src/**/*.js'
+                ],
+                dest: 'out/src.min.js'
+            },
             'concat-traceur-test': {
                 options: {
                     separator: ';'
@@ -109,7 +120,7 @@ module.exports = function(grunt) {
         var getters = packagedFiles.map(function(e) {
             return '$traceurRuntime.getModule("' + e + '");';
         }).join('\n');
-        grunt.file.write(dst, getters);
+        grunt.file.write(dst, getters + '\n//# sourceURL=src.min.js');
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
@@ -128,6 +139,14 @@ module.exports = function(grunt) {
         'copy:copy-res-to-out',
         'clean:clean-tmp'
     ]);
+    grunt.registerTask('build-debug', [
+        'clean:clean-tmp',
+        'traceur:translate-src',
+        'bootstrap-get-packages:src/**/*.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
+        'concat:concat-traceur-debug',
+        'copy:copy-res-to-out',
+        'clean:clean-tmp'
+    ]);
     grunt.registerTask('build-test', [
         'clean:clean-tmp',
         'traceur:translate-src',
@@ -136,7 +155,6 @@ module.exports = function(grunt) {
         'concat:concat-traceur-test',
         'clean:clean-tmp'
     ]);
-    grunt.registerTask('build', ['build-src', 'build-test']);
 
     grunt.registerTask('test-firefox', ['build-test', 'karma:unit-firefox']);
     grunt.registerTask('test-chrome', ['build-test', 'karma:unit-chrome']);

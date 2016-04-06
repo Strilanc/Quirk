@@ -36,18 +36,17 @@ suite.test("roundTrip_Matrix", () => {
 suite.test("roundTrip_Gate", () => {
     assertRoundTrip(Gate, Gates.HalfTurns.X, "X");
     for (let g of Gates.KnownToSerializer) {
-        assertRoundTrip(Gate, g, g.symbol);
+        assertRoundTrip(Gate, g, g.serializedId);
     }
 
-    let f = Gates.Silly.MysteryGateMaker();
+    let f = Gates.Misc.MysteryGateMaker();
     assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
 
     let g = new Gate(
         "custom_id",
         Matrix.square(Complex.I, -1, 2, 3),
         "custom_name",
-        "custom_blurb",
-        GateFactory.DEFAULT_DRAWER);
+        "custom_blurb");
     let v = Serializer.toJson(g);
     let g2 = Serializer.fromJson(Gate, v);
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});

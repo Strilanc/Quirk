@@ -171,7 +171,7 @@ class GateColumn {
 
             // Post-selection gates un-measure (in that the simulator can then do coherent operations on the qubit
             // without getting the wrong answer, at least).
-            if (!this.hasControl() && (gate === Gates.Silly.PostSelectOn || gate === Gates.Silly.PostSelectOff)) {
+            if (!this.hasControl() && (gate === Gates.Misc.PostSelectOn || gate === Gates.Misc.PostSelectOff)) {
                 return [measureMask & ~bit, prevSwap];
             }
 

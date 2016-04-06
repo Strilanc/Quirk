@@ -1,3 +1,4 @@
+import CircuitShaders from "src/circuit/CircuitShaders.js"
 import DetailedError from "src/base/DetailedError.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import Gates from "src/ui/Gates.js"
@@ -191,7 +192,7 @@ class CircuitDefinition {
         return g !== null &&
             g !== Gates.Special.Control &&
             g !== Gates.Special.AntiControl &&
-            g !== Gates.Silly.SpacerGate &&
+            g !== Gates.Misc.SpacerGate &&
             (g !== Gates.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
     }
 
@@ -238,15 +239,15 @@ class CircuitDefinition {
     /**
      * @param {!int} colIndex
      * @param {!number} time
-     * @returns {!(!{m: !Matrix, i: !int}[])}
+     * @returns {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture):!WglConfiguredShader>}
      */
-    singleQubitOperationsInColAt(colIndex, time) {
+    operationShadersInColAt(colIndex, time) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return [];
         }
 
         let col = this.columns[colIndex];
-        return new Seq(col.gates).
+        let nonSwaps = seq(col.gates).
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
                 if (gate === null || this.gateAtLocIsDisabledReason(pt) !== undefined) {
@@ -256,10 +257,17 @@ class CircuitDefinition {
                 if (m.width() !== 2 || m.height() !== 2 || m.isIdentity()) {
                     return null;
                 }
-                return {m, i};
+
+                if (gate.customShader !== undefined) {
+                    return (inTex, conTex) => gate.customShader(inTex, conTex, i);
+                }
+
+                return (inTex, conTex) => CircuitShaders.qubitOperation(inTex, m, i, conTex);
             }).
-            filter(e => e !== null).
-            toArray();
+            filter(e => e !== null);
+        let swaps = col.swapPairs().
+            map(([i1, i2]) => (inTex, conTex) => CircuitShaders.swap(inTex, i1, i2, conTex));
+        return nonSwaps.concat(swaps).toArray();
     }
 
     toString() {

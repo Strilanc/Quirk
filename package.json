@@ -1,22 +1,22 @@
 {
   "name": "Quantum-Circuit-Inspector",
   "title": "Quirk",
-  "description": "An html5 widget for toying around with, and understanding, simple quantum circuits.",
+  "description": "An html5 toy for exploring and understanding small quantum circuits.",
   "license": "Apache-2.0",
-  "version": "0.5.0",
+  "version": "1.0.2",
   "homepage": "https://github.com/Strilanc/Quantum-Circuit-Inspector",
   "bugs": {
     "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector/issues"
   },
   "devDependencies": {
-    "grunt": "~0.4.5",
+    "grunt": "~1.0.0",
     "grunt-cli": "~0.1.13",
     "grunt-contrib-clean": "~1.0.0",
     "grunt-contrib-concat": "~1.0.0",
     "grunt-contrib-copy": "~1.0.0",
     "grunt-contrib-uglify": "~1.0.1",
     "grunt-karma": "~0.12.2",
-    "grunt-traceur": "~0.5.4",
+    "grunt-traceur": "~0.5.5",
     "karma": "~0.13.22",
     "karma-chrome-launcher": "~0.2.2",
     "karma-firefox-launcher": "~0.1.7",

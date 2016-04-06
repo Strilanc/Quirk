@@ -3,6 +3,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 import CircuitWidget from "src/widgets/CircuitWidget.js"
 import Config from "src/Config.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
+import GateFactory from "src/ui/GateFactory.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
@@ -94,7 +95,8 @@ export default class InspectorWidget {
         for (let k = 0; k < gates.length; k++) {
             let p = this.hand.pos.offsetBy(0, dh * (k - gates.length + 1));
             let r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
-            gates[k].drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
+            let drawer = gates[k].customDrawer || GateFactory.DEFAULT_DRAWER;
+            drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
         }
     }
 

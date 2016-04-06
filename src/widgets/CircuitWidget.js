@@ -3,6 +3,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
+import GateFactory from "src/ui/GateFactory.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/math/Point.js"
@@ -289,7 +290,8 @@ class CircuitWidget {
             let canGrab =
                 (new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt)) && this.compressedColumnIndex === null) ||
                 this.compressedColumnIndex === col;
-            gate.drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
+            let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
+            drawer(new GateDrawParams(painter, false, canGrab, r, gate, stats, {row, col}));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== undefined) {
                 if (canGrab) {
