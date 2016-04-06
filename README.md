@@ -1,6 +1,6 @@
 # Quirk
 
-A toy for exploring and understanding the behavior of small quantum circuits.
+A toy for exploring and understanding small quantum circuits.
 
 | master | dev | demo |
 |--------|-----|------|
@@ -10,9 +10,10 @@ Defining features:
 
 - Runs in web browsers.
 - Drag-and-drop circuit editing.
-- Simulates and animates the effects of operations on up to 16 qubits in real time.
+- Reacts, simulates, and animates in real time.
 - Inline displays for conditional and marginal states.
 - Bookmarkable circuits.
+- Up to 16 qubits.
 
 Notable limitations (a.k.a. future features):
 
