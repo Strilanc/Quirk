@@ -1,7 +1,7 @@
 {
   "name": "Quantum-Circuit-Inspector",
   "title": "Quirk",
-  "description": "An html5 toy for exploring and understanding small quantum circuits.",
+  "description": "An HTML5 toy for exploring and understanding small quantum circuits.",
   "license": "Apache-2.0",
   "version": "1.0.2",
   "homepage": "https://github.com/Strilanc/Quantum-Circuit-Inspector",
