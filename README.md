@@ -51,9 +51,6 @@ The example terminal commands have been tested on a fresh Ubuntu install.
     
     `sudo apt-get install --yes git npm nodejs-legacy`
 
-    *(The first two commands are only needed for REALLY fresh installs. Still-a-Live-CD fresh. nodejs-legacy is needed
-    to workaround [an issue in grunt.js](https://github.com/nodejs/node-v0.x-archive/issues/3911).)*
-
 2. **Clone the repository**.
 
     `git clone https://github.com/Strilanc/Quantum-Circuit-Inspector.git`
@@ -63,10 +60,6 @@ The example terminal commands have been tested on a fresh Ubuntu install.
     `cd Quantum-Circuit-Inspector`
     
     `npm install`
-
-    *(If you're on Windows, you'll need to work around
-      [this bug in grunt-traceur](https://github.com/aaronfrost/grunt-traceur/issues/66) by going to line 49 of
-      `node_modules/grunt-traceur/tasks/traceur.js` and replacing the 'path.sep' with '"/"'. I wish I was joking.)*
 
 4. **(*Optional*) Run the tests**.
 
