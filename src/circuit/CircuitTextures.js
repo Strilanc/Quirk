@@ -255,6 +255,40 @@ CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask
 };
 
 /**
+ * @param {!WglTexture} stateTex
+ * @param {!Controls} controls
+ * @param {!int} keptBitMask
+ * @returns {!WglTexture}
+ */
+CircuitTextures.superpositionToQubitPairDensities = (stateTex, controls, keptBitMask) => {
+    if (keptBitMask === 0) {
+        return new WglTexture(0, 0);
+    }
+    let hasControls = !controls.isEqualTo(Controls.NONE);
+    let reducedTex = stateTex;
+    if (hasControls) {
+        reducedTex = allocQubitTexture(CircuitTextures.qubitCount(stateTex) - controls.includedBitCount());
+        CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
+    }
+    let p = 1;
+    for (let i = 1; i <= controls.inclusionMask; i <<= 1) {
+        if ((controls.inclusionMask & i) === 0) {
+            p <<= 1;
+        } else {
+            keptBitMask = (keptBitMask & (p - 1)) | ((keptBitMask & ~(p-1)) >> 1)
+        }
+    }
+    let unsummedTex = CircuitTextures._superpositionTexToUnsummedQubitPairDensitiesTex(reducedTex, keptBitMask);
+    if (hasControls) {
+        CircuitTextures.doneWithTexture(reducedTex, "reducedTex in superpositionToQubitDensities");
+    }
+    let keptQubitCount = Util.numberOfSetBits(keptBitMask);
+    let result = CircuitTextures._sumDown(unsummedTex, keptQubitCount * 4);
+    CircuitTextures.doneWithTexture(unsummedTex, "unsummedTex in superpositionToQubitDensities");
+    return result;
+};
+
+/**
  * @param {!WglTexture} superpositionTex
  * @param {!int} keptBitMask
  * @returns {!WglTexture}
@@ -271,20 +305,34 @@ CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex
 };
 
 /**
+ * @param {!WglTexture} superpositionTex
+ * @param {!int} keptBitMask
+ * @returns {!WglTexture}
+ */
+CircuitTextures._superpositionTexToUnsummedQubitPairDensitiesTex = (superpositionTex, keptBitMask) => {
+    if (keptBitMask === 0) {
+        throw new DetailedError("keptBitMask === 0", {superpositionTex, keptBitMask});
+    }
+    let startingQubitCount = CircuitTextures.qubitCount(superpositionTex);
+    let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
+    let inter = allocQubitTexture(startingQubitCount + Math.ceil(Math.log2(remainingQubitCount)));
+    CircuitShaders.qubitPairDensities(superpositionTex, keptBitMask).renderTo(inter);
+    return inter;
+};
+
+/**
  * @param {!WglTexture} summandsTex
  * @param {!int} outCount The number of interleaved slices being summed.
  * The output will be a single row containing this many results (but padded up to a power of 2).
  * @returns {!WglTexture}
  */
 CircuitTextures._sumDown = (summandsTex, outCount) => {
-    let outWidth = Util.ceilingPowerOf2(outCount);
-    if (outWidth > summandsTex.width) {
-        throw new DetailedError("Unexpected: output should fit in the first row.", {summandsTex, outCount, outWidth});
-    }
+    let outSize = Util.ceilingPowerOf2(outCount);
+    let outWidth = Math.min(summandsTex.width, outSize);
 
     return CircuitTextures.aggregateReusingIntermediates(
         summandsTex,
-        Seq.range(Math.log2(summandsTex.width * summandsTex.height / outWidth)),
+        Seq.range(Math.log2(summandsTex.width * summandsTex.height / outSize)),
         accTex => {
             let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
                 [accTex.width / 2, 0] :
@@ -297,21 +345,67 @@ CircuitTextures._sumDown = (summandsTex, outCount) => {
 
 /**
  * @param {!Float32Array} buffer
- * @param {!int} qubitCount
  * @returns {!Array.<!Matrix>}
  */
-CircuitTextures.pixelsToDensityMatrices = (buffer, qubitCount) => {
+CircuitTextures.pixelsToQubitDensityMatrices = buffer => {
+    let qubitCount = buffer.length / 4;
     return Seq.range(qubitCount).map(i => {
         let a = buffer[i*4];
         let d = buffer[i*4 + 3];
         let unity = a + d;
-        if (unity === 0 || isNaN(unity)) {
+        if (unity < 0.0000001 || isNaN(unity)) {
             return new Matrix(2, 2, new Float32Array([NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]));
         }
 
         let br = buffer[i*4 + 1] / unity;
         let bi = buffer[i*4 + 2] / unity;
         return new Matrix(2, 2, new Float32Array([a / unity, 0, br, bi, br, -bi, d / unity, 0]));
+    }).toArray();
+};
+
+/**
+ * @param {!Float32Array} buffer
+ * @returns {!Array.<!Matrix>}
+ */
+CircuitTextures.pixelsToQubitPairDensityMatrices = buffer => {
+    if (buffer.length % 16 !== 0) {
+        throw new DetailedError("Expected a multiple of 16 sized buffer.", {len: buffer.length, buffer});
+    }
+    let qubitCount = buffer.length / 16;
+    return Seq.range(qubitCount).map(i => {
+        let j = i * 16;
+        let r00 = buffer[j];
+        let r01 = buffer[j + 1];
+        let r10 = buffer[j + 2];
+        let r11 = buffer[j + 3];
+        let unity = r00 + r01 + r10 + r11;
+        if (unity < 0.0000001 || isNaN(unity)) {
+            return Matrix.zero(4, 4).scaledBy(NaN);
+        }
+        r00 /= unity;
+        r01 /= unity;
+        r10 /= unity;
+        r11 /= unity;
+
+        let cr_00_01 = buffer[j + 4] / unity;
+        let cr_00_10 = buffer[j + 5] / unity;
+        let cr_00_11 = buffer[j + 6] / unity;
+        let cr_10_11 = buffer[j + 7] / unity;
+        let ci_00_01 = buffer[j + 8] / unity;
+        let ci_00_10 = buffer[j + 9] / unity;
+        let ci_00_11 = buffer[j + 10] / unity;
+        let ci_10_11 = buffer[j + 11] / unity;
+        let cr_01_10 = buffer[j + 12] / unity;
+        let cr_01_11 = buffer[j + 13] / unity;
+        let ci_01_10 = buffer[j + 14] / unity;
+        let ci_01_11 = buffer[j + 15] / unity;
+
+        return new Matrix(4, 4, new Float32Array([
+            r00,0,              cr_00_01,ci_00_01,  cr_00_10,ci_00_10,  cr_00_11,ci_00_11,
+            cr_00_01,-ci_00_01, r01,0,              cr_01_10,ci_01_10,  cr_01_11,ci_01_11,
+            cr_00_10,-ci_00_10, cr_01_10,-ci_01_10, r10,0,              cr_10_11,ci_10_11,
+            cr_00_11,-ci_00_11, cr_01_11,-ci_01_11, cr_10_11,-ci_10_11, r11,0
+        ]));
     }).toArray();
 };
 

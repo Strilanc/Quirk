@@ -37,6 +37,21 @@ const paintGateSymbol = (painter, symbol, rect) => {
     const font = '16px Helvetica';
     rect = rect.paddedBy(-2);
 
+    let noteIndex = symbol.indexOf('\n');
+    if (noteIndex !== -1) {
+        painter.print(
+            symbol.substring(noteIndex + 1),
+            rect.x + rect.w/2,
+            rect.y + rect.h,
+            'center',
+            'bottom',
+            'black',
+            '12px Helvetica',
+            rect.w,
+            rect.h);
+        symbol = symbol.substring(0, noteIndex);
+    }
+
     let parts = symbol.split("^");
     if (parts.length != 2 || parts[0] === "" || parts[1] === "") {
         painter.print(

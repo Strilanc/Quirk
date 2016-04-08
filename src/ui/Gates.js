@@ -48,7 +48,7 @@ Gates.Special = {
         "Measure",
         Matrix.identity(2),
         "Measurement Gate",
-        "Measures a wire in the computational basis, along the Z axis."
+        "Measures a wire's qubit, along the Z axis."
     ).withCustomDrawer(args => {
         let backColor = Config.GATE_FILL_COLOR;
         if (args.isHighlighted) {
@@ -167,6 +167,32 @@ Gates.Displays = {
             let {row, col} = args.positionInCircuit;
             let ρ = args.stats.qubitDensityMatrix(row, col);
             MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
+        }
+
+        if (showText) {
+            if (showState) {
+                args.painter.ctx.globalAlpha = 0.8;
+            }
+            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+            if (showState) {
+                args.painter.ctx.globalAlpha = 1.0;
+            }
+        }
+    }),
+
+    DensityMatrixDisplay2: new Gate(
+        "Density\n(2)",
+        Matrix.identity(4),
+        "2-Qubit Density Matrix Display",
+        "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
+    ).withSerializedId("Density2").withCustomDrawer(args => {
+        let showState = args.positionInCircuit !== null;
+        let showText = !showState || args.isHighlighted;
+
+        if (showState) {
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.qubitPairDensityMatrix(row, col);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect.withW(90).withH(90));
         }
 
         if (showText) {
@@ -599,14 +625,25 @@ Gates.ExperimentalAndImplausible = {
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gates.Sets = [
     {
-        hint: "Inspection",
+        hint: "Controls",
         gates: [
-            Gates.Special.Control,
-            Gates.Special.Measurement,
-            Gates.Displays.ChanceDisplay,
             Gates.Special.AntiControl,
+            Gates.Misc.PostSelectOff,
+            Gates.Special.Measurement,
+            Gates.Special.Control,
+            Gates.Misc.PostSelectOn,
+            null
+        ]
+    },
+    {
+        hint: "Displays",
+        gates: [
+            Gates.Displays.ChanceDisplay,
+            Gates.Displays.BlochSphereDisplay,
+            null,
             Gates.Displays.DensityMatrixDisplay,
-            Gates.Displays.BlochSphereDisplay
+            Gates.Displays.DensityMatrixDisplay2,
+            null
         ]
     },
     {
@@ -637,8 +674,8 @@ Gates.Sets = [
             Gates.Misc.SpacerGate,
             Gates.Misc.MysteryGateMaker(),
             Gates.Misc.ClockPulseGate,
-            Gates.Misc.PostSelectOff,
-            Gates.Misc.PostSelectOn,
+            null,
+            null,
             Gates.Misc.QuarterPhaseClockPulseGate
         ]
     },
@@ -702,19 +739,20 @@ Gates.Sets = [
 /** @type {!(!Gate[])} */
 Gates.KnownToSerializer = [
     Gates.Special.Control,
-    Gates.Special.SwapHalf,
-    Gates.Special.Measurement,
     Gates.Special.AntiControl,
+    Gates.Misc.PostSelectOff,
+    Gates.Misc.PostSelectOn,
+    Gates.Special.Measurement,
+    Gates.Special.SwapHalf,
 
     Gates.Displays.ChanceDisplay,
     Gates.Displays.DensityMatrixDisplay,
+    Gates.Displays.DensityMatrixDisplay2,
     Gates.Displays.BlochSphereDisplay,
 
     Gates.Misc.SpacerGate,
     Gates.Misc.ClockPulseGate,
     Gates.Misc.QuarterPhaseClockPulseGate,
-    Gates.Misc.PostSelectOff,
-    Gates.Misc.PostSelectOn,
 
     Gates.HalfTurns.H,
     Gates.HalfTurns.X,
