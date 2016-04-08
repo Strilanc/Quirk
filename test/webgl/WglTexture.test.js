@@ -44,3 +44,7 @@ suite.webGlTest("readPixels_floats", () => {
         1.5, 1.5, 192.25, 254.5
     ]));
 });
+
+suite.webGlTest("readPixels_empty", () => {
+    assertThat(new WglTexture(0, 0).readPixels()).isEqualTo(new Float32Array([]));
+});

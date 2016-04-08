@@ -63,6 +63,10 @@ class WglShader {
         }
 
         return new WglConfiguredShader(texture => {
+            if (texture.width === 0 || texture.height === 0) {
+                return;
+            }
+
             const GL = WebGLRenderingContext;
             let ctx = initializedWglContext();
             let gl = ctx.gl;

@@ -11,3 +11,9 @@ suite.webGlTest("renderTo_large", () => {
     let expected = new Uint8Array(Seq.repeat(3, 4 * tex.width * tex.height).toArray());
     assertThat(tex.readPixels()).isEqualTo(expected);
 });
+
+suite.webGlTest("renderTo_empty", () => {
+    let tex = new WglTexture(0, 0);
+    new WglShader("void main(){gl_FragColor=vec4(0.0,0.0,0.0,0.0);}").withArgs().renderTo(tex);
+    assertThat(tex.readPixels()).isEqualTo(new Float32Array([]));
+});

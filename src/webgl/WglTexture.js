@@ -16,6 +16,17 @@ export default class WglTexture {
      * @param {!int} pixelType FLOAT or UNSIGNED_BYTE
      */
     constructor(width, height, pixelType = WebGLRenderingContext.FLOAT) {
+        if (width === 0 && height === 0) {
+            this.width = 0;
+            this.height = 0;
+            this.pixelType = pixelType;
+            this._hasBeenRenderedTo = true;
+            this._textureAndFrameBufferSlot = new WglMortalValueSlot(
+                () => { throw new DetailedError("Touched a zero-size texture.", this); },
+                () => { throw new DetailedError("Touched a zero-size texture.", this); });
+            return;
+        }
+
         if (!Util.isPowerOf2(width) || !Util.isPowerOf2(height)) {
             throw new DetailedError("Sizes must be a power of 2.", {width, height, pixelType});
         }

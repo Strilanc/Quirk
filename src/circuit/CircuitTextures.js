@@ -25,6 +25,10 @@ let allocNewTextureCount = 0;
  * @returns {!WglTexture}
  */
 const allocSizedTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) => {
+    if (width === 0 || height === 0) {
+        return new WglTexture(0, 0, pixelType);
+    }
+
     let k = width + ":" + height + ":" + pixelType;
 
     if (!TEXTURE_POOL.has(k)) {
@@ -67,6 +71,9 @@ const allocQubitTexture = qubitCount => {
  * @returns {void}
  */
 CircuitTextures.doneWithTexture = (texture, detailsShownWhenUsedAfterDone) => {
+    if (texture.width === 0) {
+        return;
+    }
     let pool = TEXTURE_POOL.get(texture.width + ":" + texture.height + ":" + texture.pixelType);
     pool.push(texture.invalidateButMoveToNewInstance(detailsShownWhenUsedAfterDone));
 };
@@ -102,13 +109,16 @@ CircuitTextures.mergedReadFloats = textures => {
     let lgTotal = Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1]));
     let combinedTex = allocQubitTexture(lgTotal);
     Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
-    combinedTex = CircuitTextures.aggregateWithReuse(combinedTex, Seq.range(textures.length), (accTex, i) => {
-        let inputTex = textures[i];
-        let nextTex = allocQubitTexture(lgTotal);
-        CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
-        CircuitTextures.doneWithTexture(inputTex, "inputTex in mergedReadFloats");
-        return nextTex;
-    });
+    combinedTex = CircuitTextures.aggregateWithReuse(
+        combinedTex,
+        Seq.range(textures.length).filter(i => textures[i].width > 0),
+        (accTex, i) => {
+            let inputTex = textures[i];
+            let nextTex = allocQubitTexture(lgTotal);
+            CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
+            CircuitTextures.doneWithTexture(inputTex, "inputTex in mergedReadFloats");
+            return nextTex;
+        });
 
     let combinedPixels = combinedTex.readPixels();
     CircuitTextures.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
@@ -218,9 +228,7 @@ CircuitTextures.qubitCount = superpositionTex => {
  */
 CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
     if (keptBitMask === 0) {
-        let empty = allocQubitTexture(0);
-        Shaders.color(0, 0, 0, 0).renderTo(empty);
-        return empty;
+        return new WglTexture(0, 0);
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let reducedTex = stateTex;
