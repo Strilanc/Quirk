@@ -39,13 +39,17 @@ module.exports = function(grunt) {
             unit: {
                 configFile: 'karma.conf.js'
             },
+            'unit-chrome': {
+                configFile: 'karma.conf.js',
+                browsers: ['Chrome']
+            },
             'unit-firefox': {
                 configFile: 'karma.conf.js',
                 browsers: ['Firefox']
             },
-            'unit-chrome': {
+            'unit-travis': {
                 configFile: 'karma.conf.js',
-                browsers: ['Chrome']
+                browsers: ['Firefox']
             }
         },
         concat: {
@@ -156,7 +160,8 @@ module.exports = function(grunt) {
         'clean:clean-tmp'
     ]);
 
-    grunt.registerTask('test-firefox', ['build-test', 'karma:unit-firefox']);
     grunt.registerTask('test-chrome', ['build-test', 'karma:unit-chrome']);
+    grunt.registerTask('test-firefox', ['build-test', 'karma:unit-firefox']);
+    grunt.registerTask('test-travis', ['build-test', 'karma:unit-travis']);
     grunt.registerTask('test', ['build-test', 'karma:unit']);
 };

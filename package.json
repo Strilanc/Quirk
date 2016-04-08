@@ -23,10 +23,11 @@
     "traceur": "0.0.104"
   },
   "scripts": {
+    "build": "grunt build-src",
     "test": "grunt test",
-    "test-firefox": "grunt test-firefox",
     "test-chrome": "grunt test-chrome",
-    "build": "grunt build-src"
+    "test-firefox": "grunt test-firefox",
+    "test-travis": "grunt test-travis"
   },
   "repository": {
     "type": "git",
