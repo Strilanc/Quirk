@@ -137,12 +137,10 @@ export default class WglTexture {
      * @returns {!Uint8Array|!Float32Array}
      */
     readPixels() {
+        const GL = WebGLRenderingContext;
         if (!this._hasBeenRenderedTo) {
             throw new Error("Called readPixels on a texture that hasn't been rendered to.");
         }
-
-        let gl = initializedWglContext().gl;
-        const GL = WebGLRenderingContext;
 
         let outputBuffer;
         switch (this.pixelType) {
@@ -156,6 +154,11 @@ export default class WglTexture {
                 throw new Error("Unrecognized pixel type.");
         }
 
+        if (this.width === 0 || this.height === 0) {
+            return outputBuffer;
+        }
+
+        let gl = initializedWglContext().gl;
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.initializedFramebuffer());
         checkGetErrorResult(gl, "framebufferTexture2D", true);
         checkFrameBufferStatusResult(gl, true);
