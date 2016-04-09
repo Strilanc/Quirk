@@ -56,11 +56,21 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
     let [w, h] = [destinationTexture.width, destinationTexture.height];
     Util.need(rgbaData.length === w * h * 4, "rgbaData.length === w * h * 4");
 
-    initializedWglContext().useRawDataTextureIn(w, h, rgbaData, tempDataTexture =>
+    let GL = WebGLRenderingContext;
+    let gl = initializedWglContext().gl;
+    let dataTexture = gl.createTexture();
+    try {
+        gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, dataTexture);
+        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+        gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
+        gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, w, h, 0, GL.RGBA, GL.FLOAT, rgbaData);
         PASSTHROUGH_SHADER.withArgs(
             WglArg.vec2("textureSize", w, h),
-            WglArg.rawTexture("dataTexture", tempDataTexture, 0)
-        ).renderTo(destinationTexture));
+            WglArg.webGlTexture("dataTexture", dataTexture, 0)
+        ).renderTo(destinationTexture);
+    } finally {
+        gl.deleteTexture(dataTexture);
+    }
 });
 
 /**

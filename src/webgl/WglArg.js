@@ -76,22 +76,22 @@ export default class WglArg {
 
     /**
      * @param {!string} name
-     * @param {!WglTexture} texture
+     * @param {!WglTexture} wglTexture
      * @param {!int} unit
      * @returns {!WglArg}
      */
-    static texture(name, texture, unit) {
-        return new WglArg(WglArg.WGL_TEXTURE_TYPE, name, {texture, unit});
+    static texture(name, wglTexture, unit) {
+        return new WglArg(WglArg.WGL_TEXTURE_TYPE, name, {texture: wglTexture, unit});
     }
 
     /**
      * @param {!string} name
-     * @param {!WebGLTexture} texture
+     * @param {!WebGLTexture} webGlTexture
      * @param {!int} unit
      * @returns {!WglArg}
      */
-    static rawTexture(name, texture, unit) {
-        return new WglArg(WglArg.RAW_TEXTURE_TYPE, name, {texture, unit});
+    static webGlTexture(name, webGlTexture, unit) {
+        return new WglArg(WglArg.WEB_GL_TEXTURE_TYPE, name, {texture: webGlTexture, unit});
     }
 
     toString() {
@@ -106,7 +106,7 @@ WglArg.VEC2_TYPE = "vec2";
 WglArg.VEC4_TYPE = "vec4";
 WglArg.MAT4_TYPE = "mat4";
 WglArg.WGL_TEXTURE_TYPE = "wgl_texture";
-WglArg.RAW_TEXTURE_TYPE = "raw_texture";
+WglArg.WEB_GL_TEXTURE_TYPE = "web_gl_texture";
 
 /**
  * A map from an argument's type to the action used to give it to a shader.
@@ -133,7 +133,7 @@ WglArg.INPUT_ACTION_MAP = new Map([
         gl.activeTexture(WebGLRenderingContext.TEXTURE0 + unit);
         gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, texture.initializedTexture());
     }],
-    [WglArg.RAW_TEXTURE_TYPE, (ctx, loc, {unit, texture}) => {
+    [WglArg.WEB_GL_TEXTURE_TYPE, (ctx, loc, {unit, texture}) => {
         if (unit >= ctx.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${unit} but max ` +
                 `is ${ctx.maxTextureUnits}.`);

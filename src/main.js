@@ -7,6 +7,7 @@ import InspectorWidget from "src/widgets/InspectorWidget.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import { initializedWglContext } from "src/webgl/WglContext.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/widgets/MouseUtil.js"
@@ -66,6 +67,8 @@ let updateCircuitLink = jsonText => {
         document.location.hash = urlHash;
     }
 };
+
+initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
 
 let snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
 let restore = jsonText => {

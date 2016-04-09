@@ -19,7 +19,6 @@ export function checkGetErrorResult(gl, previousOperationDescription, isOnHotPat
     }
     const msgs = {
         [GL.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
-        [GL.CONTEXT_LOST_WEBGL]: "CONTEXT_LOST_WEBGL",
         [GL.OUT_OF_MEMORY]: "OUT_OF_MEMORY",
         [GL.INVALID_ENUM]: "INVALID_ENUM",
         [GL.INVALID_VALUE]: "INVALID_VALUE",

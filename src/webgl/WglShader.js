@@ -239,7 +239,7 @@ class WglConfiguredShader {
      * This method is slow (because it uses readPixels) and mainly exists for easy testing.
      * @param {!int} width
      * @param {!int} height
-     * @returns {!Float32Array|!Uint8Array}
+     * @returns {!Float32Array}
      */
     readFloatOutputs(width, height) {
         let texture = new WglTexture(width, height);
@@ -256,7 +256,7 @@ class WglConfiguredShader {
      * This method is slow (because it uses readPixels) and mainly exists for easy testing.
      * @param {!int} width
      * @param {!int} height
-     * @returns {!Float32Array|!Uint8Array}
+     * @returns {!Uint8Array}
      */
     readByteOutputs(width, height) {
         let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
