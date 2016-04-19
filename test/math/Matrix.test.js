@@ -277,24 +277,24 @@ suite.test("times_scalar", () => {
 });
 
 suite.test("plus", () => {
-    assertTrue(Matrix.square(2, 3, 5, 7).plus(Matrix.square(11, 13, 17, 19))
-        .isEqualTo(Matrix.square(13, 16, 22, 26)));
+    assertThat(Matrix.square(2, 3, 5, 7).plus(Matrix.square(11, 13, 17, 19)))
+        .isEqualTo(Matrix.square(13, 16, 22, 26));
 });
 
 suite.test("minus", () => {
-    assertTrue(Matrix.square(2, 3, 5, 7).minus(Matrix.square(11, 13, 17, 19))
-        .isEqualTo(Matrix.square(-9, -10, -12, -12)));
+    assertThat(Matrix.square(2, 3, 5, 7).minus(Matrix.square(11, 13, 17, 19)))
+        .isEqualTo(Matrix.square(-9, -10, -12, -12));
 });
 
 suite.test("times_matrix", () => {
-    assertTrue(Matrix.square(2, 3, 5, 7).times(Matrix.square(11, 13, 17, 19))
-        .isEqualTo(Matrix.square(73, 83, 174, 198)));
+    assertThat(Matrix.square(2, 3, 5, 7).times(Matrix.square(11, 13, 17, 19)))
+        .isEqualTo(Matrix.square(73, 83, 174, 198));
 
     let x = Matrix.square(new Complex(0.5, -0.5), new Complex(0.5, 0.5),
                           new Complex(0.5, 0.5), new Complex(0.5, -0.5));
-    assertTrue(x.times(x.adjoint()).isEqualTo(Matrix.identity(2)));
-    assertTrue(Matrix.PAULI_X.times(Matrix.PAULI_Y).times(Matrix.PAULI_Z).times(new Complex(0, -1))
-        .isEqualTo(Matrix.identity(2)));
+    assertThat(x.times(x.adjoint())).isEqualTo(Matrix.identity(2));
+    assertThat(Matrix.PAULI_X.times(Matrix.PAULI_Y).times(Matrix.PAULI_Z).times(new Complex(0, -1)))
+        .isEqualTo(Matrix.identity(2));
 });
 
 suite.test("times_ColRow", () => {

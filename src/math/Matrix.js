@@ -432,15 +432,31 @@ class Matrix {
      * @private
      */
     _timesMatrix(other) {
-        let m = this;
-        let w = other.width();
-        let h = this.height();
-        let n = this.width();
-        Util.need(other.height() === n, "Matrix.times: compatible sizes");
-        return Matrix.generate(w, h, (r, c) => Seq.
-            range(n).
-            map(i => m.cell(i, r).times(other.cell(c, i))).
-            aggregate(Complex.ZERO, (a, e) => a.plus(e)));
+        if (this._width !== other._height) {
+            throw new DetailedError("Incompatible sizes.", {'this': this, other})
+        }
+        let w = other._width;
+        let h = this._height;
+        let n = this._width;
+        let newBuffer = new Float32Array(w*h*2);
+        for (let r = 0; r < h; r++) {
+            for (let c = 0; c < w; c++) {
+                let k3 = (r*w + c)*2;
+                for (let k = 0; k < n; k++) {
+                    let k1 = (r*n + k)*2;
+                    let k2 = (k*w + c)*2;
+                    let r1 = this._buffer[k1];
+                    let i1 = this._buffer[k1+1];
+                    let r2 = other._buffer[k2];
+                    let i2 = other._buffer[k2+1];
+                    let r3 = r1*r2 - i1*i2;
+                    let i3 = r1*i2 + r2*i1;
+                    newBuffer[k3] += r3;
+                    newBuffer[k3+1] += i3;
+                }
+            }
+        }
+        return new Matrix(w, h, newBuffer);
     };
 
     /**
