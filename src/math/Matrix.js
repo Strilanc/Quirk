@@ -737,9 +737,15 @@ class Matrix {
      * @returns {!Array.<!number>}
      */
     qubitDensityMatrixToBlochVector() {
-        Util.need(this._width === 2 && this._height === 2, "Need a 2x2 density matrix.");
-        Util.need(this.isApproximatelyHermitian(0.01), "Density matrix should be Hermitian.");
-        Util.need(this.trace().isApproximatelyEqualTo(1, 0.01), "Density matrix should have unit trace.");
+        if (this._width !== 2 || this._height !== 2) {
+            throw new DetailedError("Need a 2x2 density matrix.", this);
+        }
+        if (!this.isApproximatelyHermitian(0.01)) {
+            throw new DetailedError("Density matrix should be Hermitian.", this);
+        }
+        if (!this.trace().isApproximatelyEqualTo(1, 0.01)) {
+            throw new DetailedError("Density matrix should have unit trace.", this);
+        }
 
         // Density matrix from bloch vector equation: M = 1/2 (I + vσ)
         //noinspection JSUnusedLocalSymbols

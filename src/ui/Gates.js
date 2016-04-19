@@ -119,11 +119,12 @@ Gates.Displays = {
 
         if (showText) {
             if (showState) {
-                args.painter.ctx.globalAlpha = 0.8;
+                args.painter.ctx.save();
+                args.painter.ctx.globalAlpha *= 0.8;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
-                args.painter.ctx.globalAlpha = 1.0;
+                args.painter.ctx.restore();
             }
         }
     }),
@@ -145,11 +146,12 @@ Gates.Displays = {
 
         if (showText) {
             if (showState) {
-                args.painter.ctx.globalAlpha = 0.8;
+                args.painter.ctx.save();
+                args.painter.ctx.globalAlpha *= 0.8;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
-                args.painter.ctx.globalAlpha = 1.0;
+                args.painter.ctx.restore();
             }
         }
     }),
@@ -171,11 +173,12 @@ Gates.Displays = {
 
         if (showText) {
             if (showState) {
-                args.painter.ctx.globalAlpha = 0.8;
+                args.painter.ctx.save();
+                args.painter.ctx.globalAlpha *= 0.8;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
-                args.painter.ctx.globalAlpha = 1.0;
+                args.painter.ctx.restore();
             }
         }
     }),
@@ -197,11 +200,12 @@ Gates.Displays = {
 
         if (showText) {
             if (showState) {
-                args.painter.ctx.globalAlpha = 0.8;
+                args.painter.ctx.save();
+                args.painter.ctx.globalAlpha *= 0.8;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
-                args.painter.ctx.globalAlpha = 1.0;
+                args.painter.ctx.restore();
             }
         }
     })

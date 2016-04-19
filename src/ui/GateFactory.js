@@ -125,7 +125,8 @@ GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
         new Point(xf, yOn),
         new Point(xf, yOff),
         new Point(xf, yNeutral)];
-    args.painter.ctx.globalAlpha = 0.3;
+    args.painter.ctx.save();
+    args.painter.ctx.globalAlpha *= 0.3;
     args.painter.fillPolygon(curve, 'yellow');
     for (let i = 1; i < curve.length - 2; i++) {
         args.painter.strokeLine(curve[i], curve[i+1], 'black');
@@ -135,7 +136,7 @@ GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
         args.painter.fillRect(args.rect, 'white');
         args.painter.fillRect(args.rect, 'white');
     }
-    args.painter.ctx.globalAlpha = 1.0;
+    args.painter.ctx.restore();
 };
 
 /**

@@ -194,13 +194,18 @@ export default class MathPainter {
         painter.strokePolygon([cz, c, pxy, p], '#666');
         painter.strokeLine(c, p, 'black', 2);
         painter.fillCircle(p, r, fillColor);
-        painter.ctx.globalAlpha = Math.min(1, Math.max(0, 1-x*x-y*y-z*z));
+
+        painter.ctx.save();
+        painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 1-x*x-y*y-z*z));
         painter.fillCircle(p, r, 'yellow');
-        painter.ctx.globalAlpha = 1;
+        painter.ctx.restore();
+
         painter.strokeCircle(p, r, 'black');
-        painter.ctx.globalAlpha = Math.min(1, Math.max(0, 0.5+y*5));
+
+        painter.ctx.save();
+        painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 0.5+y*5));
         painter.strokeLine(c, p, 'black', 2);
-        painter.ctx.globalAlpha = 1;
+        painter.ctx.restore();
     }
 
     /**
