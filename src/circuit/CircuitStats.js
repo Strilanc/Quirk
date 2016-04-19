@@ -149,8 +149,8 @@ export default class CircuitStats {
         let unity = final[0] + final[3];
         //noinspection JSCheckFunctionSignatures
         let outputSuperposition = CircuitTextures.pixelsToAmplitudes(pixelData.outputTex, unity);
-        let nanMat2 = Matrix.zero(2, 2).scaledBy(NaN);
-        let nanMat4 = Matrix.zero(4, 4).scaledBy(NaN);
+        let nanMat2 = Matrix.zero(2, 2).times(NaN);
+        let nanMat4 = Matrix.zero(4, 4).times(NaN);
         let qubitDensities = seq(pixelData.qubitDensityTexes).mapWithIndex((pixels, col) => {
             let aCol = circuitDefinition.columns[col];
             let mask = aCol === undefined ? allWiresMask : aCol.wiresWithSingleQubitDisplaysMask();

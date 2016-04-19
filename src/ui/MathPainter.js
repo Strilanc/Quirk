@@ -261,12 +261,12 @@ export default class MathPainter {
         // Find perpendicular axes, for drawing the rotation arrow circles.
         let norm = e => Math.sqrt(e.adjoint().times(e).cell(0, 0).real);
         let perpVec1 = new Seq(axes).
-            mapWithIndex((a, i) => a.scaledBy([2, -3, 1][i])). // Prioritize/orient axes to look good.
+            mapWithIndex((a, i) => a.times([2, -3, 1][i])). // Prioritize/orient axes to look good.
             map(a => axisVec.cross3(a)).
             maxBy(norm);
         let perpVec2 = axisVec.cross3(perpVec1);
-        perpVec1 = perpVec1.scaledBy(0.15 / norm(perpVec1));
-        perpVec2 = perpVec2.scaledBy(0.15 / norm(perpVec2));
+        perpVec1 = perpVec1.times(0.15 / norm(perpVec1));
+        perpVec2 = perpVec2.times(0.15 / norm(perpVec2));
         let dPerp1 = projToPt(perpVec1);
         let dPerp2 = projToPt(perpVec2);
 

@@ -263,17 +263,17 @@ suite.test("adjoint", () => {
     assertThat(v.adjoint()).isEqualTo(a);
 });
 
-suite.test("scaledBy", () => {
+suite.test("times_scalar", () => {
     let v = Matrix.square(new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19));
     let a = Matrix.square(new Complex(-2, -3), new Complex(-5, -7),
                           new Complex(-11, -13), new Complex(-17, -19));
-    assertThat(v.scaledBy(-1)).isEqualTo(a);
-    assertThat(v.scaledBy(0)).isEqualTo(Matrix.square(0, 0, 0, 0));
-    assertThat(v.scaledBy(1)).isEqualTo(v);
+    assertThat(v.times(-1)).isEqualTo(a);
+    assertThat(v.times(0)).isEqualTo(Matrix.square(0, 0, 0, 0));
+    assertThat(v.times(1)).isEqualTo(v);
 
-    assertThat(Matrix.col(2, 3).scaledBy(5)).isEqualTo(Matrix.col(10, 15));
-    assertThat(Matrix.row(2, 3).scaledBy(5)).isEqualTo(Matrix.row(10, 15));
+    assertThat(Matrix.col(2, 3).times(5)).isEqualTo(Matrix.col(10, 15));
+    assertThat(Matrix.row(2, 3).times(5)).isEqualTo(Matrix.row(10, 15));
 });
 
 suite.test("plus", () => {
@@ -286,14 +286,14 @@ suite.test("minus", () => {
         .isEqualTo(Matrix.square(-9, -10, -12, -12)));
 });
 
-suite.test("times", () => {
+suite.test("times_matrix", () => {
     assertTrue(Matrix.square(2, 3, 5, 7).times(Matrix.square(11, 13, 17, 19))
         .isEqualTo(Matrix.square(73, 83, 174, 198)));
 
     let x = Matrix.square(new Complex(0.5, -0.5), new Complex(0.5, 0.5),
                           new Complex(0.5, 0.5), new Complex(0.5, -0.5));
     assertTrue(x.times(x.adjoint()).isEqualTo(Matrix.identity(2)));
-    assertTrue(Matrix.PAULI_X.times(Matrix.PAULI_Y).times(Matrix.PAULI_Z).scaledBy(new Complex(0, -1))
+    assertTrue(Matrix.PAULI_X.times(Matrix.PAULI_Y).times(Matrix.PAULI_Z).times(new Complex(0, -1))
         .isEqualTo(Matrix.identity(2)));
 });
 
@@ -529,12 +529,12 @@ suite.test("eigenDecomposition", () => {
         {val: 1, vec: Matrix.col(1, 0)}
     ]);
     assertThat(Matrix.square(1, 1, 1, -1).eigenDecomposition()).isApproximatelyEqualTo([
-        {val: -z, vec: Matrix.col(1 - z, 1).scaledBy(-1/Math.sqrt(4-2*z))},
-        {val: z, vec: Matrix.col(1 + z, 1).scaledBy(1/Math.sqrt(4+2*z))}
+        {val: -z, vec: Matrix.col(1 - z, 1).times(-1/Math.sqrt(4-2*z))},
+        {val: z, vec: Matrix.col(1 + z, 1).times(1/Math.sqrt(4+2*z))}
     ]);
     assertThat(Matrix.HADAMARD.eigenDecomposition()).isApproximatelyEqualTo([
-        {val: -1, vec: Matrix.col(1 - z, 1).scaledBy(-1/Math.sqrt(4-2*z))},
-        {val: 1, vec: Matrix.col(1 + z, 1).scaledBy(1/Math.sqrt(4+2*z))}
+        {val: -1, vec: Matrix.col(1 - z, 1).times(-1/Math.sqrt(4-2*z))},
+        {val: 1, vec: Matrix.col(1 + z, 1).times(1/Math.sqrt(4+2*z))}
     ]);
 });
 
@@ -548,7 +548,7 @@ suite.test("liftApply", () => {
     assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
     assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(0, i, i, 0));
     assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI/4))).
-        isApproximatelyEqualTo(Matrix.square(1, i, i, 1).scaledBy(s));
+        isApproximatelyEqualTo(Matrix.square(1, i, i, 1).times(s));
 
     assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
     assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(0, 1, -1, 0));
@@ -560,14 +560,14 @@ suite.test("liftApply", () => {
         isApproximatelyEqualTo(Matrix.square(new Complex(s, s), 0, 0, new Complex(s, -s)));
 
     assertThat(Matrix.PAULI_X.liftApply(tPow(0.5))).
-        isApproximatelyEqualTo(Matrix.square(i, 1, 1, i).scaledBy(new Complex(0.5, -0.5)));
+        isApproximatelyEqualTo(Matrix.square(i, 1, 1, i).times(new Complex(0.5, -0.5)));
     assertThat(Matrix.PAULI_X.liftApply(tPow(-0.5))).
-        isApproximatelyEqualTo(Matrix.square(mi, 1, 1, mi).scaledBy(new Complex(0.5, 0.5)));
+        isApproximatelyEqualTo(Matrix.square(mi, 1, 1, mi).times(new Complex(0.5, 0.5)));
 
     assertThat(Matrix.PAULI_Y.liftApply(tPow(0.5))).
-        isApproximatelyEqualTo(Matrix.square(1, -1, 1, 1).scaledBy(new Complex(0.5, 0.5)));
+        isApproximatelyEqualTo(Matrix.square(1, -1, 1, 1).times(new Complex(0.5, 0.5)));
     assertThat(Matrix.PAULI_Y.liftApply(tPow(-0.5))).
-        isApproximatelyEqualTo(Matrix.square(1, 1, -1, 1).scaledBy(new Complex(0.5, -0.5)));
+        isApproximatelyEqualTo(Matrix.square(1, 1, -1, 1).times(new Complex(0.5, -0.5)));
 
     assertThat(Matrix.PAULI_Z.liftApply(tPow(0.5))).isApproximatelyEqualTo(Matrix.square(1, 0, 0, i));
     assertThat(Matrix.PAULI_Z.liftApply(tPow(-0.5))).isApproximatelyEqualTo(Matrix.square(1, 0, 0, mi));
@@ -595,7 +595,7 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     assertThrows(() => Matrix.square(1, Complex.i, Complex.i, 0).qubitDensityMatrixToBlochVector());
 
     // Maximally mixed state.
-    assertThat(Matrix.identity(2).scaledBy(0.5).qubitDensityMatrixToBlochVector()).
+    assertThat(Matrix.identity(2).times(0.5).qubitDensityMatrixToBlochVector()).
         isEqualTo([0, 0, 0]);
 
     // Pure states as vectors along each axis.
@@ -604,10 +604,10 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     let mi = i.times(-1);
     assertThat(f(1, 0).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, 1]);
     assertThat(f(0, 1).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, -1]);
-    assertThat(f(1, 1).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([1, 0, 0]);
-    assertThat(f(1, -1).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([-1, 0, 0]);
-    assertThat(f(1, i).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, 1, 0]);
-    assertThat(f(1, mi).scaledBy(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, -1, 0]);
+    assertThat(f(1, 1).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([1, 0, 0]);
+    assertThat(f(1, -1).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([-1, 0, 0]);
+    assertThat(f(1, i).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, 1, 0]);
+    assertThat(f(1, mi).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, -1, 0]);
 });
 
 suite.test("determinant", () => {
@@ -684,19 +684,19 @@ suite.test("qubitOperationToAngleAxisRotation", () => {
     assertThat(y.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: π/2});
     assertThat(z.qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: π/2});
 
-    assertThat(w.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: π/2});
-    assertThat(x.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: π});
-    assertThat(y.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: π});
-    assertThat(z.scaledBy(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: π});
+    assertThat(w.times(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: π/2});
+    assertThat(x.times(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: π});
+    assertThat(y.times(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: π});
+    assertThat(z.times(i).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: π});
 
-    assertThat(w.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: -π/2});
-    assertThat(x.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: 0});
-    assertThat(y.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: 0});
-    assertThat(z.scaledBy(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: 0});
+    assertThat(w.times(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: 0, axis: [1, 0, 0], phase: -π/2});
+    assertThat(x.times(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [1, 0, 0], phase: 0});
+    assertThat(y.times(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 1, 0], phase: 0});
+    assertThat(z.times(mi).qubitOperationToAngleAxisRotation()).isEqualTo({angle: π, axis: [0, 0, 1], phase: 0});
 
     assertThat(Matrix.HADAMARD.qubitOperationToAngleAxisRotation()).
         isEqualTo({angle: π, axis: [s, 0, s], phase: π/2});
-    assertThat(Matrix.square(1, i, i, 1).scaledBy(s).qubitOperationToAngleAxisRotation()).
+    assertThat(Matrix.square(1, i, i, 1).times(s).qubitOperationToAngleAxisRotation()).
         isEqualTo({angle: -π/2, axis: [1, 0, 0], phase: 0});
     assertThat(Matrix.square(s, s, -s, s).qubitOperationToAngleAxisRotation()).
         isEqualTo({angle: -π/2, axis: [0, 1, 0], phase: 0});
@@ -736,10 +736,10 @@ suite.test("cross3", () => {
     assertThat(y.cross3(z)).isEqualTo(x);
     assertThat(z.cross3(x)).isEqualTo(y);
 
-    assertThat(y.cross3(x)).isEqualTo(z.scaledBy(-1));
-    assertThat(z.cross3(y)).isEqualTo(x.scaledBy(-1));
-    assertThat(x.cross3(z)).isEqualTo(y.scaledBy(-1));
+    assertThat(y.cross3(x)).isEqualTo(z.times(-1));
+    assertThat(z.cross3(y)).isEqualTo(x.times(-1));
+    assertThat(x.cross3(z)).isEqualTo(y.times(-1));
 
-    assertThat(x.scaledBy(2).cross3(y.scaledBy(3))).isEqualTo(z.scaledBy(6));
+    assertThat(x.times(2).cross3(y.times(3))).isEqualTo(z.times(6));
     assertThat(x.plus(y).cross3(y)).isEqualTo(z);
 });

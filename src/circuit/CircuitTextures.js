@@ -380,7 +380,7 @@ CircuitTextures.pixelsToQubitPairDensityMatrices = buffer => {
         let r11 = buffer[j + 3];
         let unity = r00 + r01 + r10 + r11;
         if (unity < 0.0000001 || isNaN(unity)) {
-            return Matrix.zero(4, 4).scaledBy(NaN);
+            return Matrix.zero(4, 4).times(NaN);
         }
         r00 /= unity;
         r01 /= unity;

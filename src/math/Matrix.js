@@ -376,8 +376,9 @@ class Matrix {
      * Returns the result of scaling the receiving matrix by the given scalar factor.
      * @param {!number|!Complex} v
      * @returns {!Matrix}
+     * @private
      */
-    scaledBy(v) {
+    _timesScalar(v) {
         let newBuffer = new Float64Array(this._buffer.length);
         let sr = Complex.realPartOf(v);
         let si = Complex.imagPartOf(v);
@@ -428,8 +429,9 @@ class Matrix {
      * Returns the matrix product (i.e. the composition) of the receiving matrix and the given matrix.
      * @param {!Matrix} other
      * @returns {!Matrix}
+     * @private
      */
-    times(other) {
+    _timesMatrix(other) {
         let m = this;
         let w = other.width();
         let h = this.height();
@@ -440,6 +442,16 @@ class Matrix {
             map(i => m.cell(i, r).times(other.cell(c, i))).
             aggregate(Complex.ZERO, (a, e) => a.plus(e)));
     };
+
+    /**
+     * Returns the product of the receiving matrix and the given matrix or scalar.
+     * @param {!Matrix|!number|!Complex} other A matrix or a scalar value.
+     * @returns {!Matrix}
+     */
+    times(other) {
+        //noinspection JSCheckFunctionSignatures
+        return other instanceof Matrix ? this._timesMatrix(other) : this._timesScalar(other);
+    }
 
     /**
      * Returns the receiving matrix's squared euclidean length.
@@ -551,9 +563,9 @@ class Matrix {
 
         let s = -11*x + -13*y + -17*z >= 0 ? 1 : -1;  // phase correction discontinuity on an awkward plane
         let theta = Math.sqrt(x*x + y*y + z*z);
-        let sigma_v = Matrix.PAULI_X.scaledBy(x).plus(
-                      Matrix.PAULI_Y.scaledBy(y)).plus(
-                      Matrix.PAULI_Z.scaledBy(z));
+        let sigma_v = Matrix.PAULI_X.times(x).plus(
+                      Matrix.PAULI_Y.times(y)).plus(
+                      Matrix.PAULI_Z.times(z));
 
         /** @type {!Complex} */
         let [cos, sin] = Util.snappedCosSin(s * theta);
@@ -561,7 +573,7 @@ class Matrix {
         /** @type {!Complex} */
         let cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
 
-        let m = Matrix.identity(2).scaledBy(ci).minus(sigma_v.scaledBy(cv));
+        let m = Matrix.identity(2).times(ci).minus(sigma_v.times(cv));
         let expectNiceValuesCorrection = v => Format.simplifyByRounding(v, 0.0000000000001);
         return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
     };
@@ -661,7 +673,7 @@ class Matrix {
             if (m === 0) {
                 throw new Error("Unexpected degenerate");
             }
-            return {val: v, vec: Matrix.col(x, y).scaledBy(1/m)};
+            return {val: v, vec: Matrix.col(x, y).times(1/m)};
         });
     }
 
@@ -672,13 +684,13 @@ class Matrix {
      * @returns {!Matrix}
      */
     liftApply(complexFunction) {
-        let t = this.scaledBy(0);
+        let t = this.times(0);
         for (let {val, vec} of this.eigenDecomposition()) {
             //noinspection JSUnusedAssignment
             let fVal = complexFunction(val);
             //noinspection JSUnusedAssignment
             let part = vec.times(vec.adjoint());
-            t = t.plus(part.scaledBy(fVal));
+            t = t.plus(part.times(fVal));
         }
         return t;
     }
@@ -785,13 +797,13 @@ class Matrix {
         let [x, y, z] = axis;
         Util.need(Math.abs(x*x+y*y+z*z - 1) < 0.000001, "Not a unit axis.");
 
-        let vσ = Matrix.PAULI_X.scaledBy(x).
-            plus(Matrix.PAULI_Y.scaledBy(y)).
-            plus(Matrix.PAULI_Z.scaledBy(z));
+        let vσ = Matrix.PAULI_X.times(x).
+            plus(Matrix.PAULI_Y.times(y)).
+            plus(Matrix.PAULI_Z.times(z));
         let [cos, sin] = Util.snappedCosSin(-angle/2);
-        return Matrix.identity(2).scaledBy(cos).
-            plus(vσ.scaledBy(new Complex(0, sin))).
-            scaledBy(Complex.polar(1, phase));
+        return Matrix.identity(2).times(cos).
+            plus(vσ.times(new Complex(0, sin))).
+            times(Complex.polar(1, phase));
     }
 
     /**
@@ -944,6 +956,6 @@ Matrix.PAULI_Z = Matrix.square(1, 0, 0, -1);
  * The 2x2 Hadamard matrix.
  * @type {!Matrix}
  */
-Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).scaledBy(Math.sqrt(0.5));
+Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).times(Math.sqrt(0.5));
 
 export default Matrix;
