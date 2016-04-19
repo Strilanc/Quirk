@@ -326,6 +326,8 @@ suite.test("norm2", () => {
 suite.test("tensorProduct", () => {
     assertThat(Matrix.solo(2).tensorProduct(Matrix.solo(3))).
         isEqualTo(Matrix.solo(6));
+    assertThat(Matrix.solo(new Complex(2, 3)).tensorProduct(Matrix.solo(new Complex(5, 7)))).
+        isEqualTo(Matrix.solo(new Complex(-11, 29)));
     assertThat(Matrix.solo(2).tensorProduct(Matrix.solo(3))).
         isEqualTo(Matrix.solo(6));
     assertThat(Matrix.PAULI_X.tensorProduct(Matrix.PAULI_Z)).isEqualTo(Matrix.square(

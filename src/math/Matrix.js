@@ -483,20 +483,34 @@ class Matrix {
      * @returns {!Matrix}
      */
     tensorProduct(other) {
-        let w1 = this.width();
-        let w2 = other.width();
-        let h1 = this.height();
-        let h2 = other.height();
-        return Matrix.generate(w1 * w2, h1 * h2, (r, c) => {
-            let r1 = Math.floor(r / h2);
-            let c1 = Math.floor(c / w2);
-            let r2 = r % h2;
-            let c2 = c % w2;
-            let v1 = this.cell(c1, r1);
-            let v2 = other.cell(c2, r2);
-            return v1.times(v2);
-        });
-    };
+        let w1 = this._width;
+        let h1 = this._height;
+        let w2 = other._width;
+        let h2 = other._height;
+        let w = w1*w2;
+        let h = h1*h2;
+        let newBuffer = new Float64Array(w*h*2);
+        for (let r1 = 0; r1 < h1; r1++) {
+            for (let r2 = 0; r2 < h2; r2++) {
+                for (let c1 = 0; c1 < w1; c1++) {
+                    for (let c2 = 0; c2 < w2; c2++) {
+                        let k1 = (r1*w1 + c1)*2;
+                        let k2 = (r2*w2 + c2)*2;
+                        let k3 = ((r1*h2 + r2)*w + (c1*w2 + c2))*2;
+                        let cr1 = this._buffer[k1];
+                        let ci1 = this._buffer[k1+1];
+                        let cr2 = other._buffer[k2];
+                        let ci2 = other._buffer[k2+1];
+                        let cr3 = cr1*cr2 - ci1*ci2;
+                        let ci3 = cr1*ci2 + ci1*cr2;
+                        newBuffer[k3] = cr3;
+                        newBuffer[k3+1] = ci3;
+                    }
+                }
+            }
+        }
+        return new Matrix(w, h, newBuffer);
+    }
 
     timesQubitOperation(operation2x2, qubitIndex, controlMask, desiredValueMask) {
         Util.need((controlMask & (1 << qubitIndex)) === 0, "Matrix.timesQubitOperation: self-controlled");
