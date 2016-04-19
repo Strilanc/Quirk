@@ -12,11 +12,11 @@ import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/widgets/MouseUtil.js"
 
-let canvasDiv = document.getElementById("canvasDiv");
+const canvasDiv = document.getElementById("canvasDiv");
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
-let canvas = document.getElementById("drawCanvas");
+const canvas = document.getElementById("drawCanvas");
 //noinspection JSValidateTypes
 if (canvas === null) {
     throw new Error("Couldn't find 'drawCanvas'");
@@ -27,7 +27,7 @@ let haveLoaded = false;
 
 //noinspection JSValidateTypes
 /** @type {!HTMLDivElement} */
-let inspectorDiv = document.getElementById("inspectorDiv");
+const inspectorDiv = document.getElementById("inspectorDiv");
 
 /** @type {null|!string} */
 let wantToPushStateIfDiffersFrom = null;
@@ -39,7 +39,7 @@ let inspector = InspectorWidget.empty(
 
 let historyFallback = false;
 /** @param {!string} jsonText */
-let updateCircuitLink = jsonText => {
+const updateCircuitLink = jsonText => {
     let title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     if (historyFallback) {
@@ -70,8 +70,8 @@ let updateCircuitLink = jsonText => {
 
 initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
 
-let snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
-let restore = jsonText => {
+const snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
+const restore = jsonText => {
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
     updateCircuitLink(jsonText);
     redrawThrottle.trigger();
@@ -86,37 +86,21 @@ let circuitTime = 0;
  * @type {!number}
  */
 let prevAdvanceTime = performance.now();
-let advanceCircuitTime = () => {
+const advanceCircuitTime = () => {
     let t = performance.now();
     let elapsed = (t - prevAdvanceTime) / Config.CYCLE_DURATION_MS;
     circuitTime += elapsed;
     circuitTime %= 1;
     prevAdvanceTime = t;
 };
-/** @type {!CooldownThrottle} */
-let redrawThrottle;
-/** @type {!number|undefined} */
-let tickWhenAppropriateTicker = undefined;
 let currentCircuitStatsCache =
     new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
-
-let tickWhenAppropriate = () => {
-    if (tickWhenAppropriateTicker !== undefined) {
-        clearTimeout(tickWhenAppropriateTicker);
-        tickWhenAppropriateTicker = undefined;
-    }
-    if (inspector.needsContinuousRedraw()) {
-        // Delay animating when the user has just modified the circuit.
-        // We don't want to start doing work just before they drag a bit more.
-        tickWhenAppropriateTicker = window.setTimeout(() => redrawThrottle.trigger(), Config.REFRESH_DURATION_MS);
-    }
-};
 
 /**
  * @param {!InspectorWidget} ins
  * @returns {!InspectorWidget}
  */
-let syncArea = ins => {
+const syncArea = ins => {
     ins.updateArea(
         new Rect(
             0,
@@ -126,7 +110,10 @@ let syncArea = ins => {
     return ins;
 };
 
-let redraw = () => {
+/** @type {!CooldownThrottle} */
+let redrawThrottle;
+const scheduleRedraw = () => redrawThrottle.trigger();
+const redrawNow = () => {
     canvas.width = Math.max(canvasDiv.clientWidth, inspector.desiredWidth());
     canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     if (!haveLoaded) {
@@ -147,11 +134,13 @@ let redraw = () => {
     shown.paint(painter, stats);
     painter.paintDeferred();
 
-    tickWhenAppropriate();
+    if (inspector.needsContinuousRedraw()) {
+        window.requestAnimationFrame(scheduleRedraw);
+    }
 };
-redrawThrottle = new CooldownThrottle(redraw.bind(undefined), Config.REDRAW_COOLDOWN_MS);
+redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MS);
 
-let useInspector = (newInspector, keepInHistory) => {
+const useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
         return false;
     }
@@ -162,7 +151,7 @@ let useInspector = (newInspector, keepInHistory) => {
         revision.commit(jsonText);
     }
 
-    redrawThrottle.trigger();
+    scheduleRedraw();
     return true;
 };
 
@@ -255,7 +244,7 @@ document.addEventListener('mousemove', ev => {
 });
 
 // Resize drawn circuit as window size changes.
-window.addEventListener('resize', () => redrawThrottle.trigger(), false);
+window.addEventListener('resize', scheduleRedraw, false);
 
 // Keyboard shortcuts (undo, redo).
 document.addEventListener("keydown", e => {
@@ -273,7 +262,7 @@ document.addEventListener("keydown", e => {
 });
 
 // Pull initial circuit out of URL '?x=y' arguments.
-let getHashParameters = () => {
+const getHashParameters = () => {
     let paramsText = document.location.hash.substr(1);
     let paramsObject = {};
     if (paramsText !== null && paramsText !== "") {
@@ -290,7 +279,7 @@ let getHashParameters = () => {
     }
     return paramsObject;
 };
-let loadCircuitFromUrl = () => {
+const loadCircuitFromUrl = () => {
     wantToPushStateIfDiffersFrom = null;
     let params = getHashParameters();
     if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
@@ -305,10 +294,10 @@ let loadCircuitFromUrl = () => {
             alert("Failed to load circuit: " + ex);
         }
     }
-    redrawThrottle.trigger();
+    scheduleRedraw();
 };
 
 window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl(true);
 haveLoaded = true;
-redraw();
+redrawNow();
