@@ -261,6 +261,7 @@ suite.test("adjoint", () => {
     let a = Matrix.square(new Complex(2, -3), new Complex(11, -13),
                           new Complex(5, -7), new Complex(17, -19));
     assertThat(v.adjoint()).isEqualTo(a);
+    assertThat(Matrix.col(1, 2, Complex.I).adjoint()).isEqualTo(Matrix.row(1, 2, Complex.I.neg()));
 });
 
 suite.test("times_scalar", () => {

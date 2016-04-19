@@ -50,7 +50,7 @@ class Matrix {
     }
 
     /**
-     * @returns {!Float64Array}
+     * @returns {!Float64Array|!Float32Array}
      */
     rawBuffer() {
         return this._buffer;
@@ -349,11 +349,18 @@ class Matrix {
      * @returns {!Matrix}
      */
     adjoint() {
-        //noinspection JSSuspiciousNameCombination
-        return Matrix.generate(
-            this._height,
-            this._width,
-            (r, c) => this.cell(r, c).conjugate());
+        let w = this._height;
+        let h = this._width;
+        let newBuf = new Float32Array(w*h*2);
+        for (let r = 0; r < h; r++) {
+            for (let c = 0; c < w; c++) {
+                let kIn = (c*this._width + r)*2;
+                let kOut = (r*w + c)*2;
+                newBuf[kOut] = this._buffer[kIn];
+                newBuf[kOut+1] = -this._buffer[kIn+1];
+            }
+        }
+        return new Matrix(w, h, newBuf);
     };
 
     /**
