@@ -351,7 +351,7 @@ class Matrix {
     adjoint() {
         let w = this._height;
         let h = this._width;
-        let newBuf = new Float32Array(w*h*2);
+        let newBuf = new Float64Array(w*h*2);
         for (let r = 0; r < h; r++) {
             for (let c = 0; c < w; c++) {
                 let kIn = (c*this._width + r)*2;
@@ -445,7 +445,7 @@ class Matrix {
         let w = other._width;
         let h = this._height;
         let n = this._width;
-        let newBuffer = new Float32Array(w*h*2);
+        let newBuffer = new Float64Array(w*h*2);
         for (let r = 0; r < h; r++) {
             for (let c = 0; c < w; c++) {
                 let k3 = (r*w + c)*2;
