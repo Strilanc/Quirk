@@ -746,3 +746,64 @@ suite.test("cross3", () => {
     assertThat(x.times(2).cross3(y.times(3))).isEqualTo(z.times(6));
     assertThat(x.plus(y).cross3(y)).isEqualTo(z);
 });
+
+suite.test("isUpperTriangular", () => {
+    assertTrue(Matrix.solo(0).isUpperTriangular(0));
+    assertTrue(Matrix.solo(1).isUpperTriangular(0));
+    assertFalse(Matrix.col(1, 2).isUpperTriangular(0));
+    assertTrue(Matrix.row(1, 2).isUpperTriangular(0));
+
+    assertTrue(Matrix.square(1, 2, 0, 4).isUpperTriangular(0));
+    assertFalse(Matrix.square(1, 2, 3, 4).isUpperTriangular(0));
+    assertFalse(Matrix.square(1, 2, Complex.I, 4).isUpperTriangular(0));
+    assertFalse(Matrix.square(1, 2, 3, 4).isUpperTriangular(2.9));
+    assertTrue(Matrix.square(1, 2, 3, 4).isUpperTriangular(3.1));
+
+    assertTrue(Matrix.square(
+        1, 2, 3,
+        0, 5, 6,
+        0, 0, 7).isUpperTriangular(0));
+    assertFalse(Matrix.square(
+        1, 2, 3,
+        0, 5, 6,
+        0.01, 0, 7).isUpperTriangular(0));
+    assertTrue(Matrix.square(
+        1, 2, 3,
+        0, 5, 6,
+        0.01, 0, 7).isUpperTriangular(0.1));
+});
+
+const assertQrDecompositionWorksFor = m => {
+    let {Q, R} = m.qrDecomposition();
+    assertThat(Q.isUnitary(0.00001)).withInfo({m, Q, R, test: "isUnitary"}).isEqualTo(true);
+    assertThat(R.isUpperTriangular(0.00001)).withInfo({m, Q, R, test: "isUpperTriangular"}).isEqualTo(true);
+    assertThat(Q.times(R)).withInfo({m, Q, R, QR: Q.times(R)}).isApproximatelyEqualTo(m);
+};
+
+suite.test("qrDecomposition", () => {
+    assertThrows(() => Matrix.col(2, 3).qrDecomposition());
+    assertThrows(() => Matrix.row(2, 3).qrDecomposition());
+
+    assertThat(Matrix.solo(0).qrDecomposition()).isEqualTo({Q: Matrix.solo(1), R: Matrix.solo(0)});
+    assertThat(Matrix.solo(1).qrDecomposition()).isEqualTo({Q: Matrix.solo(1), R: Matrix.solo(1)});
+
+    assertThat(Matrix.square(2, 3, 0, 5).qrDecomposition()).isEqualTo({
+        Q: Matrix.square(1, 0, 0, 1),
+        R: Matrix.square(2, 3, 0, 5)
+    });
+    assertThat(Matrix.square(2, 0, 3, 5).qrDecomposition()).isApproximatelyEqualTo({
+        Q: Matrix.square(0.5547, -0.83205, 0.83205, 0.5547),
+        R: Matrix.square(3.60555, 4.16025, 0, 2.7735)
+    }, 0.0001);
+    assertQrDecompositionWorksFor(Matrix.square(0, 0, 1, 0));
+    assertQrDecompositionWorksFor(Matrix.square(2, 0, 3, 5));
+    assertQrDecompositionWorksFor(Matrix.square(-1, Complex.I, Complex.I, 1));
+    assertQrDecompositionWorksFor(Matrix.square(2, 3, 5, 7, new Complex(11, 13), 17, 19, 23, 29));
+});
+
+suite.test("qrDecomposition_randomized", () => {
+    for (let k = 1; k < 20; k++) {
+        let m = Matrix.generate(k, k, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
+        assertQrDecompositionWorksFor(m);
+    }
+});

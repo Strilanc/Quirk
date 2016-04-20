@@ -30,7 +30,7 @@ class Matrix {
          */
         this._height = height;
         /**
-         * @type {!Float64Array}
+         * @type {!Float32Array|!Float64Array}
          * @private
          */
         this._buffer = buffer;
@@ -131,8 +131,7 @@ class Matrix {
      * @param {=Format} format
      * @returns {!string}
      */
-    toString(format) {
-        format = format || Format.EXACT;
+    toString(format = Format.EXACT) {
         let data = this.rows().
             map(row => row.
                 map(e => e.toString(format)).
@@ -262,6 +261,24 @@ class Matrix {
         }
         return this.times(this.adjoint()).isApproximatelyEqualTo(Matrix.identity(n), epsilon);
     };
+
+    /**
+     * @param {!number} epsilon
+     * @returns {!boolean}
+     */
+    isUpperTriangular(epsilon) {
+        for (let r = 0; r < this._height; r++) {
+            for (let c = 0; c < r && c < this._width; c++) {
+                let k = (r*this._width + c)*2;
+                let v1 = this._buffer[k];
+                let v2 = this._buffer[k+1];
+                if (v1*v1 + v2*v2 > epsilon*epsilon) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     /**
      * Determines if the matrix can be factored into a permutation matrix times a diagonal matrix.
@@ -610,18 +627,10 @@ class Matrix {
         /** @type {!Complex} */
         let cv = new Complex(Math.sin(theta/2) * sinc(theta/2), -s * sinc(theta)).times(s * 0.5);
 
+        //noinspection JSCheckFunctionSignatures
         let m = Matrix.identity(2).times(ci).minus(sigma_v.times(cv));
         let expectNiceValuesCorrection = v => Format.simplifyByRounding(v, 0.0000000000001);
         return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
-    };
-
-    static fromTargetedRotation(p) {
-        Util.need(p >= -1 && p <= 1, arguments);
-        let c = Math.sqrt(1 - Math.abs(p));
-        let s = (p < 0 ? -1 : +1) * Math.sqrt(Math.abs(p));
-        c = Format.simplifyByRounding(c, 0.00000000001);
-        s = Format.simplifyByRounding(s, 0.00000000001);
-        return Matrix.square(c, -s, s, c);
     };
 
     /**
@@ -649,7 +658,7 @@ class Matrix {
             return s;
         };
         return Matrix.generate(1 << numWires, 1 << numWires, (r, c) => bitSwap(r) === c ? 1 : 0);
-    };
+    }
 
     /**
      * Returns the identity matrix, with 1s on the main diagonal and all other entries zero.
@@ -657,8 +666,12 @@ class Matrix {
      * @returns {!Matrix}
      */
     static identity(size) {
-        return Matrix.generate(size, size, (r, c) => r === c ? Complex.ONE : Complex.ZERO);
-    };
+        let buf = new Float64Array(size*size*2);
+        for (let k = 0; k < size; k++) {
+            buf[k*(size + 1)*2] = 1;
+        }
+        return new Matrix(size, size, buf);
+    }
 
     /**
      * Returns a rotation matrix that rotations by the given angle.
@@ -672,6 +685,87 @@ class Matrix {
             c, -s,
             s, c);
     };
+
+    /**
+     * @private
+     */
+    _inline_rowMix_preMultiply(row1, row2, op) {
+        let [[a, b], [c, d]] = op.rows();
+        for (let col = 0; col < this._width; col++) {
+            let x = this.cell(col, row1);
+            let y = this.cell(col, row2);
+            let v1 = x.times(a).plus(y.times(b));
+            let v2 = x.times(c).plus(y.times(d));
+            let k1 = (row1*this._width + col)*2;
+            let k2 = (row2*this._width + col)*2;
+            this._buffer[k1] = v1.real;
+            this._buffer[k1+1] = v1.imag;
+            this._buffer[k2] = v2.real;
+            this._buffer[k2+1] = v2.imag;
+        }
+    }
+
+    /**
+     * @private
+     */
+    _inline_colMix_postMultiply(col1, col2, op) {
+        let [[a, b], [c, d]] = op.rows();
+        for (let row = 0; row < this._width; row++) {
+            let x = this.cell(col1, row);
+            let y = this.cell(col2, row);
+            let v1 = x.times(a).plus(y.times(c));
+            let v2 = x.times(b).plus(y.times(d));
+            let k1 = (row*this._width + col1)*2;
+            let k2 = (row*this._width + col2)*2;
+            this._buffer[k1] = v1.real;
+            this._buffer[k1+1] = v1.imag;
+            this._buffer[k2] = v2.real;
+            this._buffer[k2+1] = v2.imag;
+        }
+    }
+
+    /**
+     * Factors the receiving square matrix into a unitary matrix Q times an upper diagonal matrix R.
+     * @returns {!{Q: !Matrix, R: !Matrix}}
+     */
+    qrDecomposition() {
+        if (this._width !== this._height) {
+            throw new DetailedError("Expected a square matrix.", this);
+        }
+        let Q = Matrix.identity(this._width);
+        //noinspection JSCheckFunctionSignatures
+        let R = new Matrix(this._width, this._height, this._buffer.slice());
+        for (let row = 0; row < this._height; row++) {
+            for (let col = 0; col < row && col < this._width; col++) {
+                // We're going to cancel out the value below the diagonal with a Givens rotation.
+
+                let belowDiag = R.cell(col, row); // Zero this.
+                let onDiag = R.cell(col, col); // With this.
+
+                // Determine how much to rotate.
+                let mag1 = onDiag.abs();
+                let mag2 = belowDiag.abs();
+                if (mag2 === 0) {
+                    continue; // Already zero'd.
+                }
+                let theta = -Math.atan2(mag2, mag1);
+                let cos = Math.cos(theta);
+                let sin = Math.sin(theta);
+
+                // Need to cancel phases before rotating.
+                let phase1 = onDiag.unit().conjugate();
+                let phase2 = belowDiag.unit().conjugate();
+
+                // Apply the rotation to R (and cancel it with Q).
+                let op = Matrix.square(
+                    phase1.times(cos), phase2.times(-sin),
+                    phase1.times(sin), phase2.times(cos));
+                R._inline_rowMix_preMultiply(col, row, op);
+                Q._inline_colMix_postMultiply(col, row, op.adjoint());
+            }
+        }
+        return {Q, R};
+    }
 
     /**
      * Computes the eigenvalues and eigenvectors of a 2x2 matrix.
@@ -857,7 +951,7 @@ class Matrix {
     cross3(other) {
         Util.need(this.width() === 1 && this.height() === 3, "This isn't a 3d column vector.");
         Util.need(other.width() === 1 && other.height() === 3, "Other's not a 3d column vector.");
-        return Matrix.generate(1, 3, (r, _) => {
+        return Matrix.generate(1, 3, r => {
             let [i, j] = [(r+1) % 3, (r+2) % 3];
             let a = this.cell(0, i).times(other.cell(0, j));
             let b = this.cell(0, j).times(other.cell(0, i));
