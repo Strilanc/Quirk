@@ -1,5 +1,6 @@
 # Quirk
 
+A drag-and-drop quantum circuit simulator.
 A toy for exploring and understanding small quantum circuits.
 
 | master | dev | demo |
