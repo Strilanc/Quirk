@@ -4,7 +4,7 @@ A toy for exploring and understanding small quantum circuits.
 
 | master | dev | demo |
 |--------|-----|------|
-| [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=master)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector)      | [![Build Status](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector.svg?branch=dev)](https://travis-ci.org/Strilanc/Quantum-Circuit-Inspector) | [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk) |
+| [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)      | [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=dev)](https://travis-ci.org/Strilanc/Quirk) | [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk) |
 
 Defining features:
 
@@ -55,11 +55,11 @@ The example terminal commands have been tested on a fresh Ubuntu install.
 
 2. Clone the repository.
 
-    `git clone https://github.com/Strilanc/Quantum-Circuit-Inspector.git`
+    `git clone https://github.com/Strilanc/Quirk.git`
 
 3. Install the dev dependencies.
 
-    `cd Quantum-Circuit-Inspector`
+    `cd Quirk`
     
     `npm install`
 
