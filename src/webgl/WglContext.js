@@ -75,14 +75,14 @@ class WglContext {
         /** @type {Number} */
         this.maxTextureSize = this.gl.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE);
         /** @type {!string} */
-        this.maximumShaderFloatPrecision = this.getMaximumShaderFloatPrecision();
+        this.maximumShaderFloatPrecision = this._getMaximumShaderFloatPrecision();
     }
 
     /**
      * @returns {!string}
      * @private
      */
-    getMaximumShaderFloatPrecision() {
+    _getMaximumShaderFloatPrecision() {
         let gl = this.gl;
         const GL = WebGLRenderingContext;
         let check = (shaderType, precisionType) => {

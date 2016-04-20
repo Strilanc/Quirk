@@ -138,7 +138,6 @@ export default class CircuitStats {
             });
         qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
         qubitPairDensityTexes.push(CircuitTextures.superpositionToQubitPairDensities(outputTex, Controls.NONE, 0));
-        //console.log({mask, row, col, mat: matrices[row].toString(Format.SIMPLIFIED)});
 
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
             outputTex,

@@ -103,9 +103,9 @@ GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
     }
 
     let t = (args.stats.time + offset) % 1;
-    let yOff = args.rect.takeTopProportion(0.2).center().y;
-    let yOn = args.rect.takeBottomProportion(0.2).center().y;
-    let yNeutral = yOn;
+    let yOn = args.rect.takeTopProportion(0.2).center().y;
+    let yNeutral = args.rect.bottom();
+    let yOff = args.rect.takeBottomProportion(0.2).center().y;
     let xi = args.rect.x;
     let xf = args.rect.right();
     let xt = p => Math.min(Math.max(xi + (xf - xi)*p, xi), xf);
