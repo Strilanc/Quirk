@@ -4,9 +4,9 @@
   "description": "An HTML5 toy for exploring and understanding small quantum circuits.",
   "license": "Apache-2.0",
   "version": "1.0.2",
-  "homepage": "https://github.com/Strilanc/Quantum-Circuit-Inspector",
+  "homepage": "https://github.com/Strilanc/Quirk",
   "bugs": {
-    "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector/issues"
+    "url": "https://github.com/Strilanc/Quirk/issues"
   },
   "devDependencies": {
     "grunt": "~1.0.0",
@@ -31,6 +31,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Strilanc/Quantum-Circuit-Inspector.git"
+    "url": "https://github.com/Strilanc/Quirk.git"
   }
 }
