@@ -128,13 +128,14 @@ const match = function(array, predicate) {
  * Returns a string representation of a float, taking advantage of unicode fractions and square roots.
  *
  * @param {!number} value The value to represent as a string.
- * @param {=number} epsilon The maximum error introduced by using an expression.
- * @param {=number} digits The number of digits to use if no expression matches.
+ * @param {!number=} epsilon The maximum error introduced by using an expression.
+ * @param {!number|undefined=} digits The number of digits to use if no expression matches.
  * @returns {!string}
  */
-function abbreviateFloat(value, epsilon, digits) {
-    epsilon = epsilon || 0;
-
+function abbreviateFloat(value, epsilon=0, digits=undefined) {
+    if (Math.abs(value) < epsilon) {
+        return "0";
+    }
     if (value < 0) {
         return "-" + abbreviateFloat(-value, epsilon, digits);
     }

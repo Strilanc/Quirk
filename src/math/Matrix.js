@@ -341,19 +341,20 @@ class Matrix {
 
     /**
      * Determines if the matrix is exactly an identity matrix.
+     * @param {!number} epsilon
      * @returns {!boolean}
      */
-    isIdentity() {
+    isIdentity(epsilon=0) {
         if (this._width !== this._height) {
             return false;
         }
         for (let c = 0; c < this._width; c++) {
             for (let r = 0; r < this._height; r++) {
                 let i = (this._width*r + c)*2;
-                if (this._buffer[i] !== (r === c ? 1 : 0)) {
+                if (Math.abs(this._buffer[i] - (r === c ? 1 : 0)) > epsilon) {
                     return false;
                 }
-                if (this._buffer[i+1] !== 0) {
+                if (Math.abs(this._buffer[i+1]) > epsilon) {
                     return false;
                 }
             }
@@ -765,6 +766,29 @@ class Matrix {
             }
         }
         return {Q, R};
+    }
+
+    /**
+     * Computes the magnitudes of the eigenvalues of the matrix, using the QR algorithm.
+     * @param {!number} epsilon
+     * @param {!number=} maxIterations
+     * @returns {!Array.<!Complex>}
+     */
+    eigenvalueMagnitudes(epsilon, maxIterations = 1000) {
+        if (this._width !== this._height) {
+            throw new DetailedError("Expected a square matrix.", this);
+        }
+        let iteration = 0;
+        let m = this;
+        while (!m.isUpperTriangular(epsilon) && iteration < maxIterations) {
+            let {Q, R} = m.qrDecomposition();
+            if (R.isIdentity(epsilon)) {
+                return Seq.repeat(1, this._width).toArray();
+            }
+            m = R.times(Q);
+            iteration++;
+        }
+        return Seq.range(this._width).map(i => m.cell(i, i).abs()).sortedBy(e => -e).toArray();
     }
 
     /**

@@ -8,6 +8,7 @@ module.exports = function(config) {
         reporters: ['dots'],
         port: 19876,
         colors: true,
+        browserNoActivityTimeout: 30000,
         logLevel: config.LOG_INFO,
         autoWatch: false,
         browsers: ['Chrome', 'Firefox'],

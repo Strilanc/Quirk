@@ -802,8 +802,21 @@ suite.test("qrDecomposition", () => {
 });
 
 suite.test("qrDecomposition_randomized", () => {
-    for (let k = 1; k < 20; k++) {
+    for (let k = 1; k < 10; k++) {
         let m = Matrix.generate(k, k, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
         assertQrDecompositionWorksFor(m);
     }
+});
+
+suite.test("eigenvalueMagnitudes", () => {
+    assertThat(Matrix.HADAMARD.eigenvalueMagnitudes(0.001, 3)).isEqualTo([1, 1]);
+    assertThat(Matrix.PAULI_X.eigenvalueMagnitudes(0.001)).isEqualTo([1, 1]);
+    assertThat(Matrix.PAULI_Y.eigenvalueMagnitudes(0.001)).isEqualTo([1, 1]);
+    assertThat(Matrix.PAULI_Z.eigenvalueMagnitudes(0.001)).isEqualTo([1, 1]);
+    assertThat(Matrix.identity(5).eigenvalueMagnitudes(0.001)).isEqualTo([1, 1, 1, 1, 1]);
+
+    assertThat(Matrix.square(1, 1, 1, 1).eigenvalueMagnitudes(0.001)).isApproximatelyEqualTo([2, 0]);
+    assertThat(Matrix.square(1, -1, -1, 1).eigenvalueMagnitudes(0.001)).isApproximatelyEqualTo([2, 0]);
+
+    assertThat(Matrix.square(1, 1, 0, 1, 1, 0, 0, 0, 0).eigenvalueMagnitudes(0.001)).isApproximatelyEqualTo([2, 0, 0]);
 });

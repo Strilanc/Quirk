@@ -937,6 +937,30 @@ class Seq {
     };
 
     /**
+     * Returns a sequence containing the same items, but in ascending order.
+     * @returns {!Iterable.<T>}
+     * @template T
+     */
+    sorted() {
+        return seq(this.toArray().sort());
+    }
+
+    /**
+     * Returns a sequence containing the same items, but in ascending order of outputs from the given function.
+     * @returns {!Iterable.<T>}
+     * @template T
+     */
+    sortedBy(keySelector) {
+        return seq(this.toArray().sort((e1, e2) => {
+            let out1 = keySelector(e1);
+            let out2 = keySelector(e2);
+            return out1 < out2 ? -1 :
+                   out1 > out2 ? +1 :
+                   0;
+        }));
+    }
+
+    /**
      * Conditionally applies a transformation to the sequence.
      * If the given condition is false, the original sequence is returned.
      * If the given condition is true, the sequence is run through the given transformation and the result is returned.
