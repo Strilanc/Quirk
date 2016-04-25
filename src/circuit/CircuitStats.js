@@ -11,6 +11,8 @@ import { seq, Seq } from "src/base/Seq.js"
 import CircuitTextures from "src/circuit/CircuitTextures.js"
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
+import Serializer from "src/circuit/Serializer.js"
+import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
 
 export default class CircuitStats {
     /**
@@ -116,17 +118,34 @@ export default class CircuitStats {
             this.finalState);
     }
 
-    static fallbackForCircuit(circuitDefinition, time) {
-        return new CircuitStats(
-            circuitDefinition,
-            time,
-            [],
-            [],
-            Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN)
-        )
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
+    static fromCircuitAtTime(circuitDefinition, time) {
+        try {
+            return CircuitStats._fromCircuitAtTime_noFallback(circuitDefinition, time);
+        } catch (ex) {
+            notifyAboutRecoveryFromUnexpectedError(
+                "Computing circuit values failed. Defaulted to NaN results.",
+                {circuitDefinition: Serializer.toJson(circuitDefinition)},
+                ex);
+            return new CircuitStats(
+                circuitDefinition,
+                time,
+                [],
+                [],
+                Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN));
+        }
     }
 
-    static fromCircuitAtTime(circuitDefinition, time) {
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
+    static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
         const numWires = circuitDefinition.numWires;
         const allWiresMask = (1 << numWires) - 1;
 

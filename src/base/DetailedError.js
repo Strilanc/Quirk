@@ -34,4 +34,8 @@ export default class DetailedError extends Error {
             CONSTRUCTOR_CALLS_NESTING--;
         }
     }
+
+    toString() {
+        return `${super.toString()}\nDetails: ${this.details}`;
+    }
 }

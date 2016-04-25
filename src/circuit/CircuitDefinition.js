@@ -278,8 +278,10 @@ class CircuitDefinition {
             map(r => w + Seq.
                 range(this.columns.length).
                 map(c => {
+                    let span = 4 + seq(self.columns[c].gates).map(e => e === null ? 0 : e.serializedId.length).max();
                     let g = self.columns[c].gates[r];
-                    let t = g === null ? w : g.symbol;
+                    let t = g === null ? w : g.serializedId;
+                    t = w.repeat(Math.floor(span - t.length)/2) + t + w.repeat(Math.ceil(span - t.length)/2);
                     return new Seq(t).padded(7, w).join("");
                 }).
                 join("")).

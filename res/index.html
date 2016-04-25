@@ -10,8 +10,30 @@
             <div id="canvasDiv" style="width: 100%;">
                 <canvas id="drawCanvas"></canvas>
             </div>
-
-            <script src="src.min.js"></script>
         </div>
+        <div id="errorDiv" style="visibility:collapse; font-size:24px; font-family:monospace; color:red; background-color:#FFA;">
+            An error happened. :(
+            <br/>
+            <br/>
+            You can:
+            <ul>
+                <li>
+                    <a id="error-github-anchor">Create an issue on github</a>
+                    (requires an account)
+                    (repository: <a href="https://github.com/Strilanc/Quirk">Strilanc/Quirk</a>)
+                </li>
+                <li>
+                    Undo what you just did to the circuit (hit CTRL+Z).
+                </li>
+                <li>
+                    <a id="error-mailto-anchor"></a>
+                </li>
+            </ul>
+            Useful details to mention:
+            <br/>
+            <br/>
+            <div id="errorDescDiv" style="font-size: 16px;"></div>
+        </div>
+        <script src="src.min.js"></script>
     </body>
 </html>
