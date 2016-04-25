@@ -16,53 +16,48 @@ class WglContext {
          */
         this.canvas = document.createElement('canvas');
 
-        try {
-            /**
-             * The WebGLRenderingContext instance associated with the WglContext.
-             * @type {!WebGLRenderingContext}
-             */
-            this.gl = /** @type {!WebGLRenderingContext} */
-                this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
-            if ((/** @type {null|!WebGLRenderingContext} */ this.gl) === null) {
-                throw new Error('Error creating WebGL context.');
-            }
-            if (this.gl.getExtension('OES_texture_float') === undefined) {
-                throw new Error("WebGL support for 32-bit floats not present.")
-            }
-
-            /** @type {!function(void):void} */
-            this.onContextRestored = undefined;
-
-            /**
-             * Changed when the wrapped WebGLRenderingContext is lost/restored and things need to be re-created.
-             * @type {!int}
-             */
-            this.lifetimeCounter = 0;
-
-            // Wire lifetime updates.
-            this.canvas.addEventListener(
-                "webglcontextrestored",
-                event => {
-                    event.preventDefault();
-                    this.recomputeProperties();
-                    if (this.onContextRestored !== undefined) {
-                        this.onContextRestored();
-                    }
-                },
-                false);
-            this.canvas.addEventListener(
-                'webglcontextlost',
-                event => {
-                    event.preventDefault();
-                    this.lifetimeCounter++;
-                },
-                false);
-
-            this.recomputeProperties();
-        } catch (ex) {
-            document.removeChild(this.canvas);
-            throw ex;
+        /**
+         * The WebGLRenderingContext instance associated with the WglContext.
+         * @type {!WebGLRenderingContext}
+         */
+        this.gl = /** @type {!WebGLRenderingContext} */
+            this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
+        if ((/** @type {null|!WebGLRenderingContext} */ this.gl) === null) {
+            throw new Error('Error creating WebGL context.');
         }
+        if (this.gl.getExtension('OES_texture_float') === undefined) {
+            throw new Error("OES_texture_float webgl extension not present.")
+        }
+
+        /** @type {!function(void):void} */
+        this.onContextRestored = undefined;
+
+        /**
+         * Changed when the wrapped WebGLRenderingContext is lost/restored and things need to be re-created.
+         * @type {!int}
+         */
+        this.lifetimeCounter = 0;
+
+        // Wire lifetime updates.
+        this.canvas.addEventListener(
+            "webglcontextrestored",
+            event => {
+                event.preventDefault();
+                this.recomputeProperties();
+                if (this.onContextRestored !== undefined) {
+                    this.onContextRestored();
+                }
+            },
+            false);
+        this.canvas.addEventListener(
+            'webglcontextlost',
+            event => {
+                event.preventDefault();
+                this.lifetimeCounter++;
+            },
+            false);
+
+        this.recomputeProperties();
     };
 
     /**
