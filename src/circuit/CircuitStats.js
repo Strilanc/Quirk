@@ -11,6 +11,8 @@ import { seq, Seq } from "src/base/Seq.js"
 import CircuitTextures from "src/circuit/CircuitTextures.js"
 import Util from "src/base/Util.js"
 import Matrix from "src/math/Matrix.js"
+import Serializer from "src/circuit/Serializer.js"
+import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
 
 export default class CircuitStats {
     /**
@@ -53,33 +55,41 @@ export default class CircuitStats {
     }
 
     qubitDensityMatrix(wireIndex, colIndex) {
-        if (wireIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
+        if (wireIndex < 0) {
             throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
         }
 
         // The initial state is all-qubits-off.
-        if (colIndex < 0) {
+        if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
             let buf = new Float32Array(2*2*2);
             buf[0] = 1;
             return new Matrix(2, 2, buf);
         }
 
-        return this._qubitDensities[Math.min(colIndex, this._qubitDensities.length - 1)][wireIndex];
+        let col = Math.min(colIndex, this._qubitDensities.length - 1);
+        if (col < 0 || wireIndex >= this._qubitDensities[col].length) {
+            return Matrix.zero(2, 2).times(NaN);
+        }
+        return this._qubitDensities[col][wireIndex];
     }
 
     qubitPairDensityMatrix(wireIndex, colIndex) {
-        if (wireIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
+        if (wireIndex < 0) {
             throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
         }
 
         // The initial state is all-qubits-off.
-        if (colIndex < 0) {
+        if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
             let buf = new Float32Array(4*4*2);
             buf[0] = 1;
-            return new Matrix(2, 2, buf);
+            return new Matrix(4, 4, buf);
         }
 
-        return this._qubitPairDensities[Math.min(colIndex, this._qubitPairDensities.length - 1)][wireIndex];
+        let col = Math.min(colIndex, this._qubitPairDensities.length - 1);
+        if (col < 0 || wireIndex >= this._qubitPairDensities[col].length) {
+            return Matrix.zero(4, 4).times(NaN);
+        }
+        return this._qubitPairDensities[col][wireIndex];
     }
 
     /**
@@ -108,7 +118,34 @@ export default class CircuitStats {
             this.finalState);
     }
 
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
     static fromCircuitAtTime(circuitDefinition, time) {
+        try {
+            return CircuitStats._fromCircuitAtTime_noFallback(circuitDefinition, time);
+        } catch (ex) {
+            notifyAboutRecoveryFromUnexpectedError(
+                "Computing circuit values failed. Defaulted to NaN results.",
+                {circuitDefinition: Serializer.toJson(circuitDefinition)},
+                ex);
+            return new CircuitStats(
+                circuitDefinition,
+                time,
+                [],
+                [],
+                Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN));
+        }
+    }
+
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
+    static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
         const numWires = circuitDefinition.numWires;
         const allWiresMask = (1 << numWires) - 1;
 
@@ -138,7 +175,6 @@ export default class CircuitStats {
             });
         qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
         qubitPairDensityTexes.push(CircuitTextures.superpositionToQubitPairDensities(outputTex, Controls.NONE, 0));
-        //console.log({mask, row, col, mat: matrices[row].toString(Format.SIMPLIFIED)});
 
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
             outputTex,

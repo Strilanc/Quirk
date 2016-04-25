@@ -34,6 +34,9 @@ let promiseRunTest = (suite, name, method) => {
         return finish();
     }, ex => {
         result.log.push(String(ex));
+        if (ex.details !== undefined) {
+            result.log.push(ex.details);
+        }
         if (ex.stack !== undefined) {
             result.log.push(ex.stack);
         }
