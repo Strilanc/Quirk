@@ -188,7 +188,7 @@ Gates.Displays = {
         Matrix.identity(4),
         "2-Qubit Density Matrix Display",
         "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
-    ).withSerializedId("Density2").withCustomDrawer(args => {
+    ).withSerializedId("Density2").withWidth(2).withHeight(2).withCustomDrawer(args => {
         let showState = args.positionInCircuit !== null;
         let showText = !showState || args.isHighlighted;
 

@@ -114,6 +114,10 @@ class CircuitDefinition {
                     toArray())));
     }
 
+    minimumRequiredWireCount() {
+        return seq(this.columns).map(c => c.minimumRequiredWireCount()).max(0);
+    }
+
     isEqualTo(other) {
         if (this === other) {
             return true;
