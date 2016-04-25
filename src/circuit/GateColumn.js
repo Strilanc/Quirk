@@ -146,10 +146,10 @@ class GateColumn {
             // Also this time happens to hit the upstroke on both of the included clock-pulse gates.
             let m = g.matrixAt(0.8234);
             const ε = 0.0001;
-            let doesSomething = !m.isIdentity();
+            let permutesStates = !m.isDiagonal();
             let createsSuperpositions = !m.isPhasedPermutation(ε);
             let hasCoherentControl = this.hasCoherentControl(inputMeasureMask);
-            if (doesSomething && (hasCoherentControl || createsSuperpositions)) {
+            if (permutesStates && (hasCoherentControl || createsSuperpositions)) {
                 return "no\nremix\n(sorry)";
             }
         }

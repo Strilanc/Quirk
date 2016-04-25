@@ -820,3 +820,33 @@ suite.test("eigenvalueMagnitudes", () => {
 
     assertThat(Matrix.square(1, 1, 0, 1, 1, 0, 0, 0, 0).eigenvalueMagnitudes(0.001)).isApproximatelyEqualTo([2, 0, 0]);
 });
+
+suite.test("isDiagonal", () => {
+    assertTrue(Matrix.solo(0).isDiagonal());
+    assertTrue(Matrix.solo(1).isDiagonal(0));
+    assertFalse(Matrix.col(0, 0).isDiagonal(0));
+    assertFalse(Matrix.row(0, 0).isDiagonal(0));
+
+    assertTrue(Matrix.square(1, 0, 0, 0).isDiagonal());
+    assertFalse(Matrix.square(0, 1, 0, 0).isDiagonal());
+    assertFalse(Matrix.square(0, 0, 1, 0).isDiagonal());
+    assertTrue(Matrix.square(0, 0, 0, 1).isDiagonal());
+
+    assertTrue(Matrix.square(new Complex(2, 3), 0, 0, 0).isDiagonal());
+    assertFalse(Matrix.square(0, new Complex(2, 3), 0, 0).isDiagonal());
+    assertFalse(Matrix.square(0, 0, new Complex(2, 3), 0).isDiagonal());
+    assertTrue(Matrix.square(0, 0, 0, new Complex(2, 3)).isDiagonal());
+
+    assertTrue(Matrix.square(
+        -10, 0, 0,
+        0, Infinity, 0,
+        0, 0, Complex.I).isDiagonal());
+    assertFalse(Matrix.square(
+        -10, 0.1, 0,
+        0, Infinity, 0,
+        0, 0, Complex.I).isDiagonal());
+    assertTrue(Matrix.square(
+        -10, 0.1, 0,
+        0, Infinity, 0,
+        0, 0, Complex.I).isDiagonal(0.2));
+});

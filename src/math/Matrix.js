@@ -263,10 +263,10 @@ class Matrix {
     };
 
     /**
-     * @param {!number} epsilon
+     * @param {!number=} epsilon
      * @returns {!boolean}
      */
-    isUpperTriangular(epsilon) {
+    isUpperTriangular(epsilon=0) {
         for (let r = 0; r < this._height; r++) {
             for (let c = 0; c < r && c < this._width; c++) {
                 let k = (r*this._width + c)*2;
@@ -340,7 +340,7 @@ class Matrix {
     };
 
     /**
-     * Determines if the matrix is exactly an identity matrix.
+     * Determines if the matrix is an identity matrix.
      * @param {!number} epsilon
      * @returns {!boolean}
      */
@@ -355,6 +355,26 @@ class Matrix {
                     return false;
                 }
                 if (Math.abs(this._buffer[i+1]) > epsilon) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    /**
+     * Determines if the matrix is square and only has entries along its main diagonal.
+     * @param {!number=} epsilon
+     * @returns {!boolean}
+     */
+    isDiagonal(epsilon=0) {
+        if (this._width !== this._height) {
+            return false;
+        }
+        for (let c = 0; c < this._width; c++) {
+            for (let r = 0; r < this._height; r++) {
+                let i = (this._width*r + c)*2;
+                if (r !== c && (Math.abs(this._buffer[i]) > epsilon || Math.abs(this._buffer[i+1]) > epsilon)) {
                     return false;
                 }
             }
