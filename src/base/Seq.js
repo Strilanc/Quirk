@@ -111,6 +111,24 @@ class Seq {
     };
 
     /**
+     * Returns a Float32Array containing the items of this sequence.
+     * @returns {!Float32Array}
+     */
+    toFloat32Array() {
+        let n = this.tryPeekCount();
+        if (n === undefined) {
+            return new Float32Array(this.toArray());
+        }
+
+        let buf = new Float32Array(n);
+        let i = 0;
+        for (let item of this._iterable) {
+            buf[i++] = item;
+        }
+        return buf;
+    };
+
+    /**
      * Returns a set containing the distinct items of this sequence.
      * @returns {!Set.<T>)
      * @template T
@@ -880,6 +898,7 @@ class Seq {
      * If the sequence is of a known type with a known number of items, then returns the length of the sequence.
      * Otherwise, returns undefined.
      * It is guaranteed that the sequence will not be iterated by this method.
+     * @returns {!int|undefined}
      */
     tryPeekCount() {
         if (Array.isArray(this._iterable) || !GENERIC_ARRAY_TYPES.every(t => !(this._iterable instanceof t))) {
@@ -895,6 +914,7 @@ class Seq {
      * Determines the number of items in the sequence.
      * Uses length/size methods of known types, when possible, but otherwise falls back to iterating all the items.
      * Gets stuck in a loop if the sequence is unbounded.
+     * @returns {!int}
      */
     count() {
         let known = this.tryPeekCount();

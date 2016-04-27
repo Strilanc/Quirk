@@ -1,12 +1,14 @@
+import CircuitShaders from "src/circuit/CircuitShaders.js"
+import Shaders from "src/webgl/Shaders.js"
 import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
 import GateFactory from "src/ui/GateFactory.js"
+import GateShaders from "src/circuit/GateShaders.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 const τ = Math.PI * 2;
@@ -184,7 +186,7 @@ Gates.Displays = {
     }),
 
     DensityMatrixDisplay2: new Gate(
-        "Density\n(2)",
+        "Density\n2",
         Matrix.identity(4),
         "2-Qubit Density Matrix Display",
         "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
@@ -272,6 +274,65 @@ Gates.HalfTurns = {
         "Hadamard Gate",
         "The simplest non-classical gate.\n" +
         "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.")
+};
+
+/**
+ * Gates that correspond to increments or decrements of multiple qubits.
+ */
+Gates.Increments = {
+    Inc2: new Gate(
+        "+1\n2",
+        Matrix.generate(1<<2, 1<<2, (r, c) => ((r+1) & 3) == c ? 1 : 0),
+        "2-Bit Increment Gate",
+        "Adds 1 to the little-endian number represented by two qubits."
+    ).withSerializedId("inc2").
+        withHeight(2).
+        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 2, +1)),
+
+    Inc3: new Gate(
+        "+1\n3",
+        Matrix.generate(1<<3, 1<<3, (r, c) => ((r+1) & 7) == c ? 1 : 0),
+        "3-Bit Increment Gate",
+        "Adds 1 to the little-endian number represented by three qubits."
+    ).withSerializedId("inc3").
+        withHeight(3).
+        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 3, +1)),
+
+    Inc4: new Gate(
+        "+1\n4",
+        Matrix.generate(1<<4, 1<<4, (r, c) => ((r+1) & 15) == c ? 1 : 0),
+        "4-Bit Increment Gate",
+        "Adds 1 to the little-endian number represented by three qubits."
+    ).withSerializedId("inc4").
+        withHeight(4).
+        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 4, +1)),
+
+    Dec2: new Gate(
+        "-1\n2",
+        Matrix.generate(1<<2, 1<<2, (r, c) => ((r-1) & 3) == c ? 1 : 0),
+        "2-Bit Decrement Gate",
+        "Subtracts 1 from little-endian number represented by two qubits."
+    ).withSerializedId("dec2").
+        withHeight(2).
+        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 2, -1)),
+
+    Dec3: new Gate(
+        "-1\n3",
+        Matrix.generate(1<<3, 1<<3, (r, c) => ((r-1) & 7) == c ? 1 : 0),
+        "3-Bit Decrement Gate",
+        "Subtracts 1 from the little-endian number represented by three qubits."
+    ).withSerializedId("dec3").
+        withHeight(3).
+        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 3, -1)),
+
+    Dec4: new Gate(
+        "-1\n4",
+        Matrix.generate(1<<4, 1<<4, (r, c) => ((r-1) & 15) == c ? 1 : 0),
+        "4-Bit Decrement Gate",
+        "Subtracts 1 from the little-endian number represented by three qubits."
+    ).withSerializedId("dec4").
+        withHeight(4).
+        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 4, -1))
 };
 
 Gates.QuarterTurns = {
@@ -622,7 +683,7 @@ Gates.ExperimentalAndImplausible = {
         Matrix.zero(2, 2),
         "Universal Not Gate",
         "Mirrors a qubit's state through the origin of the Bloch sphere.\nImpossible in practice.").
-        withCustomShader(CircuitShaders.universalNot).
+        withCustomShader(GateShaders.universalNot).
         withSerializedId("__unstable__UniversalNot")
 };
 
@@ -703,6 +764,17 @@ Gates.Sets = [
             Gates.Exponentiating.XBackward,
             Gates.Exponentiating.YBackward,
             Gates.Exponentiating.ZBackward
+        ]
+    },
+    {
+        hint: "Counters",
+        gates: [
+            Gates.Increments.Inc2,
+            Gates.Increments.Inc3,
+            Gates.Increments.Inc4,
+            Gates.Increments.Dec2,
+            Gates.Increments.Dec3,
+            Gates.Increments.Dec4
         ]
     },
     {
@@ -804,6 +876,13 @@ Gates.KnownToSerializer = [
     Gates.OtherZ.Z3i,
     Gates.OtherZ.Z4i,
     Gates.OtherZ.Z8i,
+
+    Gates.Increments.Inc2,
+    Gates.Increments.Inc3,
+    Gates.Increments.Inc4,
+    Gates.Increments.Dec2,
+    Gates.Increments.Dec3,
+    Gates.Increments.Dec4,
 
     Gates.ExperimentalAndImplausible.UniversalNot
 ];

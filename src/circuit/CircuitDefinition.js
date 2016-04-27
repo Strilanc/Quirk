@@ -258,7 +258,7 @@ class CircuitDefinition {
                     return null;
                 }
                 let m = gate.matrixAt(time);
-                if (m.width() !== 2 || m.height() !== 2 || m.isIdentity()) {
+                if (gate === Gates.Special.SwapHalf || m.isIdentity()) {
                     return null;
                 }
 

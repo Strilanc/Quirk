@@ -95,6 +95,8 @@ export default class InspectorWidget {
         for (let k = 0; k < gates.length; k++) {
             let p = this.hand.pos.offsetBy(0, dh * (k - gates.length + 1));
             let r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
+            r.h = Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gates[k].height-1);
+            r.w = Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gates[k].width-1);
             let drawer = gates[k].customDrawer || GateFactory.DEFAULT_DRAWER;
             drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
         }
