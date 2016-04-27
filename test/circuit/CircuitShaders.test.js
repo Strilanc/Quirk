@@ -581,27 +581,3 @@ suite.webGlTest("qubitDensities", () => {
         q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
 });
-
-suite.webGlTest('universalNot', () => {
-    let _ = 0;
-    let input = Shaders.data(new Float32Array([
-        1,2,_,_, 3,4,_,_,
-        5,6,_,_, 7,8,_,_
-    ])).toFloatTexture(2, 2);
-    let assertAbout = (index, control) => assertThat(CircuitShaders.universalNot(
-        input,
-        CircuitShaders.controlMask(control).toFloatTexture(2, 2),
-        index).readFloatOutputs(2, 2));
-    assertAbout(0, Controls.NONE).isEqualTo(new Float32Array([
-        3,-4,_,_, -1,2,_,_,
-        7,-8,_,_, -5,6,_,_
-    ]));
-    assertAbout(1, Controls.NONE).isEqualTo(new Float32Array([
-        5,-6,_,_, 7,-8,_,_,
-        -1,2,_,_, -3,4,_,_
-    ]));
-    assertAbout(0, Controls.bit(1, true)).isEqualTo(new Float32Array([
-        1,2,_,_, 3,4,_,_,
-        7,-8,_,_, -5,6,_,_
-    ]));
-});

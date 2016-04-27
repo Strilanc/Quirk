@@ -44,25 +44,13 @@ const snippets = {
         }`,
 
     /**
-     * Converts the index of a classical state to the XY coordinate of the pixel storing its amplitude.
-     * @param state The classical state's index, where the index in binary is a list of the qubit values.
-     */
-    stateToPixelUv: `
-        vec2 stateToPixelUv(float state) {
-            float c = state + 0.5;
-            float r = mod(c, textureSize.x);
-            float d = floor(c / textureSize.x) + 0.5;
-            return vec2(r, d) / textureSize.xy;
-        }`,
-
-    /**
      * Returns the uv difference between a bit's off and on states.
      */
     bitMaskToPixelDeltaUv: `
         vec2 bitMaskToPixelDeltaUv(float bitMask) {
-            float r = mod(bitMask, textureSize.x);
-            float d = floor(bitMask / textureSize.x);
-            return vec2(r, d) / textureSize.xy;
+            float r = mod(bitMask, inputSize.x);
+            float d = floor(bitMask / inputSize.x);
+            return vec2(r, d) / inputSize.xy;
         }`
 };
 
@@ -259,7 +247,7 @@ CircuitShaders.qubitOperation = (inputTexture, operation, qubitIndex, controlTex
         Util.need(operation.width() === 2 && operation.height() === 2);
         let [ar, ai, br, bi, cr, ci, dr, di] = operation.rawBuffer();
         CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.vec2("inputSize", destinationTexture.width, destinationTexture.height),
             WglArg.texture("inputTexture", inputTexture, 0),
             WglArg.float("qubitIndexMask", 1 << qubitIndex),
             WglArg.texture("controlTexture", controlTexture, 1),
@@ -285,7 +273,7 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
     /**
      * The width and height of the textures being operated on.
      */
-    uniform vec2 textureSize;
+    uniform vec2 inputSize;
 
     /**
      * A power of two (2^n) with the exponent n determined by the index of the qubit to operate on.
@@ -301,16 +289,19 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
 
     ${snippets.filterBit}
     ${snippets.toggleBit}
-    ${snippets.stateToPixelUv}
+
+    vec2 toUv(float state) {
+        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
+    }
 
     void main() {
 
         // Which part of the multiplication are we doing?
         vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        vec2 pixelUv = gl_FragCoord.xy / textureSize;
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
+        vec2 pixelUv = gl_FragCoord.xy / inputSize;
+        float state = pixelXy.y * inputSize.x + pixelXy.x;
         float opposingState = toggleBit(state, qubitIndexMask);
-        vec2 opposingPixelUv = stateToPixelUv(opposingState);
+        vec2 opposingPixelUv = toUv(opposingState);
         bool targetBitIsOff = state < opposingState;
 
         // Does this part of the superposition match the controls?
@@ -344,49 +335,6 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
     }`);
 
 /**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
- * @returns {!WglConfiguredShader}
- */
-CircuitShaders.universalNot = (inputTexture, controlTexture, qubitIndex) =>
-    new WglConfiguredShader(destinationTexture => {
-        UNIVERSAL_NOT_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("bit", 1 << qubitIndex)
-        ).renderTo(destinationTexture);
-    });
-const UNIVERSAL_NOT_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float bit;
-
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float hasBit = mod(floor(state / bit), 2.0);
-        float partnerState = state + bit * (1.0 - 2.0 * hasBit);
-        vec2 uv = uvFor(state);
-        vec2 partnerUv = uvFor(partnerState);
-
-        float control = texture2D(controlTexture, uv).x;
-        vec2 val = vec4(texture2D(inputTexture, uv)).xy;
-        vec2 partnerVal = vec4(texture2D(inputTexture, partnerUv)).xy;
-        vec2 outUncontrolled = vec2(partnerVal.x, -partnerVal.y) * (1.0 - 2.0 * hasBit);
-        vec2 outVal = (1.0 - control) * val + control * outUncontrolled;
-        gl_FragColor = vec4(outVal.x, outVal.y, 0.0, 0.0);
-    }`);
-
-/**
  * Renders the result of applying a controlled swap operation to a superposition.
  *
  * @param {!WglTexture} inputTexture
@@ -400,7 +348,7 @@ CircuitShaders.swap = (inputTexture, qubitIndex1, qubitIndex2, controlTexture) =
             throw new Error("Texture sizes must match.");
         }
         SWAP_QUBITS_SHADER.withArgs(
-            WglArg.vec2("textureSize", destinationTexture.width, destinationTexture.height),
+            WglArg.vec2("inputSize", destinationTexture.width, destinationTexture.height),
             WglArg.texture("inputTexture", inputTexture, 0),
             WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
             WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
@@ -423,7 +371,7 @@ const SWAP_QUBITS_SHADER = new WglShader(`
     /**
      * The width and height of the textures being operated on.
      */
-    uniform vec2 textureSize;
+    uniform vec2 inputSize;
 
     /**
      * A power of two (2^n) with the exponent n determined by the index of one of the qubits to swap.
@@ -437,12 +385,15 @@ const SWAP_QUBITS_SHADER = new WglShader(`
 
     ${snippets.filterBit}
     ${snippets.toggleBit}
-    ${snippets.stateToPixelUv}
+
+    vec2 toUv(float state) {
+        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
+    }
 
     void main() {
         vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = pixelXy.y * textureSize.x + pixelXy.x;
-        vec2 pixelUv = gl_FragCoord.xy / textureSize;
+        float state = pixelXy.y * inputSize.x + pixelXy.x;
+        vec2 pixelUv = gl_FragCoord.xy / inputSize;
 
         float opposingState1 = toggleBit(state, qubitIndexMask1);
         float opposingState2 = toggleBit(state, qubitIndexMask2);
@@ -453,7 +404,7 @@ const SWAP_QUBITS_SHADER = new WglShader(`
         vec2 srcPixelUv;
         if (!blockedByControls && qubitIsOn1 != qubitIsOn2) {
             float swapState = opposingState1 + opposingState2 - state;
-            vec2 swapPixelUv = stateToPixelUv(swapState);
+            vec2 swapPixelUv = toUv(swapState);
             srcPixelUv = swapPixelUv;
         } else {
             srcPixelUv = pixelUv;

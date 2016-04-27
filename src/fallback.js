@@ -7,7 +7,7 @@ let showErrorDiv = (subject, body) => {
     }
     _alreadySeen.push(body);
 
-    document.getElementById('errorDiv').style.visibility = 'visible';
+    document.getElementById('errorDiv').style.display = 'block';
     document.getElementById('errorDescDiv').innerText = body;
     document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
     document.getElementById('error-mailto-anchor').href = [

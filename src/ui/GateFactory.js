@@ -20,7 +20,7 @@ GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR
     }
     args.painter.fillRect(args.rect, backColor);
     args.painter.strokeRect(args.rect);
-    paintGateSymbol(args.painter, args.gate.symbol, args.rect);
+    paintGateSymbol(args);
 };
 
 /**
@@ -29,26 +29,29 @@ GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR
 GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
 
 /**
- * @param {!Painter} painter
- * @param {!string} symbol
- * @param {!Rect} rect
+ * @param {!GateDrawParams} args
  */
-const paintGateSymbol = (painter, symbol, rect) => {
+const paintGateSymbol = args => {
+    let painter = args.painter;
+    let symbol = args.gate.symbol;
+    let rect = args.rect;
     const font = '16px Helvetica';
     rect = rect.paddedBy(-2);
 
     let noteIndex = symbol.indexOf('\n');
     if (noteIndex !== -1) {
-        painter.print(
-            symbol.substring(noteIndex + 1),
-            rect.x + rect.w/2,
-            rect.y + rect.h,
-            'center',
-            'bottom',
-            'black',
-            '12px Helvetica',
-            rect.w,
-            rect.h);
+        if (args.isInToolbox || args.isHighlighted) {
+            painter.print(
+                symbol.substring(noteIndex + 1),
+                rect.x + rect.w,
+                rect.y + rect.h,
+                'right',
+                'bottom',
+                'black' ,
+                '10px Helvetica',
+                rect.w,
+                rect.h);
+        }
         symbol = symbol.substring(0, noteIndex);
     }
 

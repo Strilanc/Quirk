@@ -1,6 +1,7 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
+import DetailedError from "src/base/DetailedError.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GateFactory from "src/ui/GateFactory.js"
@@ -63,8 +64,10 @@ class CircuitWidget {
      * @returns {!Rect}
      */
     wireRect(wireIndex) {
-        Util.need(wireIndex >= 0 && wireIndex < this.circuitDefinition.numWires, "wireIndex out of range", arguments);
-        return this.area.skipTop(Config.WIRE_SPACING * wireIndex).takeTop(Config.WIRE_SPACING);
+        if (wireIndex < 0) {
+            throw new DetailedError("wireIndex < 0", {wireIndex});
+        }
+        return new Rect(this.area.x, this.area.y + Config.WIRE_SPACING * wireIndex, this.area.w, Config.WIRE_SPACING);
     }
 
     /**
@@ -199,13 +202,18 @@ class CircuitWidget {
     /**
      * @param {!int} wireIndex
      * @param {!int} operationIndex
+     * @param {!int=} width
+     * @param {!int=} height
      */
-    gateRect(wireIndex, operationIndex) {
+    gateRect(wireIndex, operationIndex, width=1, height=1) {
         let op = this.opRect(operationIndex);
         let wire = this.wireRect(wireIndex);
-        let r = Rect.centeredSquareWithRadius(
-            new Point(op.x + Config.GATE_RADIUS, wire.center().y),
-            Config.GATE_RADIUS);
+        let r = new Rect(
+            op.center().x - Config.GATE_RADIUS,
+            wire.center().y - Config.GATE_RADIUS,
+            2*Config.GATE_RADIUS + (width-1)*Config.WIRE_SPACING,
+            2*Config.GATE_RADIUS + (height-1)*Config.WIRE_SPACING);
+
         return new Rect(Math.round(r.x - 0.5) + 0.5, Math.round(r.y - 0.5) + 0.5, Math.round(r.w), Math.round(r.h));
     }
 
@@ -279,13 +287,12 @@ class CircuitWidget {
         this.drawColumnControlWires(painter, gateColumn, col, stats);
 
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
-            let r = this.gateRect(row, col);
-
             if (gateColumn.gates[row] === null) {
                 continue;
             }
             /** @type {!Gate} */
             let gate = gateColumn.gates[row];
+            let r = this.gateRect(row, col, gate.width, gate.height);
 
             let canGrab =
                 (new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt)) && this.compressedColumnIndex === null) ||
@@ -423,12 +430,9 @@ class CircuitWidget {
     }
 
     withJustEnoughWires(extra = 0) {
-        let maxUsedWire = seq(this.circuitDefinition.columns).
-            map(c => Seq.range(this.circuitDefinition.numWires).filter(i => c.gates[i] !== null).last(0)).
-            max(0);
-        let desiredWireCount = maxUsedWire + 1 + extra;
-        desiredWireCount = Math.min(Config.MAX_WIRE_COUNT, Math.max(Config.MIN_WIRE_COUNT, desiredWireCount));
-        return this.withCircuit(this.circuitDefinition.withWireCount(desiredWireCount));
+        let desiredWireCount = this.circuitDefinition.minimumRequiredWireCount() + extra;
+        let clampedWireCount = Math.min(Config.MAX_WIRE_COUNT, Math.max(Config.MIN_WIRE_COUNT, desiredWireCount));
+        return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount));
     }
 
     /**

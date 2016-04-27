@@ -114,6 +114,10 @@ class CircuitDefinition {
                     toArray())));
     }
 
+    minimumRequiredWireCount() {
+        return seq(this.columns).map(c => c.minimumRequiredWireCount()).max(0);
+    }
+
     isEqualTo(other) {
         if (this === other) {
             return true;
@@ -254,7 +258,7 @@ class CircuitDefinition {
                     return null;
                 }
                 let m = gate.matrixAt(time);
-                if (m.width() !== 2 || m.height() !== 2 || m.isIdentity()) {
+                if (gate === Gates.Special.SwapHalf || m.isIdentity()) {
                     return null;
                 }
 

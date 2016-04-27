@@ -8,7 +8,7 @@ import GateColumn from "src/circuit/GateColumn.js"
 import GateFactory from "src/ui/GateFactory.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
 /**
@@ -90,7 +90,7 @@ let fromJson_Matrix = json => {
  * @returns {!object}
  */
 let toJson_Gate = gate => {
-    if (new Seq(Gates.KnownToSerializer).contains(gate)) {
+    if (seq(Gates.KnownToSerializer).contains(gate)) {
         return gate.serializedId;
     }
 
@@ -135,7 +135,7 @@ let fromJson_Gate = json => {
     let matrixProp = json["matrix"];
     if (matrixProp === undefined) {
         // Should be a built-in.
-        let match = new Seq(Gates.KnownToSerializer).
+        let match = seq(Gates.KnownToSerializer).
             filter(g => g.serializedId === symbol).
             first(null);
         if (match !== null) {
@@ -196,7 +196,7 @@ let fromJson_GateColumn = json => {
  */
 let toJson_CircuitDefinition = v => {
     return {
-        cols: v.columns.map(Serializer.toJson).map(c => new Seq(c).skipTailWhile(e => e === 1).toArray())
+        cols: v.columns.map(Serializer.toJson).map(c => seq(c).skipTailWhile(e => e === 1).toArray())
     };
 };
 
@@ -212,9 +212,9 @@ let fromJson_CircuitDefinition = json => {
         throw new Error(`CircuitDefinition json should contain an array of cols. Json: ${describe(json)}`);
     }
     let gateCols = cols.map(e => Serializer.fromJson(GateColumn, e));
-    let numWires = new Seq(gateCols).map(e => e.gates.length).max(0);
+    let numWires = seq(gateCols).map(c => c.minimumRequiredWireCount()).max(0);
     numWires = Math.max(Config.MIN_WIRE_COUNT, Math.min(numWires, Config.MAX_WIRE_COUNT));
-    gateCols = gateCols.map(e => new GateColumn(new Seq(e.gates).
+    gateCols = gateCols.map(e => new GateColumn(seq(e.gates).
             padded(numWires, null). // Pad column up to circuit length.
             toArray().
             slice(0, numWires))); // Silently discard gates off the edge of the circuit.

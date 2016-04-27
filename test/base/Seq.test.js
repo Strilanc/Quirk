@@ -114,6 +114,14 @@ suite.test("toArray", () => {
     assertThat(a2).isEqualTo([1, "a"]);
 });
 
+suite.test("toFloat32Array", () => {
+    assertThat(seq([]).toFloat32Array()).isEqualTo(new Float32Array([]));
+    assertThat(seq([1, 2, Infinity]).toFloat32Array()).isEqualTo(new Float32Array([1, 2, Infinity]));
+    assertThat(Seq.fromGenerator(function*() {}).toFloat32Array()).isEqualTo(new Float32Array([]));
+    assertThat(Seq.fromGenerator(function*() { yield 1; yield 0.5; }).toFloat32Array()).isEqualTo(
+        new Float32Array([1, 0.5]));
+});
+
 suite.test("toSet", () => {
     assertThat(Seq.fromGenerator(function*() {}).toSet()).isEqualTo(new Set());
     assertThat(Seq.fromGenerator(function*() { yield 1; yield "a"; }).toSet()).isEqualTo(new Set([1, "a"]));

@@ -27,6 +27,10 @@ class Gate {
         this.name = name;
         /** @type {!string} */
         this.blurb = blurb;
+        /** @type {!int} */
+        this.width = 1;
+        /** @type {!int} */
+        this.height = 1;
 
         /** @type {undefined|!function(!GateDrawParams) : void} */
         this.customDrawer = undefined;
@@ -46,6 +50,28 @@ class Gate {
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
         g.customShader = this.customShader;
+        g.width = this.width;
+        g.height = this.height;
+        return g;
+    }
+
+    /**
+     * @param {!int} width
+     * @returns {!Gate}
+     */
+    withWidth(width) {
+        let g = this._copy();
+        g.width = width;
+        return g;
+    }
+
+    /**
+     * @param {!int} height
+     * @returns {!Gate}
+     */
+    withHeight(height) {
+        let g = this._copy();
+        g.height = height;
         return g;
     }
 

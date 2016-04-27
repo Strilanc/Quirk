@@ -157,6 +157,13 @@ class GateColumn {
         return undefined;
     }
 
+    minimumRequiredWireCount() {
+        return Seq.range(this.gates.length).
+            filter(i => this.gates[i] !== null).
+            map(i => i + this.gates[i].height).
+            max(0);
+    }
+
     disabledReasons(inputMeasureMask) {
         return Seq.range(this.gates.length).map(i => this._disabledReason(inputMeasureMask, i)).toArray();
     }
