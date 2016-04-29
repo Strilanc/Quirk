@@ -159,11 +159,11 @@ Gates.Displays = {
     }),
 
     DensityMatrixDisplay: new Gate(
-        "Density",
+        "Density\n1",
         Matrix.identity(2),
         "Density Matrix Display",
         "Shows a wire's local state as a density matrix.\nUse controls to see conditional states."
-    ).withCustomDrawer(args => {
+    ).withSerializedId("Density").withCustomDrawer(args => {
         let showState = args.positionInCircuit !== null;
         let showText = !showState || args.isHighlighted;
 
@@ -276,63 +276,42 @@ Gates.HalfTurns = {
         "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.")
 };
 
+const IncGateMaker = span => new Gate(
+    "+1\n" + span,
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) == c ? 1 : 0),
+    span + "-Bit Increment Gate",
+    "Adds 1 to the little-endian number represented by " + span + " qubits."
+).withSerializedId("inc" + span).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1));
+
+const DecGateMaker = span => new Gate(
+    "-1\n" + span,
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) == c ? 1 : 0),
+    span + "-Bit Decrement Gate",
+    "Subtracts 1 from the little-endian number represented by " + span + " qubits."
+).withSerializedId("dec" + span).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1));
+
 /**
  * Gates that correspond to increments or decrements of multiple qubits.
  */
 Gates.Increments = {
-    Inc2: new Gate(
-        "+1\n2",
-        Matrix.generate(1<<2, 1<<2, (r, c) => ((r+1) & 3) == c ? 1 : 0),
-        "2-Bit Increment Gate",
-        "Adds 1 to the little-endian number represented by two qubits."
-    ).withSerializedId("inc2").
-        withHeight(2).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 2, +1)),
-
-    Inc3: new Gate(
-        "+1\n3",
-        Matrix.generate(1<<3, 1<<3, (r, c) => ((r+1) & 7) == c ? 1 : 0),
-        "3-Bit Increment Gate",
-        "Adds 1 to the little-endian number represented by three qubits."
-    ).withSerializedId("inc3").
-        withHeight(3).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 3, +1)),
-
-    Inc4: new Gate(
-        "+1\n4",
-        Matrix.generate(1<<4, 1<<4, (r, c) => ((r+1) & 15) == c ? 1 : 0),
-        "4-Bit Increment Gate",
-        "Adds 1 to the little-endian number represented by three qubits."
-    ).withSerializedId("inc4").
-        withHeight(4).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 4, +1)),
-
-    Dec2: new Gate(
-        "-1\n2",
-        Matrix.generate(1<<2, 1<<2, (r, c) => ((r-1) & 3) == c ? 1 : 0),
-        "2-Bit Decrement Gate",
-        "Subtracts 1 from little-endian number represented by two qubits."
-    ).withSerializedId("dec2").
-        withHeight(2).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 2, -1)),
-
-    Dec3: new Gate(
-        "-1\n3",
-        Matrix.generate(1<<3, 1<<3, (r, c) => ((r-1) & 7) == c ? 1 : 0),
-        "3-Bit Decrement Gate",
-        "Subtracts 1 from the little-endian number represented by three qubits."
-    ).withSerializedId("dec3").
-        withHeight(3).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 3, -1)),
-
-    Dec4: new Gate(
-        "-1\n4",
-        Matrix.generate(1<<4, 1<<4, (r, c) => ((r-1) & 15) == c ? 1 : 0),
-        "4-Bit Decrement Gate",
-        "Subtracts 1 from the little-endian number represented by three qubits."
-    ).withSerializedId("dec4").
-        withHeight(4).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, 4, -1))
+    Inc2: IncGateMaker(2),
+    Inc3: IncGateMaker(3),
+    Inc4: IncGateMaker(4),
+    Inc5: IncGateMaker(5),
+    Inc6: IncGateMaker(6),
+    Inc7: IncGateMaker(7),
+    Inc8: IncGateMaker(8),
+    Dec2: DecGateMaker(2),
+    Dec3: DecGateMaker(3),
+    Dec4: DecGateMaker(4),
+    Dec5: DecGateMaker(5),
+    Dec6: DecGateMaker(6),
+    Dec7: DecGateMaker(7),
+    Dec8: DecGateMaker(8)
 };
 
 Gates.QuarterTurns = {
@@ -690,7 +669,7 @@ Gates.ExperimentalAndImplausible = {
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gates.Sets = [
     {
-        hint: "Controls",
+        hint: "Separators",
         gates: [
             Gates.Special.AntiControl,
             Gates.Misc.PostSelectOff,
@@ -880,9 +859,18 @@ Gates.KnownToSerializer = [
     Gates.Increments.Inc2,
     Gates.Increments.Inc3,
     Gates.Increments.Inc4,
+    Gates.Increments.Inc5,
+    Gates.Increments.Inc6,
+    Gates.Increments.Inc7,
+    Gates.Increments.Inc8,
+
     Gates.Increments.Dec2,
     Gates.Increments.Dec3,
     Gates.Increments.Dec4,
+    Gates.Increments.Dec5,
+    Gates.Increments.Dec6,
+    Gates.Increments.Dec7,
+    Gates.Increments.Dec8,
 
     Gates.ExperimentalAndImplausible.UniversalNot
 ];
