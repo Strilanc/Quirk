@@ -19,7 +19,6 @@ Defining features:
 Notable limitations (a.k.a. future features):
 
 - User-defined custom gates.
-- Multi-wire gates and displays.
 - Putting measured wires back into superposition. Controlled measurement.
 
 # Try It Out
