@@ -669,7 +669,7 @@ Gates.ExperimentalAndImplausible = {
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gates.Sets = [
     {
-        hint: "Separators",
+        hint: "Probes",
         gates: [
             Gates.Special.AntiControl,
             Gates.Misc.PostSelectOff,
