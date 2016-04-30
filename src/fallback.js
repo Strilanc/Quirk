@@ -2,12 +2,15 @@ import describe from "src/base/Describe.js"
 
 let _alreadySeen = [];
 let showErrorDiv = (subject, body) => {
+    document.getElementById('errorDiv').style.backgroundColor = '#FFA';
+    document.getElementById('errorDiv').style.opacity = 1.0;
+    document.getElementById('errorDiv').style.display = 'block';
     if (_alreadySeen.indexOf(body) !== -1) {
         return;
     }
     _alreadySeen.push(body);
 
-    document.getElementById('errorDiv').style.display = 'block';
+    document.getElementById('errorMessageDiv').innerText = subject;
     document.getElementById('errorDescDiv').innerText = body;
     document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
     document.getElementById('error-mailto-anchor').href = [
@@ -54,10 +57,10 @@ let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
          simplifySrcUrls(location)
     ].join('\n');
 
-    showErrorDiv(recovery, msg);
+    showErrorDiv(recovery + ' (' + (error.message || '') + ')', msg);
 };
 
-let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+\/src\.min\.js/g, 'src.min.js');
+let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+?\/src\.min\.js/g, 'src.min.js');
 
 let drawErrorBox = msg => {
     let canvas = document.getElementById("drawCanvas");

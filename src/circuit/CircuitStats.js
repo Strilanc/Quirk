@@ -128,7 +128,7 @@ export default class CircuitStats {
             return CircuitStats._fromCircuitAtTime_noFallback(circuitDefinition, time);
         } catch (ex) {
             notifyAboutRecoveryFromUnexpectedError(
-                "Computing circuit values failed. Defaulted to NaN results.",
+                `Defaulted to NaN results. Computing circuit values failed.`,
                 {circuitDefinition: Serializer.toJson(circuitDefinition)},
                 ex);
             return new CircuitStats(
