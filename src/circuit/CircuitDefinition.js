@@ -72,6 +72,8 @@ class CircuitDefinition {
      *
      * The text isn't intended to be particularly understandable, but it should vaguely reflect or at least
      * distinguish the circuit from others when skimming a list of hashes (e.g. links in browser history).
+     *
+     * @returns {!string}
      */
     readableHash() {
         let allGates = new Seq(this.columns)
@@ -89,18 +91,29 @@ class CircuitDefinition {
         return allGatesString.substring(0, 40) + `…`;
     }
 
+    /**
+     * @oaram {!Array.<!GateColumn>} cols
+     * @returns {!CircuitDefinition}
+     */
     withColumns(cols) {
         return new CircuitDefinition(
             this.numWires,
             cols)
     }
 
+    /**
+     * @returns {!CircuitDefinition}
+     */
     withoutEmpties() {
         return new CircuitDefinition(
             this.numWires,
             this.columns.filter(e => !e.isEmpty()));
     }
 
+    /**
+     * @param {!int} {newWireCount}
+     * @returns {!CircuitDefinition}
+     */
     withWireCount(newWireCount) {
         if (newWireCount === this.numWires) {
             return this;
@@ -114,10 +127,17 @@ class CircuitDefinition {
                     toArray())));
     }
 
+    /**
+     * @returns {!int}
+     */
     minimumRequiredWireCount() {
         return seq(this.columns).map(c => c.minimumRequiredWireCount()).max(0);
     }
 
+    /**
+     * @param {*} other
+     * @returns {!boolean}
+     */
     isEqualTo(other) {
         if (this === other) {
             return true;
@@ -128,16 +148,48 @@ class CircuitDefinition {
     }
 
     /**
+     * @param {!int} col
+     * @returns {!int}
+     */
+    colIsMeasuredMask(col) {
+        if (col < 0) {
+            return 0;
+        }
+        return this._measureMasks[Math.min(col, this.columns.length)];
+    }
+
+    /**
+     * @param {!int} col
+     * @returns {!int}
+     */
+    colHasSingleQubitDisplayMask(col) {
+        if (col < 0 || col >= this.columns.length) {
+            return 0;
+        }
+        return this.columns[col].wiresWithSingleQubitDisplaysMask();
+    }
+
+    /**
+     * @param {!int} col
+     * @returns {!int}
+     */
+    colHasDoubleQubitDisplayMask(col) {
+        if (col < 0 || col >= this.columns.length) {
+            return 0;
+        }
+        return this.columns[col].wiresWithTwoQubitDisplaysMask();
+    }
+
+    /**
      * @param {!Point} pt
      * @returns {boolean}
      */
     locIsMeasured(pt) {
-        let col = Math.min(this.columns.length, pt.x);
         let row = pt.y;
-        if (col < 0 || row < 0 || row >= this.numWires) {
+        if (row < 0 || row >= this.numWires) {
             return false
         }
-        return (this._measureMasks[col] & (1 << row)) !== 0;
+        return (this.colIsMeasuredMask(pt.x) & (1 << row)) !== 0;
     }
 
     /**
@@ -200,6 +252,10 @@ class CircuitDefinition {
             (g !== Gates.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
     }
 
+    /**
+     * @param {!int} col
+     * @returns {!boolean}
+     */
     colHasControls(col) {
         if (col < 0 || col >= this.columns.length) {
             return false;

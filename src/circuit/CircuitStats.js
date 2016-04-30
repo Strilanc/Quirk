@@ -141,19 +141,69 @@ export default class CircuitStats {
     }
 
     /**
+     * Returns the same density matrix, but without any diagonal terms related to qubits that have been measured.
+     * @param {!Matrix} densityMatrix
+     * @param {!int} isMeasuredMask A bitmask where each 1 corresponds to a measured qubit position.
+     * @returns {!Matrix}
+     */
+    static decohereMeasuredBitsInDensityMatrix(densityMatrix, isMeasuredMask) {
+        if (isMeasuredMask === 0) {
+            return densityMatrix;
+        }
+
+        let buf = new Float32Array(densityMatrix.rawBuffer());
+        let n = densityMatrix.width();
+        for (let row = 0; row < n; row++) {
+            for (let col = 0; col < n; col++) {
+                if (((row ^ col) & isMeasuredMask) !== 0) {
+                    let k = (row*n + col)*2;
+                    buf[k] = 0;
+                    buf[k+1] = 0;
+                }
+            }
+        }
+        return new Matrix(n, n, buf);
+    }
+
+    /**
+     * @param {!Array.<!Matrix>} rawMatrices
+     * @param {!int} numWires
+     * @param {!int} qubitSpan
+     * @param {!int} isMeasuredMask
+     * @param {!int} hasDisplayMask
+     * @returns {!Array.<!Matrix>}
+     */
+    static scatterAndDecohereDensities(rawMatrices, numWires, qubitSpan, isMeasuredMask, hasDisplayMask) {
+        let nanMat = Matrix.zero(1 << qubitSpan, 1 << qubitSpan).times(NaN);
+        let used = 0;
+        return Seq.range(numWires - qubitSpan + 1).map(row => {
+            if ((hasDisplayMask & (1 << row)) === 0) {
+                return nanMat;
+            }
+            return CircuitStats.decohereMeasuredBitsInDensityMatrix(
+                rawMatrices[used++],
+                (isMeasuredMask >> row) & ((1 << qubitSpan) - 1));
+        }).toArray();
+    }
+
+
+    /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
      * @returns {!CircuitStats}
      */
     static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
         const numWires = circuitDefinition.numWires;
+        const numCols = circuitDefinition.columns.length;
         const allWiresMask = (1 << numWires) - 1;
+
+        // -- DEFINE TEXTURES TO BE COMPUTED --
 
         let qubitDensityTexes = [];
         let qubitPairDensityTexes = [];
         let outputTex = CircuitTextures.aggregateWithReuse(
             CircuitTextures.zero(numWires),
-            Seq.range(circuitDefinition.columns.length),
+            Seq.range(numCols),
             (stateTex, col) => {
                 let gateCol = circuitDefinition.columns[col];
                 let controls = gateCol.controls();
@@ -162,6 +212,8 @@ export default class CircuitStats {
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
                     (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex));
+
+                // Stats for inline displays.
                 qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(
                     stateTex,
                     controls,
@@ -170,64 +222,43 @@ export default class CircuitStats {
                     stateTex,
                     controls,
                     gateCol.wiresWithTwoQubitDisplaysMask()));
+
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return stateTex;
             });
         qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
-        qubitPairDensityTexes.push(CircuitTextures.superpositionToQubitPairDensities(outputTex, Controls.NONE, 0));
+
+        // -- READ ALL TEXTURES --
 
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
             outputTex,
             qubitDensityTexes,
             qubitPairDensityTexes});
 
+        // -- INTERPRET --
+
         let final = pixelData.qubitDensityTexes[pixelData.qubitDensityTexes.length - 1];
         let unity = final[0] + final[3];
         //noinspection JSCheckFunctionSignatures
         let outputSuperposition = CircuitTextures.pixelsToAmplitudes(pixelData.outputTex, unity);
-        let nanMat2 = Matrix.zero(2, 2).times(NaN);
-        let nanMat4 = Matrix.zero(4, 4).times(NaN);
-        let qubitDensities = seq(pixelData.qubitDensityTexes).mapWithIndex((pixels, col) => {
-            let aCol = circuitDefinition.columns[col];
-            let mask = aCol === undefined ? allWiresMask : aCol.wiresWithSingleQubitDisplaysMask();
-            let matrices = CircuitTextures.pixelsToQubitDensityMatrices(pixels);
-            for (let row = 0; row < numWires; row++) {
-                if ((mask & (1 << row)) === 0) {
-                    matrices.splice(row, 0, nanMat2);
-                    continue;
-                }
-                if (circuitDefinition.locIsMeasured(new Point(col, row))) {
-                    let m = matrices[row].rawBuffer();
-                    matrices[row] = new Matrix(2, 2, new Float32Array([m[0], 0, 0, 0, 0, 0, m[6], 0]));
-                }
-            }
-            return matrices;
-        }).toArray();
-        let qubitPairDensities = seq(pixelData.qubitPairDensityTexes).mapWithIndex((pixels, col) => {
-            let aCol = circuitDefinition.columns[col];
-            let mask = aCol === undefined ? 0 : aCol.wiresWithTwoQubitDisplaysMask();
-            let matrices = CircuitTextures.pixelsToQubitPairDensityMatrices(pixels);
-            for (let row = 0; row < numWires; row++) {
-                if ((mask & (1 << row)) === 0) {
-                    matrices.splice(row, 0, nanMat4);
-                    continue;
-                }
-                let b = (circuitDefinition.locIsMeasured(new Point(col, row)) ? 1 : 0) |
-                        (circuitDefinition.locIsMeasured(new Point(col, row + 1)) ? 2 : 0);
-                let buf = new Float32Array(matrices[row].rawBuffer());
-                for (let i = 0; i < 4; i++) {
-                    for (let j = 0; j < 4; j++) {
-                        if (((i ^ j) & b) !== 0) {
-                            buf[i*8 + j*2] = 0;
-                            buf[i*8 + j*2 + 1] = 0;
-                        }
-                    }
-                }
-                matrices[row] = new Matrix(4, 4, buf);
-            }
-            return matrices;
-        }).toArray();
 
+        let qubitDensities = seq(pixelData.qubitDensityTexes).mapWithIndex((pixels, col) =>
+            CircuitStats.scatterAndDecohereDensities(
+                CircuitTextures.pixelsToQubitDensityMatrices(pixels),
+                numWires,
+                1,
+                circuitDefinition.colIsMeasuredMask(col),
+                // All wires have an output display in the after-last column.
+                col == numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(col))
+        ).toArray();
+        let qubitPairDensities = seq(pixelData.qubitPairDensityTexes).mapWithIndex((pixels, col) =>
+            CircuitStats.scatterAndDecohereDensities(
+                CircuitTextures.pixelsToQubitPairDensityMatrices(pixels),
+                numWires,
+                2,
+                circuitDefinition.colIsMeasuredMask(col),
+                circuitDefinition.colHasDoubleQubitDisplayMask(col))
+        ).toArray();
 
         return new CircuitStats(
             circuitDefinition,
