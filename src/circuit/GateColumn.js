@@ -164,6 +164,13 @@ class GateColumn {
             max(0);
     }
 
+    maximumGateWidth() {
+        return seq(this.gates).
+            filter(g => g !== null).
+            map(g => g.width).
+            max(0);
+    }
+
     disabledReasons(inputMeasureMask) {
         return Seq.range(this.gates.length).map(i => this._disabledReason(inputMeasureMask, i)).toArray();
     }

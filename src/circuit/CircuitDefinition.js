@@ -46,7 +46,6 @@ class CircuitDefinition {
             this._measureMasks.push(mask);
         }
 
-
         /**
          * @type {!Map.<!string, !{col: !int, row: !int, gate: !Gate}}
          */
@@ -129,12 +128,142 @@ class CircuitDefinition {
     }
 
     /**
+     * @returns {!Set.<!int>}
+     * @private
+     */
+    _usedColumns() {
+        let usedCols = new Set();
+        for (let col = 0; col < this.columns.length; col++) {
+            for (let i = 0; i < this.columns[col].maximumGateWidth(); i++) {
+                usedCols.add(col+i);
+            }
+        }
+        return usedCols;
+    }
+
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {undefined|!{col: !int, row: !int}}
+     * @private
+     */
+    _findWidthWiseOverlapInRect(col, row, width, height) {
+        for (let i = 1; i < width && col + i < this.columns.length; i++) {
+            for (let j = 0; j < height; j++) {
+                let otherGate = this.findGateCoveringSlot(col+i, row+j);
+                if (otherGate === undefined || otherGate.col == col) {
+                    continue;
+                }
+                return {col: otherGate.col, row: otherGate.row};
+            }
+        }
+        return undefined;
+    }
+
+    /**
      * @returns {!CircuitDefinition}
      */
-    withoutEmpties() {
+    withWidthOverlapsFixed() {
+        let newCols = [];
+        for (let col = 0; col < this.columns.length; col++) {
+            let paddingRequired = Seq.range(this.numWires).map(row => {
+                let gate = this.columns[col].gates[row];
+                if (gate === null) {
+                    return 0;
+                }
+                let f = this._findWidthWiseOverlapInRect(col, row, gate.width, gate.height);
+                if (f === undefined) {
+                    return 0;
+                }
+                return gate.width - (f.col - col);
+            }).max(0);
+
+            newCols.push(this.columns[col]);
+            for (let i = 0; i < paddingRequired; i++) {
+                newCols.push(GateColumn.empty(this.numWires));
+            }
+        }
+
+        return this.withColumns(newCols);
+    }
+
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!Set.<!int>}
+     * @private
+     */
+    _findHeightWiseOverlapsInCol(col) {
+        let pushedGates = new Set();
+        let h = 0;
+        for (let row = 0; row < this.numWires; row++) {
+            h -= 1;
+            let gate = this.gateInSlot(col, row);
+            if (gate !== undefined) {
+                if (h > 0) {
+                    pushedGates.add(row);
+                }
+                h = Math.max(h, gate.height);
+            }
+        }
+        return pushedGates;
+    }
+
+    /**
+     * @param {!int} recurseLimit If a bug causes an infinite height-overlap-fixing loop, this will save us.
+     * @returns {!CircuitDefinition}
+     */
+    withHeightOverlapsFixed(recurseLimit=5) {
+        let newCols = [];
+        for (let col = 0; col < this.columns.length; col++) {
+            let pushedGateIndexes = this._findHeightWiseOverlapsInCol(col);
+            if (pushedGateIndexes.size === 0) {
+                newCols.push(this.columns[col]);
+                continue;
+            }
+
+            console.log(pushedGateIndexes);
+            let isControl = g => g === Gates.Special.Control || g === Gates.Special.AntiControl;
+            let keptGates = seq(this.columns[col].gates).
+                mapWithIndex((g, row) => pushedGateIndexes.has(row) ? null : g).
+                toArray();
+            let pushedGates = seq(this.columns[col].gates).
+                mapWithIndex((g, row) => isControl(g) || pushedGateIndexes.has(row) ? g : null).
+                toArray();
+
+            newCols.push(new GateColumn(keptGates));
+            newCols.push(new GateColumn(pushedGates));
+        }
+
+        let result = this.withColumns(newCols);
+        if (newCols.length > this.columns.length && recurseLimit > 0) {
+            // The pushed gates may still contain more height overlaps.
+            result = result.withHeightOverlapsFixed(recurseLimit-1);
+        }
+        return result;
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    withTrailingSpacersIncluded() {
+        return this.withColumns(seq(this.columns).
+            padded(this.minimumRequiredColCount(), GateColumn.empty(this.numWires)).
+            toArray());
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    withUncoveredColumnsRemoved() {
+        let used = this._usedColumns();
         return new CircuitDefinition(
             this.numWires,
-            this.columns.filter(e => !e.isEmpty()));
+            seq(this.columns).filterWithIndex((e, i) => used.has(i)).toArray());
     }
 
     /**
@@ -159,6 +288,13 @@ class CircuitDefinition {
      */
     minimumRequiredWireCount() {
         return seq(this.columns).map(c => c.minimumRequiredWireCount()).max(0);
+    }
+
+    /**
+     * @returns {!int}
+     */
+    minimumRequiredColCount() {
+        return seq(this.columns).mapWithIndex((c, i) => c.maximumGateWidth() + i).max(0);
     }
 
     /**
@@ -377,7 +513,6 @@ class CircuitDefinition {
     /**
      * @param {!int} col
      * @param {!int} row
-     * @param {!int} width
      * @param {!int} height
      * @returns {!boolean}
      */

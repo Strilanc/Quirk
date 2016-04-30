@@ -230,7 +230,12 @@ class CircuitWidget {
      * @returns {!CircuitWidget}
      */
     afterTidyingUp() {
-        return this.withCircuit(this.circuitDefinition.withoutEmpties());
+        return this.withCircuit(this.circuitDefinition.
+            withUncoveredColumnsRemoved().
+            withHeightOverlapsFixed().
+            withWidthOverlapsFixed().
+            withUncoveredColumnsRemoved().
+            withTrailingSpacersIncluded());
     }
 
     /**
@@ -435,7 +440,7 @@ class CircuitWidget {
         let newCols = seq(this.circuitDefinition.columns).
             padded(i, emptyCol).
             ifThen(isInserting, s => s.withInsertedItem(i, emptyCol)).
-            padded(i + 1, emptyCol).
+            padded(i + addedGate.width, emptyCol).
             withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
 
@@ -460,9 +465,6 @@ class CircuitWidget {
      * @returns {!CircuitWidget}
      */
     withCircuit(circuitDefinition) {
-        if (circuitDefinition.isEqualTo(this.circuitDefinition)) {
-            return this;
-        }
         return new CircuitWidget(
             this.area,
             circuitDefinition,
