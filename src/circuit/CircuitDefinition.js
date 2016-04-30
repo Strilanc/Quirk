@@ -45,6 +45,33 @@ class CircuitDefinition {
             this._disabledReasons.push(reasons);
             this._measureMasks.push(mask);
         }
+
+
+        /**
+         * @type {!Map.<!string, !{col: !int, row: !int, gate: !Gate}}
+         */
+        this._gateSlotCoverMap = this._computeGateSlotCoverMap();
+    }
+
+    /**
+     * @returns {!Map.<!string, !{col: !int, row: !int, gate: !Gate}}
+     * @private
+     */
+    _computeGateSlotCoverMap() {
+        let result = new Map();
+        for (let col = 0; col < this.columns.length; col++) {
+            for (let row = 0; row < this.numWires; row++) {
+                let gate = this.columns[col].gates[row];
+                if (gate !== null) {
+                    for (let i = 0; i < gate.width; i++) {
+                        for (let j = 0; j < gate.height; j++) {
+                            result.set((col+i)+":"+(row+j), {col, row, gate});
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -193,15 +220,31 @@ class CircuitDefinition {
     }
 
     /**
+     * A gate is only "in" the slot at its top left.
+     * It "covers" any other slots underneath it.
      * @param {!Point} pt
      * @returns {undefined|!Gate}
      */
-    gateAtLoc(pt) {
-        if (pt.x < 0 || pt.x >= this.columns.length || pt.y < 0 || pt.y >= this.numWires) {
+    gateInSlot(col, row) {
+        if (col < 0 || col >= this.columns.length || row < 0 || row >= this.numWires) {
             return undefined;
         }
-        let gate = this.columns[pt.x].gates[pt.y];
+        let gate = this.columns[col].gates[row];
         return gate === null ? undefined : gate;
+    }
+
+    /**
+     * A slot is covered when a gate is in it or extends over it.
+     * @param {!int} col
+     * @param {!int} row
+     * @returns {undefined|!{col: !int, row: !int, gate: !Gate}}
+     */
+    findGateCoveringSlot(col, row) {
+        let key = col+":"+row;
+        if (!this._gateSlotCoverMap.has(key)) {
+            return undefined;
+        }
+        return this._gateSlotCoverMap.get(key);
     }
 
     /**
@@ -209,7 +252,7 @@ class CircuitDefinition {
      * @returns {!boolean}
      */
     locIsControl(pt) {
-        let gate = this.gateAtLoc(pt);
+        let gate = this.gateInSlot(pt.x, pt.y);
         return gate === Gates.Special.Control || gate === Gates.Special.AntiControl;
     }
 
@@ -236,7 +279,7 @@ class CircuitDefinition {
     colHasPairedSwapGate(col) {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
-            filter(pt => this.gateAtLoc(pt) === Gates.Special.SwapHalf);
+            filter(pt => this.gateInSlot(pt.x, pt.y) === Gates.Special.SwapHalf);
         return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== undefined) && pts.count() == 2;
     }
 
@@ -245,7 +288,7 @@ class CircuitDefinition {
      * @returns {!boolean}
      */
     locHasControllableGate(pt) {
-        let g = this.gateAtLoc(pt);
+        let g = this.gateInSlot(pt.x, pt.y);
         return g !== undefined &&
             g !== Gates.Special.Control &&
             g !== Gates.Special.AntiControl &&
@@ -336,18 +379,16 @@ class CircuitDefinition {
      * @param {!int} row
      * @param {!int} width
      * @param {!int} height
-     * @returns {undefined|!{col: !int, row: !int}}
+     * @returns {!boolean}
      */
-    findGateOverlapping(col, row, width, height) {
-        for (let c = col + width - 1; c >= 0; c--) {
-            for (let r = row + height - 1; r >= 0; r--) {
-                let gate = this.gateAtLoc(new Point(c, r));
-                if (gate !== undefined && c + gate.width > col && r + gate.height > row) {
-                    return {col: c, row: r};
-                }
+    isSlotRectCoveredByGateInSameColumn(col, row, height) {
+        for (let j = 0; j < height; j++) {
+            let f = this.findGateCoveringSlot(col, row+j);
+            if (f !== undefined && f.col === col) {
+                return true;
             }
         }
-        return undefined;
+        return false;
     }
 
     toString() {
