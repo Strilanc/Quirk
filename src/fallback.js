@@ -3,8 +3,9 @@ import describe from "src/base/Describe.js"
 let _alreadySeen = [];
 let showErrorDiv = (subject, body) => {
     let errDivStyle = document.getElementById('errorDiv').style;
-    if (errDivStyle.display !== 'block') {
-        // Faded away. We can re-show messages now.
+    if (errDivStyle.opacity < 0.7) {
+        // Partially faded away as user interacted with circuit.
+        // Enough time to justify updating the message despite the risk of clearing the user's selection.
         _alreadySeen = [];
     }
 
