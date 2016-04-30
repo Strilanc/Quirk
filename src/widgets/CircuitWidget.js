@@ -32,7 +32,7 @@ class CircuitWidget {
      * @property {!int|null} compressedColumnIndex
      * @property {!function(!int) : !string=} wireLabeller
      */
-    constructor(area, circuitDefinition, compressedColumnIndex) {
+    constructor(area, circuitDefinition, compressedColumnIndex=null) {
         this.area = area;
         this.circuitDefinition = circuitDefinition;
         this.compressedColumnIndex = compressedColumnIndex;
@@ -79,30 +79,26 @@ class CircuitWidget {
 
     /**
      * @param {!Point} p
-     * @returns {null|!int}
+     * @returns {undefined|!int}
      */
     findWireAt(p) {
         if (!this.area.containsPoint(p)) {
-            return null;
+            return undefined;
         }
 
         let i = Math.floor((p.y - this.area.y) / Config.WIRE_SPACING);
         if (i < 0 || i >= this.circuitDefinition.numWires) {
-            return null;
+            return undefined;
         }
         return i;
     }
 
     /**
      * @param {!Point} p
-     * @returns {?number}
+     * @returns {!number}
      * @private
      */
     findContinuousColumnX(p) {
-        if (!this.area.containsPoint(p)) {
-            return null;
-        }
-
         let s = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS * 2);
         let left = this.area.x + CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
         let dg = (p.x - left) / s;
@@ -115,7 +111,7 @@ class CircuitWidget {
      */
     findOpHalfColumnAt(p) {
         if (!this.area.containsPoint(p)) {
-            return null;
+            return undefined;
         }
 
         return Math.max(-0.5, Math.round(this.findContinuousColumnX(p) * 2) / 2);
@@ -123,11 +119,11 @@ class CircuitWidget {
 
     /**
      * @param {!Point} p
-     * @returns {?int}
+     * @returns {undefined|!int}
      */
     findExistingOpColumnAt(p) {
         if (!this.area.containsPoint(p)) {
-            return null;
+            return undefined;
         }
 
         let x = this.findContinuousColumnX(p);
@@ -141,7 +137,7 @@ class CircuitWidget {
         }
 
         if (i < 0 || i >= this.circuitDefinition.columns.length) {
-            return null;
+            return undefined;
         }
 
         return i;
@@ -152,39 +148,34 @@ class CircuitWidget {
      * @returns {?{ col : !number, row : !number, isInsert : !boolean }}
      */
     findModificationIndex(hand) {
-        if (hand.pos === null) {
-            return null;
+        if (hand.pos === undefined || hand.heldGate === undefined) {
+            return undefined;
         }
-        let halfColIndex = this.findOpHalfColumnAt(Util.notNull(hand.pos));
-        let wireIndex = this.findWireAt(Util.notNull(hand.pos));
-        if (halfColIndex === null || wireIndex === null) {
-            return null;
+        let pos = hand.pos.minus(hand.heldGateOffset).plus(new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
+        let halfColIndex = this.findOpHalfColumnAt(pos);
+        let row = this.findWireAt(pos);
+        if (halfColIndex === undefined || row === undefined) {
+            return undefined;
         }
-        let colIndex = Math.ceil(halfColIndex);
+        let col = Math.ceil(halfColIndex);
         let isInsert = Math.abs(halfColIndex % 1) === 0.5;
-        if (colIndex >= this.circuitDefinition.columns.length) {
-            return {col: colIndex, row: wireIndex, isInsert: isInsert};
+        if (col >= this.circuitDefinition.columns.length) {
+            return {col: col, row: row, isInsert: isInsert};
         }
 
         if (!isInsert) {
-            let isFree = this.circuitDefinition.columns[colIndex].gates[wireIndex] === null;
-            if (hand.heldGates !== null) {
-                for (let k = 0; k < hand.heldGates.gates.length; k++) {
-                    if (this.circuitDefinition.columns[colIndex].gates[wireIndex + k] !== null) {
-                        isFree = false;
-                    }
-                }
-            }
-            if (!isFree) {
-                let isAfter = hand.pos.x > this.opRect(colIndex).center().x;
+            let overlapGate = this.circuitDefinition.findGateOverlapping(
+                col, row, hand.heldGate.width, hand.heldGate.height);
+            if (overlapGate !== undefined) {
+                let isAfter = hand.pos.x > this.opRect(col).center().x;
                 isInsert = true;
                 if (isAfter) {
-                    colIndex += 1;
+                    col += 1;
                 }
             }
         }
 
-        return {col: colIndex, row: wireIndex, isInsert: isInsert};
+        return {col: col, row: row, isInsert: isInsert};
     }
 
     /**
@@ -405,24 +396,20 @@ class CircuitWidget {
      */
     previewDrop(hand) {
         let modificationPoint = this.findModificationIndex(hand);
-        if (modificationPoint === null || hand.heldGates === null) {
+        if (modificationPoint === undefined || modificationPoint.row + hand.heldGate.height > this.circuitDefinition.numWires) {
             return this;
         }
-        let addedGateBlock = Util.notNull(hand.heldGates);
+        let addedGate = hand.heldGate;
 
         let emptyCol = GateColumn.empty(this.circuitDefinition.numWires);
         let i = modificationPoint.col;
         let isInserting = modificationPoint.isInsert;
-        let row = Math.min(
-            Math.max(
-                modificationPoint.row - hand.heldGatesGrabInset,
-                0),
-            this.circuitDefinition.numWires - hand.heldGates.gates.length);
+        let row = modificationPoint.row;
         let newCols = seq(this.circuitDefinition.columns).
             padded(i, emptyCol).
             ifThen(isInserting, s => s.withInsertedItem(i, emptyCol)).
             padded(i + 1, emptyCol).
-            withTransformedItem(i, c => c.withGatesAdded(row, addedGateBlock)).
+            withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
 
         let result = this.withCircuit(this.circuitDefinition.withColumns(newCols));
@@ -465,45 +452,59 @@ class CircuitWidget {
     }
 
     /**
+     * @param {!Point} pos
+     * @returns {undefined|!{col: !int, row: !int, offset: !Point}}
+     */
+    findGateOverlappingPos(pos) {
+        let maxCol = this.findExistingOpColumnAt(pos);
+        let maxRow = this.findWireAt(pos);
+        if (maxCol === undefined || maxRow === undefined) {
+            return undefined;
+        }
+        for (let col = maxCol; col >= 0; col--) {
+            for (let row = maxRow; row >= 0; row--) {
+                let gate = this.circuitDefinition.gateAtLoc(new Point(col, row));
+                if (gate !== undefined) {
+                    let rect = this.gateRect(row, col, gate.width, gate.height);
+                    if (rect.containsPoint(pos)) {
+                        return {col, row, offset: pos.minus(rect.topLeft())};
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    /**
      * @param {!Hand} hand
      * @param {!boolean} duplicate
      * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
-        if (hand.pos === null) {
+        if (hand.pos === undefined) {
             return {newCircuit: this, newHand: hand};
         }
 
-        let possibleCol = this.findExistingOpColumnAt(Util.notNull(hand.pos));
-        if (possibleCol === null) {
+        let foundPt = this.findGateOverlappingPos(hand.pos);
+        if (foundPt === undefined) {
             return {newCircuit: this, newHand: hand};
         }
 
-        let c = Util.notNull(possibleCol);
-        let r = this.findWireAt(Util.notNull(hand.pos));
-        if (r === null ||
-                !this.gateRect(r, c).containsPoint(Util.notNull(hand.pos)) ||
-                this.circuitDefinition.columns[c].gates[r] === null) {
-            return {newCircuit: this, newHand: hand};
-        }
-
-        let gate = this.circuitDefinition.columns[c].gates[r];
-        let remainingGates = seq(this.circuitDefinition.columns[c].gates).toArray();
+        let {col, row, offset} = foundPt;
+        let gate = this.circuitDefinition.columns[col].gates[row];
+        let remainingGates = seq(this.circuitDefinition.columns[col].gates).toArray();
         if (!duplicate) {
-            remainingGates[r] = null;
+            remainingGates[row] = null;
         }
-        let grabbedGates = [gate];
 
-        let grabInset = 0;
         let newCols = seq(this.circuitDefinition.columns).
-            withOverlayedItem(c, new GateColumn(remainingGates)).
+            withOverlayedItem(col, new GateColumn(remainingGates)).
             toArray();
         return {
             newCircuit: new CircuitWidget(
                 this.area,
-                this.circuitDefinition.withColumns(newCols),
-                null),
-            newHand: hand.withHeldGates(new GateColumn(grabbedGates), grabInset)
+                this.circuitDefinition.withColumns(newCols)),
+            newHand: hand.withHeldGate(gate, offset)
         };
     }
 

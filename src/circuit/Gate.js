@@ -123,11 +123,21 @@ class Gate {
         return this.matrixOrFunc instanceof Matrix ? this.matrixOrFunc : this.matrixOrFunc(time);
     }
 
+    /**
+     * @returns {!boolean}
+     */
     isTimeBased() {
         return !(this.matrixOrFunc instanceof Matrix);
     }
 
+    /**
+     * @param {*|!Gate} other
+     * @returns {!boolean}
+     */
     isEqualTo(other) {
+        if (this === other) {
+            return true;
+        }
         return other instanceof Gate &&
             this.symbol === other.symbol &&
             this.serializedId === other.serializedId &&
@@ -141,6 +151,9 @@ class Gate {
             this.customDrawer === other.customDrawer;
     }
 
+    /**
+     * @returns {!string}
+     */
     toString() {
         return `Gate(${this.symbol})`;
     }

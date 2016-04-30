@@ -194,18 +194,19 @@ class CircuitDefinition {
 
     /**
      * @param {!Point} pt
-     * @returns {!Gate|null}
+     * @returns {undefined|!Gate}
      */
     gateAtLoc(pt) {
         if (pt.x < 0 || pt.x >= this.columns.length || pt.y < 0 || pt.y >= this.numWires) {
-            return null;
+            return undefined;
         }
-        return this.columns[pt.x].gates[pt.y];
+        let gate = this.columns[pt.x].gates[pt.y];
+        return gate === null ? undefined : gate;
     }
 
     /**
      * @param {!Point} pt
-     * @returns {boolean}
+     * @returns {!boolean}
      */
     locIsControl(pt) {
         let gate = this.gateAtLoc(pt);
@@ -241,11 +242,11 @@ class CircuitDefinition {
 
     /**
      * @param {!Point} pt
-     * @returns {boolean}
+     * @returns {!boolean}
      */
     locHasControllableGate(pt) {
         let g = this.gateAtLoc(pt);
-        return g !== null &&
+        return g !== undefined &&
             g !== Gates.Special.Control &&
             g !== Gates.Special.AntiControl &&
             g !== Gates.Misc.SpacerGate &&
@@ -328,6 +329,25 @@ class CircuitDefinition {
         let swaps = col.swapPairs().
             map(([i1, i2]) => (inTex, conTex) => CircuitShaders.swap(inTex, i1, i2, conTex));
         return nonSwaps.concat(swaps).toArray();
+    }
+
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {undefined|!{col: !int, row: !int}}
+     */
+    findGateOverlapping(col, row, width, height) {
+        for (let c = col + width - 1; c >= 0; c--) {
+            for (let r = row + height - 1; r >= 0; r--) {
+                let gate = this.gateAtLoc(new Point(c, r));
+                if (gate !== undefined && c + gate.width > col && r + gate.height > row) {
+                    return {col: c, row: r};
+                }
+            }
+        }
+        return undefined;
     }
 
     toString() {

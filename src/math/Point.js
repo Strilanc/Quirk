@@ -61,6 +61,15 @@ export default class Point {
     };
 
     /**
+     * Returns the result of subtracting the given point's coordinates from the receiving point.
+     * @param {!Point} p
+     * @returns {!Point}
+     */
+    minus(p) {
+        return new Point(this.x - p.x, this.y - p.y);
+    };
+
+    /**
      * Returns the result of scaling the receiving point's coordinates by the given factor.
      * @param {!number} c The scaling factor.
      * @returns {!Point}

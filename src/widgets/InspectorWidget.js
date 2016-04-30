@@ -85,21 +85,19 @@ export default class InspectorWidget {
      * @private
      */
     paintHand(painter, stats) {
-        let heldGates = this.hand.heldGates;
-        if (this.hand.pos === null || heldGates === null) {
+        if (this.hand.pos === undefined || this.hand.heldGate === undefined) {
             return;
         }
-        let gates = heldGates.gates;
 
-        let dh = Config.WIRE_SPACING;
-        for (let k = 0; k < gates.length; k++) {
-            let p = this.hand.pos.offsetBy(0, dh * (k - gates.length + 1));
-            let r = Rect.centeredSquareWithRadius(p, Config.GATE_RADIUS);
-            r.h = Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gates[k].height-1);
-            r.w = Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gates[k].width-1);
-            let drawer = gates[k].customDrawer || GateFactory.DEFAULT_DRAWER;
-            drawer(new GateDrawParams(painter, false, true, r, gates[k], stats, null));
-        }
+        let gate = this.hand.heldGate;
+        let pos = this.hand.pos.minus(this.hand.heldGateOffset);
+        let rect = new Rect(
+            pos.x,
+            pos.y,
+            Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.width-1),
+            Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.height-1));
+        let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
+        drawer(new GateDrawParams(painter, false, true, rect, gate, stats, null));
     }
 
     /**
@@ -161,7 +159,7 @@ export default class InspectorWidget {
     }
 
     previewDrop() {
-        if (this.hand.heldGates === null) {
+        if (this.hand.heldGate === undefined) {
             return this;
         }
 
@@ -183,8 +181,8 @@ export default class InspectorWidget {
 
     needsContinuousRedraw() {
         return this.toolboxWidget.needsContinuousRedraw(this.hand) ||
-            (this.hand.heldGates !== null && new Seq(this.hand.heldGates.gates).any(g => g.isTimeBased()) ||
-            this.circuitWidget.needsContinuousRedraw());
+            this.hand.needsContinuousRedraw() ||
+            this.circuitWidget.needsContinuousRedraw();
     }
 
     /**
