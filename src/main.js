@@ -124,6 +124,13 @@ const redrawNow = () => {
     let painter = new Painter(canvas);
     let shown = syncArea(inspector).previewDrop();
     if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.circuitWidget.circuitDefinition)) {
+        // Maybe this fresh new circuit isn't failing. Clear the error tint.
+        let errDivStyle = document.getElementById('errorDiv').style;
+        errDivStyle.opacity *= 0.9;
+        if (errDivStyle.opacity < 0.06) {
+            errDivStyle.display = 'None'
+        }
+
         currentCircuitStatsCache =
             new CycleCircuitStats(shown.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
     }

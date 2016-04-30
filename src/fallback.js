@@ -2,12 +2,25 @@ import describe from "src/base/Describe.js"
 
 let _alreadySeen = [];
 let showErrorDiv = (subject, body) => {
+    let errDivStyle = document.getElementById('errorDiv').style;
+    if (errDivStyle.opacity < 0.7) {
+        // Partially faded away as user interacted with circuit.
+        // Enough time to justify updating the message despite the risk of clearing the user's selection.
+        _alreadySeen = [];
+    }
+
+    // Error just happened, so this should be showing and highlighted.
+    errDivStyle.backgroundColor = '#FFA';
+    errDivStyle.opacity = 1.0;
+    errDivStyle.display = 'block';
+
     if (_alreadySeen.indexOf(body) !== -1) {
         return;
     }
     _alreadySeen.push(body);
 
-    document.getElementById('errorDiv').style.display = 'block';
+    // Set shown error details.
+    document.getElementById('errorMessageDiv').innerText = subject;
     document.getElementById('errorDescDiv').innerText = body;
     document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
     document.getElementById('error-mailto-anchor').href = [
@@ -54,10 +67,10 @@ let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
          simplifySrcUrls(location)
     ].join('\n');
 
-    showErrorDiv(recovery, msg);
+    showErrorDiv(recovery + ' (' + (error.message || '') + ')', msg);
 };
 
-let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+\/src\.min\.js/g, 'src.min.js');
+let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+?\/src\.min\.js/g, 'src.min.js');
 
 let drawErrorBox = msg => {
     let canvas = document.getElementById("drawCanvas");
