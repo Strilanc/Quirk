@@ -2,14 +2,23 @@ import describe from "src/base/Describe.js"
 
 let _alreadySeen = [];
 let showErrorDiv = (subject, body) => {
-    document.getElementById('errorDiv').style.backgroundColor = '#FFA';
-    document.getElementById('errorDiv').style.opacity = 1.0;
-    document.getElementById('errorDiv').style.display = 'block';
+    let errDivStyle = document.getElementById('errorDiv').style;
+    if (errDivStyle.display !== 'block') {
+        // Faded away. We can re-show messages now.
+        _alreadySeen = [];
+    }
+
+    // Error just happened, so this should be showing and highlighted.
+    errDivStyle.backgroundColor = '#FFA';
+    errDivStyle.opacity = 1.0;
+    errDivStyle.display = 'block';
+
     if (_alreadySeen.indexOf(body) !== -1) {
         return;
     }
     _alreadySeen.push(body);
 
+    // Set shown error details.
     document.getElementById('errorMessageDiv').innerText = subject;
     document.getElementById('errorDescDiv').innerText = body;
     document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
