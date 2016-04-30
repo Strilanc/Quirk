@@ -56,12 +56,12 @@ class ToolboxWidget {
 
     /**
      *
-     * @param {?Point} pt
+     * @param {undefined|!Point} pt
      *
      * @returns {?{groupIndex: !int, gateIndex: !int, gate: !Gate}}
      */
     findGateAt(pt) {
-        if (pt === null) {
+        if (pt === undefined) {
             return null;
         }
         for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
@@ -114,8 +114,9 @@ class ToolboxWidget {
             }
         }
 
+        // Draw tooltip when hovering, but also when dragging a gate over its own toolbox spot.
         let f = this.findGateAt(hand.pos);
-        if (f !== null && (!hand.isBusy() || hand.heldGates.isEqualTo(new GateColumn([f.gate])))) {
+        if (f !== null && (hand.heldGate === undefined || f.gate.symbol === hand.heldGate.symbol)) {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
             let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
                 snapInside(painter.paintableArea().skipTop(gateRect.y));
@@ -140,11 +141,11 @@ class ToolboxWidget {
      * @returns {!Hand} newHand
      */
     tryGrab(hand) {
-        if (hand.pos === null || hand.isBusy()) {
+        if (hand.pos === undefined || hand.isBusy()) {
             return hand;
         }
 
-        let f = this.findGateAt(Util.notNull(hand.pos));
+        let f = this.findGateAt(hand.pos);
         if (f === null) {
             return hand;
         }
@@ -152,7 +153,7 @@ class ToolboxWidget {
         if (f.gate.symbol === Gates.Misc.MysteryGateSymbol) {
             Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Misc.MysteryGateMaker();
         }
-        return hand.withHeldGates(new GateColumn([f.gate]));
+        return hand.withHeldGate(f.gate, new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
     }
 
     /**

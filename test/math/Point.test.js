@@ -30,6 +30,10 @@ suite.test("plus", () => {
     assertThat(new Point(2, 3).plus(new Point(5, 7))).isEqualTo(new Point(7, 10));
 });
 
+suite.test("minus", () => {
+    assertThat(new Point(2, 3).minus(new Point(5, 7))).isEqualTo(new Point(-3, -4));
+});
+
 suite.test("times", () => {
     assertThat(new Point(2, 3).times(5)).isEqualTo(new Point(10, 15));
 });

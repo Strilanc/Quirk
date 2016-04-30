@@ -102,39 +102,6 @@ class WebGLFramebuffer {}
 class WebGLShader {}
 
 /**
- * A collection of distinct keys, with efficient membership testing.
- *
- * This class is just a JSDoc hack to make WebStorm understand the built-in Set type, and should not be used.
- */
-class Set {
-    //noinspection JSUnusedLocalSymbols
-    /**
-     * @param {(*[]=} valuesIterable
-     * @property {!function()} clear
-     * @property {!function(T) : !Set.<T>} add
-     * @property {!function(T)} delete
-     * @property {!Iterator.<!(T[])>} entries
-     * @property {!function() : !Iterator.<T>} keys
-     * @property {!function() : !Iterator.<T>} values
-     * @template T
-     */
-    constructor(valuesIterable) {
-        /** @type {!int} */
-        this.size = 0;
-        throw new Error("Just a doc class")
-    }
-
-    /**
-     * @param {T|*} key
-     * @returns {!boolean}
-     * @template T
-     */
-    has(key) {
-        throw new Error("Just a doc class " + key + this)
-    }
-}
-
-/**
  * Yields items.
  *
  * This class is just a JSDoc hack to make WebStorm understand the implicit type, and should not be used.

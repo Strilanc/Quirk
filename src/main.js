@@ -210,7 +210,7 @@ watchDrags(canvas,
 
         let newHand = inspector.hand.withPos(pt);
         let newInspector = syncArea(inspector).withHand(newHand).afterDropping().afterTidyingUp();
-        let clearHand = newInspector.hand.withPos(null);
+        let clearHand = newInspector.hand.withPos(undefined);
         let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(0);
         useInspector(clearInspector, true);
         ev.preventDefault();

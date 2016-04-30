@@ -335,4 +335,7 @@ Util.STRICT_EQUALITY = (e1, e2) => e1 === e2;
  * @returns {!boolean}
  * @template T
  */
-Util.CUSTOM_IS_EQUAL_TO_EQUALITY = (e1, e2) => e1 === null ? e2 === null: e1.isEqualTo(e2);
+Util.CUSTOM_IS_EQUAL_TO_EQUALITY = (e1, e2) =>
+    e1 === null ? e2 === null :
+    e1 === undefined ? e2 === undefined :
+    e1.isEqualTo(e2);

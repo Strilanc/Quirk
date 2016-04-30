@@ -45,6 +45,32 @@ class CircuitDefinition {
             this._disabledReasons.push(reasons);
             this._measureMasks.push(mask);
         }
+
+        /**
+         * @type {!Map.<!string, !{col: !int, row: !int, gate: !Gate}}
+         */
+        this._gateSlotCoverMap = this._computeGateSlotCoverMap();
+    }
+
+    /**
+     * @returns {!Map.<!string, !{col: !int, row: !int, gate: !Gate}}
+     * @private
+     */
+    _computeGateSlotCoverMap() {
+        let result = new Map();
+        for (let col = 0; col < this.columns.length; col++) {
+            for (let row = 0; row < this.numWires; row++) {
+                let gate = this.columns[col].gates[row];
+                if (gate !== null) {
+                    for (let i = 0; i < gate.width; i++) {
+                        for (let j = 0; j < gate.height; j++) {
+                            result.set((col+i)+":"+(row+j), {col, row, gate});
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -72,6 +98,8 @@ class CircuitDefinition {
      *
      * The text isn't intended to be particularly understandable, but it should vaguely reflect or at least
      * distinguish the circuit from others when skimming a list of hashes (e.g. links in browser history).
+     *
+     * @returns {!string}
      */
     readableHash() {
         let allGates = new Seq(this.columns)
@@ -89,18 +117,159 @@ class CircuitDefinition {
         return allGatesString.substring(0, 40) + `…`;
     }
 
+    /**
+     * @oaram {!Array.<!GateColumn>} cols
+     * @returns {!CircuitDefinition}
+     */
     withColumns(cols) {
         return new CircuitDefinition(
             this.numWires,
             cols)
     }
 
-    withoutEmpties() {
-        return new CircuitDefinition(
-            this.numWires,
-            this.columns.filter(e => !e.isEmpty()));
+    /**
+     * @returns {!Set.<!int>}
+     * @private
+     */
+    _usedColumns() {
+        let usedCols = new Set();
+        for (let col = 0; col < this.columns.length; col++) {
+            for (let i = 0; i < this.columns[col].maximumGateWidth(); i++) {
+                usedCols.add(col+i);
+            }
+        }
+        return usedCols;
     }
 
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {undefined|!{col: !int, row: !int}}
+     * @private
+     */
+    _findWidthWiseOverlapInRect(col, row, width, height) {
+        for (let i = 1; i < width && col + i < this.columns.length; i++) {
+            for (let j = 0; j < height; j++) {
+                let otherGate = this.findGateCoveringSlot(col+i, row+j);
+                if (otherGate === undefined || otherGate.col == col) {
+                    continue;
+                }
+                return {col: otherGate.col, row: otherGate.row};
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    withWidthOverlapsFixed() {
+        let newCols = [];
+        for (let col = 0; col < this.columns.length; col++) {
+            let paddingRequired = Seq.range(this.numWires).map(row => {
+                let gate = this.columns[col].gates[row];
+                if (gate === null) {
+                    return 0;
+                }
+                let f = this._findWidthWiseOverlapInRect(col, row, gate.width, gate.height);
+                if (f === undefined) {
+                    return 0;
+                }
+                return gate.width - (f.col - col);
+            }).max(0);
+
+            newCols.push(this.columns[col]);
+            for (let i = 0; i < paddingRequired; i++) {
+                newCols.push(GateColumn.empty(this.numWires));
+            }
+        }
+
+        return this.withColumns(newCols);
+    }
+
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!Set.<!int>}
+     * @private
+     */
+    _findHeightWiseOverlapsInCol(col) {
+        let pushedGates = new Set();
+        let h = 0;
+        for (let row = 0; row < this.numWires; row++) {
+            h -= 1;
+            let gate = this.gateInSlot(col, row);
+            if (gate !== undefined) {
+                if (h > 0) {
+                    pushedGates.add(row);
+                }
+                h = Math.max(h, gate.height);
+            }
+        }
+        return pushedGates;
+    }
+
+    /**
+     * @param {!int} recurseLimit If a bug causes an infinite height-overlap-fixing loop, this will save us.
+     * @returns {!CircuitDefinition}
+     */
+    withHeightOverlapsFixed(recurseLimit=5) {
+        let newCols = [];
+        for (let col = 0; col < this.columns.length; col++) {
+            let pushedGateIndexes = this._findHeightWiseOverlapsInCol(col);
+            if (pushedGateIndexes.size === 0) {
+                newCols.push(this.columns[col]);
+                continue;
+            }
+
+            console.log(pushedGateIndexes);
+            let isControl = g => g === Gates.Special.Control || g === Gates.Special.AntiControl;
+            let keptGates = seq(this.columns[col].gates).
+                mapWithIndex((g, row) => pushedGateIndexes.has(row) ? null : g).
+                toArray();
+            let pushedGates = seq(this.columns[col].gates).
+                mapWithIndex((g, row) => isControl(g) || pushedGateIndexes.has(row) ? g : null).
+                toArray();
+
+            newCols.push(new GateColumn(keptGates));
+            newCols.push(new GateColumn(pushedGates));
+        }
+
+        let result = this.withColumns(newCols);
+        if (newCols.length > this.columns.length && recurseLimit > 0) {
+            // The pushed gates may still contain more height overlaps.
+            result = result.withHeightOverlapsFixed(recurseLimit-1);
+        }
+        return result;
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    withTrailingSpacersIncluded() {
+        return this.withColumns(seq(this.columns).
+            padded(this.minimumRequiredColCount(), GateColumn.empty(this.numWires)).
+            toArray());
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    withUncoveredColumnsRemoved() {
+        let used = this._usedColumns();
+        return new CircuitDefinition(
+            this.numWires,
+            seq(this.columns).filterWithIndex((e, i) => used.has(i)).toArray());
+    }
+
+    /**
+     * @param {!int} {newWireCount}
+     * @returns {!CircuitDefinition}
+     */
     withWireCount(newWireCount) {
         if (newWireCount === this.numWires) {
             return this;
@@ -114,10 +283,24 @@ class CircuitDefinition {
                     toArray())));
     }
 
+    /**
+     * @returns {!int}
+     */
     minimumRequiredWireCount() {
         return seq(this.columns).map(c => c.minimumRequiredWireCount()).max(0);
     }
 
+    /**
+     * @returns {!int}
+     */
+    minimumRequiredColCount() {
+        return seq(this.columns).mapWithIndex((c, i) => c.maximumGateWidth() + i).max(0);
+    }
+
+    /**
+     * @param {*} other
+     * @returns {!boolean}
+     */
     isEqualTo(other) {
         if (this === other) {
             return true;
@@ -128,35 +311,84 @@ class CircuitDefinition {
     }
 
     /**
+     * @param {!int} col
+     * @returns {!int}
+     */
+    colIsMeasuredMask(col) {
+        if (col < 0) {
+            return 0;
+        }
+        return this._measureMasks[Math.min(col, this.columns.length)];
+    }
+
+    /**
+     * @param {!int} col
+     * @returns {!int}
+     */
+    colHasSingleQubitDisplayMask(col) {
+        if (col < 0 || col >= this.columns.length) {
+            return 0;
+        }
+        return this.columns[col].wiresWithSingleQubitDisplaysMask();
+    }
+
+    /**
+     * @param {!int} col
+     * @returns {!int}
+     */
+    colHasDoubleQubitDisplayMask(col) {
+        if (col < 0 || col >= this.columns.length) {
+            return 0;
+        }
+        return this.columns[col].wiresWithTwoQubitDisplaysMask();
+    }
+
+    /**
      * @param {!Point} pt
      * @returns {boolean}
      */
     locIsMeasured(pt) {
-        let col = Math.min(this.columns.length, pt.x);
         let row = pt.y;
-        if (col < 0 || row < 0 || row >= this.numWires) {
+        if (row < 0 || row >= this.numWires) {
             return false
         }
-        return (this._measureMasks[col] & (1 << row)) !== 0;
+        return (this.colIsMeasuredMask(pt.x) & (1 << row)) !== 0;
     }
 
     /**
+     * A gate is only "in" the slot at its top left.
+     * It "covers" any other slots underneath it.
      * @param {!Point} pt
-     * @returns {!Gate|null}
+     * @returns {undefined|!Gate}
      */
-    gateAtLoc(pt) {
-        if (pt.x < 0 || pt.x >= this.columns.length || pt.y < 0 || pt.y >= this.numWires) {
-            return null;
+    gateInSlot(col, row) {
+        if (col < 0 || col >= this.columns.length || row < 0 || row >= this.numWires) {
+            return undefined;
         }
-        return this.columns[pt.x].gates[pt.y];
+        let gate = this.columns[col].gates[row];
+        return gate === null ? undefined : gate;
+    }
+
+    /**
+     * A slot is covered when a gate is in it or extends over it.
+     * @param {!int} col
+     * @param {!int} row
+     * @returns {undefined|!{col: !int, row: !int, gate: !Gate}}
+     */
+    findGateCoveringSlot(col, row) {
+        let key = col+":"+row;
+        if (!this._gateSlotCoverMap.has(key)) {
+            return undefined;
+        }
+        return this._gateSlotCoverMap.get(key);
     }
 
     /**
      * @param {!Point} pt
-     * @returns {boolean}
+     * @returns {!boolean}
      */
     locIsControl(pt) {
-        let gate = this.gateAtLoc(pt);
+        let gate = this.gateInSlot(pt.x, pt.y);
         return gate === Gates.Special.Control || gate === Gates.Special.AntiControl;
     }
 
@@ -183,23 +415,27 @@ class CircuitDefinition {
     colHasPairedSwapGate(col) {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
-            filter(pt => this.gateAtLoc(pt) === Gates.Special.SwapHalf);
+            filter(pt => this.gateInSlot(pt.x, pt.y) === Gates.Special.SwapHalf);
         return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== undefined) && pts.count() == 2;
     }
 
     /**
      * @param {!Point} pt
-     * @returns {boolean}
+     * @returns {!boolean}
      */
     locHasControllableGate(pt) {
-        let g = this.gateAtLoc(pt);
-        return g !== null &&
+        let g = this.gateInSlot(pt.x, pt.y);
+        return g !== undefined &&
             g !== Gates.Special.Control &&
             g !== Gates.Special.AntiControl &&
             g !== Gates.Misc.SpacerGate &&
             (g !== Gates.Special.SwapHalf || this.colHasPairedSwapGate(pt.x));
     }
 
+    /**
+     * @param {!int} col
+     * @returns {!boolean}
+     */
     colHasControls(col) {
         if (col < 0 || col >= this.columns.length) {
             return false;
@@ -272,6 +508,22 @@ class CircuitDefinition {
         let swaps = col.swapPairs().
             map(([i1, i2]) => (inTex, conTex) => CircuitShaders.swap(inTex, i1, i2, conTex));
         return nonSwaps.concat(swaps).toArray();
+    }
+
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!int} height
+     * @returns {!boolean}
+     */
+    isSlotRectCoveredByGateInSameColumn(col, row, height) {
+        for (let j = 0; j < height; j++) {
+            let f = this.findGateCoveringSlot(col, row+j);
+            if (f !== undefined && f.col === col) {
+                return true;
+            }
+        }
+        return false;
     }
 
     toString() {

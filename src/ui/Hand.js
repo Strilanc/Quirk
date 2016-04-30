@@ -1,38 +1,59 @@
-import Util from "src/base/Util.js"
-import Point from "src/math/Point.js"
+import describe from "src/base/Describe.js"
+import DetailedError from "src/base/DetailedError.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
+import Point from "src/math/Point.js"
+import Util from "src/base/Util.js"
 
 class Hand {
     /**
-     * @param {?Point} pos
-     * @param {?GateColumn} heldGates
-     * @param {?int} heldGatesGrabInset
-     *
-     * @property {?Point} pos
-     * @property {?GateColumn} heldGates
-     * @property {?int} heldGatesGrabInset
-     *
-     * @constructor
+     * @param {undefined|!Point} pos
+     * @param {undefined|!Gate} heldGate
+     * @param {undefined|!Point} heldGateOffset
      */
-    constructor(pos, heldGates, heldGatesGrabInset) {
-        Util.need(pos === null || pos instanceof Point, "pos instanceof ?Point");
-        Util.need((heldGates === null) === (heldGatesGrabInset === null), "heldGates iff heldGatesGrabInset");
-        this.heldGates = heldGates;
-        this.heldGatesGrabInset = heldGatesGrabInset;
+    constructor(pos, heldGate, heldGateOffset) {
+        if (pos !== undefined && !(pos instanceof Point)) {
+            throw new DetailedError("Bad pos", {pos, heldGate, heldGateOffset});
+        }
+        if (heldGate !== undefined && !(heldGate instanceof Gate)) {
+            throw new DetailedError("Bad heldGate", {pos, heldGate, heldGateOffset});
+        }
+        if (heldGateOffset !== undefined && !(heldGateOffset instanceof Point)) {
+            throw new DetailedError("Bad heldGateOffset", {pos, heldGate, heldGateOffset});
+        }
+        if ((heldGate !== undefined) !== (heldGateOffset !== undefined)) {
+            throw new DetailedError("Inconsistent hold properties", {pos, heldGate, heldGateOffset});
+        }
+
+        /**
+         * @type {undefined|!Point}
+         */
         this.pos = pos;
-    }
-
-    isBusy() {
-        return this.heldGates !== null;
-    }
-
-    hoverPoints() {
-        return this.pos === null || this.isBusy() ? [] : [this.pos];
+        /**
+         * @type {undefined|!Gate}
+         */
+        this.heldGate = heldGate;
+        /**
+         * @type {undefined|!Point}
+         */
+        this.heldGateOffset = heldGateOffset;
     }
 
     /**
-     *
+     * @returns {!boolean}
+     */
+    isBusy() {
+        return this.heldGate !== undefined;
+    }
+
+    /**
+     * @returns {!Array.<!Point>}
+     */
+    hoverPoints() {
+        return this.pos === undefined || this.isBusy() ? [] : [this.pos];
+    }
+
+    /**
      * @param {!Hand|*} other
      * @returns {!boolean}
      */
@@ -42,38 +63,48 @@ class Hand {
         }
         return other instanceof Hand &&
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.pos, other.pos) &&
-            this.heldGatesGrabInset === other.heldGatesGrabInset &&
-            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGates, other.heldGates);
-    }
-
-    toString() {
-        return `pos: ${this.pos}, holding: ${this.heldGates}`;
+            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGateOffset, other.heldGateOffset) &&
+            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGate, other.heldGate);
     }
 
     /**
-     * @param {?Point} newPos
+     * @returns {!string}
+     */
+    toString() {
+        return describe({pos: this.pos, heldGate: this.heldGate, heldGateOffset: this.heldGateOffset});
+    }
+
+    /**
+     * @param {undefined|!Point} newPos
      * @returns {!Hand}
      */
     withPos(newPos) {
-        return new Hand(newPos, this.heldGates, this.heldGatesGrabInset);
+        return new Hand(newPos, this.heldGate, this.heldGateOffset);
     }
 
     /**
      * @returns {!Hand}
      */
     withDrop() {
-        return new Hand(this.pos, null, null);
+        return new Hand(this.pos, undefined, undefined);
     }
 
     /**
-     * @param {!GateColumn} heldGates
-     * @param {!int} heldGatesGrabInset
+     * @param {!Gate} heldGate
+     * @param {!Point} heldGateOffset
      * @returns {!Hand}
      */
-    withHeldGates(heldGates, heldGatesGrabInset=0) {
-        return new Hand(this.pos, heldGates, heldGatesGrabInset);
+    withHeldGate(heldGate, heldGateOffset) {
+        return new Hand(this.pos, heldGate, heldGateOffset);
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    needsContinuousRedraw() {
+        return this.heldGate !== undefined && this.heldGate.isTimeBased();
     }
 }
 export default Hand;
 
-Hand.EMPTY = new Hand(null, null, null);
+Hand.EMPTY = new Hand(undefined, undefined, undefined);
