@@ -38,10 +38,17 @@ class CircuitWidget {
         this.compressedColumnIndex = compressedColumnIndex;
     }
 
+    /**
+     * @param {!int} wireCount
+     * @returns {!number}
+     */
     static desiredHeight(wireCount) {
         return Math.max(Config.MIN_WIRE_COUNT, wireCount) * Config.WIRE_SPACING + 100;
     }
 
+    /**
+     * @returns {!number}
+     */
     desiredWidth() {
         let r = this.opRect(
             this.circuitDefinition.columns.length + // Operations.
@@ -217,6 +224,9 @@ class CircuitWidget {
         return new Rect(Math.round(r.x - 0.5) + 0.5, Math.round(r.y - 0.5) + 0.5, Math.round(r.w), Math.round(r.h));
     }
 
+    /**
+     * @returns {!CircuitWidget}
+     */
     afterTidyingUp() {
         return this.withCircuit(this.circuitDefinition.withoutEmpties());
     }
@@ -368,6 +378,13 @@ class CircuitWidget {
         }
     }
 
+    /**
+     * @param {!Array.<!GateColumn>} cols
+     * @param {!int} row
+     * @param {!int} oldCol
+     * @param {!int} minCol
+     * @returns {!Array.<!GateColumn>}
+     */
     static _shiftGateAhead(cols, row, oldCol, minCol) {
         let gate = cols[oldCol].gates[row];
         let newCol = Seq.
@@ -413,12 +430,20 @@ class CircuitWidget {
         return result;
     }
 
+    /**
+     * @param {!Hand} hand
+     * @returns {!CircuitWidget}
+     */
     afterDropping(hand) {
         let r = this.previewDrop(hand);
         r.compressedColumnIndex = null;
         return r;
     }
 
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @returns {!CircuitWidget}
+     */
     withCircuit(circuitDefinition) {
         if (circuitDefinition.isEqualTo(this.circuitDefinition)) {
             return this;
@@ -429,8 +454,12 @@ class CircuitWidget {
             this.compressedColumnIndex);
     }
 
-    withJustEnoughWires(extra = 0) {
-        let desiredWireCount = this.circuitDefinition.minimumRequiredWireCount() + extra;
+    /**
+     * @param {!int} extraWireCount
+     * @returns {!CircuitWidget}
+     */
+    withJustEnoughWires(extraWireCount = 0) {
+        let desiredWireCount = this.circuitDefinition.minimumRequiredWireCount() + extraWireCount;
         let clampedWireCount = Math.min(Config.MAX_WIRE_COUNT, Math.max(Config.MIN_WIRE_COUNT, desiredWireCount));
         return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount));
     }
@@ -485,11 +514,15 @@ class CircuitWidget {
         return this.circuitDefinition.isTimeDependent();
     }
 
+    /**
+     * @returns {!int}
+     */
     importantWireCount() {
-        let usedWireCount = 1 + seq(this.circuitDefinition.columns).
-            flatMap(col => seq(col.gates).mapWithIndex((gate, i) => gate !== null ? i : -Infinity)).
-            max(-Infinity);
-        return Math.max(this.circuitDefinition.numWires - 1, Math.max(Config.MIN_WIRE_COUNT, usedWireCount));
+        return seq([
+            this.circuitDefinition.numWires - 1,
+            Config.MIN_WIRE_COUNT,
+            this.circuitDefinition.minimumRequiredWireCount()
+        ]).max();
     }
 
     /**
