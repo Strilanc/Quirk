@@ -195,6 +195,7 @@ suite.test("isApproximatelyHermitian", () => {
 suite.test("isIdentity", () => {
     let i = Complex.I;
 
+    assertFalse(Matrix.solo(NaN).isIdentity());
     assertFalse(Matrix.solo(-1).isIdentity());
     assertFalse(Matrix.solo(0).isIdentity());
     assertTrue(Matrix.solo(1).isIdentity());
@@ -253,6 +254,10 @@ suite.test("isPhasedPermutation", () => {
     assertFalse(Matrix.square(1, 0.1, 0, 1).isPhasedPermutation(0));
     assertFalse(Matrix.square(1, 0.1, 0, 1).isPhasedPermutation(0.05));
     assertTrue(Matrix.square(1, 0.1, 0, 1).isPhasedPermutation(0.2));
+
+    assertTrue(Matrix.solo(NaN).isPhasedPermutation());
+    assertFalse(Matrix.square(NaN, NaN, NaN, NaN).isPhasedPermutation());
+    assertTrue(Matrix.square(NaN, 0, 0, NaN).isPhasedPermutation());
 });
 
 suite.test("adjoint", () => {
@@ -577,6 +582,7 @@ suite.test("liftApply", () => {
 });
 
 suite.test("trace", () => {
+    assertThat(Matrix.solo(NaN).trace().abs()).isEqualTo(NaN);
     assertThat(Matrix.identity(2).trace()).isEqualTo(2);
     assertThat(Matrix.identity(10).trace()).isEqualTo(10);
 
@@ -748,14 +754,17 @@ suite.test("cross3", () => {
 });
 
 suite.test("isUpperTriangular", () => {
-    assertTrue(Matrix.solo(0).isUpperTriangular(0));
-    assertTrue(Matrix.solo(1).isUpperTriangular(0));
-    assertFalse(Matrix.col(1, 2).isUpperTriangular(0));
-    assertTrue(Matrix.row(1, 2).isUpperTriangular(0));
+    assertTrue(Matrix.solo(NaN).isUpperTriangular());
+    assertTrue(Matrix.solo(0).isUpperTriangular());
+    assertTrue(Matrix.solo(1).isUpperTriangular());
+    assertFalse(Matrix.col(1, 2).isUpperTriangular());
+    assertTrue(Matrix.row(1, 2).isUpperTriangular());
 
-    assertTrue(Matrix.square(1, 2, 0, 4).isUpperTriangular(0));
-    assertFalse(Matrix.square(1, 2, 3, 4).isUpperTriangular(0));
-    assertFalse(Matrix.square(1, 2, Complex.I, 4).isUpperTriangular(0));
+    assertTrue(Matrix.square(1, 2, 0, 4).isUpperTriangular());
+    assertTrue(Matrix.square(1, NaN, 0, 4).isUpperTriangular());
+    assertFalse(Matrix.square(1, 2, 3, 4).isUpperTriangular());
+    assertFalse(Matrix.square(1, 2, NaN, 4).isUpperTriangular());
+    assertFalse(Matrix.square(1, 2, Complex.I, 4).isUpperTriangular());
     assertFalse(Matrix.square(1, 2, 3, 4).isUpperTriangular(2.9));
     assertTrue(Matrix.square(1, 2, 3, 4).isUpperTriangular(3.1));
 
@@ -822,13 +831,15 @@ suite.test("eigenvalueMagnitudes", () => {
 });
 
 suite.test("isDiagonal", () => {
+    assertTrue(Matrix.solo(NaN).isDiagonal());
     assertTrue(Matrix.solo(0).isDiagonal());
-    assertTrue(Matrix.solo(1).isDiagonal(0));
-    assertFalse(Matrix.col(0, 0).isDiagonal(0));
-    assertFalse(Matrix.row(0, 0).isDiagonal(0));
+    assertTrue(Matrix.solo(1).isDiagonal());
+    assertFalse(Matrix.col(0, 0).isDiagonal());
+    assertFalse(Matrix.row(0, 0).isDiagonal());
 
     assertTrue(Matrix.square(1, 0, 0, 0).isDiagonal());
     assertFalse(Matrix.square(0, 1, 0, 0).isDiagonal());
+    assertFalse(Matrix.square(0, NaN, 0, 0).isDiagonal());
     assertFalse(Matrix.square(0, 0, 1, 0).isDiagonal());
     assertTrue(Matrix.square(0, 0, 0, 1).isDiagonal());
 
@@ -849,4 +860,14 @@ suite.test("isDiagonal", () => {
         -10, 0.1, 0,
         0, Infinity, 0,
         0, 0, Complex.I).isDiagonal(0.2));
+});
+
+
+suite.test("hasNaN", () => {
+    assertTrue(Matrix.solo(NaN).hasNaN());
+    assertFalse(Matrix.solo(0).hasNaN());
+
+    assertTrue(Matrix.solo(new Complex(0, NaN)).hasNaN());
+    assertTrue(Matrix.square(0, 0, NaN, 0).hasNaN());
+    assertFalse(Matrix.square(0, 0, 0, 0).hasNaN());
 });

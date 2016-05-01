@@ -177,7 +177,8 @@ watchDrags(canvas,
         }
 
         // Add extra wire temporarily.
-        useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(1)).afterGrabbing(ev.shiftKey), false);
+        useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
+            afterGrabbing(ev.shiftKey), false);
 
         revision.startedWorkingOnCommit();
         ev.preventDefault();
@@ -218,7 +219,7 @@ watchDrags(canvas,
         let newHand = inspector.hand.withPos(pt);
         let newInspector = syncArea(inspector).withHand(newHand).afterDropping().afterTidyingUp();
         let clearHand = newInspector.hand.withPos(undefined);
-        let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(0);
+        let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(clearHand, 0);
         useInspector(clearInspector, true);
         ev.preventDefault();
     });
@@ -234,7 +235,7 @@ canvas.addEventListener('mousedown', ev => {
         afterGrabbing(false). // Grab the gate.
         withHand(newHand). // Lose the gate.
         afterTidyingUp().
-        withJustEnoughWires(0);
+        withJustEnoughWires(newHand, 0);
     if (useInspector(newInspector, true)) {
         ev.preventDefault();
     }

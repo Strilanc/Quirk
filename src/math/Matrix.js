@@ -272,7 +272,7 @@ class Matrix {
                 let k = (r*this._width + c)*2;
                 let v1 = this._buffer[k];
                 let v2 = this._buffer[k+1];
-                if (v1*v1 + v2*v2 > epsilon*epsilon) {
+                if (isNaN(v1) || isNaN(v2) || v1*v1 + v2*v2 > epsilon*epsilon) {
                     return false;
                 }
             }
@@ -298,7 +298,8 @@ class Matrix {
         for (let col = 0; col < n; col++) {
             for (let row = 0; row < n; row++) {
                 let i = (row*n + col)*2;
-                if (Math.max(Math.abs(this._buffer[i]), Math.abs(this._buffer[i+1])) > epsilon) {
+                let m = Math.max(Math.abs(this._buffer[i]), Math.abs(this._buffer[i+1]));
+                if (isNaN(m) || m > epsilon) {
                     colCounts[col] += 1;
                     rowCounts[row] += 1;
                 }
@@ -351,6 +352,9 @@ class Matrix {
         for (let c = 0; c < this._width; c++) {
             for (let r = 0; r < this._height; r++) {
                 let i = (this._width*r + c)*2;
+                if (isNaN(this._buffer[i]) || isNaN(this._buffer[i+1])) {
+                    return false;
+                }
                 if (Math.abs(this._buffer[i] - (r === c ? 1 : 0)) > epsilon) {
                     return false;
                 }
@@ -359,7 +363,20 @@ class Matrix {
                 }
             }
         }
-        return true;
+        return !this.hasNaN();
+    };
+
+    /**
+     * Determines if the matrix contains a NaN.
+     * @returns {!boolean}
+     */
+    hasNaN(epsilon=0) {
+        for (let i = 0; i < this._buffer.length; i++) {
+            if (isNaN(this._buffer[i])) {
+                return true;
+            }
+        }
+        return false;
     };
 
     /**
@@ -373,8 +390,13 @@ class Matrix {
         }
         for (let c = 0; c < this._width; c++) {
             for (let r = 0; r < this._height; r++) {
+                if (r === c) {
+                    continue;
+                }
                 let i = (this._width*r + c)*2;
-                if (r !== c && (Math.abs(this._buffer[i]) > epsilon || Math.abs(this._buffer[i+1]) > epsilon)) {
+                let vr = this._buffer[i];
+                let vi = this._buffer[i+1];
+                if (isNaN(vr) || Math.abs(vr) > epsilon || isNaN(vi) || Math.abs(vi) > epsilon) {
                     return false;
                 }
             }
