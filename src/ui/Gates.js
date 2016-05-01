@@ -278,7 +278,7 @@ Gates.HalfTurns = {
 
 const IncGateMaker = span => new Gate(
     "+1\n" + span,
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) == c ? 1 : 0),
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) == c ? 1 : 0),
     span + "-Bit Increment Gate",
     "Adds 1 to the little-endian number represented by " + span + " qubits."
 ).withSerializedId("inc" + span).
@@ -287,7 +287,7 @@ const IncGateMaker = span => new Gate(
 
 const DecGateMaker = span => new Gate(
     "-1\n" + span,
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) == c ? 1 : 0),
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) == c ? 1 : 0),
     span + "-Bit Decrement Gate",
     "Subtracts 1 from the little-endian number represented by " + span + " qubits."
 ).withSerializedId("dec" + span).
@@ -659,7 +659,7 @@ Gates.Misc = {
 Gates.ExperimentalAndImplausible = {
     UniversalNot: new Gate(
         "UniNot",
-        Matrix.zero(2, 2),
+        Matrix.zero(1, 1).times(NaN),
         "Universal Not Gate",
         "Mirrors a qubit's state through the origin of the Bloch sphere.\nImpossible in practice.").
         withCustomShader(GateShaders.universalNot).
