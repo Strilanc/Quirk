@@ -472,12 +472,16 @@ class CircuitWidget {
     }
 
     /**
+     * @param {!Hand} hand
      * @param {!int} extraWireCount
      * @returns {!CircuitWidget}
      */
-    withJustEnoughWires(extraWireCount = 0) {
+    withJustEnoughWires(hand, extraWireCount) {
+        let neededWireCountForPlacement = hand.heldGate !== undefined ? hand.heldGate.height : 0;
         let desiredWireCount = this.circuitDefinition.minimumRequiredWireCount() + extraWireCount;
-        let clampedWireCount = Math.min(Config.MAX_WIRE_COUNT, Math.max(Config.MIN_WIRE_COUNT, desiredWireCount));
+        let clampedWireCount = Math.min(
+            Config.MAX_WIRE_COUNT,
+            Math.max(neededWireCountForPlacement, Math.max(Config.MIN_WIRE_COUNT, desiredWireCount)));
         return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount));
     }
 
