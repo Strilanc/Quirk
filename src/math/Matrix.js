@@ -348,13 +348,12 @@ class Matrix {
                 let i = (this._width*r + c)*2;
                 let dr = Math.abs(this._buffer[i] - (r === c ? 1 : 0));
                 let di = Math.abs(this._buffer[i+1]);
-                let d = Math.max(dr, di);
-                if (isNaN(d) || d > epsilon) {
+                if (Math.max(dr, di) > epsilon) {
                     return false;
                 }
             }
         }
-        return true;
+        return !this.hasNaN();
     }
 
     /**
@@ -376,24 +375,21 @@ class Matrix {
      * @returns {!boolean}
      */
     isDiagonal(epsilon=0) {
-        if (this._width !== this._height) {
-            return false;
-        }
         for (let c = 0; c < this._width; c++) {
             for (let r = 0; r < this._height; r++) {
                 if (r === c) {
                     continue;
                 }
-                let i = (this._width*r + c)*2;
-                let vr = this._buffer[i];
-                let vi = this._buffer[i+1];
-                let v = Math.max(vr, vi);
-                if (isNaN(v) || Math.abs(v) > epsilon) {
+                let k = (this._width*r + c)*2;
+                let dr = Math.abs(this._buffer[k]);
+                let di = Math.abs(this._buffer[k+1]);
+                let d = Math.max(dr, di);
+                if (isNaN(d) || d > epsilon) {
                     return false;
                 }
             }
         }
-        return true;
+        return this._width === this._height;
     }
 
     /**
