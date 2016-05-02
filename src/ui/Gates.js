@@ -278,7 +278,7 @@ Gates.HalfTurns = {
 
 const IncGateMaker = span => new Gate(
     "+1\n" + span,
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) == c ? 1 : 0),
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
     span + "-Bit Increment Gate",
     "Adds 1 to the little-endian number represented by " + span + " qubits."
 ).withSerializedId("inc" + span).
@@ -287,7 +287,7 @@ const IncGateMaker = span => new Gate(
 
 const DecGateMaker = span => new Gate(
     "-1\n" + span,
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) == c ? 1 : 0),
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
     span + "-Bit Decrement Gate",
     "Subtracts 1 from the little-endian number represented by " + span + " qubits."
 ).withSerializedId("dec" + span).
@@ -451,69 +451,76 @@ Gates.OtherY = {
         "Adjoint eighth root of Y.")
 };
 
+const XPow = t => {
+    let c = Math.cos(τ * t) / 2;
+    let s = Math.sin(τ * t) / 2;
+    return new Matrix(2, 2, new Float32Array([0.5+c, s, 0.5-c, -s, 0.5-c, -s, 0.5+c, s]));
+};
+const YPow = t => {
+    let c = Math.cos(τ * t) / 2;
+    let s = Math.sin(τ * t) / 2;
+    return new Matrix(2, 2, new Float32Array([0.5+c, s, -s, c-0.5, s, 0.5-c, 0.5+c, s]));
+};
+const ZPow = t => {
+    let c = Math.cos(τ * t);
+    let s = Math.sin(τ * t);
+    return new Matrix(2, 2, new Float32Array([1, 0, 0, 0, 0, 0, c, s]));
+};
+const XExp = t => {
+    let c = Math.cos(τ * t);
+    let s = Math.sin(τ * t);
+    return new Matrix(2, 2, new Float32Array([c, 0, 0, -s, 0, -s, c, 0]));
+};
+const YExp = t => {
+    let c = Math.cos(τ * t);
+    let s = Math.sin(τ * t);
+    return new Matrix(2, 2, new Float32Array([c, 0, -s, 0, s, 0, c, 0]));
+};
+const ZExp = t => {
+    let c = Math.cos(τ * t);
+    let s = Math.sin(τ * t);
+    return new Matrix(2, 2, new Float32Array([c, -s, 0, 0, 0, 0, c, s]));
+};
+
 Gates.Exponentiating = {
     XForward: new Gate(
         "e^-iXt",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([c, 0, 0, -s, 0, -s, c, 0]));
-        },
+        XExp,
         "X-Exponentiating Gate (forward)",
         "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X."
     ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
 
     XBackward: new Gate(
         "e^iXt",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([c, 0, 0, s, 0, s, c, 0]));
-        },
+        t => XExp(-t),
         "X-Exponentiating Gate (backward)",
         "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X."
     ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
 
     YForward: new Gate(
         "e^-iYt",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([c, 0, -s, 0, s, 0, c, 0]));
-        },
+        YExp,
         "Y-Exponentiating Gate (forward)",
         "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y."
     ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
 
     YBackward: new Gate(
         "e^iYt",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([c, 0, s, 0, -s, 0, c, 0]));
-        },
+        t => YExp(-t),
         "Y-Exponentiating Gate (backward)",
         "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y."
     ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
 
     ZForward: new Gate(
         "e^-iZt",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([c, -s, 0, 0, 0, 0, c, s]));
-        },
+        ZExp,
         "Z-Exponentiating Gate (forward)",
         "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z."
     ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
 
     ZBackward: new Gate(
         "e^iZt",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([c, s, 0, 0, 0, 0, c, -s]));
-        },
+        t => ZExp(-t),
         "Z-Exponentiating Gate (backward)",
         "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z."
     ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER)
@@ -522,66 +529,42 @@ Gates.Exponentiating = {
 Gates.Powering = {
     XForward: new Gate(
         "X^t",
-        t => {
-            let c = Math.cos(τ * t) / 2;
-            let s = Math.sin(τ * t) / 2;
-            return new Matrix(2, 2, new Float32Array([0.5+c, s, 0.5-c, -s, 0.5-c, -s, 0.5+c, s]));
-        },
+        XPow,
         "X-Raising Gate (forward)",
         "A continuous right-handed cycle between the X gate and no-op."
     ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
 
     XBackward: new Gate(
         "X^-t",
-        t => {
-            let c = Math.cos(τ * -t) / 2;
-            let s = Math.sin(τ * -t) / 2;
-            return new Matrix(2, 2, new Float32Array([0.5+c, s, 0.5-c, -s, 0.5-c, -s, 0.5+c, s]));
-        },
+        t => XPow(-t),
         "X-Raising Gate (backward)",
         "A continuous left-handed cycle between the X gate and no-op."
     ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
 
     YForward: new Gate(
         "Y^t",
-        t => {
-            let c = Math.cos(τ * t) / 2;
-            let s = Math.sin(τ * t) / 2;
-            return new Matrix(2, 2, new Float32Array([0.5+c, s, -s, c-0.5, s, 0.5-c, 0.5+c, s]));
-        },
+        YPow,
         "Y-Raising Gate (forward)",
         "A continuous right-handed cycle between the Y gate and no-op."
     ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
 
     YBackward: new Gate(
         "Y^-t",
-        t => {
-            let c = Math.cos(τ * -t) / 2;
-            let s = Math.sin(τ * -t) / 2;
-            return new Matrix(2, 2, new Float32Array([0.5+c, s, -s, c-0.5, s, 0.5-c, 0.5+c, s]));
-        },
+        t => YPow(-t),
         "Y-Raising Gate (backward)",
         "A continuous left-handed cycle between the Y gate and no-op."
     ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
 
     ZForward: new Gate(
         "Z^t",
-        t => {
-            let c = Math.cos(τ * t);
-            let s = Math.sin(τ * t);
-            return new Matrix(2, 2, new Float32Array([1, 0, 0, 0, 0, 0, c, s]));
-        },
+        ZPow,
         "Z-Raising Gate (forward)",
         "A continuous right-handed cycle between the Z gate and no-op."
     ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
 
     ZBackward: new Gate(
         "Z^-t",
-        t => {
-            let c = Math.cos(τ * -t);
-            let s = Math.sin(τ * -t);
-            return new Matrix(2, 2, new Float32Array([1, 0, 0, 0, 0, 0, c, s]));
-        },
+        t => ZPow(-t),
         "Z-Raising Gate (backward)",
         "A continuous left-handed cycle between the Z gate and no-op."
     ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER)
