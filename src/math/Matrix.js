@@ -307,13 +307,7 @@ class Matrix {
         }
 
         // Phased permutations have at most one entry in each row and column.
-        for (let i = 0; i < n; i++) {
-            if (colCounts[i] > 1 || rowCounts[i] > 1) {
-                return false;
-            }
-        }
-
-        return true;
+        return seq(colCounts).concat(rowCounts).every(e => e <= 1);
     }
 
     /**
@@ -352,18 +346,15 @@ class Matrix {
         for (let c = 0; c < this._width; c++) {
             for (let r = 0; r < this._height; r++) {
                 let i = (this._width*r + c)*2;
-                if (isNaN(this._buffer[i]) || isNaN(this._buffer[i+1])) {
-                    return false;
-                }
-                if (Math.abs(this._buffer[i] - (r === c ? 1 : 0)) > epsilon) {
-                    return false;
-                }
-                if (Math.abs(this._buffer[i+1]) > epsilon) {
+                let dr = Math.abs(this._buffer[i] - (r === c ? 1 : 0));
+                let di = Math.abs(this._buffer[i+1]);
+                let d = Math.max(dr, di);
+                if (isNaN(d) || d > epsilon) {
                     return false;
                 }
             }
         }
-        return !this.hasNaN();
+        return true;
     }
 
     /**
@@ -396,7 +387,8 @@ class Matrix {
                 let i = (this._width*r + c)*2;
                 let vr = this._buffer[i];
                 let vi = this._buffer[i+1];
-                if (isNaN(vr) || Math.abs(vr) > epsilon || isNaN(vi) || Math.abs(vi) > epsilon) {
+                let v = Math.max(vr, vi);
+                if (isNaN(v) || Math.abs(v) > epsilon) {
                     return false;
                 }
             }
