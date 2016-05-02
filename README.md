@@ -1,4 +1,4 @@
-# Quirk <a href="http://algorithmicassertions.com/quirk"><img src="res/favicon.ico" alt="Icon" title="Icon" /></a>
+# <a href="http://algorithmicassertions.com/quirk">Quirk <img src="res/favicon.ico" alt="Icon" title="Icon" /></a>
 
 [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)
 [![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)
@@ -6,7 +6,7 @@
 Quirk is a simple quantum circuit simulator, intended to help people learn about quantum computing.
 
 If you want to quickly explore the behavior of a small quantum circuit, Quirk is the tool for you.
-There's no installing or configuring or scripting: just go to [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk), drag gates onto the circuit, and the output displays will update in real time.
+There's no installing or configuring or scripting: just go to **[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)**, drag gates onto the circuit, and the output displays will update in real time.
 
 (If you're still trying to understand what a quantum circuit *even is*, then I recommend the video series [Quantum Computing for the Determined](https://www.youtube.com/playlist?list=PL1826E60FD05B44E4).
 Quirk assumes you already know background facts like "each wire represents a qubit".)
