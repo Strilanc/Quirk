@@ -1,13 +1,18 @@
 # Quirk
 
-A drag-and-drop quantum circuit simulator.
-A toy for exploring and understanding small quantum circuits.
-
 | master | dev | demo |
 |--------|-----|------|
 | [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)      | [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=dev)](https://travis-ci.org/Strilanc/Quirk) | [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk) |
 
-Defining features:
+Quirk is a simple quantum circuit simulator, intended to help people learn about quantum computing.
+
+If you want to quickly explore the behavior of a small quantum circuit, Quirk is the tool for you.
+There's no installing or configuring or scripting: just go to [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk), drag gates onto the circuit, and the output displays will update in real time.
+
+(If you're still trying to understand what a quantum circuit *even is*, then I recommend the video series [Quantum Computing for the Determined](https://www.youtube.com/playlist?list=PL1826E60FD05B44E4).
+Quirk assumes you already know background facts like "each wire represents a qubit".)
+
+**Defining features**:
 
 - Runs in web browsers.
 - Drag-and-drop circuit editing.
@@ -16,16 +21,16 @@ Defining features:
 - Bookmarkable circuits.
 - Up to 16 qubits.
 
-Notable limitations (a.k.a. future features):
+**Notable limitations** (a.k.a. future features):
 
-- User-defined custom gates.
-- Putting measured wires back into superposition. Controlled measurement.
+- No user-defined custom gates.
+- No recohering of measured qubits.
 
-# Try It Out
+**Try it out**:
 
 **[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)**
 
-# Screenshots
+# Screenshots and Example Circuits
 
 Quantum teleportation circuit, with Bloch-sphere state displays inserted:
 
@@ -39,11 +44,9 @@ Reacting and animating smoothly while working with ten qubits:
 
 ![Ten qubits animation](/README_TenQubitsLoop.gif)
 
-# Building
+# Building the Code
 
-Please open an issue if these instructions don't work for you.
-
-The example terminal commands have been tested on a fresh Ubuntu install.
+If you want to make changes to Quirk's code, this is how you get the code and turn your changes into working html/javascript.
 
 1. Have [git](https://git-scm.com/) and [Node.js](https://nodejs.org/en/download/) installed.
 
