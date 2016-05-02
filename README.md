@@ -1,4 +1,4 @@
-# Quirk <a href="#"><img src="res/favicon.ico" alt="Icon" title="Icon" /></a>
+# Quirk <img src="res/favicon.ico" alt="Icon" title="Icon" />
 
 | master | dev | demo |
 |--------|-----|------|
