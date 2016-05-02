@@ -657,13 +657,13 @@ class Seq {
             }
             let i = 0;
             for (let e of self._iterable) {
-                if (i == index) {
+                if (i === index) {
                     yield item;
                 }
                 i++;
                 yield e;
             }
-            if (i == index) {
+            if (i === index) {
                 yield item;
             }
             if (i < index) {

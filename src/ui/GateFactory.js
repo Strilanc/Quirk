@@ -56,7 +56,7 @@ const paintGateSymbol = args => {
     }
 
     let parts = symbol.split("^");
-    if (parts.length != 2 || parts[0] === "" || parts[1] === "") {
+    if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
         painter.print(
             symbol,
             rect.x + rect.w/2,

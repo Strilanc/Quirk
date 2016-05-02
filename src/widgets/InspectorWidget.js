@@ -170,7 +170,7 @@ export default class InspectorWidget {
         let hand = this.hand;
         let circuitWidget = this.circuitWidget;
         let previewCircuit = circuitWidget.previewDrop(hand);
-        let previewHand = previewCircuit == circuitWidget ? hand : hand.withDrop();
+        let previewHand = previewCircuit === circuitWidget ? hand : hand.withDrop();
         return this.withHand(previewHand).withCircuitWidget(previewCircuit);
     }
 
