@@ -49,7 +49,7 @@ export default class WglTexture {
         this._textureAndFrameBufferSlot = new WglMortalValueSlot(
             () => this._textureAndFramebufferInitializer(),
             e => WglTexture._deinitialize(e));
-    };
+    }
 
     markRendered() {
         this._hasBeenRenderedTo = true;
@@ -166,5 +166,5 @@ export default class WglTexture {
         checkGetErrorResult(gl, "readPixels(..., RGBA, UNSIGNED_BYTE, ...)", true);
 
         return outputBuffer;
-    };
+    }
 }

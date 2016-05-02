@@ -352,11 +352,37 @@ suite.test("tensorProduct", () => {
 });
 
 suite.test("tensorPower", () => {
-    assertThat(Matrix.row(1, Complex.I).tensorPower(0).toString()).isEqualTo("{{1}}");
-    assertThat(Matrix.row(1, Complex.I).tensorPower(1).toString()).isEqualTo("{{1, i}}");
-    assertThat(Matrix.row(1, Complex.I).tensorPower(2).toString()).isEqualTo("{{1, i, i, -1}}");
-    assertThat(Matrix.row(1, Complex.I).tensorPower(3).toString()).
-        isEqualTo("{{1, i, i, -1, i, -1, -1, -i}}");
+    let i = Complex.I;
+
+    assertThat(Matrix.solo(i).tensorPower(0)).isEqualTo(Matrix.solo(1));
+    assertThat(Matrix.solo(i).tensorPower(1)).isEqualTo(Matrix.solo(i));
+    assertThat(Matrix.solo(i).tensorPower(2)).isEqualTo(Matrix.solo(-1));
+    assertThat(Matrix.solo(i).tensorPower(3)).isEqualTo(Matrix.solo(i.neg()));
+    assertThat(Matrix.solo(i).tensorPower(4)).isEqualTo(Matrix.solo(1));
+    assertThat(Matrix.solo(i).tensorPower(5)).isEqualTo(Matrix.solo(i));
+    assertThat(Matrix.solo(i).tensorPower(1 << 30)).isEqualTo(Matrix.solo(1));
+    assertThat(Matrix.solo(i).tensorPower(5 + (1 << 30))).isEqualTo(Matrix.solo(i));
+
+    let r = Matrix.row(1, i);
+    assertThat(r.tensorPower(0)).isEqualTo(Matrix.solo(1));
+    assertThat(r.tensorPower(1)).isEqualTo(Matrix.row(1, i));
+    assertThat(r.tensorPower(2)).isEqualTo(Matrix.row(1, i, i, -1));
+    assertThat(r.tensorPower(3)).isEqualTo(Matrix.row(1, i, i, -1, i, -1, -1, i.neg()));
+
+    let c = Matrix.col(1, i);
+    assertThat(c.tensorPower(0)).isEqualTo(Matrix.solo(1));
+    assertThat(c.tensorPower(1)).isEqualTo(Matrix.col(1, i));
+    assertThat(c.tensorPower(2)).isEqualTo(Matrix.col(1, i, i, -1));
+    assertThat(c.tensorPower(3)).isEqualTo(Matrix.col(1, i, i, -1, i, -1, -1, i.neg()));
+
+    let s = Matrix.square(1, 2, 3, 4);
+    assertThat(s.tensorPower(0)).isEqualTo(Matrix.solo(1));
+    assertThat(s.tensorPower(1)).isEqualTo(Matrix.square(1, 2, 3, 4));
+    assertThat(s.tensorPower(2)).isEqualTo(Matrix.square(
+        1, 2, 2, 4,
+        3, 4, 6, 8,
+        3, 6, 4, 8,
+        9, 12,12,16));
 });
 
 suite.test("timesQubitOperation", () => {

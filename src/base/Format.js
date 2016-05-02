@@ -28,7 +28,7 @@ export default class Format {
             return f.toFixed(this.fixedDigits);
         }
         return f + "";
-    };
+    }
 
     /**
      * Parses the given text into a float. Works for text created by Format#formatFloat.
@@ -57,7 +57,7 @@ export default class Format {
             throw new Error("Not a number: '" + text + "'")
         }
         return result;
-    };
+    }
 
     /**
      * Corrects a value to a nearby simple fraction or root thereof, such as sqrt(1/2), so it can be printed compactly.
@@ -85,7 +85,7 @@ export default class Format {
         }
 
         return value;
-    };
+    }
 }
 
 /**

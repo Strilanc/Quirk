@@ -32,14 +32,14 @@ export default class Point {
         /** @type {!Point} */
         let other = obj;
         return other.x === this.x && other.y === this.y;
-    };
+    }
 
     /**
      * @returns {!string}
      */
     toString() {
         return `(x: ${this.x}, y: ${this.y})`;
-    };
+    }
 
     /**
      * Returns the result of adding the receiving point's coordinates to the given offset values.
@@ -49,7 +49,7 @@ export default class Point {
      */
     offsetBy(dx, dy) {
         return new Point(this.x + dx, this.y + dy);
-    };
+    }
 
     /**
      * Returns the result of pairing and adding the receiving point's, and the given point's, coordinates.
@@ -58,7 +58,7 @@ export default class Point {
      */
     plus(p) {
         return new Point(this.x + p.x, this.y + p.y);
-    };
+    }
 
     /**
      * Returns the result of subtracting the given point's coordinates from the receiving point.
@@ -67,7 +67,7 @@ export default class Point {
      */
     minus(p) {
         return new Point(this.x - p.x, this.y - p.y);
-    };
+    }
 
     /**
      * Returns the result of scaling the receiving point's coordinates by the given factor.
@@ -76,5 +76,5 @@ export default class Point {
      */
     times(c) {
         return new Point(this.x * c, this.y * c);
-    };
+    }
 }

@@ -123,7 +123,7 @@ class Matrix {
             this._width === other._width &&
             this._height === other._height &&
             Math.sqrt(this.minus(other).norm2()) <= epsilon;
-    };
+    }
 
     /**
      * Returns a text representation of the receiving matrix.
@@ -138,7 +138,7 @@ class Matrix {
                 join(format.itemSeparator)).
             join("}" + format.itemSeparator + "{");
         return "{{" + data + "}}";
-    };
+    }
 
     /**
      * @param {!string} text
@@ -159,7 +159,7 @@ class Matrix {
             map(row => row.
                 split(",").
                 map(Complex.parse)));
-    };
+    }
 
     /**
      * Returns a matrix of the given dimensions, using the given function to generate the coefficients.
@@ -179,7 +179,7 @@ class Matrix {
         }
 
         return Matrix.fromRows(rows);
-    };
+    }
 
     /**
      * Returns a zero matrix of the given size.
@@ -189,7 +189,7 @@ class Matrix {
      */
     static zero(width, height) {
         return new Matrix(width, height, new Float64Array(width*height*2));
-    };
+    }
 
     /**
      * Returns a 1x1 matrix containing the given value.
@@ -198,7 +198,7 @@ class Matrix {
      */
     static solo(coef) {
         return new Matrix(1, 1, new Float64Array([Complex.realPartOf(coef), Complex.imagPartOf(coef)]));
-    };
+    }
 
     /**
      * Converts the given square block of coefficients into a square complex matrix.
@@ -211,7 +211,7 @@ class Matrix {
         let n = Math.round(Math.sqrt(coefs.length));
         Util.need(n * n === coefs.length, "Matrix.square: non-square number of arguments");
         return Matrix.generate(n, n, (r, c) => coefs[r * n + c]);
-    };
+    }
 
     /**
      * Converts the array of complex coefficients into a column vector.
@@ -221,7 +221,7 @@ class Matrix {
     static col(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         return Matrix.generate(1, coefs.length, r => coefs[r]);
-    };
+    }
 
     /**
      * Converts the array of complex coefficients into a row vector.
@@ -231,7 +231,7 @@ class Matrix {
     static row(...coefs) {
         Util.need(Array.isArray(coefs), "Array.isArray(coefs)", arguments);
         return Matrix.generate(coefs.length, 1, (r, c) => coefs[c]);
-    };
+    }
 
     /**
      * Returns the width of the receiving matrix.
@@ -239,7 +239,7 @@ class Matrix {
      */
     width() {
         return this._width;
-    };
+    }
 
     /**
      * Returns the height of the receiving matrix.
@@ -247,7 +247,7 @@ class Matrix {
      */
     height() {
         return this._height;
-    };
+    }
 
     /**
      * Determines if the matrix is approximately unitary or not.
@@ -260,7 +260,7 @@ class Matrix {
             return false;
         }
         return this.times(this.adjoint()).isApproximatelyEqualTo(Matrix.identity(n), epsilon);
-    };
+    }
 
     /**
      * @param {!number=} epsilon
@@ -338,7 +338,7 @@ class Matrix {
             }
         }
         return true;
-    };
+    }
 
     /**
      * Determines if the matrix is an identity matrix.
@@ -364,7 +364,7 @@ class Matrix {
             }
         }
         return !this.hasNaN();
-    };
+    }
 
     /**
      * Determines if the matrix contains a NaN.
@@ -377,7 +377,7 @@ class Matrix {
             }
         }
         return false;
-    };
+    }
 
     /**
      * Determines if the matrix is square and only has entries along its main diagonal.
@@ -402,7 +402,7 @@ class Matrix {
             }
         }
         return true;
-    };
+    }
 
     /**
      * Returns the conjugate transpose of the receiving operation (the adjoint is the inverse when the matrix is unitary).
@@ -421,7 +421,7 @@ class Matrix {
             }
         }
         return new Matrix(w, h, newBuf);
-    };
+    }
 
     /**
      * Returns the matrix' trace (i.e. the sum of its diagonal elements, i.e. the sum of its eigenvalues
@@ -437,7 +437,7 @@ class Matrix {
             total_i += this._buffer[i+1];
         }
         return new Complex(total_r, total_i);
-    };
+    }
 
     /**
      * Returns the result of scaling the receiving matrix by the given scalar factor.
@@ -456,7 +456,7 @@ class Matrix {
             newBuffer[i + 1] = vr*si + vi*sr;
         }
         return new Matrix(this._width, this._height, newBuffer);
-    };
+    }
 
     /**
      * Returns the sum of the receiving matrix and the given matrix.
@@ -473,7 +473,7 @@ class Matrix {
             newBuffer[i] = b1[i] + b2[i];
         }
         return new Matrix(w, h, newBuffer);
-    };
+    }
 
     /**
      * Returns the difference from the receiving matrix to the given matrix.
@@ -490,7 +490,7 @@ class Matrix {
             newBuffer[i] = b1[i] - b2[i];
         }
         return new Matrix(w, h, newBuffer);
-    };
+    }
 
     /**
      * Returns the matrix product (i.e. the composition) of the receiving matrix and the given matrix.
@@ -524,7 +524,7 @@ class Matrix {
             }
         }
         return new Matrix(w, h, newBuffer);
-    };
+    }
 
     /**
      * Returns the product of the receiving matrix and the given matrix or scalar.
@@ -542,7 +542,7 @@ class Matrix {
      */
     norm2() {
         return seq(this.rows()).flatten().map(e => e.norm2()).sum();
-    };
+    }
 
     /**
      * Returns the tensor product of the receiving matrix and the given matrix.
@@ -619,17 +619,19 @@ class Matrix {
      * @returns {!Matrix}
      */
     tensorPower(exponent) {
-        if (exponent === 0) {
-            return Matrix.identity(1);
+        if (!Number.isInteger(exponent) || exponent < 0) {
+            throw new DetailedError("Bad exponent", {exponent});
         }
-        let t = this;
-        while (exponent > 1) {
-            // TODO: use repeated squaring instead
-            t = t.tensorProduct(this);
-            exponent -= 1;
+        let t = Matrix.identity(1);
+        let p = this;
+        for (let m = 1; m <= exponent; m *= 2) {
+            if ((m & exponent) !== 0) {
+                t = t.tensorProduct(p);
+            }
+            p = p.tensorProduct(p);
         }
         return t;
-    };
+    }
 
     /**
      * Returns a single-qubit quantum operation corresponding to the given 3-dimensional rotation in some useful way.
@@ -674,7 +676,7 @@ class Matrix {
         let m = Matrix.identity(2).times(ci).minus(sigma_v.times(cv));
         let expectNiceValuesCorrection = v => Format.simplifyByRounding(v, 0.0000000000001);
         return m.transformRealAndImagComponentsWith(expectNiceValuesCorrection);
-    };
+    }
 
     /**
      * @param {!function(!number) : !number} func
@@ -683,7 +685,7 @@ class Matrix {
      */
     transformRealAndImagComponentsWith(func) {
         return Matrix.fromRows(this.rows().map(row => row.map(cell => new Complex(func(cell.real), func(cell.imag)))));
-    };
+    }
 
     /**
      * Returns a matrix for an n-wire circuit that swaps wires i and j.
@@ -727,7 +729,7 @@ class Matrix {
         return Matrix.square(
             c, -s,
             s, c);
-    };
+    }
 
     /**
      * @private
@@ -1120,12 +1122,12 @@ class Matrix {
         }
 
         return svd_2x2(this);
-    };
+    }
 
     getColumn(colIndex) {
         Util.need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
         return this.rows().map(r => r[colIndex]);
-    };
+    }
 
     /**
      * Returns the unitary matrix closest to the receiving matrix, "repairing" it into a unitary form.
@@ -1134,7 +1136,7 @@ class Matrix {
     closestUnitary() {
         let svd = this.singularValueDecomposition();
         return svd.u.times(svd.v);
-    };
+    }
 }
 
 /**

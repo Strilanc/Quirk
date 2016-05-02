@@ -55,7 +55,7 @@ export default class Painter {
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = thickness;
         this.ctx.stroke();
-    };
+    }
 
     /**
      * Draws the outside of a rectangle.

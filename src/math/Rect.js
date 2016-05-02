@@ -47,7 +47,7 @@ class Rect {
             other.y === this.y &&
             other.w === this.w &&
             other.h === this.h;
-    };
+    }
 
     /**
      * @param {!Rect|*} obj
@@ -64,11 +64,11 @@ class Rect {
             Math.abs(other.y - this.y) <= epsilon &&
             Math.abs(other.right() - this.right()) <= epsilon &&
             Math.abs(other.bottom() - this.bottom()) <= epsilon;
-    };
+    }
 
     toString() {
         return `[${this.x}:${this.right()}]x[${this.y}:${this.bottom()}]`;
-    };
+    }
 
     /**
      *
@@ -78,85 +78,84 @@ class Rect {
      */
     static centeredSquareWithRadius(center, radius) {
         return new Rect(center.x - radius, center.y - radius, radius*2, radius*2);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     center() {
         return new Point(this.x + this.w / 2, this.y + this.h / 2);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     topLeft() {
         return new Point(this.x, this.y);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     topRight() {
         return new Point(this.x + this.w, this.y);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     bottomLeft() {
         return new Point(this.x, this.y + this.h);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     bottomRight() {
         return new Point(this.x + this.w, this.y + this.h);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     centerLeft() {
         return new Point(this.x, this.y + this.h/2);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     centerRight() {
         return new Point(this.x + this.w, this.y + this.h/2);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     topCenter() {
         return new Point(this.x + this.w/2, this.y);
-    };
+    }
 
     /**
      * @returns {!Point}
      */
     bottomCenter() {
         return new Point(this.x + this.w/2, this.y + this.h);
-    };
-
+    }
 
     /**
      * @returns !number
      */
     right() {
         return this.x + this.w;
-    };
+    }
 
     /**
      * @returns !number
      */
     bottom() {
         return this.y + this.h;
-    };
+    }
 
     /**
      * Returns the result of removing the given width from the left side of the rectangle.
@@ -168,7 +167,7 @@ class Rect {
     skipLeft(lostWidth) {
         let d = Math.min(lostWidth, this.w);
         return new Rect(this.x + d, this.y, this.w - d, this.h);
-    };
+    }
 
     /**
      * Returns the result of removing the given width from the right side of the rectangle.
@@ -180,7 +179,7 @@ class Rect {
     skipRight(lostWidth) {
         let d = Math.min(lostWidth, this.w);
         return new Rect(this.x, this.y, this.w - d, this.h);
-    };
+    }
 
     /**
      * Returns the result of removing the given height from the top side of the rectangle.
@@ -192,7 +191,7 @@ class Rect {
     skipTop(lostHeight) {
         let d = Math.min(lostHeight, this.h);
         return new Rect(this.x, this.y + d, this.w, this.h - d);
-    };
+    }
 
     /**
      * Returns the result of removing the given height from the bottom side of the rectangle.
@@ -204,7 +203,7 @@ class Rect {
     skipBottom(lostHeight) {
         let d = Math.min(lostHeight, this.h);
         return new Rect(this.x, this.y, this.w, this.h - d);
-    };
+    }
 
     /**
      * Returns the result of removing all but the given width from the left side of the rectangle.
@@ -216,7 +215,7 @@ class Rect {
     takeLeft(keptWidth) {
         let d = Math.max(keptWidth, 0);
         return new Rect(this.x, this.y, d, this.h);
-    };
+    }
 
     /**
      * Returns the result of removing all but the given width from the right side of the rectangle.
@@ -228,7 +227,7 @@ class Rect {
     takeRight(keptWidth) {
         let d = Math.max(keptWidth, 0);
         return new Rect(this.x + this.w - d, this.y, d, this.h);
-    };
+    }
 
     /**
      * Returns the result of removing all but the given height from the top side of the rectangle.
@@ -240,7 +239,7 @@ class Rect {
     takeTop(keptHeight) {
         let d = Math.max(keptHeight, 0);
         return new Rect(this.x, this.y, this.w, d);
-    };
+    }
 
     /**
      * Returns the result of removing all but the given height from the bottom side of the rectangle.
@@ -252,7 +251,7 @@ class Rect {
     takeBottom(keptHeight) {
         let d = Math.max(keptHeight, 0);
         return new Rect(this.x, this.y + this.h - d, this.w, d);
-    };
+    }
 
     /**
      * Returns the result of padding to each side of the rectangle by the given amount.
@@ -262,7 +261,7 @@ class Rect {
      */
     paddedBy(p) {
         return new Rect(this.x - p, this.y - p, this.w + p * 2, this.h + p * 2);
-    };
+    }
 
     /**
      * Returns the result of scaling the rectangle w.r.t. its center by the given scaling factor.
@@ -274,7 +273,7 @@ class Rect {
         let w2 = this.w * factor;
         let h2 = this.h * factor;
         return new Rect(c.x - w2/2, c.y - h2/2, w2, h2);
-    };
+    }
 
     /**
      * Determines if the given point is in the receiving rect or not.
@@ -289,7 +288,7 @@ class Rect {
             p.x < this.x + this.w &&
             p.y >= this.y &&
             p.y < this.y + this.h;
-    };
+    }
 
     /**
      * @param {!number} proportion
@@ -297,7 +296,7 @@ class Rect {
      */
     takeLeftProportion(proportion) {
         return this.takeLeft(this.w * proportion);
-    };
+    }
 
     /**
      * @param {!number} proportion
@@ -305,7 +304,7 @@ class Rect {
      */
     takeRightProportion(proportion) {
         return this.takeRight(this.w * proportion);
-    };
+    }
 
     /**
      * @param {!number} proportion
@@ -313,7 +312,7 @@ class Rect {
      */
     takeTopProportion(proportion) {
         return this.takeTop(this.h * proportion);
-    };
+    }
 
     /**
      * @param {!number} proportion
@@ -321,35 +320,35 @@ class Rect {
      */
     takeBottomProportion(proportion) {
         return this.takeBottom(this.h * proportion);
-    };
+    }
 
     /**
      * @returns {!Rect}
      */
     leftHalf() {
         return this.skipRight(this.w / 2);
-    };
+    }
 
     /**
      * @returns {!Rect}
      */
     rightHalf() {
         return this.skipLeft(this.w / 2);
-    };
+    }
 
     /**
      * @returns {!Rect}
      */
     topHalf() {
         return this.skipBottom(this.h / 2);
-    };
+    }
 
     /**
      * @returns {!Rect}
      */
     bottomHalf() {
         return this.skipTop(this.h / 2);
-    };
+    }
 
     /**
      * @param {!number} dx The displacement to move the rect horizontally.
@@ -358,7 +357,7 @@ class Rect {
      */
     shiftedBy(dx, dy) {
         return new Rect(this.x + dx, this.y + dy, this.w, this.h);
-    };
+    }
 
 
     /**
@@ -368,7 +367,7 @@ class Rect {
      */
     proportionalShiftedBy(dx, dy) {
         return this.shiftedBy(dx * this.w, dy * this.h);
-    };
+    }
 
     /**
      * @param {!number} newX
@@ -376,7 +375,7 @@ class Rect {
      */
     withX(newX) {
         return new Rect(newX, this.y, this.w, this.h);
-    };
+    }
 
     /**
      * @param {!number} newY
@@ -384,7 +383,7 @@ class Rect {
      */
     withY(newY) {
         return new Rect(this.x, newY, this.w, this.h);
-    };
+    }
 
     /**
      * @param {!number} newW
@@ -392,14 +391,15 @@ class Rect {
      */
     withW(newW) {
         return new Rect(this.x, this.y, newW, this.h);
-    };
+    }
+
     /**
      * @param {!number} newH
      * @returns {!Rect}
      */
     withH(newH) {
         return new Rect(this.x, this.y, this.w, newH);
-    };
+    }
 
     /**
      * Returns the result of repositioning the receiving rect so that it is inside the paintable area. Also shrinks the

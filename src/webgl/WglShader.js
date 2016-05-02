@@ -45,7 +45,7 @@ class WglShader {
         this.fragmentShaderSource = fragmentShaderSource;
         /** @type {undefined|!WglMortalValueSlot.<!WglCompiledShader>} */
         this._compiledShaderSlot = undefined; // Wait for someone to tell us the parameter names.
-    };
+    }
 
     /**
      * Returns the same shader, but parameterized by the given arguments. Call renderTo on the result to render to a
@@ -149,7 +149,7 @@ class WglCompiledShader {
         this.positionAttributeLocation = gl.getAttribLocation(program, 'position');
         /** @type {!WebGLProgram} */
         this.program = program;
-    };
+    }
 
     /**
      * @param {!(!WglArg[])} uniformArgs
@@ -170,7 +170,7 @@ class WglCompiledShader {
 
         gl.enableVertexAttribArray(this.positionAttributeLocation);
         gl.vertexAttribPointer(this.positionAttributeLocation, 2, WebGLRenderingContext.FLOAT, false, 0, 0);
-    };
+    }
 
     free() {
         let gl = initializedWglContext().gl;
@@ -199,7 +199,7 @@ class WglCompiledShader {
         }
 
         return shader;
-    };
+    }
 }
 
 /**

@@ -14,7 +14,7 @@ export default class WglArg {
         this.name = name;
         /** @type {*} */
         this.value = value;
-    };
+    }
 
     /**
      * @param {!string} name
