@@ -1,4 +1,4 @@
-# Quirk
+# Quirk <a href="#"><img src="res/favicon.ico" alt="Icon" title="Icon" /></a>
 
 | master | dev | demo |
 |--------|-----|------|
