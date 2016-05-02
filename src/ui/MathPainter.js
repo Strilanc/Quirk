@@ -23,8 +23,6 @@ export default class MathPainter {
         return Math.min(Math.max(v, e), 100 - e).toFixed(fractionalDigits) + "%";
     }
 
-;
-
     /**
      * @param {!Painter} painter
      * @param {!number} probability
