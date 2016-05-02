@@ -153,7 +153,7 @@ class CircuitDefinition {
         for (let i = 1; i < width && col + i < this.columns.length; i++) {
             for (let j = 0; j < height; j++) {
                 let otherGate = this.findGateCoveringSlot(col+i, row+j);
-                if (otherGate === undefined || otherGate.col == col) {
+                if (otherGate === undefined || otherGate.col === col) {
                     continue;
                 }
                 return {col: otherGate.col, row: otherGate.row};
@@ -416,7 +416,7 @@ class CircuitDefinition {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
             filter(pt => this.gateInSlot(pt.x, pt.y) === Gates.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== undefined) && pts.count() == 2;
+        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== undefined) && pts.count() === 2;
     }
 
     /**

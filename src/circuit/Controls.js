@@ -42,8 +42,8 @@ class Controls {
      */
     isEqualTo(other) {
         return other instanceof Controls &&
-            this.inclusionMask == other.inclusionMask &&
-            this.desiredValueMask == other.desiredValueMask;
+            this.inclusionMask === other.inclusionMask &&
+            this.desiredValueMask === other.desiredValueMask;
     }
 
     /**

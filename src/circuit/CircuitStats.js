@@ -249,7 +249,7 @@ export default class CircuitStats {
                 1,
                 circuitDefinition.colIsMeasuredMask(col),
                 // All wires have an output display in the after-last column.
-                col == numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(col))
+                col === numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(col))
         ).toArray();
         let qubitPairDensities = seq(pixelData.qubitPairDensityTexes).mapWithIndex((pixels, col) =>
             CircuitStats.scatterAndDecohereDensities(
