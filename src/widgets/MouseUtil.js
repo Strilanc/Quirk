@@ -233,7 +233,7 @@ class DragWatcher {
      */
     relativeEventPos(ev) {
         return eventPosRelativeTo(ev, this._element);
-    };
+    }
 
     /**
      * @param {!TouchEvent} ev
@@ -244,7 +244,7 @@ class DragWatcher {
             let touch = ev.changedTouches[i];
             handler.call(this, this.relativeEventPos(touch), touch.identifier, ev);
         }
-    };
+    }
 
     /**
      * @param {!MouseEvent} ev
@@ -252,7 +252,7 @@ class DragWatcher {
      */
     handleMouseEventWith(ev, handler) {
         handler.call(this, this.relativeEventPos(ev), MOUSE_ID, ev);
-    };
+    }
 }
 
 export { watchDrags, isLeftClicking, isMiddleClicking, eventPosRelativeTo };

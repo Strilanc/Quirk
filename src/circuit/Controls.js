@@ -34,7 +34,7 @@ class Controls {
             throw new DetailedError("Out of range", {bitIndex})
         }
         return new Controls(1 << bitIndex, desiredValue ? (1 << bitIndex) : 0);
-    };
+    }
 
     /**
      * @param {!Controls|*} other
@@ -44,7 +44,7 @@ class Controls {
         return other instanceof Controls &&
             this.inclusionMask == other.inclusionMask &&
             this.desiredValueMask == other.desiredValueMask;
-    };
+    }
 
     /**
      * @returns {!string}
@@ -60,7 +60,7 @@ class Controls {
             map(e => e === null ? "_" : e ? "1" : "0").
             reverse().
             join("");
-    };
+    }
 
     /**
      * @param {!int} stateIndex
@@ -68,7 +68,7 @@ class Controls {
      */
     allowsState(stateIndex) {
         return (this.inclusionMask & stateIndex) === this.desiredValueMask;
-    };
+    }
 
     /**
      * @param {!int} bitIndex
@@ -79,7 +79,7 @@ class Controls {
             return null;
         }
         return (this.desiredValueMask & (1 << bitIndex)) !== 0;
-    };
+    }
 
     /**
      * @returns {!int|Infinity}
@@ -102,7 +102,7 @@ class Controls {
         return new Controls(
             this.inclusionMask | other.inclusionMask,
             this.desiredValueMask | other.desiredValueMask);
-    };
+    }
 }
 
 /** @type {!Controls} */

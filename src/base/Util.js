@@ -62,7 +62,7 @@ export default class Util {
      */
     static isPowerOf2(i) {
         return i > 0 && ((i - 1) & i) === 0;
-    };
+    }
 
     /**
      * Returns the number of bits needed to uniquely encode all integers up to and including the given value.
@@ -76,7 +76,7 @@ export default class Util {
             return 0;
         }
         return Math.floor(Math.log2(n) + 0.000001) + 1;
-    };
+    }
 
     /**
      * Returns the smallest power of 2 that is equal to or larger than the given integer.
@@ -88,7 +88,7 @@ export default class Util {
             return 1;
         }
         return 1 << Math.ceil(Math.log2(i));
-    };
+    }
 
     /**
      * Determines how multiply-even a number is; how many times you can divide it by 2 before getting an odd result.
@@ -110,7 +110,7 @@ export default class Util {
         let lowMask = i ^ (i - 1);
         let lowBit = i & lowMask;
         return Math.round(Math.log2(lowBit));
-    };
+    }
 
     /**
      * Converts from Map.<K, V[]> to Map.<V, K[]> in the "obvious" way, by having each value map to the group of keys that
@@ -141,7 +141,7 @@ export default class Util {
         }
 
         return result;
-    };
+    }
 
     /**
      * Performs a binary search, looking for the first index to return false under the constraint that the given

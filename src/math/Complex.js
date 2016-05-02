@@ -38,7 +38,7 @@ class Complex {
             return this.real === other && this.imag === 0;
         }
         return false;
-    };
+    }
 
     /**
      * Determines if the receiving complex value is near the given complex, integer, or float value.
@@ -55,7 +55,7 @@ class Complex {
                 d.abs() <= epsilon;
         }
         return false;
-    };
+    }
 
     /**
      * Wraps the given number into a Complex value (unless it's already a Complex value).
@@ -70,7 +70,7 @@ class Complex {
             return new Complex(v, 0);
         }
         throw new DetailedError("Unrecognized value type.", {v});
-    };
+    }
 
     /**
      * Returns a complex number with the given magnitude and phase.
@@ -96,7 +96,7 @@ class Complex {
             return v;
         }
         throw new DetailedError("Unrecognized value type.", {v});
-    };
+    }
 
     /**
      * Returns the imaginary component of a Complex value, or else 0 for integer and float values.
@@ -111,7 +111,7 @@ class Complex {
             return 0;
         }
         throw new DetailedError("Unrecognized value type.", {v});
-    };
+    }
 
     /**
      * Returns a compact text representation of the receiving complex value.
@@ -142,7 +142,7 @@ class Complex {
             format.formatFloat(Math.abs(this.imag));
         let prefix = format.allowAbbreviation || format.fixedDigits === undefined || this.real < 0 ? "" : "+";
         return prefix + format.formatFloat(this.real) + separator + imagFactor + "i";
-    };
+    }
 
     /**
      * Parses a complex number from some text.
@@ -182,7 +182,7 @@ class Complex {
                 })
             ).
             aggregate(Complex.ZERO, (a, e) => a.plus(e));
-    };
+    }
 
     /**
      * Returns the squared euclidean length of the receiving complex value.
@@ -190,7 +190,7 @@ class Complex {
      */
     norm2() {
         return this.real * this.real + this.imag * this.imag;
-    };
+    }
 
     /**
      * Returns the euclidean length of the receiving complex value.
@@ -198,7 +198,7 @@ class Complex {
      */
     abs() {
         return Math.sqrt(this.norm2());
-    };
+    }
 
     /**
      * Returns the complex conjugate of the receiving complex value, with the same real part but a negated imaginary part.
@@ -206,7 +206,7 @@ class Complex {
      */
     conjugate() {
         return new Complex(this.real, -this.imag);
-    };
+    }
 
     /**
      * Returns the negation of this complex value.
@@ -223,7 +223,7 @@ class Complex {
      */
     phase() {
         return Math.atan2(this.imag, this.real);
-    };
+    }
 
     /**
      * Returns a unit complex value parallel to the receiving complex value.
@@ -236,7 +236,7 @@ class Complex {
             return Complex.polar(1, this.phase());
         }
         return this.dividedBy(Math.sqrt(m));
-    };
+    }
 
     /**
      * Returns the sum of the receiving complex value plus the given value.
@@ -246,7 +246,7 @@ class Complex {
     plus(v) {
         let c = Complex.from(v);
         return new Complex(this.real + c.real, this.imag + c.imag);
-    };
+    }
 
     /**
      * Returns the difference from the receiving complex value to the given value.
@@ -256,7 +256,7 @@ class Complex {
     minus(v) {
         let c = Complex.from(v);
         return new Complex(this.real - c.real, this.imag - c.imag);
-    };
+    }
 
     /**
      * Returns the product of the receiving complex value times the given value.
@@ -268,7 +268,7 @@ class Complex {
         return new Complex(
             this.real * c.real - this.imag * c.imag,
             this.real * c.imag + this.imag * c.real);
-    };
+    }
 
     /**
      * Returns the ratio of the receiving complex value to the given value.
@@ -284,7 +284,7 @@ class Complex {
 
         let n = this.times(c.conjugate());
         return new Complex(n.real / d, n.imag / d);
-    };
+    }
 
     sqrts() {
         let [r, i] = [this.real, this.imag];

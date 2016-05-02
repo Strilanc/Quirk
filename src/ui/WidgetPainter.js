@@ -157,7 +157,7 @@ export default class WidgetPainter {
         WidgetPainter.paintGateTooltipHelper(painter, w, gate, time);
 
         painter.ctx.restore();
-    };
+    }
 
     static describeKet(bitCount, bitMask, factor, format) {
         factor = Complex.from(factor);

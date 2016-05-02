@@ -76,7 +76,7 @@ class Seq {
      */
     static fromGenerator(generatorFunction) {
         return new Seq(generatorFunction, true);
-    };
+    }
 
     /**
     * Determines if the given iterable contains the same items as this sequence.
@@ -108,7 +108,7 @@ class Seq {
      */
     toArray() {
         return Array.from(this._iterable);
-    };
+    }
 
     /**
      * Returns a Float32Array containing the items of this sequence.
@@ -126,7 +126,7 @@ class Seq {
             buf[i++] = item;
         }
         return buf;
-    };
+    }
 
     /**
      * Returns a set containing the distinct items of this sequence.
@@ -135,7 +135,7 @@ class Seq {
      */
     toSet() {
         return new Set(this._iterable);
-    };
+    }
 
     /**
      * Returns a string representation of the receiving sequence's items, separated by the given joiner.
@@ -153,7 +153,7 @@ class Seq {
      */
     toString() {
         return `Seq[${this.join(", ")}]`;
-    };
+    }
 
     /**
      * Returns a sequence of natural numbers, starting at 0 and incrementing until just before the given count.
@@ -170,7 +170,7 @@ class Seq {
                 yield i;
             }
         })
-    };
+    }
 
     /**
      * Returns the sequence of natural numbers, starting at 0 and incrementing without bound.
@@ -185,7 +185,7 @@ class Seq {
                 i++;
             }
         })
-    };
+    }
 
     /**
      * Returns a sequence of the same item repeated the given number of times.
@@ -204,7 +204,7 @@ class Seq {
                 yield item;
             }
         })
-    };
+    }
 
     /**
      * Returns a sequence with the same items, but precomputed and stored. If the sequence is already solid, e.g. it is
@@ -233,7 +233,7 @@ class Seq {
             }
         }
         return new Seq(this.toArray());
-    };
+    }
 
     /**
      * Returns a sequence iterating the results of applying a transformation to the items of the receiving sequence.
@@ -248,7 +248,7 @@ class Seq {
                 yield projection(e);
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence iterating the results of applying a transformation to the indexed items of the receiving
@@ -266,7 +266,7 @@ class Seq {
                 i += 1;
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence iterating the concatenated results of applying an iterable-returning transformation to the
@@ -282,7 +282,7 @@ class Seq {
                 yield* sequenceProjection(e);
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence iterating the items of the receiving sequence that match a predicate. Items that don't match
@@ -300,7 +300,7 @@ class Seq {
                 }
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence iterating the items of the receiving sequence that match a predicate over the item and the
@@ -320,7 +320,7 @@ class Seq {
                 i++;
             }
         });
-    };
+    }
 
     /**
      * Combines the items of a sequence into a single result by iteratively applying a combining function. If the
@@ -343,7 +343,7 @@ class Seq {
             throw new Error("Folded empty sequence without providing an alternative result.");
         }
         return emptyErrorAlternative;
-    };
+    }
 
     /**
      * Combines the items of a sequence into a single result by starting with a seed accumulator and iteratively
@@ -359,7 +359,7 @@ class Seq {
             accumulator = aggregator(accumulator, e);
         }
         return accumulator;
-    };
+    }
 
     /**
      * Combines this sequence with another by passing items with the same index through a combining function.
@@ -384,7 +384,7 @@ class Seq {
                 yield combiner(item1, item2.value);
             }
         });
-    };
+    }
 
     /**
      * Returns the largest value in the sequence, as determined by the `<` operator. If the sequence  is empty, then
@@ -396,7 +396,7 @@ class Seq {
      */
     max(emptyErrorAlternative = THROW_IF_EMPTY) {
         return this.fold((e1, e2) => e1 < e2 ? e2 : e1, emptyErrorAlternative);
-    };
+    }
 
     /**
      * Returns the smallest value in the sequence, as determined by the `<` operator. If the sequence  is empty, then
@@ -408,7 +408,7 @@ class Seq {
      */
     min(emptyErrorAlternative = THROW_IF_EMPTY) {
         return this.fold((e1, e2) => e1 < e2 ? e1 : e2, emptyErrorAlternative);
-    };
+    }
 
     /**
      * Returns the highest-scoring item in the sequence, as determined by a scoring function.
@@ -447,7 +447,7 @@ class Seq {
             throw new Error("Can't maxBy an empty sequence.");
         }
         return emptyErrorAlternative;
-    };
+    }
 
     /**
      * Returns the lowest-scoring item in the sequence, as determined by a scoring function.
@@ -476,7 +476,7 @@ class Seq {
             }
         }
         return false;
-    };
+    }
 
     /**
      * Determines if every item in the sequence matches the given predicate.
@@ -486,7 +486,7 @@ class Seq {
      */
     every(predicate) {
         return !this.any(e => !predicate(e));
-    };
+    }
 
     /**
      * Determines if the sequence contains a given value or not, as determined by the <code>===</code> operator.
@@ -496,7 +496,7 @@ class Seq {
      */
     contains(value) {
         return this.any(e => e === value);
-    };
+    }
 
     /**
      * Adds up the numbers in the sequence, using the `+` operator, and returns the total.
@@ -506,7 +506,7 @@ class Seq {
      */
     sum() {
         return this.fold((a, e) => a + e, 0);
-    };
+    }
 
     /**
      * Multiplies up the numbers in the sequence, using the `*` operator, and returns the total.
@@ -516,7 +516,7 @@ class Seq {
      */
     product() {
         return this.fold((a, e) => a * e, 1);
-    };
+    }
 
     /**
      * Accumulates the items of a sequence into a seed, while yielding the results. For example,
@@ -539,7 +539,7 @@ class Seq {
                 yield accumulator;
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence containing the same items, but in the opposite order.
@@ -562,7 +562,7 @@ class Seq {
                 yield* seq;
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence that iterates the receiving sequence's items and then the given iterable's items.
@@ -576,7 +576,7 @@ class Seq {
             yield* seq;
             yield* other;
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except the item at the given index is replaced.
@@ -605,7 +605,7 @@ class Seq {
                     "[withOverlayedItem(${index}, ${overlayedItem})]");
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except the item at the given index is transformed by the given function.
@@ -634,7 +634,7 @@ class Seq {
                     "[withTransformedItem(${index}, ${itemTransformation})]");
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except the given extra item is yielded when the given index is reached.
@@ -689,7 +689,7 @@ class Seq {
                 yield e;
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except items are dropped from the end of the sequence until the last item
@@ -712,7 +712,7 @@ class Seq {
                 }
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except items at the start of the sequence are skipped until an item
@@ -732,7 +732,7 @@ class Seq {
                 }
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except cut short if it exceeds the given maximum count.
@@ -758,7 +758,7 @@ class Seq {
                 }
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except the give number are skipped at the start.
@@ -784,7 +784,7 @@ class Seq {
                 i++;
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence with the same items, except later items with the same key as earlier items get skipped.
@@ -807,7 +807,7 @@ class Seq {
                 return true;
             })[Symbol.iterator]();
         });
-    };
+    }
 
     /**
     * Returns a sequence with the same items, except duplicate items are omitted.
@@ -817,7 +817,7 @@ class Seq {
     */
     distinct() {
         return this.distinctBy(e => e);
-    };
+    }
 
     /**
      * Returns the single item in the sequence. If there are no items or multiple items in the sequence, either an error
@@ -845,7 +845,7 @@ class Seq {
         }
 
         return emptyManyErrorAlternative;
-    };
+    }
 
     /**
      * Returns the first item in the sequence.
@@ -867,7 +867,7 @@ class Seq {
         }
 
         return emptyErrorAlternative;
-    };
+    }
 
     /**
      * Returns the last item in the sequence.
@@ -892,7 +892,7 @@ class Seq {
         }
 
         return emptyErrorAlternative;
-    };
+    }
 
     /**
      * If the sequence is of a known type with a known number of items, then returns the length of the sequence.
@@ -954,7 +954,7 @@ class Seq {
                 remaining -= 1;
             }
         });
-    };
+    }
 
     /**
      * Returns a sequence containing the same items, but in ascending order.
@@ -1019,7 +1019,7 @@ class Seq {
             map.set(key, val);
         }
         return map;
-    };
+    }
 
     /**
      * Returns a map where the items from the sequence are indexed by the result of running them through the given key
@@ -1033,7 +1033,7 @@ class Seq {
      */
     keyedBy(keySelector) {
         return this.toMap(keySelector, e => e);
-    };
+    }
 
     /**
      * Returns a map, with keys generated by passing the sequence's items through the given key selector, where each key
@@ -1052,7 +1052,7 @@ class Seq {
             map.get(key).push(item);
         }
         return map;
-    };
+    }
 
     /**
      * Groups elements into arrays of the given size (except for the last partition, which may be smaller) and yields
@@ -1107,7 +1107,7 @@ class Seq {
                 yield e;
             }
         });
-    };
+    }
 }
 
 /**

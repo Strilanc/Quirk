@@ -58,7 +58,7 @@ class WglContext {
             false);
 
         this.recomputeProperties();
-    };
+    }
 
     /**
      * @private
@@ -98,7 +98,7 @@ class WglContext {
 
         console.warn('WebGL medium precision not available.');
         return 'lowp';
-    };
+    }
 }
 
 // We really only ever want one instance to exist.

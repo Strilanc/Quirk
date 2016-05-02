@@ -142,7 +142,7 @@ export class AssertionSubject {
             actualItems.push(item);
         }
         new AssertionSubject(actualItems, this.id).isEqualTo(items);
-    };
+    }
 
     /**
      * @param {*} other
@@ -151,7 +151,7 @@ export class AssertionSubject {
         if (!equate(this.subject, other)) {
             this._fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>.`);
         }
-    };
+    }
 
     //noinspection JSUnusedGlobalSymbols
     /**
@@ -161,7 +161,7 @@ export class AssertionSubject {
         if (!(this.subject > other)) {
             this._fail(`Got <${describe(this.subject)}> but expected it to be greater than <${describe(other)}>.`);
         }
-    };
+    }
 
     /**
      * @param {*} other
@@ -170,7 +170,7 @@ export class AssertionSubject {
         if (!(this.subject < other)) {
             this._fail(`Got <${describe(this.subject)}> but expected it to be less than <${describe(other)}>.`);
         }
-    };
+    }
 
     /**
      * @param {*} other
@@ -179,7 +179,7 @@ export class AssertionSubject {
         if (equate(this.subject, other)) {
             this._fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>.`);
         }
-    };
+    }
 
     /**
      * @param {*} other
@@ -189,7 +189,7 @@ export class AssertionSubject {
         if (!isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
             this._fail(`Got <${describe(this.subject)}> but expected it to approximately equal <${describe(other)}>.`);
         }
-    };
+    }
 
     /**
      * @param {*} other
@@ -200,7 +200,7 @@ export class AssertionSubject {
             this._fail(
                 `Got <${describe(this.subject)}> but expected it to NOT approximately equal <${describe(other)}>.`);
         }
-    };
+    }
 }
 
 /**
