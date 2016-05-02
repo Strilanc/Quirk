@@ -2,7 +2,7 @@
 
 | master | dev | demo |
 |--------|-----|------|
-| [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)      | [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=dev)](https://travis-ci.org/Strilanc/Quirk) | [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk) |
+| [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk) [![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)     | [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=dev)](https://travis-ci.org/Strilanc/Quirk) | [algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk) |
 
 Quirk is a simple quantum circuit simulator, intended to help people learn about quantum computing.
 
