@@ -619,14 +619,16 @@ class Matrix {
      * @returns {!Matrix}
      */
     tensorPower(exponent) {
-        if (exponent === 0) {
-            return Matrix.identity(1);
+        if (!Number.isInteger(exponent) || exponent < 0) {
+            throw new DetailedError("Bad exponent", {exponent});
         }
-        let t = this;
-        while (exponent > 1) {
-            // TODO: use repeated squaring instead
-            t = t.tensorProduct(this);
-            exponent -= 1;
+        let t = Matrix.identity(1);
+        let p = this;
+        for (let m = 1; m <= exponent; m *= 2) {
+            if ((m & exponent) !== 0) {
+                t = t.tensorProduct(p);
+            }
+            p = p.tensorProduct(p);
         }
         return t;
     };
