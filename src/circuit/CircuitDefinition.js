@@ -108,7 +108,7 @@ class CircuitDefinition {
             .map(e => e.symbol)
             .toArray();
         if (allGates.length === 0) {
-            return "A Toy Quantum Circuit Inspector";
+            return "Toy Quantum Circuit Simulator";
         }
         let allGatesString = `${this.numWires} wires, ${allGates.length} ops, ${allGates.join("").split("^").join("")}`;
         if (allGatesString.length <= 40) {
