@@ -1,7 +1,7 @@
 import describe from "src/base/Describe.js"
 
 let _alreadySeen = [];
-let showErrorDiv = (subject, body) => {
+let showErrorDiv = (callout, subject, body) => {
     let errDivStyle = document.getElementById('error-div').style;
     if (errDivStyle.opacity < 0.7) {
         // Partially faded away as user interacted with circuit.
@@ -20,6 +20,7 @@ let showErrorDiv = (subject, body) => {
     _alreadySeen.push(body);
 
     // Set shown error details.
+    document.getElementById('error-happened-div').innerText = callout;
     document.getElementById('error-message-div').innerText = subject;
     document.getElementById('error-description-div').innerText = body;
     document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
@@ -52,7 +53,7 @@ let takeScreenshotOfCanvas = () => {
  * @param {*} error The exception object.
  */
 let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
-    console.warn('Recovered from unexpected error', {recovery, context, error});
+    console.error('Recovered from unexpected error', {recovery, context, error});
 
     let location = error.stack || "unknown";
     let msg = [
@@ -76,7 +77,10 @@ let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
          simplifySrcUrls(location)
     ].join('\n');
 
-    showErrorDiv(recovery + ' (' + (error.message || '') + ')', msg);
+    showErrorDiv(
+        'Recovered from an error. :(',
+        recovery + ' (' + (error.message || '') + ')',
+        msg);
 };
 let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+?\/src\.min\.js/g, 'src.min.js');
 
@@ -119,7 +123,7 @@ window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
             ((errorObj instanceof Object)? errorObj.stack : undefined) ||
                 (url + ":" + lineNumber + ":" + columnNumber));
 
-        showErrorDiv(errorMsg, [
+        showErrorDiv('An error happened. :(', errorMsg, [
             'URL',
             document.location,
             '',

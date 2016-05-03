@@ -226,7 +226,6 @@ class CircuitDefinition {
                 continue;
             }
 
-            console.log(pushedGateIndexes);
             let isControl = g => g === Gates.Special.Control || g === Gates.Special.AntiControl;
             let keptGates = seq(this.columns[col].gates).
                 mapWithIndex((g, row) => pushedGateIndexes.has(row) ? null : g).

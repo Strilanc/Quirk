@@ -7,10 +7,11 @@ import InspectorWidget from "src/widgets/InspectorWidget.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
-import { initializedWglContext } from "src/webgl/WglContext.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
+import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/widgets/MouseUtil.js"
+import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 
@@ -30,7 +31,7 @@ let haveLoaded = false;
 const inspectorDiv = document.getElementById("inspectorDiv");
 
 /** @type {null|!string} */
-let wantToPushStateIfDiffersFrom = null;
+let wantToPushStateIfDiffersFrom = undefined;
 
 /** @type {!InspectorWidget} */
 let inspector = InspectorWidget.empty(
@@ -41,30 +42,31 @@ let historyFallback = false;
 /** @param {!string} jsonText */
 const updateCircuitLink = jsonText => {
     let title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
-    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    let hashComponent = Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    let urlToCurrentCircuit = "#" + hashComponent;
     if (historyFallback) {
-        document.location.hash = urlHash;
+        document.location.hash = hashComponent;
         document.title = title;
         return;
     }
 
     //noinspection UnusedCatchParameterJS
     try {
-        if (wantToPushStateIfDiffersFrom !== null && jsonText !== wantToPushStateIfDiffersFrom) {
+        if (wantToPushStateIfDiffersFrom !== undefined && jsonText !== wantToPushStateIfDiffersFrom) {
             // We moved away from the original state the user was linked to. Keep it in the history.
             // I'm not sure if this is the correct thing to do. It makes the user press back twice to escape.
             // On the other hand, it allows them to get back to where they expect when they go back then forward.
-            history.pushState(jsonText, document.title, urlHash);
-            wantToPushStateIfDiffersFrom = null;
+            history.pushState(jsonText, document.title, urlToCurrentCircuit);
+            wantToPushStateIfDiffersFrom = undefined;
         } else {
             // Intermediate states are too numerous to put in the history. (Users should use ctrl+Z instead.)
-            history.replaceState(jsonText, document.title, urlHash);
+            history.replaceState(jsonText, document.title, urlToCurrentCircuit);
         }
         document.title = title;
     } catch (ex) {
         console.warn("Touching 'history.replaceState' caused an error. Falling back to setting location.hash.", ex);
         historyFallback = true;
-        document.location.hash = urlHash;
+        document.location.hash = hashComponent;
     }
 };
 
@@ -282,24 +284,23 @@ document.addEventListener("keydown", e => {
 
 // Pull initial circuit out of URL '#x=y' arguments.
 const getHashParameters = () => {
-    let paramsText = document.location.hash.substr(1);
+    let hashText = document.location.hash.substr(1);
     let paramsObject = {};
-    if (paramsText !== null && paramsText !== "") {
-        let paramsKeyVal = paramsText.split("&");
-        for (let i = 0; i < paramsKeyVal.length; i++) {
-            let keyVal = paramsKeyVal[i];
+    if (hashText !== "") {
+        for (let keyVal of hashText.split("&")) {
             let eq = keyVal.indexOf("=");
             if (eq === -1) {
                 continue;
             }
-            let key = decodeURIComponent(keyVal.substring(0, eq));
-            paramsObject[key] = decodeURIComponent(keyVal.substring(eq + 1));
+            let key = keyVal.substring(0, eq);
+            let val = decodeURIComponent(keyVal.substring(eq + 1));
+            paramsObject[key] = val;
         }
     }
     return paramsObject;
 };
 const loadCircuitFromUrl = () => {
-    wantToPushStateIfDiffersFrom = null;
+    wantToPushStateIfDiffersFrom = undefined;
     let params = getHashParameters();
     if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
         try {
@@ -308,9 +309,12 @@ const loadCircuitFromUrl = () => {
             useInspector(inspector.withCircuitDefinition(circuitDef), true);
             let state = snapshot();
             revision = new Revision(state);
-            wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : null;
+            wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : undefined;
         } catch (ex) {
-            alert("Failed to load circuit: " + ex);
+            notifyAboutRecoveryFromUnexpectedError(
+                "Failed to understand circuit from URL. Defaulted to an empty circuit.",
+                {document_location_hash: document.location.hash},
+                ex);
         }
     }
     scheduleRedraw();
