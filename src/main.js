@@ -30,7 +30,7 @@ let haveLoaded = false;
 /** @type {!HTMLDivElement} */
 const inspectorDiv = document.getElementById("inspectorDiv");
 
-/** @type {null|!string} */
+/** @type {undefined|!boolean|!string} */
 let wantToPushStateIfDiffersFrom = undefined;
 
 /** @type {!InspectorWidget} */
@@ -300,7 +300,7 @@ const getHashParameters = () => {
     return paramsObject;
 };
 const loadCircuitFromUrl = () => {
-    wantToPushStateIfDiffersFrom = undefined;
+    wantToPushStateIfDiffersFrom = true;
     try {
         let params = getHashParameters();
         if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
@@ -310,6 +310,8 @@ const loadCircuitFromUrl = () => {
             let state = snapshot();
             revision = new Revision(state);
             wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : undefined;
+        } else {
+            wantToPushStateIfDiffersFrom = undefined;
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
