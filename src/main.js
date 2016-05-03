@@ -315,7 +315,7 @@ const loadCircuitFromUrl = () => {
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
-            "Failed to understand circuit from URL. Defaulted to an empty circuit.",
+            "Defaulted to an empty circuit. Failed to understand circuit from URL.",
             {document_location_hash: document.location.hash},
             ex);
     }
