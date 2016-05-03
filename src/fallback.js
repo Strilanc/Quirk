@@ -36,7 +36,10 @@ let showErrorDiv = (callout, subject, body) => {
         '&body=',
         encodeURIComponent('\n\n\n' + body)
     ].join('');
-    document.getElementById('error-image').src = takeScreenshotOfCanvas();
+    document.getElementById('error-image-pre').src = takeScreenshotOfCanvas();
+    setTimeout(() => {
+        document.getElementById('error-image-post').src = takeScreenshotOfCanvas();
+    }, 0);
 };
 
 let takeScreenshotOfCanvas = () => {
