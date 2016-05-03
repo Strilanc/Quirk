@@ -1,6 +1,7 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
 import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 export default class CycleCircuitStats {
     /**
@@ -24,7 +25,7 @@ export default class CycleCircuitStats {
          * @type {!Array.<?CircuitStats>}
          * @private
          */
-        this._cachedCircuitStatsByTime = Seq.repeat(null, this._divisions).toArray();
+        this._cachedCircuitStatsByTime = Seq.repeat(undefined, this._divisions).toArray();
     }
 
     /**
@@ -41,8 +42,8 @@ export default class CycleCircuitStats {
      * @returns {!CircuitStats}
      */
     statsAtApproximateTime(t) {
-        let i = Math.round(t * this._divisions) % this._divisions;
-        if (this._cachedCircuitStatsByTime[i] === null) {
+        let i = Util.properMod(Math.round(t * this._divisions), this._divisions);
+        if (this._cachedCircuitStatsByTime[i] === undefined) {
             this._cachedCircuitStatsByTime[i] = this._computeStateForBucket(i);
         }
         return this._cachedCircuitStatsByTime[i].withTime(t);
