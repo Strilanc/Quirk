@@ -33,15 +33,15 @@ Quirk assumes you already know background facts like "each wire represents a qub
 
 Quantum teleportation circuit, with Bloch-sphere state displays inserted:
 
-![Quantum teleportation](/README_TeleportationLoop.gif)
+![Quantum teleportation](/doc/README_TeleportationLoop.gif)
 
 Quantum pigeonhole circuit, showing the toolbox and default after-circuit state displays:
 
-![The Inspector](/README_Pigeonhole.png)
+![The Inspector](/doc/README_Pigeonhole.png)
 
 Reacting and animating smoothly while working with ten qubits:
 
-![Ten qubits animation](/README_TenQubitsLoop.gif)
+![Ten qubits animation](/doc/README_TenQubitsLoop.gif)
 
 # Building the Code
 
