@@ -13,15 +13,21 @@ import Util from "src/base/Util.js"
 export default class GateFactory {
 }
 
-GateFactory.MAKE_HIGHLIGHTED_DRAWER = (toolboxFillColor = Config.GATE_FILL_COLOR) => args => {
-    let backColor = args.isInToolbox ? toolboxFillColor : Config.GATE_FILL_COLOR;
-    if (args.isHighlighted) {
-        backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
-    }
-    args.painter.fillRect(args.rect, backColor);
-    args.painter.strokeRect(args.rect);
-    paintGateSymbol(args);
-};
+/**
+ * @param {!string=} toolboxFillColor
+ * @param {!string=} normalFillColor
+ * @constructor
+ */
+GateFactory.MAKE_HIGHLIGHTED_DRAWER =
+    (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
+        let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
+        if (args.isHighlighted) {
+            backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
+        }
+        args.painter.fillRect(args.rect, backColor);
+        args.painter.strokeRect(args.rect);
+        paintGateSymbol(args);
+    };
 
 /**
  * @param {!GateDrawParams} args
