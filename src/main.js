@@ -30,7 +30,7 @@ let haveLoaded = false;
 /** @type {!HTMLDivElement} */
 const inspectorDiv = document.getElementById("inspectorDiv");
 
-/** @type {null|!string} */
+/** @type {undefined|!boolean|!string} */
 let wantToPushStateIfDiffersFrom = undefined;
 
 /** @type {!InspectorWidget} */
@@ -300,9 +300,10 @@ const getHashParameters = () => {
     return paramsObject;
 };
 const loadCircuitFromUrl = () => {
-    wantToPushStateIfDiffersFrom = undefined;
+    wantToPushStateIfDiffersFrom = true; // (differs from all strings, meaning 'always push')
     try {
         let params = getHashParameters();
+        wantToPushStateIfDiffersFrom = params[Config.URL_CIRCUIT_PARAM_KEY];
         if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
             let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
             let circuitDef = Serializer.fromJson(CircuitDefinition, json);
@@ -313,7 +314,7 @@ const loadCircuitFromUrl = () => {
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
-            "Failed to understand circuit from URL. Defaulted to an empty circuit.",
+            "Defaulted to an empty circuit. Failed to understand circuit from URL.",
             {document_location_hash: document.location.hash},
             ex);
     }

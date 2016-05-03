@@ -161,7 +161,7 @@ let fromJson_Gate = json => {
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
-            "Failed to understand json for a gate. Replaced with a do-nothing 'parse error' gate.",
+            "Defaulted to a do-nothing 'parse error' gate. Failed to understand the json defining a gate.",
             {gate_json: json},
             ex);
         matrix = Matrix.identity(2);
