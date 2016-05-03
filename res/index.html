@@ -13,9 +13,9 @@
                 <canvas id="drawCanvas"></canvas>
             </div>
         </div>
-        <div id="errorDiv" style="display:none; font-size:24px; font-family:monospace; color:red;">
+        <div id="error-div" style="display:none; font-size:24px; font-family:monospace; color:red;">
             An error happened. :(
-            <div id="errorMessageDiv" style="font-size: 16px;"></div>
+            <div id="error-message-div" style="font-size: 16px;"></div>
             <br/>
             Please report it:
             <ul style="font-size: 18px;">
@@ -31,8 +31,14 @@
             <br/>
             <br/>
             Useful details to mention (auto-included if you use the create/email links above):
-            <br/>
-            <div id="errorDescDiv" style="font-size: 16px;"></div>
+            <div style="font-size: 16px;">
+                <br/>
+                <div id="error-description-div"></div>
+                <br/>
+                PRE-DRAWN
+                <br/>
+                <img id="error-image" src="#" style="zoom: 50%;"/>
+            </div>
         </div>
         <script src="src.min.js"></script>
     </body>
