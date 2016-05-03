@@ -301,21 +301,21 @@ const getHashParameters = () => {
 };
 const loadCircuitFromUrl = () => {
     wantToPushStateIfDiffersFrom = undefined;
-    let params = getHashParameters();
-    if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
-        try {
+    try {
+        let params = getHashParameters();
+        if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
             let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
             let circuitDef = Serializer.fromJson(CircuitDefinition, json);
             useInspector(inspector.withCircuitDefinition(circuitDef), true);
             let state = snapshot();
             revision = new Revision(state);
             wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : undefined;
-        } catch (ex) {
-            notifyAboutRecoveryFromUnexpectedError(
-                "Failed to understand circuit from URL. Defaulted to an empty circuit.",
-                {document_location_hash: document.location.hash},
-                ex);
         }
+    } catch (ex) {
+        notifyAboutRecoveryFromUnexpectedError(
+            "Failed to understand circuit from URL. Defaulted to an empty circuit.",
+            {document_location_hash: document.location.hash},
+            ex);
     }
     scheduleRedraw();
 };
