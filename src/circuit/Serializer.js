@@ -8,8 +8,9 @@ import GateColumn from "src/circuit/GateColumn.js"
 import GateFactory from "src/ui/GateFactory.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
-import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
+import {seq, Seq} from "src/base/Seq.js"
+import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
 
 /**
  * Serializes supported values to/from json elements.
@@ -148,6 +149,9 @@ let fromJson_Gate = json => {
     let drawer = symbol === "" ? GateFactory.MATRIX_DRAWER : GateFactory.DEFAULT_DRAWER;
     let matrix;
     try {
+        if (matrixProp === undefined) {
+            throw new Error("Unrecognized gate id, but no matrix specified.");
+        }
         matrix = fromJson_Matrix(matrixProp);
         if (matrix.width() !== matrix.height()) {
             throw new Error("Gate matrix must be square.");
@@ -156,7 +160,10 @@ let fromJson_Gate = json => {
             throw new Error("Gate matrix size must be at least 2, and a power of 2.");
         }
     } catch (ex) {
-        console.error("Error parsing gate from json", "<", json, ">", ex);
+        notifyAboutRecoveryFromUnexpectedError(
+            "Failed to understand json for a gate. Replaced with a do-nothing 'parse error' gate.",
+            {gate_json: json},
+            ex);
         matrix = Matrix.identity(2);
         return new Gate(
             symbol,
