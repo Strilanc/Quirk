@@ -300,9 +300,10 @@ const getHashParameters = () => {
     return paramsObject;
 };
 const loadCircuitFromUrl = () => {
-    wantToPushStateIfDiffersFrom = true;
+    wantToPushStateIfDiffersFrom = true; // (differs from all strings, meaning 'always push')
     try {
         let params = getHashParameters();
+        wantToPushStateIfDiffersFrom = params[Config.URL_CIRCUIT_PARAM_KEY];
         if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
             let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
             let circuitDef = Serializer.fromJson(CircuitDefinition, json);
@@ -310,8 +311,6 @@ const loadCircuitFromUrl = () => {
             let state = snapshot();
             revision = new Revision(state);
             wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : undefined;
-        } else {
-            wantToPushStateIfDiffersFrom = undefined;
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
