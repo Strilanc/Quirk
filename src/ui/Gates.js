@@ -1,5 +1,5 @@
 import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Shaders from "src/webgl/Shaders.js"
+import DetailedError from "src/base/DetailedError.js"
 import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
@@ -10,6 +10,7 @@ import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
+import Shaders from "src/webgl/Shaders.js"
 
 const τ = Math.PI * 2;
 
@@ -590,14 +591,16 @@ Gates.Misc = {
         "|0⟩⟨0|",
         Matrix.square(1, 0, 0, 0),
         "Post-selection Gate [Off]",
-        "Keeps OFF states, discards ON states, and renormalizes."
+        "Keeps OFF states, discards ON states, and renormalizes\n" +
+            "(Corresponds to restarting until the right answer happens.)"
     ).withCustomDrawer(GateFactory.POST_SELECT_DRAWER),
 
     PostSelectOn: new Gate(
         "|1⟩⟨1|",
         Matrix.square(0, 0, 0, 1),
         "Post-selection Gate [On]",
-        "Keeps ON states, discards OFF states, and renormalizes."
+        "Keeps ON states, discards OFF states, and renormalizes.\n" +
+            "(Corresponds to restarting until the right answer happens.)"
     ).withCustomDrawer(GateFactory.POST_SELECT_DRAWER),
 
     ClockPulseGate: new Gate(
@@ -646,7 +649,17 @@ Gates.ExperimentalAndImplausible = {
         "Universal Not Gate",
         "Mirrors a qubit's state through the origin of the Bloch sphere.\nImpossible in practice.").
         withCustomShader(GateShaders.universalNot).
-        withSerializedId("__unstable__UniversalNot")
+        withSerializedId("__unstable__UniversalNot"),
+    ErrorInjection: new Gate(
+        "ERR!",
+        Matrix.zero(1, 1).times(NaN),
+        "Error Injection Gate",
+        "Throws an exception during circuit stat computations, for testing error paths.").
+        withCustomShader((inputTex, controlTex, qubit) => {
+            throw new DetailedError("Applied an Error Injection Gate", {qubit});
+        }).
+        withSerializedId("__debug__ErrorInjection").
+        withCustomDrawer(GateFactory.MAKE_HIGHLIGHTED_DRAWER('red', 'red'))
 };
 
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
@@ -855,5 +868,6 @@ Gates.KnownToSerializer = [
     Gates.Increments.Dec7,
     Gates.Increments.Dec8,
 
-    Gates.ExperimentalAndImplausible.UniversalNot
+    Gates.ExperimentalAndImplausible.UniversalNot,
+    Gates.ExperimentalAndImplausible.ErrorInjection
 ];

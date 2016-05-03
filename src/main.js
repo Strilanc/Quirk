@@ -79,34 +79,45 @@ const restore = jsonText => {
 /** @type {!Revision} */
 let revision = new Revision(snapshot());
 
-/** @type {!number} */
-let circuitTime = 0;
-/**
- * Milliseconds.
- * @type {!number}
- */
-let prevAdvanceTime = performance.now();
-const advanceCircuitTime = () => {
-    let t = performance.now();
-    let elapsed = (t - prevAdvanceTime) / Config.CYCLE_DURATION_MS;
-    circuitTime += elapsed;
-    circuitTime %= 1;
-    prevAdvanceTime = t;
-};
+const getCircuitCycleTime = (() => {
+    /**
+     * Milliseconds.
+     * @type {!number}
+     */
+    let _circuitCycleTime = 0;
+    /**
+     * Milliseconds.
+     * @type {!number}
+     */
+    let _prevRealTime = performance.now();
+
+    return () => {
+        let nextRealTime = performance.now();
+        let elapsed = (nextRealTime - _prevRealTime) / Config.CYCLE_DURATION_MS;
+        _circuitCycleTime += elapsed;
+        _circuitCycleTime %= 1;
+        _prevRealTime = nextRealTime;
+        return _circuitCycleTime;
+    };
+})();
+
 let currentCircuitStatsCache =
     new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
+
+let desiredCanvasSize = () => {
+    return {
+        w: Math.max(canvasDiv.clientWidth, inspector.desiredWidth()),
+        h: InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires)
+    };
+};
 
 /**
  * @param {!InspectorWidget} ins
  * @returns {!InspectorWidget}
  */
 const syncArea = ins => {
-    ins.updateArea(
-        new Rect(
-            0,
-            0,
-            canvasDiv.clientWidth,
-            InspectorWidget.defaultHeight(ins.circuitWidget.circuitDefinition.numWires)));
+    let size = desiredCanvasSize();
+    ins.updateArea(new Rect(0, 0, size.w, size.h));
     return ins;
 };
 
@@ -114,18 +125,15 @@ const syncArea = ins => {
 let redrawThrottle;
 const scheduleRedraw = () => redrawThrottle.trigger();
 const redrawNow = () => {
-    canvas.width = Math.max(canvasDiv.clientWidth, inspector.desiredWidth());
-    canvas.height = InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires);
     if (!haveLoaded) {
         // Don't draw while loading. It's a huge source of false-positive circuit-load-failed errors during development.
         return;
     }
 
-    let painter = new Painter(canvas);
     let shown = syncArea(inspector).previewDrop();
     if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.circuitWidget.circuitDefinition)) {
         // Maybe this fresh new circuit isn't failing. Clear the error tint.
-        let errDivStyle = document.getElementById('errorDiv').style;
+        let errDivStyle = document.getElementById('error-div').style;
         errDivStyle.opacity *= 0.9;
         if (errDivStyle.opacity < 0.06) {
             errDivStyle.display = 'None'
@@ -134,9 +142,12 @@ const redrawNow = () => {
         currentCircuitStatsCache =
             new CycleCircuitStats(shown.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
     }
-    advanceCircuitTime();
-    let stats = currentCircuitStatsCache.statsAtApproximateTime(circuitTime);
+    let stats = currentCircuitStatsCache.statsAtApproximateTime(getCircuitCycleTime());
 
+    let size = desiredCanvasSize();
+    canvas.width = size.w;
+    canvas.height = size.h;
+    let painter = new Painter(canvas);
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats);
     painter.paintDeferred();
@@ -269,7 +280,7 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// Pull initial circuit out of URL '?x=y' arguments.
+// Pull initial circuit out of URL '#x=y' arguments.
 const getHashParameters = () => {
     let paramsText = document.location.hash.substr(1);
     let paramsObject = {};

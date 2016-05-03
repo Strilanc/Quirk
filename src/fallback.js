@@ -2,7 +2,7 @@ import describe from "src/base/Describe.js"
 
 let _alreadySeen = [];
 let showErrorDiv = (subject, body) => {
-    let errDivStyle = document.getElementById('errorDiv').style;
+    let errDivStyle = document.getElementById('error-div').style;
     if (errDivStyle.opacity < 0.7) {
         // Partially faded away as user interacted with circuit.
         // Enough time to justify updating the message despite the risk of clearing the user's selection.
@@ -20,8 +20,8 @@ let showErrorDiv = (subject, body) => {
     _alreadySeen.push(body);
 
     // Set shown error details.
-    document.getElementById('errorMessageDiv').innerText = subject;
-    document.getElementById('errorDescDiv').innerText = body;
+    document.getElementById('error-message-div').innerText = subject;
+    document.getElementById('error-description-div').innerText = body;
     document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
     document.getElementById('error-mailto-anchor').href = [
         'mailto:craig.gidney@gmail.com?subject=',
@@ -35,6 +35,15 @@ let showErrorDiv = (subject, body) => {
         '&body=',
         encodeURIComponent('\n\n\n' + body)
     ].join('');
+    document.getElementById('error-image').src = takeScreenshotOfCanvas();
+};
+
+let takeScreenshotOfCanvas = () => {
+    let canvas = document.getElementById("drawCanvas");
+    if (canvas === undefined) {
+        return '#';
+    }
+    return canvas.toDataURL("image/png");
 };
 
 /**
@@ -69,7 +78,6 @@ let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
 
     showErrorDiv(recovery + ' (' + (error.message || '') + ')', msg);
 };
-
 let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+?\/src\.min\.js/g, 'src.min.js');
 
 let drawErrorBox = msg => {
@@ -110,14 +118,15 @@ window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
         let location = simplifySrcUrls(
             ((errorObj instanceof Object)? errorObj.stack : undefined) ||
                 (url + ":" + lineNumber + ":" + columnNumber));
-        let details = errorObj !== undefined ? errorObj.details : undefined;
 
         showErrorDiv(errorMsg, [
             'URL',
             document.location,
             '',
-            'BROWSER USER AGENT',
+            'BROWSER',
             window.navigator.userAgent,
+            window.navigator.appName,
+            window.navigator.appVersion,
             '',
             'ERROR OBJECT',
             errorObj instanceof Object && errorObj.toString !== undefined ? errorObj.toString() : String(errorObj),
