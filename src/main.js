@@ -71,15 +71,20 @@ const updateCircuitLink = jsonText => {
 };
 
 initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
-
 const snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
+/**
+ * @param {undefined|!string} jsonText
+ */
 const restore = jsonText => {
+    if (jsonText === undefined) {
+        return;
+    }
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
     updateCircuitLink(jsonText);
     redrawThrottle.trigger();
 };
 /** @type {!Revision} */
-let revision = new Revision(snapshot());
+let revision = Revision.startingAt(snapshot());
 
 const getCircuitCycleTime = (() => {
     /**
@@ -309,8 +314,8 @@ const loadCircuitFromUrl = () => {
             let circuitDef = Serializer.fromJson(CircuitDefinition, json);
             useInspector(inspector.withCircuitDefinition(circuitDef), true);
             let state = snapshot();
-            revision = new Revision(state);
             wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : undefined;
+        revision.clear(snapshot());
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
