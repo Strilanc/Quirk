@@ -266,7 +266,7 @@ class CircuitWidget {
             this.drawGatesInColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }
 
-        this.drawOutputDisplays(painter, stats);
+        this.drawOutputDisplays(painter, stats, hand);
     }
 
     /**
@@ -331,7 +331,7 @@ class CircuitWidget {
                 (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
 
             let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
-            drawer(new GateDrawParams(painter, false, isHighlighted, r, gate, stats, {row, col}));
+            drawer(new GateDrawParams(painter, false, isHighlighted, r, gate, stats, {row, col}, hand.hoverPoints()));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== undefined) {
                 if (isHighlighted) {
@@ -399,27 +399,6 @@ class CircuitWidget {
             painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
             painter.strokeLine(new Point(x-1, y1), new Point(x-1, y2));
         }
-    }
-
-    /**
-     * @param {!Array.<!GateColumn>} cols
-     * @param {!int} row
-     * @param {!int} oldCol
-     * @param {!int} minCol
-     * @returns {!Array.<!GateColumn>}
-     */
-    static _shiftGateAhead(cols, row, oldCol, minCol) {
-        let gate = cols[oldCol].gates[row];
-        let newCol = Seq.
-            range(cols.length).
-            skip(minCol).
-            skipWhile(c => cols[c].gates[row] !== null).
-            first(cols.length);
-        return seq(cols).
-            padded(cols.length + 1, GateColumn.empty(cols[0].gates.length)).
-            withTransformedItem(oldCol, c => c.withGatesAdded(row, new GateColumn([null]))).
-            withTransformedItem(newCol, c => c.withGatesAdded(row, new GateColumn([gate]))).
-            toArray();
     }
 
     /**
@@ -568,8 +547,9 @@ class CircuitWidget {
      *
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
+     * @param {!Hand} hand
      */
-    drawOutputDisplays(painter, stats) {
+    drawOutputDisplays(painter, stats, hand) {
         let colCount = this.circuitDefinition.columns.length + 1;
         let numWire = this.importantWireCount();
 
@@ -588,7 +568,7 @@ class CircuitWidget {
             let topLeft = this.gateRect(i, offset).topLeft();
             let wh = this.gateRect(i, offset).bottom() - topLeft.y;
             let r = new Rect(topLeft.x, topLeft.y, wh, wh);
-            MathPainter.paintDensityMatrix(painter, m, r);
+            MathPainter.paintDensityMatrix(painter, m, r, hand.hoverPoints());
         }
         offset += 1;
 
@@ -600,7 +580,7 @@ class CircuitWidget {
             new Point(0.5, 0),
             'gray');
 
-        this.drawOutputSuperpositionDisplay(painter, stats, offset);
+        this.drawOutputSuperpositionDisplay(painter, stats, offset, hand);
     }
 
     /**
@@ -609,8 +589,9 @@ class CircuitWidget {
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
      * @param {!int} col
+     * @param {!Hand} hand
      */
-    drawOutputSuperpositionDisplay(painter, stats, col) {
+    drawOutputSuperpositionDisplay(painter, stats, col, hand) {
         let numWire = this.importantWireCount();
         if (numWire >= Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD) {
             return;
@@ -635,15 +616,15 @@ class CircuitWidget {
             numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_MID_COLOR : undefined,
             'black',
             numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_FORE_COLOR : undefined,
-            Config.SUPERPOSITION_BACK_COLOR);
+            Config.SUPERPOSITION_BACK_COLOR,
+            hand.hoverPoints());
 
         let expandedRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
         let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
-        let bin = (val, pad) => ("0".repeat(pad) + val.toString(2)).slice(-pad).split("").reverse().join("");
 
         // Row labels.
         for (let i = 0; i < rowCount; i++) {
-            let label = "_".repeat(colWires) + bin(i, rowWires);
+            let label = "_".repeat(colWires) + Util.bin(i, rowWires);
             let x = gridRect.right();
             let y = expandedRect.y + dh*(i+0.5);
             painter.print(label, x + 2, y, 'left', 'middle', 'black', '12px monospace', 50, dh, (w, h) => {
@@ -659,7 +640,7 @@ class CircuitWidget {
             let labelRect = expandedRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
             labelRect = new Rect(labelRect.y, -labelRect.x-labelRect.w, labelRect.h, labelRect.w);
 
-            let label = bin(i, colWires) + "_".repeat(rowWires);
+            let label = Util.bin(i, colWires) + "_".repeat(rowWires);
             let x = expandedRect.x + dw*(i+0.5);
             let y = gridRect.bottom();
             painter.print(label, y + 2, -x, 'left', 'middle', 'black', '12px monospace', 50, dw, (w, h) => {

@@ -123,7 +123,7 @@ Gates.Displays = {
         if (showText) {
             if (showState) {
                 args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.8;
+                args.painter.ctx.globalAlpha *= 0.4;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
@@ -150,7 +150,7 @@ Gates.Displays = {
         if (showText) {
             if (showState) {
                 args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.8;
+                args.painter.ctx.globalAlpha *= 0.4;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
@@ -171,13 +171,13 @@ Gates.Displays = {
         if (showState) {
             let {row, col} = args.positionInCircuit;
             let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
         }
 
         if (showText) {
             if (showState) {
                 args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.8;
+                args.painter.ctx.globalAlpha *= 0.4;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
@@ -198,13 +198,13 @@ Gates.Displays = {
         if (showState) {
             let {row, col} = args.positionInCircuit;
             let ρ = args.stats.qubitPairDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect.withW(90).withH(90));
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
         }
 
         if (showText) {
             if (showState) {
                 args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.8;
+                args.painter.ctx.globalAlpha *= 0.4;
             }
             GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {

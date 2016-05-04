@@ -96,7 +96,7 @@ export default class InspectorWidget {
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.width-1),
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.height-1));
         let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
-        drawer(new GateDrawParams(painter, false, true, rect, gate, stats, null));
+        drawer(new GateDrawParams(painter, false, true, rect, gate, stats, null, []));
     }
 
     /**
