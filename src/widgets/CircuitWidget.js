@@ -331,7 +331,15 @@ class CircuitWidget {
                 (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
 
             let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
-            drawer(new GateDrawParams(painter, false, isHighlighted, r, gate, stats, {row, col}, hand.hoverPoints()));
+            drawer(new GateDrawParams(
+                painter,
+                false,
+                isHighlighted,
+                r,
+                gate,
+                stats,
+                {row, col},
+                focusSlot === undefined ? hand.hoverPoints() : []));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== undefined) {
                 if (isHighlighted) {
