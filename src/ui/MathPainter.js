@@ -56,6 +56,7 @@ export default class MathPainter {
      * @param {!string} amplitudeCircleStrokeColor
      * @param {undefined|!string} amplitudeProbabilityFillColor
      * @param {!string=} backColor
+     * @param {!Array.<!Point>} focusPoints
      */
     static paintMatrix(painter,
                        matrix,
@@ -63,7 +64,8 @@ export default class MathPainter {
                        amplitudeCircleFillColor,
                        amplitudeCircleStrokeColor,
                        amplitudeProbabilityFillColor,
-                       backColor = Config.DISPLAY_GATE_BACK_COLOR) {
+                       backColor = Config.DISPLAY_GATE_BACK_COLOR,
+                       focusPoints = []) {
         let numCols = matrix.width();
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
@@ -137,7 +139,8 @@ export default class MathPainter {
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
             thenStroke('lightgray');
 
-        if (isNaN(buf[0])) {
+        // Error text.
+        if (matrix.hasNaN()) {
             painter.print(
                 'NaN',
                 drawArea.x + drawArea.w/2,
@@ -149,6 +152,68 @@ export default class MathPainter {
                 drawArea.w,
                 drawArea.h);
         }
+
+        // Tool tips.
+        for (let pt of focusPoints) {
+            let c = Math.floor((pt.x - x) / diam);
+            let r = Math.floor((pt.y - y) / diam);
+            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
+                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'red', 2);
+                MathPainter.paintDeferredValueTooltip(
+                    painter,
+                    x + diam*c + diam,
+                    y + diam*r,
+                    `Amplitude of |${Util.bin(r*matrix.width() + c, Math.log2(numRows*numCols))}⟩`,
+                    matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
+            }
+        }
+    }
+
+    static paintDeferredValueTooltip(painter, x, y, labelText, valueText) {
+        const labelFont = '12px Helvetica';
+        const valueFont = 'bold 12px monospace';
+        painter.defer(() => {
+            painter.ctx.font = labelFont;
+            let width1 = painter.ctx.measureText(labelText).width;
+            painter.ctx.font = valueFont;
+            let width2 = painter.ctx.measureText(valueText).width;
+
+            let height = 40;
+            let width = Math.max(width1, width2);
+            let boundingRect = new Rect(x, y - height, width, height).snapInside(
+                new Rect(0, 0, painter.ctx.canvas.clientWidth, painter.ctx.canvas.clientHeight));
+
+            painter.print(
+                valueText,
+                boundingRect.x,
+                boundingRect.bottom(),
+                'left',
+                'bottom',
+                'black',
+                valueFont,
+                boundingRect.w,
+                boundingRect.h/2,
+                (w1, h1) => painter.print(
+                    labelText,
+                    boundingRect.x,
+                    boundingRect.bottom()-h1,
+                    'left',
+                    'bottom',
+                    'black',
+                    labelFont,
+                    boundingRect.w,
+                    boundingRect.h/2,
+                    (w2, h2) => {
+                        let r = new Rect(
+                            boundingRect.x,
+                            boundingRect.bottom()-h1-h2,
+                            Math.max(w1, w2),
+                            h1 + h2).paddedBy(4);
+                        painter.trace(tracer => tracer.rect(r.x, r.y, r.w, r.h)).
+                            thenFill(Config.DISPLAY_GATE_BACK_COLOR).
+                            thenStroke('black');
+                    }));
+        });
     }
 
     /**
@@ -306,12 +371,14 @@ export default class MathPainter {
      * @param {!Painter} painter
      * @param {!Matrix} matrix
      * @param {!Rect} drawArea
+     * @param {!Array.<!Point>} focusPoints
      * @param {!string=} backgroundColor
      * @param {!string=} fillColor
      */
     static paintDensityMatrix(painter,
                               matrix,
                               drawArea,
+                              focusPoints = [],
                               backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
                               fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         let numCols = matrix.width();
@@ -367,7 +434,7 @@ export default class MathPainter {
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
             thenStroke('lightgray');
 
-        if (isNaN(buf[0])) {
+        if (matrix.hasNaN()) {
             painter.print(
                 'NaN',
                 drawArea.x + drawArea.w/2,
@@ -378,6 +445,30 @@ export default class MathPainter {
                 '16px Helvetica',
                 drawArea.w,
                 drawArea.h);
+        }
+
+        // Tool tips.
+        for (let pt of focusPoints) {
+            let c = Math.floor((pt.x - x) / diam);
+            let r = Math.floor((pt.y - y) / diam);
+            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
+                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'red', 2);
+                if (r === c) {
+                    MathPainter.paintDeferredValueTooltip(
+                        painter,
+                        x + diam*c + diam,
+                        y + diam*r,
+                        `Probability of |${Util.bin(r, Math.log2(numRows))}⟩`,
+                        new Format(false, 0, 4, ", ").formatFloat(matrix.cell(c, r).real*100) + "%");
+                } else {
+                    MathPainter.paintDeferredValueTooltip(
+                        painter,
+                        x + diam*c + diam,
+                        y + diam*r,
+                        `Coupling of |${Util.bin(c, Math.log2(numRows))}⟩ to ⟨${Util.bin(r, Math.log2(numRows))}|`,
+                        matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
+                }
+            }
         }
     }
 }

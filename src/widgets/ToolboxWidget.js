@@ -109,7 +109,7 @@ class ToolboxWidget {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
                     let isHighlighted = new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
                     let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
-                    drawer(new GateDrawParams(painter, true, isHighlighted, r, Util.notNull(gate), stats, null));
+                    drawer(new GateDrawParams(painter, true, isHighlighted, r, Util.notNull(gate), stats, null, []));
                 }
             }
         }

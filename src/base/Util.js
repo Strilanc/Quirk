@@ -43,6 +43,10 @@ export default class Util {
         return i & 0xFF;
     }
 
+    static bin(number, fixedWidth) {
+        return ("0".repeat(fixedWidth) + number.toString(2)).slice(-fixedWidth).split("").reverse().join("");
+    }
+
     /**
      * Forced cast from nullable to non-nullable, throwing an exception on failure.
      * @param {?T} v

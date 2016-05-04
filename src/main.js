@@ -4,14 +4,15 @@ import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
 import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
 import InspectorWidget from "src/widgets/InspectorWidget.js"
+import HistoryPusher from "src/browser/HistoryPusher.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
-import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/widgets/MouseUtil.js"
 import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
+import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 
@@ -25,61 +26,39 @@ if (canvas === null) {
 canvas.width = canvasDiv.clientWidth;
 canvas.height = window.innerHeight;
 let haveLoaded = false;
+let historyPusher = new HistoryPusher();
 
 //noinspection JSValidateTypes
 /** @type {!HTMLDivElement} */
 const inspectorDiv = document.getElementById("inspectorDiv");
-
-/** @type {undefined|!boolean|!string} */
-let wantToPushStateIfDiffersFrom = undefined;
 
 /** @type {!InspectorWidget} */
 let inspector = InspectorWidget.empty(
     Config.MIN_WIRE_COUNT,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
-let historyFallback = false;
-/** @param {!string} jsonText */
-const updateCircuitLink = jsonText => {
-    let title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
-    let hashComponent = Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    let urlToCurrentCircuit = "#" + hashComponent;
-    if (historyFallback) {
-        document.location.hash = hashComponent;
-        document.title = title;
-        return;
-    }
-
-    //noinspection UnusedCatchParameterJS
-    try {
-        if (wantToPushStateIfDiffersFrom !== undefined && jsonText !== wantToPushStateIfDiffersFrom) {
-            // We moved away from the original state the user was linked to. Keep it in the history.
-            // I'm not sure if this is the correct thing to do. It makes the user press back twice to escape.
-            // On the other hand, it allows them to get back to where they expect when they go back then forward.
-            history.pushState(jsonText, document.title, urlToCurrentCircuit);
-            wantToPushStateIfDiffersFrom = undefined;
-        } else {
-            // Intermediate states are too numerous to put in the history. (Users should use ctrl+Z instead.)
-            history.replaceState(jsonText, document.title, urlToCurrentCircuit);
-        }
-        document.title = title;
-    } catch (ex) {
-        console.warn("Touching 'history.replaceState' caused an error. Falling back to setting location.hash.", ex);
-        historyFallback = true;
-        document.location.hash = hashComponent;
-    }
-};
-
 initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
 
+const importantStateChangeHappened = jsonText => {
+    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    historyPusher.stateChange(jsonText, urlHash);
+    document.title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
+};
+
 const snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
+/**
+ * @param {undefined|!string} jsonText
+ */
 const restore = jsonText => {
+    if (jsonText === undefined) {
+        return;
+    }
+    importantStateChangeHappened(jsonText);
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
-    updateCircuitLink(jsonText);
     redrawThrottle.trigger();
 };
 /** @type {!Revision} */
-let revision = new Revision(snapshot());
+let revision = Revision.startingAt(snapshot());
 
 const getCircuitCycleTime = (() => {
     /**
@@ -167,8 +146,8 @@ const useInspector = (newInspector, keepInHistory) => {
     inspector = newInspector;
     let jsonText = snapshot();
     if (keepInHistory) {
-        updateCircuitLink(jsonText);
         revision.commit(jsonText);
+        importantStateChangeHappened(jsonText);
     }
 
     scheduleRedraw();
@@ -285,7 +264,7 @@ document.addEventListener("keydown", e => {
 // Pull initial circuit out of URL '#x=y' arguments.
 const getHashParameters = () => {
     let hashText = document.location.hash.substr(1);
-    let paramsObject = {};
+    let paramsMap = new Map();
     if (hashText !== "") {
         for (let keyVal of hashText.split("&")) {
             let eq = keyVal.indexOf("=");
@@ -294,23 +273,30 @@ const getHashParameters = () => {
             }
             let key = keyVal.substring(0, eq);
             let val = decodeURIComponent(keyVal.substring(eq + 1));
-            paramsObject[key] = val;
+            paramsMap.set(key, val);
         }
     }
-    return paramsObject;
+    return paramsMap;
 };
+
 const loadCircuitFromUrl = () => {
-    wantToPushStateIfDiffersFrom = true; // (differs from all strings, meaning 'always push')
     try {
+        historyPusher.currentStateIsMemorableButUnknown();
         let params = getHashParameters();
-        wantToPushStateIfDiffersFrom = params[Config.URL_CIRCUIT_PARAM_KEY];
-        if (params.hasOwnProperty(Config.URL_CIRCUIT_PARAM_KEY)) {
-            let json = JSON.parse(params[Config.URL_CIRCUIT_PARAM_KEY]);
-            let circuitDef = Serializer.fromJson(CircuitDefinition, json);
-            useInspector(inspector.withCircuitDefinition(circuitDef), true);
-            let state = snapshot();
-            revision = new Revision(state);
-            wantToPushStateIfDiffersFrom = circuitDef.columns.length > 0 ? state : undefined;
+        if (!params.has(Config.URL_CIRCUIT_PARAM_KEY)) {
+            params.set(Config.URL_CIRCUIT_PARAM_KEY, JSON.stringify(Serializer.toJson(CircuitDefinition.from([]))));
+        }
+
+        let jsonText = params.get(Config.URL_CIRCUIT_PARAM_KEY);
+        historyPusher.currentStateIsMemorableAndEqualTo(jsonText);
+        let json = JSON.parse(jsonText);
+        let circuitDef = Serializer.fromJson(CircuitDefinition, json);
+        useInspector(inspector.withCircuitDefinition(circuitDef), true);
+        revision.clear(snapshot());
+        if (circuitDef.columns.length === 0 && params.size === 1) {
+            historyPusher.currentStateIsNotMemorable();
+        } else {
+            importantStateChangeHappened(jsonText);
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
@@ -318,10 +304,9 @@ const loadCircuitFromUrl = () => {
             {document_location_hash: document.location.hash},
             ex);
     }
-    scheduleRedraw();
 };
 
 window.onpopstate = () => loadCircuitFromUrl(false);
-loadCircuitFromUrl(true);
+loadCircuitFromUrl();
 haveLoaded = true;
 redrawNow();
