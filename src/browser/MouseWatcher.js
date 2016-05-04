@@ -1,5 +1,5 @@
-import Point from "../math/Point.js"
-import Rect from "../math/Rect.js"
+import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
 
 const ALLOW_REGRAB_WATCHDOG_TIME_MS = 5000;
 const MOUSE_ID = "mouse!";
@@ -32,7 +32,7 @@ let eventPosRelativeTo = (ev, element) => {
  * @param {!function(!MouseEvent|!TouchEvent) : void} cancelHandler
  * @param {!function(?Point, !MouseEvent|!TouchEvent) : void} dragHandler
  * @param {!function(?Point, !MouseEvent|!TouchEvent) : void} dropHandler
- * @returns {!function(void) : void}
+ * @returns {!function(void) : void} Call this to dispose the watcher (removing any global callbacks it added).
  */
 let watchDrags = (element, grabHandler, cancelHandler, dragHandler, dropHandler) => {
     return new DragWatcher(element, grabHandler, cancelHandler, dragHandler, dropHandler)
