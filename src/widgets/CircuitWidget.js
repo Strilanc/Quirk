@@ -318,23 +318,40 @@ class CircuitWidget {
                 continue;
             }
             /** @type {!Gate} */
-            let gate = gateColumn.gates[row];
+            const gate = gateColumn.gates[row];
             let r = this.gateRect(row, col, gate.width, gate.height);
 
-            let isOverGate = pt => {
-                let f = this.findGateOverlappingPos(pt);
+            let isOverGate = pos => {
+                let f = this.findGateOverlappingPos(pos);
                 return f !== undefined && f.col === col && f.row === row;
+            };
+            let isOverGateResizeTab = pos => {
+                if (this.findGateOverlappingPos(pos) !== undefined) {
+                    return false;
+                }
+                let d = Config.GATE_RADIUS;
+                let belowRect = new Rect(r.x+1, r.bottom(), r.w-2, d * 2);
+                return belowRect.containsPoint(pos);
             };
 
             let isHighlighted =
-                (focusSlot === undefined && new Seq(hand.hoverPoints()).any(isOverGate)) ||
+                (focusSlot === undefined && seq(hand.hoverPoints()).any(isOverGate)) ||
                 (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
+            let isResizeShowing =
+                gate.canResize &&
+                this.circuitDefinition.findGateCoveringSlot(col, row + gate.height) === undefined &&
+                (isHighlighted || (focusSlot === undefined && seq(hand.hoverPoints()).any(isOverGateResizeTab)));
+            let isResizeHighlighted =
+                isResizeShowing &&
+                seq(hand.hoverPoints()).any(isOverGateResizeTab);
 
             let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
             drawer(new GateDrawParams(
                 painter,
                 false,
-                isHighlighted,
+                isHighlighted || isResizeHighlighted,
+                isResizeShowing,
+                isResizeHighlighted,
                 r,
                 gate,
                 stats,

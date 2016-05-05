@@ -20,6 +20,9 @@ export default class GateFactory {
  */
 GateFactory.MAKE_HIGHLIGHTED_DRAWER =
     (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
+        if (args.gate.canResize && args.isResizeShowing) {
+            GateFactory.paintResizeTab(args);
+        }
         let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
         if (args.isHighlighted) {
             backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
@@ -33,6 +36,32 @@ GateFactory.MAKE_HIGHLIGHTED_DRAWER =
  * @param {!GateDrawParams} args
  */
 GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
+
+/**
+ * @param {!GateDrawParams} args
+ */
+GateFactory.paintResizeTab = args => {
+    let d = Config.GATE_RADIUS;
+    let belowRect = new Rect(args.rect.x+1, args.rect.bottom(), args.rect.w-2, d * 2);
+    let {x: cx, y: cy} = belowRect.center();
+    let backColor = Config.GATE_FILL_COLOR;
+    let foreColor = args.isResizeHighlighted ? 'black' : 'gray';
+    args.painter.ctx.save();
+    args.painter.fillRect(belowRect, backColor);
+    args.painter.strokeRect(belowRect, backColor);
+    //noinspection JSUnresolvedFunction
+    args.painter.ctx.setLineDash([2, 5]);
+    args.painter.strokeRect(belowRect, foreColor);
+    args.painter.print('resize', cx, cy, 'center', 'middle', foreColor, 'monospace', belowRect.w - 4, belowRect.h - 4);
+    args.painter.ctx.restore();
+    args.painter.trace(tracer => {
+        for (let sx of [-1, +1]) {
+            for (let sy of [-1, +1]) {
+                tracer.line(cx, cy + sy * d * 0.75, cx + sx * d * 0.3, cy + sy * d * 0.5);
+            }
+        }
+    }).thenStroke(foreColor);
+};
 
 /**
  * @param {!GateDrawParams} args

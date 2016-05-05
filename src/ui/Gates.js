@@ -164,54 +164,68 @@ Gates.Displays = {
         Matrix.identity(2),
         "Density Matrix Display",
         "Shows a wire's local state as a density matrix.\nUse controls to see conditional states."
-    ).withSerializedId("Density").withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
+    ).withSerializedId("Density").
+        withCanResize().
+        withCustomDrawer(args => {
+            if (args.isResizeShowing) {
+                GateFactory.paintResizeTab(args);
             }
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
             if (showState) {
-                args.painter.ctx.restore();
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.qubitDensityMatrix(row, col);
+                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
             }
-        }
-    }),
+
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.save();
+                    args.painter.ctx.globalAlpha *= 0.4;
+                }
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.restore();
+                }
+            }
+        }),
 
     DensityMatrixDisplay2: new Gate(
         "Density\n2",
         Matrix.identity(4),
         "2-Qubit Density Matrix Display",
         "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
-    ).withSerializedId("Density2").withWidth(2).withHeight(2).withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitPairDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
+    ).withSerializedId("Density2").
+        withCanResize().
+        withWidth(2).
+        withHeight(2).
+        withCustomDrawer(args => {
+            if (args.isResizeShowing) {
+                GateFactory.paintResizeTab(args);
             }
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
             if (showState) {
-                args.painter.ctx.restore();
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.qubitPairDensityMatrix(row, col);
+                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
             }
-        }
-    })
+
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.save();
+                    args.painter.ctx.globalAlpha *= 0.4;
+                }
+                GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.restore();
+                }
+            }
+        })
 };
 
 /**
@@ -284,7 +298,8 @@ const IncGateMaker = span => new Gate(
     "Adds 1 to the little-endian number represented by " + span + " qubits."
 ).withSerializedId("inc" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1));
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)).
+    withCanResize();
 
 const DecGateMaker = span => new Gate(
     "-1\n" + span,
@@ -293,7 +308,8 @@ const DecGateMaker = span => new Gate(
     "Subtracts 1 from the little-endian number represented by " + span + " qubits."
 ).withSerializedId("dec" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1));
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)).
+    withCanResize();
 
 /**
  * Gates that correspond to increments or decrements of multiple qubits.

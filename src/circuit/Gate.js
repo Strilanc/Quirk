@@ -38,6 +38,8 @@ class Gate {
         this.tag = undefined;
         /** @type {undefined|!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int):!WglConfiguredShader} */
         this.customShader = undefined;
+        /** @type {!boolean} */
+        this.canResize = false;
     }
 
     /**
@@ -52,6 +54,7 @@ class Gate {
         g.customShader = this.customShader;
         g.width = this.width;
         g.height = this.height;
+        g.canResize = this.canResize;
         return g;
     }
 
@@ -102,6 +105,16 @@ class Gate {
     withCustomShader(shaderFunc) {
         let g = this._copy();
         g.customShader = shaderFunc;
+        return g;
+    }
+
+    /**
+     * @param {!boolean} canResize
+     * @returns {!Gate}
+     */
+    withCanResize(canResize = true) {
+        let g = this._copy();
+        g.canResize = canResize;
         return g;
     }
 
