@@ -26,7 +26,7 @@ class WglContext {
             throw new Error('Error creating WebGL context.');
         }
         if (this.gl.getExtension('OES_texture_float') === undefined) {
-            throw new Error("OES_texture_float webgl extension not present.")
+            throw new Error("OES_texture_float webgl extension not present.");
         }
 
         /** @type {!function(void):void} */
