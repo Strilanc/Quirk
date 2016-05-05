@@ -26,10 +26,10 @@ const emptyFallback = (result, alternative, errorMessage) => {
     if (result !== EMPTY_SYGIL) {
         return result;
     }
-    if (obj === THROW_IF_EMPTY) {
+    if (alternative === THROW_IF_EMPTY) {
         throw new Error(errorMessage);
     }
-    return obj;
+    return alternative;
 };
 
 
