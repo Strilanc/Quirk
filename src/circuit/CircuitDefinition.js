@@ -8,12 +8,16 @@ import Point from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
+/**
+ * Defines a circuit layout, with wires and columns and gates.
+ * Also exposes utility methods for querying useful facts about the layout (e.g. disabled gates).
+ *
+ * Doesn't compute any amplitudes or probabilities or other possibly-time-dependent stuff. See CircuitStats for that.
+ */
 class CircuitDefinition {
     /**
      * @param {!int} numWires
-     * @param {!Array<!GateColumn>} columns
-     * @property {!int} numWires
-     * @property {!Array<!GateColumn>} columns;
+     * @param {!Array.<!GateColumn>} columns
      */
     constructor(numWires, columns) {
         if (numWires < 0) {
@@ -23,10 +27,12 @@ class CircuitDefinition {
             throw new DetailedError("Not a GateColumn", {columns})
         }
         if (!columns.every(e => e.gates.length === numWires)) {
-            throw new DetailedError("Wrong gate count", {numWires, columns})
+            throw new DetailedError("Wrong gate count in a column", {numWires, columns})
         }
 
+        /** @type {!int} */
         this.numWires = numWires;
+        /** @type {!Array.<!GateColumn>} */
         this.columns = columns;
 
         /**
@@ -49,6 +55,7 @@ class CircuitDefinition {
 
         /**
          * @type {!Map.<!string, !{col: !int, row: !int, gate: !Gate}>}
+         * @private
          */
         this._gateSlotCoverMap = this._computeGateSlotCoverMap();
     }
@@ -112,6 +119,7 @@ class CircuitDefinition {
     }
 
     /**
+     * This mainly exists for writing tests that are understandable.
      * @param {!string} diagram
      * @param {!Map.<!string, !Gate>} gateMap
      * @returns {!CircuitDefinition}
