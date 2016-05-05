@@ -37,8 +37,6 @@ let inspector = InspectorWidget.empty(
     Config.MIN_WIRE_COUNT,
     new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
-initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
-
 const importantStateChangeHappened = jsonText => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     historyPusher.stateChange(jsonText, urlHash);
@@ -310,3 +308,8 @@ window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl();
 haveLoaded = true;
 redrawNow();
+
+// If the webgl initialization is going to fail, don't fail during the module loading phase.
+setTimeout(() => {
+    initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
+}, 0);
