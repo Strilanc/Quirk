@@ -20,6 +20,19 @@ const GENERIC_ARRAY_TYPES = [
     Uint8ClampedArray
 ];
 
+const isIterable = obj => typeof Object(obj)[Symbol.iterator] === 'function';
+
+const emptyFallback = (result, alternative, errorMessage) => {
+    if (result !== EMPTY_SYGIL) {
+        return result;
+    }
+    if (obj === THROW_IF_EMPTY) {
+        throw new Error(errorMessage);
+    }
+    return obj;
+};
+
+
 /**
  * A fluent wrapper for iterable sequences of values, exposing useful methods and properties.
  */
@@ -29,20 +42,20 @@ class Seq {
      * Use fromGenerator for wrapping generator functions.
      *
      * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} obj
-     * @param {!boolean=} isIterator
+     * @param {!boolean=} isIteratorFunction
      * @template T
      */
-    constructor(obj, isIterator=false) {
+    constructor(obj, isIteratorFunction=false) {
         let iterable;
         let iterator;
         if (obj instanceof Seq) {
             iterable = obj._iterable;
             iterator = obj[Symbol.iterator];
-        } else if (isIterator) {
+        } else if (isIteratorFunction) {
             iterable = {[Symbol.iterator]: obj};
             iterator = obj;
         } else {
-            if (obj[Symbol.iterator] === undefined) {
+            if (!isIterable(obj)) {
                 throw new Error(`Not iterable: ${obj}`);
             }
             iterable = obj;
@@ -85,7 +98,7 @@ class Seq {
      * @template T
     */
     isEqualTo(other, comparator = (e1, e2) => e1 === e2) {
-        if (other === undefined || other === null || other[Symbol.iterator] === undefined) {
+        if (!isIterable(other)) {
             return false;
         }
         if (other === this) {
@@ -180,7 +193,7 @@ class Seq {
         return Seq.fromGenerator(function*() {
             let i = 0;
             //noinspection InfiniteLoopJS
-            while (true) {
+            while (true) { //eslint-disable-line no-constant-condition
                 yield i;
                 i++;
             }
@@ -336,13 +349,10 @@ class Seq {
         for (let e of this._iterable) {
             accumulator = accumulator === EMPTY_SYGIL ? e : combiner(accumulator, e);
         }
-        if (accumulator !== EMPTY_SYGIL) {
-            return accumulator;
-        }
-        if (emptyErrorAlternative === THROW_IF_EMPTY) {
-            throw new Error("Folded empty sequence without providing an alternative result.");
-        }
-        return emptyErrorAlternative;
+        return emptyFallback(
+            accumulator,
+            emptyErrorAlternative,
+            "Folded empty sequence without providing an alternative result.");
     }
 
     /**
@@ -440,13 +450,7 @@ class Seq {
             }
         }
 
-        if (curMaxItem !== EMPTY_SYGIL) {
-            return curMaxItem;
-        }
-        if (emptyErrorAlternative === THROW_IF_EMPTY) {
-            throw new Error("Can't maxBy an empty sequence.");
-        }
-        return emptyErrorAlternative;
+        return emptyFallback(curMaxItem, emptyErrorAlternative, "Can't maxBy an empty sequence.");
     }
 
     /**
@@ -882,16 +886,7 @@ class Seq {
         for (let e of this._iterable) {
             result = e;
         }
-
-        if (result !== EMPTY_SYGIL) {
-            return result;
-        }
-
-        if (emptyErrorAlternative === THROW_IF_EMPTY) {
-            throw new Error("Empty sequence has no last item.")
-        }
-
-        return emptyErrorAlternative;
+        return emptyFallback(result, emptyErrorAlternative, "Empty sequence has no last item.");
     }
 
     /**
