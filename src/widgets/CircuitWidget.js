@@ -367,7 +367,7 @@ class CircuitWidget {
         let n = gateColumn.gates.length;
         let gs = gateColumn.gates;
 
-        let hasTwoSwaps = stats.circuitDefinition.colHasPairedSwapGate(columnIndex);
+        let hasTwoSwaps = stats.circuitDefinition.colHasEnabledSwapGate(columnIndex);
 
         let canBeControlled =
             i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i));
