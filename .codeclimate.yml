@@ -1,6 +1,9 @@
 engines:
   eslint:
     enabled: true
+    checks:
+      no-loop-func:
+        enabled: false
   fixme:
     enabled: true
 ratings:
