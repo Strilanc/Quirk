@@ -77,8 +77,8 @@ class CircuitDefinition {
      * @returns {!boolean}
      */
     isTimeDependent() {
-        return new Seq(this.columns).any(
-                e => new Seq(e.gates).any(
+        return seq(this.columns).any(
+                e => seq(e.gates).any(
                     g => g !== null && g.isTimeBased()));
     }
 
@@ -102,7 +102,7 @@ class CircuitDefinition {
      * @returns {!string}
      */
     readableHash() {
-        let allGates = new Seq(this.columns)
+        let allGates = seq(this.columns)
             .flatMap(e => e.gates)
             .filter(e => e !== null)
             .map(e => e.symbol)
@@ -191,9 +191,6 @@ class CircuitDefinition {
 
     /**
      * @param {!int} col
-     * @param {!int} row
-     * @param {!int} width
-     * @param {!int} height
      * @returns {!Set.<!int>}
      * @private
      */
@@ -276,7 +273,7 @@ class CircuitDefinition {
         return new CircuitDefinition(
             newWireCount,
             this.columns.map(c => new GateColumn(
-                new Seq(c.gates).
+                seq(c.gates).
                     take(newWireCount).
                     padded(newWireCount, null).
                     toArray())));
@@ -306,7 +303,7 @@ class CircuitDefinition {
         }
         return other instanceof CircuitDefinition &&
             this.numWires === other.numWires &&
-            new Seq(this.columns).isEqualTo(new Seq(other.columns), Util.CUSTOM_IS_EQUAL_TO_EQUALITY);
+            seq(this.columns).isEqualTo(seq(other.columns), Util.CUSTOM_IS_EQUAL_TO_EQUALITY);
     }
 
     /**
@@ -357,7 +354,8 @@ class CircuitDefinition {
     /**
      * A gate is only "in" the slot at its top left.
      * It "covers" any other slots underneath it.
-     * @param {!Point} pt
+     * @param {!int} col
+     * @param {!int} row
      * @returns {undefined|!Gate}
      */
     gateInSlot(col, row) {
@@ -526,21 +524,24 @@ class CircuitDefinition {
     }
 
     toString() {
-        let w = "─";
-        let self = this;
-        return Seq.
-            range(self.numWires).
-            map(r => w + Seq.
-                range(this.columns.length).
+        let wire = n => "─".repeat(n);
+        let wireAround = (n, s) =>
+            wire(Math.floor(n - s.length)/2) +
+            s +
+            wire(Math.ceil(n - s.length)/2);
+        let colWidths = Seq.range(this.columns.length).
+            map(c => 4 + seq(this.columns[c].gates).map(e => e === null ? 0 : e.serializedId.length).max()).
+            toArray();
+        return Seq.range(this.numWires).
+            map(r => wire(1) +
+                Seq.range(this.columns.length).
                 map(c => {
-                    let span = 4 + seq(self.columns[c].gates).map(e => e === null ? 0 : e.serializedId.length).max();
-                    let g = self.columns[c].gates[r];
-                    let t = g === null ? w : g.serializedId;
-                    t = w.repeat(Math.floor(span - t.length)/2) + t + w.repeat(Math.ceil(span - t.length)/2);
-                    return new Seq(t).padded(7, w).join("");
+                    let g = this.columns[c].gates[r];
+                    let label = g === null ? "" : g.serializedId;
+                    return wireAround(colWidths[c], label);
                 }).
-                join("")).
-            join("\n");
+                join('')).
+            join('\n');
     }
 }
 
