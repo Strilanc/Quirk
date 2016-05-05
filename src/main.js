@@ -284,7 +284,7 @@ const loadCircuitFromUrl = () => {
         historyPusher.currentStateIsMemorableButUnknown();
         let params = getHashParameters();
         if (!params.has(Config.URL_CIRCUIT_PARAM_KEY)) {
-            params.set(Config.URL_CIRCUIT_PARAM_KEY, JSON.stringify(Serializer.toJson(CircuitDefinition.from([]))));
+            params.set(Config.URL_CIRCUIT_PARAM_KEY, JSON.stringify(Serializer.toJson(CircuitDefinition.EMPTY)));
         }
 
         let jsonText = params.get(Config.URL_CIRCUIT_PARAM_KEY);

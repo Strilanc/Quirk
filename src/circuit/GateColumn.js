@@ -79,13 +79,15 @@ class GateColumn {
     }
 
     hasCoherentControl(inputMeasureMask) {
-        return Seq.range(this.gates.length).any(i => (inputMeasureMask & (1 << i)) === 0 &&
-        (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
+        return Seq.range(this.gates.length).any(i =>
+            (inputMeasureMask & (1 << i)) === 0 &&
+                (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
     }
 
     hasMeasuredControl(inputMeasureMask) {
-        return Seq.range(this.gates.length).any(i => (inputMeasureMask & (1 << i)) !== 0 &&
-        (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
+        return Seq.range(this.gates.length).any(i =>
+            (inputMeasureMask & (1 << i)) !== 0 &&
+                (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
     }
 
     wiresWithSingleQubitDisplaysMask() {
@@ -135,13 +137,19 @@ class GateColumn {
             }
 
             let affectsMeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) !== 0);
+            let affectsUnmeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) === 0);
             if (affectsMeasured && this.hasCoherentControl(inputMeasureMask)) {
+                return "no\nremix\n(sorry)";
+            }
+            if (affectsMeasured && affectsUnmeasured && this.hasControl()) {
                 return "no\nremix\n(sorry)";
             }
         }
 
         // Measured qubits can't be re-superposed for implementation simplicity reasons.
-        if ((inputMeasureMask & (1 << row)) !== 0) {
+        let mask = ((1 << g.height) - 1) << row;
+        let maskMeasured = mask & inputMeasureMask;
+        if (maskMeasured !== 0) {
             // Pick a time that's unlikely to be on a corner case of a time-based gate.
             // Also this time happens to hit the upstroke on both of the included clock-pulse gates.
             let m = g.matrixAt(0.8234);
@@ -149,9 +157,13 @@ class GateColumn {
             let permutesStates = !m.isDiagonal();
             let createsSuperpositions = !m.isPhasedPermutation(ε);
             let hasCoherentControl = this.hasCoherentControl(inputMeasureMask);
-            if (permutesStates && (hasCoherentControl || createsSuperpositions)) {
+            if (createsSuperpositions || (permutesStates && hasCoherentControl)) {
                 return "no\nremix\n(sorry)";
             }
+        }
+
+        if (maskMeasured !== 0 && maskMeasured !== mask) {
+            return "no\nremix\n(sorry)";
         }
 
         return undefined;
@@ -168,7 +180,7 @@ class GateColumn {
         return seq(this.gates).
             filter(g => g !== null).
             map(g => g.width).
-            max(0);
+            max(-Infinity);
     }
 
     disabledReasons(inputMeasureMask) {
