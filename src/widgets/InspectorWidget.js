@@ -69,12 +69,13 @@ export default class InspectorWidget {
     /**
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
+     * @param {!boolean} shift
      */
-    paint(painter, stats) {
+    paint(painter, stats, shift) {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         this.toolboxWidget.paint(painter, stats, this.hand);
-        this.circuitWidget.paint(painter, this.hand, stats);
+        this.circuitWidget.paint(painter, this.hand, stats, shift);
         this.paintHand(painter, stats);
     }
 
@@ -163,7 +164,7 @@ export default class InspectorWidget {
     }
 
     previewDrop() {
-        if (this.hand.heldGate === undefined) {
+        if (!this.hand.isBusy()) {
             return this;
         }
 

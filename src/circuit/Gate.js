@@ -38,8 +38,8 @@ class Gate {
         this.tag = undefined;
         /** @type {undefined|!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int):!WglConfiguredShader} */
         this.customShader = undefined;
-        /** @type {!boolean} */
-        this.canResize = false;
+        /** @type {!Array.<!Gate>} */
+        this.gateFamily = [this];
     }
 
     /**
@@ -54,7 +54,7 @@ class Gate {
         g.customShader = this.customShader;
         g.width = this.width;
         g.height = this.height;
-        g.canResize = this.canResize;
+        g.gateFamily = this.gateFamily;
         return g;
     }
 
@@ -109,13 +109,29 @@ class Gate {
     }
 
     /**
-     * @param {!boolean} canResize
-     * @returns {!Gate}
+     * @param {T} gatesObj
+     * @returns {T}
+     * @template T
      */
-    withCanResize(canResize = true) {
-        let g = this._copy();
-        g.canResize = canResize;
-        return g;
+    static makeFamily(gatesObj) {
+        let oldGates = Util.decomposeObjectValues(gatesObj);
+        let newGates = oldGates.map(e => e._copy());
+        for (let g of newGates) {
+            g.gateFamily = newGates;
+        }
+        return Util.recomposedObjectValues(gatesObj, newGates);
+    }
+
+    canChangeInSize() {
+        return this.gateFamily.length > 1;
+    }
+
+    canIncreaseInSize() {
+        return !this.gateFamily.every(e => e.height !== this.height + 1);
+    }
+
+    canDecreaseInSize() {
+        return !this.gateFamily.every(e => e.height !== this.height - 1);
     }
 
     /**

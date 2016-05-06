@@ -26,7 +26,7 @@ class CircuitWidget {
      * @param {!Rect} area
      * @param {!CircuitDefinition} circuitDefinition
      * @param {null|!int} compressedColumnIndex
-     * @param {undefined|!{row: !int, col: !int}} highlightedSlot
+     * @param {undefined|!{col: !int, row: !int}} highlightedSlot
      */
     constructor(area, circuitDefinition, compressedColumnIndex=null, highlightedSlot=undefined) {
         /**
@@ -43,7 +43,7 @@ class CircuitWidget {
          */
         this._compressedColumnIndex = compressedColumnIndex;
         /**
-         * @type {undefined|!{row: !int, col: !int}}
+         * @type {undefined|!{col: !int, row: !int}}
          * @private
          */
         this._highlightedSlot = highlightedSlot;
@@ -102,6 +102,14 @@ class CircuitWidget {
             return undefined;
         }
         return i;
+    }
+
+    /**
+     * @param {!number} y
+     * @returns {!int}
+     */
+    wireIndexAt(y) {
+        return Math.floor((y - this.area.y) / Config.WIRE_SPACING);
     }
 
     /**
@@ -256,14 +264,15 @@ class CircuitWidget {
      * @param {!Painter} painter
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
+     * @param {!boolean} shift
      */
-    paint(painter, hand, stats) {
+    paint(painter, hand, stats, shift) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
 
         this.drawWires(painter);
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
-            this.drawGatesInColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
+            this.drawGatesInColumn(painter, this.circuitDefinition.columns[col], col, hand, stats, shift);
         }
 
         this.drawOutputDisplays(painter, stats, hand);
@@ -303,13 +312,51 @@ class CircuitWidget {
     }
 
     /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!Array.<!Point>} pts
+     * @returns {!{isHighlighted: !boolean, isResizeShowing: !boolean, isResizeHighlighted: !boolean}}
+     * @private
+     */
+    _isHighlightedOrResizeTabShowingForGateInSlot(col, row, pts) {
+        let gate = this.circuitDefinition.gateInSlot(col, row);
+        if (gate === undefined) {
+            return undefined;
+        }
+        let gateRect = this.gateRect(row, col, gate.width, gate.height);
+        let resizeTabRect = GateFactory.rectForResizeTab(gateRect);
+
+        let isOverGate = pos => {
+            let overGate = this.findGateOverlappingPos(pos);
+            return overGate !== undefined && overGate.col === col && overGate.row === row;
+        };
+        let isOverGateResizeTab = pos =>
+            this.findGateOverlappingPos(pos) === undefined &&
+            resizeTabRect.containsPoint(pos);
+
+        let focusSlot = this._highlightedSlot;
+        let isHighlighted =
+            (focusSlot === undefined && seq(pts).any(isOverGate)) ||
+            (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
+        let isResizeShowing =
+            gate.canChangeInSize() &&
+            this.circuitDefinition.findGateCoveringSlot(col, row + gate.height) === undefined &&
+            (isHighlighted || (focusSlot === undefined && seq(pts).any(isOverGateResizeTab)));
+        let isResizeHighlighted =
+            isResizeShowing &&
+            seq(pts).any(isOverGateResizeTab);
+        return {isHighlighted, isResizeShowing, isResizeHighlighted};
+    }
+
+    /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
      * @param {!int} col
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
+     * @param {!boolean} shift
      */
-    drawGatesInColumn(painter, gateColumn, col, hand, stats) {
+    drawGatesInColumn(painter, gateColumn, col, hand, stats, shift) {
         this.drawColumnControlWires(painter, gateColumn, col, stats);
 
         let focusSlot = this._highlightedSlot;
@@ -317,33 +364,21 @@ class CircuitWidget {
             if (gateColumn.gates[row] === null) {
                 continue;
             }
-            /** @type {!Gate} */
-            const gate = gateColumn.gates[row];
-            let r = this.gateRect(row, col, gate.width, gate.height);
+            let gate = gateColumn.gates[row];
+            let gateRect = this.gateRect(row, col, gate.width, gate.height);
 
-            let isOverGate = pos => {
-                let f = this.findGateOverlappingPos(pos);
-                return f !== undefined && f.col === col && f.row === row;
-            };
-            let isOverGateResizeTab = pos => {
-                if (this.findGateOverlappingPos(pos) !== undefined) {
-                    return false;
+            let {isHighlighted, isResizeShowing, isResizeHighlighted} =
+                this._isHighlightedOrResizeTabShowingForGateInSlot(col, row, hand.hoverPoints());
+            isResizeHighlighted = isResizeHighlighted || new Point(col, row).isEqualTo(hand.resizingGateSlot);
+            if (isResizeHighlighted) {
+                painter.setDesiredCursor('ns-resize');
+            } else if (isHighlighted) {
+                if (shift) {
+                    painter.setDesiredCursor('pointer');
+                } else {
+                    painter.setDesiredCursor('move');
                 }
-                let d = Config.GATE_RADIUS;
-                let belowRect = new Rect(r.x+1, r.bottom(), r.w-2, d * 2);
-                return belowRect.containsPoint(pos);
-            };
-
-            let isHighlighted =
-                (focusSlot === undefined && seq(hand.hoverPoints()).any(isOverGate)) ||
-                (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
-            let isResizeShowing =
-                gate.canResize &&
-                this.circuitDefinition.findGateCoveringSlot(col, row + gate.height) === undefined &&
-                (isHighlighted || (focusSlot === undefined && seq(hand.hoverPoints()).any(isOverGateResizeTab)));
-            let isResizeHighlighted =
-                isResizeShowing &&
-                seq(hand.hoverPoints()).any(isOverGateResizeTab);
+            }
 
             let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
             drawer(new GateDrawParams(
@@ -352,7 +387,7 @@ class CircuitWidget {
                 isHighlighted || isResizeHighlighted,
                 isResizeShowing,
                 isResizeHighlighted,
-                r,
+                gateRect,
                 gate,
                 stats,
                 {row, col},
@@ -362,11 +397,11 @@ class CircuitWidget {
                 if (isHighlighted) {
                     painter.ctx.globalAlpha /= 2;
                 }
-                painter.strokeLine(r.topLeft(), r.bottomRight(), 'orange', 3);
+                painter.strokeLine(gateRect.topLeft(), gateRect.bottomRight(), 'orange', 3);
                 painter.ctx.globalAlpha /= 2;
-                painter.fillRect(r.paddedBy(5), 'yellow');
+                painter.fillRect(gateRect.paddedBy(5), 'yellow');
                 painter.ctx.globalAlpha *= 2;
-                painter.printParagraph(isDisabledReason, r.paddedBy(5), new Point(0.5, 0.5), 'red');
+                painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
                 if (isHighlighted) {
                     painter.ctx.globalAlpha *= 2;
                 }
@@ -431,8 +466,18 @@ class CircuitWidget {
      * @returns {!CircuitWidget}
      */
     previewDrop(hand) {
+        return hand.heldGate !== undefined ? this._previewDropMovedGate(hand) : this._previewResizedGate(hand);
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!CircuitWidget}
+     * @private
+     */
+    _previewDropMovedGate(hand) {
         let modificationPoint = this.findModificationIndex(hand);
-        if (modificationPoint === undefined || modificationPoint.row + hand.heldGate.height > this.circuitDefinition.numWires) {
+        if (modificationPoint === undefined
+                || modificationPoint.row + hand.heldGate.height > this.circuitDefinition.numWires) {
             return this;
         }
         let addedGate = hand.heldGate;
@@ -448,10 +493,37 @@ class CircuitWidget {
             withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
 
-        let result = this.withCircuit(this.circuitDefinition.withColumns(newCols));
+        let result = this.withCircuit(this.circuitDefinition.withColumns(newCols)).
+            withHighlightedSlot(modificationPoint);
         result._compressedColumnIndex = isInserting ? i : null;
-        result._highlightedSlot = {row:modificationPoint.row, col:modificationPoint.col};
         return result;
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!CircuitWidget}
+     * @private
+     */
+    _previewResizedGate(hand) {
+        if (hand.resizingGateSlot === undefined || hand.pos === undefined) {
+            return this;
+        }
+        let gate = this.circuitDefinition.gateInSlot(hand.resizingGateSlot.x, hand.resizingGateSlot.y);
+        if (gate === undefined) {
+            return this;
+        }
+        let row = this.wireIndexAt(hand.pos.y);
+        let newGate = seq(gate.gateFamily).minBy(g => Math.abs(g.height - (row - hand.resizingGateSlot.y)));
+        let newWireCount = Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y + 1);
+        let newCols = seq(this.circuitDefinition.columns).
+            withTransformedItem(hand.resizingGateSlot.x,
+                colObj => new GateColumn(seq(colObj.gates).
+                    withOverlayedItem(hand.resizingGateSlot.y, newGate).
+                    toArray())).
+            toArray();
+
+        return this.withCircuit(this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount)).
+            withHighlightedSlot(this._highlightedSlot);
     }
 
     /**
@@ -521,13 +593,23 @@ class CircuitWidget {
      * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
+        let {newCircuit, newHand} = this._tryGrabGate(hand, duplicate) || {newCircuit: this, newHand: hand};
+        return newCircuit._tryGrabResizeTab(newHand) || {newCircuit, newHand};
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @param {!boolean=} duplicate
+     * @returns {undefined|!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     */
+    _tryGrabGate(hand, duplicate=false) {
         if (hand.pos === undefined) {
-            return {newCircuit: this, newHand: hand};
+            return undefined;
         }
 
         let foundPt = this.findGateOverlappingPos(hand.pos);
         if (foundPt === undefined) {
-            return {newCircuit: this, newHand: hand};
+            return undefined;
         }
 
         let {col, row, offset} = foundPt;
@@ -547,6 +629,46 @@ class CircuitWidget {
                 this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGate(gate, offset)
         };
+    }
+
+    /**
+     * @param {undefined|!{col: !int, row: !int}} slot
+     * @returns {!CircuitWidget}
+     */
+    withHighlightedSlot(slot) {
+        return new CircuitWidget(
+            this.area,
+            this.circuitDefinition,
+            this._compressedColumnIndex,
+            slot);
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     */
+    _tryGrabResizeTab(hand) {
+        if (hand.isBusy() || hand.pos === undefined) {
+            return undefined;
+        }
+
+        for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
+            for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+                let gate = this.circuitDefinition.columns[col].gates[row];
+                if (gate === null) {
+                    continue;
+                }
+                let {isResizeHighlighted} =
+                    this._isHighlightedOrResizeTabShowingForGateInSlot(col, row, hand.hoverPoints());
+                if (isResizeHighlighted) {
+                    return {
+                        newCircuit: this.withHighlightedSlot({col, row}),
+                        newHand: hand.withResizeSlot(new Point(col, row))
+                    };
+                }
+            }
+        }
+        return undefined;
     }
 
     /**

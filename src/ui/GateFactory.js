@@ -20,9 +20,7 @@ export default class GateFactory {
  */
 GateFactory.MAKE_HIGHLIGHTED_DRAWER =
     (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
-        if (args.gate.canResize && args.isResizeShowing) {
-            GateFactory.paintResizeTab(args);
-        }
+        GateFactory.paintResizeTab(args);
         let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
         if (args.isHighlighted) {
             backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
@@ -38,14 +36,25 @@ GateFactory.MAKE_HIGHLIGHTED_DRAWER =
 GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
 
 /**
+ * @param {!Rect} gateRect
+ * @returns {!Rect}
+ */
+GateFactory.rectForResizeTab = gateRect =>
+    new Rect(gateRect.x+1, gateRect.bottom(), gateRect.w-2, Config.GATE_RADIUS * 2);
+
+/**
  * @param {!GateDrawParams} args
  */
 GateFactory.paintResizeTab = args => {
+    if (!args.isResizeShowing || !args.gate.canChangeInSize()) {
+        return;
+    }
+
     let d = Config.GATE_RADIUS;
-    let belowRect = new Rect(args.rect.x+1, args.rect.bottom(), args.rect.w-2, d * 2);
+    let belowRect = GateFactory.rectForResizeTab(args.rect);
     let {x: cx, y: cy} = belowRect.center();
     let backColor = Config.GATE_FILL_COLOR;
-    let foreColor = args.isResizeHighlighted ? 'black' : 'gray';
+    let foreColor = args.isResizeHighlighted ? '#222' : 'gray';
     args.painter.ctx.save();
     args.painter.fillRect(belowRect, backColor);
     args.painter.strokeRect(belowRect, backColor);
@@ -55,8 +64,15 @@ GateFactory.paintResizeTab = args => {
     args.painter.print('resize', cx, cy, 'center', 'middle', foreColor, 'monospace', belowRect.w - 4, belowRect.h - 4);
     args.painter.ctx.restore();
     args.painter.trace(tracer => {
+        let sys = [];
+        if (args.gate.canIncreaseInSize()) {
+            sys.push(+1);
+        }
+        if (args.gate.canDecreaseInSize()) {
+            sys.push(-1);
+        }
         for (let sx of [-1, +1]) {
-            for (let sy of [-1, +1]) {
+            for (let sy of sys) {
                 tracer.line(cx, cy + sy * d * 0.75, cx + sx * d * 0.3, cy + sy * d * 0.5);
             }
         }
@@ -73,21 +89,23 @@ const paintGateSymbol = args => {
     const font = '16px Helvetica';
     rect = rect.paddedBy(-2);
 
+    let note = args.gate.gateFamily.length > 1 ? "↕" : undefined;
     let noteIndex = symbol.indexOf('\n');
     if (noteIndex !== -1) {
-        if (args.isInToolbox || args.isHighlighted) {
-            painter.print(
-                symbol.substring(noteIndex + 1),
-                rect.x + rect.w,
-                rect.y + rect.h,
-                'right',
-                'bottom',
-                'black' ,
-                '10px Helvetica',
-                rect.w,
-                rect.h);
-        }
+        note = symbol.substring(noteIndex + 1);
         symbol = symbol.substring(0, noteIndex);
+    }
+    if (note !== undefined && (args.isInToolbox || args.isHighlighted)) {
+        painter.print(
+            note,
+            rect.x + rect.w,
+            rect.y + rect.h,
+            'right',
+            'bottom',
+            'black' ,
+            '12px Helvetica',
+            rect.w,
+            rect.h);
     }
 
     let parts = symbol.split("^");

@@ -103,6 +103,14 @@ const syncArea = ins => {
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
 const scheduleRedraw = () => redrawThrottle.trigger();
+let isShiftHeld = false;
+const setShiftHeld = newShift => {
+    if (newShift === isShiftHeld) {
+        return;
+    }
+    isShiftHeld = newShift;
+    scheduleRedraw();
+};
 const redrawNow = () => {
     if (!haveLoaded) {
         // Don't draw while loading. It's a huge source of false-positive circuit-load-failed errors during development.
@@ -128,8 +136,10 @@ const redrawNow = () => {
     canvas.height = size.h;
     let painter = new Painter(canvas);
     shown.updateArea(painter.paintableArea());
-    shown.paint(painter, stats);
+    shown.paint(painter, stats, isShiftHeld);
     painter.paintDeferred();
+    inspector.hand.paintCursor(painter);
+    canvas.style.cursor = painter.desiredCursorStyle;
 
     if (inspector.needsContinuousRedraw()) {
         window.requestAnimationFrame(scheduleRedraw);
@@ -246,6 +256,7 @@ window.addEventListener('resize', scheduleRedraw, false);
 
 // Keyboard shortcuts (undo, redo).
 document.addEventListener("keydown", e => {
+    setShiftHeld(e.shiftKey);
     const Y_KEY = 89;
     const Z_KEY = 90;
     let isUndo = e.keyCode === Z_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
@@ -257,6 +268,9 @@ document.addEventListener("keydown", e => {
     if (isRedo1 || isRedo2) {
         restore(revision.redo());
     }
+});
+document.addEventListener("keyup", e => {
+    setShiftHeld(e.shiftKey);
 });
 
 // Pull initial circuit out of URL '#x=y' arguments.

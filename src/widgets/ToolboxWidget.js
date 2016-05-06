@@ -131,6 +131,7 @@ class ToolboxWidget {
             let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
                 snapInside(painter.paintableArea().skipTop(gateRect.y));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
+            painter.setDesiredCursor('pointer');
         }
 
         let r = new Rect(0, 0, Config.TOOLBOX_MARGIN_X, this.area.h);
