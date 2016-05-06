@@ -1,6 +1,6 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
-import CircuitWidget from "src/widgets/CircuitWidget.js"
+import CircuitDisplay from "src/widgets/CircuitDisplay.js"
 import Config from "src/Config.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GateFactory from "src/ui/GateFactory.js"
@@ -16,12 +16,12 @@ import Util from "src/base/Util.js"
 export default class InspectorWidget {
     /**
      * @param {!Rect} drawArea
-     * @param {!CircuitWidget} circuitWidget
+     * @param {!CircuitDisplay} circuitWidget
      * @param {!ToolboxWidget} toolboxWidget
      * @param {!Hand} hand
      */
     constructor(drawArea, circuitWidget, toolboxWidget, hand) {
-        /** @type {!CircuitWidget} */
+        /** @type {!CircuitDisplay} */
         this.circuitWidget = circuitWidget;
         /** @type {!ToolboxWidget} */
         this.toolboxWidget = toolboxWidget;
@@ -46,7 +46,7 @@ export default class InspectorWidget {
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
         this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).
-            takeTop(CircuitWidget.desiredHeight(this.circuitWidget.circuitDefinition.numWires)));
+            takeTop(CircuitDisplay.desiredHeight(this.circuitWidget.circuitDefinition.numWires)));
     }
 
     /**
@@ -59,7 +59,7 @@ export default class InspectorWidget {
 
         return new InspectorWidget(
             drawArea,
-            new CircuitWidget(
+            new CircuitDisplay(
                 drawArea.skipTop(toolboxHeight).takeTop(250),
                 new CircuitDefinition(numWires, [])),
             new ToolboxWidget(drawArea.takeTop(toolboxHeight)),
@@ -137,7 +137,7 @@ export default class InspectorWidget {
     }
 
     /**
-     * @param {!CircuitWidget} circuitWidget
+     * @param {!CircuitDisplay} circuitWidget
      * @returns {!InspectorWidget}
      */
     withCircuitWidget(circuitWidget) {
@@ -214,12 +214,16 @@ export default class InspectorWidget {
             Hand.EMPTY);
     }
 
+    /**
+     * @param {undefined|!int=} wireCount
+     * @returns {!number}
+     */
     static defaultHeight(wireCount = undefined) {
         if (wireCount === undefined) {
             wireCount = Config.MIN_WIRE_COUNT;
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        let circuitHeight = CircuitWidget.desiredHeight(wireCount);
+        let circuitHeight = CircuitDisplay.desiredHeight(wireCount);
         return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight);
     }
 }

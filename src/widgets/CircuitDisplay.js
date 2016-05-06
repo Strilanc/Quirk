@@ -20,7 +20,7 @@ let CIRCUIT_OP_LEFT_SPACING = 35;
 /** @type {!number} */
 let CIRCUIT_OP_RIGHT_SPACING = 5;
 
-class CircuitWidget {
+class CircuitDisplay {
     /**
      *
      * @param {!Rect} area
@@ -67,7 +67,7 @@ class CircuitWidget {
             2 + // Wire chance and bloch sphere displays.
             1 // Density matrix displays.
         );
-        return r.x + CircuitWidget.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
+        return r.x + CircuitDisplay.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
     }
 
     /**
@@ -235,7 +235,7 @@ class CircuitWidget {
     }
 
     /**
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      */
     afterTidyingUp() {
         return this.withCircuit(this.circuitDefinition.
@@ -247,14 +247,14 @@ class CircuitWidget {
     }
 
     /**
-     * @param {!CircuitWidget|*} other
+     * @param {!CircuitDisplay|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
         if (this === other) {
             return true;
         }
-        return other instanceof CircuitWidget &&
+        return other instanceof CircuitDisplay &&
             this.area.isEqualTo(other.area) &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
             this._compressedColumnIndex === other._compressedColumnIndex;
@@ -463,7 +463,7 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      */
     previewDrop(hand) {
         return hand.heldGate !== undefined ? this._previewDropMovedGate(hand) : this._previewResizedGate(hand);
@@ -471,7 +471,7 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      * @private
      */
     _previewDropMovedGate(hand) {
@@ -501,7 +501,7 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      * @private
      */
     _previewResizedGate(hand) {
@@ -528,7 +528,7 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      */
     afterDropping(hand) {
         let r = this.previewDrop(hand);
@@ -538,10 +538,10 @@ class CircuitWidget {
 
     /**
      * @param {!CircuitDefinition} circuitDefinition
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      */
     withCircuit(circuitDefinition) {
-        return new CircuitWidget(
+        return new CircuitDisplay(
             this.area,
             circuitDefinition,
             this._compressedColumnIndex);
@@ -550,7 +550,7 @@ class CircuitWidget {
     /**
      * @param {!Hand} hand
      * @param {!int} extraWireCount
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      */
     withJustEnoughWires(hand, extraWireCount) {
         let neededWireCountForPlacement = hand.heldGate !== undefined ? hand.heldGate.height : 0;
@@ -590,7 +590,7 @@ class CircuitWidget {
     /**
      * @param {!Hand} hand
      * @param {!boolean=} duplicate
-     * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     * @returns {!{newCircuit: !CircuitDisplay, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
         let {newCircuit, newHand} = this._tryGrabGate(hand, duplicate) || {newCircuit: this, newHand: hand};
@@ -600,7 +600,7 @@ class CircuitWidget {
     /**
      * @param {!Hand} hand
      * @param {!boolean=} duplicate
-     * @returns {undefined|!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     * @returns {undefined|!{newCircuit: !CircuitDisplay, newHand: !Hand}}
      */
     _tryGrabGate(hand, duplicate=false) {
         if (hand.pos === undefined) {
@@ -624,7 +624,7 @@ class CircuitWidget {
             withOverlayedItem(col, new GateColumn(remainingGates)).
             toArray();
         return {
-            newCircuit: new CircuitWidget(
+            newCircuit: new CircuitDisplay(
                 this.area,
                 this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGate(gate, offset)
@@ -633,10 +633,10 @@ class CircuitWidget {
 
     /**
      * @param {undefined|!{col: !int, row: !int}} slot
-     * @returns {!CircuitWidget}
+     * @returns {!CircuitDisplay}
      */
     withHighlightedSlot(slot) {
-        return new CircuitWidget(
+        return new CircuitDisplay(
             this.area,
             this.circuitDefinition,
             this._compressedColumnIndex,
@@ -645,7 +645,7 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     * @returns {!{newCircuit: !CircuitDisplay, newHand: !Hand}}
      */
     _tryGrabResizeTab(hand) {
         if (hand.isBusy() || hand.pos === undefined) {
@@ -806,4 +806,4 @@ class CircuitWidget {
     }
 }
 
-export default CircuitWidget;
+export default CircuitDisplay;
