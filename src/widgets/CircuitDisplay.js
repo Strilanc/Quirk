@@ -283,7 +283,8 @@ class CircuitDisplay {
         // Initial value labels
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
             let wireRect = this.wireRect(row);
-            painter.printParagraph("|0⟩", wireRect.takeLeft(20), new Point(1, 0.5));
+            let y = wireRect.center().y;
+            painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px Helvetica', 20, Config.WIRE_SPACING);
         }
 
         // Wires (doubled-up for measured sections).
