@@ -23,16 +23,19 @@ let CIRCUIT_OP_RIGHT_SPACING = 5;
 class CircuitDisplay {
     /**
      *
-     * @param {!Rect} area
+     * @param {!number} top
      * @param {!CircuitDefinition} circuitDefinition
      * @param {null|!int} compressedColumnIndex
      * @param {undefined|!{col: !int, row: !int}} highlightedSlot
      */
-    constructor(area, circuitDefinition, compressedColumnIndex=null, highlightedSlot=undefined) {
+    constructor(top, circuitDefinition, compressedColumnIndex=null, highlightedSlot=undefined) {
+        if (!Number.isInteger(top)) {
+            throw new DetailedError("Bad top", {top, circuitDefinition});
+        }
         /**
-         * @type {!Rect}
+         * @type {!number}
          */
-        this.area = area;
+        this.top = top;
         /**
          * @type {!CircuitDefinition}
          */
@@ -67,14 +70,7 @@ class CircuitDisplay {
             2 + // Wire chance and bloch sphere displays.
             1 // Density matrix displays.
         );
-        return r.x + CircuitDisplay.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
-    }
-
-    /**
-     * @param {!Rect} drawArea
-     */
-    updateArea(drawArea) {
-        this.area = drawArea;
+        return r.x + this.height() + 5; // Superposition display.
     }
 
     /**
@@ -83,9 +79,9 @@ class CircuitDisplay {
      */
     wireRect(wireIndex) {
         if (wireIndex < 0) {
-            throw new DetailedError("wireIndex < 0", {wireIndex});
+            throw new DetailedError("Bad wireIndex", {wireIndex});
         }
-        return new Rect(this.area.x, this.area.y + Config.WIRE_SPACING * wireIndex, this.area.w, Config.WIRE_SPACING);
+        return new Rect(0, this.top + Config.WIRE_SPACING * wireIndex, Infinity, Config.WIRE_SPACING);
     }
 
     /**
@@ -93,11 +89,7 @@ class CircuitDisplay {
      * @returns {undefined|!int}
      */
     findWireAt(p) {
-        if (!this.area.containsPoint(p)) {
-            return undefined;
-        }
-
-        let i = Math.floor((p.y - this.area.y) / Config.WIRE_SPACING);
+        let i = Math.floor((p.y - this.top) / Config.WIRE_SPACING);
         if (i < 0 || i >= this.circuitDefinition.numWires) {
             return undefined;
         }
@@ -109,7 +101,7 @@ class CircuitDisplay {
      * @returns {!int}
      */
     wireIndexAt(y) {
-        return Math.floor((y - this.area.y) / Config.WIRE_SPACING);
+        return Math.floor((y - this.top) / Config.WIRE_SPACING);
     }
 
     /**
@@ -119,17 +111,17 @@ class CircuitDisplay {
      */
     findContinuousColumnX(p) {
         let s = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS * 2);
-        let left = this.area.x + CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
+        let left = CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
         let dg = (p.x - left) / s;
         return dg - 0.5;
     }
 
     /**
      * @param {!Point} p
-     * @returns {?number}
+     * @returns {undefined|!number}
      */
     findOpHalfColumnAt(p) {
-        if (!this.area.containsPoint(p)) {
+        if (p.x < 0 || p.y < top || p.y > top + this.height()) {
             return undefined;
         }
 
@@ -141,7 +133,7 @@ class CircuitDisplay {
      * @returns {undefined|!int}
      */
     findExistingOpColumnAt(p) {
-        if (!this.area.containsPoint(p)) {
+        if (p.x < 0 || p.y < top || p.y > top + this.height()) {
             return undefined;
         }
 
@@ -213,7 +205,11 @@ class CircuitDisplay {
         }
 
         let dx = opSeparation * operationIndex - tweak + CIRCUIT_OP_LEFT_SPACING;
-        return this.area.withX(this.area.x + dx).withW(opWidth);
+        return new Rect(dx, this.top, opWidth, this.height());
+    }
+
+    height() {
+        return CircuitDisplay.desiredHeight(this.circuitDefinition.numWires);
     }
 
     /**
@@ -255,7 +251,7 @@ class CircuitDisplay {
             return true;
         }
         return other instanceof CircuitDisplay &&
-            this.area.isEqualTo(other.area) &&
+            this.top === other.top &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
             this._compressedColumnIndex === other._compressedColumnIndex;
     }
@@ -267,7 +263,9 @@ class CircuitDisplay {
      * @param {!boolean} shift
      */
     paint(painter, hand, stats, shift) {
-        painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
+        painter.fillRect(
+            new Rect(0, this.top, this.height(), painter.canvas.clientWidth,
+            Config.BACKGROUND_COLOR_CIRCUIT));
 
         this.drawWires(painter);
 
@@ -293,9 +291,9 @@ class CircuitDisplay {
             for (let row = 0; row < this.circuitDefinition.numWires; row++) {
                 let wireRect = this.wireRect(row);
                 let y = Math.round(wireRect.center().y - 0.5) + 0.5;
-                let lastX = this.area.x + 25;
+                let lastX = 25;
                 //noinspection ForLoopThatDoesntUseLoopVariableJS
-                for (let col = 0; lastX < this.area.right(); col++) {
+                for (let col = 0; lastX < painter.canvas.width; col++) {
                     let x = this.opRect(col).center().x;
                     if (this.circuitDefinition.locIsMeasured(new Point(col, row))) {
                         // Measured wire.
@@ -542,7 +540,7 @@ class CircuitDisplay {
      */
     withCircuit(circuitDefinition) {
         return new CircuitDisplay(
-            this.area,
+            this.top,
             circuitDefinition,
             this._compressedColumnIndex);
     }
@@ -625,7 +623,7 @@ class CircuitDisplay {
             toArray();
         return {
             newCircuit: new CircuitDisplay(
-                this.area,
+                this.top,
                 this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGate(gate, offset)
         };
@@ -637,7 +635,7 @@ class CircuitDisplay {
      */
     withHighlightedSlot(slot) {
         return new CircuitDisplay(
-            this.area,
+            this.top,
             this.circuitDefinition,
             this._compressedColumnIndex,
             slot);

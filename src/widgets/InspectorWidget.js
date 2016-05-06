@@ -45,8 +45,6 @@ export default class InspectorWidget {
 
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
-        this.circuitWidget.updateArea(drawArea.skipTop(toolboxHeight).
-            takeTop(CircuitDisplay.desiredHeight(this.circuitWidget.circuitDefinition.numWires)));
     }
 
     /**
@@ -60,7 +58,7 @@ export default class InspectorWidget {
         return new InspectorWidget(
             drawArea,
             new CircuitDisplay(
-                drawArea.skipTop(toolboxHeight).takeTop(250),
+                toolboxHeight,
                 new CircuitDefinition(numWires, [])),
             new ToolboxWidget(drawArea.takeTop(toolboxHeight)),
             Hand.EMPTY);
