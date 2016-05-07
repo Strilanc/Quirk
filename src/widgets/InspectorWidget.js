@@ -89,7 +89,7 @@ export default class InspectorWidget {
         }
 
         let gate = this.hand.heldGate;
-        let pos = this.hand.pos.minus(this.hand.heldGateOffset);
+        let pos = this.hand.pos.minus(this.hand.holdOffset);
         let rect = new Rect(
             pos.x,
             pos.y,

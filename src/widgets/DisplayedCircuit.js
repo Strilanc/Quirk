@@ -162,7 +162,7 @@ class DisplayedCircuit {
         if (hand.pos === undefined || hand.heldGate === undefined) {
             return undefined;
         }
-        let pos = hand.pos.minus(hand.heldGateOffset).plus(new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
+        let pos = hand.pos.minus(hand.holdOffset).plus(new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
         let halfColIndex = this.findOpHalfColumnAt(pos);
         let row = this.indexOfDisplayedRowAt(pos.y);
         if (halfColIndex === undefined || row === undefined) {
@@ -522,8 +522,10 @@ class DisplayedCircuit {
         if (gate === undefined) {
             return this;
         }
-        let row = Math.min(this.wireIndexAt(hand.pos.y), Config.MAX_WIRE_COUNT);
-        let newGate = seq(gate.gateFamily).minBy(g => Math.abs(g.height - (row - hand.resizingGateSlot.y)));
+        let row = Math.min(
+            this.wireIndexAt(hand.pos.y - hand.holdOffset.y),
+            Config.MAX_WIRE_COUNT - 1);
+        let newGate = seq(gate.gateFamily).minBy(g => Math.abs(g.height - (row - hand.resizingGateSlot.y + 1)));
         let newWireCount = Math.min(Config.MAX_WIRE_COUNT,
             Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y + 1));
         let newCols = seq(this.circuitDefinition.columns).
@@ -688,9 +690,10 @@ class DisplayedCircuit {
                 let {isResizeHighlighted} =
                     this._highlightStatusAt(col, row, hand.hoverPoints());
                 if (isResizeHighlighted) {
+                    let offset = hand.pos.minus(this.gateRect(row + gate.height - 1, col, 1, 1).center());
                     return {
                         newCircuit: this._withHighlightedSlot({col, row, resizeStyle: true}),
-                        newHand: hand.withResizeSlot(new Point(col, row))
+                        newHand: hand.withResizeSlot(new Point(col, row), offset)
                     };
                 }
             }
