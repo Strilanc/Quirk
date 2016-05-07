@@ -515,21 +515,48 @@ suite.test("rotation", () => {
     assertThat(Matrix.rotation(t)).isApproximatelyEqualTo(Matrix.square(1, 0, 0, 1));
 });
 
-suite.test("singularValueDecomposition_2x2", () => {
-    let z = Matrix.square(0, 0, 0, 0).singularValueDecomposition();
-    assertThat(z.u).isApproximatelyEqualTo(Matrix.identity(2));
-    assertThat(z.s).isApproximatelyEqualTo(Matrix.square(0, 0, 0, 0));
-    assertThat(z.v).isApproximatelyEqualTo(Matrix.identity(2));
+const assertSvdDecompositionWorksFor = m => {
+    let {U, S, V} = m.singularValueDecomposition(0.000001, 100);
+    assertThat(U.isUnitary(0.00001)).withInfo({m, U, S, V, test: "U isUnitary"}).isEqualTo(true);
+    assertThat(V.isUnitary(0.00001)).withInfo({m, U, S, V, test: "V isUnitary"}).isEqualTo(true);
+    assertThat(S.isDiagonal(0.00001)).withInfo({m, U, S, V, test: "S diagonal"}).isEqualTo(true);
+    assertThat(Seq.range(S.width()).every(i => Math.abs(S.cell(i, i).phase()) < 0.000001)).
+        withInfo({m, U, S, V, test: "S is positive"}).isEqualTo(true);
+    assertThat(U.times(S).times(V)).withInfo({m, U, S, V}).isApproximatelyEqualTo(m, 0.0001);
+};
 
-    let i = Matrix.identity(2).singularValueDecomposition();
-    assertThat(i.u).isApproximatelyEqualTo(Matrix.identity(2));
-    assertThat(i.s).isApproximatelyEqualTo(Matrix.identity(2));
-    assertThat(i.v).isApproximatelyEqualTo(Matrix.identity(2));
+suite.test("singularValueDecomposition", () => {
+    assertThat(Matrix.zero(2, 2).singularValueDecomposition()).isEqualTo({
+        U: Matrix.identity(2),
+        S: Matrix.zero(2, 2),
+        V: Matrix.identity(2)
+    });
 
-    let am = Matrix.square(1, Complex.I.times(2), 3, 4);
-    let ad = am.singularValueDecomposition();
-    assertThat(ad.u.times(ad.s).times(ad.v)).isApproximatelyEqualTo(am);
-    assertThat(ad.s).isApproximatelyEqualTo(Matrix.square(5.305935, 0, 0, 1.359063));
+    assertThat(Matrix.identity(2).singularValueDecomposition()).isEqualTo({
+        U: Matrix.identity(2),
+        S: Matrix.identity(2),
+        V: Matrix.identity(2)
+    });
+
+    assertSvdDecompositionWorksFor(Matrix.square(1, Complex.I.times(2), 3, 4));
+    assertSvdDecompositionWorksFor(Matrix.square(
+        new Complex(2, 3), new Complex(5, 7),
+        new Complex(11, 13), new Complex(17, 19)));
+    assertSvdDecompositionWorksFor(Matrix.square(
+        new Complex(2, 3), new Complex(5, 7), new Complex(11, 13),
+        new Complex(17, 19), new Complex(23, 29), new Complex(31, 37),
+        new Complex(41, 43), new Complex(47, 53), new Complex(59, 61)));
+    assertSvdDecompositionWorksFor(Matrix.square(
+        new Complex(2, 3), new Complex(5, 7), new Complex(11, 13),
+        new Complex(17, 19), new Complex(-23, 29), new Complex(31, 37),
+        new Complex(41, -43), new Complex(47, -53), new Complex(59, 61)));
+});
+
+suite.test("singularValueDecomposition_randomized", () => {
+    for (let k = 1; k < 5; k++) {
+        let m = Matrix.generate(k, k, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
+        assertSvdDecompositionWorksFor(m);
+    }
 });
 
 suite.test("closestUnitary_2x2", () => {
@@ -786,8 +813,15 @@ suite.test("isUpperTriangular", () => {
     assertFalse(Matrix.col(1, 2).isUpperTriangular());
     assertTrue(Matrix.row(1, 2).isUpperTriangular());
 
+    assertTrue(Matrix.square(1, 0, 0, 0).isUpperTriangular());
+    assertTrue(Matrix.square(0, 1, 0, 0).isUpperTriangular());
+    assertFalse(Matrix.square(0, 0, 1, 0).isUpperTriangular());
+    assertTrue(Matrix.square(0, 0, 0, 1).isUpperTriangular());
+
     assertTrue(Matrix.square(1, 2, 0, 4).isUpperTriangular());
     assertTrue(Matrix.square(1, NaN, 0, 4).isUpperTriangular());
+    assertFalse(Matrix.square(1, 0, 2, 4).isUpperTriangular());
+    assertFalse(Matrix.square(1, 0, NaN, 4).isUpperTriangular());
     assertFalse(Matrix.square(1, 2, 3, 4).isUpperTriangular());
     assertFalse(Matrix.square(1, 2, NaN, 4).isUpperTriangular());
     assertFalse(Matrix.square(1, 2, Complex.I, 4).isUpperTriangular());
@@ -808,11 +842,51 @@ suite.test("isUpperTriangular", () => {
         0.01, 0, 7).isUpperTriangular(0.1));
 });
 
+suite.test("isLowerTriangular", () => {
+    assertTrue(Matrix.solo(NaN).isLowerTriangular());
+    assertTrue(Matrix.solo(0).isLowerTriangular());
+    assertTrue(Matrix.solo(1).isLowerTriangular());
+    assertTrue(Matrix.col(1, 2).isLowerTriangular());
+    assertFalse(Matrix.row(1, 2).isLowerTriangular());
+
+    assertTrue(Matrix.square(1, 0, 0, 0).isLowerTriangular());
+    assertFalse(Matrix.square(0, 1, 0, 0).isLowerTriangular());
+    assertTrue(Matrix.square(0, 0, 1, 0).isLowerTriangular());
+    assertTrue(Matrix.square(0, 0, 0, 1).isLowerTriangular());
+
+    assertFalse(Matrix.square(1, 2, 0, 4).isLowerTriangular());
+    assertFalse(Matrix.square(1, NaN, 0, 4).isLowerTriangular());
+    assertTrue(Matrix.square(1, 0, 2, 4).isLowerTriangular());
+    assertTrue(Matrix.square(1, 0, NaN, 4).isLowerTriangular());
+    assertFalse(Matrix.square(1, 2, 3, 4).isLowerTriangular());
+    assertFalse(Matrix.square(1, 2, NaN, 4).isLowerTriangular());
+    assertFalse(Matrix.square(1, 2, Complex.I, 4).isLowerTriangular());
+    assertFalse(Matrix.square(1, 3, 2, 4).isLowerTriangular(2.9));
+    assertTrue(Matrix.square(1, 3, 2, 4).isLowerTriangular(3.1));
+
+    assertFalse(Matrix.square(
+        1, 2, 3,
+        0, 5, 6,
+        0, 0, 7).isLowerTriangular(0));
+    assertTrue(Matrix.square(
+        1, 0, 0,
+        2, 5, 0,
+        3, 6, 7).isLowerTriangular(0));
+    assertFalse(Matrix.square(
+        1, 0, 0.01,
+        2, 5, 0,
+        3, 6, 7).isLowerTriangular(0));
+    assertTrue(Matrix.square(
+        1, 0, 0.01,
+        2, 5, 0,
+        3, 6, 7).isLowerTriangular(0.1));
+});
+
 const assertQrDecompositionWorksFor = m => {
     let {Q, R} = m.qrDecomposition();
     assertThat(Q.isUnitary(0.00001)).withInfo({m, Q, R, test: "isUnitary"}).isEqualTo(true);
     assertThat(R.isUpperTriangular(0.00001)).withInfo({m, Q, R, test: "isUpperTriangular"}).isEqualTo(true);
-    assertThat(Q.times(R)).withInfo({m, Q, R, QR: Q.times(R)}).isApproximatelyEqualTo(m);
+    assertThat(Q.times(R)).withInfo({m, Q, R}).isApproximatelyEqualTo(m);
 };
 
 suite.test("qrDecomposition", () => {
@@ -831,15 +905,52 @@ suite.test("qrDecomposition", () => {
         R: Matrix.square(3.60555, 4.16025, 0, 2.7735)
     }, 0.0001);
     assertQrDecompositionWorksFor(Matrix.square(0, 0, 1, 0));
+    assertQrDecompositionWorksFor(Matrix.square(0, 1, 0, 0));
     assertQrDecompositionWorksFor(Matrix.square(2, 0, 3, 5));
     assertQrDecompositionWorksFor(Matrix.square(-1, Complex.I, Complex.I, 1));
     assertQrDecompositionWorksFor(Matrix.square(2, 3, 5, 7, new Complex(11, 13), 17, 19, 23, 29));
 });
 
 suite.test("qrDecomposition_randomized", () => {
-    for (let k = 1; k < 10; k++) {
+    for (let k = 1; k < 6; k++) {
         let m = Matrix.generate(k, k, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
         assertQrDecompositionWorksFor(m);
+    }
+});
+
+const assertLqDecompositionWorksFor = m => {
+    let {L, Q} = m.lqDecomposition();
+    assertThat(Q.isUnitary(0.00001)).withInfo({m, L, Q, test: "isUnitary"}).isEqualTo(true);
+    assertThat(L.isLowerTriangular(0.00001)).withInfo({m, L, Q, test: "isLowerTriangular"}).isEqualTo(true);
+    assertThat(L.times(Q)).withInfo({m, L, Q}).isApproximatelyEqualTo(m);
+};
+
+suite.test("lqDecomposition", () => {
+    assertThrows(() => Matrix.col(2, 3).lqDecomposition());
+    assertThrows(() => Matrix.row(2, 3).lqDecomposition());
+
+    assertThat(Matrix.solo(0).lqDecomposition()).isEqualTo({L: Matrix.solo(0), Q: Matrix.solo(1)});
+    assertThat(Matrix.solo(1).lqDecomposition()).isEqualTo({L: Matrix.solo(1), Q: Matrix.solo(1)});
+
+    assertThat(Matrix.square(2, 3, 0, 5).lqDecomposition()).isApproximatelyEqualTo({
+        L: Matrix.square(3.60555, 0, 4.16025, 2.7735),
+        Q: Matrix.square(0.5547, 0.83205, -0.83205, 0.5547)
+    }, 0.0001);
+    assertThat(Matrix.square(2, 0, 3, 5).lqDecomposition()).isEqualTo({
+        L: Matrix.square(2, 0, 3, 5),
+        Q: Matrix.square(1, 0, 0, 1)
+    });
+    assertLqDecompositionWorksFor(Matrix.square(0, 0, 1, 0));
+    assertLqDecompositionWorksFor(Matrix.square(0, 1, 0, 0));
+    assertLqDecompositionWorksFor(Matrix.square(2, 0, 3, 5));
+    assertLqDecompositionWorksFor(Matrix.square(-1, Complex.I, Complex.I, 1));
+    assertLqDecompositionWorksFor(Matrix.square(2, 3, 5, 7, new Complex(11, 13), 17, 19, 23, 29));
+});
+
+suite.test("lqDecomposition_randomized", () => {
+    for (let k = 1; k < 6; k++) {
+        let m = Matrix.generate(k, k, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
+        assertLqDecompositionWorksFor(m);
     }
 });
 

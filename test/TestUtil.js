@@ -320,6 +320,7 @@ export class Suite {
 
             if (!__webGLSupportPresent) {
                 console.warn(`Skipping ${this.name}.${name} due to lack of WebGL support.`);
+                assertThat(undefined); // Cancel 'no assertion' warning.
                 return;
             }
 

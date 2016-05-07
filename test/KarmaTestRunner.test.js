@@ -18,10 +18,19 @@ let promiseRunTest = (suite, name, method) => {
     };
     let status = {warn_only: false};
 
-    let t0 = performance.now();
-    let promise = tryPromiseRun(() => method(status));
+    let t0;
+    let t1;
+    let promise = tryPromiseRun(() => {
+        t0 = performance.now();
+        let result = method(status);
+        t1 = performance.now(); // Hack: only measures the synchronous time.
+        return result;
+    });
     let finish = () => {
-        result.time = performance.now() - t0;
+        result.time = t1 - t0;
+        if (result.time > 1000) {
+            console.warn(`${suite.name}.${name} took ${Math.ceil(result.time)}ms to run.`)
+        }
         __karma__.result(result);
         return result;
     };
