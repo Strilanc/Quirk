@@ -292,8 +292,8 @@ Gates.HalfTurns = {
 const IncGateMaker = span => new Gate(
     "+1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
-    span + "-Bit Increment Gate",
-    "Adds 1 to the little-endian number represented by " + span + " qubits."
+    "Increment Gate",
+    "Adds 1 to the little-endian number represented by a block of qubits."
 ).withSerializedId("inc" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1));
@@ -301,8 +301,8 @@ const IncGateMaker = span => new Gate(
 const DecGateMaker = span => new Gate(
     "-1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
-    span + "-Bit Decrement Gate",
-    "Subtracts 1 from the little-endian number represented by " + span + " qubits."
+    "Decrement Gate",
+    "Subtracts 1 from the little-endian number represented by a block of qubits."
 ).withSerializedId("dec" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1));
