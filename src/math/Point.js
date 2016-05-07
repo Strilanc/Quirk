@@ -77,4 +77,15 @@ export default class Point {
     times(c) {
         return new Point(this.x * c, this.y * c);
     }
+
+    /**
+     * Returns the Euclidean distance between the receiving point and the given point.
+     * @param {!Point} other
+     * @returns {!number}
+     */
+    distanceTo(other) {
+        let dx = this.x - other.x;
+        let dy = this.y - other.y;
+        return Math.sqrt(dx*dx + dy*dy);
+    }
 }

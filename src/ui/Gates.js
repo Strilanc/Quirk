@@ -117,7 +117,8 @@ Gates.Displays = {
             MathPainter.paintProbabilityBox(
                 args.painter,
                 args.stats.controlledWireProbabilityJustAfter(row, col),
-                args.rect);
+                args.rect,
+                args.focusPoints);
         }
 
         if (showText) {
@@ -144,7 +145,7 @@ Gates.Displays = {
         if (showState) {
             let {row, col} = args.positionInCircuit;
             let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
+            MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
         }
 
         if (showText) {
