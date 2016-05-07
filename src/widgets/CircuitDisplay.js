@@ -524,8 +524,14 @@ class CircuitDisplay {
                     toArray())).
             toArray();
 
-        return this.withCircuit(this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount)).
-            withHighlightedSlot(this._highlightedSlot);
+        let newCircuitWithoutHeightFix = this.circuitDefinition.withColumns(newCols).
+            withWireCount(newWireCount);
+        let newCircuit = newCircuitWithoutHeightFix.withHeightOverlapsFixed();
+        let result = this.withCircuit(newCircuit).withHighlightedSlot(this._highlightedSlot);
+        if (!newCircuitWithoutHeightFix.isEqualTo(newCircuit)) {
+            result._compressedColumnIndex = hand.resizingGateSlot.x + 1;
+        }
+        return result;
     }
 
     /**
