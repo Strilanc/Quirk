@@ -2,6 +2,7 @@ import DetailedError from "src/base/DetailedError.js"
 import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
+import GateShaders from "src/circuit/GateShaders.js"
 import { seq, Seq } from "src/base/Seq.js"
 import Shaders from "src/webgl/Shaders.js"
 import WglTexture from "src/webgl/WglTexture.js"
@@ -150,7 +151,7 @@ CircuitTextures.applyCustomShader = (customShader, inputTex, controlTex) => {
  */
 CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
     let result = allocSameSizedTexture(stateTex);
-    CircuitShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
+    GateShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
     return result;
 };
 

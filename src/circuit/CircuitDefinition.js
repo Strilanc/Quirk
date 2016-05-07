@@ -551,7 +551,7 @@ class CircuitDefinition {
                     return (inTex, conTex) => gate.customShader(inTex, conTex, i);
                 }
 
-                return (inTex, conTex) => CircuitShaders.qubitOperation(inTex, m, i, conTex);
+                return (inTex, conTex) => GateShaders.qubitOperation(inTex, m, i, conTex);
             }).
             filter(e => e !== null);
         let swaps = col.swapPairs().
