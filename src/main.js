@@ -85,10 +85,10 @@ const getCircuitCycleTime = (() => {
 let currentCircuitStatsCache =
     new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
-let desiredCanvasSize = () => {
+let desiredCanvasSizeFor = curInspector => {
     return {
-        w: Math.max(canvasDiv.clientWidth, inspector.desiredWidth()),
-        h: InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires)
+        w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
+        h: InspectorWidget.defaultHeight(curInspector.circuitWidget.circuitDefinition.numWires)
     };
 };
 
@@ -97,7 +97,7 @@ let desiredCanvasSize = () => {
  * @returns {!InspectorWidget}
  */
 const syncArea = ins => {
-    let size = desiredCanvasSize();
+    let size = desiredCanvasSizeFor(ins);
     ins.updateArea(new Rect(0, 0, size.w, size.h));
     return ins;
 };
@@ -133,7 +133,7 @@ const redrawNow = () => {
     }
     let stats = currentCircuitStatsCache.statsAtApproximateTime(getCircuitCycleTime());
 
-    let size = desiredCanvasSize();
+    let size = desiredCanvasSizeFor(shown);
     canvas.width = size.w;
     canvas.height = size.h;
     let painter = new Painter(canvas);

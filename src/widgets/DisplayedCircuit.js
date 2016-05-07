@@ -522,9 +522,10 @@ class DisplayedCircuit {
         if (gate === undefined) {
             return this;
         }
-        let row = this.wireIndexAt(hand.pos.y);
+        let row = Math.min(this.wireIndexAt(hand.pos.y), Config.MAX_WIRE_COUNT);
         let newGate = seq(gate.gateFamily).minBy(g => Math.abs(g.height - (row - hand.resizingGateSlot.y)));
-        let newWireCount = Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y + 1);
+        let newWireCount = Math.min(Config.MAX_WIRE_COUNT,
+            Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y + 1));
         let newCols = seq(this.circuitDefinition.columns).
             withTransformedItem(hand.resizingGateSlot.x,
                 colObj => new GateColumn(seq(colObj.gates).
