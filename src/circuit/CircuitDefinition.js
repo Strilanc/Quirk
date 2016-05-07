@@ -21,7 +21,10 @@ class CircuitDefinition {
      */
     constructor(numWires, columns) {
         if (numWires < 0) {
-            throw new DetailedError("numWires < 0", {numWires})
+            throw new DetailedError("Bad numWires", {numWires})
+        }
+        if (!Array.isArray(columns)) {
+            throw new DetailedError("Bad columns", {numWires, columns})
         }
         if (!columns.every(e => e instanceof GateColumn)) {
             throw new DetailedError("Not a GateColumn", {columns})

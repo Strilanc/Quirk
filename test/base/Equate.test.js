@@ -1,4 +1,4 @@
-import { Suite, fail } from "test/TestUtil.js"
+import { Suite, fail, assertTrue, assertFalse } from "test/TestUtil.js"
 import equate from "src/base/Equate.js"
 
 import describe from "src/base/Describe.js"
@@ -99,6 +99,9 @@ suite.test("groups", () => {
             {frump: new Map([["trump", [1, new Set([2, "a"]), new Float32Array(5)]]])}
         ]
     ];
+
+    assertTrue(equate(1, 1));
+    assertFalse(equate(1, 2));
 
     for (let g1 of groups) {
         for (let g2 of groups) {
