@@ -25,10 +25,10 @@ class DisplayedCircuit {
      *
      * @param {!number} top
      * @param {!CircuitDefinition} circuitDefinition
-     * @param {null|!int} compressedColumnIndex
+     * @param {undefined|!int} compressedColumnIndex
      * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} highlightedSlot
      */
-    constructor(top, circuitDefinition, compressedColumnIndex=null, highlightedSlot=undefined) {
+    constructor(top, circuitDefinition, compressedColumnIndex=undefined, highlightedSlot=undefined) {
         if (!Number.isInteger(top)) {
             throw new DetailedError("Bad top", {top, circuitDefinition});
         }
@@ -44,7 +44,7 @@ class DisplayedCircuit {
          */
         this.circuitDefinition = circuitDefinition;
         /**
-         * @type {null|!int}
+         * @type {undefined|!int}
          * @private
          */
         this._compressedColumnIndex = compressedColumnIndex;
@@ -142,7 +142,7 @@ class DisplayedCircuit {
 
         let x = this.findContinuousColumnX(p);
         let i;
-        if (this._compressedColumnIndex === null || x < this._compressedColumnIndex - 0.75) {
+        if (this._compressedColumnIndex === undefined || x < this._compressedColumnIndex - 0.75) {
             i = Math.round(x);
         } else if (x < this._compressedColumnIndex - 0.25) {
             i = this._compressedColumnIndex;
@@ -200,10 +200,10 @@ class DisplayedCircuit {
         let opWidth = Config.GATE_RADIUS * 2;
         let opSeparation = opWidth + CIRCUIT_OP_HORIZONTAL_SPACING;
         let tweak = 0;
-        if (this._compressedColumnIndex !== null && operationIndex === this._compressedColumnIndex) {
+        if (this._compressedColumnIndex !== undefined && operationIndex === this._compressedColumnIndex) {
             tweak = opSeparation / 2;
         }
-        if (this._compressedColumnIndex !== null && operationIndex > this._compressedColumnIndex) {
+        if (this._compressedColumnIndex !== undefined && operationIndex > this._compressedColumnIndex) {
             tweak = opSeparation;
         }
 
@@ -504,10 +504,9 @@ class DisplayedCircuit {
             withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
 
-        let result = this.withCircuit(this.circuitDefinition.withColumns(newCols)).
-            withHighlightedSlot({row: modificationPoint.row, col: modificationPoint.col, resizeStyle: false});
-        result._compressedColumnIndex = isInserting ? i : null;
-        return result;
+        return this.withCircuit(this.circuitDefinition.withColumns(newCols)).
+            _withHighlightedSlot({row: modificationPoint.row, col: modificationPoint.col, resizeStyle: false}).
+            _withCompressedColumnIndex(isInserting ? i : undefined);
     }
 
     /**
@@ -536,11 +535,11 @@ class DisplayedCircuit {
         let newCircuitWithoutHeightFix = this.circuitDefinition.withColumns(newCols).
             withWireCount(newWireCount);
         let newCircuit = newCircuitWithoutHeightFix.withHeightOverlapsFixed();
-        let result = this.withCircuit(newCircuit).withHighlightedSlot(this._highlightedSlot);
-        if (!newCircuitWithoutHeightFix.isEqualTo(newCircuit)) {
-            result._compressedColumnIndex = hand.resizingGateSlot.x + 1;
-        }
-        return result;
+        return this.withCircuit(newCircuit).
+            _withHighlightedSlot(this._highlightedSlot).
+            _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
+                undefined :
+                hand.resizingGateSlot.x + 1);
     }
 
     /**
@@ -548,9 +547,7 @@ class DisplayedCircuit {
      * @returns {!DisplayedCircuit}
      */
     afterDropping(hand) {
-        let r = this.previewDrop(hand);
-        r._compressedColumnIndex = null;
-        return r;
+        return this.previewDrop(hand)._withCompressedColumnIndex(undefined);
     }
 
     /**
@@ -610,8 +607,8 @@ class DisplayedCircuit {
      * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
-        let {newCircuit, newHand} = this._tryGrabResizeTab(hand, duplicate) || {newCircuit: this, newHand: hand};
-        return newCircuit._tryGrabGate(newHand) || {newCircuit, newHand};
+        let {newCircuit, newHand} = this._tryGrabResizeTab(hand) || {newCircuit: this, newHand: hand};
+        return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
     }
 
     /**
@@ -652,12 +649,24 @@ class DisplayedCircuit {
      * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
      * @returns {!DisplayedCircuit}
      */
-    withHighlightedSlot(slot) {
+    _withHighlightedSlot(slot) {
         return new DisplayedCircuit(
             this.top,
             this.circuitDefinition,
             this._compressedColumnIndex,
             slot);
+    }
+
+    /**
+     * @param {undefined|!int} compressedColumnIndex
+     * @returns {!DisplayedCircuit}
+     */
+    _withCompressedColumnIndex(compressedColumnIndex) {
+        return new DisplayedCircuit(
+            this.top,
+            this.circuitDefinition,
+            compressedColumnIndex,
+            this._highlightedSlot);
     }
 
     /**
@@ -679,7 +688,7 @@ class DisplayedCircuit {
                     this._highlightStatusAt(col, row, hand.hoverPoints());
                 if (isResizeHighlighted) {
                     return {
-                        newCircuit: this.withHighlightedSlot({col, row, resizeStyle: true}),
+                        newCircuit: this._withHighlightedSlot({col, row, resizeStyle: true}),
                         newHand: hand.withResizeSlot(new Point(col, row))
                     };
                 }
