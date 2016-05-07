@@ -135,19 +135,19 @@ suite.test("bootstrap_diagram", () => {
     });
 });
 
-suite.test("findWireAt", () => {
+suite.test("indexOfDisplayedRowAt", () => {
     let {circuit, pts} = diagram(`|0
                                   |1+-+-
                                   |   2
                                   |-+3+-
                                   |  4`);
 
-    assertThat(circuit.findWireAt(-9999)).isEqualTo(undefined);
-    assertThat(circuit.findWireAt(+9999)).isEqualTo(undefined);
+    assertThat(circuit.indexOfDisplayedRowAt(-9999)).isEqualTo(undefined);
+    assertThat(circuit.indexOfDisplayedRowAt(+9999)).isEqualTo(undefined);
 
-    assertThat(circuit.findWireAt(pts[0].y)).isEqualTo(0);
-    assertThat(circuit.findWireAt(pts[1].y)).isEqualTo(0);
-    assertThat(circuit.findWireAt(pts[2].y)).isEqualTo(1);
-    assertThat(circuit.findWireAt(pts[3].y)).isEqualTo(1);
-    assertThat(circuit.findWireAt(pts[4].y)).isEqualTo(undefined);
+    assertThat(circuit.indexOfDisplayedRowAt(pts[0].y)).isEqualTo(0);
+    assertThat(circuit.indexOfDisplayedRowAt(pts[1].y)).isEqualTo(0);
+    assertThat(circuit.indexOfDisplayedRowAt(pts[2].y)).isEqualTo(1);
+    assertThat(circuit.indexOfDisplayedRowAt(pts[3].y)).isEqualTo(1);
+    assertThat(circuit.indexOfDisplayedRowAt(pts[4].y)).isEqualTo(undefined);
 });

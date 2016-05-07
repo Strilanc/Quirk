@@ -90,9 +90,29 @@ class DisplayedCircuit {
 
     /**
      * @param {!number} y
+     * @returns {!int}
+     */
+    wireIndexAt(y) {
+        return Math.floor((y - this.top) / Config.WIRE_SPACING);
+    }
+
+    //noinspection JSMethodCanBeStatic
+    /**
+     * @param {!number} x
+     * @returns {!number} The continuous column-space coordinate corresponding to the given display-space coordinate.
+     * @private
+     */
+    toColumnSpaceCoordinate(x) {
+        let spacing = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS * 2);
+        let left = CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
+        return (x - left) / spacing - 0.5;
+    }
+
+    /**
+     * @param {!number} y
      * @returns {undefined|!int}
      */
-    findWireAt(y) {
+    indexOfDisplayedRowAt(y) {
         let i = Math.floor((y - this.top) / Config.WIRE_SPACING);
         if (i < 0 || i >= this.circuitDefinition.numWires) {
             return undefined;
@@ -101,23 +121,25 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!number} y
-     * @returns {!int}
+     * @param {!number} x
+     * @returns {undefined|!int}
      */
-    wireIndexAt(y) {
-        return Math.floor((y - this.top) / Config.WIRE_SPACING);
-    }
+    indexOfDisplayedColumnAt(x) {
+        let col = this.toColumnSpaceCoordinate(x);
+        let i;
+        if (this._compressedColumnIndex === undefined || col < this._compressedColumnIndex - 0.75) {
+            i = Math.round(col);
+        } else if (col < this._compressedColumnIndex - 0.25) {
+            i = this._compressedColumnIndex;
+        } else {
+            i = Math.round(col) - 1;
+        }
 
-    /**
-     * @param {!Point} p
-     * @returns {!number}
-     * @private
-     */
-    findContinuousColumnX(p) {
-        let s = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS * 2);
-        let left = CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
-        let dg = (p.x - left) / s;
-        return dg - 0.5;
+        if (i < 0 || i >= this.circuitDefinition.columns.length) {
+            return undefined;
+        }
+
+        return i;
     }
 
     /**
@@ -129,33 +151,7 @@ class DisplayedCircuit {
             return undefined;
         }
 
-        return Math.max(-0.5, Math.round(this.findContinuousColumnX(p) * 2) / 2);
-    }
-
-    /**
-     * @param {!Point} p
-     * @returns {undefined|!int}
-     */
-    findExistingOpColumnAt(p) {
-        if (p.x < 0 || p.y < top || p.y > top + this.height()) {
-            return undefined;
-        }
-
-        let x = this.findContinuousColumnX(p);
-        let i;
-        if (this._compressedColumnIndex === undefined || x < this._compressedColumnIndex - 0.75) {
-            i = Math.round(x);
-        } else if (x < this._compressedColumnIndex - 0.25) {
-            i = this._compressedColumnIndex;
-        } else {
-            i = Math.round(x) - 1;
-        }
-
-        if (i < 0 || i >= this.circuitDefinition.columns.length) {
-            return undefined;
-        }
-
-        return i;
+        return Math.max(-0.5, Math.round(this.toColumnSpaceCoordinate(p.x) * 2) / 2);
     }
 
     /**
@@ -168,7 +164,7 @@ class DisplayedCircuit {
         }
         let pos = hand.pos.minus(hand.heldGateOffset).plus(new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
         let halfColIndex = this.findOpHalfColumnAt(pos);
-        let row = this.findWireAt(pos.y);
+        let row = this.indexOfDisplayedRowAt(pos.y);
         if (halfColIndex === undefined || row === undefined) {
             return undefined;
         }
@@ -584,8 +580,8 @@ class DisplayedCircuit {
      * @returns {undefined|!{col: !int, row: !int, offset: !Point}}
      */
     findGateOverlappingPos(pos) {
-        let col = this.findExistingOpColumnAt(pos);
-        let row = this.findWireAt(pos.y);
+        let col = this.indexOfDisplayedColumnAt(pos.x);
+        let row = this.indexOfDisplayedRowAt(pos.y);
         if (col === undefined || row === undefined) {
             return undefined;
         }
