@@ -4,7 +4,7 @@ import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
-import GateFactory from "src/ui/GateFactory.js"
+import GatePainting from "src/ui/GatePainting.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/math/Point.js"
@@ -341,7 +341,7 @@ class DisplayedCircuit {
         }
 
         let gateRect = this.gateRect(row, col, gate.width, gate.height);
-        let resizeTabRect = GateFactory.rectForResizeTab(gateRect);
+        let resizeTabRect = GatePainting.rectForResizeTab(gateRect);
 
         let isOverGate = pos => {
             let overGate = this.findGateOverlappingPos(pos);
@@ -391,7 +391,7 @@ class DisplayedCircuit {
                 }
             }
 
-            let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
+            let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
             drawer(new GateDrawParams(
                 painter,
                 false,

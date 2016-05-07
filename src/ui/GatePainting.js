@@ -10,7 +10,7 @@ import Util from "src/base/Util.js"
 /**
  * A described and possibly time-varying quantum operation.
  */
-export default class GateFactory {
+export default class GatePainting {
 }
 
 /**
@@ -18,7 +18,7 @@ export default class GateFactory {
  * @param {!string=} normalFillColor
  * @constructor
  */
-GateFactory.MAKE_HIGHLIGHTED_DRAWER =
+GatePainting.MAKE_HIGHLIGHTED_DRAWER =
     (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
         let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
         if (args.isHighlighted) {
@@ -26,32 +26,32 @@ GateFactory.MAKE_HIGHLIGHTED_DRAWER =
         }
         args.painter.fillRect(args.rect, backColor);
         args.painter.strokeRect(args.rect);
-        GateFactory.paintResizeTab(args);
+        GatePainting.paintResizeTab(args);
         paintGateSymbol(args);
     };
 
 /**
  * @param {!GateDrawParams} args
  */
-GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
+GatePainting.DEFAULT_DRAWER = GatePainting.MAKE_HIGHLIGHTED_DRAWER();
 
 /**
  * @param {!Rect} gateRect
  * @returns {!Rect}
  */
-GateFactory.rectForResizeTab = gateRect =>
+GatePainting.rectForResizeTab = gateRect =>
     new Rect(gateRect.x, gateRect.bottom()-Config.GATE_RADIUS, gateRect.w, Config.GATE_RADIUS*2);
 
 /**
  * @param {!GateDrawParams} args
  */
-GateFactory.paintResizeTab = args => {
+GatePainting.paintResizeTab = args => {
     if (!args.isResizeShowing || !args.gate.canChangeInSize()) {
         return;
     }
 
     let d = Config.GATE_RADIUS;
-    let rect = GateFactory.rectForResizeTab(args.rect);
+    let rect = GatePainting.rectForResizeTab(args.rect);
     let trimRect = rect.skipLeft(2).skipRight(2);
     let {x: cx, y: cy} = trimRect.center();
     let backColor = args.isResizeHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR;
@@ -151,8 +151,8 @@ const paintGateSymbol = args => {
         rect.h);
 };
 
-GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
-    GateFactory.DEFAULT_DRAWER(args);
+GatePainting.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
+    GatePainting.DEFAULT_DRAWER(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
@@ -198,7 +198,7 @@ GateFactory.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
 /**
  * @param {!GateDrawParams} args
  */
-GateFactory.MATRIX_DRAWER = args => {
+GatePainting.MATRIX_DRAWER = args => {
     args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR);
     MathPainter.paintMatrix(
         args.painter,
@@ -215,9 +215,9 @@ GateFactory.MATRIX_DRAWER = args => {
     }
 };
 
-GateFactory.POST_SELECT_DRAWER = args => {
+GatePainting.POST_SELECT_DRAWER = args => {
     if (args.isInToolbox  || args.isHighlighted) {
-        GateFactory.DEFAULT_DRAWER(args);
+        GatePainting.DEFAULT_DRAWER(args);
         return;
     }
 
@@ -231,8 +231,8 @@ GateFactory.POST_SELECT_DRAWER = args => {
  * @param {!number} factor
  * @returns {!function(!GateDrawParams) : *}
  */
-GateFactory.makeCycleDrawer = factor => args => {
-    GateFactory.DEFAULT_DRAWER(args);
+GatePainting.makeCycleDrawer = factor => args => {
+    GatePainting.DEFAULT_DRAWER(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
@@ -261,21 +261,21 @@ GateFactory.makeCycleDrawer = factor => args => {
  * @param {!GateDrawParams} args
  * @returns {void}
  */
-GateFactory.MATHWISE_CYCLE_DRAWER = GateFactory.makeCycleDrawer(+1);
+GatePainting.MATHWISE_CYCLE_DRAWER = GatePainting.makeCycleDrawer(+1);
 
 /**
  * @param {!GateDrawParams} args
  * @returns {void}
  */
-GateFactory.CLOCKWISE_CYCLE_DRAWER = GateFactory.makeCycleDrawer(-1);
+GatePainting.CLOCKWISE_CYCLE_DRAWER = GatePainting.makeCycleDrawer(-1);
 
 /**
  * @param {!GateDrawParams} args
  */
-GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
+GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
     if (args.isInToolbox) {
-        GateFactory.DEFAULT_DRAWER(args);
+        GatePainting.DEFAULT_DRAWER(args);
         return;
     }
-    GateFactory.MATRIX_DRAWER(args);
+    GatePainting.MATRIX_DRAWER(args);
 };

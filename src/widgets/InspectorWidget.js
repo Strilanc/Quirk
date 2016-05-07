@@ -3,7 +3,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
 import Config from "src/Config.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
-import GateFactory from "src/ui/GateFactory.js"
+import GatePainting from "src/ui/GatePainting.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
@@ -94,7 +94,7 @@ export default class InspectorWidget {
             pos.y,
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.width-1),
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.height-1));
-        let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
+        let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
         drawer(new GateDrawParams(painter, false, true, true, false, rect, gate, stats, null, []));
     }
 
