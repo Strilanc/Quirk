@@ -266,6 +266,24 @@ class Matrix {
      * @param {!number=} epsilon
      * @returns {!boolean}
      */
+    isLowerTriangular(epsilon=0) {
+        for (let r = 0; r < this._height; r++) {
+            for (let c = r + 1; c < this._width; c++) {
+                let k = (r*this._width + c)*2;
+                let v1 = this._buffer[k];
+                let v2 = this._buffer[k+1];
+                if (isNaN(v1) || isNaN(v2) || v1*v1 + v2*v2 > epsilon*epsilon) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param {!number=} epsilon
+     * @returns {!boolean}
+     */
     isUpperTriangular(epsilon=0) {
         for (let r = 0; r < this._height; r++) {
             for (let c = 0; c < r && c < this._width; c++) {
@@ -720,6 +738,39 @@ class Matrix {
     }
 
     /**
+     * @param {!int} row
+     * @param {!Complex} scale
+     * @private
+     */
+    _inline_rowScale_preMultiply(row, scale) {
+        for (let col = 0; col < this._width; col++) {
+            let v1 = this.cell(col, row);
+            let v2 = v1.times(scale);
+            let k = (row*this._width + col)*2;
+            this._buffer[k] = v2.real;
+            this._buffer[k+1] = v2.imag;
+        }
+    }
+
+    /**
+     * @param {!int} col
+     * @param {!Complex} scale
+     * @private
+     */
+    _inline_colScale_postMultiply(col, scale) {
+        for (let row = 0; row < this._height; row++) {
+            let v1 = this.cell(col, row);
+            let v2 = v1.times(scale);
+            let k = (row*this._width + col)*2;
+            this._buffer[k] = v2.real;
+            this._buffer[k+1] = v2.imag;
+        }
+    }
+
+    /**
+     * @param {!int} row1
+     * @param {!int} row2
+     * @param {!Matrix} op
      * @private
      */
     _inline_rowMix_preMultiply(row1, row2, op) {
@@ -739,6 +790,9 @@ class Matrix {
     }
 
     /**
+     * @param {!int} col1
+     * @param {!int} col2
+     * @param {!Matrix} op
      * @private
      */
     _inline_colMix_postMultiply(col1, col2, op) {
@@ -758,16 +812,24 @@ class Matrix {
     }
 
     /**
+     * @returns {!Matrix}
+     * @private
+     */
+    _clone() {
+        //noinspection JSCheckFunctionSignatures
+        return new Matrix(this._width, this._height, this._buffer.slice());
+    }
+
+    /**
      * Factors the receiving square matrix into a unitary matrix Q times an upper diagonal matrix R.
-     * @returns {!{Q: !Matrix, R: !Matrix}}
+     * @returns {!{Q: !Matrix, R: !Matrix}} where Q.times(R).isEqualTo(this) && Q.isUnitary() && R.isUpperTriangular()
      */
     qrDecomposition() {
         if (this._width !== this._height) {
             throw new DetailedError("Expected a square matrix.", this);
         }
         let Q = Matrix.identity(this._width);
-        //noinspection JSCheckFunctionSignatures
-        let R = new Matrix(this._width, this._height, this._buffer.slice());
+        let R = this._clone();
         for (let row = 0; row < this._height; row++) {
             for (let col = 0; col < row && col < this._width; col++) {
                 // We're going to cancel out the value below the diagonal with a Givens rotation.
@@ -798,6 +860,15 @@ class Matrix {
             }
         }
         return {Q, R};
+    }
+
+    /**
+     * Factors the receiving square matrix into a lower diagonal matrix L times a unitary matrix Q.
+     * @returns {!{L: !Matrix, Q: !Matrix}} where L.times(Q).isEqualTo(this) && Q.isUnitary() && R.isLowerTriangular()
+     */
+    lqDecomposition() {
+        let {Q, R} = this.adjoint().qrDecomposition();
+        return {L: R.adjoint(), Q: Q.adjoint()};
     }
 
     /**
@@ -1016,100 +1087,97 @@ class Matrix {
     }
 
     /**
-     * Factors the matrix int u*s*v parts, where u and v are unitary matrices and s is a real diagonal matrix.
-     * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
+     * @returns {!{U: !Matrix, S: !Matrix, V: !Matrix}}
      */
-    singularValueDecomposition() {
-        /**
-         * @param {!Complex|!number} p
-         * @param {!Complex|!number} q
-         * @returns {!Matrix}
-         */
-        let phase_cancel_matrix = (p, q) => {
-            return Matrix.square(
-                Complex.from(p).unit().conjugate(), 0,
-                0, Complex.from(q).unit().conjugate());
-        };
+    _unordered_singularValueDecomposition_2x2() {
+        // Initial dirty work of clearing a corner is handled by the LQ decomposition.
+        let U = Matrix.identity(2);
+        let {L: S, Q: V} = this.lqDecomposition();
 
-        /**
-         * @param {!Matrix} m
-         * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
-         */
-        let svd_real_2x2 = m => {
-            let a = Complex.realPartOf(m.cell(0, 0));
-            let b = Complex.realPartOf(m.cell(1, 0));
-            let c = Complex.realPartOf(m.cell(0, 1));
-            let d = Complex.realPartOf(m.cell(1, 1));
+        // Cancel phase factors, leaving S with only real entries.
+        let au = S.cell(0, 0).unit();
+        let cu = S.cell(0, 1).unit();
+        U._inline_colScale_postMultiply(0, au);
+        U._inline_colScale_postMultiply(1, cu);
+        S._inline_rowScale_preMultiply(0, au.conjugate());
+        S._inline_rowScale_preMultiply(1, cu.conjugate());
+        let du = S.cell(1, 1).unit();
+        S._inline_colScale_postMultiply(1, du.conjugate());
+        V._inline_rowScale_preMultiply(1, du);
 
-            let t = a + d;
-            let x = b + c;
-            let y = b - c;
-            let z = a - d;
+        // Decompose the 2x2 real matrix.
+        let [a,, b,, c,, d] = S._buffer;
+        let t = a + d;
+        let x = b + c;
+        let y = b - c;
+        let z = a - d;
+        let theta_0 = Math.atan2(x, t) / 2.0;
+        let theta_d = Math.atan2(y, z) / 2.0;
+        let s_0 = Math.sqrt(t * t + x * x) / 2.0;
+        let s_d = Math.sqrt(z * z + y * y) / 2.0;
+        U._inline_colMix_postMultiply(0, 1, Matrix.rotation(theta_0 - theta_d));
+        V._inline_rowMix_preMultiply(0, 1, Matrix.rotation(theta_0 + theta_d));
+        S = Matrix.square(s_0 + s_d, 0, 0, s_0 - s_d);
 
-            let theta_0 = Math.atan2(x, t) / 2.0;
-            let theta_d = Math.atan2(y, z) / 2.0;
+        return {U, S, V};
+    }
 
-            let s_0 = Math.sqrt(t * t + x * x) / 2.0;
-            let s_d = Math.sqrt(z * z + y * y) / 2.0;
-
-            return {
-                u: Matrix.rotation(theta_0 - theta_d),
-                s: Matrix.square(s_0 + s_d, 0, 0, s_0 - s_d),
-                v: Matrix.rotation(theta_0 + theta_d)
-            };
-        };
-
-        /**
-         * @param {!Matrix} m
-         * @returns {!{u: !Matrix, s: !Matrix, v: !Matrix}}
-         */
-        let svd_2x2 = m => {
-            // Initially all entries are free.
-            // m = | ?+?i  ?+?i |
-            //     | ?+?i  ?+?i |
-
-            // Cancel top row phase
-            let p = phase_cancel_matrix(m.cell(0, 0), m.cell(1, 0));
-            let m2 = m.times(p);
-            // m2 = m p r = | >     >    |
-            //              | ?+?i  ?+?i |
-
-            // Cancel top-right value by rotation.
-            let r = Matrix.rotation(Math.atan2(m2.cell(1, 0).real, m2.cell(0, 0).real));
-            let m3 = m2.times(r);
-            // m3 = m p r = | ?+?i  0    |
-            //              | ?+?i  ?+?i |
-
-            // Make bottom row non-imaginary and non-negative by column phasing.
-            let q = phase_cancel_matrix(m3.cell(0, 1), m3.cell(1, 1));
-            let m4 = m3.times(q);
-            // m4 = m p r q = | ?+?i  0 |
-            //                | >     > |
-
-            // Cancel imaginary part of top left value by row phasing.
-            let t = phase_cancel_matrix(m4.cell(0, 0), 1);
-            let m5 = t.times(m4);
-            // m5 = t m p r q = | > 0 |
-            //                  | > > |
-
-            // All values are now real (also the top-right is zero), so delegate to a
-            // singular value decomposition that works for real matrices.
-            // t m p r q = u s v
-            let usv = svd_real_2x2(m5);
-
-            // m = (t* u) s (v q* r* p*)
-            return {
-                u: t.adjoint().times(usv.u),
-                s: usv.s,
-                v: usv.v.times(q.adjoint()).times(r.adjoint()).times(p.adjoint())
-            };
-        };
-
-        if (this.width() !== 2 || this.height() !== 2) {
-            throw new Error("Not implemented: non-2x2 singular value decomposition");
+    /**
+     * @param {!number=} epsilon
+     * @param {!int=} maxIterations
+     * @returns {!{U: !Matrix, S: !Matrix, V: !Matrix}}
+     */
+    _unordered_singularValueDecomposition_iterative(epsilon=0, maxIterations=100) {
+        let U = Matrix.identity(this._width);
+        let S = this._clone();
+        let V = Matrix.identity(this._width);
+        let iter = 0;
+        while (!S.isDiagonal(epsilon) && iter++ < maxIterations) {
+            let {Q: Ql, R: Sl} = S.qrDecomposition();
+            let {L: Sr, Q: Qr} = Sl.lqDecomposition();
+            U = U.times(Ql);
+            S = Sr;
+            V = Qr.times(V);
         }
 
-        return svd_2x2(this);
+        return {U, S, V};
+    }
+
+    /**
+     * Factors the matrix int u*s*v parts, where u and v are unitary matrices and s is a real diagonal matrix.
+     * @param {!number=} epsilon
+     * @param {!int=} maxIterations
+     * @returns {!{U: !Matrix, S: !Matrix, V: !Matrix}}
+     */
+    singularValueDecomposition(epsilon=0, maxIterations=100) {
+        if (this._width !== this._height) {
+            throw new DetailedError("Expected a square matrix.", this);
+        }
+
+        let {U, S, V} = this._width === 2 ?
+            this._unordered_singularValueDecomposition_2x2() :
+            this._unordered_singularValueDecomposition_iterative(epsilon, maxIterations);
+
+        // Fix ordering.
+        let permutation = Seq.range(this._width).sortedBy(i => -S.cell(i, i).norm2()).toArray();
+        for (let i = 0; i < S._width; i++) {
+            let j = permutation[i];
+            if (i !== j) {
+                U._inline_colMix_postMultiply(i, j, Matrix.PAULI_X);
+                S._inline_rowMix_preMultiply(i, j, Matrix.PAULI_X);
+                [permutation[j], permutation[i]] = [permutation[i], permutation[j]]
+            }
+        }
+
+        // Fix phases.
+        for (let i = 0; i < S._width; i++) {
+            U._inline_colScale_postMultiply(i, S.cell(i, i).unit());
+        }
+
+        // Discard off-diagonal elements.
+        S = Matrix.generate(S._width, S._height, (col, row) => col === row ? S.cell(col, row).abs() : 0);
+
+        return {U, S, V};
     }
 
     getColumn(colIndex) {
@@ -1123,7 +1191,7 @@ class Matrix {
      */
     closestUnitary() {
         let svd = this.singularValueDecomposition();
-        return svd.u.times(svd.v);
+        return svd.U.times(svd.V);
     }
 }
 

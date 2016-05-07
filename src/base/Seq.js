@@ -953,7 +953,7 @@ class Seq {
 
     /**
      * Returns a sequence containing the same items, but in ascending order.
-     * @returns {!Iterable.<T>}
+     * @returns {!Seq.<T>}
      * @template T
      */
     sorted() {
@@ -962,7 +962,7 @@ class Seq {
 
     /**
      * Returns a sequence containing the same items, but in ascending order of outputs from the given function.
-     * @returns {!Iterable.<T>}
+     * @returns {!Seq.<T>}
      * @template T
      */
     sortedBy(keySelector) {
@@ -1116,7 +1116,7 @@ class Seq {
 /**
  * Wraps an iterable into a Seq.
  * @param {!(T[])|!Seq.<T>|!Iterable.<T>|*} iterable
- * @returns {!Iterable.<T>}
+ * @returns {!Seq.<T>}
  * @template T
  */
 let seq = iterable => new Seq(iterable);
