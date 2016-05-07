@@ -32,6 +32,9 @@ class CircuitDisplay {
         if (!Number.isInteger(top)) {
             throw new DetailedError("Bad top", {top, circuitDefinition});
         }
+        if (!(circuitDefinition instanceof CircuitDefinition)) {
+            throw new DetailedError("Bad circuitDefinition", {top, circuitDefinition});
+        }
         /**
          * @type {!number}
          */
