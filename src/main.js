@@ -11,10 +11,12 @@ import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
-import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
+import { notifyAboutRecoveryFromUnexpectedError, onErrorHandler } from "src/fallback.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
+
+window.onerror = onErrorHandler;
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
