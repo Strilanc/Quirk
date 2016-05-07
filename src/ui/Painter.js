@@ -18,8 +18,22 @@ export default class Painter {
         this.deferred = [];
         this.traceAction = new TraceAction(this.ctx);
         this.tracer = new Tracer(this.ctx);
+        /**
+         * @type {!string}
+         */
+        this.desiredCursorStyle = 'auto';
     }
 
+    /**
+     * @param {!string} cursorStyle auto|pointer|move|ns-resize|...
+     */
+    setDesiredCursor(cursorStyle) {
+        this.desiredCursorStyle = cursorStyle;
+    }
+
+    /**
+     * @param {!function(void): void} tooltipPainter
+     */
     defer(tooltipPainter) {
         this.deferred.push(tooltipPainter);
     }

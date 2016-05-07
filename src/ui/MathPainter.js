@@ -2,8 +2,8 @@ import Painter from "src/ui/Painter.js"
 import Format from "src/base/Format.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
 import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
 import Matrix from "src/math/Matrix.js"
@@ -27,12 +27,14 @@ export default class MathPainter {
      * @param {!Painter} painter
      * @param {!number} probability
      * @param {!Rect} drawArea
+     * @param {!Array.<!Point>=} focusPoints
      * @param {!string=} backgroundColor
      * @param {!string=} fillColor
      */
     static paintProbabilityBox(painter,
                                probability,
                                drawArea,
+                               focusPoints = [],
                                backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
                                fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
@@ -45,6 +47,18 @@ export default class MathPainter {
         }
 
         painter.strokeRect(drawArea, 'lightgray');
+
+
+        // Tool tips.
+        if (seq(focusPoints).any(pt => drawArea.containsPoint(pt))) {
+            painter.strokeRect(drawArea, 'orange', 2);
+            MathPainter.paintDeferredValueTooltip(
+                painter,
+                drawArea.right(),
+                drawArea.y,
+                'Chance of being ON if measured',
+                (100*probability).toFixed(5) + "%");
+        }
     }
 
     /**
@@ -158,7 +172,7 @@ export default class MathPainter {
             let c = Math.floor((pt.x - x) / diam);
             let r = Math.floor((pt.y - y) / diam);
             if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
-                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'red', 2);
+                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
                 MathPainter.paintDeferredValueTooltip(
                     painter,
                     x + diam*c + diam,
@@ -220,12 +234,14 @@ export default class MathPainter {
      * @param {!Painter} painter
      * @param {!Matrix} qubitDensityMatrix
      * @param {!Rect} drawArea
+     * @param {!Array.<!Point>=} focusPoints
      * @param {!string=} backgroundColor
      * @param {!string=} fillColor
      */
     static paintBlochSphere(painter,
                             qubitDensityMatrix,
                             drawArea,
+                            focusPoints = [],
                             backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
                             fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         let c = drawArea.center();
@@ -242,33 +258,50 @@ export default class MathPainter {
                 trace.line(c.x - d.x, c.y - d.y, c.x + d.x, c.y + d.y);
             }
         }).thenStroke('#BBB');
-        if (isNaN(qubitDensityMatrix.cell(0, 0).real)) {
+
+        let [x, y, z] = [NaN, NaN, NaN];
+        if (qubitDensityMatrix.hasNaN()) {
             painter.printParagraph("NaN", drawArea, new Point(0.5, 0.5), 'red');
-            return;
+        } else {
+            [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector();
+            let pxy = c.plus(dx.times(x)).plus(dy.times(y));
+            let p = pxy.plus(dz.times(z));
+            let r = 4 / (1 + y / 8);
+
+            // Draw state indicators (also in not-quite-correct 3d).
+            let cz = c.plus(dz.times(z));
+            painter.strokePolygon([cz, c, pxy, p], '#666');
+            painter.strokeLine(c, p, 'black', 2);
+            painter.fillCircle(p, r, fillColor);
+
+            painter.ctx.save();
+            painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 1-x*x-y*y-z*z));
+            painter.fillCircle(p, r, 'yellow');
+            painter.ctx.restore();
+
+            painter.strokeCircle(p, r, 'black');
+
+            painter.ctx.save();
+            painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 0.5+y*5));
+            painter.strokeLine(c, p, 'black', 2);
+            painter.ctx.restore();
         }
 
-        let [x, y, z] = qubitDensityMatrix.qubitDensityMatrixToBlochVector();
-        let pxy = c.plus(dx.times(x)).plus(dy.times(y));
-        let p = pxy.plus(dz.times(z));
-        let r = 4 / (1 + y / 8);
-
-        // Draw state indicators (also in not-quite-correct 3d).
-        let cz = c.plus(dz.times(z));
-        painter.strokePolygon([cz, c, pxy, p], '#666');
-        painter.strokeLine(c, p, 'black', 2);
-        painter.fillCircle(p, r, fillColor);
-
-        painter.ctx.save();
-        painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 1-x*x-y*y-z*z));
-        painter.fillCircle(p, r, 'yellow');
-        painter.ctx.restore();
-
-        painter.strokeCircle(p, r, 'black');
-
-        painter.ctx.save();
-        painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 0.5+y*5));
-        painter.strokeLine(c, p, 'black', 2);
-        painter.ctx.restore();
+        // Tool tips.
+        if (seq(focusPoints).any(pt => pt.distanceTo(c) < u)) {
+            painter.strokeCircle(c, u, 'orange', 2);
+            let f = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+            let d = Math.sqrt(x*x + y*y + z*z);
+            let ϕ = Math.atan2(y, -x);
+            let θ = Math.atan2(-z, Math.sqrt(y*y + x*x));
+            let τ = Math.PI * 2;
+            MathPainter.paintDeferredValueTooltip(
+                painter,
+                c.x+u*Math.sqrt(0.5),
+                c.y-u*Math.sqrt(0.5),
+                'Bloch sphere representation of local state',
+                `r:${d.toFixed(4)}, ϕ:${f(ϕ*360/τ)}°, θ:${f(θ*360/τ)}°`);
+        }
     }
 
     /**
@@ -318,7 +351,7 @@ export default class MathPainter {
             axisVec,
             Matrix.col(0, 0, axis[2])
         ].map(projToPt);
-        painter.strokePolygon(new Seq(guideDeltas).
+        painter.strokePolygon(seq(guideDeltas).
             reverse().
             concat(guideDeltas.map(d => d.times(-1))).
             map(d => c.plus(d)).
@@ -328,7 +361,7 @@ export default class MathPainter {
 
         // Find perpendicular axes, for drawing the rotation arrow circles.
         let norm = e => Math.sqrt(e.adjoint().times(e).cell(0, 0).real);
-        let perpVec1 = new Seq(axes).
+        let perpVec1 = seq(axes).
             mapWithIndex((a, i) => a.times([2, -3, 1][i])). // Prioritize/orient axes to look good.
             map(a => axisVec.cross3(a)).
             maxBy(norm);
@@ -452,7 +485,7 @@ export default class MathPainter {
             let c = Math.floor((pt.x - x) / diam);
             let r = Math.floor((pt.y - y) / diam);
             if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
-                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'red', 2);
+                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
                 if (r === c) {
                     MathPainter.paintDeferredValueTooltip(
                         painter,

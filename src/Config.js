@@ -14,11 +14,12 @@ Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 14;
 Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 17;
 
 Config.MIN_WIRE_COUNT = 2;
+Config.MIN_COL_COUNT = 5;
 Config.URL_CIRCUIT_PARAM_KEY = 'circuit';
 
 // Gate background colors.
 Config.GATE_FILL_COLOR = 'white';
-Config.HIGHLIGHTED_GATE_FILL_COLOR = 'orange';
+Config.HIGHLIGHTED_GATE_FILL_COLOR = '#FB7';
 
 // Mixed-state displays are green.
 Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR = '#4F4';

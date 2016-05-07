@@ -3,7 +3,7 @@ import DetailedError from "src/base/DetailedError.js"
 import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
-import GateFactory from "src/ui/GateFactory.js"
+import GatePainting from "src/ui/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
@@ -28,7 +28,7 @@ Gates.Special = {
         "Conditions on a qubit being ON.\nGates in the same column will only apply to states meeting the condition."
     ).withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GateFactory.DEFAULT_DRAWER(args);
+            GatePainting.DEFAULT_DRAWER(args);
         }
         args.painter.fillCircle(args.rect.center(), 5, "black");
     }),
@@ -40,7 +40,7 @@ Gates.Special = {
         "Conditions on a qubit being OFF.\nGates in the same column will only apply to states meeting the condition."
     ).withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GateFactory.DEFAULT_DRAWER(args);
+            GatePainting.DEFAULT_DRAWER(args);
         }
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
@@ -87,7 +87,7 @@ Gates.Special = {
         "Swaps the values of two qubits.\nPlace two swap gate halves in the same column to form a swap gate."
     ).withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GateFactory.DEFAULT_DRAWER(args);
+            GatePainting.DEFAULT_DRAWER(args);
             return;
         }
 
@@ -117,7 +117,8 @@ Gates.Displays = {
             MathPainter.paintProbabilityBox(
                 args.painter,
                 args.stats.controlledWireProbabilityJustAfter(row, col),
-                args.rect);
+                args.rect,
+                args.focusPoints);
         }
 
         if (showText) {
@@ -125,7 +126,7 @@ Gates.Displays = {
                 args.painter.ctx.save();
                 args.painter.ctx.globalAlpha *= 0.4;
             }
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+            GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
                 args.painter.ctx.restore();
             }
@@ -144,7 +145,7 @@ Gates.Displays = {
         if (showState) {
             let {row, col} = args.positionInCircuit;
             let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect);
+            MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
         }
 
         if (showText) {
@@ -152,7 +153,7 @@ Gates.Displays = {
                 args.painter.ctx.save();
                 args.painter.ctx.globalAlpha *= 0.4;
             }
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+            GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
             if (showState) {
                 args.painter.ctx.restore();
             }
@@ -164,54 +165,66 @@ Gates.Displays = {
         Matrix.identity(2),
         "Density Matrix Display",
         "Shows a wire's local state as a density matrix.\nUse controls to see conditional states."
-    ).withSerializedId("Density").withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
+    ).withSerializedId("Density").
+        withCustomDrawer(args => {
+            if (args.isResizeShowing) {
+                GatePainting.paintResizeTab(args);
             }
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
             if (showState) {
-                args.painter.ctx.restore();
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.qubitDensityMatrix(row, col);
+                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
             }
-        }
-    }),
+
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.save();
+                    args.painter.ctx.globalAlpha *= 0.4;
+                }
+                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.restore();
+                }
+            }
+        }),
 
     DensityMatrixDisplay2: new Gate(
         "Density\n2",
         Matrix.identity(4),
         "2-Qubit Density Matrix Display",
         "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
-    ).withSerializedId("Density2").withWidth(2).withHeight(2).withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitPairDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
+    ).withSerializedId("Density2").
+        withWidth(2).
+        withHeight(2).
+        withCustomDrawer(args => {
+            if (args.isResizeShowing) {
+                GatePainting.paintResizeTab(args);
             }
-            GateFactory.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
             if (showState) {
-                args.painter.ctx.restore();
+                let {row, col} = args.positionInCircuit;
+                let ρ = args.stats.qubitPairDensityMatrix(row, col);
+                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
             }
-        }
-    })
+
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.save();
+                    args.painter.ctx.globalAlpha *= 0.4;
+                }
+                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.restore();
+                }
+            }
+        })
 };
 
 /**
@@ -222,7 +235,7 @@ Gates.HalfTurns = {
         "X",
         Matrix.PAULI_X,
         "Pauli X Gate",
-        "Toggles between ON and OFF.\nAlso known as the Not gate."
+        "The NOT gate.\nToggles between ON and OFF."
     ).withCustomDrawer(args => {
         // The X gate is drawn as a crossed circle when it has controls.
 
@@ -233,7 +246,7 @@ Gates.HalfTurns = {
             args.positionInCircuit !== null &&
             args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
         if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
-            GateFactory.DEFAULT_DRAWER(args);
+            GatePainting.DEFAULT_DRAWER(args);
             return;
         }
 
@@ -267,45 +280,52 @@ Gates.HalfTurns = {
         "Z",
         Matrix.PAULI_Z,
         "Pauli Z Gate",
-        "Negates the amplitude of states where the qubit is ON.\nAlso known as the Phase Flip gate."),
+        "The phase flip gate.\nNegates phases when the qubit is ON."),
 
     H: new Gate(
         "H",
         Matrix.HADAMARD,
         "Hadamard Gate",
-        "The simplest non-classical gate.\n" +
-        "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.")
+        "Creates simple superpositions.\n" +
+        "Maps ON to ON + OFF.\n" +
+        "Maps OFF to ON - OFF.")
 };
 
 const IncGateMaker = span => new Gate(
-    "+1\n" + span,
+    "+1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
-    span + "-Bit Increment Gate",
-    "Adds 1 to the little-endian number represented by " + span + " qubits."
+    "Increment Gate",
+    "Adds 1 to the little-endian number represented by a block of qubits."
 ).withSerializedId("inc" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1));
 
 const DecGateMaker = span => new Gate(
-    "-1\n" + span,
+    "-1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
-    span + "-Bit Decrement Gate",
-    "Subtracts 1 from the little-endian number represented by " + span + " qubits."
+    "Decrement Gate",
+    "Subtracts 1 from the little-endian number represented by a block of qubits."
 ).withSerializedId("dec" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1));
 
 /**
- * Gates that correspond to increments or decrements of multiple qubits.
+ * Gates that correspond to increments of multiple qubits.
  */
-Gates.Increments = {
+Gates.Increments = Gate.makeFamily({
     Inc2: IncGateMaker(2),
     Inc3: IncGateMaker(3),
     Inc4: IncGateMaker(4),
     Inc5: IncGateMaker(5),
     Inc6: IncGateMaker(6),
     Inc7: IncGateMaker(7),
-    Inc8: IncGateMaker(8),
+    Inc8: IncGateMaker(8)
+});
+
+/**
+ * Gates that correspond to decrements of multiple qubits.
+ */
+Gates.Decrements = Gate.makeFamily({
     Dec2: DecGateMaker(2),
     Dec3: DecGateMaker(3),
     Dec4: DecGateMaker(4),
@@ -313,7 +333,7 @@ Gates.Increments = {
     Dec6: DecGateMaker(6),
     Dec7: DecGateMaker(7),
     Dec8: DecGateMaker(8)
-};
+});
 
 Gates.QuarterTurns = {
     SqrtXForward: new Gate(
@@ -489,42 +509,42 @@ Gates.Exponentiating = {
         XExp,
         "X-Exponentiating Gate (forward)",
         "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X."
-    ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
     XBackward: new Gate(
         "e^iXt",
         t => XExp(-t),
         "X-Exponentiating Gate (backward)",
         "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X."
-    ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
     YForward: new Gate(
         "e^-iYt",
         YExp,
         "Y-Exponentiating Gate (forward)",
         "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y."
-    ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
     YBackward: new Gate(
         "e^iYt",
         t => YExp(-t),
         "Y-Exponentiating Gate (backward)",
         "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y."
-    ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
     ZForward: new Gate(
         "e^-iZt",
         ZExp,
         "Z-Exponentiating Gate (forward)",
         "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z."
-    ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
     ZBackward: new Gate(
         "e^iZt",
         t => ZExp(-t),
         "Z-Exponentiating Gate (backward)",
         "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z."
-    ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER)
+    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
 };
 
 Gates.Powering = {
@@ -533,42 +553,42 @@ Gates.Powering = {
         XPow,
         "X-Raising Gate (forward)",
         "A continuous right-handed cycle between the X gate and no-op."
-    ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
     XBackward: new Gate(
         "X^-t",
         t => XPow(-t),
         "X-Raising Gate (backward)",
         "A continuous left-handed cycle between the X gate and no-op."
-    ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
     YForward: new Gate(
         "Y^t",
         YPow,
         "Y-Raising Gate (forward)",
         "A continuous right-handed cycle between the Y gate and no-op."
-    ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
     YBackward: new Gate(
         "Y^-t",
         t => YPow(-t),
         "Y-Raising Gate (backward)",
         "A continuous left-handed cycle between the Y gate and no-op."
-    ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
     ZForward: new Gate(
         "Z^t",
         ZPow,
         "Z-Raising Gate (forward)",
         "A continuous right-handed cycle between the Z gate and no-op."
-    ).withCustomDrawer(GateFactory.CLOCKWISE_CYCLE_DRAWER),
+    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
     ZBackward: new Gate(
         "Z^-t",
         t => ZPow(-t),
         "Z-Raising Gate (backward)",
         "A continuous left-handed cycle between the Z gate and no-op."
-    ).withCustomDrawer(GateFactory.MATHWISE_CYCLE_DRAWER)
+    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
 };
 
 Gates.Misc = {
@@ -579,7 +599,7 @@ Gates.Misc = {
         "Mystery Gate",
         "Every time you grab this gate out of the toolbox, it changes.\n" +
         "Duplicate gates in the circuit by holding shift before dragging."
-    ).withCustomDrawer(GateFactory.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
+    ).withCustomDrawer(GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
     MysteryGateMaker: () => Gates.Misc.MysteryGateMakerWithMatrix(Matrix.square(
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
@@ -593,7 +613,7 @@ Gates.Misc = {
         "Post-selection Gate [Off]",
         "Keeps OFF states, discards ON states, and renormalizes\n" +
             "(Corresponds to restarting until the right answer happens.)"
-    ).withCustomDrawer(GateFactory.POST_SELECT_DRAWER),
+    ).withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
 
     PostSelectOn: new Gate(
         "|1⟩⟨1|",
@@ -601,21 +621,21 @@ Gates.Misc = {
         "Post-selection Gate [On]",
         "Keeps ON states, discards OFF states, and renormalizes.\n" +
             "(Corresponds to restarting until the right answer happens.)"
-    ).withCustomDrawer(GateFactory.POST_SELECT_DRAWER),
+    ).withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
 
     ClockPulseGate: new Gate(
         "X^⌈t⌉",
         t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate",
         "Xors a square wave into the target wire."
-    ).withCustomDrawer(GateFactory.SQUARE_WAVE_DRAWER_MAKER(0)),
+    ).withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0)),
 
     QuarterPhaseClockPulseGate: new Gate(
         "X^⌈t-¼⌉",
         t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate (Quarter Phase)",
         "Xors a quarter-phased square wave into the target wire."
-    ).withCustomDrawer(GateFactory.SQUARE_WAVE_DRAWER_MAKER(0.75)),
+    ).withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75)),
 
     SpacerGate: new Gate(
         "…",
@@ -659,7 +679,7 @@ Gates.ExperimentalAndImplausible = {
             throw new DetailedError("Applied an Error Injection Gate", {qubit});
         }).
         withSerializedId("__debug__ErrorInjection").
-        withCustomDrawer(GateFactory.MAKE_HIGHLIGHTED_DRAWER('red', 'red'))
+        withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red'))
 };
 
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
@@ -712,10 +732,10 @@ Gates.Sets = [
         hint: 'Misc',
         gates: [
             Gates.Misc.SpacerGate,
-            Gates.Misc.MysteryGateMaker(),
+            Gates.Increments.Inc2,
             Gates.Misc.ClockPulseGate,
-            null,
-            null,
+            Gates.Misc.MysteryGateMaker(),
+            Gates.Decrements.Dec2,
             Gates.Misc.QuarterPhaseClockPulseGate
         ]
     },
@@ -739,17 +759,6 @@ Gates.Sets = [
             Gates.Exponentiating.XBackward,
             Gates.Exponentiating.YBackward,
             Gates.Exponentiating.ZBackward
-        ]
-    },
-    {
-        hint: "Counters",
-        gates: [
-            Gates.Increments.Inc2,
-            Gates.Increments.Inc3,
-            Gates.Increments.Inc4,
-            Gates.Increments.Dec2,
-            Gates.Increments.Dec3,
-            Gates.Increments.Dec4
         ]
     },
     {
@@ -860,13 +869,13 @@ Gates.KnownToSerializer = [
     Gates.Increments.Inc7,
     Gates.Increments.Inc8,
 
-    Gates.Increments.Dec2,
-    Gates.Increments.Dec3,
-    Gates.Increments.Dec4,
-    Gates.Increments.Dec5,
-    Gates.Increments.Dec6,
-    Gates.Increments.Dec7,
-    Gates.Increments.Dec8,
+    Gates.Decrements.Dec2,
+    Gates.Decrements.Dec3,
+    Gates.Decrements.Dec4,
+    Gates.Decrements.Dec5,
+    Gates.Decrements.Dec6,
+    Gates.Decrements.Dec7,
+    Gates.Decrements.Dec8,
 
     Gates.ExperimentalAndImplausible.UniversalNot,
     Gates.ExperimentalAndImplausible.ErrorInjection

@@ -5,7 +5,7 @@ import describe from "src/base/Describe.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import GateFactory from "src/ui/GateFactory.js"
+import GatePainting from "src/ui/GatePainting.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 import Util from "src/base/Util.js"
@@ -146,7 +146,7 @@ let fromJson_Gate = json => {
         // Err, okay... probably a bad matrix. Let the parse fail below.
     }
 
-    let drawer = symbol === "" ? GateFactory.MATRIX_DRAWER : GateFactory.DEFAULT_DRAWER;
+    let drawer = symbol === "" ? GatePainting.MATRIX_DRAWER : GatePainting.DEFAULT_DRAWER;
     let matrix;
     try {
         if (matrixProp === undefined) {

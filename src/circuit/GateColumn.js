@@ -1,3 +1,4 @@
+import DetailedError from "src/base/DetailedError.js"
 import Gate from "src/circuit/Gate.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
@@ -227,14 +228,17 @@ class GateColumn {
 
     /**
      * @param {!int} startIndex
-     * @param {!GateColumn} gateCol
+     * @param {!GateColumn} insertedCol
      * @returns {!GateColumn}
      */
-    withGatesAdded(startIndex, gateCol) {
-        Util.need(startIndex >= 0 && startIndex <= this.gates.length - gateCol.gates.length);
+    withGatesAdded(startIndex, insertedCol) {
+        if (!Number.isInteger(startIndex) || startIndex < 0
+                || startIndex > this.gates.length- insertedCol.gates.length) {
+            throw new DetailedError("Bad start index", {baseCol: this, startIndex, insertedCol});
+        }
         let gates = this.gates.map(e => e);
-        for (let i = 0; i < gateCol.gates.length; i++) {
-            gates[startIndex + i] = gateCol.gates[i];
+        for (let i = 0; i < insertedCol.gates.length; i++) {
+            gates[startIndex + i] = insertedCol.gates[i];
         }
         return new GateColumn(gates);
     }

@@ -106,6 +106,7 @@ export class AssertionSubject {
      */
     constructor(subject, id=undefined, info=undefined) {
         sanityCheck(subject);
+        assertionSubjectIndexInCurrentTest += 1;
 
         /**
          * The "actual" value, to be compared against expected values.
@@ -213,7 +214,6 @@ export function assertThat(subject, extraArgCatcher) {
     if (extraArgCatcher !== undefined) {
         fail('Extra assertThat arg');
     }
-    assertionSubjectIndexInCurrentTest += 1;
     return new AssertionSubject(subject, 'assertThat #' + assertionSubjectIndexInCurrentTest);
 }
 
@@ -294,7 +294,11 @@ export class Suite {
     test(name, method) {
         this.tests.push([name, status => {
             assertionSubjectIndexInCurrentTest = 0;
-            method(status);
+            let result = method(status);
+            if (result === undefined && assertionSubjectIndexInCurrentTest === 0) {
+                console.warn(`No assertions in test '${name}' of suite '${this.name}'.`);
+            }
+            return result;
         }]);
     }
 

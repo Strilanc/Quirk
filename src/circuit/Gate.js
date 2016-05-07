@@ -38,6 +38,8 @@ class Gate {
         this.tag = undefined;
         /** @type {undefined|!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int):!WglConfiguredShader} */
         this.customShader = undefined;
+        /** @type {!Array.<!Gate>} */
+        this.gateFamily = [this];
     }
 
     /**
@@ -52,6 +54,7 @@ class Gate {
         g.customShader = this.customShader;
         g.width = this.width;
         g.height = this.height;
+        g.gateFamily = this.gateFamily;
         return g;
     }
 
@@ -103,6 +106,32 @@ class Gate {
         let g = this._copy();
         g.customShader = shaderFunc;
         return g;
+    }
+
+    /**
+     * @param {T} gatesObj
+     * @returns {T}
+     * @template T
+     */
+    static makeFamily(gatesObj) {
+        let oldGates = Util.decomposeObjectValues(gatesObj);
+        let newGates = oldGates.map(e => e._copy());
+        for (let g of newGates) {
+            g.gateFamily = newGates;
+        }
+        return Util.recomposedObjectValues(gatesObj, newGates);
+    }
+
+    canChangeInSize() {
+        return this.gateFamily.length > 1;
+    }
+
+    canIncreaseInSize() {
+        return !this.gateFamily.every(e => e.height !== this.height + 1);
+    }
+
+    canDecreaseInSize() {
+        return !this.gateFamily.every(e => e.height !== this.height - 1);
     }
 
     /**

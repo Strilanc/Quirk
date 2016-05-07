@@ -2,9 +2,10 @@ import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
+import equate from "src/base/Equate.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
-import GateFactory from "src/ui/GateFactory.js"
+import GatePainting from "src/ui/GatePainting.js"
 import Gates from "src/ui/Gates.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/math/Point.js"
@@ -20,30 +21,36 @@ let CIRCUIT_OP_LEFT_SPACING = 35;
 /** @type {!number} */
 let CIRCUIT_OP_RIGHT_SPACING = 5;
 
-class CircuitWidget {
+class DisplayedCircuit {
     /**
      *
-     * @param {!Rect} area
+     * @param {!number} top
      * @param {!CircuitDefinition} circuitDefinition
-     * @param {null|!int} compressedColumnIndex
-     * @param {undefined|!{row: !int, col: !int}} highlightedSlot
+     * @param {undefined|!int} compressedColumnIndex
+     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} highlightedSlot
      */
-    constructor(area, circuitDefinition, compressedColumnIndex=null, highlightedSlot=undefined) {
+    constructor(top, circuitDefinition, compressedColumnIndex=undefined, highlightedSlot=undefined) {
+        if (!Number.isFinite(top)) {
+            throw new DetailedError("Bad top", {top, circuitDefinition});
+        }
+        if (!(circuitDefinition instanceof CircuitDefinition)) {
+            throw new DetailedError("Bad circuitDefinition", {top, circuitDefinition});
+        }
         /**
-         * @type {!Rect}
+         * @type {!number}
          */
-        this.area = area;
+        this.top = top;
         /**
          * @type {!CircuitDefinition}
          */
         this.circuitDefinition = circuitDefinition;
         /**
-         * @type {null|!int}
+         * @type {undefined|!int}
          * @private
          */
         this._compressedColumnIndex = compressedColumnIndex;
         /**
-         * @type {undefined|!{row: !int, col: !int}}
+         * @type {undefined|!{col: !int, row: !int, resizeStyle: !boolean}}
          * @private
          */
         this._highlightedSlot = highlightedSlot;
@@ -67,14 +74,7 @@ class CircuitWidget {
             2 + // Wire chance and bloch sphere displays.
             1 // Density matrix displays.
         );
-        return r.x + CircuitWidget.desiredHeight(this.circuitDefinition.numWires) + 5; // Superposition display.
-    }
-
-    /**
-     * @param {!Rect} drawArea
-     */
-    updateArea(drawArea) {
-        this.area = drawArea;
+        return r.x + this.height() + 5; // Superposition display.
     }
 
     /**
@@ -83,21 +83,37 @@ class CircuitWidget {
      */
     wireRect(wireIndex) {
         if (wireIndex < 0) {
-            throw new DetailedError("wireIndex < 0", {wireIndex});
+            throw new DetailedError("Bad wireIndex", {wireIndex});
         }
-        return new Rect(this.area.x, this.area.y + Config.WIRE_SPACING * wireIndex, this.area.w, Config.WIRE_SPACING);
+        return new Rect(0, this.top + Config.WIRE_SPACING * wireIndex, Infinity, Config.WIRE_SPACING);
     }
 
     /**
-     * @param {!Point} p
+     * @param {!number} y
+     * @returns {!int}
+     */
+    wireIndexAt(y) {
+        return Math.floor((y - this.top) / Config.WIRE_SPACING);
+    }
+
+    //noinspection JSMethodCanBeStatic
+    /**
+     * @param {!number} x
+     * @returns {!number} The continuous column-space coordinate corresponding to the given display-space coordinate.
+     * @private
+     */
+    toColumnSpaceCoordinate(x) {
+        let spacing = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS * 2);
+        let left = CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
+        return (x - left) / spacing - 0.5;
+    }
+
+    /**
+     * @param {!number} y
      * @returns {undefined|!int}
      */
-    findWireAt(p) {
-        if (!this.area.containsPoint(p)) {
-            return undefined;
-        }
-
-        let i = Math.floor((p.y - this.area.y) / Config.WIRE_SPACING);
+    indexOfDisplayedRowAt(y) {
+        let i = Math.floor((y - this.top) / Config.WIRE_SPACING);
         if (i < 0 || i >= this.circuitDefinition.numWires) {
             return undefined;
         }
@@ -105,46 +121,18 @@ class CircuitWidget {
     }
 
     /**
-     * @param {!Point} p
-     * @returns {!number}
-     * @private
-     */
-    findContinuousColumnX(p) {
-        let s = (CIRCUIT_OP_HORIZONTAL_SPACING + Config.GATE_RADIUS * 2);
-        let left = this.area.x + CIRCUIT_OP_LEFT_SPACING - CIRCUIT_OP_HORIZONTAL_SPACING / 2;
-        let dg = (p.x - left) / s;
-        return dg - 0.5;
-    }
-
-    /**
-     * @param {!Point} p
-     * @returns {?number}
-     */
-    findOpHalfColumnAt(p) {
-        if (!this.area.containsPoint(p)) {
-            return undefined;
-        }
-
-        return Math.max(-0.5, Math.round(this.findContinuousColumnX(p) * 2) / 2);
-    }
-
-    /**
-     * @param {!Point} p
+     * @param {!number} x
      * @returns {undefined|!int}
      */
-    findExistingOpColumnAt(p) {
-        if (!this.area.containsPoint(p)) {
-            return undefined;
-        }
-
-        let x = this.findContinuousColumnX(p);
+    indexOfDisplayedColumnAt(x) {
+        let col = this.toColumnSpaceCoordinate(x);
         let i;
-        if (this._compressedColumnIndex === null || x < this._compressedColumnIndex - 0.75) {
-            i = Math.round(x);
-        } else if (x < this._compressedColumnIndex - 0.25) {
+        if (this._compressedColumnIndex === undefined || col < this._compressedColumnIndex - 0.75) {
+            i = Math.round(col);
+        } else if (col < this._compressedColumnIndex - 0.25) {
             i = this._compressedColumnIndex;
         } else {
-            i = Math.round(x) - 1;
+            i = Math.round(col) - 1;
         }
 
         if (i < 0 || i >= this.circuitDefinition.columns.length) {
@@ -152,6 +140,18 @@ class CircuitWidget {
         }
 
         return i;
+    }
+
+    /**
+     * @param {!Point} p
+     * @returns {undefined|!number}
+     */
+    findOpHalfColumnAt(p) {
+        if (p.x < 0 || p.y < top || p.y > top + this.height()) {
+            return undefined;
+        }
+
+        return Math.max(-0.5, Math.round(this.toColumnSpaceCoordinate(p.x) * 2) / 2);
     }
 
     /**
@@ -164,7 +164,7 @@ class CircuitWidget {
         }
         let pos = hand.pos.minus(hand.heldGateOffset).plus(new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
         let halfColIndex = this.findOpHalfColumnAt(pos);
-        let row = this.findWireAt(pos);
+        let row = this.indexOfDisplayedRowAt(pos.y);
         if (halfColIndex === undefined || row === undefined) {
             return undefined;
         }
@@ -197,15 +197,19 @@ class CircuitWidget {
         let opWidth = Config.GATE_RADIUS * 2;
         let opSeparation = opWidth + CIRCUIT_OP_HORIZONTAL_SPACING;
         let tweak = 0;
-        if (this._compressedColumnIndex !== null && operationIndex === this._compressedColumnIndex) {
+        if (this._compressedColumnIndex !== undefined && operationIndex === this._compressedColumnIndex) {
             tweak = opSeparation / 2;
         }
-        if (this._compressedColumnIndex !== null && operationIndex > this._compressedColumnIndex) {
+        if (this._compressedColumnIndex !== undefined && operationIndex > this._compressedColumnIndex) {
             tweak = opSeparation;
         }
 
         let dx = opSeparation * operationIndex - tweak + CIRCUIT_OP_LEFT_SPACING;
-        return this.area.withX(this.area.x + dx).withW(opWidth);
+        return new Rect(dx, this.top, opWidth, this.height());
+    }
+
+    height() {
+        return DisplayedCircuit.desiredHeight(this.circuitDefinition.numWires);
     }
 
     /**
@@ -227,7 +231,7 @@ class CircuitWidget {
     }
 
     /**
-     * @returns {!CircuitWidget}
+     * @returns {!DisplayedCircuit}
      */
     afterTidyingUp() {
         return this.withCircuit(this.circuitDefinition.
@@ -239,44 +243,50 @@ class CircuitWidget {
     }
 
     /**
-     * @param {!CircuitWidget|*} other
+     * @param {!DisplayedCircuit|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
         if (this === other) {
             return true;
         }
-        return other instanceof CircuitWidget &&
-            this.area.isEqualTo(other.area) &&
+        return other instanceof DisplayedCircuit &&
+            this.top === other.top &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
-            this._compressedColumnIndex === other._compressedColumnIndex;
+            this._compressedColumnIndex === other._compressedColumnIndex &&
+            equate(this._highlightedSlot, other._highlightedSlot);
     }
 
     /**
      * @param {!Painter} painter
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
+     * @param {!boolean} shift
      */
-    paint(painter, hand, stats) {
-        painter.fillRect(this.area, Config.BACKGROUND_COLOR_CIRCUIT);
+    paint(painter, hand, stats, shift) {
+        painter.fillRect(
+            new Rect(0, this.top, this.height(), painter.canvas.clientWidth,
+            Config.BACKGROUND_COLOR_CIRCUIT));
 
-        this.drawWires(painter);
+        this._drawWires(painter);
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
-            this.drawGatesInColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
+            this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats, shift);
         }
 
-        this.drawOutputDisplays(painter, stats, hand);
+        this._drawOutputDisplays(painter, stats, hand);
     }
 
     /**
      * @param {!Painter} painter
+     * @private
      */
-    drawWires(painter) {
+    _drawWires(painter) {
         // Initial value labels
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
             let wireRect = this.wireRect(row);
-            painter.printParagraph("|0⟩", wireRect.takeLeft(20), new Point(1, 0.5));
+            let y = wireRect.center().y;
+            painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px Helvetica', 20, Config.WIRE_SPACING);
         }
 
         // Wires (doubled-up for measured sections).
@@ -284,9 +294,9 @@ class CircuitWidget {
             for (let row = 0; row < this.circuitDefinition.numWires; row++) {
                 let wireRect = this.wireRect(row);
                 let y = Math.round(wireRect.center().y - 0.5) + 0.5;
-                let lastX = this.area.x + 25;
+                let lastX = 25;
                 //noinspection ForLoopThatDoesntUseLoopVariableJS
-                for (let col = 0; lastX < this.area.right(); col++) {
+                for (let col = 0; lastX < painter.canvas.width; col++) {
                     let x = this.opRect(col).center().x;
                     if (this.circuitDefinition.locIsMeasured(new Point(col, row))) {
                         // Measured wire.
@@ -303,13 +313,62 @@ class CircuitWidget {
     }
 
     /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!Array.<!Point>} focusPosPts
+     * @returns {!{isHighlighted: !boolean, isResizeShowing: !boolean, isResizeHighlighted: !boolean}}
+     * @private
+     */
+    _highlightStatusAt(col, row, focusPosPts) {
+        if (this._highlightedSlot !== undefined) {
+            if (this._highlightedSlot.col === col && this._highlightedSlot.row === row) {
+                return {
+                    isResizeShowing: true,
+                    isResizeHighlighted: this._highlightedSlot.resizeStyle,
+                    isHighlighted: !this._highlightedSlot.resizeStyle
+                };
+            }
+        }
+
+        let gate = this.circuitDefinition.gateInSlot(col, row);
+        if (gate === undefined || this._highlightedSlot !== undefined) {
+            return {
+                isResizeShowing: false,
+                isResizeHighlighted: false,
+                isHighlighted: false
+            };
+        }
+
+        let gateRect = this.gateRect(row, col, gate.width, gate.height);
+        let resizeTabRect = GatePainting.rectForResizeTab(gateRect);
+
+        let isOverGate = pos => {
+            let overGate = this.findGateOverlappingPos(pos);
+            return overGate !== undefined && overGate.col === col && overGate.row === row;
+        };
+        let isNotCoveredAt = pos => {
+            let g = this.findGateOverlappingPos(pos);
+            return g === undefined || (g.col === col && g.row === row);
+        };
+        let isOverGateResizeTab = pos => isNotCoveredAt(pos) && resizeTabRect.containsPoint(pos);
+
+        let isResizeHighlighted = gate.canChangeInSize() && seq(focusPosPts).any(isOverGateResizeTab);
+        let isHighlighted = !isResizeHighlighted && seq(focusPosPts).any(isOverGate);
+        let isResizeShowing = gate.canChangeInSize() && (isResizeHighlighted || isHighlighted);
+
+        return {isHighlighted, isResizeShowing, isResizeHighlighted};
+    }
+
+    /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
      * @param {!int} col
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
+     * @param {!boolean} shift
+     * @private
      */
-    drawGatesInColumn(painter, gateColumn, col, hand, stats) {
+    _drawColumn(painter, gateColumn, col, hand, stats, shift) {
         this.drawColumnControlWires(painter, gateColumn, col, stats);
 
         let focusSlot = this._highlightedSlot;
@@ -317,25 +376,29 @@ class CircuitWidget {
             if (gateColumn.gates[row] === null) {
                 continue;
             }
-            /** @type {!Gate} */
             let gate = gateColumn.gates[row];
-            let r = this.gateRect(row, col, gate.width, gate.height);
+            let gateRect = this.gateRect(row, col, gate.width, gate.height);
 
-            let isOverGate = pt => {
-                let f = this.findGateOverlappingPos(pt);
-                return f !== undefined && f.col === col && f.row === row;
-            };
+            let {isHighlighted, isResizeShowing, isResizeHighlighted} =
+                this._highlightStatusAt(col, row, hand.hoverPoints());
+            if (isResizeHighlighted) {
+                painter.setDesiredCursor('ns-resize');
+            } else if (isHighlighted) {
+                if (shift) {
+                    painter.setDesiredCursor('pointer');
+                } else {
+                    painter.setDesiredCursor('move');
+                }
+            }
 
-            let isHighlighted =
-                (focusSlot === undefined && new Seq(hand.hoverPoints()).any(isOverGate)) ||
-                (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
-
-            let drawer = gate.customDrawer || GateFactory.DEFAULT_DRAWER;
+            let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
             drawer(new GateDrawParams(
                 painter,
                 false,
-                isHighlighted,
-                r,
+                isHighlighted && !isResizeHighlighted,
+                isResizeShowing,
+                isResizeHighlighted,
+                gateRect,
                 gate,
                 stats,
                 {row, col},
@@ -345,11 +408,11 @@ class CircuitWidget {
                 if (isHighlighted) {
                     painter.ctx.globalAlpha /= 2;
                 }
-                painter.strokeLine(r.topLeft(), r.bottomRight(), 'orange', 3);
+                painter.strokeLine(gateRect.topLeft(), gateRect.bottomRight(), 'orange', 3);
                 painter.ctx.globalAlpha /= 2;
-                painter.fillRect(r.paddedBy(5), 'yellow');
+                painter.fillRect(gateRect.paddedBy(5), 'yellow');
                 painter.ctx.globalAlpha *= 2;
-                painter.printParagraph(isDisabledReason, r.paddedBy(5), new Point(0.5, 0.5), 'red');
+                painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
                 if (isHighlighted) {
                     painter.ctx.globalAlpha *= 2;
                 }
@@ -411,11 +474,21 @@ class CircuitWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitWidget}
+     * @returns {!DisplayedCircuit}
      */
     previewDrop(hand) {
+        return hand.heldGate !== undefined ? this._previewDropMovedGate(hand) : this._previewResizedGate(hand);
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _previewDropMovedGate(hand) {
         let modificationPoint = this.findModificationIndex(hand);
-        if (modificationPoint === undefined || modificationPoint.row + hand.heldGate.height > this.circuitDefinition.numWires) {
+        if (modificationPoint === undefined
+                || modificationPoint.row + hand.heldGate.height > this.circuitDefinition.numWires) {
             return this;
         }
         let addedGate = hand.heldGate;
@@ -431,29 +504,59 @@ class CircuitWidget {
             withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
 
-        let result = this.withCircuit(this.circuitDefinition.withColumns(newCols));
-        result._compressedColumnIndex = isInserting ? i : null;
-        result._highlightedSlot = {row:modificationPoint.row, col:modificationPoint.col};
-        return result;
+        return this.withCircuit(this.circuitDefinition.withColumns(newCols)).
+            _withHighlightedSlot({row: modificationPoint.row, col: modificationPoint.col, resizeStyle: false}).
+            _withCompressedColumnIndex(isInserting ? i : undefined);
     }
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitWidget}
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _previewResizedGate(hand) {
+        if (hand.resizingGateSlot === undefined || hand.pos === undefined) {
+            return this;
+        }
+        let gate = this.circuitDefinition.gateInSlot(hand.resizingGateSlot.x, hand.resizingGateSlot.y);
+        if (gate === undefined) {
+            return this;
+        }
+        let row = this.wireIndexAt(hand.pos.y);
+        let newGate = seq(gate.gateFamily).minBy(g => Math.abs(g.height - (row - hand.resizingGateSlot.y)));
+        let newWireCount = Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y + 1);
+        let newCols = seq(this.circuitDefinition.columns).
+            withTransformedItem(hand.resizingGateSlot.x,
+                colObj => new GateColumn(seq(colObj.gates).
+                    withOverlayedItem(hand.resizingGateSlot.y, newGate).
+                    toArray())).
+            toArray();
+
+        let newCircuitWithoutHeightFix = this.circuitDefinition.withColumns(newCols).
+            withWireCount(newWireCount);
+        let newCircuit = newCircuitWithoutHeightFix.withHeightOverlapsFixed();
+        return this.withCircuit(newCircuit).
+            _withHighlightedSlot(this._highlightedSlot).
+            _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
+                undefined :
+                hand.resizingGateSlot.x + 1);
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!DisplayedCircuit}
      */
     afterDropping(hand) {
-        let r = this.previewDrop(hand);
-        r._compressedColumnIndex = null;
-        return r;
+        return this.previewDrop(hand)._withCompressedColumnIndex(undefined);
     }
 
     /**
      * @param {!CircuitDefinition} circuitDefinition
-     * @returns {!CircuitWidget}
+     * @returns {!DisplayedCircuit}
      */
     withCircuit(circuitDefinition) {
-        return new CircuitWidget(
-            this.area,
+        return new DisplayedCircuit(
+            this.top,
             circuitDefinition,
             this._compressedColumnIndex);
     }
@@ -461,7 +564,7 @@ class CircuitWidget {
     /**
      * @param {!Hand} hand
      * @param {!int} extraWireCount
-     * @returns {!CircuitWidget}
+     * @returns {!DisplayedCircuit}
      */
     withJustEnoughWires(hand, extraWireCount) {
         let neededWireCountForPlacement = hand.heldGate !== undefined ? hand.heldGate.height : 0;
@@ -479,8 +582,8 @@ class CircuitWidget {
      * @returns {undefined|!{col: !int, row: !int, offset: !Point}}
      */
     findGateOverlappingPos(pos) {
-        let col = this.findExistingOpColumnAt(pos);
-        let row = this.findWireAt(pos);
+        let col = this.indexOfDisplayedColumnAt(pos.x);
+        let row = this.indexOfDisplayedRowAt(pos.y);
         if (col === undefined || row === undefined) {
             return undefined;
         }
@@ -501,16 +604,26 @@ class CircuitWidget {
     /**
      * @param {!Hand} hand
      * @param {!boolean=} duplicate
-     * @returns {!{newCircuit: !CircuitWidget, newHand: !Hand}}
+     * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
-        if (hand.pos === undefined) {
-            return {newCircuit: this, newHand: hand};
+        let {newCircuit, newHand} = this._tryGrabResizeTab(hand) || {newCircuit: this, newHand: hand};
+        return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @param {!boolean=} duplicate
+     * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
+     */
+    _tryGrabGate(hand, duplicate=false) {
+        if (hand.isBusy() || hand.pos === undefined) {
+            return undefined;
         }
 
         let foundPt = this.findGateOverlappingPos(hand.pos);
         if (foundPt === undefined) {
-            return {newCircuit: this, newHand: hand};
+            return undefined;
         }
 
         let {col, row, offset} = foundPt;
@@ -525,11 +638,63 @@ class CircuitWidget {
             withOverlayedItem(col, new GateColumn(remainingGates)).
             toArray();
         return {
-            newCircuit: new CircuitWidget(
-                this.area,
+            newCircuit: new DisplayedCircuit(
+                this.top,
                 this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGate(gate, offset)
         };
+    }
+
+    /**
+     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
+     * @returns {!DisplayedCircuit}
+     */
+    _withHighlightedSlot(slot) {
+        return new DisplayedCircuit(
+            this.top,
+            this.circuitDefinition,
+            this._compressedColumnIndex,
+            slot);
+    }
+
+    /**
+     * @param {undefined|!int} compressedColumnIndex
+     * @returns {!DisplayedCircuit}
+     */
+    _withCompressedColumnIndex(compressedColumnIndex) {
+        return new DisplayedCircuit(
+            this.top,
+            this.circuitDefinition,
+            compressedColumnIndex,
+            this._highlightedSlot);
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
+     */
+    _tryGrabResizeTab(hand) {
+        if (hand.isBusy() || hand.pos === undefined) {
+            return undefined;
+        }
+
+        for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
+            for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+                let gate = this.circuitDefinition.columns[col].gates[row];
+                if (gate === null) {
+                    continue;
+                }
+                let {isResizeHighlighted} =
+                    this._highlightStatusAt(col, row, hand.hoverPoints());
+                if (isResizeHighlighted) {
+                    return {
+                        newCircuit: this._withHighlightedSlot({col, row, resizeStyle: true}),
+                        newHand: hand.withResizeSlot(new Point(col, row))
+                    };
+                }
+            }
+        }
+        return undefined;
     }
 
     /**
@@ -556,17 +721,20 @@ class CircuitWidget {
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
      * @param {!Hand} hand
+     * @private
      */
-    drawOutputDisplays(painter, stats, hand) {
-        let colCount = this.circuitDefinition.columns.length + 1;
+    _drawOutputDisplays(painter, stats, hand) {
+        let colCount = Math.max(
+                Config.MIN_COL_COUNT + (this._compressedColumnIndex !== undefined ? 1 : 0),
+                this.circuitDefinition.columns.length) + 1;
         let numWire = this.importantWireCount();
 
         for (let i = 0; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
-            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount));
+            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount), hand.hoverPoints());
             let m = stats.qubitDensityMatrix(i, Infinity);
             if (m !== undefined) {
-                MathPainter.paintBlochSphere(painter, m, this.gateRect(i, colCount+1));
+                MathPainter.paintBlochSphere(painter, m, this.gateRect(i, colCount+1), hand.hoverPoints());
             }
         }
 
@@ -581,14 +749,14 @@ class CircuitWidget {
         offset += 1;
 
         let bottom = this.wireRect(numWire-1).bottom();
-        let right = this.opRect(this.circuitDefinition.columns.length).x;
+        let right = this.opRect(colCount - 1).x;
         painter.printParagraph(
             "Local wire states\n(Chance/Bloch/Density)",
             new Rect(right+25, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
 
-        this.drawOutputSuperpositionDisplay(painter, stats, offset, hand);
+        this._drawOutputSuperpositionDisplay(painter, stats, offset, hand);
     }
 
     /**
@@ -598,8 +766,9 @@ class CircuitWidget {
      * @param {!CircuitStats} stats
      * @param {!int} col
      * @param {!Hand} hand
+     * @private
      */
-    drawOutputSuperpositionDisplay(painter, stats, col, hand) {
+    _drawOutputSuperpositionDisplay(painter, stats, col, hand) {
         let numWire = this.importantWireCount();
         if (numWire >= Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD) {
             return;
@@ -667,4 +836,4 @@ class CircuitWidget {
     }
 }
 
-export default CircuitWidget;
+export default DisplayedCircuit;

@@ -6,7 +6,7 @@ import Complex from "src/math/Complex.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import GateFactory from "src/ui/GateFactory.js"
+import GatePainting from "src/ui/GatePainting.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 

@@ -799,3 +799,39 @@ suite.test("sortedBy", () => {
     assertThat(seq([1, 5]).sortedBy(e => e % 5)).isEqualTo([5, 1]);
     assertThat(seq([5, 1]).sortedBy(e => e % 5)).isEqualTo([5, 1]);
 });
+
+suite.test("stride", () => {
+    assertThat(seq([]).stride(1)).isEqualTo([]);
+    assertThat(seq([]).stride(2)).isEqualTo([]);
+    assertThat(seq([]).stride(3)).isEqualTo([]);
+
+    assertThat(seq(["a"]).stride(1)).isEqualTo(["a"]);
+    assertThat(seq(["a"]).stride(2)).isEqualTo(["a"]);
+    assertThat(seq(["a"]).stride(3)).isEqualTo(["a"]);
+
+    assertThat(seq(["a", "b"]).stride(1)).isEqualTo(["a", "b"]);
+    assertThat(seq(["a", "b"]).stride(2)).isEqualTo(["a"]);
+    assertThat(seq(["a", "b"]).stride(3)).isEqualTo(["a"]);
+
+    assertThat(seq(["a", "b", "c"]).stride(1)).isEqualTo(["a", "b", "c"]);
+    assertThat(seq(["a", "b", "c"]).stride(2)).isEqualTo(["a", "c"]);
+    assertThat(seq(["a", "b", "c"]).stride(3)).isEqualTo(["a"]);
+
+    assertThat(seq(["a", "b", "c", "d"]).stride(1)).isEqualTo(["a", "b", "c", "d"]);
+    assertThat(seq(["a", "b", "c", "d"]).stride(2)).isEqualTo(["a", "c"]);
+    assertThat(seq(["a", "b", "c", "d"]).stride(3)).isEqualTo(["a", "d"]);
+
+    assertThat(seq(["a", "b", "c", "d", "e"]).stride(1)).isEqualTo(["a", "b", "c", "d", "e"]);
+    assertThat(seq(["a", "b", "c", "d", "e"]).stride(2)).isEqualTo(["a", "c", "e"]);
+    assertThat(seq(["a", "b", "c", "d", "e"]).stride(3)).isEqualTo(["a", "d"]);
+
+    assertThat(seq(["a", "b", "c", "d", "e", "f"]).stride(1)).isEqualTo(["a", "b", "c", "d", "e", "f"]);
+    assertThat(seq(["a", "b", "c", "d", "e", "f"]).stride(2)).isEqualTo(["a", "c", "e"]);
+    assertThat(seq(["a", "b", "c", "d", "e", "f"]).stride(3)).isEqualTo(["a", "d"]);
+
+    assertThat(seq(["a", "b", "c", "d", "e", "f", "g"]).stride(1)).isEqualTo(["a", "b", "c", "d", "e", "f", "g"]);
+    assertThat(seq(["a", "b", "c", "d", "e", "f", "g"]).stride(2)).isEqualTo(["a", "c", "e", "g"]);
+    assertThat(seq(["a", "b", "c", "d", "e", "f", "g"]).stride(3)).isEqualTo(["a", "d", "g"]);
+
+    assertThat(Seq.range(100).stride(10)).isEqualTo(Seq.range(10).map(e => e*10));
+});

@@ -37,3 +37,11 @@ suite.test("minus", () => {
 suite.test("times", () => {
     assertThat(new Point(2, 3).times(5)).isEqualTo(new Point(10, 15));
 });
+
+suite.test("distanceTo", () => {
+    assertThat(new Point(2, 3).distanceTo(new Point(3, 3))).isEqualTo(1);
+    assertThat(new Point(2, 3).distanceTo(new Point(4, 3))).isEqualTo(2);
+    assertThat(new Point(2, 2).distanceTo(new Point(2, 3))).isEqualTo(1);
+    assertThat(new Point(2, 2).distanceTo(new Point(2, 4))).isEqualTo(2);
+    assertThat(new Point(0, 0).distanceTo(new Point(4, 3))).isEqualTo(5);
+});

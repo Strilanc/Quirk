@@ -137,7 +137,7 @@ let drawErrorBox = msg => {
 /**
  * Draws a user-visible error box when problems occur.
  */
-window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
+function onErrorHandler(errorMsg, url, lineNumber, columnNumber, errorObj) {
     try {
         let location = simplifySrcUrls(
             ((errorObj instanceof Object)? errorObj.stack : undefined) ||
@@ -177,6 +177,6 @@ window.onerror = (errorMsg, url, lineNumber, columnNumber, errorObj) => {
         console.error("Caused an exception when handling unexpected error.", ex);
     }
     return false;
-};
+}
 
-export { notifyAboutRecoveryFromUnexpectedError }
+export { notifyAboutRecoveryFromUnexpectedError, onErrorHandler }
