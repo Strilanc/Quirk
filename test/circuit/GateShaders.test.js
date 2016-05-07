@@ -213,3 +213,26 @@ suite.webGlTest('increment', () => {
         1,2,3,4,29,30,31,32,9,10,11,12,5,6,7,8,17,18,19,20,13,14,15,16,25,26,27,28,21,22,23,24
     ]));
 });
+
+suite.webGlTest('fourierTransformStep', () => {
+    let _ = 0;
+    let w = Math.sqrt(1/8);
+    let input0 = Shaders.data(new Float32Array([
+        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_,
+        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
+    ])).toFloatTexture(4, 4);
+    let input1 = Shaders.data(new Float32Array([
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
+        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_,
+        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_
+    ])).toFloatTexture(4, 4);
+    let control = CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 4);
+    assertThat(GateShaders.fourierTransformStep(input0, control, 0, 3).readFloatOutputs(4, 4)).isApproximatelyEqualTo(
+        Seq.repeat([0.25,0,0,0], 16).flatten().toFloat32Array());
+    assertThat(GateShaders.fourierTransformStep(input1, control, 0, 3).readFloatOutputs(4, 4)).isApproximatelyEqualTo(
+        Seq.range(16).map(i => Complex.polar(0.25, Math.PI*i/8)).flatMap(c => [c.real, c.imag, 0, 0]).toFloat32Array(),
+        0.0001);
+});

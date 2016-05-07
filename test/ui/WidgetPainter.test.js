@@ -35,12 +35,12 @@ suite.test("describeKet", () => {
     assertThat(WidgetPainter.describeKet(1, 1, 1, Format.SIMPLIFIED)).isEqualTo('|1⟩');
 
     assertThat(WidgetPainter.describeKet(2, 0, 1, Format.SIMPLIFIED)).isEqualTo('|00⟩');
-    assertThat(WidgetPainter.describeKet(2, 1, 1, Format.SIMPLIFIED)).isEqualTo('|01⟩');
-    assertThat(WidgetPainter.describeKet(2, 2, 1, Format.SIMPLIFIED)).isEqualTo('|10⟩');
+    assertThat(WidgetPainter.describeKet(2, 1, 1, Format.SIMPLIFIED)).isEqualTo('|10⟩');
+    assertThat(WidgetPainter.describeKet(2, 2, 1, Format.SIMPLIFIED)).isEqualTo('|01⟩');
     assertThat(WidgetPainter.describeKet(2, 3, 1, Format.SIMPLIFIED)).isEqualTo('|11⟩');
 
     assertThat(WidgetPainter.describeKet(2, 0, new Complex(-1, 0), Format.SIMPLIFIED)).isEqualTo('-|00⟩');
-    assertThat(WidgetPainter.describeKet(2, 1, Complex.I, Format.SIMPLIFIED)).isEqualTo('i|01⟩');
-    assertThat(WidgetPainter.describeKet(2, 2, new Complex(0, -1), Format.SIMPLIFIED)).isEqualTo('-i|10⟩');
+    assertThat(WidgetPainter.describeKet(2, 1, Complex.I, Format.SIMPLIFIED)).isEqualTo('i|10⟩');
+    assertThat(WidgetPainter.describeKet(2, 2, new Complex(0, -1), Format.SIMPLIFIED)).isEqualTo('-i|01⟩');
     assertThat(WidgetPainter.describeKet(2, 3, new Complex(1, 1), Format.SIMPLIFIED)).isEqualTo('(1+i)·|11⟩');
 });
