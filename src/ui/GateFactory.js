@@ -20,13 +20,13 @@ export default class GateFactory {
  */
 GateFactory.MAKE_HIGHLIGHTED_DRAWER =
     (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
-        GateFactory.paintResizeTab(args);
         let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
         if (args.isHighlighted) {
             backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
         }
         args.painter.fillRect(args.rect, backColor);
         args.painter.strokeRect(args.rect);
+        GateFactory.paintResizeTab(args);
         paintGateSymbol(args);
     };
 
@@ -40,7 +40,7 @@ GateFactory.DEFAULT_DRAWER = GateFactory.MAKE_HIGHLIGHTED_DRAWER();
  * @returns {!Rect}
  */
 GateFactory.rectForResizeTab = gateRect =>
-    new Rect(gateRect.x+1, gateRect.bottom(), gateRect.w-2, Config.GATE_RADIUS * 2);
+    new Rect(gateRect.x, gateRect.bottom()-Config.GATE_RADIUS, gateRect.w, Config.GATE_RADIUS*2);
 
 /**
  * @param {!GateDrawParams} args
@@ -51,29 +51,29 @@ GateFactory.paintResizeTab = args => {
     }
 
     let d = Config.GATE_RADIUS;
-    let belowRect = GateFactory.rectForResizeTab(args.rect);
-    let {x: cx, y: cy} = belowRect.center();
-    let backColor = Config.GATE_FILL_COLOR;
+    let rect = GateFactory.rectForResizeTab(args.rect);
+    let trimRect = rect.skipLeft(2).skipRight(2);
+    let {x: cx, y: cy} = trimRect.center();
+    let backColor = args.isResizeHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR;
     let foreColor = args.isResizeHighlighted ? '#222' : 'gray';
     args.painter.ctx.save();
-    args.painter.fillRect(belowRect, backColor);
-    args.painter.strokeRect(belowRect, backColor);
-    //noinspection JSUnresolvedFunction
-    args.painter.ctx.setLineDash([2, 5]);
-    args.painter.strokeRect(belowRect, foreColor);
-    args.painter.print('resize', cx, cy, 'center', 'middle', foreColor, 'monospace', belowRect.w - 4, belowRect.h - 4);
+    args.painter.ctx.globalAlpha = args.isResizeHighlighted ? 1 : 0.5;
+    args.painter.fillRect(trimRect, backColor);
+    args.painter.strokeRect(trimRect, 'gray');
     args.painter.ctx.restore();
+    args.painter.print('resize', cx, cy, 'center', 'middle', foreColor, 'monospace', trimRect.w - 4, trimRect.h - 4);
     args.painter.trace(tracer => {
-        let sys = [];
-        if (args.gate.canIncreaseInSize()) {
-            sys.push(+1);
-        }
-        if (args.gate.canDecreaseInSize()) {
-            sys.push(-1);
-        }
+        let arrowDirs = [
+            args.gate.canIncreaseInSize() ? +1 : -1,
+            args.gate.canDecreaseInSize() ? -1 : +1
+        ];
+        let arrowOffsets = [+1, -1];
         for (let sx of [-1, +1]) {
-            for (let sy of sys) {
-                tracer.line(cx, cy + sy * d * 0.75, cx + sx * d * 0.3, cy + sy * d * 0.5);
+            for (let k = 0; k < 2; k++) {
+                let by = cy + d*arrowOffsets[k]*5/8;
+                let y1 = by + d*arrowDirs[k]/8;
+                let y2 = by - d*arrowDirs[k]/8;
+                tracer.line(cx, y1, cx + d*sx*0.3, y2);
             }
         }
     }).thenStroke(foreColor);
@@ -89,7 +89,7 @@ const paintGateSymbol = args => {
     const font = '16px Helvetica';
     rect = rect.paddedBy(-2);
 
-    let note = args.gate.gateFamily.length > 1 ? "↕" : undefined;
+    let note = args.gate.gateFamily.length > 1 && args.isInToolbox ? "↕" : undefined;
     let noteIndex = symbol.indexOf('\n');
     if (noteIndex !== -1) {
         note = symbol.substring(noteIndex + 1);

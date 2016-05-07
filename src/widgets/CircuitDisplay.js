@@ -26,7 +26,7 @@ class CircuitDisplay {
      * @param {!number} top
      * @param {!CircuitDefinition} circuitDefinition
      * @param {null|!int} compressedColumnIndex
-     * @param {undefined|!{col: !int, row: !int}} highlightedSlot
+     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} highlightedSlot
      */
     constructor(top, circuitDefinition, compressedColumnIndex=null, highlightedSlot=undefined) {
         if (!Number.isInteger(top)) {
@@ -49,7 +49,7 @@ class CircuitDisplay {
          */
         this._compressedColumnIndex = compressedColumnIndex;
         /**
-         * @type {undefined|!{col: !int, row: !int}}
+         * @type {undefined|!{col: !int, row: !int, resizeStyle: !boolean}}
          * @private
          */
         this._highlightedSlot = highlightedSlot;
@@ -316,15 +316,30 @@ class CircuitDisplay {
     /**
      * @param {!int} col
      * @param {!int} row
-     * @param {!Array.<!Point>} pts
+     * @param {!Array.<!Point>} focusPosPts
      * @returns {!{isHighlighted: !boolean, isResizeShowing: !boolean, isResizeHighlighted: !boolean}}
      * @private
      */
-    _isHighlightedOrResizeTabShowingForGateInSlot(col, row, pts) {
-        let gate = this.circuitDefinition.gateInSlot(col, row);
-        if (gate === undefined) {
-            return undefined;
+    _highlightStatusAt(col, row, focusPosPts) {
+        if (this._highlightedSlot !== undefined) {
+            if (this._highlightedSlot.col === col && this._highlightedSlot.row === row) {
+                return {
+                    isResizeShowing: true,
+                    isResizeHighlighted: this._highlightedSlot.resizeStyle,
+                    isHighlighted: !this._highlightedSlot.resizeStyle
+                };
+            }
         }
+
+        let gate = this.circuitDefinition.gateInSlot(col, row);
+        if (gate === undefined || this._highlightedSlot !== undefined) {
+            return {
+                isResizeShowing: false,
+                isResizeHighlighted: false,
+                isHighlighted: false
+            };
+        }
+
         let gateRect = this.gateRect(row, col, gate.width, gate.height);
         let resizeTabRect = GateFactory.rectForResizeTab(gateRect);
 
@@ -332,21 +347,16 @@ class CircuitDisplay {
             let overGate = this.findGateOverlappingPos(pos);
             return overGate !== undefined && overGate.col === col && overGate.row === row;
         };
-        let isOverGateResizeTab = pos =>
-            this.findGateOverlappingPos(pos) === undefined &&
-            resizeTabRect.containsPoint(pos);
+        let isNotCoveredAt = pos => {
+            let g = this.findGateOverlappingPos(pos);
+            return g === undefined || (g.col === col && g.row === row);
+        };
+        let isOverGateResizeTab = pos => isNotCoveredAt(pos) && resizeTabRect.containsPoint(pos);
 
-        let focusSlot = this._highlightedSlot;
-        let isHighlighted =
-            (focusSlot === undefined && seq(pts).any(isOverGate)) ||
-            (focusSlot !== undefined && focusSlot.row === row && focusSlot.col === col);
-        let isResizeShowing =
-            gate.canChangeInSize() &&
-            this.circuitDefinition.findGateCoveringSlot(col, row + gate.height) === undefined &&
-            (isHighlighted || (focusSlot === undefined && seq(pts).any(isOverGateResizeTab)));
-        let isResizeHighlighted =
-            isResizeShowing &&
-            seq(pts).any(isOverGateResizeTab);
+        let isResizeHighlighted = gate.canChangeInSize() && seq(focusPosPts).any(isOverGateResizeTab);
+        let isHighlighted = !isResizeHighlighted && seq(focusPosPts).any(isOverGate);
+        let isResizeShowing = gate.canChangeInSize() && (isResizeHighlighted || isHighlighted);
+
         return {isHighlighted, isResizeShowing, isResizeHighlighted};
     }
 
@@ -370,8 +380,7 @@ class CircuitDisplay {
             let gateRect = this.gateRect(row, col, gate.width, gate.height);
 
             let {isHighlighted, isResizeShowing, isResizeHighlighted} =
-                this._isHighlightedOrResizeTabShowingForGateInSlot(col, row, hand.hoverPoints());
-            isResizeHighlighted = isResizeHighlighted || new Point(col, row).isEqualTo(hand.resizingGateSlot);
+                this._highlightStatusAt(col, row, hand.hoverPoints());
             if (isResizeHighlighted) {
                 painter.setDesiredCursor('ns-resize');
             } else if (isHighlighted) {
@@ -386,7 +395,7 @@ class CircuitDisplay {
             drawer(new GateDrawParams(
                 painter,
                 false,
-                isHighlighted || isResizeHighlighted,
+                isHighlighted && !isResizeHighlighted,
                 isResizeShowing,
                 isResizeHighlighted,
                 gateRect,
@@ -496,7 +505,7 @@ class CircuitDisplay {
             toArray();
 
         let result = this.withCircuit(this.circuitDefinition.withColumns(newCols)).
-            withHighlightedSlot(modificationPoint);
+            withHighlightedSlot({row: modificationPoint.row, col: modificationPoint.col, resizeStyle: false});
         result._compressedColumnIndex = isInserting ? i : null;
         return result;
     }
@@ -601,8 +610,8 @@ class CircuitDisplay {
      * @returns {!{newCircuit: !CircuitDisplay, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
-        let {newCircuit, newHand} = this._tryGrabGate(hand, duplicate) || {newCircuit: this, newHand: hand};
-        return newCircuit._tryGrabResizeTab(newHand) || {newCircuit, newHand};
+        let {newCircuit, newHand} = this._tryGrabResizeTab(hand, duplicate) || {newCircuit: this, newHand: hand};
+        return newCircuit._tryGrabGate(newHand) || {newCircuit, newHand};
     }
 
     /**
@@ -611,7 +620,7 @@ class CircuitDisplay {
      * @returns {undefined|!{newCircuit: !CircuitDisplay, newHand: !Hand}}
      */
     _tryGrabGate(hand, duplicate=false) {
-        if (hand.pos === undefined) {
+        if (hand.isBusy() || hand.pos === undefined) {
             return undefined;
         }
 
@@ -640,7 +649,7 @@ class CircuitDisplay {
     }
 
     /**
-     * @param {undefined|!{col: !int, row: !int}} slot
+     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
      * @returns {!CircuitDisplay}
      */
     withHighlightedSlot(slot) {
@@ -667,10 +676,10 @@ class CircuitDisplay {
                     continue;
                 }
                 let {isResizeHighlighted} =
-                    this._isHighlightedOrResizeTabShowingForGateInSlot(col, row, hand.hoverPoints());
+                    this._highlightStatusAt(col, row, hand.hoverPoints());
                 if (isResizeHighlighted) {
                     return {
-                        newCircuit: this.withHighlightedSlot({col, row}),
+                        newCircuit: this.withHighlightedSlot({col, row, resizeStyle: true}),
                         newHand: hand.withResizeSlot(new Point(col, row))
                     };
                 }
