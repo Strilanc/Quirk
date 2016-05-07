@@ -159,8 +159,8 @@ suite.webGlTest("controlMask", () => {
 });
 
 suite.webGlTest("controlMask_largeReference", () => {
-    let w = 1 << 7;
-    let h = 1 << 10;
+    let w = 1 << 5;
+    let h = 1 << 8;
     let mask = new Controls(0b10111010101010111, 0b10011000001010001);
     let expected = new Float32Array(Seq.range(w * h).
         map(i => mask.allowsState(i) ? 1 : 0).
