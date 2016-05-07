@@ -20,7 +20,7 @@ let CIRCUIT_OP_LEFT_SPACING = 35;
 /** @type {!number} */
 let CIRCUIT_OP_RIGHT_SPACING = 5;
 
-class CircuitDisplay {
+class DisplayedCircuit {
     /**
      *
      * @param {!number} top
@@ -212,7 +212,7 @@ class CircuitDisplay {
     }
 
     height() {
-        return CircuitDisplay.desiredHeight(this.circuitDefinition.numWires);
+        return DisplayedCircuit.desiredHeight(this.circuitDefinition.numWires);
     }
 
     /**
@@ -234,7 +234,7 @@ class CircuitDisplay {
     }
 
     /**
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      */
     afterTidyingUp() {
         return this.withCircuit(this.circuitDefinition.
@@ -246,14 +246,14 @@ class CircuitDisplay {
     }
 
     /**
-     * @param {!CircuitDisplay|*} other
+     * @param {!DisplayedCircuit|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
         if (this === other) {
             return true;
         }
-        return other instanceof CircuitDisplay &&
+        return other instanceof DisplayedCircuit &&
             this.top === other.top &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
             this._compressedColumnIndex === other._compressedColumnIndex;
@@ -474,7 +474,7 @@ class CircuitDisplay {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      */
     previewDrop(hand) {
         return hand.heldGate !== undefined ? this._previewDropMovedGate(hand) : this._previewResizedGate(hand);
@@ -482,7 +482,7 @@ class CircuitDisplay {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      * @private
      */
     _previewDropMovedGate(hand) {
@@ -512,7 +512,7 @@ class CircuitDisplay {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      * @private
      */
     _previewResizedGate(hand) {
@@ -545,7 +545,7 @@ class CircuitDisplay {
 
     /**
      * @param {!Hand} hand
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      */
     afterDropping(hand) {
         let r = this.previewDrop(hand);
@@ -555,10 +555,10 @@ class CircuitDisplay {
 
     /**
      * @param {!CircuitDefinition} circuitDefinition
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      */
     withCircuit(circuitDefinition) {
-        return new CircuitDisplay(
+        return new DisplayedCircuit(
             this.top,
             circuitDefinition,
             this._compressedColumnIndex);
@@ -567,7 +567,7 @@ class CircuitDisplay {
     /**
      * @param {!Hand} hand
      * @param {!int} extraWireCount
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      */
     withJustEnoughWires(hand, extraWireCount) {
         let neededWireCountForPlacement = hand.heldGate !== undefined ? hand.heldGate.height : 0;
@@ -607,7 +607,7 @@ class CircuitDisplay {
     /**
      * @param {!Hand} hand
      * @param {!boolean=} duplicate
-     * @returns {!{newCircuit: !CircuitDisplay, newHand: !Hand}}
+     * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
     tryGrab(hand, duplicate=false) {
         let {newCircuit, newHand} = this._tryGrabResizeTab(hand, duplicate) || {newCircuit: this, newHand: hand};
@@ -617,7 +617,7 @@ class CircuitDisplay {
     /**
      * @param {!Hand} hand
      * @param {!boolean=} duplicate
-     * @returns {undefined|!{newCircuit: !CircuitDisplay, newHand: !Hand}}
+     * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
     _tryGrabGate(hand, duplicate=false) {
         if (hand.isBusy() || hand.pos === undefined) {
@@ -641,7 +641,7 @@ class CircuitDisplay {
             withOverlayedItem(col, new GateColumn(remainingGates)).
             toArray();
         return {
-            newCircuit: new CircuitDisplay(
+            newCircuit: new DisplayedCircuit(
                 this.top,
                 this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGate(gate, offset)
@@ -650,10 +650,10 @@ class CircuitDisplay {
 
     /**
      * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
-     * @returns {!CircuitDisplay}
+     * @returns {!DisplayedCircuit}
      */
     withHighlightedSlot(slot) {
-        return new CircuitDisplay(
+        return new DisplayedCircuit(
             this.top,
             this.circuitDefinition,
             this._compressedColumnIndex,
@@ -662,7 +662,7 @@ class CircuitDisplay {
 
     /**
      * @param {!Hand} hand
-     * @returns {!{newCircuit: !CircuitDisplay, newHand: !Hand}}
+     * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
     _tryGrabResizeTab(hand) {
         if (hand.isBusy() || hand.pos === undefined) {
@@ -823,4 +823,4 @@ class CircuitDisplay {
     }
 }
 
-export default CircuitDisplay;
+export default DisplayedCircuit;

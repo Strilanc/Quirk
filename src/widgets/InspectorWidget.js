@@ -1,6 +1,6 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
-import CircuitDisplay from "src/widgets/CircuitDisplay.js"
+import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
 import Config from "src/Config.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GateFactory from "src/ui/GateFactory.js"
@@ -16,12 +16,12 @@ import Util from "src/base/Util.js"
 export default class InspectorWidget {
     /**
      * @param {!Rect} drawArea
-     * @param {!CircuitDisplay} circuitWidget
+     * @param {!DisplayedCircuit} circuitWidget
      * @param {!ToolboxWidget} toolboxWidget
      * @param {!Hand} hand
      */
     constructor(drawArea, circuitWidget, toolboxWidget, hand) {
-        /** @type {!CircuitDisplay} */
+        /** @type {!DisplayedCircuit} */
         this.circuitWidget = circuitWidget;
         /** @type {!ToolboxWidget} */
         this.toolboxWidget = toolboxWidget;
@@ -57,7 +57,7 @@ export default class InspectorWidget {
 
         return new InspectorWidget(
             drawArea,
-            new CircuitDisplay(
+            new DisplayedCircuit(
                 toolboxHeight,
                 new CircuitDefinition(numWires, [])),
             new ToolboxWidget(drawArea.takeTop(toolboxHeight)),
@@ -135,7 +135,7 @@ export default class InspectorWidget {
     }
 
     /**
-     * @param {!CircuitDisplay} circuitWidget
+     * @param {!DisplayedCircuit} circuitWidget
      * @returns {!InspectorWidget}
      */
     withCircuitWidget(circuitWidget) {
@@ -221,7 +221,7 @@ export default class InspectorWidget {
             wireCount = Config.MIN_WIRE_COUNT;
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        let circuitHeight = CircuitDisplay.desiredHeight(wireCount);
+        let circuitHeight = DisplayedCircuit.desiredHeight(wireCount);
         return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight);
     }
 }
