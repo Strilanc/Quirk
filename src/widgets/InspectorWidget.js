@@ -75,6 +75,7 @@ export default class InspectorWidget {
         this.toolboxWidget.paint(painter, stats, this.hand);
         this.circuitWidget.paint(painter, this.hand, stats, shift);
         this.paintHand(painter, stats);
+        this._drawHint(painter);
     }
 
     /**
@@ -223,5 +224,56 @@ export default class InspectorWidget {
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         let circuitHeight = DisplayedCircuit.desiredHeight(wireCount);
         return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight);
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @private
+     */
+    _drawHint(painter) {
+        if (this.circuitWidget.circuitDefinition.columns.length !== 0) {
+            return;
+        }
+        painter.ctx.save();
+        painter.ctx.globalAlpha = this.hand.pos === undefined || !this.hand.isBusy() ?
+            1.0 :
+            Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
+        painter.ctx.save();
+        painter.ctx.translate(50, 190);
+        painter.ctx.rotate(Math.PI * 0.05);
+        painter.ctx.fillStyle = 'red';
+        painter.ctx.font = '12pt Helvetica';
+        painter.ctx.fillText("drag gates onto circuit", 0, 0);
+        painter.ctx.restore();
+
+        painter.ctx.save();
+        painter.ctx.translate(50, 240);
+        painter.ctx.rotate(Math.PI * 0.02);
+        painter.ctx.fillStyle = 'red';
+        painter.ctx.font = '12pt Helvetica';
+        painter.ctx.fillText("watch outputs change", 0, 0);
+        painter.ctx.restore();
+
+        painter.ctx.beginPath();
+        painter.ctx.moveTo(260, 50);
+        painter.ctx.bezierCurveTo(
+            250, 85,
+            190, 165,
+            145, 183);
+        painter.ctx.moveTo(210, 245);
+        painter.ctx.bezierCurveTo(
+            275, 245,
+            315, 215,
+            330, 200);
+        painter.ctx.strokeStyle = 'red';
+        painter.ctx.lineWidth = 3;
+        painter.ctx.stroke();
+
+        painter.trace(tracer => {
+            tracer.arrowHead(143, 185, 10, Math.PI*0.82, 1.3);
+            tracer.arrowHead(330, 200, 10, Math.PI*-0.23, 1.3);
+        }).thenFill('red');
+
+        painter.ctx.restore();
     }
 }

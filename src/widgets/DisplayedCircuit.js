@@ -268,19 +268,20 @@ class DisplayedCircuit {
             new Rect(0, this.top, this.height(), painter.canvas.clientWidth,
             Config.BACKGROUND_COLOR_CIRCUIT));
 
-        this.drawWires(painter);
+        this._drawWires(painter);
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
-            this.drawGatesInColumn(painter, this.circuitDefinition.columns[col], col, hand, stats, shift);
+            this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats, shift);
         }
 
-        this.drawOutputDisplays(painter, stats, hand);
+        this._drawOutputDisplays(painter, stats, hand);
     }
 
     /**
      * @param {!Painter} painter
+     * @private
      */
-    drawWires(painter) {
+    _drawWires(painter) {
         // Initial value labels
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
             let wireRect = this.wireRect(row);
@@ -365,8 +366,9 @@ class DisplayedCircuit {
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
      * @param {!boolean} shift
+     * @private
      */
-    drawGatesInColumn(painter, gateColumn, col, hand, stats, shift) {
+    _drawColumn(painter, gateColumn, col, hand, stats, shift) {
         this.drawColumnControlWires(painter, gateColumn, col, stats);
 
         let focusSlot = this._highlightedSlot;
@@ -719,9 +721,12 @@ class DisplayedCircuit {
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
      * @param {!Hand} hand
+     * @private
      */
-    drawOutputDisplays(painter, stats, hand) {
-        let colCount = this.circuitDefinition.columns.length + 1;
+    _drawOutputDisplays(painter, stats, hand) {
+        let colCount = Math.max(
+                Config.MIN_COL_COUNT + (this._compressedColumnIndex !== undefined ? 1 : 0),
+                this.circuitDefinition.columns.length) + 1;
         let numWire = this.importantWireCount();
 
         for (let i = 0; i < numWire; i++) {
@@ -744,14 +749,14 @@ class DisplayedCircuit {
         offset += 1;
 
         let bottom = this.wireRect(numWire-1).bottom();
-        let right = this.opRect(this.circuitDefinition.columns.length).x;
+        let right = this.opRect(colCount - 1).x;
         painter.printParagraph(
             "Local wire states\n(Chance/Bloch/Density)",
             new Rect(right+25, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
 
-        this.drawOutputSuperpositionDisplay(painter, stats, offset, hand);
+        this._drawOutputSuperpositionDisplay(painter, stats, offset, hand);
     }
 
     /**
@@ -761,8 +766,9 @@ class DisplayedCircuit {
      * @param {!CircuitStats} stats
      * @param {!int} col
      * @param {!Hand} hand
+     * @private
      */
-    drawOutputSuperpositionDisplay(painter, stats, col, hand) {
+    _drawOutputSuperpositionDisplay(painter, stats, col, hand) {
         let numWire = this.importantWireCount();
         if (numWire >= Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD) {
             return;

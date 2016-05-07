@@ -234,7 +234,7 @@ Gates.HalfTurns = {
         "X",
         Matrix.PAULI_X,
         "Pauli X Gate",
-        "Toggles between ON and OFF.\nAlso known as the Not gate."
+        "The NOT gate.\nToggles between ON and OFF."
     ).withCustomDrawer(args => {
         // The X gate is drawn as a crossed circle when it has controls.
 
@@ -279,14 +279,15 @@ Gates.HalfTurns = {
         "Z",
         Matrix.PAULI_Z,
         "Pauli Z Gate",
-        "Negates the amplitude of states where the qubit is ON.\nAlso known as the Phase Flip gate."),
+        "The phase flip gate.\nNegates phases when the qubit is ON."),
 
     H: new Gate(
         "H",
         Matrix.HADAMARD,
         "Hadamard Gate",
-        "The simplest non-classical gate.\n" +
-        "Toggles between ON and ON+OFF. Toggles between OFF and ON-OFF.")
+        "Creates simple superpositions.\n" +
+        "Maps ON to ON + OFF.\n" +
+        "Maps OFF to ON - OFF.")
 };
 
 const IncGateMaker = span => new Gate(
@@ -730,10 +731,10 @@ Gates.Sets = [
         hint: 'Misc',
         gates: [
             Gates.Misc.SpacerGate,
-            Gates.Misc.MysteryGateMaker(),
+            Gates.Increments.Inc2,
             Gates.Misc.ClockPulseGate,
-            null,
-            null,
+            Gates.Misc.MysteryGateMaker(),
+            Gates.Decrements.Dec2,
             Gates.Misc.QuarterPhaseClockPulseGate
         ]
     },
@@ -757,17 +758,6 @@ Gates.Sets = [
             Gates.Exponentiating.XBackward,
             Gates.Exponentiating.YBackward,
             Gates.Exponentiating.ZBackward
-        ]
-    },
-    {
-        hint: "Counters",
-        gates: [
-            Gates.Increments.Inc2,
-            null,
-            null,
-            Gates.Decrements.Dec2,
-            null,
-            null
         ]
     },
     {

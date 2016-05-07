@@ -57,7 +57,7 @@ GatePainting.paintResizeTab = args => {
     let backColor = args.isResizeHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR;
     let foreColor = args.isResizeHighlighted ? '#222' : 'gray';
     args.painter.ctx.save();
-    args.painter.ctx.globalAlpha = args.isResizeHighlighted ? 1 : 0.5;
+    args.painter.ctx.globalAlpha = args.isResizeHighlighted ? 1 : 0.7;
     args.painter.fillRect(trimRect, backColor);
     args.painter.strokeRect(trimRect, 'gray');
     args.painter.ctx.restore();
