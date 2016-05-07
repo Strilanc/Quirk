@@ -1077,6 +1077,14 @@ class Seq {
     }
 
     /**
+     * Iterates the elements in the subsequence that are at indices congruent to 0 modulo the given step size.
+     * @param stepSize
+     */
+    stride(stepSize) {
+        return this.filterWithIndex((e, i) => i % stepSize === 0);
+    }
+
+    /**
      * Iterates elements reachable by starting from the given sequence and applying the given neighbor yielding function
      * to known nodes.
      * @param {!function(T) : !(T[])} neighborSelector

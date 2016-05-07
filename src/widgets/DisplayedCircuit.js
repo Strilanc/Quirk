@@ -2,6 +2,7 @@ import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
+import equate from "src/base/Equate.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GatePainting from "src/ui/GatePainting.js"
@@ -29,7 +30,7 @@ class DisplayedCircuit {
      * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} highlightedSlot
      */
     constructor(top, circuitDefinition, compressedColumnIndex=undefined, highlightedSlot=undefined) {
-        if (!Number.isInteger(top)) {
+        if (!Number.isFinite(top)) {
             throw new DetailedError("Bad top", {top, circuitDefinition});
         }
         if (!(circuitDefinition instanceof CircuitDefinition)) {
@@ -88,11 +89,11 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!Point} p
+     * @param {!number} y
      * @returns {undefined|!int}
      */
-    findWireAt(p) {
-        let i = Math.floor((p.y - this.top) / Config.WIRE_SPACING);
+    findWireAt(y) {
+        let i = Math.floor((y - this.top) / Config.WIRE_SPACING);
         if (i < 0 || i >= this.circuitDefinition.numWires) {
             return undefined;
         }
@@ -167,7 +168,7 @@ class DisplayedCircuit {
         }
         let pos = hand.pos.minus(hand.heldGateOffset).plus(new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
         let halfColIndex = this.findOpHalfColumnAt(pos);
-        let row = this.findWireAt(pos);
+        let row = this.findWireAt(pos.y);
         if (halfColIndex === undefined || row === undefined) {
             return undefined;
         }
@@ -256,7 +257,8 @@ class DisplayedCircuit {
         return other instanceof DisplayedCircuit &&
             this.top === other.top &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
-            this._compressedColumnIndex === other._compressedColumnIndex;
+            this._compressedColumnIndex === other._compressedColumnIndex &&
+            equate(this._highlightedSlot, other._highlightedSlot);
     }
 
     /**
@@ -583,7 +585,7 @@ class DisplayedCircuit {
      */
     findGateOverlappingPos(pos) {
         let col = this.findExistingOpColumnAt(pos);
-        let row = this.findWireAt(pos);
+        let row = this.findWireAt(pos.y);
         if (col === undefined || row === undefined) {
             return undefined;
         }
