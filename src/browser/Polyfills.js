@@ -16,6 +16,10 @@ const ARRAY_ITER = function() {
 Float32Array.prototype[Symbol.iterator] = Float32Array.prototype[Symbol.iterator] || ARRAY_ITER;
 Float64Array.prototype[Symbol.iterator] = Float64Array.prototype[Symbol.iterator] || ARRAY_ITER;
 
+// This was missing on the iPhone I tested.
+window.performance = window.performance || {};
+window.performance.now = window.performance.now || (() => Date.now());
+
 // Safari only puts properties on instances of WebGLRenderingContext.
 const GL = WebGLRenderingContext;
 if (GL !== undefined && GL.INVALID_ENUM === undefined) {
