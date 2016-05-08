@@ -22,7 +22,7 @@ window.onerror = onErrorHandler;
 /** @type {!HTMLCanvasElement} */
 const canvas = document.getElementById("drawCanvas");
 //noinspection JSValidateTypes
-if (canvas === null) {
+if (!canvas) {
     throw new Error("Couldn't find 'drawCanvas'");
 }
 canvas.width = canvasDiv.clientWidth;
@@ -210,7 +210,7 @@ watchDrags(canvas,
     },
     /**
      * Drop
-     * @param {?Point} pt
+     * @param {undefined|!Point} pt
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {

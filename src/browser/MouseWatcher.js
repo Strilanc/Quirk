@@ -73,7 +73,7 @@ class DragWatcher {
         this._grabPointerId = undefined;
         /** @type {!number} */
         this._grabActivityTime = window.performance.now();
-        /** @type {undefined|null|!Point} */
+        /** @type {undefined|!Point} */
         this._lastPos = undefined;
         /** @type {undefined|!MouseEvent|!TouchEvent} */
         this._lastEv = undefined;
@@ -145,7 +145,7 @@ class DragWatcher {
             this._lastPos = undefined;
             this._lastEv = undefined;
             this._grabPointerId = undefined;
-            this._dropHandler(null, ev);
+            this._dropHandler(undefined, ev);
             return;
         }
 
@@ -203,10 +203,10 @@ class DragWatcher {
         }
 
         this._grabActivityTime = window.performance.now();
-        this._lastPos = null;
+        this._lastPos = undefined;
         this._lastEv = ev;
 
-        this._dragHandler(null, ev);
+        this._dragHandler(undefined, ev);
     }
 
     //noinspection JSUnusedLocalSymbols
@@ -224,7 +224,7 @@ class DragWatcher {
         this._lastEv = undefined;
         this._grabPointerId = undefined;
 
-        this._dropHandler(null, ev);
+        this._dropHandler(undefined, ev);
     }
 
     /**
