@@ -78,3 +78,4 @@ Config.DEFAULT_STROKE_THICKNESS = 1;
 
 // Calling WebGLRenderingContext.getError forces a CPU/GPU sync. It's very expensive.
 Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = false;
+Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS = true;
