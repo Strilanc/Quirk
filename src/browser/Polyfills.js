@@ -5,6 +5,16 @@ Float32Array.prototype.slice = Float32Array.prototype.slice || function(a, b, c)
 Float64Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
     return new Float64Array(Array.from(this).slice(a, b, c));
 };
+Uint32Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
+    return new Uint32Array(Array.from(this).slice(a, b, c));
+};
+Uint16Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
+    return new Uint16Array(Array.from(this).slice(a, b, c));
+};
+Uint8Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
+    return new Uint8Array(Array.from(this).slice(a, b, c));
+};
+
 const ARRAY_ITER = function() {
     let self = this;
     return function*() {
@@ -15,6 +25,13 @@ const ARRAY_ITER = function() {
 };
 Float32Array.prototype[Symbol.iterator] = Float32Array.prototype[Symbol.iterator] || ARRAY_ITER;
 Float64Array.prototype[Symbol.iterator] = Float64Array.prototype[Symbol.iterator] || ARRAY_ITER;
+Uint32Array.prototype[Symbol.iterator] = Uint32Array.prototype[Symbol.iterator] || ARRAY_ITER;
+Uint16Array.prototype[Symbol.iterator] = Uint16Array.prototype[Symbol.iterator] || ARRAY_ITER;
+Uint8Array.prototype[Symbol.iterator] = Uint8Array.prototype[Symbol.iterator] || ARRAY_ITER;
+
+// This was missing on the iPhone I tested.
+window.performance = window.performance || {};
+window.performance.now = window.performance.now || (() => Date.now());
 
 // Safari only puts properties on instances of WebGLRenderingContext.
 const GL = WebGLRenderingContext;

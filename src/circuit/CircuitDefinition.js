@@ -540,16 +540,19 @@ class CircuitDefinition {
         let nonSwaps = seq(col.gates).
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
-                if (gate === null || this.gateAtLocIsDisabledReason(pt) !== undefined) {
-                    return [];
-                }
-                let m = gate.matrixAt(time);
-                if (gate === Gates.Special.SwapHalf || m.isIdentity()) {
+                if (gate === null
+                        || gate === Gates.Special.SwapHalf
+                        || this.gateAtLocIsDisabledReason(pt) !== undefined) {
                     return [];
                 }
 
                 if (gate.customShaders !== undefined) {
                     return gate.customShaders.map(f => (inTex, conTex) => f(inTex, conTex, i, time));
+                }
+
+                let m = gate.matrixAt(time);
+                if (m.isIdentity()) {
+                    return [];
                 }
 
                 return [(inTex, conTex) => GateShaders.qubitOperation(inTex, m, i, conTex)];

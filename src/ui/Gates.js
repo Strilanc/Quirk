@@ -319,7 +319,7 @@ const CountingGateMaker = span => new Gate(
     t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
     "Counting Gate",
     "Adds an increasing little-endian count into a block of qubits."
-).withSerializedId("counting" + span).
+).withSerializedId("Counting" + span).
     withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
     withHeight(span).
     withTimeDependence().
