@@ -304,21 +304,21 @@ const FourierTransformMaker = span => new Gate(
     "QFT",
     Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span))),
     "Fourier Transform Gate",
-    "Switches between time and frequency space."
+    "Transforms to/from phase frequency space."
 ).withSerializedId("QFT" + span).
     withHeight(span).
     withCustomShaders(
         Seq.range(Math.floor(span/2)).
         map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
         concat(Seq.range(span).
-            map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i, false))).
+            map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
         toArray());
 
 const CountingGateMaker = span => new Gate(
     "+T",
     t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
     "Counting Gate",
-    "Continuously increments the little-endian number represented by a block of qubits."
+    "Adds an increasing little-endian count into a block of qubits."
 ).withSerializedId("counting" + span).
     withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
     withHeight(span).
@@ -779,23 +779,12 @@ Gates.Sets = [
     {
         hint: 'Misc',
         gates: [
-            Gates.Misc.SpacerGate,
-            Gates.Counters.Counting2,
-            Gates.Misc.ClockPulseGate,
-            Gates.Misc.MysteryGateMaker(),
-            null,
-            Gates.Misc.QuarterPhaseClockPulseGate
-        ]
-    },
-    {
-        hint: 'Arithmetic',
-        gates: [
             Gates.FourierTransforms.Qft2,
+            Gates.Counters.Counting2,
             Gates.Increments.Inc2,
-            null,
-            null,
-            Gates.Decrements.Dec2,
-            null
+            Gates.Misc.SpacerGate,
+            Gates.Misc.MysteryGateMaker(),
+            Gates.Decrements.Dec2
         ]
     },
     {
