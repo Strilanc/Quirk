@@ -9,6 +9,14 @@
         <a href="https://github.com/Strilanc/Quirk/"
            style="position: fixed; bottom: 5px; right: 5px; font-size: 20px;">About Quirk</a>
         <div id="inspectorDiv">
+            <div id="loading-div" style="color: orange; font-size: 24px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                Loading Quirk...
+            </div>
+            <noscript>
+                <div style="color: red; font-size: 24px; position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);">
+                    You appear to have JavaScript blocked. But Quirk is made out of JavaScript... :(
+                </div>
+            </noscript>
             <div id="canvasDiv" style="width: 100%;">
                 <canvas id="drawCanvas"></canvas>
             </div>

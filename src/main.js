@@ -322,10 +322,11 @@ const loadCircuitFromUrl = () => {
 
 window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl();
-haveLoaded = true;
-redrawNow();
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
+haveLoaded = true;
 setTimeout(() => {
     initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
+    redrawNow();
+    document.getElementById("loading-div").style.display = 'none';
 }, 0);
