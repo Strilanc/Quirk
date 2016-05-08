@@ -121,8 +121,15 @@ CircuitTextures.mergedReadFloats = textures => {
             return nextTex;
         });
 
-    let combinedPixels = combinedTex.readPixels();
+    let combinedTexBytes = allocSizedTexture(combinedTex.width*2, combinedTex.height*2,
+        WebGLRenderingContext.UNSIGNED_BYTE);
+    Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(combinedTexBytes);
     CircuitTextures.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
+
+    let combinedBytes = combinedTexBytes.readPixels();
+    let combinedPixels = Shaders.decodeByteBufferToFloatBuffer(
+        combinedBytes, combinedTexBytes.width/2, combinedTexBytes.height/2);
+    CircuitTextures.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
 
     return Seq.range(textures.length).map(i => {
         let offset = pixelOffsets[i] * 4;
