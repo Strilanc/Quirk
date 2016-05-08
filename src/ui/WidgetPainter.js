@@ -20,7 +20,7 @@ export default class WidgetPainter {
      */
     static describeGateTransformations(matrix, format) {
         let n = matrix.height();
-        let b = Math.log2(n);
+        let b = Math.round(Math.log2(n));
         return Seq.range(n).
             map(c => {
                 let inputDescription = WidgetPainter.describeKet(b, c, 1, Format.SIMPLIFIED);

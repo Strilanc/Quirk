@@ -107,7 +107,7 @@ CircuitTextures.control = (qubitCount, mask) => {
 CircuitTextures.mergedReadFloats = textures => {
     let pixelCounts = textures.map(e => e.width * e.height);
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
-    let lgTotal = Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1]));
+    let lgTotal = Math.round(Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1])));
     let combinedTex = allocQubitTexture(lgTotal);
     Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
     combinedTex = CircuitTextures.aggregateWithReuse(
@@ -219,7 +219,7 @@ CircuitTextures.pixelsToAmplitudes = (pixels, unity) => {
  * @returns {!int}
  */
 CircuitTextures.qubitCount = superpositionTex => {
-    return Math.log2(superpositionTex.width * superpositionTex.height);
+    return Math.round(Math.log2(superpositionTex.width * superpositionTex.height));
 };
 
 /**
@@ -334,7 +334,7 @@ CircuitTextures._sumDown = (summandsTex, outCount) => {
 
     return CircuitTextures.aggregateReusingIntermediates(
         summandsTex,
-        Seq.range(Math.log2(summandsTex.width * summandsTex.height / outSize)),
+        Seq.range(Math.round(Math.log2(summandsTex.width * summandsTex.height / outSize))),
         accTex => {
             let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
                 [accTex.width / 2, 0] :

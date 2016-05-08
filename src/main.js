@@ -1,4 +1,4 @@
-import {} from "src/fallback.js"
+import {} from "src/browser/Polyfills.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"

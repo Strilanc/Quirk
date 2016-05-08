@@ -18,8 +18,11 @@ export default class DetailedError extends Error {
         this.name = 'Error';
         /** @type {!string} */
         this.message = message;
-        /** @type {!string} */
-        this.stack = new Error().stack.replace(/^Error\n\s+at new DetailedError (\S+)\s?\n\s+at /, '\n    ');
+        /** @type {undefined|!string} */
+        this.stack = new Error().stack;
+        if (this.stack !== undefined) {
+            this.stack = this.stack.replace(/^Error\n\s+at new DetailedError (\S+)\s?\n\s+at /, '\n    ');
+        }
 
         CONSTRUCTOR_CALLS_NESTING++;
         try {
