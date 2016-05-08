@@ -87,7 +87,7 @@ export default class MathPainter {
         let unitRadius = diam/2;
         let x = drawArea.x;
         let y = drawArea.y;
-        const ε = 0.000001;
+        const ε = 0.00005;
 
         painter.fillRect(drawArea, backColor);
 
@@ -178,7 +178,7 @@ export default class MathPainter {
                     x + diam*c + diam,
                     y + diam*r,
                     `Amplitude of |${Util.bin(r*matrix.width() + c, Math.round(Math.log2(numRows*numCols)))}⟩`,
-                    matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
+                    matrix.cell(c, r).toString(new Format(false, 0, 5, ", ")));
             }
         }
     }
@@ -421,7 +421,7 @@ export default class MathPainter {
         let unitRadius = diam/2;
         let x = drawArea.x;
         let y = drawArea.y;
-        const ε = 0.000001;
+        const ε = 0.00003;
 
         painter.fillRect(drawArea, backgroundColor);
 
