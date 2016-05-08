@@ -36,10 +36,12 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
-        /** @type {undefined|!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int):!WglConfiguredShader} */
-        this.customShader = undefined;
+        /** @type {undefined|!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        this.customShaders = undefined;
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
+        /** @type {!boolean} */
+        this._isTimeDependent = false;
     }
 
     /**
@@ -51,10 +53,20 @@ class Gate {
         g.serializedId = this.serializedId;
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
-        g.customShader = this.customShader;
+        g.customShaders = this.customShaders;
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
+        g._isTimeDependent = this._isTimeDependent;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    withTimeDependence() {
+        let g = this._copy();
+        g._isTimeDependent = true;
         return g;
     }
 
@@ -99,13 +111,21 @@ class Gate {
     }
 
     /**
-     * @param {!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int) : !WglConfiguredShader} shaderFunc
+     * @param {!Array.<!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader>} shaderFuncs
+     * @returns {!Gate}
+     */
+    withCustomShaders(shaderFuncs) {
+        let g = this._copy();
+        g.customShaders = shaderFuncs;
+        return g;
+    }
+
+    /**
+     * @param {!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader} shaderFunc
      * @returns {!Gate}
      */
     withCustomShader(shaderFunc) {
-        let g = this._copy();
-        g.customShader = shaderFunc;
-        return g;
+        return this.withCustomShaders([shaderFunc]);
     }
 
     /**
@@ -156,7 +176,7 @@ class Gate {
      * @returns {!boolean}
      */
     isTimeBased() {
-        return !(this.matrixOrFunc instanceof Matrix);
+        return this._isTimeDependent || !(this.matrixOrFunc instanceof Matrix);
     }
 
     /**
@@ -176,7 +196,7 @@ class Gate {
             this.blurb === other.blurb &&
             this.symbol === other.symbol &&
             this.tag === other.tag &&
-            this.customShader === other.customShader &&
+            this.customShaders === other.customShaders &&
             this.customDrawer === other.customDrawer;
     }
 

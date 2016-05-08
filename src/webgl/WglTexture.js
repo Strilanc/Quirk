@@ -163,7 +163,7 @@ export default class WglTexture {
         checkGetErrorResult(gl, "framebufferTexture2D", true);
         checkFrameBufferStatusResult(gl, true);
         gl.readPixels(0, 0, this.width, this.height, GL.RGBA, this.pixelType, outputBuffer);
-        checkGetErrorResult(gl, "readPixels(..., RGBA, UNSIGNED_BYTE, ...)", true);
+        checkGetErrorResult(gl, `readPixels(..., RGBA, ${this.pixelType}, ...)`, true);
 
         return outputBuffer;
     }

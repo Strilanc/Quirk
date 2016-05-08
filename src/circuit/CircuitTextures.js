@@ -1,11 +1,13 @@
-import DetailedError from "src/base/DetailedError.js"
-import Matrix from "src/math/Matrix.js"
-import Controls from "src/circuit/Controls.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
-import { seq, Seq } from "src/base/Seq.js"
+import Config from "src/Config.js"
+import Controls from "src/circuit/Controls.js"
+import DetailedError from "src/base/DetailedError.js"
+import GateShaders from "src/circuit/GateShaders.js"
+import Matrix from "src/math/Matrix.js"
 import Shaders from "src/webgl/Shaders.js"
-import WglTexture from "src/webgl/WglTexture.js"
 import Util from "src/base/Util.js"
+import WglTexture from "src/webgl/WglTexture.js"
+import { seq, Seq } from "src/base/Seq.js"
 
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.
@@ -106,7 +108,7 @@ CircuitTextures.control = (qubitCount, mask) => {
 CircuitTextures.mergedReadFloats = textures => {
     let pixelCounts = textures.map(e => e.width * e.height);
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
-    let lgTotal = Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1]));
+    let lgTotal = Math.round(Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1])));
     let combinedTex = allocQubitTexture(lgTotal);
     Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
     combinedTex = CircuitTextures.aggregateWithReuse(
@@ -120,8 +122,23 @@ CircuitTextures.mergedReadFloats = textures => {
             return nextTex;
         });
 
-    let combinedPixels = combinedTex.readPixels();
+    let combinedPixels;
+    if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS) {
+        let combinedTexBytes = allocSizedTexture(combinedTex.width*2, combinedTex.height*2,
+            WebGLRenderingContext.UNSIGNED_BYTE);
+        Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(combinedTexBytes);
+
+        let combinedBytePixels = combinedTexBytes.readPixels();
+        combinedPixels = Shaders.decodeByteBufferToFloatBuffer(
+            combinedBytePixels,
+            combinedTex.width,
+            combinedTex.height);
+        CircuitTextures.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
+    } else {
+        combinedPixels = combinedTex.readPixels();
+    }
     CircuitTextures.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
+
 
     return Seq.range(textures.length).map(i => {
         let offset = pixelOffsets[i] * 4;
@@ -133,11 +150,12 @@ CircuitTextures.mergedReadFloats = textures => {
 /**
  * @param {!WglTexture} inputTex
  * @param {!WglTexture} controlTex
- * @param {!function(inputTex:!WglTexture,controlTex:!WglTexture):!WglConfiguredShader} customShader
+ * @param {!number} time
+ * @param {!function(inputTex:!WglTexture,controlTex:!WglTexture,time:!number):!WglConfiguredShader} customShader
  */
-CircuitTextures.applyCustomShader = (customShader, inputTex, controlTex) => {
+CircuitTextures.applyCustomShader = (customShader, inputTex, controlTex, time) => {
     let result = allocSameSizedTexture(inputTex);
-    customShader(inputTex, controlTex).renderTo(result);
+    customShader(inputTex, controlTex, time).renderTo(result);
     return result;
 };
 
@@ -150,7 +168,7 @@ CircuitTextures.applyCustomShader = (customShader, inputTex, controlTex) => {
  */
 CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
     let result = allocSameSizedTexture(stateTex);
-    CircuitShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
+    GateShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
     return result;
 };
 
@@ -217,7 +235,7 @@ CircuitTextures.pixelsToAmplitudes = (pixels, unity) => {
  * @returns {!int}
  */
 CircuitTextures.qubitCount = superpositionTex => {
-    return Math.log2(superpositionTex.width * superpositionTex.height);
+    return Math.round(Math.log2(superpositionTex.width * superpositionTex.height));
 };
 
 /**
@@ -332,7 +350,7 @@ CircuitTextures._sumDown = (summandsTex, outCount) => {
 
     return CircuitTextures.aggregateReusingIntermediates(
         summandsTex,
-        Seq.range(Math.log2(summandsTex.width * summandsTex.height / outSize)),
+        Seq.range(Math.round(Math.log2(summandsTex.width * summandsTex.height / outSize))),
         accTex => {
             let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
                 [accTex.width / 2, 0] :

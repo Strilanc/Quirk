@@ -300,6 +300,31 @@ const IncGateMaker = span => new Gate(
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1));
 
+const FourierTransformMaker = span => new Gate(
+    "QFT",
+    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span))),
+    "Fourier Transform Gate",
+    "Transforms to/from phase frequency space."
+).withSerializedId("QFT" + span).
+    withHeight(span).
+    withCustomShaders(
+        Seq.range(Math.floor(span/2)).
+        map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
+        concat(Seq.range(span).
+            map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
+        toArray());
+
+const CountingGateMaker = span => new Gate(
+    "+T",
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
+    "Counting Gate",
+    "Adds an increasing little-endian count into a block of qubits."
+).withSerializedId("counting" + span).
+    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
+    withHeight(span).
+    withTimeDependence().
+    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span, Math.floor(time*(1<<span))));
+
 const DecGateMaker = span => new Gate(
     "-1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
@@ -308,6 +333,16 @@ const DecGateMaker = span => new Gate(
 ).withSerializedId("dec" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1));
+
+Gates.FourierTransforms = Gate.makeFamily({
+    Qft2: FourierTransformMaker(2),
+    Qft3: FourierTransformMaker(3),
+    Qft4: FourierTransformMaker(4),
+    Qft5: FourierTransformMaker(5),
+    Qft6: FourierTransformMaker(6),
+    Qft7: FourierTransformMaker(7),
+    Qft8: FourierTransformMaker(8)
+});
 
 /**
  * Gates that correspond to increments of multiple qubits.
@@ -320,6 +355,19 @@ Gates.Increments = Gate.makeFamily({
     Inc6: IncGateMaker(6),
     Inc7: IncGateMaker(7),
     Inc8: IncGateMaker(8)
+});
+
+/**
+ * Gates that correspond to increments of multiple qubits.
+ */
+Gates.Counters = Gate.makeFamily({
+    Counting2: CountingGateMaker(2),
+    Counting3: CountingGateMaker(3),
+    Counting4: CountingGateMaker(4),
+    Counting5: CountingGateMaker(5),
+    Counting6: CountingGateMaker(6),
+    Counting7: CountingGateMaker(7),
+    Counting8: CountingGateMaker(8)
 });
 
 /**
@@ -731,12 +779,12 @@ Gates.Sets = [
     {
         hint: 'Misc',
         gates: [
-            Gates.Misc.SpacerGate,
+            Gates.FourierTransforms.Qft2,
+            Gates.Counters.Counting2,
             Gates.Increments.Inc2,
-            Gates.Misc.ClockPulseGate,
+            Gates.Misc.SpacerGate,
             Gates.Misc.MysteryGateMaker(),
-            Gates.Decrements.Dec2,
-            Gates.Misc.QuarterPhaseClockPulseGate
+            Gates.Decrements.Dec2
         ]
     },
     {
@@ -868,6 +916,22 @@ Gates.KnownToSerializer = [
     Gates.Increments.Inc6,
     Gates.Increments.Inc7,
     Gates.Increments.Inc8,
+
+    Gates.Counters.Counting2,
+    Gates.Counters.Counting3,
+    Gates.Counters.Counting4,
+    Gates.Counters.Counting5,
+    Gates.Counters.Counting6,
+    Gates.Counters.Counting7,
+    Gates.Counters.Counting8,
+
+    Gates.FourierTransforms.Qft2,
+    Gates.FourierTransforms.Qft3,
+    Gates.FourierTransforms.Qft4,
+    Gates.FourierTransforms.Qft5,
+    Gates.FourierTransforms.Qft6,
+    Gates.FourierTransforms.Qft7,
+    Gates.FourierTransforms.Qft8,
 
     Gates.Decrements.Dec2,
     Gates.Decrements.Dec3,

@@ -74,7 +74,7 @@ export default class InspectorWidget {
 
         this.toolboxWidget.paint(painter, stats, this.hand);
         this.circuitWidget.paint(painter, this.hand, stats, shift);
-        this.paintHand(painter, stats);
+        this._paintHand(painter, stats);
         this._drawHint(painter);
     }
 
@@ -83,16 +83,16 @@ export default class InspectorWidget {
      * @param {!CircuitStats} stats
      * @private
      */
-    paintHand(painter, stats) {
+    _paintHand(painter, stats) {
         if (this.hand.pos === undefined || this.hand.heldGate === undefined) {
             return;
         }
 
         let gate = this.hand.heldGate;
-        let pos = this.hand.pos.minus(this.hand.heldGateOffset);
+        let pos = this.hand.pos.minus(this.hand.holdOffset);
         let rect = new Rect(
-            pos.x,
-            pos.y,
+            Math.round(pos.x - 0.5) + 0.5,
+            Math.round(pos.y - 0.5) + 0.5,
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.width-1),
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.height-1));
         let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;

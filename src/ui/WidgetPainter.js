@@ -1,14 +1,14 @@
-import Format from "src/base/Format.js"
-import Seq from "src/base/Seq.js"
-import Util from "src/base/Util.js"
-import Rect from "src/math/Rect.js"
-import Config from "src/Config.js"
-import Point from "src/math/Point.js"
-import Matrix from "src/math/Matrix.js"
 import Complex from "src/math/Complex.js"
+import Config from "src/Config.js"
+import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
-import Painter from "src/ui/Painter.js"
 import MathPainter from "src/ui/MathPainter.js"
+import Matrix from "src/math/Matrix.js"
+import Painter from "src/ui/Painter.js"
+import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
+import {seq, Seq} from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 export default class WidgetPainter {
 
@@ -20,7 +20,7 @@ export default class WidgetPainter {
      */
     static describeGateTransformations(matrix, format) {
         let n = matrix.height();
-        let b = Math.log2(n);
+        let b = Math.round(Math.log2(n));
         return Seq.range(n).
             map(c => {
                 let inputDescription = WidgetPainter.describeKet(b, c, 1, Format.SIMPLIFIED);
@@ -38,8 +38,8 @@ export default class WidgetPainter {
                     mapWithIndex((e, c) => WidgetPainter.describeKet(b, c, e, format)).
                     filter(e => e !== "").
                     join(" + ").
-                    replace(" + -", " - ").
-                    replace(" + +", " + ");
+                    split(" + -").join(" - ").
+                    split(" + +").join(" + ");
                 return 'transforms ' + inputDescription + ' into ' + outputDescription;
             }).
             toArray();
@@ -164,7 +164,7 @@ export default class WidgetPainter {
         if (factor.isEqualTo(0)) {
             return "";
         }
-        let scaleFactoDesc =
+        let scaleFactorDesc =
             factor.isEqualTo(1) ? "" :
             factor.isEqualTo(-1) ? "-" :
             factor.isEqualTo(Complex.I) ? "i" :
@@ -172,11 +172,8 @@ export default class WidgetPainter {
             (factor.real === 0 || factor.imag === 0) && format !== Format.CONSISTENT ? factor.toString(format) :
             '(' + factor.toString(format) + ')·';
 
-        let bitDesc = bitMask.toString(2);
-        while (bitDesc.length < bitCount) {
-            bitDesc = '0' + bitDesc;
-        }
-        return scaleFactoDesc + '|' + bitDesc + '⟩';
+        let bitDesc = seq(bitMask.toString(2)).reverse().padded(bitCount, '0').join('');
+        return scaleFactorDesc + '|' + bitDesc + '⟩';
     }
     /**
      * @param {!Array.<!number>} unitAxis x, y, z

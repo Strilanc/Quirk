@@ -154,12 +154,16 @@ const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
 
         val = abs(val);
         float exponent = floor(log2(val));
+        if (pow(2.0, exponent) > val) {
+            // On my machine this happens for val=0.2499999850988388
+            exponent = floor(exponent - 0.5);
+        }
         float mantissa = val * exp2(-exponent) - 1.0;
 
         float a = exponent + 127.0;
         float b = floor(mantissa * 256.0);
         float c = floor(mod(mantissa * 65536.0, 256.0));
-        float d = mod(mantissa * 16777216.0, 256.0) + sign;
+        float d = floor(mod(mantissa * 8388608.0, 128.0)) * 2.0 + sign;
         return vec4(a, b, c, d) / 255.0;
     }
 
@@ -213,8 +217,8 @@ const decodeByteToFloat = (a, b, c, d) => {
 /**
  * Decodes the bytes in a Uint8Array (from a float-encoded-as-bytes texture) back into the desired Float32Array.
  * @param {!Uint8Array} bytes
- * @param {!int} width The width of the rgba byte texture this byte buffer was read from.
- * @param {!int} height The height of the rgba byte texture this byte buffer was read from.
+ * @param {!int} width The width of the float texture this byte buffer is an encoding of.
+ * @param {!int} height The height of the float texture this byte buffer is an encoding of.
  * @returns {!Float32Array}
  */
 Shaders.decodeByteBufferToFloatBuffer = (bytes, width, height) => {

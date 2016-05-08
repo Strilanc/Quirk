@@ -2,6 +2,7 @@ import CircuitShaders from "src/circuit/CircuitShaders.js"
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
 import GateColumn from "src/circuit/GateColumn.js"
+import GateShaders from "src/circuit/GateShaders.js"
 import Gates from "src/ui/Gates.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
@@ -540,20 +541,20 @@ class CircuitDefinition {
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
                 if (gate === null || this.gateAtLocIsDisabledReason(pt) !== undefined) {
-                    return null;
+                    return [];
                 }
                 let m = gate.matrixAt(time);
                 if (gate === Gates.Special.SwapHalf || m.isIdentity()) {
-                    return null;
+                    return [];
                 }
 
-                if (gate.customShader !== undefined) {
-                    return (inTex, conTex) => gate.customShader(inTex, conTex, i);
+                if (gate.customShaders !== undefined) {
+                    return gate.customShaders.map(f => (inTex, conTex) => f(inTex, conTex, i, time));
                 }
 
-                return (inTex, conTex) => CircuitShaders.qubitOperation(inTex, m, i, conTex);
+                return [(inTex, conTex) => GateShaders.qubitOperation(inTex, m, i, conTex)];
             }).
-            filter(e => e !== null);
+            flatten();
         let swaps = col.swapPairs().
             map(([i1, i2]) => (inTex, conTex) => CircuitShaders.swap(inTex, i1, i2, conTex));
         return nonSwaps.concat(swaps).toArray();

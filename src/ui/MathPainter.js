@@ -87,7 +87,7 @@ export default class MathPainter {
         let unitRadius = diam/2;
         let x = drawArea.x;
         let y = drawArea.y;
-        const ε = 0.000001;
+        const ε = 0.00005;
 
         painter.fillRect(drawArea, backColor);
 
@@ -177,8 +177,8 @@ export default class MathPainter {
                     painter,
                     x + diam*c + diam,
                     y + diam*r,
-                    `Amplitude of |${Util.bin(r*matrix.width() + c, Math.log2(numRows*numCols))}⟩`,
-                    matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
+                    `Amplitude of |${Util.bin(r*matrix.width() + c, Math.round(Math.log2(numRows*numCols)))}⟩`,
+                    matrix.cell(c, r).toString(new Format(false, 0, 5, ", ")));
             }
         }
     }
@@ -421,7 +421,7 @@ export default class MathPainter {
         let unitRadius = diam/2;
         let x = drawArea.x;
         let y = drawArea.y;
-        const ε = 0.000001;
+        const ε = 0.00003;
 
         painter.fillRect(drawArea, backgroundColor);
 
@@ -484,6 +484,7 @@ export default class MathPainter {
         for (let pt of focusPoints) {
             let c = Math.floor((pt.x - x) / diam);
             let r = Math.floor((pt.y - y) / diam);
+            let n = Math.round(Math.log2(numRows));
             if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
                 painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
                 if (r === c) {
@@ -491,14 +492,14 @@ export default class MathPainter {
                         painter,
                         x + diam*c + diam,
                         y + diam*r,
-                        `Probability of |${Util.bin(r, Math.log2(numRows))}⟩`,
+                        `Probability of |${Util.bin(r, n)}⟩`,
                         new Format(false, 0, 4, ", ").formatFloat(matrix.cell(c, r).real*100) + "%");
                 } else {
                     MathPainter.paintDeferredValueTooltip(
                         painter,
                         x + diam*c + diam,
                         y + diam*r,
-                        `Coupling of |${Util.bin(c, Math.log2(numRows))}⟩ to ⟨${Util.bin(r, Math.log2(numRows))}|`,
+                        `Coupling of |${Util.bin(c, n)}⟩ to ⟨${Util.bin(r, n)}|`,
                         matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
                 }
             }

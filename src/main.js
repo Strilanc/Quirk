@@ -1,4 +1,4 @@
-import {} from "src/fallback.js"
+import {} from "src/browser/Polyfills.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
@@ -22,7 +22,7 @@ window.onerror = onErrorHandler;
 /** @type {!HTMLCanvasElement} */
 const canvas = document.getElementById("drawCanvas");
 //noinspection JSValidateTypes
-if (canvas === null) {
+if (!canvas) {
     throw new Error("Couldn't find 'drawCanvas'");
 }
 canvas.width = canvasDiv.clientWidth;
@@ -85,10 +85,10 @@ const getCircuitCycleTime = (() => {
 let currentCircuitStatsCache =
     new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
-let desiredCanvasSize = () => {
+let desiredCanvasSizeFor = curInspector => {
     return {
-        w: Math.max(canvasDiv.clientWidth, inspector.desiredWidth()),
-        h: InspectorWidget.defaultHeight(inspector.circuitWidget.circuitDefinition.numWires)
+        w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
+        h: InspectorWidget.defaultHeight(curInspector.circuitWidget.circuitDefinition.numWires)
     };
 };
 
@@ -97,7 +97,7 @@ let desiredCanvasSize = () => {
  * @returns {!InspectorWidget}
  */
 const syncArea = ins => {
-    let size = desiredCanvasSize();
+    let size = desiredCanvasSizeFor(ins);
     ins.updateArea(new Rect(0, 0, size.w, size.h));
     return ins;
 };
@@ -133,7 +133,7 @@ const redrawNow = () => {
     }
     let stats = currentCircuitStatsCache.statsAtApproximateTime(getCircuitCycleTime());
 
-    let size = desiredCanvasSize();
+    let size = desiredCanvasSizeFor(shown);
     canvas.width = size.w;
     canvas.height = size.h;
     let painter = new Painter(canvas);
@@ -210,7 +210,7 @@ watchDrags(canvas,
     },
     /**
      * Drop
-     * @param {?Point} pt
+     * @param {undefined|!Point} pt
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {

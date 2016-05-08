@@ -211,7 +211,7 @@ export default class CircuitStats {
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
-                    (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex));
+                    (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex, time));
 
                 // Stats for inline displays.
                 qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(
