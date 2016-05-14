@@ -315,7 +315,7 @@ Gates.CountingFamily = Gate.generateFamily(1, 8, span => new Gate(
     "Counting Gate",
     "Adds an increasing little-endian count into a block of qubits.").
     withSerializedId("Counting" + span).
-    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
+    withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
@@ -327,7 +327,7 @@ Gates.UncountingFamily = Gate.generateFamily(1, 8, span => new Gate(
     "Down Counting Gate",
     "Subtracts an increasing little-endian count from a block of qubits.").
     withSerializedId("Uncounting" + span).
-    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
+    withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span, true)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
@@ -658,7 +658,7 @@ Gates.Misc = {
         t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate",
         "Xors a square wave into the target wire.").
-        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0)).
+        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 2)).
         withStableDuration(0.5),
 
     QuarterPhaseClockPulseGate: new Gate(
@@ -666,7 +666,7 @@ Gates.Misc = {
         t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate (Quarter Phase)",
         "Xors a quarter-phased square wave into the target wire.").
-        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75)).
+        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75, 2)).
         withStableDuration(0.25),
 
     SpacerGate: new Gate(
