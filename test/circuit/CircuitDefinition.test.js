@@ -43,9 +43,9 @@ const TEST_GATES = new Map([
 
     ['#', new Gate('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', new Gate('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
-    ['2', Gates.Increments.Inc2],
-    ['3', Gates.Increments.Inc3],
-    ['4', Gates.Increments.Inc4],
+    ['2', Gates.IncrementFamily.ofSize(2)],
+    ['3', Gates.IncrementFamily.ofSize(3)],
+    ['4', Gates.IncrementFamily.ofSize(4)],
     ['Q', new Gate('Q', Matrix.square(1, 1, 1, 1,
                                       1, Complex.I, -1, Complex.I.neg(),
                                       1, -1, 1, -1,

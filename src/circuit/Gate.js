@@ -5,6 +5,7 @@ import GateDrawParams from "src/ui/GateDrawParams.js"
 import Config from "src/Config.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 /**
  * Describes a quantum operation that may vary with time.
@@ -140,6 +141,25 @@ class Gate {
             g.gateFamily = newGates;
         }
         return Util.recomposedObjectValues(gatesObj, newGates);
+    }
+
+    /**
+     * @param {!int} minSize
+     * @param {!int} maxSize
+     * @param {!function(!int):!Gate} gateGenerator
+     * @returns {!{all: !Array.<!Gate>, representative: !Gate, ofSize: !function(!int) : undefined|!Gate}}
+     * @template T
+     */
+    static generateFamily(minSize, maxSize, gateGenerator) {
+        let gates = Seq.range(maxSize + 1).skip(minSize).map(i => gateGenerator(i)._copy()).toArray();
+        for (let g of gates) {
+            g.gateFamily = gates;
+        }
+        return {
+            all: gates,
+            representative: gates[Math.max(0, 2-minSize)],
+            ofSize: i => seq(gates).concat([undefined]).filter(e => e.height === i || e === undefined).first()
+        };
     }
 
     canChangeInSize() {
