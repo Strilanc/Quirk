@@ -369,7 +369,7 @@ class DisplayedCircuit {
      * @private
      */
     _drawColumn(painter, gateColumn, col, hand, stats, shift) {
-        this.drawColumnControlWires(painter, gateColumn, col, stats);
+        this._drawColumnControlWires(painter, gateColumn, col, stats);
 
         let focusSlot = this._highlightedSlot;
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
@@ -381,17 +381,12 @@ class DisplayedCircuit {
 
             let {isHighlighted, isResizeShowing, isResizeHighlighted} =
                 this._highlightStatusAt(col, row, hand.hoverPoints());
-            if (isResizeHighlighted) {
-                painter.setDesiredCursor('ns-resize');
-            } else if (isHighlighted) {
-                if (shift) {
-                    painter.setDesiredCursor('pointer');
-                } else {
-                    painter.setDesiredCursor('move');
-                }
-            }
 
             let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
+            painter.noteTouchBlocker({rect: gateRect, cursor: 'pointer'});
+            if (gate.canChangeInSize()) {
+                painter.noteTouchBlocker({rect: GatePainting.rectForResizeTab(gateRect), cursor: 'ns-resize'});
+            }
             drawer(new GateDrawParams(
                 painter,
                 false,
@@ -425,8 +420,9 @@ class DisplayedCircuit {
      * @param {!GateColumn} gateColumn
      * @param {!int} columnIndex
      * @param {!CircuitStats} stats
+     * @private
      */
-    drawColumnControlWires(painter, gateColumn, columnIndex, stats) {
+    _drawColumnControlWires(painter, gateColumn, columnIndex, stats) {
         let n = gateColumn.gates.length;
         let gs = gateColumn.gates;
 

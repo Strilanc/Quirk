@@ -106,16 +106,17 @@ class ToolboxWidget {
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
                 if (gate !== null) {
-                    let r = this.gateDrawRect(groupIndex, gateIndex);
-                    let isHighlighted = seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
+                    let rect = this.gateDrawRect(groupIndex, gateIndex);
+                    let isHighlighted = seq(hand.hoverPoints()).any(pt => rect.containsPoint(pt));
                     let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
+                    painter.noteTouchBlocker({rect, cursor: 'pointer'});
                     drawer(new GateDrawParams(
                         painter,
                         true,
                         isHighlighted,
                         false,
                         false,
-                        r,
+                        rect,
                         Util.notNull(gate),
                         stats,
                         null,
@@ -131,7 +132,6 @@ class ToolboxWidget {
             let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
                 snapInside(painter.paintableArea().skipTop(gateRect.y));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
-            painter.setDesiredCursor('pointer');
         }
 
         let r = new Rect(0, 0, Config.TOOLBOX_MARGIN_X, this.area.h);
