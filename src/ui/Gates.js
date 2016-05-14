@@ -433,7 +433,17 @@ Gates.OtherZ = {
         "Z^-⅛",
         Matrix.fromPauliRotation(0, 0, -1 / 16),
         "Z^-⅛ Gate",
-        "Adjoint eighth root of Z.")
+        "Adjoint eighth root of Z."),
+    Z16: new Gate(
+        "Z^⅟₁₆",
+        Matrix.fromPauliRotation(0, 0, 1 / 32),
+        "Z^⅟₁₆ Gate",
+        "Principle sixteenth root of Z."),
+    Z16i: new Gate(
+        "Z^-⅟₁₆",
+        Matrix.fromPauliRotation(0, 0, -1 / 32),
+        "Z^-⅟₁₆ Gate",
+        "Adjoint sixteenth root of Z.")
 };
 
 Gates.OtherX = {
@@ -466,7 +476,17 @@ Gates.OtherX = {
         "X^-⅛",
         Matrix.fromPauliRotation(-1 / 16, 0, 0),
         "X^-⅛ Gate",
-        "Adjoint eighth root of X.")
+        "Adjoint eighth root of X."),
+    X16: new Gate(
+        "X^⅟₁₆",
+        Matrix.fromPauliRotation(1 / 32, 0, 0),
+        "X^⅟₁₆ Gate",
+        "Principle sixteenth root of X."),
+    X16i: new Gate(
+        "X^-⅟₁₆",
+        Matrix.fromPauliRotation(-1 / 32, 0, 0),
+        "X^-⅟₁₆ Gate",
+        "Adjoint sixteenth root of X.")
 };
 
 Gates.OtherY = {
@@ -499,7 +519,17 @@ Gates.OtherY = {
         "Y^-⅛",
         Matrix.fromPauliRotation(0, -1 / 16, 0),
         "Y^-⅛ Gate",
-        "Adjoint eighth root of Y.")
+        "Adjoint eighth root of Y."),
+    Y16: new Gate(
+        "Y^⅟₁₆",
+        Matrix.fromPauliRotation(0, 1 / 32, 0),
+        "Y^⅟₁₆ Gate",
+        "Principle sixteenth root of Y."),
+    Y16i: new Gate(
+        "Y^-⅟₁₆",
+        Matrix.fromPauliRotation(0, -1 / 32, 0),
+        "Y^-⅟₁₆ Gate",
+        "Adjoint sixteenth root of Y.")
 };
 
 const XPow = t => {
@@ -761,6 +791,17 @@ Gates.Sets = [
         ]
     },
     {
+        hint: "Eighth Turns",
+        gates: [
+            Gates.OtherX.X4,
+            Gates.OtherY.Y4,
+            Gates.OtherZ.Z4,
+            Gates.OtherX.X4i,
+            Gates.OtherY.Y4i,
+            Gates.OtherZ.Z4i
+        ]
+    },
+    {
         hint: 'Misc',
         gates: [
             Gates.FourierTransformFamily.representative,
@@ -808,33 +849,33 @@ Gates.Sets = [
         hint: "Other X",
         gates: [
             Gates.OtherX.X3,
-            Gates.OtherX.X4,
             Gates.OtherX.X8,
+            Gates.OtherX.X16,
             Gates.OtherX.X3i,
-            Gates.OtherX.X4i,
-            Gates.OtherX.X8i
+            Gates.OtherX.X8i,
+            Gates.OtherX.X16i
         ]
     },
     {
         hint: "Other Y",
         gates: [
             Gates.OtherY.Y3,
-            Gates.OtherY.Y4,
             Gates.OtherY.Y8,
+            Gates.OtherY.Y16,
             Gates.OtherY.Y3i,
-            Gates.OtherY.Y4i,
-            Gates.OtherY.Y8i
+            Gates.OtherY.Y8i,
+            Gates.OtherY.Y16i
         ]
     },
     {
         hint: "Other Z",
         gates: [
             Gates.OtherZ.Z3,
-            Gates.OtherZ.Z4,
             Gates.OtherZ.Z8,
+            Gates.OtherZ.Z16,
             Gates.OtherZ.Z3i,
-            Gates.OtherZ.Z4i,
-            Gates.OtherZ.Z8i
+            Gates.OtherZ.Z8i,
+            Gates.OtherZ.Z16
         ]
     }
 ];
@@ -886,23 +927,29 @@ Gates.KnownToSerializer = [
     Gates.OtherX.X3,
     Gates.OtherX.X4,
     Gates.OtherX.X8,
+    Gates.OtherX.X16,
     Gates.OtherX.X3i,
     Gates.OtherX.X4i,
     Gates.OtherX.X8i,
+    Gates.OtherX.X16i,
 
     Gates.OtherY.Y3,
     Gates.OtherY.Y4,
     Gates.OtherY.Y8,
+    Gates.OtherY.Y16,
     Gates.OtherY.Y3i,
     Gates.OtherY.Y4i,
     Gates.OtherY.Y8i,
+    Gates.OtherY.Y16i,
 
     Gates.OtherZ.Z3,
     Gates.OtherZ.Z4,
     Gates.OtherZ.Z8,
+    Gates.OtherZ.Z16,
     Gates.OtherZ.Z3i,
     Gates.OtherZ.Z4i,
     Gates.OtherZ.Z8i,
+    Gates.OtherZ.Z16i,
 
     ...Gates.IncrementFamily.all,
     ...Gates.DecrementFamily.all,
