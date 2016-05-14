@@ -69,7 +69,7 @@ export default class WidgetPainter {
         }
         pushRect(new Rect(0, maxY, 1, 0), pad*3);
         let curMatrix = gate.matrixAt(time);
-        let format = gate.isTimeBased() ? Format.CONSISTENT : Format.SIMPLIFIED;
+        let format = gate.stableDuration() < 0.2 ? Format.CONSISTENT : Format.SIMPLIFIED;
 
         // Matrix interpretation.
         pushRect(painter.printParagraph('As matrix:', new Rect(pad, maxY, w, 18), new Point(0, 0), 'black', 12), 0);

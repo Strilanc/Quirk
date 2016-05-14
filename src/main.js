@@ -1,4 +1,7 @@
+// It's important that the polyfills and error fallback get loaded first!
 import {} from "src/browser/Polyfills.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
@@ -10,13 +13,11 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
+import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
-import { notifyAboutRecoveryFromUnexpectedError, onErrorHandler } from "src/fallback.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
-
-window.onerror = onErrorHandler;
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
@@ -102,6 +103,8 @@ const syncArea = ins => {
     return ins;
 };
 
+let scrollBlocker = new TouchScrollBlocker(canvasDiv);
+
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
 const scheduleRedraw = () => redrawThrottle.trigger();
@@ -140,14 +143,17 @@ const redrawNow = () => {
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats, isShiftHeld);
     painter.paintDeferred();
-    inspector.hand.paintCursor(painter);
-    canvas.style.cursor = painter.desiredCursorStyle;
 
-    if (inspector.needsContinuousRedraw()) {
+    inspector.hand.paintCursor(painter);
+    scrollBlocker.setBlockers(painter.touchBlockers, painter.desiredCursorStyle);
+    canvas.style.cursor = painter.desiredCursorStyle || 'auto';
+
+    let dt = inspector.stableDuration();
+    if (dt < Infinity) {
         window.requestAnimationFrame(scheduleRedraw);
     }
 };
-redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MS);
+redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
 const useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
@@ -164,7 +170,7 @@ const useInspector = (newInspector, keepInHistory) => {
     return true;
 };
 
-watchDrags(canvas,
+watchDrags(canvasDiv,
     /**
      * Grab
      * @param {!Point} pt
@@ -227,7 +233,7 @@ watchDrags(canvas,
     });
 
 // Middle-click to delete a gate.
-canvas.addEventListener('mousedown', ev => {
+canvasDiv.addEventListener('mousedown', ev => {
     if (!isMiddleClicking(ev)) {
         return;
     }
@@ -244,7 +250,7 @@ canvas.addEventListener('mousedown', ev => {
 });
 
 // When mouse moves without dragging, track it (for showing hints and things).
-canvas.addEventListener('mousemove', ev => {
+canvasDiv.addEventListener('mousemove', ev => {
     if (!inspector.hand.isBusy()) {
         ev.preventDefault();
         let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));

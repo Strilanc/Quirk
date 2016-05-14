@@ -5,7 +5,7 @@ import GateDrawParams from "src/ui/GateDrawParams.js"
 import GatePainting from "src/ui/GatePainting.js"
 import Rect from "src/math/Rect.js"
 import Point from "src/math/Point.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Config from "src/Config.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
@@ -106,16 +106,17 @@ class ToolboxWidget {
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
                 if (gate !== null) {
-                    let r = this.gateDrawRect(groupIndex, gateIndex);
-                    let isHighlighted = new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
+                    let rect = this.gateDrawRect(groupIndex, gateIndex);
+                    let isHighlighted = seq(hand.hoverPoints()).any(pt => rect.containsPoint(pt));
                     let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
+                    painter.noteTouchBlocker({rect, cursor: 'pointer'});
                     drawer(new GateDrawParams(
                         painter,
                         true,
                         isHighlighted,
                         false,
                         false,
-                        r,
+                        rect,
                         Util.notNull(gate),
                         stats,
                         null,
@@ -131,7 +132,6 @@ class ToolboxWidget {
             let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
                 snapInside(painter.paintableArea().skipTop(gateRect.y));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
-            painter.setDesiredCursor('pointer');
         }
 
         let r = new Rect(0, 0, Config.TOOLBOX_MARGIN_X, this.area.h);
@@ -169,12 +169,14 @@ class ToolboxWidget {
 
     /**
     * @param {!Hand} hand
-    * @returns {!boolean}
+    * @returns {Infinity|!number}
     */
-    needsContinuousRedraw(hand) {
-        return new Seq(hand.hoverPoints()).
+    stableDuration(hand) {
+        return seq(hand.hoverPoints()).
             map(p => this.findGateAt(p)).
-            any(f => f !== null && f.gate !== null && f.gate.isTimeBased());
+            filter(e => e !== null).
+            map(e => e.gate.stableDuration()).
+            min(Infinity);
     }
 }
 

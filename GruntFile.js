@@ -137,7 +137,7 @@ module.exports = function(grunt) {
     grunt.registerTask('build-src', [
         'clean:clean-tmp',
         'traceur:translate-src',
-        'bootstrap-get-packages:src/**/*.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
+        'bootstrap-get-packages:src/main.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat-traceur-src',
         'uglify:uglify-concated-src',
         'copy:copy-res-to-out',
@@ -146,7 +146,7 @@ module.exports = function(grunt) {
     grunt.registerTask('build-debug', [
         'clean:clean-tmp',
         'traceur:translate-src',
-        'bootstrap-get-packages:src/**/*.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
+        'bootstrap-get-packages:src/main.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat-traceur-debug',
         'copy:copy-res-to-out',
         'clean:clean-tmp'

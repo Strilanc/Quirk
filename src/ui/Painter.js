@@ -19,9 +19,20 @@ export default class Painter {
         this.traceAction = new TraceAction(this.ctx);
         this.tracer = new Tracer(this.ctx);
         /**
-         * @type {!string}
+         * @type {undefined|!string}
          */
-        this.desiredCursorStyle = 'auto';
+        this.desiredCursorStyle = undefined;
+        /**
+         * @type {!Array.<!{rect: !Rect, cursor: undefined|!string}>}
+         */
+        this.touchBlockers = [];
+    }
+
+    /**
+     * @param {!{rect: !Rect, cursor: undefined|!string}} blocker
+     */
+    noteTouchBlocker(blocker) {
+        this.touchBlockers.push(blocker);
     }
 
     /**

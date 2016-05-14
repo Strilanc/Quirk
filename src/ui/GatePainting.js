@@ -5,6 +5,7 @@ import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import Seq from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
 /**
@@ -151,43 +152,50 @@ const paintGateSymbol = args => {
         rect.h);
 };
 
-GatePainting.SQUARE_WAVE_DRAWER_MAKER = offset => args => {
+const staircaseCurve = steps => {
+    let curve = [];
+    for (let i = 0; i < steps; i++) {
+        let x = i/steps;
+        let y = i/(steps-1);
+        curve.push(new Point(x, y));
+        curve.push(new Point(x + 1/steps, y));
+    }
+    return curve;
+};
+
+GatePainting.SQUARE_WAVE_DRAWER_MAKER = (timeOffset, steps, flip=false) => args => {
     GatePainting.DEFAULT_DRAWER(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
     }
 
-    let t = (args.stats.time + offset) % 1;
-    let yOn = args.rect.takeTopProportion(0.2).center().y;
+    let t = (args.stats.time + timeOffset) % 1;
+    let yOn = args.rect.y + 3;
     let yNeutral = args.rect.bottom();
-    let yOff = args.rect.takeBottomProportion(0.2).center().y;
+    let yOff = args.rect.bottom() - 3;
+    if (flip) {
+        [yOn, yOff] = [yOff, yOn];
+        yNeutral = args.rect.y;
+    }
     let xi = args.rect.x;
     let xf = args.rect.right();
+
     let xt = p => Math.min(Math.max(xi + (xf - xi)*p, xi), xf);
-    let x1 = xt(0.5 - t);
-    let x2 = xt(1 - t);
-    let x3 = xt(1.5 - t);
-    let off = t < 0.5;
-    let curve = [
-        new Point(xi, yNeutral),
-        new Point(xi, yOff),
-        new Point(x1, yOff),
-        new Point(x1, yOn),
-        new Point(x2, yOn),
-        new Point(x2, yOff),
-        new Point(x3, yOff),
-        new Point(x3, yOn),
-        new Point(xf, yOn),
-        new Point(xf, yOff),
-        new Point(xf, yNeutral)];
+    let yt = p => yOff + (yOn - yOff)*p;
+    let curve = [];
+    curve.push(new Point(xi, yNeutral));
+    curve.push(...staircaseCurve(steps).map(p => new Point(xt(p.x - t), yt(p.y))));
+    curve.push(...staircaseCurve(steps).map(p => new Point(xt(p.x + 1 - t), yt(p.y))));
+    curve.push(new Point(xf, yNeutral));
+
     args.painter.ctx.save();
     args.painter.ctx.globalAlpha *= 0.3;
     args.painter.fillPolygon(curve, 'yellow');
     for (let i = 1; i < curve.length - 2; i++) {
         args.painter.strokeLine(curve[i], curve[i+1], 'black');
     }
-    if (off) {
+    if (steps === 2 && t < 0.5) {
         args.painter.fillRect(args.rect, 'white');
         args.painter.fillRect(args.rect, 'white');
         args.painter.fillRect(args.rect, 'white');

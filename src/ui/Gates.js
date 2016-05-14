@@ -291,97 +291,79 @@ Gates.HalfTurns = {
         "Maps OFF to ON - OFF.")
 };
 
-const IncGateMaker = span => new Gate(
+Gates.IncrementFamily = Gate.generateFamily(1, 8, span => new Gate(
     "+1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
     "Increment Gate",
-    "Adds 1 to the little-endian number represented by a block of qubits."
-).withSerializedId("inc" + span).
+    "Adds 1 to the little-endian number represented by a block of qubits.").
+    withSerializedId("inc" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1));
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)));
 
-const FourierTransformMaker = span => new Gate(
-    "QFT",
-    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span))),
-    "Fourier Transform Gate",
-    "Transforms to/from phase frequency space."
-).withSerializedId("QFT" + span).
-    withHeight(span).
-    withCustomShaders(
-        Seq.range(Math.floor(span/2)).
-        map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
-        concat(Seq.range(span).
-            map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
-        toArray());
-
-const CountingGateMaker = span => new Gate(
-    "+T",
-    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
-    "Counting Gate",
-    "Adds an increasing little-endian count into a block of qubits."
-).withSerializedId("Counting" + span).
-    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
-    withHeight(span).
-    withTimeDependence().
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span, Math.floor(time*(1<<span))));
-
-const DecGateMaker = span => new Gate(
+Gates.DecrementFamily = Gate.generateFamily(1, 8, span => new Gate(
     "-1",
     Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
     "Decrement Gate",
-    "Subtracts 1 from the little-endian number represented by a block of qubits."
-).withSerializedId("dec" + span).
+    "Subtracts 1 from the little-endian number represented by a block of qubits.").
+    withSerializedId("dec" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1));
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
 
-Gates.FourierTransforms = Gate.makeFamily({
-    Qft2: FourierTransformMaker(2),
-    Qft3: FourierTransformMaker(3),
-    Qft4: FourierTransformMaker(4),
-    Qft5: FourierTransformMaker(5),
-    Qft6: FourierTransformMaker(6),
-    Qft7: FourierTransformMaker(7),
-    Qft8: FourierTransformMaker(8)
-});
+Gates.CountingFamily = Gate.generateFamily(1, 8, span => new Gate(
+    "(+1)^⌈t⌉",
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
+    "Counting Gate",
+    "Adds an increasing little-endian count into a block of qubits.").
+    withSerializedId("Counting" + span).
+    withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span)).
+    withHeight(span).
+    withStableDuration(1.0 / (1<<span)).
+    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
+        Math.floor(time*(1<<span)))));
 
-/**
- * Gates that correspond to increments of multiple qubits.
- */
-Gates.Increments = Gate.makeFamily({
-    Inc2: IncGateMaker(2),
-    Inc3: IncGateMaker(3),
-    Inc4: IncGateMaker(4),
-    Inc5: IncGateMaker(5),
-    Inc6: IncGateMaker(6),
-    Inc7: IncGateMaker(7),
-    Inc8: IncGateMaker(8)
-});
+Gates.UncountingFamily = Gate.generateFamily(1, 8, span => new Gate(
+    "(-1)^⌈t⌉",
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r+Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
+    "Down Counting Gate",
+    "Subtracts an increasing little-endian count from a block of qubits.").
+    withSerializedId("Uncounting" + span).
+    withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span, true)).
+    withHeight(span).
+    withStableDuration(1.0 / (1<<span)).
+    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
+        -Math.floor(time*(1<<span)))));
 
-/**
- * Gates that correspond to increments of multiple qubits.
- */
-Gates.Counters = Gate.makeFamily({
-    Counting2: CountingGateMaker(2),
-    Counting3: CountingGateMaker(3),
-    Counting4: CountingGateMaker(4),
-    Counting5: CountingGateMaker(5),
-    Counting6: CountingGateMaker(6),
-    Counting7: CountingGateMaker(7),
-    Counting8: CountingGateMaker(8)
-});
+Gates.FourierTransformFamily = Gate.generateFamily(1, 8, span => new Gate(
+    "QFT",
+    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span))),
+    "Fourier Transform Gate",
+    "Transforms to/from phase frequency space.").
+    withSerializedId("QFT" + span).
+    withHeight(span).
+    withCustomShaders(
+        Seq.range(Math.floor(span/2)).
+            map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
+            concat(Seq.range(span).
+                map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
+            toArray()));
 
-/**
- * Gates that correspond to decrements of multiple qubits.
- */
-Gates.Decrements = Gate.makeFamily({
-    Dec2: DecGateMaker(2),
-    Dec3: DecGateMaker(3),
-    Dec4: DecGateMaker(4),
-    Dec5: DecGateMaker(5),
-    Dec6: DecGateMaker(6),
-    Dec7: DecGateMaker(7),
-    Dec8: DecGateMaker(8)
-});
+Gates.PhaseGradientFamily = Gate.generateFamily(1, 8, span => new Gate(
+    "Z^#",
+    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, τ*r/(2<<span)) : 0),
+    "Phase Gradient Gate",
+    "Phases by an amount proportional to the little endian number represented by a block of qubits.").
+    withSerializedId("PhaseGradient" + span).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.phaseGradient(val, con, bit, span)));
+
+Gates.PhaseDegradientFamily = Gate.generateFamily(1, 8, span => new Gate(
+    "Z^-#",
+    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, -τ*r/(2<<span)) : 0),
+    "Inverse Phase Gradient Gate",
+    "Phases by a negative amount proportional to the little endian number represented by a block of qubits.").
+    withSerializedId("PhaseUngradient" + span).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.phaseGradient(val, con, bit, span, -1)));
 
 Gates.QuarterTurns = {
     SqrtXForward: new Gate(
@@ -675,15 +657,17 @@ Gates.Misc = {
         "X^⌈t⌉",
         t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate",
-        "Xors a square wave into the target wire."
-    ).withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0)),
+        "Xors a square wave into the target wire.").
+        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 2)).
+        withStableDuration(0.5),
 
     QuarterPhaseClockPulseGate: new Gate(
         "X^⌈t-¼⌉",
         t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate (Quarter Phase)",
-        "Xors a quarter-phased square wave into the target wire."
-    ).withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75)),
+        "Xors a quarter-phased square wave into the target wire.").
+        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75, 2)).
+        withStableDuration(0.25),
 
     SpacerGate: new Gate(
         "…",
@@ -779,12 +763,23 @@ Gates.Sets = [
     {
         hint: 'Misc',
         gates: [
-            Gates.FourierTransforms.Qft2,
-            Gates.Counters.Counting2,
-            Gates.Increments.Inc2,
+            Gates.FourierTransformFamily.representative,
+            null,
+            Gates.PhaseGradientFamily.representative,
             Gates.Misc.SpacerGate,
             Gates.Misc.MysteryGateMaker(),
-            Gates.Decrements.Dec2
+            Gates.PhaseDegradientFamily.representative
+        ]
+    },
+    {
+        hint: 'Arithmetic',
+        gates: [
+            Gates.IncrementFamily.representative,
+            null,
+            Gates.CountingFamily.representative,
+            Gates.DecrementFamily.representative,
+            null,
+            Gates.UncountingFamily.representative
         ]
     },
     {
@@ -909,37 +904,13 @@ Gates.KnownToSerializer = [
     Gates.OtherZ.Z4i,
     Gates.OtherZ.Z8i,
 
-    Gates.Increments.Inc2,
-    Gates.Increments.Inc3,
-    Gates.Increments.Inc4,
-    Gates.Increments.Inc5,
-    Gates.Increments.Inc6,
-    Gates.Increments.Inc7,
-    Gates.Increments.Inc8,
-
-    Gates.Counters.Counting2,
-    Gates.Counters.Counting3,
-    Gates.Counters.Counting4,
-    Gates.Counters.Counting5,
-    Gates.Counters.Counting6,
-    Gates.Counters.Counting7,
-    Gates.Counters.Counting8,
-
-    Gates.FourierTransforms.Qft2,
-    Gates.FourierTransforms.Qft3,
-    Gates.FourierTransforms.Qft4,
-    Gates.FourierTransforms.Qft5,
-    Gates.FourierTransforms.Qft6,
-    Gates.FourierTransforms.Qft7,
-    Gates.FourierTransforms.Qft8,
-
-    Gates.Decrements.Dec2,
-    Gates.Decrements.Dec3,
-    Gates.Decrements.Dec4,
-    Gates.Decrements.Dec5,
-    Gates.Decrements.Dec6,
-    Gates.Decrements.Dec7,
-    Gates.Decrements.Dec8,
+    ...Gates.IncrementFamily.all,
+    ...Gates.DecrementFamily.all,
+    ...Gates.CountingFamily.all,
+    ...Gates.UncountingFamily.all,
+    ...Gates.FourierTransformFamily.all,
+    ...Gates.PhaseGradientFamily.all,
+    ...Gates.PhaseDegradientFamily.all,
 
     Gates.ExperimentalAndImplausible.UniversalNot,
     Gates.ExperimentalAndImplausible.ErrorInjection

@@ -43,9 +43,9 @@ const TEST_GATES = new Map([
 
     ['#', new Gate('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', new Gate('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
-    ['2', Gates.Increments.Inc2],
-    ['3', Gates.Increments.Inc3],
-    ['4', Gates.Increments.Inc4],
+    ['2', Gates.IncrementFamily.ofSize(2)],
+    ['3', Gates.IncrementFamily.ofSize(3)],
+    ['4', Gates.IncrementFamily.ofSize(4)],
     ['Q', new Gate('Q', Matrix.square(1, 1, 1, 1,
                                       1, Complex.I, -1, Complex.I.neg(),
                                       1, -1, 1, -1,
@@ -108,22 +108,22 @@ suite.test("fromTextDiagram", () => {
         `)).isEqualTo(new CircuitDefinition(3, [new GateColumn([_, _, _]), new GateColumn([C, _, Z])]));
 });
 
-suite.test("isTimeDependent", () => {
-    assertFalse(circuit('----').isTimeDependent());
-    assertFalse(circuit('-XY-').isTimeDependent());
-    assertFalse(circuit(`-XY-
-                         --X-`).isTimeDependent());
-    assertFalse(circuit(`•Z#M
-                         --X/`).isTimeDependent());
+suite.test("stableDuration", () => {
+    assertThat(circuit('----').stableDuration()).isEqualTo(Infinity);
+    assertThat(circuit('-XY-').stableDuration()).isEqualTo(Infinity);
+    assertThat(circuit(`-XY-
+                        --X-`).stableDuration()).isEqualTo(Infinity);
+    assertThat(circuit(`•Z#M
+                        --X/`).stableDuration()).isEqualTo(Infinity);
 
-    assertTrue(circuit('t').isTimeDependent());
-    assertTrue(circuit('---t---').isTimeDependent());
-    assertTrue(circuit('-X-t-Y-').isTimeDependent());
-    assertTrue(circuit('-t-t---').isTimeDependent());
-    assertTrue(circuit(`-t-t---
-                        -----X-`).isTimeDependent());
-    assertTrue(circuit(`-------
-                        -t-----`).isTimeDependent());
+    assertThat(circuit('t').stableDuration()).isEqualTo(0);
+    assertThat(circuit('---t---').stableDuration()).isEqualTo(0);
+    assertThat(circuit('-X-t-Y-').stableDuration()).isEqualTo(0);
+    assertThat(circuit('-t-t---').stableDuration()).isEqualTo(0);
+    assertThat(circuit(`-t-t---
+                        -----X-`).stableDuration()).isEqualTo(0);
+    assertThat(circuit(`-------
+                        -t-----`).stableDuration()).isEqualTo(0);
 });
 
 suite.test("readableHash", () => {

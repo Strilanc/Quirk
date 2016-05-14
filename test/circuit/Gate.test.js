@@ -35,12 +35,14 @@ suite.test("toString_runsWithoutFailing", () => {
     assertThat(g.toString()).isNotEqualTo(null);
 });
 
-suite.test("isTimeBased", () => {
+suite.test("stableDuration", () => {
     let m0 = new Gate("symbol", Matrix.HADAMARD, "name", "blurb");
     let mt = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
+    let mc = new Gate("symbol", t => Matrix.square(Math.round(t*2), 0, 0, 0), "name", "blurb").withStableDuration(0.5);
 
-    assertFalse(m0.isTimeBased());
-    assertTrue(mt.isTimeBased());
+    assertThat(m0.stableDuration()).isEqualTo(Infinity);
+    assertThat(mt.stableDuration()).isEqualTo(0);
+    assertThat(mc.stableDuration()).isEqualTo(0.5);
 });
 
 suite.test("matrixAt", () => {

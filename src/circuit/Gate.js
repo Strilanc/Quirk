@@ -5,6 +5,7 @@ import GateDrawParams from "src/ui/GateDrawParams.js"
 import Config from "src/Config.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 /**
  * Describes a quantum operation that may vary with time.
@@ -40,8 +41,8 @@ class Gate {
         this.customShaders = undefined;
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
-        /** @type {!boolean} */
-        this._isTimeDependent = false;
+        /** @type {undefined|Infinity|!number} */
+        this._stableDuration = undefined;
     }
 
     /**
@@ -57,16 +58,17 @@ class Gate {
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
-        g._isTimeDependent = this._isTimeDependent;
+        g._stableDuration = this._stableDuration;
         return g;
     }
 
     /**
+     * @param {undefined|Infinity|!number} duration
      * @returns {!Gate}
      */
-    withTimeDependence() {
+    withStableDuration(duration) {
         let g = this._copy();
-        g._isTimeDependent = true;
+        g._stableDuration = duration;
         return g;
     }
 
@@ -142,6 +144,25 @@ class Gate {
         return Util.recomposedObjectValues(gatesObj, newGates);
     }
 
+    /**
+     * @param {!int} minSize
+     * @param {!int} maxSize
+     * @param {!function(!int):!Gate} gateGenerator
+     * @returns {!{all: !Array.<!Gate>, representative: !Gate, ofSize: !function(!int) : undefined|!Gate}}
+     * @template T
+     */
+    static generateFamily(minSize, maxSize, gateGenerator) {
+        let gates = Seq.range(maxSize + 1).skip(minSize).map(i => gateGenerator(i)._copy()).toArray();
+        for (let g of gates) {
+            g.gateFamily = gates;
+        }
+        return {
+            all: gates,
+            representative: gates[Math.max(0, 2-minSize)],
+            ofSize: i => seq(gates).concat([undefined]).filter(e => e.height === i || e === undefined).first()
+        };
+    }
+
     canChangeInSize() {
         return this.gateFamily.length > 1;
     }
@@ -173,10 +194,12 @@ class Gate {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {Infinity|!number}
      */
-    isTimeBased() {
-        return this._isTimeDependent || !(this.matrixOrFunc instanceof Matrix);
+    stableDuration() {
+        return this._stableDuration !== undefined ? this._stableDuration :
+            this.matrixOrFunc instanceof Matrix ? Infinity :
+            0;
     }
 
     /**
@@ -196,6 +219,7 @@ class Gate {
             this.blurb === other.blurb &&
             this.symbol === other.symbol &&
             this.tag === other.tag &&
+            this._stableDuration === other._stableDuration &&
             this.customShaders === other.customShaders &&
             this.customDrawer === other.customDrawer;
     }
