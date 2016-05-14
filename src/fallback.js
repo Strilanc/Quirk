@@ -180,3 +180,5 @@ function onErrorHandler(errorMsg, url, lineNumber, columnNumber, errorObj) {
 }
 
 export { notifyAboutRecoveryFromUnexpectedError, onErrorHandler }
+
+window.onerror = onErrorHandler;

@@ -5,7 +5,7 @@ import GateDrawParams from "src/ui/GateDrawParams.js"
 import GatePainting from "src/ui/GatePainting.js"
 import Rect from "src/math/Rect.js"
 import Point from "src/math/Point.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Config from "src/Config.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
@@ -107,7 +107,7 @@ class ToolboxWidget {
                 let gate = group.gates[gateIndex];
                 if (gate !== null) {
                     let r = this.gateDrawRect(groupIndex, gateIndex);
-                    let isHighlighted = new Seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
+                    let isHighlighted = seq(hand.hoverPoints()).any(pt => r.containsPoint(pt));
                     let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
                     drawer(new GateDrawParams(
                         painter,
@@ -169,12 +169,14 @@ class ToolboxWidget {
 
     /**
     * @param {!Hand} hand
-    * @returns {!boolean}
+    * @returns {Infinity|!number}
     */
-    needsContinuousRedraw(hand) {
-        return new Seq(hand.hoverPoints()).
+    stableDuration(hand) {
+        return seq(hand.hoverPoints()).
             map(p => this.findGateAt(p)).
-            any(f => f !== null && f.gate !== null && f.gate.isTimeBased());
+            filter(e => e !== null).
+            map(e => e.gate.stableDuration()).
+            min(Infinity);
     }
 }
 

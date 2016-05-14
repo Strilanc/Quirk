@@ -292,44 +292,44 @@ Gates.HalfTurns = {
 };
 
 Gates.IncrementFamily = Gate.generateFamily(1, 8, span => new Gate(
-        "+1",
-        Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
-        "Increment Gate",
-        "Adds 1 to the little-endian number represented by a block of qubits."
-    ).withSerializedId("inc" + span).
-        withHeight(span).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)));
+    "+1",
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
+    "Increment Gate",
+    "Adds 1 to the little-endian number represented by a block of qubits.").
+    withSerializedId("inc" + span).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)));
 
 Gates.DecrementFamily = Gate.generateFamily(1, 8, span => new Gate(
-        "-1",
-        Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
-        "Decrement Gate",
-        "Subtracts 1 from the little-endian number represented by a block of qubits."
-    ).withSerializedId("dec" + span).
-        withHeight(span).
-        withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
+    "-1",
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
+    "Decrement Gate",
+    "Subtracts 1 from the little-endian number represented by a block of qubits.").
+    withSerializedId("dec" + span).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
 
 Gates.CountingFamily = Gate.generateFamily(1, 8, span => new Gate(
-        "++^⌈t⌉",
-        t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
-        "Counting Gate",
-        "Adds an increasing little-endian count into a block of qubits."
-    ).withSerializedId("Counting" + span).
-        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
-        withHeight(span).
-        withTimeDependence().
-        withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-            Math.floor(time*(1<<span)))));
+    "(+1)^⌈t⌉",
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
+    "Counting Gate",
+    "Adds an increasing little-endian count into a block of qubits.").
+    withSerializedId("Counting" + span).
+    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
+    withHeight(span).
+    withStableDuration(1.0 / (1<<span)).
+    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
+        Math.floor(time*(1<<span)))));
 
 Gates.UncountingFamily = Gate.generateFamily(1, 8, span => new Gate(
-    "--^⌈t⌉",
-    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
+    "(-1)^⌈t⌉",
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r+Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
     "Down Counting Gate",
-    "Subtracts aan increasing little-endian count from a block of qubits.").
+    "Subtracts an increasing little-endian count from a block of qubits.").
     withSerializedId("Uncounting" + span).
     withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER).
     withHeight(span).
-    withTimeDependence().
+    withStableDuration(1.0 / (1<<span)).
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
         -Math.floor(time*(1<<span)))));
 
@@ -657,15 +657,17 @@ Gates.Misc = {
         "X^⌈t⌉",
         t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate",
-        "Xors a square wave into the target wire."
-    ).withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0)),
+        "Xors a square wave into the target wire.").
+        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0)).
+        withStableDuration(0.5),
 
     QuarterPhaseClockPulseGate: new Gate(
         "X^⌈t-¼⌉",
         t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate (Quarter Phase)",
-        "Xors a quarter-phased square wave into the target wire."
-    ).withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75)),
+        "Xors a quarter-phased square wave into the target wire.").
+        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75)).
+        withStableDuration(0.25),
 
     SpacerGate: new Gate(
         "…",
@@ -766,18 +768,18 @@ Gates.Sets = [
             Gates.PhaseGradientFamily.representative,
             Gates.Misc.SpacerGate,
             Gates.Misc.MysteryGateMaker(),
-            Gates.PhaseDegradientFamily.representative,
+            Gates.PhaseDegradientFamily.representative
         ]
     },
     {
         hint: 'Arithmetic',
         gates: [
-            null,
-            Gates.CountingFamily.representative,
             Gates.IncrementFamily.representative,
             null,
-            Gates.UncountingFamily.representative,
-            Gates.DecrementFamily.representative
+            Gates.CountingFamily.representative,
+            Gates.DecrementFamily.representative,
+            null,
+            Gates.UncountingFamily.representative
         ]
     },
     {

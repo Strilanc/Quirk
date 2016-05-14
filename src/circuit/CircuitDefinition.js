@@ -149,12 +149,14 @@ class CircuitDefinition {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {Infinity|!number}
      */
-    isTimeDependent() {
-        return seq(this.columns).any(
-                e => seq(e.gates).any(
-                    g => g !== null && g.isTimeBased()));
+    stableDuration() {
+        return seq(this.columns).
+            flatMap(c => c.gates).
+            filter(g => g !== null).
+            map(g => g.stableDuration()).
+            min(Infinity);
     }
 
     /**

@@ -108,22 +108,22 @@ suite.test("fromTextDiagram", () => {
         `)).isEqualTo(new CircuitDefinition(3, [new GateColumn([_, _, _]), new GateColumn([C, _, Z])]));
 });
 
-suite.test("isTimeDependent", () => {
-    assertFalse(circuit('----').isTimeDependent());
-    assertFalse(circuit('-XY-').isTimeDependent());
-    assertFalse(circuit(`-XY-
-                         --X-`).isTimeDependent());
-    assertFalse(circuit(`•Z#M
-                         --X/`).isTimeDependent());
+suite.test("stableDuration", () => {
+    assertThat(circuit('----').stableDuration()).isEqualTo(Infinity);
+    assertThat(circuit('-XY-').stableDuration()).isEqualTo(Infinity);
+    assertThat(circuit(`-XY-
+                        --X-`).stableDuration()).isEqualTo(Infinity);
+    assertThat(circuit(`•Z#M
+                        --X/`).stableDuration()).isEqualTo(Infinity);
 
-    assertTrue(circuit('t').isTimeDependent());
-    assertTrue(circuit('---t---').isTimeDependent());
-    assertTrue(circuit('-X-t-Y-').isTimeDependent());
-    assertTrue(circuit('-t-t---').isTimeDependent());
-    assertTrue(circuit(`-t-t---
-                        -----X-`).isTimeDependent());
-    assertTrue(circuit(`-------
-                        -t-----`).isTimeDependent());
+    assertThat(circuit('t').stableDuration()).isEqualTo(0);
+    assertThat(circuit('---t---').stableDuration()).isEqualTo(0);
+    assertThat(circuit('-X-t-Y-').stableDuration()).isEqualTo(0);
+    assertThat(circuit('-t-t---').stableDuration()).isEqualTo(0);
+    assertThat(circuit(`-t-t---
+                        -----X-`).stableDuration()).isEqualTo(0);
+    assertThat(circuit(`-------
+                        -t-----`).stableDuration()).isEqualTo(0);
 });
 
 suite.test("readableHash", () => {

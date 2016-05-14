@@ -2,6 +2,7 @@ import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
 import describe from "src/base/Describe.js"
+import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
@@ -95,8 +96,8 @@ let toJson_Gate = gate => {
         return gate.serializedId;
     }
 
-    if (gate.isTimeBased()) {
-        throw new Error("Don't know how to serialize matrix functions.");
+    if (!(gate.matrixOrFunc instanceof Matrix)) {
+        throw new DetailedError("Can't serialize unknown gate with non-trivial operation.", {gate});
     }
 
     if (gate.name === "Parse Error") {

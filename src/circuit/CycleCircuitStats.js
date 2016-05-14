@@ -19,7 +19,7 @@ export default class CycleCircuitStats {
          * @type {!int}
          * @private
          */
-        this._divisions = circuitDefinition.isTimeDependent() ? timeBucketCount : 1;
+        this._divisions = Math.min(timeBucketCount, Math.max(1, 1/circuitDefinition.stableDuration()));
 
         /**
          * @type {!Array.<?CircuitStats>}
@@ -34,7 +34,8 @@ export default class CycleCircuitStats {
      * @private
      */
     _computeStateForBucket(i) {
-        return CircuitStats.fromCircuitAtTime(this.circuitDefinition, (i+0.5) / this._divisions);
+        let t = (i+0.5) / this._divisions;
+        return CircuitStats.fromCircuitAtTime(this.circuitDefinition, t);
     }
 
     /**
@@ -42,7 +43,7 @@ export default class CycleCircuitStats {
      * @returns {!CircuitStats}
      */
     statsAtApproximateTime(t) {
-        let i = Util.properMod(Math.round(t * this._divisions), this._divisions);
+        let i = Util.properMod(Math.round(t * this._divisions - 0.5), this._divisions);
         if (this._cachedCircuitStatsByTime[i] === undefined) {
             this._cachedCircuitStatsByTime[i] = this._computeStateForBucket(i);
         }

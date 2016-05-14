@@ -122,10 +122,10 @@ class Hand {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {Infinity|!number}
      */
-    needsContinuousRedraw() {
-        return this.heldGate !== undefined && this.heldGate.isTimeBased();
+    stableDuration() {
+        return this.heldGate === undefined ? Infinity : this.heldGate.stableDuration();
     }
 }
 export default Hand;

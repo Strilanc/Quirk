@@ -41,8 +41,8 @@ class Gate {
         this.customShaders = undefined;
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
-        /** @type {!boolean} */
-        this._isTimeDependent = false;
+        /** @type {undefined|Infinity|!number} */
+        this._stableDuration = undefined;
     }
 
     /**
@@ -58,16 +58,17 @@ class Gate {
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
-        g._isTimeDependent = this._isTimeDependent;
+        g._stableDuration = this._stableDuration;
         return g;
     }
 
     /**
+     * @param {undefined|Infinity|!number} duration
      * @returns {!Gate}
      */
-    withTimeDependence() {
+    withStableDuration(duration) {
         let g = this._copy();
-        g._isTimeDependent = true;
+        g._stableDuration = duration;
         return g;
     }
 
@@ -193,10 +194,12 @@ class Gate {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {Infinity|!number}
      */
-    isTimeBased() {
-        return this._isTimeDependent || !(this.matrixOrFunc instanceof Matrix);
+    stableDuration() {
+        return this._stableDuration !== undefined ? this._stableDuration :
+            this.matrixOrFunc instanceof Matrix ? Infinity :
+            0;
     }
 
     /**
@@ -216,6 +219,7 @@ class Gate {
             this.blurb === other.blurb &&
             this.symbol === other.symbol &&
             this.tag === other.tag &&
+            this._stableDuration === other._stableDuration &&
             this.customShaders === other.customShaders &&
             this.customDrawer === other.customDrawer;
     }

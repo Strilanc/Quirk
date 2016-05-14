@@ -9,7 +9,7 @@ import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
 import Painter from "src/ui/Painter.js"
 import Rect from "src/math/Rect.js"
-import Seq from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import ToolboxWidget from "src/widgets/ToolboxWidget.js"
 import Util from "src/base/Util.js"
 
@@ -183,10 +183,15 @@ export default class InspectorWidget {
             withHand(this.hand.withDrop());
     }
 
-    needsContinuousRedraw() {
-        return this.toolboxWidget.needsContinuousRedraw(this.hand) ||
-            this.hand.needsContinuousRedraw() ||
-            this.circuitWidget.needsContinuousRedraw();
+    /**
+     * @returns {Infinity|!number}
+     */
+    stableDuration() {
+        return seq([
+            this.toolboxWidget.stableDuration(this.hand),
+            this.hand.stableDuration(),
+            this.circuitWidget.stableDuration()
+        ]).min(Infinity);
     }
 
     /**

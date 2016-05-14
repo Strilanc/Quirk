@@ -702,10 +702,10 @@ class DisplayedCircuit {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {Infinity|!number}
      */
-    needsContinuousRedraw() {
-        return this.circuitDefinition.isTimeDependent();
+    stableDuration() {
+        return this.circuitDefinition.stableDuration();
     }
 
     /**

@@ -1,4 +1,7 @@
+// It's important that the polyfills and error fallback get loaded first!
 import {} from "src/browser/Polyfills.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
@@ -11,12 +14,9 @@ import Rect from "src/math/Rect.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
-import { notifyAboutRecoveryFromUnexpectedError, onErrorHandler } from "src/fallback.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
-
-window.onerror = onErrorHandler;
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
@@ -143,11 +143,12 @@ const redrawNow = () => {
     inspector.hand.paintCursor(painter);
     canvas.style.cursor = painter.desiredCursorStyle;
 
-    if (inspector.needsContinuousRedraw()) {
+    let dt = inspector.stableDuration();
+    if (dt < Infinity) {
         window.requestAnimationFrame(scheduleRedraw);
     }
 };
-redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MS);
+redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
 const useInspector = (newInspector, keepInHistory) => {
     if (inspector.isEqualTo(newInspector)) {
