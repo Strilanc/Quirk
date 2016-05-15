@@ -444,17 +444,20 @@ class DisplayedCircuit {
                 focusSlot === undefined ? hand.hoverPoints() : []));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== undefined) {
+                painter.ctx.save();
                 if (isHighlighted) {
-                    painter.ctx.globalAlpha /= 2;
+                    painter.ctx.globalAlpha *= 0.3;
                 }
-                painter.strokeLine(gateRect.topLeft(), gateRect.bottomRight(), 'orange', 3);
-                painter.ctx.globalAlpha /= 2;
+                painter.ctx.globalAlpha *= 0.5;
                 painter.fillRect(gateRect.paddedBy(5), 'yellow');
                 painter.ctx.globalAlpha *= 2;
+                painter.strokeLine(gateRect.topLeft(), gateRect.bottomRight(), 'orange', 3);
+                let r = painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
+                painter.ctx.globalAlpha *= 0.5;
+                painter.fillRect(r.paddedBy(2), 'yellow');
+                painter.ctx.globalAlpha *= 2;
                 painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
-                if (isHighlighted) {
-                    painter.ctx.globalAlpha *= 2;
-                }
+                painter.ctx.restore()
             }
         }
     }

@@ -760,6 +760,17 @@ suite.test("gateAtLocIsDisabledReason", () => {
     good(1, 1, `---
                 -X-
                 ---`);
+
+    // Control inside gate.
+    bad(1, 1, `---
+               -2-
+               -•-`);
+    bad(1, 1, `---
+               -D/
+               -◦/`);
+    good(1, 1, `---
+               -D•
+               -X◦`);
 });
 
 suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {

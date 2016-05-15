@@ -217,11 +217,11 @@ export default class CircuitStats {
                 qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(
                     stateTex,
                     controls,
-                    gateCol.wiresWithSingleQubitDisplaysMask()));
+                    circuitDefinition.colHasSingleQubitDisplayMask(col)));
                 qubitPairDensityTexes.push(CircuitTextures.superpositionToQubitPairDensities(
                     stateTex,
                     controls,
-                    gateCol.wiresWithTwoQubitDisplaysMask()));
+                    circuitDefinition.colHasDoubleQubitDisplayMask(col)));
 
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return stateTex;
