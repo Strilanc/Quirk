@@ -345,7 +345,7 @@ Gates.SubtractionFamily = Gate.generateFamily(2, 8, span => new Gate(
         return expected === actual ? 1 : 0;
     }),
     "Subtraction Gate",
-    "Adds a little-endian number from another.").
+    "Subtracts a little-endian number from another.").
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
