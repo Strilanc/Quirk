@@ -36,9 +36,7 @@ let historyPusher = new HistoryPusher();
 const inspectorDiv = document.getElementById("inspectorDiv");
 
 /** @type {!InspectorWidget} */
-let inspector = InspectorWidget.empty(
-    Config.MIN_WIRE_COUNT,
-    new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
+let inspector = InspectorWidget.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
 const importantStateChangeHappened = jsonText => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;

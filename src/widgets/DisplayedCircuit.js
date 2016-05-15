@@ -28,8 +28,10 @@ class DisplayedCircuit {
      * @param {!CircuitDefinition} circuitDefinition
      * @param {undefined|!int} compressedColumnIndex
      * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} highlightedSlot
+     * @param {undefined|!int} extraWireStartIndex
+     * @private
      */
-    constructor(top, circuitDefinition, compressedColumnIndex=undefined, highlightedSlot=undefined) {
+    constructor(top, circuitDefinition, compressedColumnIndex, highlightedSlot, extraWireStartIndex) {
         if (!Number.isFinite(top)) {
             throw new DetailedError("Bad top", {top, circuitDefinition});
         }
@@ -54,6 +56,24 @@ class DisplayedCircuit {
          * @private
          */
         this._highlightedSlot = highlightedSlot;
+        /**
+         * @type {undefined|!int}
+         * @private
+         */
+        this._extraWireStartIndex = extraWireStartIndex;
+    }
+
+    /**
+     * @param {!number} top
+     * @returns {!DisplayedCircuit}
+     */
+    static empty(top) {
+        return new DisplayedCircuit(
+            top,
+            new CircuitDefinition(Config.MIN_WIRE_COUNT, []),
+            undefined,
+            undefined,
+            undefined);
     }
 
     /**
@@ -234,12 +254,16 @@ class DisplayedCircuit {
      * @returns {!DisplayedCircuit}
      */
     afterTidyingUp() {
-        return this.withCircuit(this.circuitDefinition.
-            withUncoveredColumnsRemoved().
-            withHeightOverlapsFixed().
-            withWidthOverlapsFixed().
-            withUncoveredColumnsRemoved().
-            withTrailingSpacersIncluded());
+        return this.
+            withCircuit(this.circuitDefinition.
+                withUncoveredColumnsRemoved().
+                withHeightOverlapsFixed().
+                withWidthOverlapsFixed().
+                withUncoveredColumnsRemoved().
+                withTrailingSpacersIncluded()).
+            _withCompressedColumnIndex(undefined).
+            _withExtraWireStartIndex(undefined).
+            _withHighlightedSlot(undefined);
     }
 
     /**
@@ -254,6 +278,7 @@ class DisplayedCircuit {
             this.top === other.top &&
             this.circuitDefinition.isEqualTo(other.circuitDefinition) &&
             this._compressedColumnIndex === other._compressedColumnIndex &&
+            this._extraWireStartIndex === other._extraWireStartIndex &&
             equate(this._highlightedSlot, other._highlightedSlot);
     }
 
@@ -290,8 +315,13 @@ class DisplayedCircuit {
         }
 
         // Wires (doubled-up for measured sections).
-        painter.trace(trace => {
-            for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+        painter.ctx.save();
+        let drawnWireCount = Math.min(this.circuitDefinition.numWires, (this._extraWireStartIndex || Infinity) + 1);
+        for (let row = 0; row < drawnWireCount; row++) {
+            if (row === this._extraWireStartIndex) {
+                painter.ctx.globalAlpha = 0.5;
+            }
+            painter.trace(trace => {
                 let wireRect = this.wireRect(row);
                 let y = Math.round(wireRect.center().y - 0.5) + 0.5;
                 let lastX = 25;
@@ -308,8 +338,9 @@ class DisplayedCircuit {
                     }
                     lastX = x;
                 }
-            }
-        }).thenStroke('black');
+            }).thenStroke('black');
+        }
+        painter.ctx.restore();
     }
 
     /**
@@ -483,8 +514,11 @@ class DisplayedCircuit {
      */
     _previewDropMovedGate(hand) {
         let modificationPoint = this.findModificationIndex(hand);
-        if (modificationPoint === undefined
-                || modificationPoint.row + hand.heldGate.height > this.circuitDefinition.numWires) {
+        if (modificationPoint === undefined) {
+            return this;
+        }
+        let handRowOffset = Math.floor(hand.holdOffset.y/Config.WIRE_SPACING);
+        if (modificationPoint.row + handRowOffset >= this.circuitDefinition.numWires) {
             return this;
         }
         let addedGate = hand.heldGate;
@@ -499,10 +533,17 @@ class DisplayedCircuit {
             padded(i + addedGate.width, emptyCol).
             withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
+        let newWireCount = Math.min(Config.MAX_WIRE_COUNT,
+            Math.max(
+                this._extraWireStartIndex || 0,
+                Math.max(
+                    this.circuitDefinition.numWires,
+                    addedGate.height + row)));
 
-        return this.withCircuit(this.circuitDefinition.withColumns(newCols)).
+        return this.withCircuit(this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount)).
             _withHighlightedSlot({row: modificationPoint.row, col: modificationPoint.col, resizeStyle: false}).
-            _withCompressedColumnIndex(isInserting ? i : undefined);
+            _withCompressedColumnIndex(isInserting ? i : undefined).
+            _withExtraWireStartIndex(this._extraWireStartIndex || this.circuitDefinition.numWires);
     }
 
     /**
@@ -538,7 +579,8 @@ class DisplayedCircuit {
             _withHighlightedSlot(this._highlightedSlot).
             _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
                 undefined :
-                hand.resizingGateSlot.x + 1);
+                hand.resizingGateSlot.x + 1).
+            _withExtraWireStartIndex(this._extraWireStartIndex || this.circuitDefinition.numWires);
     }
 
     /**
@@ -557,7 +599,51 @@ class DisplayedCircuit {
         return new DisplayedCircuit(
             this.top,
             circuitDefinition,
-            this._compressedColumnIndex);
+            this._compressedColumnIndex,
+            this._highlightedSlot,
+            this._extraWireStartIndex);
+    }
+
+    /**
+     * @param {undefined|!int} compressedColumnIndex
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _withCompressedColumnIndex(compressedColumnIndex) {
+        return new DisplayedCircuit(
+            this.top,
+            this.circuitDefinition,
+            compressedColumnIndex,
+            this._highlightedSlot,
+            this._extraWireStartIndex);
+    }
+
+    /**
+     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _withHighlightedSlot(slot) {
+        return new DisplayedCircuit(
+            this.top,
+            this.circuitDefinition,
+            this._compressedColumnIndex,
+            slot,
+            this._extraWireStartIndex);
+    }
+
+    /**
+     * @param {undefined|!int} extraWireStartIndex
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _withExtraWireStartIndex(extraWireStartIndex) {
+        return new DisplayedCircuit(
+            this.top,
+            this.circuitDefinition,
+            this._compressedColumnIndex,
+            this._highlightedSlot,
+            extraWireStartIndex);
     }
 
     /**
@@ -573,7 +659,8 @@ class DisplayedCircuit {
             Math.max(
                 neededWireCountForPlacement,
                 Math.max(Config.MIN_WIRE_COUNT, desiredWireCount) + extraWireCount));
-        return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount));
+        return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount)).
+            _withExtraWireStartIndex(this._extraWireStartIndex || desiredWireCount);
     }
 
     /**
@@ -639,33 +726,12 @@ class DisplayedCircuit {
         return {
             newCircuit: new DisplayedCircuit(
                 this.top,
-                this.circuitDefinition.withColumns(newCols)),
+                this.circuitDefinition.withColumns(newCols),
+                undefined,
+                undefined,
+                this._extraWireStartIndex),
             newHand: hand.withHeldGate(gate, offset)
         };
-    }
-
-    /**
-     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
-     * @returns {!DisplayedCircuit}
-     */
-    _withHighlightedSlot(slot) {
-        return new DisplayedCircuit(
-            this.top,
-            this.circuitDefinition,
-            this._compressedColumnIndex,
-            slot);
-    }
-
-    /**
-     * @param {undefined|!int} compressedColumnIndex
-     * @returns {!DisplayedCircuit}
-     */
-    _withCompressedColumnIndex(compressedColumnIndex) {
-        return new DisplayedCircuit(
-            this.top,
-            this.circuitDefinition,
-            compressedColumnIndex,
-            this._highlightedSlot);
     }
 
     /**
