@@ -11,6 +11,7 @@ import HistoryPusher from "src/browser/HistoryPusher.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import RestartableRng from "src/base/RestartableRng.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
@@ -30,6 +31,10 @@ canvas.width = canvasDiv.clientWidth;
 canvas.height = window.innerHeight;
 let haveLoaded = false;
 let historyPusher = new HistoryPusher();
+let semiStableRng = new RestartableRng();
+setInterval(() => {
+    semiStableRng = new RestartableRng();
+}, Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS*0.95);
 
 //noinspection JSValidateTypes
 /** @type {!HTMLDivElement} */
@@ -137,7 +142,7 @@ const redrawNow = () => {
     let size = desiredCanvasSizeFor(shown);
     canvas.width = size.w;
     canvas.height = size.h;
-    let painter = new Painter(canvas);
+    let painter = new Painter(canvas, semiStableRng.restarted());
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats, isShiftHeld);
     painter.paintDeferred();

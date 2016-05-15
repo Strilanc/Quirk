@@ -409,10 +409,9 @@ class DisplayedCircuit {
      * @param {!int} col
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
-     * @param {!boolean} shift
      * @private
      */
-    _drawColumn(painter, gateColumn, col, hand, stats, shift) {
+    _drawColumn(painter, gateColumn, col, hand, stats) {
         this._drawColumnControlWires(painter, gateColumn, col, stats);
 
         let focusSlot = this._highlightedSlot;

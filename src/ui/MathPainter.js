@@ -196,9 +196,17 @@ export default class MathPainter {
      * @param {!number} y
      * @param {!string} labelText
      * @param {!string} valueText
-     * @param {undefined|!string} valueText2
+     * @param {undefined|!string=} valueText2
+     * @param {!string=} backColor
      */
-    static paintDeferredValueTooltip(painter, x, y, labelText, valueText, valueText2 = undefined) {
+    static paintDeferredValueTooltip(
+            painter,
+            x,
+            y,
+            labelText,
+            valueText,
+            valueText2 = undefined,
+            backColor = Config.DISPLAY_GATE_BACK_COLOR) {
         const labelFont = '12px Helvetica';
         const valueFont = 'bold 12px monospace';
         painter.defer(() => {
@@ -221,7 +229,7 @@ export default class MathPainter {
                     w,
                     h).paddedBy(4);
                 painter.trace(tracer => tracer.rect(r.x, r.y, r.w, r.h)).
-                    thenFill(Config.DISPLAY_GATE_BACK_COLOR).
+                    thenFill(backColor).
                     thenStroke('black');
             };
 

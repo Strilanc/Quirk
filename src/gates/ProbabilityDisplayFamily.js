@@ -22,8 +22,8 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
     let [w, h] = [controlTexture.width, controlTexture.height];
     let result = new ShaderPipeline();
 
-    result.addStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
     result.addStep(w, h, t => DisplayShaders.amplitudesToProbabilities(t, controlTexture));
+    result.addStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
 
     let remainingQubitCount = Math.round(Math.log2(w*h));
     while (remainingQubitCount > rangeLength) {
@@ -204,3 +204,4 @@ let SingleChanceGate = new Gate(
 let ProbabilityDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleChanceGate : multiChanceGateMaker(span));
 export default ProbabilityDisplayFamily;
+export { makeProbabilitySpanPipeline, probabilityPixelsToColumnVector };

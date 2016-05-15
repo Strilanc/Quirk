@@ -13,7 +13,9 @@ import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
 import ShaderPipeline from "src/circuit/ShaderPipeline.js"
 import Shaders from "src/webgl/Shaders.js"
+
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
+import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 
 const τ = Math.PI * 2;
 
@@ -107,6 +109,7 @@ Gates.Special = {
  */
 Gates.Displays = {
     ProbabilityDisplayFamily: ProbabilityDisplayFamily,
+    SampleDisplayFamily: SampleDisplayFamily,
 
     BlochSphereDisplay: new Gate(
         "Bloch",
@@ -123,7 +126,7 @@ Gates.Displays = {
         "Density",
         Matrix.identity(2),
         "Density Matrix Display",
-        "Shows the marginal state of one or more wires.\nUse controls to see conditional states.").
+        "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
         withSerializedId("Density").
         withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
             let {row, col} = args.positionInCircuit;
@@ -742,10 +745,10 @@ Gates.Sets = [
         hint: "Displays",
         gates: [
             Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
-            Gates.Displays.BlochSphereDisplay,
             DensityMatrixFamily.ofSize(1),
+            Gates.Displays.SampleDisplayFamily.ofSize(3),
             null,
-            null,
+            Gates.Displays.BlochSphereDisplay,
             null
         ]
     },
@@ -871,6 +874,7 @@ Gates.KnownToSerializer = [
     Gates.Special.SwapHalf,
 
     ...Gates.Displays.ProbabilityDisplayFamily.all,
+    ...Gates.Displays.SampleDisplayFamily.all,
     ...DensityMatrixFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
