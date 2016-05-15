@@ -8,16 +8,27 @@ import Point from "src/math/Point.js"
 export default class Painter {
     /**
      * @param {!HTMLCanvasElement} canvas
-     * @property {!HTMLCanvasElement} canvas
-     * @property {!CanvasRenderingContext2D} ctx
-     * @property {!function()} deferred
      */
     constructor(canvas) {
+        /** @type {!HTMLCanvasElement} */
         this.canvas = canvas;
+        /** @type {!CanvasRenderingContext2D} */
         this.ctx = canvas.getContext("2d");
-        this.deferred = [];
-        this.traceAction = new TraceAction(this.ctx);
-        this.tracer = new Tracer(this.ctx);
+        /**
+         * @type {!Array.<!function()>}
+         * @private
+         */
+        this._deferredPaintActions = [];
+        /**
+         * @type {!TraceAction}
+         * @private
+         */
+        this._traceAction = new TraceAction(this.ctx);
+        /**
+         * @type {!Tracer}
+         * @private
+         */
+        this._tracer = new Tracer(this.ctx);
         /**
          * @type {undefined|!string}
          */
@@ -46,20 +57,26 @@ export default class Painter {
      * @param {!function(void): void} tooltipPainter
      */
     defer(tooltipPainter) {
-        this.deferred.push(tooltipPainter);
+        this._deferredPaintActions.push(tooltipPainter);
     }
 
     paintDeferred() {
-        for (let e of this.deferred) {
+        for (let e of this._deferredPaintActions) {
             e();
         }
-        this.deferred = [];
+        this._deferredPaintActions = [];
     }
 
+    /**
+     * @returns {!Rect}
+     */
     paintableArea() {
         return new Rect(0, 0, this.canvas.width, this.canvas.height);
     }
 
+    /**
+     * @param {!string=} color
+     */
     clear(color = Config.DEFAULT_FILL_COLOR) {
         this.ctx.fillStyle = color;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -125,8 +142,8 @@ export default class Painter {
      */
     trace(tracerFunc) {
         this.ctx.beginPath();
-        tracerFunc(this.tracer);
-        return this.traceAction;
+        tracerFunc(this._tracer);
+        return this._traceAction;
     }
 
     /**

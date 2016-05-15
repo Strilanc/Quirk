@@ -91,20 +91,6 @@ class GateColumn {
                 (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
     }
 
-    wiresWithSingleQubitDisplaysMask() {
-        return Seq.range(this.gates.length).
-            filter(i => this.gates[i] === Gates.Displays.ChanceDisplay ||
-                this.gates[i] === Gates.Displays.BlochSphereDisplay ||
-                this.gates[i] === Gates.Displays.DensityMatrixDisplay).
-            aggregate(0, (a, i) => a | (1 << i));
-    }
-
-    wiresWithTwoQubitDisplaysMask() {
-        return Seq.range(this.gates.length).
-            filter(i => this.gates[i] === Gates.Displays.DensityMatrixDisplay2).
-            aggregate(0, (a, i) => a | (1 << i));
-    }
-
     /**
      * @param {!int} inputMeasureMask
      * @param {!int} row
@@ -147,13 +133,19 @@ class GateColumn {
             }
         }
 
+        for (let j = 1; j < g.height; j++) {
+            if (this.gates[row + j] === Gates.Special.Control || this.gates[row + j] === Gates.Special.AntiControl) {
+                return "control\ninside";
+            }
+        }
+
         // Measured qubits can't be re-superposed for implementation simplicity reasons.
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
+            let m = g.matrixAt(0.8234);
             // Pick a time that's unlikely to be on a corner case of a time-based gate.
             // Also this time happens to hit the upstroke on both of the included clock-pulse gates.
-            let m = g.matrixAt(0.8234);
             const ε = 0.0001;
             let permutesStates = !m.isDiagonal();
             let createsSuperpositions = !m.isPhasedPermutation(ε);
@@ -161,20 +153,22 @@ class GateColumn {
             if (createsSuperpositions || (permutesStates && hasCoherentControl)) {
                 return "no\nremix\n(sorry)";
             }
-        }
-
-        if (maskMeasured !== 0 && maskMeasured !== mask) {
-            return "no\nremix\n(sorry)";
+            if (!m.isIdentity() && maskMeasured !== mask) {
+                return "no\nremix\n(sorry)";
+            }
         }
 
         return undefined;
     }
 
     minimumRequiredWireCount() {
-        return Seq.range(this.gates.length).
-            filter(i => this.gates[i] !== null).
-            map(i => i + this.gates[i].height).
-            max(0);
+        let best = 0;
+        for (let i = 0; i < this.gates.length; i++) {
+            if (this.gates[i] !== null) {
+                best = Math.max(best, this.gates[i].height + i);
+            }
+        }
+        return best;
     }
 
     maximumGateWidth() {

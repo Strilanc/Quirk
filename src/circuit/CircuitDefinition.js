@@ -350,7 +350,11 @@ class CircuitDefinition {
      * and assuming the gate positions are fixed (i.e. wires can only be added or removed from the bottom).
      */
     minimumRequiredWireCount() {
-        return seq(this.columns).map(c => c.minimumRequiredWireCount()).max(0);
+        let best = 0;
+        for (let c of this.columns) {
+            best = Math.max(best, c.minimumRequiredWireCount());
+        }
+        return best;
     }
 
     /**
@@ -380,7 +384,13 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return 0;
         }
-        return this.columns[col].wiresWithSingleQubitDisplaysMask();
+        let c = this.columns[col];
+        return Seq.range(c.gates.length).
+            filter(row => c.gates[row] === Gates.Displays.ChanceDisplay ||
+                c.gates[row] === Gates.Displays.BlochSphereDisplay ||
+                c.gates[row] === Gates.Displays.DensityMatrixDisplay).
+            filter(row => this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined).
+            aggregate(0, (a, i) => a | (1 << i));
     }
 
     /**
@@ -391,7 +401,11 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return 0;
         }
-        return this.columns[col].wiresWithTwoQubitDisplaysMask();
+        let c = this.columns[col];
+        return Seq.range(c.gates.length).
+            filter(row => c.gates[row] === Gates.Displays.DensityMatrixDisplay2).
+            filter(row => this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined).
+            aggregate(0, (a, i) => a | (1 << i));
     }
 
     /**

@@ -47,7 +47,12 @@ let diagram = diagramText => {
         stride(2).
         map(line => seq(line).skip(1).stride(2).join("")).
         join('\n');
-    let circuit = new DisplayedCircuit(10, CircuitDefinition.fromTextDiagram(TEST_GATES, circuitDiagramSubset));
+    let circuit = new DisplayedCircuit(
+        10,
+        CircuitDefinition.fromTextDiagram(TEST_GATES, circuitDiagramSubset),
+        undefined,
+        undefined,
+        undefined);
     let pts = Seq.naturals().
         takeWhile(k => diagramText.indexOf(k) !== -1).
         map(k => {
@@ -70,11 +75,11 @@ let suite = new Suite("DisplayedCircuit");
 suite.test("constructor_vs_isEqualTo", () => {
     let d1 = CircuitDefinition.fromTextDiagram(TEST_GATES, '+H+\nX+Y');
     let d2 = CircuitDefinition.fromTextDiagram(TEST_GATES, '++++\ntHHH');
-    assertThrows(() => new DisplayedCircuit(23, "not a circuit"));
-    assertThrows(() => new DisplayedCircuit("not a number", d1));
+    assertThrows(() => new DisplayedCircuit(23, "not a circuit", undefined, undefined, undefined));
+    assertThrows(() => new DisplayedCircuit("not a number", d1, undefined, undefined, undefined));
 
-    let c1 = new DisplayedCircuit(45, d1, undefined, undefined);
-    let c2 = new DisplayedCircuit(67, d2, 1, {col: 1, row: 1, resizeStyle: true});
+    let c1 = new DisplayedCircuit(45, d1, undefined, undefined, undefined);
+    let c2 = new DisplayedCircuit(67, d2, 1, {col: 1, row: 1, resizeStyle: true}, 1);
     assertThat(c1.top).isEqualTo(45);
     assertThat(c1.circuitDefinition).isEqualTo(d1);
 
@@ -83,17 +88,19 @@ suite.test("constructor_vs_isEqualTo", () => {
     assertThat(c2).isEqualTo(c2);
     assertThat(c2).isNotEqualTo(c1);
 
-    assertThat(c1).isEqualTo(new DisplayedCircuit(45, d1, undefined, undefined));
-    assertThat(c1).isNotEqualTo(new DisplayedCircuit(46, d1, undefined, undefined));
-    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d2, undefined, undefined));
-    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d1, 1, undefined));
-    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d1, undefined, {col: 1, row: 1, resizeStyle: false}));
+    assertThat(c1).isEqualTo(new DisplayedCircuit(45, d1, undefined, undefined, undefined));
+    assertThat(c1).isNotEqualTo(new DisplayedCircuit(46, d1, undefined, undefined, undefined));
+    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d2, undefined, undefined, undefined));
+    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d1, 1, undefined, undefined));
+    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d1, undefined, {col:1, row:1, resizeStyle:false}, undefined));
+    assertThat(c1).isNotEqualTo(new DisplayedCircuit(45, d1, undefined, undefined, 0));
 
-    assertThat(c2).isEqualTo(new DisplayedCircuit(67, d2, 1, {col: 1, row: 1, resizeStyle: true}));
-    assertThat(c2).isNotEqualTo(new DisplayedCircuit(68, d2, 1, {col: 1, row: 1, resizeStyle: true}));
-    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d1, 1, {col: 1, row: 1, resizeStyle: true}));
-    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d2, 2, {col: 1, row: 1, resizeStyle: true}));
-    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d2, 1, {col: 2, row: 1, resizeStyle: true}));
+    assertThat(c2).isEqualTo(new DisplayedCircuit(67, d2, 1, {col: 1, row: 1, resizeStyle: true}, 1));
+    assertThat(c2).isNotEqualTo(new DisplayedCircuit(68, d2, 1, {col: 1, row: 1, resizeStyle: true}, 1));
+    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d1, 1, {col: 1, row: 1, resizeStyle: true}, 1));
+    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d2, 2, {col: 1, row: 1, resizeStyle: true}, 1));
+    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d2, 1, {col: 2, row: 1, resizeStyle: true}, 1));
+    assertThat(c2).isNotEqualTo(new DisplayedCircuit(67, d2, 1, {col: 2, row: 1, resizeStyle: true}, 2));
 });
 
 suite.test("bootstrap_diagram", () => {
@@ -102,8 +109,13 @@ suite.test("bootstrap_diagram", () => {
                         |   ///
                         |-+-///-
                         |`)).isEqualTo({
-        circuit: new DisplayedCircuit(10, CircuitDefinition.fromTextDiagram(TEST_GATES, `XD+
-                                                                                         +++`)),
+        circuit: new DisplayedCircuit(
+            10,
+            CircuitDefinition.fromTextDiagram(TEST_GATES, `XD+
+                                                           +++`),
+            undefined,
+            undefined,
+            undefined),
         pts: []
     });
 
@@ -112,8 +124,13 @@ suite.test("bootstrap_diagram", () => {
                         |
                         |-+-Y-+-
                         |`)).isEqualTo({
-        circuit: new DisplayedCircuit(10, CircuitDefinition.fromTextDiagram(TEST_GATES, `+H+
-                                                                                         +Y+`)),
+        circuit: new DisplayedCircuit(
+            10,
+            CircuitDefinition.fromTextDiagram(TEST_GATES, `+H+
+                                                           +Y+`),
+            undefined,
+            undefined,
+            undefined),
         pts: []
     });
 
@@ -122,8 +139,13 @@ suite.test("bootstrap_diagram", () => {
                         |  3
                         |-+-Y4+-
                         |  5^   `)).isEqualTo({
-        circuit: new DisplayedCircuit(10, CircuitDefinition.fromTextDiagram(TEST_GATES, `+H+
-                                                                                         +Y+`)),
+        circuit: new DisplayedCircuit(
+            10,
+            CircuitDefinition.fromTextDiagram(TEST_GATES, `+H+
+                                                           +Y+`),
+            undefined,
+            undefined,
+            undefined),
         pts: [
             new Point(35.5, 10.5),
             new Point(60.5, 10.5),

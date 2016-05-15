@@ -13,6 +13,8 @@ import {seq, Seq} from "src/base/Seq.js"
 import ToolboxWidget from "src/widgets/ToolboxWidget.js"
 import Util from "src/base/Util.js"
 
+const TOOLBOX_HEIGHT = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+
 export default class InspectorWidget {
     /**
      * @param {!Rect} drawArea
@@ -43,24 +45,18 @@ export default class InspectorWidget {
     updateArea(drawArea) {
         this.drawArea = drawArea;
 
-        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        this.toolboxWidget.updateArea(drawArea.takeTop(toolboxHeight));
+        this.toolboxWidget.updateArea(drawArea.takeTop(TOOLBOX_HEIGHT));
     }
 
     /**
-     * @param {!int} numWires
      * @param {!Rect} drawArea
      * @returns {!InspectorWidget}
      */
-    static empty(numWires, drawArea) {
-        let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-
+    static empty(drawArea) {
         return new InspectorWidget(
             drawArea,
-            new DisplayedCircuit(
-                toolboxHeight,
-                new CircuitDefinition(numWires, [])),
-            new ToolboxWidget(drawArea.takeTop(toolboxHeight)),
+            DisplayedCircuit.empty(TOOLBOX_HEIGHT),
+            new ToolboxWidget(drawArea.takeTop(TOOLBOX_HEIGHT)),
             Hand.EMPTY);
     }
 
@@ -213,7 +209,7 @@ export default class InspectorWidget {
     withCircuitDefinition(newCircuitDefinition) {
         return new InspectorWidget(
             this.drawArea,
-            this.circuitWidget.withCircuit(newCircuitDefinition),
+            DisplayedCircuit.empty(TOOLBOX_HEIGHT).withCircuit(newCircuitDefinition),
             this.toolboxWidget,
             Hand.EMPTY);
     }
