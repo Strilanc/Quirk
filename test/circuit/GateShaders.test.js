@@ -229,6 +229,22 @@ suite.webGlTest('addition', () => {
         49,50,51,52, 37,38,39,40, 25,26,27,28, 13,14,15,16
     ]));
 });
+
+suite.webGlTest('cycleBits', () => {
+    let actual = GateShaders.cycleBits(
+        Shaders.data(Seq.range(4*16+1).skip(1).toFloat32Array()).toFloatTexture(4, 4),
+        CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 4),
+        0,
+        4,
+        -1).readFloatOutputs(4, 4);
+    assertThat(actual).isEqualTo(new Float32Array([
+         1, 2, 3, 4,  9,10,11,12, 17,18,19,20, 25,26,27,28,
+        33,34,35,36, 41,42,43,44, 49,50,51,52, 57,58,59,60,
+         5, 6, 7, 8, 13,14,15,16, 21,22,23,24, 29,30,31,32,
+        37,38,39,40, 45,46,47,48, 53,54,55,56, 61,62,63,64
+    ]));
+});
+
 suite.webGlTest('fourierTransformStep', () => {
     let _ = 0;
     let w = Math.sqrt(1/8);
@@ -251,7 +267,6 @@ suite.webGlTest('fourierTransformStep', () => {
         Seq.range(16).map(i => Complex.polar(0.25, Math.PI*i/8)).flatMap(c => [c.real, c.imag, 0, 0]).toFloat32Array(),
         0.0001);
 });
-
 
 suite.webGlTest('phaseGradient', () => {
     const π = Math.PI;

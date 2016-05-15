@@ -783,7 +783,21 @@ Gates.ExperimentalAndImplausible = {
             throw new DetailedError("Applied an Error Injection Gate", {qubit});
         }).
         withSerializedId("__debug__ErrorInjection").
-        withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red'))
+        withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red')),
+    CycleBitsFamily: Gate.generateFamily(2, 8, span => new Gate(
+        "<<=1",
+        Matrix.generate(1<<span, 1<<span, (r, c) => {
+            let expected = r;
+            let input = c;
+            let actual = input << 1;
+            actual = (actual & ((1 << span) - 1)) | (actual >> span);
+            return expected === actual ? 1 : 0;
+        }),
+        "Bit Cycle Gate",
+        "Swaps bits in a cycle.").
+        withSerializedId("__unstable__cycle" + span).
+        withHeight(span).
+        withCustomShader((val, con, bit) => GateShaders.cycleBits(val, con, bit, span, 1)))
 };
 
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
@@ -922,7 +936,7 @@ Gates.Sets = [
     }
 ];
 
-/** @type {!(!Gate[])} */
+/** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
     Gates.Special.Control,
     Gates.Special.AntiControl,
@@ -1004,5 +1018,6 @@ Gates.KnownToSerializer = [
     ...Gates.PhaseDegradientFamily.all,
 
     Gates.ExperimentalAndImplausible.UniversalNot,
-    Gates.ExperimentalAndImplausible.ErrorInjection
+    Gates.ExperimentalAndImplausible.ErrorInjection,
+    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
 ];
