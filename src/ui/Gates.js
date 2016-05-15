@@ -110,30 +110,14 @@ Gates.Displays = {
         Matrix.identity(2),
         "Probability Display",
         "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities."
-    ).withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            MathPainter.paintProbabilityBox(
-                args.painter,
-                args.stats.controlledWireProbabilityJustAfter(row, col),
-                args.rect,
-                args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
-            }
-            GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-            if (showState) {
-                args.painter.ctx.restore();
-            }
-        }
-    }),
+    ).withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+        let {row, col} = args.positionInCircuit;
+        MathPainter.paintProbabilityBox(
+            args.painter,
+            args.stats.controlledWireProbabilityJustAfter(row, col),
+            args.rect,
+            args.focusPoints);
+    })),
 
     MultiChanceDisplay: Gate.generateFamily(2, 8, span => new Gate(
         "MultiChance",
@@ -171,177 +155,103 @@ Gates.Displays = {
             }
             return new Matrix(1, pixels.length >> 2, ps);
         }).
-        withCustomDrawer(args => {
-            if (args.positionInCircuit === null) {
-                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+            let probabilities = args.customStats || Matrix.square(NaN);
+            let {painter, rect} = args;
+            let {x, y, w, h} = rect;
+            let d = h/probabilities.height();
+            painter.fillRect(rect, Config.DISPLAY_GATE_BACK_COLOR);
+            painter.trace(tracer => {
+                for (let i = 1; i < probabilities.height(); i++) {
+                    tracer.line(x, y + d*i, x+w, y+d*i);
+                }
+            }).thenStroke('lightgray');
+            if (probabilities.hasNaN()) {
+                painter.printParagraph("NaN", rect, new Point(0.5, 0.5), 'red');
                 return;
             }
 
-            let showState = args.positionInCircuit !== null;
-            let showText = !showState || args.isHighlighted;
-
-            if (showState) {
-                let probabilities = args.customStats || Matrix.square(NaN);
-                let {painter, rect} = args;
-                let {x, y, w, h} = rect;
-                let d = h/probabilities.height();
-                painter.fillRect(rect, Config.DISPLAY_GATE_BACK_COLOR);
-                painter.trace(tracer => {
-                    for (let i = 1; i < probabilities.height(); i++) {
-                        tracer.line(x, y + d*i, x+w, y+d*i);
-                    }
-                }).thenStroke('lightgray');
-                if (probabilities.hasNaN()) {
-                    painter.printParagraph("NaN", rect, new Point(0.5, 0.5), 'red');
-                } else {
-                    if (d <= 8) {
-                        painter.ctx.beginPath();
-                        painter.ctx.moveTo(x, y);
-                        for (let i = 0; i < probabilities.height(); i++) {
-                            let p = probabilities.rawBuffer()[i * 2];
-                            let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) / 10));
-                            let py = y + d * i;
-                            painter.ctx.lineTo(px, py);
-                            painter.ctx.lineTo(px, py + d);
-                        }
-                        painter.ctx.lineTo(x, y + h);
-                        painter.ctx.lineTo(x, y);
-                        painter.ctx.strokeStyle = '#CCC';
-                        painter.ctx.stroke();
-                    }
-
-                    painter.ctx.beginPath();
-                    painter.ctx.moveTo(x, y);
-                    for (let i = 0; i < probabilities.height(); i++) {
-                        let p = probabilities.rawBuffer()[i*2];
-                        let px = x + w*p;
-                        let py = y+d*i;
-                        painter.ctx.lineTo(px, py);
-                        painter.ctx.lineTo(px, py+d);
-                    }
-                    painter.ctx.lineTo(x, y+h);
-                    painter.ctx.lineTo(x, y);
-                    painter.ctx.strokeStyle = 'gray';
-                    painter.ctx.stroke();
-                    painter.ctx.fillStyle = Config.DISPLAY_GATE_FORE_COLOR;
-                    painter.ctx.fill();
-                    if (d > 8) {
-                        for (let i = 0; i < probabilities.height(); i++) {
-                            let p = probabilities.rawBuffer()[i*2];
-                            painter.print((p*100).toFixed(1) + "%", x+w-2, y+d*(i+0.5), 'right', 'middle', 'black', '8pt monospace', w-4, d);
-                        }
-                    }
+            if (d <= 8) {
+                painter.ctx.beginPath();
+                painter.ctx.moveTo(x, y);
+                for (let i = 0; i < probabilities.height(); i++) {
+                    let p = probabilities.rawBuffer()[i * 2];
+                    let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) / 10));
+                    let py = y + d * i;
+                    painter.ctx.lineTo(px, py);
+                    painter.ctx.lineTo(px, py + d);
                 }
-                painter.strokeRect(rect, 'lightgray');
+                painter.ctx.lineTo(x, y + h);
+                painter.ctx.lineTo(x, y);
+                painter.ctx.strokeStyle = '#CCC';
+                painter.ctx.stroke();
             }
 
-            if (showText) {
-                if (showState) {
-                    args.painter.ctx.save();
-                    args.painter.ctx.globalAlpha *= 0.4;
-                }
-                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                if (showState) {
-                    args.painter.ctx.restore();
+            painter.ctx.beginPath();
+            painter.ctx.moveTo(x, y);
+            for (let i = 0; i < probabilities.height(); i++) {
+                let p = probabilities.rawBuffer()[i*2];
+                let px = x + w*p;
+                let py = y+d*i;
+                painter.ctx.lineTo(px, py);
+                painter.ctx.lineTo(px, py+d);
+            }
+            painter.ctx.lineTo(x, y+h);
+            painter.ctx.lineTo(x, y);
+            painter.ctx.strokeStyle = 'gray';
+            painter.ctx.stroke();
+            painter.ctx.fillStyle = Config.DISPLAY_GATE_FORE_COLOR;
+            painter.ctx.fill();
+            if (d > 8) {
+                for (let i = 0; i < probabilities.height(); i++) {
+                    let p = probabilities.rawBuffer()[i*2];
+                    painter.print((p*100).toFixed(1) + "%", x+w-2, y+d*(i+0.5), 'right', 'middle', 'black', '8pt monospace', w-4, d);
                 }
             }
-
-            GatePainting.paintResizeTab(args);
-        })),
+        }))),
 
     BlochSphereDisplay: new Gate(
         "Bloch",
         Matrix.identity(2),
         "Bloch Sphere Display",
         "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states."
-    ).withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
-            }
-            GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-            if (showState) {
-                args.painter.ctx.restore();
-            }
-        }
-    }),
+    ).withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+        let {row, col} = args.positionInCircuit;
+        let ρ = args.stats.qubitDensityMatrix(row, col);
+        MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
+    })),
 
     DensityMatrixDisplay: new Gate(
-        "Density\n1",
+        "Density",
         Matrix.identity(2),
         "Density Matrix Display",
-        "Shows a wire's local state as a density matrix.\nUse controls to see conditional states."
-    ).withSerializedId("Density").
-        withCustomDrawer(args => {
-            if (args.isResizeShowing) {
-                GatePainting.paintResizeTab(args);
-            }
-
-            let showState = args.positionInCircuit !== null;
-            let showText = !showState || args.isHighlighted;
-
-            if (showState) {
-                let {row, col} = args.positionInCircuit;
-                let ρ = args.stats.qubitDensityMatrix(row, col);
-                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-            }
-
-            if (showText) {
-                if (showState) {
-                    args.painter.ctx.save();
-                    args.painter.ctx.globalAlpha *= 0.4;
-                }
-                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                if (showState) {
-                    args.painter.ctx.restore();
-                }
-            }
-        }),
+        "Shows the marginal state of one or more wires.\nUse controls to see conditional states.").
+        withSerializedId("Density").
+        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.qubitDensityMatrix(row, col);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
+        })),
 
     DensityMatrixDisplay2: new Gate(
-        "Density\n2",
+        "Density",
         Matrix.identity(4),
-        "2-Qubit Density Matrix Display",
-        "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
-    ).withSerializedId("Density2").
+        "Density Matrix Display",
+        "Shows the marginal state of one or more wires.\nUse controls to see conditional states.").
+        withSerializedId("Density2").
         withWidth(2).
         withHeight(2).
-        withCustomDrawer(args => {
-            if (args.isResizeShowing) {
-                GatePainting.paintResizeTab(args);
-            }
-
-            let showState = args.positionInCircuit !== null;
-            let showText = !showState || args.isHighlighted;
-
-            if (showState) {
-                let {row, col} = args.positionInCircuit;
-                let ρ = args.stats.qubitPairDensityMatrix(row, col);
-                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-            }
-
-            if (showText) {
-                if (showState) {
-                    args.painter.ctx.save();
-                    args.painter.ctx.globalAlpha *= 0.4;
-                }
-                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                if (showState) {
-                    args.painter.ctx.restore();
-                }
-            }
-        })
+        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.qubitPairDensityMatrix(row, col);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
+        }))
 };
+
+let DensityMatrixFamily = Gate.generateFamily(1, 2,
+        h => [Gates.Displays.DensityMatrixDisplay, Gates.Displays.DensityMatrixDisplay2][h-1]);
+Gates.Displays.DensityMatrixDisplay = DensityMatrixFamily.ofSize(1);
+Gates.Displays.DensityMatrixDisplay2 = DensityMatrixFamily.ofSize(2);
 
 /**
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
@@ -935,8 +845,8 @@ Gates.Sets = [
             Gates.Displays.ChanceDisplay,
             Gates.Displays.BlochSphereDisplay,
             Gates.Displays.MultiChanceDisplay.ofSize(2),
-            Gates.Displays.DensityMatrixDisplay,
-            Gates.Displays.DensityMatrixDisplay2,
+            DensityMatrixFamily.ofSize(1),
+            null,
             null
         ]
     },
@@ -1062,8 +972,7 @@ Gates.KnownToSerializer = [
     Gates.Special.SwapHalf,
 
     Gates.Displays.ChanceDisplay,
-    Gates.Displays.DensityMatrixDisplay,
-    Gates.Displays.DensityMatrixDisplay2,
+    ...DensityMatrixFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
     Gates.Misc.SpacerGate,

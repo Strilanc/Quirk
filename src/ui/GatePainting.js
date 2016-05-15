@@ -40,8 +40,10 @@ GatePainting.DEFAULT_DRAWER = GatePainting.MAKE_HIGHLIGHTED_DRAWER();
  * @param {!Rect} gateRect
  * @returns {!Rect}
  */
-GatePainting.rectForResizeTab = gateRect =>
-    new Rect(gateRect.x, gateRect.bottom()-Config.GATE_RADIUS, gateRect.w, Config.GATE_RADIUS*2);
+GatePainting.rectForResizeTab = gateRect => {
+    let overlap = Math.min(Config.GATE_RADIUS, gateRect.h/4);
+    return new Rect(gateRect.x, gateRect.bottom() - overlap, gateRect.w, Config.GATE_RADIUS * 2);
+};
 
 /**
  * @param {!GateDrawParams} args
@@ -58,7 +60,7 @@ GatePainting.paintResizeTab = args => {
     let backColor = args.isResizeHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR;
     let foreColor = args.isResizeHighlighted ? '#222' : 'gray';
     args.painter.ctx.save();
-    args.painter.ctx.globalAlpha = args.isResizeHighlighted ? 1 : 0.7;
+    args.painter.ctx.globalAlpha *= args.isResizeHighlighted ? 1 : 0.7;
     args.painter.fillRect(trimRect, backColor);
     args.painter.strokeRect(trimRect, 'gray');
     args.painter.ctx.restore();
@@ -185,6 +187,28 @@ GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
     }
     args.painter.strokeRect(args.rect);
     GatePainting.paintResizeTab(args);
+};
+
+const DISPLAY_GATE_DEFAULT_DRAWER = GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR);
+
+GatePainting.makeDisplayDrawer = statePainter => args => {
+    if (args.positionInCircuit === null) {
+        DISPLAY_GATE_DEFAULT_DRAWER(args);
+        return;
+    }
+
+    GatePainting.paintResizeTab(args);
+
+    statePainter(args);
+
+    if (args.isHighlighted) {
+        args.painter.strokeRect(args.rect, 'black', 1.5);
+    }
+
+    args.painter.ctx.save();
+    args.painter.ctx.globalAlpha *= 0.25;
+    GatePainting.paintResizeTab(args);
+    args.painter.ctx.restore();
 };
 
 const staircaseCurve = steps => {
