@@ -171,10 +171,13 @@ class GateColumn {
     }
 
     minimumRequiredWireCount() {
-        return Seq.range(this.gates.length).
-            filter(i => this.gates[i] !== null).
-            map(i => i + this.gates[i].height).
-            max(0);
+        let best = 0;
+        for (let i = 0; i < this.gates.length; i++) {
+            if (this.gates[i] !== null) {
+                best = Math.max(best, this.gates[i].height + i);
+            }
+        }
+        return best;
     }
 
     maximumGateWidth() {

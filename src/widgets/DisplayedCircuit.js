@@ -798,11 +798,11 @@ class DisplayedCircuit {
      * @returns {!int}
      */
     importantWireCount() {
-        return seq([
+        return Math.max(
             this.circuitDefinition.numWires - 1,
-            Config.MIN_WIRE_COUNT,
-            this.circuitDefinition.minimumRequiredWireCount()
-        ]).max();
+            Math.max(
+                Config.MIN_WIRE_COUNT,
+                this.circuitDefinition.minimumRequiredWireCount()));
     }
 
     /**
