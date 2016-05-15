@@ -13,6 +13,7 @@ import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
 import ShaderPipeline from "src/circuit/ShaderPipeline.js"
 import Shaders from "src/webgl/Shaders.js"
+import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 
 const τ = Math.PI * 2;
 
@@ -105,110 +106,7 @@ Gates.Special = {
  * (In reality these would require multiple runs of the circuit to do tomography.)
  */
 Gates.Displays = {
-    ChanceDisplay: new Gate(
-        "Chance",
-        Matrix.identity(2),
-        "Probability Display",
-        "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities."
-    ).withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-        let {row, col} = args.positionInCircuit;
-        MathPainter.paintProbabilityBox(
-            args.painter,
-            args.stats.controlledWireProbabilityJustAfter(row, col),
-            args.rect,
-            args.focusPoints);
-    })),
-
-    MultiChanceDisplay: Gate.generateFamily(2, 8, span => new Gate(
-        "MultiChance",
-        Matrix.identity(1 << span),
-        "Multi Probability Display",
-        "------------------------- Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.").
-        withHeight(span).
-        withSerializedId("Chance" + span).
-        withCustomStatPipelineMaker((val, con, bit) => {
-            let [w, h] = [val.width, val.height];
-            let remainingQubitCount = Math.round(Math.log2(w*h));
-            let result = new ShaderPipeline();
-            result.addStep(w, h, inp => GateShaders.cycleAllBits(inp, -bit));
-            result.addStep(w, h, inp => DisplayShaders.amplitudesToProbabilities(inp, con));
-            while (remainingQubitCount > span) {
-                if (h > 1) {
-                    h >>= 1;
-                    result.addStep(w, h, (h=>inp=>Shaders.sumFold(inp, 0, h))(h));
-                } else {
-                    w >>= 1;
-                    result.addStep(w, h, (w=>inp=>Shaders.sumFold(inp, w, 0))(w));
-                }
-                remainingQubitCount -= 1;
-            }
-            return result;
-        }).
-        withCustomStatPostProcessor(pixels => {
-            let unity = 0;
-            for (let e of pixels) {
-                unity += e;
-            }
-            let ps = new Float32Array(pixels.length >> 1);
-            for (let i = 0; i < ps.length; i++) {
-                ps[i*2] = pixels[i*4]/unity;
-            }
-            return new Matrix(1, pixels.length >> 2, ps);
-        }).
-        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-            let probabilities = args.customStats || Matrix.square(NaN);
-            let {painter, rect} = args;
-            let {x, y, w, h} = rect;
-            let d = h/probabilities.height();
-            painter.fillRect(rect, Config.DISPLAY_GATE_BACK_COLOR);
-            painter.trace(tracer => {
-                for (let i = 1; i < probabilities.height(); i++) {
-                    tracer.line(x, y + d*i, x+w, y+d*i);
-                }
-            }).thenStroke('lightgray');
-            if (probabilities.hasNaN()) {
-                painter.printParagraph("NaN", rect, new Point(0.5, 0.5), 'red');
-                return;
-            }
-
-            if (d <= 8) {
-                painter.ctx.beginPath();
-                painter.ctx.moveTo(x, y);
-                for (let i = 0; i < probabilities.height(); i++) {
-                    let p = probabilities.rawBuffer()[i * 2];
-                    let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) / 10));
-                    let py = y + d * i;
-                    painter.ctx.lineTo(px, py);
-                    painter.ctx.lineTo(px, py + d);
-                }
-                painter.ctx.lineTo(x, y + h);
-                painter.ctx.lineTo(x, y);
-                painter.ctx.strokeStyle = '#CCC';
-                painter.ctx.stroke();
-            }
-
-            painter.ctx.beginPath();
-            painter.ctx.moveTo(x, y);
-            for (let i = 0; i < probabilities.height(); i++) {
-                let p = probabilities.rawBuffer()[i*2];
-                let px = x + w*p;
-                let py = y+d*i;
-                painter.ctx.lineTo(px, py);
-                painter.ctx.lineTo(px, py+d);
-            }
-            painter.ctx.lineTo(x, y+h);
-            painter.ctx.lineTo(x, y);
-            painter.ctx.strokeStyle = 'gray';
-            painter.ctx.stroke();
-            painter.ctx.fillStyle = Config.DISPLAY_GATE_FORE_COLOR;
-            painter.ctx.fill();
-            if (d > 8) {
-                for (let i = 0; i < probabilities.height(); i++) {
-                    let p = probabilities.rawBuffer()[i*2];
-                    painter.print((p*100).toFixed(1) + "%", x+w-2, y+d*(i+0.5), 'right', 'middle', 'black', '8pt monospace', w-4, d);
-                }
-            }
-        }))),
+    ProbabilityDisplayFamily: ProbabilityDisplayFamily,
 
     BlochSphereDisplay: new Gate(
         "Bloch",
@@ -252,6 +150,7 @@ let DensityMatrixFamily = Gate.generateFamily(1, 2,
         h => [Gates.Displays.DensityMatrixDisplay, Gates.Displays.DensityMatrixDisplay2][h-1]);
 Gates.Displays.DensityMatrixDisplay = DensityMatrixFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixFamily.ofSize(2);
+Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
 
 /**
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
@@ -842,10 +741,10 @@ Gates.Sets = [
     {
         hint: "Displays",
         gates: [
-            Gates.Displays.ChanceDisplay,
+            Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
             Gates.Displays.BlochSphereDisplay,
-            Gates.Displays.MultiChanceDisplay.ofSize(2),
             DensityMatrixFamily.ofSize(1),
+            null,
             null,
             null
         ]
@@ -971,7 +870,7 @@ Gates.KnownToSerializer = [
     Gates.Special.Measurement,
     Gates.Special.SwapHalf,
 
-    Gates.Displays.ChanceDisplay,
+    ...Gates.Displays.ProbabilityDisplayFamily.all,
     ...DensityMatrixFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
@@ -1044,6 +943,5 @@ Gates.KnownToSerializer = [
 
     Gates.ExperimentalAndImplausible.UniversalNot,
     Gates.ExperimentalAndImplausible.ErrorInjection,
-    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all,
-    ...Gates.Displays.MultiChanceDisplay.all
+    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
 ];
