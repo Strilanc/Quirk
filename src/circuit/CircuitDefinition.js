@@ -580,6 +580,24 @@ class CircuitDefinition {
     }
 
     /**
+     * @param {!int} colIndex
+     * @returns {!Array.<!int>}
+     */
+    customStatRowsInCol(colIndex) {
+        if (colIndex < 0 || colIndex >= this.columns.length) {
+            return [];
+        }
+
+        let col = this.columns[colIndex];
+        return Seq.range(col.gates.length).
+            filter(row =>
+                col.gates[row] !== null &&
+                col.gates[row].customStatPostProcesser !== undefined &&
+                this.gateAtLocIsDisabledReason(new Point(colIndex, row)) === undefined).
+            toArray();
+    }
+
+    /**
      * @param {!int} col
      * @param {!int} row
      * @param {!int} height

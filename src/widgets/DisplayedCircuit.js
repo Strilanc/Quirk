@@ -409,10 +409,9 @@ class DisplayedCircuit {
      * @param {!int} col
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
-     * @param {!boolean} shift
      * @private
      */
-    _drawColumn(painter, gateColumn, col, hand, stats, shift) {
+    _drawColumn(painter, gateColumn, col, hand, stats) {
         this._drawColumnControlWires(painter, gateColumn, col, stats);
 
         let focusSlot = this._highlightedSlot;
@@ -441,7 +440,8 @@ class DisplayedCircuit {
                 gate,
                 stats,
                 {row, col},
-                focusSlot === undefined ? hand.hoverPoints() : []));
+                focusSlot === undefined ? hand.hoverPoints() : [],
+                stats.customStatsForSlot(col, row)));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== undefined) {
                 painter.ctx.save();

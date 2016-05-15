@@ -13,6 +13,7 @@ export default class GateDrawParams {
      * @param {!CircuitStats} stats
      * @param {?{row: !int, col: !int}} positionInCircuit
      * @param {!Array.<!Point>} focusPoints
+     * @param {undefined|*} customStats
      */
     constructor(painter,
                 isInToolbox,
@@ -23,7 +24,8 @@ export default class GateDrawParams {
                 gate,
                 stats,
                 positionInCircuit,
-                focusPoints) {
+                focusPoints,
+                customStats) {
         /** @type {!Painter} */
         this.painter = painter;
         /** @type {!boolean} */
@@ -44,5 +46,7 @@ export default class GateDrawParams {
         this.positionInCircuit = positionInCircuit;
         /** @type {!Array.<!Point>} */
         this.focusPoints = focusPoints;
+        /** @type {undefined|*} */
+        this.customStats = customStats;
     }
 }

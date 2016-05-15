@@ -43,8 +43,8 @@ export default class Util {
         return i & 0xFF;
     }
 
-    static bin(number, fixedWidth) {
-        return ("0".repeat(fixedWidth) + number.toString(2)).slice(-fixedWidth).split("").reverse().join("");
+    static bin(number, fixedLen) {
+        return ("0".repeat(fixedLen) + number.toString(2)).slice(-fixedLen).split("").reverse().join("");
     }
 
     /**

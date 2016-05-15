@@ -2,6 +2,7 @@ import CircuitShaders from "src/circuit/CircuitShaders.js"
 import DetailedError from "src/base/DetailedError.js"
 import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
+import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/ui/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
@@ -10,7 +11,11 @@ import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
+import ShaderPipeline from "src/circuit/ShaderPipeline.js"
 import Shaders from "src/webgl/Shaders.js"
+
+import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
+import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 
 const τ = Math.PI * 2;
 
@@ -103,129 +108,52 @@ Gates.Special = {
  * (In reality these would require multiple runs of the circuit to do tomography.)
  */
 Gates.Displays = {
-    ChanceDisplay: new Gate(
-        "Chance",
-        Matrix.identity(2),
-        "Probability Display",
-        "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities."
-    ).withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            MathPainter.paintProbabilityBox(
-                args.painter,
-                args.stats.controlledWireProbabilityJustAfter(row, col),
-                args.rect,
-                args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
-            }
-            GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-            if (showState) {
-                args.painter.ctx.restore();
-            }
-        }
-    }),
+    ProbabilityDisplayFamily: ProbabilityDisplayFamily,
+    SampleDisplayFamily: SampleDisplayFamily,
 
     BlochSphereDisplay: new Gate(
         "Bloch",
         Matrix.identity(2),
         "Bloch Sphere Display",
         "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states."
-    ).withCustomDrawer(args => {
-        let showState = args.positionInCircuit !== null;
-        let showText = !showState || args.isHighlighted;
-
-        if (showState) {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
-        }
-
-        if (showText) {
-            if (showState) {
-                args.painter.ctx.save();
-                args.painter.ctx.globalAlpha *= 0.4;
-            }
-            GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-            if (showState) {
-                args.painter.ctx.restore();
-            }
-        }
-    }),
+    ).withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+        let {row, col} = args.positionInCircuit;
+        let ρ = args.stats.qubitDensityMatrix(row, col);
+        MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
+    })),
 
     DensityMatrixDisplay: new Gate(
-        "Density\n1",
+        "Density",
         Matrix.identity(2),
         "Density Matrix Display",
-        "Shows a wire's local state as a density matrix.\nUse controls to see conditional states."
-    ).withSerializedId("Density").
-        withCustomDrawer(args => {
-            if (args.isResizeShowing) {
-                GatePainting.paintResizeTab(args);
-            }
-
-            let showState = args.positionInCircuit !== null;
-            let showText = !showState || args.isHighlighted;
-
-            if (showState) {
-                let {row, col} = args.positionInCircuit;
-                let ρ = args.stats.qubitDensityMatrix(row, col);
-                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-            }
-
-            if (showText) {
-                if (showState) {
-                    args.painter.ctx.save();
-                    args.painter.ctx.globalAlpha *= 0.4;
-                }
-                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                if (showState) {
-                    args.painter.ctx.restore();
-                }
-            }
-        }),
+        "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
+        withSerializedId("Density").
+        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.qubitDensityMatrix(row, col);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
+        })),
 
     DensityMatrixDisplay2: new Gate(
-        "Density\n2",
+        "Density",
         Matrix.identity(4),
-        "2-Qubit Density Matrix Display",
-        "Shows the local state of two adjacent wires.\nUse controls to see conditional states."
-    ).withSerializedId("Density2").
+        "Density Matrix Display",
+        "Shows the marginal state of one or more wires.\nUse controls to see conditional states.").
+        withSerializedId("Density2").
         withWidth(2).
         withHeight(2).
-        withCustomDrawer(args => {
-            if (args.isResizeShowing) {
-                GatePainting.paintResizeTab(args);
-            }
-
-            let showState = args.positionInCircuit !== null;
-            let showText = !showState || args.isHighlighted;
-
-            if (showState) {
-                let {row, col} = args.positionInCircuit;
-                let ρ = args.stats.qubitPairDensityMatrix(row, col);
-                MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-            }
-
-            if (showText) {
-                if (showState) {
-                    args.painter.ctx.save();
-                    args.painter.ctx.globalAlpha *= 0.4;
-                }
-                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
-                if (showState) {
-                    args.painter.ctx.restore();
-                }
-            }
-        })
+        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.qubitPairDensityMatrix(row, col);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
+        }))
 };
+
+let DensityMatrixFamily = Gate.generateFamily(1, 2,
+        h => [Gates.Displays.DensityMatrixDisplay, Gates.Displays.DensityMatrixDisplay2][h-1]);
+Gates.Displays.DensityMatrixDisplay = DensityMatrixFamily.ofSize(1);
+Gates.Displays.DensityMatrixDisplay2 = DensityMatrixFamily.ofSize(2);
+Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
 
 /**
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
@@ -308,6 +236,48 @@ Gates.DecrementFamily = Gate.generateFamily(1, 8, span => new Gate(
     withSerializedId("dec" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
+
+Gates.AdditionFamily = Gate.generateFamily(2, 8, span => new Gate(
+    "b+=a",
+    Matrix.generate(1<<span, 1<<span, (r, c) => {
+        let expected = r;
+        let input = c;
+        let sa = Math.floor(span/2);
+        let sb = Math.ceil(span/2);
+        let a = input & ((1 << sa) - 1);
+        let b = input >> sa;
+        b += a;
+        b &= ((1 << sb) - 1);
+        let actual = a + (b << sa);
+        return expected === actual ? 1 : 0;
+    }),
+    "Addition Gate",
+    "Adds a little-endian number into another.").
+    withSerializedId("add" + span).
+    withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2), 1)));
+
+Gates.SubtractionFamily = Gate.generateFamily(2, 8, span => new Gate(
+    "b-=a",
+    Matrix.generate(1<<span, 1<<span, (r, c) => {
+        let expected = r;
+        let input = c;
+        let sa = Math.floor(span/2);
+        let sb = Math.ceil(span/2);
+        let a = input & ((1 << sa) - 1);
+        let b = input >> sa;
+        b -= a;
+        b &= ((1 << sb) - 1);
+        let actual = a + (b << sa);
+        return expected === actual ? 1 : 0;
+    }),
+    "Subtraction Gate",
+    "Subtracts a little-endian number from another.").
+    withSerializedId("sub" + span).
+    withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2),-1)));
 
 Gates.CountingFamily = Gate.generateFamily(1, 8, span => new Gate(
     "(+1)^⌈t⌉",
@@ -741,7 +711,21 @@ Gates.ExperimentalAndImplausible = {
             throw new DetailedError("Applied an Error Injection Gate", {qubit});
         }).
         withSerializedId("__debug__ErrorInjection").
-        withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red'))
+        withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red')),
+    CycleBitsFamily: Gate.generateFamily(2, 8, span => new Gate(
+        "<<=1",
+        Matrix.generate(1<<span, 1<<span, (r, c) => {
+            let expected = r;
+            let input = c;
+            let actual = input << 1;
+            actual = (actual & ((1 << span) - 1)) | (actual >> span);
+            return expected === actual ? 1 : 0;
+        }),
+        "Bit Cycle Gate",
+        "Swaps bits in a cycle.").
+        withSerializedId("__unstable__cycle" + span).
+        withHeight(span).
+        withCustomShader((val, con, bit) => GateShaders.cycleBits(val, con, bit, span, 1)))
 };
 
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
@@ -760,11 +744,11 @@ Gates.Sets = [
     {
         hint: "Displays",
         gates: [
-            Gates.Displays.ChanceDisplay,
-            Gates.Displays.BlochSphereDisplay,
+            Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
+            DensityMatrixFamily.ofSize(1),
+            Gates.Displays.SampleDisplayFamily.ofSize(3),
             null,
-            Gates.Displays.DensityMatrixDisplay,
-            Gates.Displays.DensityMatrixDisplay2,
+            Gates.Displays.BlochSphereDisplay,
             null
         ]
     },
@@ -804,23 +788,23 @@ Gates.Sets = [
     {
         hint: 'Misc',
         gates: [
-            Gates.FourierTransformFamily.representative,
+            Gates.FourierTransformFamily.ofSize(2),
             null,
-            Gates.PhaseGradientFamily.representative,
+            Gates.PhaseGradientFamily.ofSize(2),
             Gates.Misc.SpacerGate,
             Gates.Misc.MysteryGateMaker(),
-            Gates.PhaseDegradientFamily.representative
+            Gates.PhaseDegradientFamily.ofSize(2)
         ]
     },
     {
         hint: 'Arithmetic',
         gates: [
-            Gates.IncrementFamily.representative,
-            null,
-            Gates.CountingFamily.representative,
-            Gates.DecrementFamily.representative,
-            null,
-            Gates.UncountingFamily.representative
+            Gates.IncrementFamily.ofSize(2),
+            Gates.AdditionFamily.ofSize(4),
+            Gates.CountingFamily.ofSize(2),
+            Gates.DecrementFamily.ofSize(2),
+            Gates.SubtractionFamily.ofSize(4),
+            Gates.UncountingFamily.ofSize(2)
         ]
     },
     {
@@ -880,7 +864,7 @@ Gates.Sets = [
     }
 ];
 
-/** @type {!(!Gate[])} */
+/** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
     Gates.Special.Control,
     Gates.Special.AntiControl,
@@ -889,9 +873,9 @@ Gates.KnownToSerializer = [
     Gates.Special.Measurement,
     Gates.Special.SwapHalf,
 
-    Gates.Displays.ChanceDisplay,
-    Gates.Displays.DensityMatrixDisplay,
-    Gates.Displays.DensityMatrixDisplay2,
+    ...Gates.Displays.ProbabilityDisplayFamily.all,
+    ...Gates.Displays.SampleDisplayFamily.all,
+    ...DensityMatrixFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
     Gates.Misc.SpacerGate,
@@ -953,6 +937,8 @@ Gates.KnownToSerializer = [
 
     ...Gates.IncrementFamily.all,
     ...Gates.DecrementFamily.all,
+    ...Gates.AdditionFamily.all,
+    ...Gates.SubtractionFamily.all,
     ...Gates.CountingFamily.all,
     ...Gates.UncountingFamily.all,
     ...Gates.FourierTransformFamily.all,
@@ -960,5 +946,6 @@ Gates.KnownToSerializer = [
     ...Gates.PhaseDegradientFamily.all,
 
     Gates.ExperimentalAndImplausible.UniversalNot,
-    Gates.ExperimentalAndImplausible.ErrorInjection
+    Gates.ExperimentalAndImplausible.ErrorInjection,
+    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
 ];

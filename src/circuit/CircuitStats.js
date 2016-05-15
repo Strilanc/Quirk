@@ -21,12 +21,14 @@ export default class CircuitStats {
      * @param {!Array.<!Array.<!Matrix>>} qubitDensities
      * @param {!Array.<!Array.<!Matrix>>} qubitPairDensities
      * @param {!Matrix} finalState
+     * @param {!Map<!string, *>} customStatsProcessed
      */
     constructor(circuitDefinition,
                 time,
                 qubitDensities,
                 qubitPairDensities,
-                finalState) {
+                finalState,
+                customStatsProcessed) {
         /**
          * The circuit that these stats apply to.
          * @type {!CircuitDefinition}
@@ -52,8 +54,18 @@ export default class CircuitStats {
          * @type {!Matrix}
          */
         this.finalState = finalState;
+        /**
+         * @type {!Map.<!string, *>}
+         * @private
+         */
+        this._customStatsProcessed = customStatsProcessed;
     }
 
+    /**
+     * @param {!int} wireIndex
+     * @param {!int} colIndex
+     * @returns {!Matrix}
+     */
     qubitDensityMatrix(wireIndex, colIndex) {
         if (wireIndex < 0) {
             throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
@@ -73,6 +85,21 @@ export default class CircuitStats {
         return this._qubitDensities[col][wireIndex];
     }
 
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @returns {undefined|*}
+     */
+    customStatsForSlot(col, row) {
+        let key = col+":"+row;
+        return this._customStatsProcessed.has(key) ? this._customStatsProcessed.get(key) : undefined;
+    }
+
+    /**
+     * @param {!int} wireIndex
+     * @param {!int} colIndex
+     * @returns {!Matrix}
+     */
     qubitPairDensityMatrix(wireIndex, colIndex) {
         if (wireIndex < 0) {
             throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
@@ -115,7 +142,8 @@ export default class CircuitStats {
             time,
             this._qubitDensities,
             this._qubitPairDensities,
-            this.finalState);
+            this.finalState,
+            this._customStatsProcessed);
     }
 
     /**
@@ -136,7 +164,8 @@ export default class CircuitStats {
                 time,
                 [],
                 [],
-                Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN));
+                Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
+                new Map());
         }
     }
 
@@ -201,6 +230,8 @@ export default class CircuitStats {
 
         let qubitDensityTexes = [];
         let qubitPairDensityTexes = [];
+        let customStats = [];
+        let customStatsMap = [];
         let outputTex = CircuitTextures.aggregateWithReuse(
             CircuitTextures.zero(numWires),
             Seq.range(numCols),
@@ -212,6 +243,16 @@ export default class CircuitStats {
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
                     (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex, time));
+
+                for (let row of circuitDefinition.customStatRowsInCol(col)) {
+                    let pipeline = gateCol.gates[row].customStatPipelineMaker(stateTex, controlTex, row);
+                    customStatsMap.push({
+                        col,
+                        row,
+                        out: customStats.length
+                    });
+                    customStats.push(CircuitTextures.evaluatePipelineWithIntermediateCleanup(stateTex, pipeline));
+                }
 
                 // Stats for inline displays.
                 qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(
@@ -233,7 +274,8 @@ export default class CircuitStats {
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
             outputTex,
             qubitDensityTexes,
-            qubitPairDensityTexes});
+            qubitPairDensityTexes,
+            customStats});
 
         // -- INTERPRET --
 
@@ -260,11 +302,18 @@ export default class CircuitStats {
                 circuitDefinition.colHasDoubleQubitDisplayMask(col))
         ).toArray();
 
+        let customStatsProcessed = new Map();
+        for (let {col, row, out} of customStatsMap) {
+            let func = circuitDefinition.gateInSlot(col, row).customStatPostProcesser || (e => e);
+            customStatsProcessed.set(col+":"+row, func(pixelData.customStats[out]));
+        }
+
         return new CircuitStats(
             circuitDefinition,
             time,
             qubitDensities,
             qubitPairDensities,
-            outputSuperposition);
+            outputSuperposition,
+            customStatsProcessed);
     }
 }

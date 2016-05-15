@@ -1,15 +1,17 @@
-import Format from "src/base/Format.js"
-import Util from "src/base/Util.js"
-import Seq from "src/base/Seq.js"
 import Config from "src/Config.js"
-import Rect from "src/math/Rect.js"
+import Format from "src/base/Format.js"
 import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
+import RestartableRng from "src/base/RestartableRng.js"
+import Seq from "src/base/Seq.js"
+import Util from "src/base/Util.js"
 
 export default class Painter {
     /**
      * @param {!HTMLCanvasElement} canvas
+     * @param {!RestartableRng=} rng
      */
-    constructor(canvas) {
+    constructor(canvas, rng = new RestartableRng()) {
         /** @type {!HTMLCanvasElement} */
         this.canvas = canvas;
         /** @type {!CanvasRenderingContext2D} */
@@ -37,6 +39,10 @@ export default class Painter {
          * @type {!Array.<!{rect: !Rect, cursor: undefined|!string}>}
          */
         this.touchBlockers = [];
+        /**
+         * @type {!RestartableRng}
+         */
+        this.rng = rng;
     }
 
     /**

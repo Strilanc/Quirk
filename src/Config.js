@@ -24,7 +24,7 @@ Config.HIGHLIGHTED_GATE_FILL_COLOR = '#FB7';
 // Mixed-state displays are green.
 Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR = '#4F4';
 Config.DISPLAY_GATE_BACK_COLOR = '#EFE';
-Config.DISPLAY_GATE_FORE_COLOR = '#4F4';
+Config.DISPLAY_GATE_FORE_COLOR = '#3F3';
 
 // Changes are yellow.
 Config.OPERATION_BACK_COLOR = '#FFE';
@@ -79,3 +79,5 @@ Config.DEFAULT_STROKE_THICKNESS = 1;
 // Calling WebGLRenderingContext.getError forces a CPU/GPU sync. It's very expensive.
 Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = false;
 Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS = true;
+
+Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS = 300;

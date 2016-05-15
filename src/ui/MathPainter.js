@@ -173,17 +173,40 @@ export default class MathPainter {
             let r = Math.floor((pt.y - y) / diam);
             if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
                 painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
+
+                let f = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+                let g = v => (v >= 0 ? '+' : '') + v.toFixed(4);
+                let v = matrix.cell(c, r);
+                let d = v.abs();
+                let p = v.phase() * 180 / Math.PI;
                 MathPainter.paintDeferredValueTooltip(
                     painter,
                     x + diam*c + diam,
                     y + diam*r,
                     `Amplitude of |${Util.bin(r*matrix.width() + c, Math.round(Math.log2(numRows*numCols)))}⟩`,
-                    matrix.cell(c, r).toString(new Format(false, 0, 5, ", ")));
+                    'val:' + v.toString(new Format(false, 0, 5, ", ")),
+                    `mag²:${g(d)}, phase:${f(p)}°`);
             }
         }
     }
 
-    static paintDeferredValueTooltip(painter, x, y, labelText, valueText) {
+    /**
+     * @param {!Painter} painter
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!string} labelText
+     * @param {!string} valueText
+     * @param {undefined|!string=} valueText2
+     * @param {!string=} backColor
+     */
+    static paintDeferredValueTooltip(
+            painter,
+            x,
+            y,
+            labelText,
+            valueText,
+            valueText2 = undefined,
+            backColor = Config.DISPLAY_GATE_BACK_COLOR) {
         const labelFont = '12px Helvetica';
         const valueFont = 'bold 12px monospace';
         painter.defer(() => {
@@ -191,42 +214,68 @@ export default class MathPainter {
             let width1 = painter.ctx.measureText(labelText).width;
             painter.ctx.font = valueFont;
             let width2 = painter.ctx.measureText(valueText).width;
+            let width3 = valueText2 === undefined ? 0 : painter.ctx.measureText(valueText2).width;
 
-            let height = 40;
-            let width = Math.max(width1, width2);
+            let lineHeight = 20;
+            let height = 40 + (valueText2 === undefined ? 0 : 20);
+            let width = Math.max(Math.max(width1, width2), width3);
             let boundingRect = new Rect(x, y - height, width, height).snapInside(
                 new Rect(0, 0, painter.ctx.canvas.clientWidth, painter.ctx.canvas.clientHeight));
 
-            painter.print(
-                valueText,
-                boundingRect.x,
-                boundingRect.bottom(),
-                'left',
-                'bottom',
-                'black',
-                valueFont,
-                boundingRect.w,
-                boundingRect.h/2,
-                (w1, h1) => painter.print(
+            let borderPainter = (w, h) => {
+                let r = new Rect(
+                    boundingRect.x,
+                    boundingRect.bottom()-h,
+                    w,
+                    h).paddedBy(4);
+                painter.trace(tracer => tracer.rect(r.x, r.y, r.w, r.h)).
+                    thenFill(backColor).
+                    thenStroke('black');
+            };
+
+            let labelPainter = (w, h) => {
+                painter.print(
                     labelText,
                     boundingRect.x,
-                    boundingRect.bottom()-h1,
+                    boundingRect.bottom()-h,
                     'left',
                     'bottom',
                     'black',
                     labelFont,
                     boundingRect.w,
-                    boundingRect.h/2,
-                    (w2, h2) => {
-                        let r = new Rect(
-                            boundingRect.x,
-                            boundingRect.bottom()-h1-h2,
-                            Math.max(w1, w2),
-                            h1 + h2).paddedBy(4);
-                        painter.trace(tracer => tracer.rect(r.x, r.y, r.w, r.h)).
-                            thenFill(Config.DISPLAY_GATE_BACK_COLOR).
-                            thenStroke('black');
-                    }));
+                    lineHeight,
+                    (w2, h2) => borderPainter(Math.max(w, w2), h + h2));
+            };
+
+            let value1Painter = (w, h) => {
+                painter.print(
+                    valueText,
+                    boundingRect.x,
+                    boundingRect.bottom()-h,
+                    'left',
+                    'bottom',
+                    'black',
+                    valueFont,
+                    boundingRect.w,
+                    lineHeight,
+                    (w2, h2) => labelPainter(Math.max(w, w2), h + h2));
+            };
+
+            if (valueText2 === undefined) {
+                value1Painter(0, 0);
+            } else {
+                painter.print(
+                    valueText2,
+                    boundingRect.x,
+                    boundingRect.bottom(),
+                    'left',
+                    'bottom',
+                    'black',
+                    valueFont,
+                    boundingRect.w,
+                    lineHeight,
+                    value1Painter);
+            }
         });
     }
 
@@ -291,6 +340,7 @@ export default class MathPainter {
         if (seq(focusPoints).any(pt => pt.distanceTo(c) < u)) {
             painter.strokeCircle(c, u, 'orange', 2);
             let f = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+            let g = v => (v >= 0 ? '+' : '') + v.toFixed(4);
             let d = Math.sqrt(x*x + y*y + z*z);
             let ϕ = Math.atan2(y, -x);
             let θ = Math.atan2(-z, Math.sqrt(y*y + x*x));
@@ -300,7 +350,8 @@ export default class MathPainter {
                 c.x+u*Math.sqrt(0.5),
                 c.y-u*Math.sqrt(0.5),
                 'Bloch sphere representation of local state',
-                `r:${d.toFixed(4)}, ϕ:${f(ϕ*360/τ)}°, θ:${f(θ*360/τ)}°`);
+                `r:${g(d)}, ϕ:${f(ϕ*360/τ)}°, θ:${f(θ*360/τ)}°`,
+                `x:${g(x)}, y:${g(y)}, z:${g(z)}`);
         }
     }
 
