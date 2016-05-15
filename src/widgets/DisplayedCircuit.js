@@ -307,8 +307,10 @@ class DisplayedCircuit {
      * @private
      */
     _drawWires(painter) {
+        let drawnWireCount = Math.min(this.circuitDefinition.numWires, (this._extraWireStartIndex || Infinity) + 1);
+
         // Initial value labels
-        for (let row = 0; row < this.circuitDefinition.numWires; row++) {
+        for (let row = 0; row < drawnWireCount; row++) {
             let wireRect = this.wireRect(row);
             let y = wireRect.center().y;
             painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px Helvetica', 20, Config.WIRE_SPACING);
@@ -316,7 +318,6 @@ class DisplayedCircuit {
 
         // Wires (doubled-up for measured sections).
         painter.ctx.save();
-        let drawnWireCount = Math.min(this.circuitDefinition.numWires, (this._extraWireStartIndex || Infinity) + 1);
         for (let row = 0; row < drawnWireCount; row++) {
             if (row === this._extraWireStartIndex) {
                 painter.ctx.globalAlpha = 0.5;
@@ -341,6 +342,18 @@ class DisplayedCircuit {
             }).thenStroke('black');
         }
         painter.ctx.restore();
+        if (this._extraWireStartIndex !== undefined && this.circuitDefinition.numWires === Config.MAX_WIRE_COUNT) {
+            painter.print(
+                `(Max wires. Qubit limit is ${Config.MAX_WIRE_COUNT}.)`,
+                5,
+                this.wireRect(Config.MAX_WIRE_COUNT).y,
+                'left',
+                'top',
+                'red',
+                '16px bold monospace',
+                400,
+                Config.WIRE_SPACING);
+        }
     }
 
     /**
@@ -526,24 +539,26 @@ class DisplayedCircuit {
         let emptyCol = GateColumn.empty(this.circuitDefinition.numWires);
         let i = modificationPoint.col;
         let isInserting = modificationPoint.isInsert;
-        let row = modificationPoint.row;
+        let row = Math.min(modificationPoint.row, Math.max(0, Config.MAX_WIRE_COUNT - addedGate.height));
         let newCols = seq(this.circuitDefinition.columns).
             padded(i, emptyCol).
             ifThen(isInserting, s => s.withInsertedItem(i, emptyCol)).
             padded(i + addedGate.width, emptyCol).
             withTransformedItem(i, c => c.withGatesAdded(row, new GateColumn([addedGate]))).
             toArray();
-        let newWireCount = Math.min(Config.MAX_WIRE_COUNT,
+        let newWireCount = Math.max(
+            this._extraWireStartIndex || 0,
             Math.max(
-                this._extraWireStartIndex || 0,
-                Math.max(
-                    this.circuitDefinition.numWires,
-                    addedGate.height + row)));
+                this.circuitDefinition.numWires,
+                addedGate.height + row));
+        if (newWireCount > Config.MAX_WIRE_COUNT) {
+            return this;
+        }
 
         return this.withCircuit(this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount)).
-            _withHighlightedSlot({row: modificationPoint.row, col: modificationPoint.col, resizeStyle: false}).
+            _withHighlightedSlot({row, col: modificationPoint.col, resizeStyle: false}).
             _withCompressedColumnIndex(isInserting ? i : undefined).
-            _withExtraWireStartIndex(this._extraWireStartIndex || this.circuitDefinition.numWires);
+            _withFallbackExtraWireStartIndex(this.circuitDefinition.numWires);
     }
 
     /**
@@ -564,7 +579,7 @@ class DisplayedCircuit {
             Config.MAX_WIRE_COUNT - 1);
         let newGate = seq(gate.gateFamily).minBy(g => Math.abs(g.height - (row - hand.resizingGateSlot.y + 1)));
         let newWireCount = Math.min(Config.MAX_WIRE_COUNT,
-            Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y + 1));
+            Math.max(this.circuitDefinition.numWires, newGate.height + hand.resizingGateSlot.y));
         let newCols = seq(this.circuitDefinition.columns).
             withTransformedItem(hand.resizingGateSlot.x,
                 colObj => new GateColumn(seq(colObj.gates).
@@ -580,7 +595,7 @@ class DisplayedCircuit {
             _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
                 undefined :
                 hand.resizingGateSlot.x + 1).
-            _withExtraWireStartIndex(this._extraWireStartIndex || this.circuitDefinition.numWires);
+            _withFallbackExtraWireStartIndex(this.circuitDefinition.numWires);
     }
 
     /**
@@ -647,6 +662,15 @@ class DisplayedCircuit {
     }
 
     /**
+     * @param {undefined|!int} fallbackExtraWireStartIndex
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _withFallbackExtraWireStartIndex(fallbackExtraWireStartIndex) {
+        return this._withExtraWireStartIndex(this._extraWireStartIndex || fallbackExtraWireStartIndex);
+    }
+
+    /**
      * @param {!Hand} hand
      * @param {!int} extraWireCount
      * @returns {!DisplayedCircuit}
@@ -660,7 +684,7 @@ class DisplayedCircuit {
                 neededWireCountForPlacement,
                 Math.max(Config.MIN_WIRE_COUNT, desiredWireCount) + extraWireCount));
         return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount)).
-            _withExtraWireStartIndex(this._extraWireStartIndex || desiredWireCount);
+            _withExtraWireStartIndex(extraWireCount === 0 ? undefined : this.circuitDefinition.numWires);
     }
 
     /**
