@@ -309,6 +309,48 @@ Gates.DecrementFamily = Gate.generateFamily(1, 8, span => new Gate(
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
 
+Gates.AdditionFamily = Gate.generateFamily(2, 8, span => new Gate(
+    "b+=a",
+    Matrix.generate(1<<span, 1<<span, (r, c) => {
+        let expected = r;
+        let input = c;
+        let sa = Math.floor(span/2);
+        let sb = Math.ceil(span/2);
+        let a = input & ((1 << sa) - 1);
+        let b = input >> sa;
+        b += a;
+        b &= ((1 << sb) - 1);
+        let actual = a + (b << sa);
+        return expected === actual ? 1 : 0;
+    }),
+    "Addition Gate",
+    "Adds a little-endian number into another.").
+    withSerializedId("add" + span).
+    withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2), 1)));
+
+Gates.SubtractionFamily = Gate.generateFamily(2, 8, span => new Gate(
+    "b-=a",
+    Matrix.generate(1<<span, 1<<span, (r, c) => {
+        let expected = r;
+        let input = c;
+        let sa = Math.floor(span/2);
+        let sb = Math.ceil(span/2);
+        let a = input & ((1 << sa) - 1);
+        let b = input >> sa;
+        b -= a;
+        b &= ((1 << sb) - 1);
+        let actual = a + (b << sa);
+        return expected === actual ? 1 : 0;
+    }),
+    "Subtraction Gate",
+    "Adds a little-endian number from another.").
+    withSerializedId("sub" + span).
+    withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
+    withHeight(span).
+    withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2),-1)));
+
 Gates.CountingFamily = Gate.generateFamily(1, 8, span => new Gate(
     "(+1)^⌈t⌉",
     t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
@@ -804,23 +846,23 @@ Gates.Sets = [
     {
         hint: 'Misc',
         gates: [
-            Gates.FourierTransformFamily.representative,
+            Gates.FourierTransformFamily.ofSize(2),
             null,
-            Gates.PhaseGradientFamily.representative,
+            Gates.PhaseGradientFamily.ofSize(2),
             Gates.Misc.SpacerGate,
             Gates.Misc.MysteryGateMaker(),
-            Gates.PhaseDegradientFamily.representative
+            Gates.PhaseDegradientFamily.ofSize(2)
         ]
     },
     {
         hint: 'Arithmetic',
         gates: [
-            Gates.IncrementFamily.representative,
-            null,
-            Gates.CountingFamily.representative,
-            Gates.DecrementFamily.representative,
-            null,
-            Gates.UncountingFamily.representative
+            Gates.IncrementFamily.ofSize(2),
+            Gates.AdditionFamily.ofSize(4),
+            Gates.CountingFamily.ofSize(2),
+            Gates.DecrementFamily.ofSize(2),
+            Gates.SubtractionFamily.ofSize(4),
+            Gates.UncountingFamily.ofSize(2)
         ]
     },
     {
@@ -953,6 +995,8 @@ Gates.KnownToSerializer = [
 
     ...Gates.IncrementFamily.all,
     ...Gates.DecrementFamily.all,
+    ...Gates.AdditionFamily.all,
+    ...Gates.SubtractionFamily.all,
     ...Gates.CountingFamily.all,
     ...Gates.UncountingFamily.all,
     ...Gates.FourierTransformFamily.all,

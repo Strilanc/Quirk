@@ -148,7 +148,7 @@ class Gate {
      * @param {!int} minSize
      * @param {!int} maxSize
      * @param {!function(!int):!Gate} gateGenerator
-     * @returns {!{all: !Array.<!Gate>, representative: !Gate, ofSize: !function(!int) : undefined|!Gate}}
+     * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : undefined|!Gate}}
      * @template T
      */
     static generateFamily(minSize, maxSize, gateGenerator) {
@@ -158,7 +158,6 @@ class Gate {
         }
         return {
             all: gates,
-            representative: gates[Math.max(0, 2-minSize)],
             ofSize: i => seq(gates).concat([undefined]).filter(e => e.height === i || e === undefined).first()
         };
     }

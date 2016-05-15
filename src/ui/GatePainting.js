@@ -152,6 +152,41 @@ const paintGateSymbol = args => {
         rect.h);
 };
 
+GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
+    if (args.isInToolbox) {
+        GatePainting.DEFAULT_DRAWER(args);
+        return;
+    }
+
+    let backColor = args.isHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR;
+    const font = '16px Helvetica';
+    args.painter.fillRect(args.rect, backColor);
+    let p = 0;
+    for (let i = 0; i < labels.length; i++) {
+        let p2;
+        if (i < labels.length - 1) {
+            p2 = p + dividers[i];
+            let cy = args.rect.y + args.rect.h*p2;
+            args.painter.strokeLine(new Point(args.rect.x, cy), new Point(args.rect.right(), cy), '#BBB');
+        } else {
+            p2 = 1;
+        }
+        args.painter.print(
+            labels[i],
+            args.rect.x + args.rect.w/2,
+            args.rect.y + args.rect.h*(p + p2)/2,
+            'center',
+            'middle',
+            'black',
+            font,
+            args.rect.w,
+            args.rect.h*(p2-p));
+        p = p2;
+    }
+    args.painter.strokeRect(args.rect);
+    GatePainting.paintResizeTab(args);
+};
+
 const staircaseCurve = steps => {
     let curve = [];
     for (let i = 0; i < steps; i++) {
