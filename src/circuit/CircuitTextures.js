@@ -382,6 +382,26 @@ CircuitTextures.pixelsToQubitDensityMatrices = buffer => {
 };
 
 /**
+ * @param {!WglTexture} seedTex
+ * @param {!ShaderPipeline} pipeline
+ */
+CircuitTextures.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
+    let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {w, h, f}) => {
+        let nextTex = allocSizedTexture(w, h);
+        f(prevTex).renderTo(nextTex);
+        if (prevTex !== seedTex) {
+            CircuitTextures.doneWithTexture(prevTex, "evaluatePipelineWithIntermediateCleanup");
+        }
+        return nextTex;
+    });
+    if (outTex === seedTex) {
+        outTex = allocSameSizedTexture(seedTex);
+        Shaders.passthrough(seedTex).renderTo(outTex);
+    }
+    return outTex;
+};
+
+/**
  * @param {!Float32Array} buffer
  * @returns {!Array.<!Matrix>}
  */

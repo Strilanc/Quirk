@@ -441,7 +441,8 @@ class DisplayedCircuit {
                 gate,
                 stats,
                 {row, col},
-                focusSlot === undefined ? hand.hoverPoints() : []));
+                focusSlot === undefined ? hand.hoverPoints() : [],
+                stats.customStatsForSlot(col, row)));
             let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
             if (isDisabledReason !== undefined) {
                 painter.ctx.save();

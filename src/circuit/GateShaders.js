@@ -387,7 +387,7 @@ GateShaders.cycleBits = (inputTexture, controlTexture, qubitIndex, qubitSpan, sh
             WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
             WglArg.float("qubitIndex", 1 << qubitIndex),
             WglArg.float("qubitSpan", 1 << qubitSpan),
-            WglArg.float("shiftAmount", 1 << Util.properMod(qubitSpan - shiftAmount, qubitSpan))
+            WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, qubitSpan))
         ).renderTo(destinationTexture);
     });
 const CYCLE_SHADER = new WglShader(`
@@ -418,4 +418,40 @@ const CYCLE_SHADER = new WglShader(`
         vec2 usedUv = control*newUv + (1.0-control)*oldUv;
 
         gl_FragColor = texture2D(inputTexture, usedUv);
+    }`);
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @param {!int} shiftAmount
+ * @returns {!WglConfiguredShader}
+ */
+GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
+    let size = Math.floor(Math.log2(inputTexture.width * inputTexture.height));
+    return new WglConfiguredShader(destinationTexture => {
+        CYCLE_ALL_SHADER.withArgs(
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.float("outputWidth", destinationTexture.width),
+            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
+            WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size))
+        ).renderTo(destinationTexture);
+    });
+};
+const CYCLE_ALL_SHADER = new WglShader(`
+    uniform sampler2D inputTexture;
+    uniform float outputWidth;
+    uniform vec2 inputSize;
+    uniform float shiftAmount;
+
+    vec2 uvFor(float state) {
+        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
+    }
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float span = inputSize.x * inputSize.y;
+        float state = xy.y * outputWidth + xy.x;
+        float shiftedState = state * shiftAmount;
+        float cycledState = mod(shiftedState, span) + floor(shiftedState / span);
+        vec2 uv = uvFor(cycledState);
+        gl_FragColor = texture2D(inputTexture, uv);
     }`);

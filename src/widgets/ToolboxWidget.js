@@ -120,7 +120,8 @@ class ToolboxWidget {
                         Util.notNull(gate),
                         stats,
                         null,
-                        []));
+                        [],
+                        undefined));
                 }
             }
         }

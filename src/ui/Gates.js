@@ -2,6 +2,7 @@ import CircuitShaders from "src/circuit/CircuitShaders.js"
 import DetailedError from "src/base/DetailedError.js"
 import Config from "src/Config.js"
 import Complex from "src/math/Complex.js"
+import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/ui/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
@@ -10,6 +11,7 @@ import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
+import ShaderPipeline from "src/circuit/ShaderPipeline.js"
 import Shaders from "src/webgl/Shaders.js"
 
 const τ = Math.PI * 2;
@@ -132,6 +134,120 @@ Gates.Displays = {
             }
         }
     }),
+
+    MultiChanceDisplay: Gate.generateFamily(2, 8, span => new Gate(
+        "MultiChance",
+        Matrix.identity(1 << span),
+        "Multi Probability Display",
+        "------------------------- Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.").
+        withHeight(span).
+        withSerializedId("Chance" + span).
+        withCustomStatPipelineMaker((val, con, bit) => {
+            let [w, h] = [val.width, val.height];
+            let remainingQubitCount = Math.round(Math.log2(w*h));
+            let result = new ShaderPipeline();
+            result.addStep(w, h, inp => GateShaders.cycleAllBits(inp, -bit));
+            result.addStep(w, h, inp => DisplayShaders.amplitudesToProbabilities(inp, con));
+            while (remainingQubitCount > span) {
+                if (h > 1) {
+                    h >>= 1;
+                    result.addStep(w, h, (h=>inp=>Shaders.sumFold(inp, 0, h))(h));
+                } else {
+                    w >>= 1;
+                    result.addStep(w, h, (w=>inp=>Shaders.sumFold(inp, w, 0))(w));
+                }
+                remainingQubitCount -= 1;
+            }
+            return result;
+        }).
+        withCustomStatPostProcessor(pixels => {
+            let unity = 0;
+            for (let e of pixels) {
+                unity += e;
+            }
+            let ps = new Float32Array(pixels.length >> 1);
+            for (let i = 0; i < ps.length; i++) {
+                ps[i*2] = pixels[i*4]/unity;
+            }
+            return new Matrix(1, pixels.length >> 2, ps);
+        }).
+        withCustomDrawer(args => {
+            if (args.positionInCircuit === null) {
+                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                return;
+            }
+
+            let showState = args.positionInCircuit !== null;
+            let showText = !showState || args.isHighlighted;
+
+            if (showState) {
+                let probabilities = args.customStats || Matrix.square(NaN);
+                let {painter, rect} = args;
+                let {x, y, w, h} = rect;
+                let d = h/probabilities.height();
+                painter.fillRect(rect, Config.DISPLAY_GATE_BACK_COLOR);
+                painter.trace(tracer => {
+                    for (let i = 1; i < probabilities.height(); i++) {
+                        tracer.line(x, y + d*i, x+w, y+d*i);
+                    }
+                }).thenStroke('lightgray');
+                if (probabilities.hasNaN()) {
+                    painter.printParagraph("NaN", rect, new Point(0.5, 0.5), 'red');
+                } else {
+                    if (d <= 8) {
+                        painter.ctx.beginPath();
+                        painter.ctx.moveTo(x, y);
+                        for (let i = 0; i < probabilities.height(); i++) {
+                            let p = probabilities.rawBuffer()[i * 2];
+                            let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) / 10));
+                            let py = y + d * i;
+                            painter.ctx.lineTo(px, py);
+                            painter.ctx.lineTo(px, py + d);
+                        }
+                        painter.ctx.lineTo(x, y + h);
+                        painter.ctx.lineTo(x, y);
+                        painter.ctx.strokeStyle = '#CCC';
+                        painter.ctx.stroke();
+                    }
+
+                    painter.ctx.beginPath();
+                    painter.ctx.moveTo(x, y);
+                    for (let i = 0; i < probabilities.height(); i++) {
+                        let p = probabilities.rawBuffer()[i*2];
+                        let px = x + w*p;
+                        let py = y+d*i;
+                        painter.ctx.lineTo(px, py);
+                        painter.ctx.lineTo(px, py+d);
+                    }
+                    painter.ctx.lineTo(x, y+h);
+                    painter.ctx.lineTo(x, y);
+                    painter.ctx.strokeStyle = 'gray';
+                    painter.ctx.stroke();
+                    painter.ctx.fillStyle = Config.DISPLAY_GATE_FORE_COLOR;
+                    painter.ctx.fill();
+                    if (d > 8) {
+                        for (let i = 0; i < probabilities.height(); i++) {
+                            let p = probabilities.rawBuffer()[i*2];
+                            painter.print((p*100).toFixed(1) + "%", x+w-2, y+d*(i+0.5), 'right', 'middle', 'black', '8pt monospace', w-4, d);
+                        }
+                    }
+                }
+                painter.strokeRect(rect, 'lightgray');
+            }
+
+            if (showText) {
+                if (showState) {
+                    args.painter.ctx.save();
+                    args.painter.ctx.globalAlpha *= 0.4;
+                }
+                GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR)(args);
+                if (showState) {
+                    args.painter.ctx.restore();
+                }
+            }
+
+            GatePainting.paintResizeTab(args);
+        })),
 
     BlochSphereDisplay: new Gate(
         "Bloch",
@@ -818,7 +934,7 @@ Gates.Sets = [
         gates: [
             Gates.Displays.ChanceDisplay,
             Gates.Displays.BlochSphereDisplay,
-            null,
+            Gates.Displays.MultiChanceDisplay.ofSize(2),
             Gates.Displays.DensityMatrixDisplay,
             Gates.Displays.DensityMatrixDisplay2,
             null
@@ -1019,5 +1135,6 @@ Gates.KnownToSerializer = [
 
     Gates.ExperimentalAndImplausible.UniversalNot,
     Gates.ExperimentalAndImplausible.ErrorInjection,
-    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
+    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all,
+    ...Gates.Displays.MultiChanceDisplay.all
 ];

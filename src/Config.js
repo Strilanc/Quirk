@@ -24,7 +24,7 @@ Config.HIGHLIGHTED_GATE_FILL_COLOR = '#FB7';
 // Mixed-state displays are green.
 Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR = '#4F4';
 Config.DISPLAY_GATE_BACK_COLOR = '#EFE';
-Config.DISPLAY_GATE_FORE_COLOR = '#4F4';
+Config.DISPLAY_GATE_FORE_COLOR = '#3F3';
 
 // Changes are yellow.
 Config.OPERATION_BACK_COLOR = '#FFE';

@@ -39,6 +39,10 @@ class Gate {
         this.tag = undefined;
         /** @type {undefined|!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
         this.customShaders = undefined;
+        /** @type {undefined|!function(!WglTexture, !WglTexture, !int) : !ShaderPipeline} */
+        this.customStatPipelineMaker = undefined;
+        /** @type {undefined|!function(!Float32Array) : *} */
+        this.customStatPostProcesser = undefined;
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
         /** @type {undefined|Infinity|!number} */
@@ -55,6 +59,8 @@ class Gate {
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
         g.customShaders = this.customShaders;
+        g.customStatPipelineMaker = this.customStatPipelineMaker;
+        g.customStatPostProcesser = this.customStatPostProcesser;
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
@@ -123,25 +129,31 @@ class Gate {
     }
 
     /**
+     * @param {undefined|!function(!WglTexture, !WglTexture, !int) : !ShaderPipeline} customStatePipelineMaker
+     * @returns {!Gate}
+     */
+    withCustomStatPipelineMaker(customStatePipelineMaker) {
+        let g = this._copy();
+        g.customStatPipelineMaker = customStatePipelineMaker;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!Float32Array):*} pixelFunc
+     * @returns {!Gate}
+     */
+    withCustomStatPostProcessor(pixelFunc) {
+        let g = this._copy();
+        g.customStatPostProcesser = pixelFunc;
+        return g;
+    }
+
+    /**
      * @param {!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader} shaderFunc
      * @returns {!Gate}
      */
     withCustomShader(shaderFunc) {
         return this.withCustomShaders([shaderFunc]);
-    }
-
-    /**
-     * @param {T} gatesObj
-     * @returns {T}
-     * @template T
-     */
-    static makeFamily(gatesObj) {
-        let oldGates = Util.decomposeObjectValues(gatesObj);
-        let newGates = oldGates.map(e => e._copy());
-        for (let g of newGates) {
-            g.gateFamily = newGates;
-        }
-        return Util.recomposedObjectValues(gatesObj, newGates);
     }
 
     /**
@@ -162,14 +174,23 @@ class Gate {
         };
     }
 
+    /**
+     * @returns {!boolean}
+     */
     canChangeInSize() {
         return this.gateFamily.length > 1;
     }
 
+    /**
+     * @returns {!boolean}
+     */
     canIncreaseInSize() {
         return !this.gateFamily.every(e => e.height !== this.height + 1);
     }
 
+    /**
+     * @returns {!boolean}
+     */
     canDecreaseInSize() {
         return !this.gateFamily.every(e => e.height !== this.height - 1);
     }
@@ -220,6 +241,8 @@ class Gate {
             this.tag === other.tag &&
             this._stableDuration === other._stableDuration &&
             this.customShaders === other.customShaders &&
+            this.customStatPipelineMaker === other.customStatPipelineMaker &&
+            this.customStatPostProcesser === other.customStatPostProcesser &&
             this.customDrawer === other.customDrawer;
     }
 
