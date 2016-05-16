@@ -50,6 +50,9 @@ function probabilityPixelsToColumnVector(pixels) {
     for (let e of pixels) {
         unity += e;
     }
+    if (isNaN(unity) || unity < 0.000001) {
+        return Matrix.zero(1, pixels.length >> 2).times(NaN);
+    }
     let ps = new Float32Array(pixels.length >> 1);
     for (let i = 0; i < ps.length; i++) {
         ps[i*2] = pixels[i*4]/unity;
