@@ -39,9 +39,9 @@ class Gate {
         this.tag = undefined;
         /** @type {undefined|!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
         this.customShaders = undefined;
-        /** @type {undefined|!function(!WglTexture, !WglTexture, !int) : !ShaderPipeline} */
+        /** @type {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} */
         this.customStatPipelineMaker = undefined;
-        /** @type {undefined|!function(!Float32Array) : *} */
+        /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
         this.customStatPostProcesser = undefined;
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
@@ -129,7 +129,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!WglTexture, !WglTexture, !int) : !ShaderPipeline} customStatePipelineMaker
+     * @param {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} customStatePipelineMaker
      * @returns {!Gate}
      */
     withCustomStatPipelineMaker(customStatePipelineMaker) {
@@ -139,7 +139,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!Float32Array):*} pixelFunc
+     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int):*} pixelFunc
      * @returns {!Gate}
      */
     withCustomStatPostProcessor(pixelFunc) {

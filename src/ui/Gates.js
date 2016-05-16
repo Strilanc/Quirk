@@ -14,6 +14,7 @@ import {seq, Seq} from "src/base/Seq.js"
 import ShaderPipeline from "src/circuit/ShaderPipeline.js"
 import Shaders from "src/webgl/Shaders.js"
 
+import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 
@@ -110,6 +111,7 @@ Gates.Special = {
 Gates.Displays = {
     ProbabilityDisplayFamily: ProbabilityDisplayFamily,
     SampleDisplayFamily: SampleDisplayFamily,
+    DensityMatrixDisplayFamily: DensityMatrixDisplayFamily,
 
     BlochSphereDisplay: new Gate(
         "Bloch",
@@ -121,38 +123,10 @@ Gates.Displays = {
         let ρ = args.stats.qubitDensityMatrix(row, col);
         MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
     })),
-
-    DensityMatrixDisplay: new Gate(
-        "Density",
-        Matrix.identity(2),
-        "Density Matrix Display",
-        "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
-        withSerializedId("Density").
-        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-        })),
-
-    DensityMatrixDisplay2: new Gate(
-        "Density",
-        Matrix.identity(4),
-        "Density Matrix Display",
-        "Shows the marginal state of one or more wires.\nUse controls to see conditional states.").
-        withSerializedId("Density2").
-        withWidth(2).
-        withHeight(2).
-        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitPairDensityMatrix(row, col);
-            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-        }))
 };
 
-let DensityMatrixFamily = Gate.generateFamily(1, 2,
-        h => [Gates.Displays.DensityMatrixDisplay, Gates.Displays.DensityMatrixDisplay2][h-1]);
-Gates.Displays.DensityMatrixDisplay = DensityMatrixFamily.ofSize(1);
-Gates.Displays.DensityMatrixDisplay2 = DensityMatrixFamily.ofSize(2);
+Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
+Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
 
 /**
@@ -745,7 +719,7 @@ Gates.Sets = [
         hint: "Displays",
         gates: [
             Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
-            DensityMatrixFamily.ofSize(1),
+            DensityMatrixDisplayFamily.ofSize(1),
             Gates.Displays.SampleDisplayFamily.ofSize(3),
             null,
             Gates.Displays.BlochSphereDisplay,
@@ -875,7 +849,7 @@ Gates.KnownToSerializer = [
 
     ...Gates.Displays.ProbabilityDisplayFamily.all,
     ...Gates.Displays.SampleDisplayFamily.all,
-    ...DensityMatrixFamily.all,
+    ...DensityMatrixDisplayFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
     Gates.Misc.SpacerGate,

@@ -245,7 +245,7 @@ export default class CircuitStats {
                     (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex, time));
 
                 for (let row of circuitDefinition.customStatRowsInCol(col)) {
-                    let pipeline = gateCol.gates[row].customStatPipelineMaker(stateTex, controlTex, row);
+                    let pipeline = gateCol.gates[row].customStatPipelineMaker(stateTex, controlTex, row, controls);
                     customStatsMap.push({
                         col,
                         row,
@@ -305,7 +305,8 @@ export default class CircuitStats {
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {
             let func = circuitDefinition.gateInSlot(col, row).customStatPostProcesser || (e => e);
-            customStatsProcessed.set(col+":"+row, func(pixelData.customStats[out]));
+            //noinspection JSUnusedAssignment
+            customStatsProcessed.set(col+":"+row, func(pixelData.customStats[out], circuitDefinition, col, row));
         }
 
         return new CircuitStats(
