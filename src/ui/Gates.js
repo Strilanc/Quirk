@@ -122,7 +122,7 @@ Gates.Displays = {
         let {row, col} = args.positionInCircuit;
         let ρ = args.stats.qubitDensityMatrix(row, col);
         MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
-    })),
+    }))
 };
 
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);

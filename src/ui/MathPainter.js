@@ -351,7 +351,7 @@ export default class MathPainter {
                 c.y-u*Math.sqrt(0.5),
                 'Bloch sphere representation of local state',
                 `r:${g(d)}, ϕ:${f(ϕ*360/τ)}°, θ:${f(θ*360/τ)}°`,
-                `x:${g(x)}, y:${g(y)}, z:${g(z)}`);
+                `x:${g(-x)}, y:${g(y)}, z:${g(-z)}`);
         }
     }
 
