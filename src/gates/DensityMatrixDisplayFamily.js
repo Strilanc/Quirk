@@ -124,7 +124,7 @@ function densityMatrixDisplayMaker(span) {
 
 const DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args => {
     let n = args.gate.height;
-    let ρ = args.customStats || Matrix.zero(n, n).times(NaN);
+    let ρ = args.customStats || Matrix.zero(1<<n, 1<<n).times(NaN);
     MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
 });
 
