@@ -24,7 +24,7 @@ export default class InspectorWidget {
      */
     constructor(drawArea, circuitWidget, toolboxWidget, hand) {
         /** @type {!DisplayedCircuit} */
-        this.circuitWidget = circuitWidget;
+        this.displayedCircuit = circuitWidget;
         /** @type {!ToolboxWidget} */
         this.toolboxWidget = toolboxWidget;
         /** @type {!Hand} */
@@ -36,7 +36,7 @@ export default class InspectorWidget {
     }
 
     desiredWidth() {
-        return Math.max(this.toolboxWidget.desiredWidth(), this.circuitWidget.desiredWidth());
+        return Math.max(this.toolboxWidget.desiredWidth(), this.displayedCircuit.desiredWidth());
     }
 
     /**
@@ -69,9 +69,19 @@ export default class InspectorWidget {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         this.toolboxWidget.paint(painter, stats, this.hand);
-        this.circuitWidget.paint(painter, this.hand, stats, shift);
+        this.displayedCircuit.paint(painter, this.hand, stats, shift);
         this._paintHand(painter, stats);
         this._drawHint(painter);
+
+        // When a gate is being dragged off the bottom, this fades it out instead of clipping it.
+        let y1 = this.displayedCircuit.top +
+            DisplayedCircuit.desiredHeight(this.displayedCircuit.circuitDefinition.numWires);
+        let y2 = this.drawArea.bottom();
+        var gradient = painter.ctx.createLinearGradient(0, y1, 0, y2);
+        gradient.addColorStop(0, 'rgba(255,255,255,0)');
+        gradient.addColorStop(1, 'white');
+        painter.ctx.fillStyle = gradient;
+        painter.ctx.fillRect(0, y1, this.drawArea.w, y2-y1);
     }
 
     /**
@@ -101,7 +111,7 @@ export default class InspectorWidget {
      */
     afterGrabbing(duplicate=false) {
         let hand = this.hand;
-        let circuit = this.circuitWidget;
+        let circuit = this.displayedCircuit;
 
         hand = this.toolboxWidget.tryGrab(hand);
         let x = circuit.tryGrab(hand, duplicate);
@@ -126,7 +136,7 @@ export default class InspectorWidget {
         //noinspection JSUnresolvedVariable
         return other instanceof InspectorWidget &&
             this.drawArea.isEqualTo(other.drawArea) &&
-            this.circuitWidget.isEqualTo(other.circuitWidget) &&
+            this.displayedCircuit.isEqualTo(other.displayedCircuit) &&
             this.toolboxWidget.isEqualTo(other.toolboxWidget) &&
             this.hand.isEqualTo(other.hand);
     }
@@ -136,7 +146,7 @@ export default class InspectorWidget {
      * @returns {!InspectorWidget}
      */
     withCircuitWidget(circuitWidget) {
-        if (circuitWidget === this.circuitWidget) {
+        if (circuitWidget === this.displayedCircuit) {
             return this;
         }
         return new InspectorWidget(this.drawArea, circuitWidget, this.toolboxWidget, this.hand);
@@ -148,14 +158,14 @@ export default class InspectorWidget {
      * @returns {!InspectorWidget}
      */
     withJustEnoughWires(hand, extraWires) {
-        return this.withCircuitWidget(this.circuitWidget.withJustEnoughWires(hand, extraWires));
+        return this.withCircuitWidget(this.displayedCircuit.withJustEnoughWires(hand, extraWires));
     }
 
     /**
     * @returns {!InspectorWidget}
     */
     afterTidyingUp() {
-        return this.withCircuitWidget(this.circuitWidget.afterTidyingUp());
+        return this.withCircuitWidget(this.displayedCircuit.afterTidyingUp());
     }
 
     previewDrop() {
@@ -164,7 +174,7 @@ export default class InspectorWidget {
         }
 
         let hand = this.hand;
-        let circuitWidget = this.circuitWidget;
+        let circuitWidget = this.displayedCircuit;
         let previewCircuit = circuitWidget.previewDrop(hand);
         let previewHand = previewCircuit === circuitWidget ? hand : hand.withDrop();
         return this.withHand(previewHand).withCircuitWidget(previewCircuit);
@@ -175,7 +185,7 @@ export default class InspectorWidget {
      */
     afterDropping() {
         return this.
-            withCircuitWidget(this.circuitWidget.afterDropping(this.hand)).
+            withCircuitWidget(this.displayedCircuit.afterDropping(this.hand)).
             withHand(this.hand.withDrop());
     }
 
@@ -186,7 +196,7 @@ export default class InspectorWidget {
         return seq([
             this.toolboxWidget.stableDuration(this.hand),
             this.hand.stableDuration(),
-            this.circuitWidget.stableDuration()
+            this.displayedCircuit.stableDuration()
         ]).min(Infinity);
     }
 
@@ -197,7 +207,7 @@ export default class InspectorWidget {
     withHand(hand) {
         return new InspectorWidget(
             this.drawArea,
-            this.circuitWidget,
+            this.displayedCircuit,
             this.toolboxWidget,
             hand);
     }
@@ -224,7 +234,8 @@ export default class InspectorWidget {
         }
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         let circuitHeight = DisplayedCircuit.desiredHeight(wireCount);
-        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight);
+        let paddingHeight = 50;
+        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight + paddingHeight);
     }
 
     /**
@@ -232,7 +243,7 @@ export default class InspectorWidget {
      * @private
      */
     _drawHint(painter) {
-        if (this.circuitWidget.circuitDefinition.columns.length !== 0) {
+        if (this.displayedCircuit.circuitDefinition.columns.length !== 0) {
             return;
         }
         painter.ctx.save();

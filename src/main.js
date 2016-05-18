@@ -46,10 +46,10 @@ let inspector = InspectorWidget.empty(new Rect(0, 0, canvas.clientWidth, canvas.
 const importantStateChangeHappened = jsonText => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     historyPusher.stateChange(jsonText, urlHash);
-    document.title = `Quirk: ${inspector.circuitWidget.circuitDefinition.readableHash()}`;
+    document.title = `Quirk: ${inspector.displayedCircuit.circuitDefinition.readableHash()}`;
 };
 
-const snapshot = () => JSON.stringify(Serializer.toJson(inspector.circuitWidget.circuitDefinition), null, 0);
+const snapshot = () => JSON.stringify(Serializer.toJson(inspector.displayedCircuit.circuitDefinition), null, 0);
 /**
  * @param {undefined|!string} jsonText
  */
@@ -87,12 +87,12 @@ const getCircuitCycleTime = (() => {
 })();
 
 let currentCircuitStatsCache =
-    new CycleCircuitStats(inspector.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
+    new CycleCircuitStats(inspector.displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
 let desiredCanvasSizeFor = curInspector => {
     return {
         w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
-        h: InspectorWidget.defaultHeight(curInspector.circuitWidget.circuitDefinition.numWires)
+        h: InspectorWidget.defaultHeight(curInspector.displayedCircuit.circuitDefinition.numWires)
     };
 };
 
@@ -126,7 +126,7 @@ const redrawNow = () => {
     }
 
     let shown = syncArea(inspector).previewDrop();
-    if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.circuitWidget.circuitDefinition)) {
+    if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.displayedCircuit.circuitDefinition)) {
         // Maybe this fresh new circuit isn't failing. Clear the error tint.
         let errDivStyle = document.getElementById('error-div').style;
         errDivStyle.opacity *= 0.9;
@@ -135,7 +135,7 @@ const redrawNow = () => {
         }
 
         currentCircuitStatsCache =
-            new CycleCircuitStats(shown.circuitWidget.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
+            new CycleCircuitStats(shown.displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
     }
     let stats = currentCircuitStatsCache.statsAtApproximateTime(getCircuitCycleTime());
 
