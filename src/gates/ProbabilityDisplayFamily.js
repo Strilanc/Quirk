@@ -22,17 +22,17 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
     let [w, h] = [controlTexture.width, controlTexture.height];
     let result = new ShaderPipeline();
 
-    result.addStep(w, h, t => DisplayShaders.amplitudesToProbabilities(t, controlTexture));
-    result.addStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
+    result.addSizedStep(w, h, t => DisplayShaders.amplitudesToProbabilities(t, controlTexture));
+    result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
 
     let remainingQubitCount = Math.round(Math.log2(w*h));
     while (remainingQubitCount > rangeLength) {
         if (h > 1) {
             h >>= 1;
-            result.addStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
+            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
         } else {
             w >>= 1;
-            result.addStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
+            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
         }
         remainingQubitCount -= 1;
     }

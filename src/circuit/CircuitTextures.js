@@ -66,13 +66,15 @@ const allocQubitTexture = qubitCount => {
     return allocSizedTexture(w, h);
 };
 
+CircuitTextures.allocQubitTexture = allocQubitTexture;
+
 /**
  * Puts the texture back into the texture pool.
  * @param {!WglTexture} texture
- * @param {*} detailsShownWhenUsedAfterDone
+ * @param {*=} detailsShownWhenUsedAfterDone
  * @returns {void}
  */
-CircuitTextures.doneWithTexture = (texture, detailsShownWhenUsedAfterDone) => {
+CircuitTextures.doneWithTexture = (texture, detailsShownWhenUsedAfterDone='?') => {
     if (texture.width === 0) {
         return;
     }
@@ -386,11 +388,17 @@ CircuitTextures.pixelsToQubitDensityMatrices = buffer => {
  * @param {!ShaderPipeline} pipeline
  */
 CircuitTextures.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
-    let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {w, h, f}) => {
+    let skipDoneWithTextureFlag = true;
+    let keptResults = [];
+    let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {w, h, shaderFunc, keepResult}) => {
         let nextTex = allocSizedTexture(w, h);
-        f(prevTex).renderTo(nextTex);
-        if (prevTex !== seedTex) {
+        shaderFunc(prevTex).renderTo(nextTex);
+        if (!skipDoneWithTextureFlag) {
             CircuitTextures.doneWithTexture(prevTex, "evaluatePipelineWithIntermediateCleanup");
+        }
+        skipDoneWithTextureFlag = keepResult;
+        if (keepResult) {
+            keptResults.push(nextTex);
         }
         return nextTex;
     });
@@ -398,7 +406,11 @@ CircuitTextures.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) =>
         outTex = allocSameSizedTexture(seedTex);
         Shaders.passthrough(seedTex).renderTo(outTex);
     }
-    return outTex;
+    if (keptResults.length === 0) {
+        return outTex;
+    }
+    keptResults.push(outTex);
+    return keptResults;
 };
 
 /**

@@ -14,6 +14,7 @@ import {seq, Seq} from "src/base/Seq.js"
 import ShaderPipeline from "src/circuit/ShaderPipeline.js"
 import Shaders from "src/webgl/Shaders.js"
 
+import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
@@ -109,6 +110,7 @@ Gates.Special = {
  * (In reality these would require multiple runs of the circuit to do tomography.)
  */
 Gates.Displays = {
+    AmplitudeDisplayFamily: AmplitudeDisplayFamily,
     ProbabilityDisplayFamily: ProbabilityDisplayFamily,
     SampleDisplayFamily: SampleDisplayFamily,
     DensityMatrixDisplayFamily: DensityMatrixDisplayFamily,
@@ -721,7 +723,7 @@ Gates.Sets = [
             Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
             DensityMatrixDisplayFamily.ofSize(1),
             Gates.Displays.SampleDisplayFamily.ofSize(3),
-            null,
+            AmplitudeDisplayFamily.ofSize(2),
             Gates.Displays.BlochSphereDisplay,
             null
         ]
@@ -847,6 +849,7 @@ Gates.KnownToSerializer = [
     Gates.Special.Measurement,
     Gates.Special.SwapHalf,
 
+    ...AmplitudeDisplayFamily.all,
     ...Gates.Displays.ProbabilityDisplayFamily.all,
     ...Gates.Displays.SampleDisplayFamily.all,
     ...DensityMatrixDisplayFamily.all,

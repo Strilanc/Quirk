@@ -147,7 +147,7 @@ export default class MathPainter {
                     trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * -buf[i+1]);
                 }
             }
-        }).thenStroke('black');
+        }).thenStroke(amplitudeCircleStrokeColor);
 
         // Dividers.
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).

@@ -222,15 +222,15 @@ const CONTROL_SELECT_SHADER = new WglShader(`
         return result;
     }
 
+    vec2 toUv(float state) {
+        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
+    }
+
     void main() {
-        float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
-        float inIndex = scatter(outIndex, used, desired);
-
-        float x = mod(inIndex, inputSize.x);
-        float y = floor(inIndex / inputSize.x);
-        vec2 uv = vec2(x + 0.5, y + 0.5) / inputSize;
-
-        gl_FragColor = texture2D(inputTexture, uv);
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float state = xy.y * outputWidth + xy.x;
+        float scatteredInputState = scatter(state, used, desired);
+        gl_FragColor = texture2D(inputTexture, toUv(scatteredInputState));
     }`);
 
 /**

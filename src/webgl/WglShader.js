@@ -219,7 +219,10 @@ class WglConfiguredShader {
      * @param {!WglTexture} texture
      */
     renderTo(texture) {
-        this.renderToFunc(texture);
+        let shouldBeUndefined = this.renderToFunc(texture);
+        if (shouldBeUndefined instanceof WglConfiguredShader) {
+            throw new Error("Returned a WglConfiguredShader instead of calling renderTo on it.");
+        }
     }
 
     /**
