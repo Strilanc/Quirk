@@ -18,7 +18,7 @@ import Shaders from "src/webgl/Shaders.js"
 
 let suite = new Suite("AmplitudeDisplayFamily");
 
-suite.test("amplitudesToPolarKets", () => {
+suite.webGlTest("amplitudesToPolarKets", () => {
     let input = Shaders.data(new Float32Array([
         1,0,0,0,
         3,4,0,0,
@@ -33,7 +33,7 @@ suite.test("amplitudesToPolarKets", () => {
     ]), 0.0001);
 });
 
-suite.test("pipelineToSpreadLengthAcrossPolarKets", () => {
+suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
     let inp = Shaders.data(new Float32Array([
         1, 2,100,0,
         3, 4,200,0,
@@ -87,7 +87,7 @@ suite.test("pipelineToSpreadLengthAcrossPolarKets", () => {
     CircuitTextures.doneWithTexture(out);
 });
 
-suite.test("pipelineToAggregateRepresentativePolarKet", () => {
+suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
     let inp = Shaders.data(new Float32Array([
          1, 2,300,0,
          3, 4,300,0,
@@ -123,7 +123,7 @@ suite.test("pipelineToAggregateRepresentativePolarKet", () => {
     CircuitTextures.doneWithTexture(out);
 });
 
-suite.test("convertAwayFromPolar", () => {
+suite.webGlTest("convertAwayFromPolar", () => {
     let input = Shaders.data(new Float32Array([
         1,0,3,0,
         25,new Complex(3,4).phase(),9,0,
@@ -138,7 +138,7 @@ suite.test("convertAwayFromPolar", () => {
     ]), 0.0001);
 });
 
-suite.test("toRatiosVsRepresentative", () => {
+suite.webGlTest("toRatiosVsRepresentative", () => {
     let c = (r, i=0) => new Complex(r, i);
     let inp = Shaders.data(new Float32Array([
         1,0,0,0,    1,0,0,0,    1,0,0,0,    1,0,0,0,
@@ -157,7 +157,7 @@ suite.test("toRatiosVsRepresentative", () => {
     ]).flatMap(e => [e.real, e.imag]).toFloat32Array(), 0.0001);
 });
 
-suite.test("pipelineToFoldConsistentRatios", () => {
+suite.webGlTest("pipelineToFoldConsistentRatios", () => {
     let inp = Shaders.data(new Float32Array([
         1,0,0,0,    2,0,0,0,
         0,0,1,0,    0,0,2,3,
@@ -208,7 +208,7 @@ suite.test("pipelineToFoldConsistentRatios", () => {
     CircuitTextures.doneWithTexture(out);
 });
 
-suite.test("pipelineToSumAll", () => {
+suite.webGlTest("pipelineToSumAll", () => {
     let inp = Shaders.data(new Float32Array([
         2,0,0,0,
         0,0,2,3,
