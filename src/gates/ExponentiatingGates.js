@@ -27,28 +27,28 @@ ExponentiatingGates.XForward = Gate.fromVaryingMatrix(
     XExp,
     "X-Exponentiating Gate (forward)",
     "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X.").
-    withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER);
+    withCustomDrawer(GatePainting.makeCycleDrawer(0.5, 1, 2));
 
 ExponentiatingGates.XBackward = Gate.fromVaryingMatrix(
     "e^iXt",
     t => XExp(-t),
     "X-Exponentiating Gate (backward)",
     "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X.").
-    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER);
+    withCustomDrawer(GatePainting.makeCycleDrawer(-0.5, 1, 2));
 
 ExponentiatingGates.YForward = Gate.fromVaryingMatrix(
     "e^-iYt",
     YExp,
     "Y-Exponentiating Gate (forward)",
     "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y.").
-    withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER);
+    withCustomDrawer(GatePainting.makeCycleDrawer(-1, 1, 2));
 
 ExponentiatingGates.YBackward = Gate.fromVaryingMatrix(
     "e^iYt",
     t => YExp(-t),
     "Y-Exponentiating Gate (backward)",
     "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y.").
-    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER);
+    withCustomDrawer(GatePainting.makeCycleDrawer(1, 1, 2));
 
 ExponentiatingGates.ZForward = Gate.fromVaryingMatrix(
     "e^-iZt",
@@ -56,7 +56,7 @@ ExponentiatingGates.ZForward = Gate.fromVaryingMatrix(
     "Z-Exponentiating Gate (forward)",
     "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.").
     markedAsOnlyPhasing().
-    withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER);
+    withCustomDrawer(GatePainting.makeCycleDrawer(1, 0.5, 2));
 
 ExponentiatingGates.ZBackward = Gate.fromVaryingMatrix(
     "e^iZt",
@@ -64,4 +64,4 @@ ExponentiatingGates.ZBackward = Gate.fromVaryingMatrix(
     "Z-Exponentiating Gate (backward)",
     "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.").
     markedAsOnlyPhasing().
-    withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER);
+    withCustomDrawer(GatePainting.makeCycleDrawer(-1, 0.5, 2));
