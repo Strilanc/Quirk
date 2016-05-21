@@ -17,7 +17,8 @@ import Shaders from "src/webgl/Shaders.js"
 import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
-import ExponentiatingGates from "src/gates/ExponentiatingGates.js";
+import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
+import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
@@ -212,32 +213,7 @@ Gates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
                 map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
             toArray()));
 
-const GRADIENT_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, τ*r/(2<<span)) : 0);
-const DE_GRADIENT_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, -τ*r/(2<<span)) : 0);
-
-Gates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "Z^#",
-    "Phase Gradient Gate",
-    "Phases by an amount proportional to the little endian number represented by a block of qubits.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
-    withSerializedId("PhaseGradient" + span).
-    withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.phaseGradient(val, con, bit, span)));
-
-Gates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "Z^-#",
-    "Inverse Phase Gradient Gate",
-    "Phases by a negative amount proportional to the little endian number represented by a block of qubits.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).
-    withSerializedId("PhaseUngradient" + span).
-    withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.phaseGradient(val, con, bit, span, -1)));
+Gates.PhaseGradientGates = PhaseGradientGates;
 
 Gates.QuarterTurns = {
     SqrtXForward: Gate.fromKnownMatrix(
@@ -581,10 +557,10 @@ Gates.Sets = [
     {
         hint: 'Misc',
         gates: [
-            Gates.PhaseGradientFamily.ofSize(2),
+            Gates.PhaseGradientGates.PhaseGradientFamily.ofSize(2),
             null,
             Gates.FourierTransformFamily.ofSize(2),
-            Gates.PhaseDegradientFamily.ofSize(2),
+            Gates.PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
             Gates.Misc.MysteryGateMaker(),
             Gates.Misc.SpacerGate
         ]
@@ -737,8 +713,8 @@ Gates.KnownToSerializer = [
     ...Gates.Arithmetic.UncountingFamily.all,
 
     ...Gates.FourierTransformFamily.all,
-    ...Gates.PhaseGradientFamily.all,
-    ...Gates.PhaseDegradientFamily.all,
+    ...Gates.PhaseGradientGates.PhaseGradientFamily.all,
+    ...Gates.PhaseGradientGates.PhaseDegradientFamily.all,
 
     Gates.ExperimentalAndImplausible.UniversalNot,
     Gates.ExperimentalAndImplausible.ErrorInjection,
