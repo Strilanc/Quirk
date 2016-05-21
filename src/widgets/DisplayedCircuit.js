@@ -928,7 +928,7 @@ class DisplayedCircuit {
 
         // Hint text.
         painter.printParagraph(
-            "Final amplitudes\n(deferring measurement)",
+            "Final amplitudes\n(assuming measurement deferred)",
             expandedRect.withY(gridRect.bottom() + maxY).withH(40).withW(200),
             new Point(0, 0),
             'gray');

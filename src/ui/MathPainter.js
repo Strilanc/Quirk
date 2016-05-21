@@ -109,8 +109,28 @@ export default class MathPainter {
      * @private
      */
     static _traceAmplitudeProbabilitySquare(trace, real, imag, x, y, d) {
-        let p = Math.sqrt(real*real + imag*imag);
+        let p = real*real + imag*imag;
         if (p > 0.001) {
+            trace.polygon([
+                x, y + d * (1 - p),
+                x + d, y + d * (1 - p),
+                x + d, y + d,
+                x, y + d]);
+        }
+    }
+
+    /**
+     * @param {!Tracer} trace
+     * @param {!number} real
+     * @param {!number} imag
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} d
+     * @private
+     */
+    static _traceProbabilitySquare(trace, real, imag, x, y, d) {
+        let p = real;
+        if (d*p > 0.1) {
             trace.polygon([
                 x, y + d * (1 - p),
                 x + d, y + d * (1 - p),
@@ -130,7 +150,7 @@ export default class MathPainter {
      */
     static _traceAmplitudeProbabilityCircle(trace, real, imag, x, y, d) {
         let mag = Math.sqrt(real*real + imag*imag);
-        if (mag > 0.0001) {
+        if (d*mag > 0.5) {
             trace.circle(x+d/2, y+d/2, mag*d/2);
         }
     }
@@ -145,7 +165,7 @@ export default class MathPainter {
      * @private
      */
     static _traceAmplitudeLogarithmCircle(trace, real, imag, x, y, d) {
-        let g = 1 + Math.log(real*real + imag*imag)/20;
+        let g = 1 + Math.log(real*real + imag*imag)/15;
         if (g > 0) {
             trace.circle(x+d/2, y+d/2, g*d/2);
         }
@@ -163,10 +183,10 @@ export default class MathPainter {
     static _traceAmplitudePhaseDirection(trace, real, imag, x, y, d) {
         let mag = Math.sqrt(real*real + imag*imag);
         let g = 1 + Math.log(mag)/10;
-        if (isNaN(mag) || g < 0.000001) {
+        let r = Math.max(1, g/mag)*Math.max(d/2, 8);
+        if (isNaN(mag) || r < 0.1) {
             return;
         }
-        let r = Math.max(1, g/mag)*d/2;
         let cx = x + d/2;
         let cy = y + d/2;
         trace.line(cx, cy, cx + real*r, cy - imag*r);
@@ -182,6 +202,7 @@ export default class MathPainter {
      * @param {undefined|!string} amplitudeProbabilityFillColor
      * @param {undefined|!string=} backColor
      * @param {undefined|!string=} amplitudePhaseStrokeColor
+     * @param {undefined|!string=} logCircleStrokeColor
      */
     static paintMatrix(painter,
                        matrix,
@@ -190,7 +211,8 @@ export default class MathPainter {
                        amplitudeCircleStrokeColor,
                        amplitudeProbabilityFillColor,
                        backColor = Config.DISPLAY_GATE_BACK_COLOR,
-                       amplitudePhaseStrokeColor = undefined) {
+                       amplitudePhaseStrokeColor = undefined,
+                       logCircleStrokeColor = '#AAA') {
         let numCols = matrix.width();
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
@@ -225,18 +247,20 @@ export default class MathPainter {
             }
 
             // Circles.
-            if (amplitudeProbabilityFillColor !== undefined) {
+            if (amplitudeCircleFillColor !== undefined) {
                 traceCellsWith(MathPainter._traceAmplitudeProbabilityCircle).
                     thenFill(amplitudeCircleFillColor).
                     thenStroke(amplitudeCircleStrokeColor, 0.5);
 
                 traceCellsWith(MathPainter._traceAmplitudeLogarithmCircle).
-                    thenStroke('#AAA', 0.5);
+                    thenStroke(logCircleStrokeColor, 0.5);
             }
 
             // Phase lines.
-            traceCellsWith(MathPainter._traceAmplitudePhaseDirection).
-                thenStroke(amplitudePhaseStrokeColor);
+            if (logCircleStrokeColor !== undefined) {
+                traceCellsWith(MathPainter._traceAmplitudePhaseDirection).
+                    thenStroke(amplitudePhaseStrokeColor);
+            }
         }
 
         // Dividers.
@@ -574,7 +598,7 @@ export default class MathPainter {
         painter.fillRect(drawArea, backgroundColor);
 
         if (!hasNaN) {
-            traceDiagonalWith(MathPainter._traceAmplitudeProbabilitySquare).
+            traceDiagonalWith(MathPainter._traceProbabilitySquare).
                 thenFill(fillColor).
                 thenStroke('#040', 0.5);
 

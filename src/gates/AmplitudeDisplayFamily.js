@@ -396,7 +396,7 @@ function paintErrorIfPresent(args, isIncoherent) {
     if (isIncoherent) {
         err = 'incoherent';
     } else if (measured) {
-        err = args.gate.width <= 2 ? 'deferring measure' : 'deferring measurement';
+        err = args.gate.width <= 2 ? '(w/ measure defer)' : '(assuming measurement deferred)';
     }
     if (err !== undefined) {
         args.painter.print(

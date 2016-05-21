@@ -274,7 +274,9 @@ GatePainting.MATRIX_DRAWER = args => {
         Config.OPERATION_FORE_COLOR,
         'black',
         undefined,
-        Config.OPERATION_BACK_COLOR);
+        Config.OPERATION_BACK_COLOR,
+        undefined,
+        'transparent');
     if (args.isHighlighted) {
         args.painter.ctx.globalAlpha = 0.9;
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
