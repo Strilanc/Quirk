@@ -12,3 +12,16 @@
 - **remove qubit**: re-arrange gates so that the bottom wire is unused
 - **show intermediate state**: `drag` a display gate onto the circuit
 - **view tips**: `hover` with mouse **OR** awkwardly tap-hold with finger
+
+**Conventions**
+
+- Endianness
+  - Bigger is rightward and downward (like English text).
+  - Top wire is the low bit. Bottom wire is the high bit.
+  - Kets are little-endian. |10100⟩ is 5, not 20.
+- Colors
+  - Blue: amplitudes
+  - Green: probabilities / densities
+  - Yellow: change / varying
+  - Orange: focused
+  - Red: error / attention
