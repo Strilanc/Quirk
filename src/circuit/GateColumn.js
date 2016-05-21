@@ -143,11 +143,10 @@ class GateColumn {
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
-            let hasCoherentControl = this.hasCoherentControl(inputMeasureMask);
-            if (g.effectMightCreateSuperpositions() || (g.effectMightPermutesStates() && hasCoherentControl)) {
+            if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
-            if (!g.definitelyHasNoEffect() && maskMeasured !== mask) {
+            if (g.effectMightPermutesStates() && (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
                 return "no\nremix\n(sorry)";
             }
         }

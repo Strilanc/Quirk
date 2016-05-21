@@ -54,16 +54,14 @@ PoweringGates.ZForward = Gate.fromVaryingMatrix(
     "Z^t",
     ZPow,
     "Z-Raising Gate (forward)",
-    "A continuous right-handed cycle between the Z gate and no-op.",
-    false,
-    false).
+    "A continuous right-handed cycle between the Z gate and no-op.").
+    markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER);
 
 PoweringGates.ZBackward = Gate.fromVaryingMatrix(
     "Z^-t",
     t => ZPow(-t),
     "Z-Raising Gate (backward)",
-    "A continuous left-handed cycle between the Z gate and no-op.",
-    false,
-    false).
+    "A continuous left-handed cycle between the Z gate and no-op.").
+    markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER);

@@ -54,16 +54,14 @@ ExponentiatingGates.ZForward = Gate.fromVaryingMatrix(
     "e^-iZt",
     ZExp,
     "Z-Exponentiating Gate (forward)",
-    "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
-    false,
-    false).
+    "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.").
+    markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER);
 
 ExponentiatingGates.ZBackward = Gate.fromVaryingMatrix(
     "e^iZt",
     t => ZExp(-t),
     "Z-Exponentiating Gate (backward)",
-    "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
-    false,
-    false).
+    "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.").
+    markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER);
