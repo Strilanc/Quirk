@@ -1,6 +1,6 @@
 import DetailedError from "src/base/DetailedError.js"
 import Gate from "src/circuit/Gate.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -143,11 +143,10 @@ class GateColumn {
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
-            let hasCoherentControl = this.hasCoherentControl(inputMeasureMask);
-            if (g.effectMightCreateSuperpositions() || (g.effectMightPermutesStates() && hasCoherentControl)) {
+            if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
-            if (!g.definitelyHasNoEffect() && maskMeasured !== mask) {
+            if (g.effectMightPermutesStates() && (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
                 return "no\nremix\n(sorry)";
             }
         }
@@ -192,7 +191,9 @@ class GateColumn {
 
             // Post-selection gates un-measure (in that the simulator can then do coherent operations on the qubit
             // without getting the wrong answer, at least).
-            if (!this.hasControl() && (gate === Gates.Misc.PostSelectOn || gate === Gates.Misc.PostSelectOff)) {
+            let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
+                || gate === Gates.PostSelectionGates.PostSelectOff;
+            if (!this.hasControl() && hasSingleResult) {
                 return [measureMask & ~bit, prevSwap];
             }
 

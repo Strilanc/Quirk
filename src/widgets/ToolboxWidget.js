@@ -1,5 +1,5 @@
 import Util from "src/base/Util.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GatePainting from "src/ui/GatePainting.js"

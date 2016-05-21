@@ -4,7 +4,7 @@ import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Seq from "src/base/Seq.js"
@@ -34,7 +34,7 @@ const TEST_GATES = new Map([
     ['D', Gates.Displays.DensityMatrixDisplay2],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
-    ['!', Gates.Misc.PostSelectOn],
+    ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['-', null],
     ['+', null],
@@ -43,9 +43,9 @@ const TEST_GATES = new Map([
 
     ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
-    ['2', Gates.IncrementFamily.ofSize(2)],
-    ['3', Gates.IncrementFamily.ofSize(3)],
-    ['4', Gates.IncrementFamily.ofSize(4)],
+    ['2', Gates.Arithmetic.IncrementFamily.ofSize(2)],
+    ['3', Gates.Arithmetic.IncrementFamily.ofSize(3)],
+    ['4', Gates.Arithmetic.IncrementFamily.ofSize(4)],
     ['Q', Gate.fromKnownMatrix('Q', Matrix.square(1, 1, 1, 1,
                                       1, Complex.I, -1, Complex.I.neg(),
                                       1, -1, 1, -1,

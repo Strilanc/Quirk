@@ -1,5 +1,5 @@
 import DetailedError from "src/base/DetailedError.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Format from "src/base/Format.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"

@@ -3,7 +3,7 @@ import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Point from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 
@@ -22,7 +22,7 @@ const TEST_GATES = new Map([
     ['D', Gates.Displays.DensityMatrixDisplay2],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
-    ['!', Gates.Misc.PostSelectOn],
+    ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['+', null],
     ['/', null],

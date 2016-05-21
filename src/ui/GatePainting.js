@@ -303,46 +303,41 @@ GatePainting.POST_SELECT_DRAWER = args => {
 };
 
 /**
- * @param {!number} factor
+ * @param {!number=} xScale
+ * @param {!number=} yScale
+ * @param {!number=} tScale
  * @returns {!function(!GateDrawParams) : *}
  */
-GatePainting.makeCycleDrawer = factor => args => {
+GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
     GatePainting.DEFAULT_DRAWER(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
     }
     let τ = 2 * Math.PI;
-    let t = Util.properMod(-args.stats.time * τ * factor, τ);
+    let t = Util.properMod(-args.stats.time * τ * tScale, τ);
     let c = args.rect.center();
     let r = 0.4 * args.rect.w;
 
-    args.painter.ctx.beginPath();
-    args.painter.ctx.moveTo(c.x, c.y);
-    args.painter.ctx.lineTo(c.x, c.y + r);
-    args.painter.ctx.arc(c.x, c.y, r, τ/4, τ/4 + t, factor > 0);
-    args.painter.ctx.lineTo(c.x, c.y);
-    args.painter.ctx.closePath();
+    args.painter.ctx.save();
 
+    args.painter.ctx.translate(c.x, c.y);
+    args.painter.ctx.scale(xScale, yScale);
     args.painter.ctx.strokeStyle = 'black';
     args.painter.ctx.fillStyle = 'yellow';
-    args.painter.ctx.globalAlpha = 0.3;
+    args.painter.ctx.globalAlpha = 0.4;
+
+    args.painter.ctx.beginPath();
+    args.painter.ctx.moveTo(0, 0);
+    args.painter.ctx.lineTo(0, r);
+    args.painter.ctx.arc(0, 0, r, τ/4, τ/4 + t, true);
+    args.painter.ctx.lineTo(0, 0);
+    args.painter.ctx.closePath();
     args.painter.ctx.stroke();
     args.painter.ctx.fill();
-    args.painter.ctx.globalAlpha = 1.0;
+
+    args.painter.ctx.restore();
 };
-
-/**
- * @param {!GateDrawParams} args
- * @returns {void}
- */
-GatePainting.MATHWISE_CYCLE_DRAWER = GatePainting.makeCycleDrawer(+1);
-
-/**
- * @param {!GateDrawParams} args
- * @returns {void}
- */
-GatePainting.CLOCKWISE_CYCLE_DRAWER = GatePainting.makeCycleDrawer(-1);
 
 /**
  * @param {!GateDrawParams} args
