@@ -16,6 +16,7 @@ import Shaders from "src/webgl/Shaders.js"
 
 import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
+import CountingGates from "src/gates/CountingGates.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
@@ -25,6 +26,7 @@ import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
+import SpacerGate from "src/gates/SpacerGate.js"
 import UniversalNotGate from "src/gates/Impossible_UniversalNotGate.js"
 import VariousXGates from "src/gates/VariousXGates.js"
 import VariousYGates from "src/gates/VariousYGates.js"
@@ -135,6 +137,7 @@ Gates.Displays = {
 };
 
 Gates.Arithmetic = ArithmeticGates;
+Gates.CountingGates = CountingGates;
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
@@ -181,45 +184,7 @@ Gates.Misc = {
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5)
         ).closestUnitary()),
-
-    ClockPulseGate: Gate.fromVaryingMatrix(
-        "X^⌈t⌉",
-        t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
-        "Clock Pulse Gate",
-        "Xors a square wave into the target wire.").
-        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 2)).
-        withStableDuration(0.5),
-
-    QuarterPhaseClockPulseGate: Gate.fromVaryingMatrix(
-        "X^⌈t-¼⌉",
-        t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
-        "Clock Pulse Gate (Quarter Phase)",
-        "Xors a quarter-phased square wave into the target wire.").
-        withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75, 2)).
-        withStableDuration(0.25),
-
-    SpacerGate: Gate.fromIdentity(
-        "…",
-        "Spacer",
-        "A gate with no effect.").
-        withCustomDrawer(args => {
-            // Drawn as an ellipsis.
-            if (args.isInToolbox || args.isHighlighted) {
-                let backColor = Config.GATE_FILL_COLOR;
-                if (args.isHighlighted) {
-                    backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
-                }
-                args.painter.fillRect(args.rect, backColor);
-                args.painter.strokeRect(args.rect);
-            } else {
-                let {x, y} = args.rect.center();
-                let r = new Rect(x - 14, y - 2, 28, 4);
-                args.painter.fillRect(r, Config.BACKGROUND_COLOR_CIRCUIT);
-            }
-            args.painter.fillCircle(args.rect.center().offsetBy(7, 0), 2, "black");
-            args.painter.fillCircle(args.rect.center(), 2, "black");
-            args.painter.fillCircle(args.rect.center().offsetBy(-7, 0), 2, "black");
-        })
+    SpacerGate: SpacerGate
 };
 
 const CYCLE_BITS_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
@@ -325,12 +290,13 @@ Gates.Sets = [
     {
         hint: 'Arithmetic',
         gates: [
-            Gates.Arithmetic.CountingFamily.ofSize(2),
-            Gates.Arithmetic.AdditionFamily.ofSize(4),
-            Gates.Arithmetic.IncrementFamily.ofSize(2),
-            Gates.Arithmetic.UncountingFamily.ofSize(2),
-            Gates.Arithmetic.SubtractionFamily.ofSize(4),
-            Gates.Arithmetic.DecrementFamily.ofSize(2)
+
+            CountingGates.CountingFamily.ofSize(2),
+            ArithmeticGates.AdditionFamily.ofSize(4),
+            ArithmeticGates.IncrementFamily.ofSize(2),
+            CountingGates.UncountingFamily.ofSize(2),
+            ArithmeticGates.SubtractionFamily.ofSize(4),
+            ArithmeticGates.DecrementFamily.ofSize(2)
         ]
     },
     {
@@ -403,11 +369,9 @@ Gates.KnownToSerializer = [
     ...DensityMatrixDisplayFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
-    Gates.Misc.SpacerGate,
-    Gates.Misc.ClockPulseGate,
-    Gates.Misc.QuarterPhaseClockPulseGate,
-
+    SpacerGate,
     ...ArithmeticGates.all,
+    ...CountingGates.all,
     ...ExponentiatingGates.all,
     ...HalfTurnGates.all,
     ...QuarterTurnGates.all,
