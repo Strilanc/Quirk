@@ -150,11 +150,11 @@ suite.test("toRatiosVsRepresentative", () => {
         1,0,0,0,    3,4,0,0,    -0.5,0,0,0,    0,0.5,0,0
     ])).toFloatTexture(4, 1);
     assertThat(toRatiosVsRepresentative(inp)(rep).readFloatOutputs(4, 4)).isApproximatelyEqualTo(seq([
-        c(1).dividedBy(c(1)),   c(1).dividedBy(c(3,4)),    c(1).dividedBy(c(-0.5)),    c(1).dividedBy(c(0,0.5)),
-        c(2).dividedBy(c(1)),   c(3).dividedBy(c(3,4)),    c(4).dividedBy(c(-0.5)),    c(5).dividedBy(c(0,0.5)),
-        c(1,2).dividedBy(c(1)), c(3,4).dividedBy(c(3,4)),  c(5,6).dividedBy(c(-0.5)),  c(7,8).dividedBy(c(0,0.5)),
-        c(0).dividedBy(c(1)),   c(0,-1).dividedBy(c(3,4)), c(0,-2).dividedBy(c(-0.5)), c(0).dividedBy(c(0,0.5))
-    ]).flatMap(e => [e.real, e.imag, 0, 0]).toFloat32Array(), 0.0001);
+        c(1),c(1),   c(1),c(3,4),    c(1),c(-0.5),    c(1),c(0,0.5),
+        c(2),c(1),   c(3),c(3,4),    c(4),c(-0.5),    c(5),c(0,0.5),
+        c(1,2),c(1), c(3,4),c(3,4),  c(5,6),c(-0.5),  c(7,8),c(0,0.5),
+        c(0),c(1),   c(0,-1),c(3,4), c(0,-2),c(-0.5), c(0),c(0,0.5)
+    ]).flatMap(e => [e.real, e.imag]).toFloat32Array(), 0.0001);
 });
 
 suite.test("pipelineToFoldConsistentRatios", () => {
