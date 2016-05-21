@@ -6,13 +6,13 @@ import Matrix from "src/math/Matrix.js"
 let suite = new Suite("Gate");
 
 suite.test("isEqualTo", () => {
-    let g1 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb");
-    let g2 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb");
-    let h1 = new Gate("DIF_symbol", Matrix.PAULI_X, "name", "blurb");
-    let h2 = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
-    let h3 = new Gate("symbol", Matrix.PAULI_X, "DIF_name", "blurb");
-    let h4 = new Gate("symbol", Matrix.PAULI_X, "name", "DIF_blurb");
-    let h5 = new Gate("symbol", Matrix.PAULI_X, "name", "blurb").withCustomDrawer(() => { throw null; });
+    let g1 = Gate.fromKnownMatrix("symbol", Matrix.PAULI_X, "name", "blurb");
+    let g2 = Gate.fromKnownMatrix("symbol", Matrix.PAULI_X, "name", "blurb");
+    let h1 = Gate.fromKnownMatrix("DIF_symbol", Matrix.PAULI_X, "name", "blurb");
+    let h2 = Gate.fromVaryingMatrix("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
+    let h3 = Gate.fromKnownMatrix("symbol", Matrix.PAULI_X, "DIF_name", "blurb");
+    let h4 = Gate.fromKnownMatrix("symbol", Matrix.PAULI_X, "name", "DIF_blurb");
+    let h5 = Gate.fromKnownMatrix("symbol", Matrix.PAULI_X, "name", "blurb").withCustomDrawer(() => { throw null; });
 
     assertThat(g1).isEqualTo(g1);
     assertThat(g1).isEqualTo(g2);
@@ -31,27 +31,28 @@ suite.test("isEqualTo", () => {
 });
 
 suite.test("toString_runsWithoutFailing", () => {
-    let g = new Gate("symbol", _ => Matrix.HADAMARD, "name", "blurb");
+    let g = Gate.fromVaryingMatrix("symbol", _ => Matrix.HADAMARD, "name", "blurb");
     assertThat(g.toString()).isNotEqualTo(null);
 });
 
 suite.test("stableDuration", () => {
-    let m0 = new Gate("symbol", Matrix.HADAMARD, "name", "blurb");
-    let mt = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
-    let mc = new Gate("symbol", t => Matrix.square(Math.round(t*2), 0, 0, 0), "name", "blurb").withStableDuration(0.5);
+    let m0 = Gate.fromKnownMatrix("symbol", Matrix.HADAMARD, "name", "blurb");
+    let mt = Gate.fromVaryingMatrix("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
+    let mc = Gate.fromVaryingMatrix("symbol", t => Matrix.square(Math.round(t*2), 0, 0, 0), "name", "blurb").
+        withStableDuration(0.5);
 
     assertThat(m0.stableDuration()).isEqualTo(Infinity);
     assertThat(mt.stableDuration()).isEqualTo(0);
     assertThat(mc.stableDuration()).isEqualTo(0.5);
 });
 
-suite.test("matrixAt", () => {
-    let m0 = new Gate("symbol", Matrix.HADAMARD, "name", "blurb");
-    let mt = new Gate("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
+suite.test("knownMatrixAt", () => {
+    let m0 = Gate.fromKnownMatrix("symbol", Matrix.HADAMARD, "name", "blurb");
+    let mt = Gate.fromVaryingMatrix("symbol", t => Matrix.square(t, 0, 0, 0), "name", "blurb");
 
-    assertThat(m0.matrixAt(0)).isEqualTo(Matrix.HADAMARD);
-    assertThat(m0.matrixAt(0.5)).isEqualTo(Matrix.HADAMARD);
+    assertThat(m0.knownMatrixAt(0)).isEqualTo(Matrix.HADAMARD);
+    assertThat(m0.knownMatrixAt(0.5)).isEqualTo(Matrix.HADAMARD);
 
-    assertThat(mt.matrixAt(0)).isEqualTo(Matrix.square(0, 0, 0, 0));
-    assertThat(mt.matrixAt(0.5)).isEqualTo(Matrix.square(0.5, 0, 0, 0));
+    assertThat(mt.knownMatrixAt(0)).isEqualTo(Matrix.square(0, 0, 0, 0));
+    assertThat(mt.knownMatrixAt(0.5)).isEqualTo(Matrix.square(0.5, 0, 0, 0));
 });

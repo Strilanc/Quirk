@@ -108,9 +108,8 @@ function densityPixelsToMatrix(pixels, circuitDefinition, col, row) {
 }
 
 function densityMatrixDisplayMaker(span) {
-    return new Gate(
+    return Gate.fromIdentity(
         "Density",
-        Matrix.identity(1 << span),
         "Density Matrix Display",
         "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
         withSerializedId("Density" + span).
@@ -128,9 +127,8 @@ const DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(a
     MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
 });
 
-let SingleWireDensityMatrixDisplay = new Gate(
+let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
     "Density",
-    Matrix.identity(2),
     "Density Matrix Display",
     "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
     withSerializedId("Density").
@@ -140,9 +138,8 @@ let SingleWireDensityMatrixDisplay = new Gate(
         MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
     }));
 
-let DoubleWireDensityMatrixDisplay = new Gate(
+let DoubleWireDensityMatrixDisplay = Gate.fromIdentity(
     "Density",
-    Matrix.identity(4),
     "Density Matrix Display",
     "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
     withSerializedId("Density2").

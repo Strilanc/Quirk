@@ -1,10 +1,11 @@
-import Util from "src/base/Util.js"
+import Config from "src/Config.js"
+import DetailedError from "src/base/DetailedError.js"
+import GateDrawParams from "src/ui/GateDrawParams.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
-import GateDrawParams from "src/ui/GateDrawParams.js"
-import Config from "src/Config.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
+import Util from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 /**
@@ -13,17 +14,14 @@ import {seq, Seq} from "src/base/Seq.js"
 class Gate {
     /**
      * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
-     * @param {!Matrix|!function(!number): !Matrix} matrixOrFunc The operation the gate applies.
      * @param {!string} name A helpful human-readable name for the operation.
      * @param {!string} blurb A helpful description of what the operation does.
      */
-    constructor(symbol, matrixOrFunc, name, blurb) {
+    constructor(symbol, name, blurb) {
         /** @type {!string} */
         this.symbol = symbol;
         /** @type {!string} */
         this.serializedId = symbol;
-        /** @type {!Matrix|!function(!number): !Matrix} */
-        this.matrixOrFunc = matrixOrFunc;
         /** @type {!string} */
         this.name = name;
         /** @type {!string} */
@@ -45,8 +43,154 @@ class Gate {
         this.customStatPostProcesser = undefined;
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
-        /** @type {undefined|Infinity|!number} */
+
+        /**
+         * @type {undefined|Infinity|!number}
+         * @private
+         */
         this._stableDuration = undefined;
+        /**
+         * @type {undefined|!Matrix}
+         * @private
+         */
+        this._knownMatrix = undefined;
+        /**
+         * @type {undefined|!function(!number) : !Matrix}
+         * @private
+         */
+        this._knownMatrixFunc = undefined;
+        /**
+         * @type {undefined|!boolean}
+         * @private
+         */
+        this._hasNoEffect = undefined;
+        /**
+         * @type {undefined|!boolean}
+         * @private
+         */
+        this._effectPermutesStates = undefined;
+        /**
+         * @type {undefined|!boolean}
+         * @private
+         */
+        this._effectCreatesSuperpositions = undefined;
+    }
+
+    /**
+     * @param {!string} symbol
+     * @param {!Matrix} matrix
+     * @param {!string} name
+     * @param {!string} blurb
+     * @returns {!Gate}
+     */
+    static fromKnownMatrix(symbol, matrix, name, blurb) {
+        if (!(matrix instanceof Matrix)) {
+            throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
+        }
+        let result = new Gate(symbol, name, blurb);
+        result._knownMatrix = matrix;
+        result._stableDuration = Infinity;
+        return result;
+    }
+
+    /**
+     * @param {undefined|!Matrix} matrix
+     * @returns {!Gate}
+     */
+    withKnownMatrix(matrix) {
+        let g = this._copy();
+        g._knownMatrix = matrix;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!number) : !Matrix} matrixFunc
+     * @returns {!Gate}
+     */
+    withKnownMatrixFunc(matrixFunc) {
+        let g = this._copy();
+        g._knownMatrixFunc = matrixFunc;
+        return g;
+    }
+
+    /**
+     * @param {!string} symbol
+     * @param {!function(!number) : !Matrix} matrixFunc
+     * @param {!string} name
+     * @param {!string} blurb
+     * @param {!boolean=} effectPermutesStates
+     * @param {!boolean=} effectCreatesSuperpositions
+     * @returns {!Gate}
+     */
+    static fromVaryingMatrix(
+            symbol,
+            matrixFunc,
+            name,
+            blurb,
+            effectPermutesStates=true,
+            effectCreatesSuperpositions=true) {
+        let result = new Gate(symbol, name, blurb);
+        result._knownMatrixFunc = matrixFunc;
+        result._hasNoEffect = false;
+        result._effectPermutesStates = effectPermutesStates;
+        result._effectCreatesSuperpositions = effectCreatesSuperpositions;
+        return result;
+    }
+
+    /**
+     * @param {!string} symbol
+     * @param {!string} name
+     * @param {!string} blurb
+     * @returns {!Gate}
+     */
+    static fromIdentity(symbol, name, blurb) {
+        let result = new Gate(symbol, name, blurb);
+        result._stableDuration = Infinity;
+        result._hasNoEffect = true;
+        result._effectPermutesStates = false;
+        result._effectCreatesSuperpositions = false;
+        return result;
+    }
+
+    /**
+     * @param {!string} symbol
+     * @param {!string} name
+     * @param {!string} blurb
+     * @returns {!Gate}
+     */
+    static withoutKnownMatrix(symbol, name, blurb) {
+        return new Gate(symbol, name, blurb);
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    markedAsOnlyPermutingAndPhasing() {
+        let g = this._copy();
+        g._hasNoEffect = false;
+        g._effectPermutesStates = true;
+        g._effectCreatesSuperpositions = false;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    markedAsOnlyPhasing() {
+        let g = this._copy();
+        g._hasNoEffect = false;
+        g._effectPermutesStates = false;
+        g._effectCreatesSuperpositions = false;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    markedAsStable() {
+        let g = this._copy();
+        g._stableDuration = Infinity;
+        return g;
     }
 
     /**
@@ -54,7 +198,7 @@ class Gate {
      * @returns {!Gate}
      */
     _copy() {
-        let g = new Gate(this.symbol, this.matrixOrFunc, this.name, this.blurb);
+        let g = new Gate(this.symbol, this.name, this.blurb);
         g.serializedId = this.serializedId;
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
@@ -64,7 +208,12 @@ class Gate {
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
+        g._knownMatrix = this._knownMatrix;
+        g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
+        g._hasNoEffect = this._hasNoEffect;
+        g._effectPermutesStates = this._effectPermutesStates;
+        g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
         return g;
     }
 
@@ -207,10 +356,30 @@ class Gate {
 
     /**
      * @param {!number} time
-     * @returns {!Matrix}
+     * @returns {undefined|!Matrix}
      */
-    matrixAt(time) {
-        return this.matrixOrFunc instanceof Matrix ? this.matrixOrFunc : this.matrixOrFunc(time);
+    knownMatrixAt(time) {
+        return this._knownMatrix !== undefined ? this._knownMatrix :
+            this._knownMatrixFunc !== undefined ? this._knownMatrixFunc(time) :
+            undefined;
+    }
+
+    effectMightPermutesStates() {
+        return this._effectPermutesStates !== undefined ? this._effectPermutesStates :
+            this._knownMatrix !== undefined ? !this._knownMatrix.isDiagonal() :
+            true;
+    }
+
+    effectMightCreateSuperpositions() {
+        return this._effectCreatesSuperpositions !== undefined ? this._effectCreatesSuperpositions :
+            this._knownMatrix !== undefined ? !this._knownMatrix.isPhasedPermutation() :
+            true;
+    }
+
+    definitelyHasNoEffect() {
+        return this._hasNoEffect !== undefined ? this._hasNoEffect :
+            this._knownMatrix !== undefined ? this._knownMatrix.isIdentity() :
+            false;
     }
 
     /**
@@ -218,7 +387,7 @@ class Gate {
      */
     stableDuration() {
         return this._stableDuration !== undefined ? this._stableDuration :
-            this.matrixOrFunc instanceof Matrix ? Infinity :
+            this._knownMatrix !== undefined || this._hasNoEffect ? Infinity :
             0;
     }
 
@@ -233,8 +402,11 @@ class Gate {
         return other instanceof Gate &&
             this.symbol === other.symbol &&
             this.serializedId === other.serializedId &&
-            ((this.matrixOrFunc instanceof Matrix && this.matrixOrFunc.isEqualTo(other.matrixOrFunc)) ||
-            this.matrixOrFunc === other.matrixOrFunc) &&
+            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this._knownMatrix, other._knownMatrix) &&
+            this._knownMatrixFunc === other._knownMatrixFunc &&
+            this._effectCreatesSuperpositions === other._effectCreatesSuperpositions &&
+            this._effectPermutesStates === other._effectPermutesStates &&
+            this._hasNoEffect === other._hasNoEffect &&
             this.name === other.name &&
             this.blurb === other.blurb &&
             this.symbol === other.symbol &&

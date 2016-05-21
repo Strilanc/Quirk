@@ -143,17 +143,11 @@ class GateColumn {
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
-            let m = g.matrixAt(0.8234);
-            // Pick a time that's unlikely to be on a corner case of a time-based gate.
-            // Also this time happens to hit the upstroke on both of the included clock-pulse gates.
-            const ε = 0.0001;
-            let permutesStates = !m.isDiagonal();
-            let createsSuperpositions = !m.isPhasedPermutation(ε);
             let hasCoherentControl = this.hasCoherentControl(inputMeasureMask);
-            if (createsSuperpositions || (permutesStates && hasCoherentControl)) {
+            if (g.effectMightCreateSuperpositions() || (g.effectMightPermutesStates() && hasCoherentControl)) {
                 return "no\nremix\n(sorry)";
             }
-            if (!m.isIdentity() && maskMeasured !== mask) {
+            if (!g.definitelyHasNoEffect() && maskMeasured !== mask) {
                 return "no\nremix\n(sorry)";
             }
         }

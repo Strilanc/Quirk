@@ -90,9 +90,8 @@ function paintSampleDisplay(args) {
 }
 
 function sampleGateMaker(span) {
-    return new Gate(
+    return Gate.fromIdentity(
         "Sample",
-        Matrix.identity(1 << span),
         "Sampled Results Display",
         "Shows a random sample of possible measurement outcomes.\nUse controls to see conditional samples.").
         withHeight(span).
