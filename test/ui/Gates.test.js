@@ -8,7 +8,7 @@ let suite = new Suite("Gates");
 suite.test("timeBased_matchUnoptimized", () => {
     let matches = (gate, func) => {
         for (let t = 0; t < 1; t += 0.05) {
-            assertThat(gate.matrixAt(t)).isApproximatelyEqualTo(func(t), 0.0000001);
+            assertThat(gate.knownMatrixAt(t)).isApproximatelyEqualTo(func(t), 0.0000001);
         }
     };
 

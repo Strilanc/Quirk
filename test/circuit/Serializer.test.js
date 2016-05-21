@@ -42,7 +42,7 @@ suite.test("roundTrip_Gate", () => {
     let f = Gates.Misc.MysteryGateMaker();
     assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
 
-    let g = new Gate(
+    let g = Gate.fromKnownMatrix(
         "custom_id",
         Matrix.square(Complex.I, -1, 2, 3),
         "custom_name",
@@ -50,7 +50,7 @@ suite.test("roundTrip_Gate", () => {
     let v = Serializer.toJson(g);
     let g2 = Serializer.fromJson(Gate, v);
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});
-    assertThat(g.matrixAt(0)).isEqualTo(g2.matrixAt(0));
+    assertThat(g.knownMatrixAt(0)).isEqualTo(g2.knownMatrixAt(0));
     assertThat(g.symbol).isEqualTo(g2.symbol);
 });
 

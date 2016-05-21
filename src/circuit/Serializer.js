@@ -96,7 +96,7 @@ let toJson_Gate = gate => {
         return gate.serializedId;
     }
 
-    if (!(gate.matrixOrFunc instanceof Matrix)) {
+    if (gate.stableDuration() !== Infinity || gate.knownMatrixAt(0) === undefined) {
         throw new DetailedError("Can't serialize unknown gate with non-trivial operation.", {gate});
     }
 
@@ -104,7 +104,7 @@ let toJson_Gate = gate => {
         return gate.tag;
     }
 
-    let matrix = gate.matrixAt(0.25);
+    let matrix = gate.knownMatrixAt(0.25);
 
     if (gate.serializedId === "") {
         return {
@@ -165,19 +165,18 @@ let fromJson_Gate = json => {
             "Defaulted to a do-nothing 'parse error' gate. Failed to understand the json defining a gate.",
             {gate_json: json},
             ex);
-        matrix = Matrix.identity(2);
-        return new Gate(
+        return Gate.fromIdentity(
             symbol,
-            matrix,
             "Parse Error",
-            describe(ex)).withCustomDrawer(drawer).withTag(json);
+            describe(ex)).
+            withCustomDrawer(drawer).withTag(json);
     }
 
     if (symbol === Gates.Misc.MysteryGateSymbol && matrix !== undefined) {
         return Gates.Misc.MysteryGateMakerWithMatrix(matrix);
     }
 
-    return new Gate(symbol, matrix, symbol, "").withCustomDrawer(drawer);
+    return Gate.fromKnownMatrix(symbol, matrix, symbol, "").withCustomDrawer(drawer);
 };
 
 /**

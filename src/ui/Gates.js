@@ -28,9 +28,8 @@ export default Gates;
  * Gates that have special behavior requiring custom code / logic to handle.
  */
 Gates.Special = {
-    Control: new Gate(
+    Control: Gate.fromIdentity(
         "•",
-        Matrix.identity(2),
         "Control",
         "Conditions on a qubit being ON.\nGates in the same column will only apply to states meeting the condition."
     ).withCustomDrawer(args => {
@@ -40,9 +39,8 @@ Gates.Special = {
         args.painter.fillCircle(args.rect.center(), 5, "black");
     }),
 
-    AntiControl: new Gate(
+    AntiControl: Gate.fromIdentity(
         "◦",
-        Matrix.identity(2),
         "Anti-Control",
         "Conditions on a qubit being OFF.\nGates in the same column will only apply to states meeting the condition."
     ).withCustomDrawer(args => {
@@ -54,9 +52,8 @@ Gates.Special = {
         args.painter.strokeCircle(p, 5);
     }),
 
-    Measurement: new Gate(
+    Measurement: Gate.fromIdentity(
         "Measure",
-        Matrix.identity(2),
         "Measurement Gate",
         "Measures a wire's qubit, along the Z axis."
     ).withCustomDrawer(args => {
@@ -83,7 +80,7 @@ Gates.Special = {
         args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
     }),
 
-    SwapHalf: new Gate(
+    SwapHalf: Gate.fromKnownMatrix(
         "Swap",
         Matrix.square(
             1, 0, 0, 0,
@@ -115,9 +112,8 @@ Gates.Displays = {
     SampleDisplayFamily: SampleDisplayFamily,
     DensityMatrixDisplayFamily: DensityMatrixDisplayFamily,
 
-    BlochSphereDisplay: new Gate(
+    BlochSphereDisplay: Gate.fromIdentity(
         "Bloch",
-        Matrix.identity(2),
         "Bloch Sphere Display",
         "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states."
     ).withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
@@ -135,7 +131,7 @@ Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1)
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
  */
 Gates.HalfTurns = {
-    X: new Gate(
+    X: Gate.fromKnownMatrix(
         "X",
         Matrix.PAULI_X,
         "Pauli X Gate",
@@ -174,19 +170,19 @@ Gates.HalfTurns = {
         }
     }),
 
-    Y: new Gate(
+    Y: Gate.fromKnownMatrix(
         "Y",
         Matrix.PAULI_Y,
         "Pauli Y Gate",
         "A combination of the X and Z gates."),
 
-    Z: new Gate(
+    Z: Gate.fromKnownMatrix(
         "Z",
         Matrix.PAULI_Z,
         "Pauli Z Gate",
         "The phase flip gate.\nNegates phases when the qubit is ON."),
 
-    H: new Gate(
+    H: Gate.fromKnownMatrix(
         "H",
         Matrix.HADAMARD,
         "Hadamard Gate",
@@ -195,83 +191,105 @@ Gates.HalfTurns = {
         "Maps OFF to ON - OFF.")
 };
 
-Gates.IncrementFamily = Gate.generateFamily(1, 8, span => new Gate(
+const INCREMENT_MATRIX_MAKER = span =>
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0);
+const DECREMENT_MATRIX_MAKER = span =>
+    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0);
+
+Gates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+1",
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0),
     "Increment Gate",
     "Adds 1 to the little-endian number represented by a block of qubits.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
     withSerializedId("inc" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)));
-
-Gates.DecrementFamily = Gate.generateFamily(1, 8, span => new Gate(
+Gates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-1",
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0),
     "Decrement Gate",
     "Subtracts 1 from the little-endian number represented by a block of qubits.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
     withSerializedId("dec" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
 
-Gates.AdditionFamily = Gate.generateFamily(2, 8, span => new Gate(
+const ADDITION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
+    let expected = r;
+    let input = c;
+    let sa = Math.floor(span/2);
+    let sb = Math.ceil(span/2);
+    let a = input & ((1 << sa) - 1);
+    let b = input >> sa;
+    b += a;
+    b &= ((1 << sb) - 1);
+    let actual = a + (b << sa);
+    return expected === actual ? 1 : 0;
+});
+const SUBTRACTION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
+    let expected = r;
+    let input = c;
+    let sa = Math.floor(span/2);
+    let sb = Math.ceil(span/2);
+    let a = input & ((1 << sa) - 1);
+    let b = input >> sa;
+    b -= a;
+    b &= ((1 << sb) - 1);
+    let actual = a + (b << sa);
+    return expected === actual ? 1 : 0;
+});
+
+Gates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b+=a",
-    Matrix.generate(1<<span, 1<<span, (r, c) => {
-        let expected = r;
-        let input = c;
-        let sa = Math.floor(span/2);
-        let sb = Math.ceil(span/2);
-        let a = input & ((1 << sa) - 1);
-        let b = input >> sa;
-        b += a;
-        b &= ((1 << sb) - 1);
-        let actual = a + (b << sa);
-        return expected === actual ? 1 : 0;
-    }),
     "Addition Gate",
     "Adds a little-endian number into another.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrix(span >= 5 ? undefined : ADDITION_MATRIX_MAKER(span)).
     withSerializedId("add" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2), 1)));
-
-Gates.SubtractionFamily = Gate.generateFamily(2, 8, span => new Gate(
+Gates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b-=a",
-    Matrix.generate(1<<span, 1<<span, (r, c) => {
-        let expected = r;
-        let input = c;
-        let sa = Math.floor(span/2);
-        let sb = Math.ceil(span/2);
-        let a = input & ((1 << sa) - 1);
-        let b = input >> sa;
-        b -= a;
-        b &= ((1 << sb) - 1);
-        let actual = a + (b << sa);
-        return expected === actual ? 1 : 0;
-    }),
     "Subtraction Gate",
     "Subtracts a little-endian number from another.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrix(span >= 5 ? undefined : SUBTRACTION_MATRIX_MAKER(span)).
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2),-1)));
 
-Gates.CountingFamily = Gate.generateFamily(1, 8, span => new Gate(
+const COUNTING_MATRIX_MAKER = span =>
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0);
+const UNCOUNTING_MATRIX_MAKER = span =>
+    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r+Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0);
+
+Gates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "(+1)^⌈t⌉",
-    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
     "Counting Gate",
     "Adds an increasing little-endian count into a block of qubits.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrixFunc(span >= 4 ? undefined : COUNTING_MATRIX_MAKER(span)).
     withSerializedId("Counting" + span).
     withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
         Math.floor(time*(1<<span)))));
-
-Gates.UncountingFamily = Gate.generateFamily(1, 8, span => new Gate(
+Gates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "(-1)^⌈t⌉",
-    t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r+Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0),
     "Down Counting Gate",
     "Subtracts an increasing little-endian count from a block of qubits.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrixFunc(UNCOUNTING_MATRIX_MAKER(span)).
     withSerializedId("Uncounting" + span).
     withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span, true)).
     withHeight(span).
@@ -279,11 +297,15 @@ Gates.UncountingFamily = Gate.generateFamily(1, 8, span => new Gate(
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
         -Math.floor(time*(1<<span)))));
 
-Gates.FourierTransformFamily = Gate.generateFamily(1, 8, span => new Gate(
+const FOURIER_TRANSFORM_MATRIX_MAKER = span =>
+    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span)));
+
+Gates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "QFT",
-    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span))),
     "Fourier Transform Gate",
     "Transforms to/from phase frequency space.").
+    markedAsStable().
+    withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT" + span).
     withHeight(span).
     withCustomShaders(
@@ -293,56 +315,65 @@ Gates.FourierTransformFamily = Gate.generateFamily(1, 8, span => new Gate(
                 map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
             toArray()));
 
-Gates.PhaseGradientFamily = Gate.generateFamily(1, 8, span => new Gate(
+const GRADIENT_MATRIX_MAKER = span =>
+    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, τ*r/(2<<span)) : 0);
+const DE_GRADIENT_MATRIX_MAKER = span =>
+    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, -τ*r/(2<<span)) : 0);
+
+Gates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^#",
-    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, τ*r/(2<<span)) : 0),
     "Phase Gradient Gate",
     "Phases by an amount proportional to the little endian number represented by a block of qubits.").
+    markedAsOnlyPhasing().
+    markedAsStable().
+    withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseGradient" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.phaseGradient(val, con, bit, span)));
 
-Gates.PhaseDegradientFamily = Gate.generateFamily(1, 8, span => new Gate(
+Gates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^-#",
-    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, -τ*r/(2<<span)) : 0),
     "Inverse Phase Gradient Gate",
     "Phases by a negative amount proportional to the little endian number represented by a block of qubits.").
+    markedAsOnlyPhasing().
+    markedAsStable().
+    withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseUngradient" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.phaseGradient(val, con, bit, span, -1)));
 
 Gates.QuarterTurns = {
-    SqrtXForward: new Gate(
+    SqrtXForward: Gate.fromKnownMatrix(
         "X^½",
         Matrix.fromPauliRotation(0.25, 0, 0),
         "√X Gate",
         "Principle square root of Not."),
 
-    SqrtXBackward: new Gate(
+    SqrtXBackward: Gate.fromKnownMatrix(
         "X^-½",
         Matrix.fromPauliRotation(0.75, 0, 0),
         "X^-½ Gate",
         "Adjoint square root of Not."),
 
-    SqrtYForward: new Gate(
+    SqrtYForward: Gate.fromKnownMatrix(
         "Y^½",
         Matrix.fromPauliRotation(0, 0.25, 0),
         "√Y Gate",
         "Principle square root of Y."),
 
-    SqrtYBackward: new Gate(
+    SqrtYBackward: Gate.fromKnownMatrix(
         "Y^-½",
         Matrix.fromPauliRotation(0, 0.75, 0),
         "Y^-½ Gate",
         "Adjoint square root of Y."),
 
-    SqrtZForward: new Gate(
+    SqrtZForward: Gate.fromKnownMatrix(
         "Z^½",
         Matrix.fromPauliRotation(0, 0, 0.25),
         "√Z Gate",
         "Principle square root of Z.\nAlso known as the 'S' gate."),
 
-    SqrtZBackward: new Gate(
+    SqrtZBackward: Gate.fromKnownMatrix(
         "Z^-½",
         Matrix.fromPauliRotation(0, 0, 0.75),
         "Z^-½ Gate",
@@ -350,42 +381,42 @@ Gates.QuarterTurns = {
 };
 
 Gates.OtherZ = {
-    Z3: new Gate(
+    Z3: Gate.fromKnownMatrix(
         "Z^⅓",
         Matrix.fromPauliRotation(0, 0, 1 / 6),
         "Z^⅓ Gate",
         "Principle third root of Z."),
-    Z3i: new Gate(
+    Z3i: Gate.fromKnownMatrix(
         "Z^-⅓",
         Matrix.fromPauliRotation(0, 0, -1 / 6),
         "Z^-⅓ Gate",
         "Adjoint third root of Z."),
-    Z4: new Gate(
+    Z4: Gate.fromKnownMatrix(
         "Z^¼",
         Matrix.fromPauliRotation(0, 0, 1 / 8),
         "Z^¼ Gate",
         "Principle fourth root of Z.\nAlso known as the 'T' gate."),
-    Z4i: new Gate(
+    Z4i: Gate.fromKnownMatrix(
         "Z^-¼",
         Matrix.fromPauliRotation(0, 0, -1 / 8),
         "Z^-¼ Gate",
         "Adjoint fourth root of Z."),
-    Z8: new Gate(
+    Z8: Gate.fromKnownMatrix(
         "Z^⅛",
         Matrix.fromPauliRotation(0, 0, 1 / 16),
         "Z^⅛ Gate",
         "Principle eighth root of Z."),
-    Z8i: new Gate(
+    Z8i: Gate.fromKnownMatrix(
         "Z^-⅛",
         Matrix.fromPauliRotation(0, 0, -1 / 16),
         "Z^-⅛ Gate",
         "Adjoint eighth root of Z."),
-    Z16: new Gate(
+    Z16: Gate.fromKnownMatrix(
         "Z^⅟₁₆",
         Matrix.fromPauliRotation(0, 0, 1 / 32),
         "Z^⅟₁₆ Gate",
         "Principle sixteenth root of Z."),
-    Z16i: new Gate(
+    Z16i: Gate.fromKnownMatrix(
         "Z^-⅟₁₆",
         Matrix.fromPauliRotation(0, 0, -1 / 32),
         "Z^-⅟₁₆ Gate",
@@ -393,42 +424,42 @@ Gates.OtherZ = {
 };
 
 Gates.OtherX = {
-    X3: new Gate(
+    X3: Gate.fromKnownMatrix(
         "X^⅓",
         Matrix.fromPauliRotation(1 / 6, 0, 0),
         "X^⅓ Gate",
         "Principle third root of X."),
-    X3i: new Gate(
+    X3i: Gate.fromKnownMatrix(
         "X^-⅓",
         Matrix.fromPauliRotation(-1 / 6, 0, 0),
         "X^-⅓ Gate",
         "Adjoint third root of X."),
-    X4: new Gate(
+    X4: Gate.fromKnownMatrix(
         "X^¼",
         Matrix.fromPauliRotation(1 / 8, 0, 0),
         "X^¼ Gate",
         "Principle fourth root of X."),
-    X4i: new Gate(
+    X4i: Gate.fromKnownMatrix(
         "X^-¼",
         Matrix.fromPauliRotation(-1 / 8, 0, 0),
         "X^-¼ Gate",
         "Adjoint fourth root of X."),
-    X8: new Gate(
+    X8: Gate.fromKnownMatrix(
         "X^⅛",
         Matrix.fromPauliRotation(1 / 16, 0, 0),
         "X^⅛ Gate",
         "Principle eighth root of X."),
-    X8i: new Gate(
+    X8i: Gate.fromKnownMatrix(
         "X^-⅛",
         Matrix.fromPauliRotation(-1 / 16, 0, 0),
         "X^-⅛ Gate",
         "Adjoint eighth root of X."),
-    X16: new Gate(
+    X16: Gate.fromKnownMatrix(
         "X^⅟₁₆",
         Matrix.fromPauliRotation(1 / 32, 0, 0),
         "X^⅟₁₆ Gate",
         "Principle sixteenth root of X."),
-    X16i: new Gate(
+    X16i: Gate.fromKnownMatrix(
         "X^-⅟₁₆",
         Matrix.fromPauliRotation(-1 / 32, 0, 0),
         "X^-⅟₁₆ Gate",
@@ -436,42 +467,42 @@ Gates.OtherX = {
 };
 
 Gates.OtherY = {
-    Y3: new Gate(
+    Y3: Gate.fromKnownMatrix(
         "Y^⅓",
         Matrix.fromPauliRotation(0, 1 / 6, 0),
         "Y^⅓ Gate",
         "Principle third root of Y."),
-    Y3i: new Gate(
+    Y3i: Gate.fromKnownMatrix(
         "Y^-⅓",
         Matrix.fromPauliRotation(0, -1 / 6, 0),
         "Y^-⅓ Gate",
         "Adjoint third root of Y."),
-    Y4: new Gate(
+    Y4: Gate.fromKnownMatrix(
         "Y^¼",
         Matrix.fromPauliRotation(0, 1 / 8, 0),
         "Y^¼ Gate",
         "Principle fourth root of Y."),
-    Y4i: new Gate(
+    Y4i: Gate.fromKnownMatrix(
         "Y^-¼",
         Matrix.fromPauliRotation(0, -1 / 8, 0),
         "Y^-¼ Gate",
         "Adjoint fourth root of Y."),
-    Y8: new Gate(
+    Y8: Gate.fromKnownMatrix(
         "Y^⅛",
         Matrix.fromPauliRotation(0, 1 / 16, 0),
         "Y^⅛ Gate",
         "Principle eighth root of Y."),
-    Y8i: new Gate(
+    Y8i: Gate.fromKnownMatrix(
         "Y^-⅛",
         Matrix.fromPauliRotation(0, -1 / 16, 0),
         "Y^-⅛ Gate",
         "Adjoint eighth root of Y."),
-    Y16: new Gate(
+    Y16: Gate.fromKnownMatrix(
         "Y^⅟₁₆",
         Matrix.fromPauliRotation(0, 1 / 32, 0),
         "Y^⅟₁₆ Gate",
         "Principle sixteenth root of Y."),
-    Y16i: new Gate(
+    Y16i: Gate.fromKnownMatrix(
         "Y^-⅟₁₆",
         Matrix.fromPauliRotation(0, -1 / 32, 0),
         "Y^-⅟₁₆ Gate",
@@ -510,102 +541,110 @@ const ZExp = t => {
 };
 
 Gates.Exponentiating = {
-    XForward: new Gate(
+    XForward: Gate.fromVaryingMatrix(
         "e^-iXt",
         XExp,
         "X-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X."
-    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
+        "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X.").
+        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
-    XBackward: new Gate(
+    XBackward: Gate.fromVaryingMatrix(
         "e^iXt",
         t => XExp(-t),
         "X-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X."
-    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
+        "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X.").
+        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
-    YForward: new Gate(
+    YForward: Gate.fromVaryingMatrix(
         "e^-iYt",
         YExp,
         "Y-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y."
-    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
+        "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y.").
+        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
-    YBackward: new Gate(
+    YBackward: Gate.fromVaryingMatrix(
         "e^iYt",
         t => YExp(-t),
         "Y-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y."
-    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
+        "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y.").
+        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
-    ZForward: new Gate(
+    ZForward: Gate.fromVaryingMatrix(
         "e^-iZt",
         ZExp,
         "Z-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z."
-    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
+        "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
+        false,
+        false).
+        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
-    ZBackward: new Gate(
+    ZBackward: Gate.fromVaryingMatrix(
         "e^iZt",
         t => ZExp(-t),
         "Z-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z."
-    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
+        "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
+        false,
+        false).
+        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
 };
 
 Gates.Powering = {
-    XForward: new Gate(
+    XForward: Gate.fromVaryingMatrix(
         "X^t",
         XPow,
         "X-Raising Gate (forward)",
-        "A continuous right-handed cycle between the X gate and no-op."
-    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
+        "A continuous right-handed cycle between the X gate and no-op.").
+        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
-    XBackward: new Gate(
+    XBackward: Gate.fromVaryingMatrix(
         "X^-t",
         t => XPow(-t),
         "X-Raising Gate (backward)",
-        "A continuous left-handed cycle between the X gate and no-op."
-    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
+        "A continuous left-handed cycle between the X gate and no-op.").
+        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
-    YForward: new Gate(
+    YForward: Gate.fromVaryingMatrix(
         "Y^t",
         YPow,
         "Y-Raising Gate (forward)",
-        "A continuous right-handed cycle between the Y gate and no-op."
-    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
+        "A continuous right-handed cycle between the Y gate and no-op.").
+        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
-    YBackward: new Gate(
+    YBackward: Gate.fromVaryingMatrix(
         "Y^-t",
         t => YPow(-t),
         "Y-Raising Gate (backward)",
-        "A continuous left-handed cycle between the Y gate and no-op."
-    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
+        "A continuous left-handed cycle between the Y gate and no-op.").
+        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
 
-    ZForward: new Gate(
+    ZForward: Gate.fromVaryingMatrix(
         "Z^t",
         ZPow,
         "Z-Raising Gate (forward)",
-        "A continuous right-handed cycle between the Z gate and no-op."
-    ).withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
+        "A continuous right-handed cycle between the Z gate and no-op.",
+        false,
+        false).
+        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
 
-    ZBackward: new Gate(
+    ZBackward: Gate.fromVaryingMatrix(
         "Z^-t",
         t => ZPow(-t),
         "Z-Raising Gate (backward)",
-        "A continuous left-handed cycle between the Z gate and no-op."
-    ).withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
+        "A continuous left-handed cycle between the Z gate and no-op.",
+        false,
+        false).
+        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
 };
 
 Gates.Misc = {
     MysteryGateSymbol: "?",
-    MysteryGateMakerWithMatrix: matrix => new Gate(
+    MysteryGateMakerWithMatrix: matrix => Gate.fromKnownMatrix(
         Gates.Misc.MysteryGateSymbol,
         matrix,
         "Mystery Gate",
         "Every time you grab this gate out of the toolbox, it changes.\n" +
-        "Duplicate gates in the circuit by holding shift before dragging."
-    ).withCustomDrawer(GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
+        "Duplicate gates in the circuit by holding shift before dragging.").
+        withCustomDrawer(GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
     MysteryGateMaker: () => Gates.Misc.MysteryGateMakerWithMatrix(Matrix.square(
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
@@ -613,23 +652,23 @@ Gates.Misc = {
             new Complex(Math.random() - 0.5, Math.random() - 0.5)
         ).closestUnitary()),
 
-    PostSelectOff: new Gate(
+    PostSelectOff: Gate.fromKnownMatrix(
         "|0⟩⟨0|",
         Matrix.square(1, 0, 0, 0),
         "Post-selection Gate [Off]",
         "Keeps OFF states, discards ON states, and renormalizes\n" +
-            "(Corresponds to restarting until the right answer happens.)"
-    ).withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
+            "(Corresponds to restarting until the right answer happens.)").
+        withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
 
-    PostSelectOn: new Gate(
+    PostSelectOn: Gate.fromKnownMatrix(
         "|1⟩⟨1|",
         Matrix.square(0, 0, 0, 1),
         "Post-selection Gate [On]",
         "Keeps ON states, discards OFF states, and renormalizes.\n" +
-            "(Corresponds to restarting until the right answer happens.)"
-    ).withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
+            "(Corresponds to restarting until the right answer happens.)").
+        withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
 
-    ClockPulseGate: new Gate(
+    ClockPulseGate: Gate.fromVaryingMatrix(
         "X^⌈t⌉",
         t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate",
@@ -637,7 +676,7 @@ Gates.Misc = {
         withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 2)).
         withStableDuration(0.5),
 
-    QuarterPhaseClockPulseGate: new Gate(
+    QuarterPhaseClockPulseGate: Gate.fromVaryingMatrix(
         "X^⌈t-¼⌉",
         t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
         "Clock Pulse Gate (Quarter Phase)",
@@ -645,60 +684,63 @@ Gates.Misc = {
         withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0.75, 2)).
         withStableDuration(0.25),
 
-    SpacerGate: new Gate(
+    SpacerGate: Gate.fromIdentity(
         "…",
-        Matrix.identity(2),
         "Spacer",
-        "A gate with no effect."
-    ).withCustomDrawer(args => {
-        // Drawn as an ellipsis.
-        if (args.isInToolbox || args.isHighlighted) {
-            let backColor = Config.GATE_FILL_COLOR;
-            if (args.isHighlighted) {
-                backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
+        "A gate with no effect.").
+        withCustomDrawer(args => {
+            // Drawn as an ellipsis.
+            if (args.isInToolbox || args.isHighlighted) {
+                let backColor = Config.GATE_FILL_COLOR;
+                if (args.isHighlighted) {
+                    backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
+                }
+                args.painter.fillRect(args.rect, backColor);
+                args.painter.strokeRect(args.rect);
+            } else {
+                let {x, y} = args.rect.center();
+                let r = new Rect(x - 14, y - 2, 28, 4);
+                args.painter.fillRect(r, Config.BACKGROUND_COLOR_CIRCUIT);
             }
-            args.painter.fillRect(args.rect, backColor);
-            args.painter.strokeRect(args.rect);
-        } else {
-            let {x, y} = args.rect.center();
-            let r = new Rect(x - 14, y - 2, 28, 4);
-            args.painter.fillRect(r, Config.BACKGROUND_COLOR_CIRCUIT);
-        }
-        args.painter.fillCircle(args.rect.center().offsetBy(7, 0), 2, "black");
-        args.painter.fillCircle(args.rect.center(), 2, "black");
-        args.painter.fillCircle(args.rect.center().offsetBy(-7, 0), 2, "black");
-    })
+            args.painter.fillCircle(args.rect.center().offsetBy(7, 0), 2, "black");
+            args.painter.fillCircle(args.rect.center(), 2, "black");
+            args.painter.fillCircle(args.rect.center().offsetBy(-7, 0), 2, "black");
+        })
 };
 
+const CYCLE_BITS_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
+    let expected = r;
+    let input = c;
+    let actual = input << 1;
+    actual = (actual & ((1 << span) - 1)) | (actual >> span);
+    return expected === actual ? 1 : 0;
+});
+
 Gates.ExperimentalAndImplausible = {
-    UniversalNot: new Gate(
+    UniversalNot: Gate.withoutKnownMatrix(
         "UniNot",
-        Matrix.zero(1, 1).times(NaN),
         "Universal Not Gate",
         "Mirrors a qubit's state through the origin of the Bloch sphere.\nImpossible in practice.").
+        markedAsStable().
         withCustomShader(GateShaders.universalNot).
         withSerializedId("__unstable__UniversalNot"),
-    ErrorInjection: new Gate(
+    ErrorInjection: Gate.withoutKnownMatrix(
         "ERR!",
-        Matrix.zero(1, 1).times(NaN),
         "Error Injection Gate",
         "Throws an exception during circuit stat computations, for testing error paths.").
+        markedAsStable().
         withCustomShader((inputTex, controlTex, qubit) => {
             throw new DetailedError("Applied an Error Injection Gate", {qubit});
         }).
         withSerializedId("__debug__ErrorInjection").
         withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red')),
-    CycleBitsFamily: Gate.generateFamily(2, 8, span => new Gate(
+    CycleBitsFamily: Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
         "<<=1",
-        Matrix.generate(1<<span, 1<<span, (r, c) => {
-            let expected = r;
-            let input = c;
-            let actual = input << 1;
-            actual = (actual & ((1 << span) - 1)) | (actual >> span);
-            return expected === actual ? 1 : 0;
-        }),
         "Bit Cycle Gate",
         "Swaps bits in a cycle.").
+        markedAsStable().
+        markedAsOnlyPermutingAndPhasing().
+        withKnownMatrix(span >= 4 ? undefined : CYCLE_BITS_MATRIX_MAKER(span)).
         withSerializedId("__unstable__cycle" + span).
         withHeight(span).
         withCustomShader((val, con, bit) => GateShaders.cycleBits(val, con, bit, span, 1)))

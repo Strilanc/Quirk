@@ -179,9 +179,8 @@ function paintMultiProbabilityDisplay(args) {
 }
 
 function multiChanceGateMaker(span) {
-    return new Gate(
+    return Gate.fromIdentity(
         "Chance",
-        Matrix.identity(1 << span),
         "Probability Display",
         "Shows chances of outcomes if a measurement was performed.\nUse controls to see conditional probabilities.").
         withHeight(span).
@@ -191,9 +190,8 @@ function multiChanceGateMaker(span) {
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay));
 }
 
-let SingleChanceGate = new Gate(
+let SingleChanceGate = Gate.fromIdentity(
     "Chance",
-    Matrix.identity(2),
     "Probability Display",
     "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.").
     withCustomDrawer(GatePainting.makeDisplayDrawer(args => {

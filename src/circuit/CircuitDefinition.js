@@ -556,9 +556,10 @@ class CircuitDefinition {
         let nonSwaps = seq(col.gates).
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
-                if (gate === null
-                        || gate === Gates.Special.SwapHalf
-                        || this.gateAtLocIsDisabledReason(pt) !== undefined) {
+                if (gate === null ||
+                        gate.definitelyHasNoEffect() ||
+                        gate === Gates.Special.SwapHalf ||
+                        this.gateAtLocIsDisabledReason(pt) !== undefined) {
                     return [];
                 }
 
@@ -566,11 +567,10 @@ class CircuitDefinition {
                     return gate.customShaders.map(f => (inTex, conTex) => f(inTex, conTex, i, time));
                 }
 
-                let m = gate.matrixAt(time);
-                if (m.isIdentity()) {
-                    return [];
+                let m = gate.knownMatrixAt(time);
+                if (m === undefined) {
+                    throw new DetailedError("Bad gate", {gate});
                 }
-
                 return [(inTex, conTex) => GateShaders.qubitOperation(inTex, m, i, conTex)];
             }).
             flatten();

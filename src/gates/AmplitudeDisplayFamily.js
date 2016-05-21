@@ -426,9 +426,8 @@ function paintErrorIfPresent(args, isIncoherent) {
  * @returns {!Gate}
  */
 function amplitudeDisplayMaker(span) {
-    return new Gate(
+    return Gate.fromIdentity(
         "Amps",
-        Matrix.identity(1 << span),
         "Amplitude Display",
         "Shows the amplitudes of some wires, if separable.\nUse controls to see conditional amplitudes.").
         withHeight(span).

@@ -266,10 +266,16 @@ GatePainting.SQUARE_WAVE_DRAWER_MAKER = (timeOffset, steps, flip=false) => args 
  * @param {!GateDrawParams} args
  */
 GatePainting.MATRIX_DRAWER = args => {
+    let m = args.gate.knownMatrixAt(args.stats.time);
+    if (m === undefined) {
+        GatePainting.DEFAULT_DRAWER(args);
+        return;
+    }
+
     args.painter.fillRect(args.rect, args.isHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR);
     MathPainter.paintMatrix(
         args.painter,
-        args.gate.matrixAt(args.stats.time),
+        m,
         args.rect,
         Config.OPERATION_FORE_COLOR,
         'black',

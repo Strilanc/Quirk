@@ -64,11 +64,11 @@ export default class WidgetPainter {
         pushRect(painter.printLine(gate.name, new Rect(pad, maxY, w, 18), 0, "blue", 24));
         pushRect(painter.printParagraph(gate.blurb, new Rect(pad, maxY, w, 50), new Point(0, 0), 'black', 14));
 
-        if (gate.matrixOrFunc instanceof Matrix && (gate.matrixOrFunc.isIdentity() || gate.matrixOrFunc.hasNaN())) {
+        let curMatrix = gate.knownMatrixAt(time);
+        if (gate.definitelyHasNoEffect() || curMatrix === undefined) {
             return {maxX, maxY};
         }
         pushRect(new Rect(0, maxY, 1, 0), pad*3);
-        let curMatrix = gate.matrixAt(time);
         let format = gate.stableDuration() < 0.2 ? Format.CONSISTENT : Format.SIMPLIFIED;
 
         // Matrix interpretation.
