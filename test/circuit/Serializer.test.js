@@ -9,6 +9,7 @@ import GateColumn from "src/circuit/GateColumn.js"
 import GatePainting from "src/ui/GatePainting.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
+import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 let suite = new Suite("Serializer");
 
@@ -39,7 +40,7 @@ suite.test("roundTrip_Gate", () => {
         assertRoundTrip(Gate, g, g.serializedId);
     }
 
-    let f = Gates.Misc.MysteryGateMaker();
+    let f = MysteryGateMaker();
     assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
 
     let g = Gate.fromKnownMatrix(

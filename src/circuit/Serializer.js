@@ -10,8 +10,9 @@ import GatePainting from "src/ui/GatePainting.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Util from "src/base/Util.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+import {MysteryGateSymbol, MysteryGateMakerWithMatrix} from "src/gates/Joke_MysteryGate.js"
 import {seq, Seq} from "src/base/Seq.js"
-import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
 
 /**
  * Serializes supported values to/from json elements.
@@ -96,12 +97,12 @@ let toJson_Gate = gate => {
         return gate.serializedId;
     }
 
-    if (gate.stableDuration() !== Infinity || gate.knownMatrixAt(0) === undefined) {
-        throw new DetailedError("Can't serialize unknown gate with non-trivial operation.", {gate});
-    }
-
     if (gate.name === "Parse Error") {
         return gate.tag;
+    }
+
+    if (gate.stableDuration() !== Infinity || gate.knownMatrixAt(0) === undefined) {
+        throw new DetailedError("Can't serialize unknown gate with non-trivial operation.", {gate});
     }
 
     let matrix = gate.knownMatrixAt(0.25);
@@ -172,8 +173,8 @@ let fromJson_Gate = json => {
             withCustomDrawer(drawer).withTag(json);
     }
 
-    if (symbol === Gates.Misc.MysteryGateSymbol && matrix !== undefined) {
-        return Gates.Misc.MysteryGateMakerWithMatrix(matrix);
+    if (symbol === MysteryGateSymbol && matrix !== undefined) {
+        return MysteryGateMakerWithMatrix(matrix);
     }
 
     return Gate.fromKnownMatrix(symbol, matrix, symbol, "").withCustomDrawer(drawer);

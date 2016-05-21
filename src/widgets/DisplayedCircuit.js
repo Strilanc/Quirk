@@ -12,8 +12,9 @@ import MathPainter from "src/ui/MathPainter.js"
 import Point from "src/math/Point.js"
 import Matrix from "src/math/Matrix.js"
 import Rect from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
+import {seq, Seq} from "src/base/Seq.js"
+import {paintBlochSphereDisplay} from "src/gates/BlochSphereDisplay.js"
 
 /** @type {!number} */
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
@@ -828,7 +829,7 @@ class DisplayedCircuit {
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount), hand.hoverPoints());
             let m = stats.qubitDensityMatrix(i, Infinity);
             if (m !== undefined) {
-                MathPainter.paintBlochSphere(painter, m, this.gateRect(i, colCount+1), hand.hoverPoints());
+                paintBlochSphereDisplay(painter, m, this.gateRect(i, colCount+1), hand.hoverPoints());
             }
         }
 

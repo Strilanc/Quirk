@@ -127,30 +127,6 @@ suite.webGlTest("qubitOperation_matrix", () => {
         ]));
 });
 
-suite.webGlTest('universalNot', () => {
-    let _ = 0;
-    let input = Shaders.data(new Float32Array([
-        1,2,_,_, 3,4,_,_,
-        5,6,_,_, 7,8,_,_
-    ])).toFloatTexture(2, 2);
-    let assertAbout = (index, control) => assertThat(GateShaders.universalNot(
-        input,
-        CircuitShaders.controlMask(control).toFloatTexture(2, 2),
-        index).readFloatOutputs(2, 2));
-    assertAbout(0, Controls.NONE).isEqualTo(new Float32Array([
-        3,-4,_,_, -1,2,_,_,
-        7,-8,_,_, -5,6,_,_
-    ]));
-    assertAbout(1, Controls.NONE).isEqualTo(new Float32Array([
-        5,-6,_,_, 7,-8,_,_,
-        -1,2,_,_, -3,4,_,_
-    ]));
-    assertAbout(0, Controls.bit(1, true)).isEqualTo(new Float32Array([
-        1,2,_,_, 3,4,_,_,
-        7,-8,_,_, -5,6,_,_
-    ]));
-});
-
 suite.webGlTest('increment', () => {
     let input = Shaders.data(Seq.range(4*8+1).skip(1).toFloat32Array()).toFloatTexture(4, 2);
     let assertAbout = (index, span, control, amount) => assertThat(GateShaders.increment(
@@ -230,21 +206,6 @@ suite.webGlTest('addition', () => {
     ]));
 });
 
-suite.webGlTest('cycleBits', () => {
-    let actual = GateShaders.cycleBits(
-        Shaders.data(Seq.range(4*16+1).skip(1).toFloat32Array()).toFloatTexture(4, 4),
-        CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 4),
-        0,
-        4,
-        -1).readFloatOutputs(4, 4);
-    assertThat(actual).isEqualTo(new Float32Array([
-         1, 2, 3, 4,  9,10,11,12, 17,18,19,20, 25,26,27,28,
-        33,34,35,36, 41,42,43,44, 49,50,51,52, 57,58,59,60,
-         5, 6, 7, 8, 13,14,15,16, 21,22,23,24, 29,30,31,32,
-        37,38,39,40, 45,46,47,48, 53,54,55,56, 61,62,63,64
-    ]));
-});
-
 suite.webGlTest('cycleAllBits', () => {
     let actual = GateShaders.cycleAllBits(
         Shaders.data(Seq.range(4*16+1).skip(1).toFloat32Array()).toFloatTexture(4, 4),
@@ -255,27 +216,4 @@ suite.webGlTest('cycleAllBits', () => {
         5, 6, 7, 8, 13,14,15,16, 21,22,23,24, 29,30,31,32,
         37,38,39,40, 45,46,47,48, 53,54,55,56, 61,62,63,64
     ]));
-});
-
-suite.webGlTest('fourierTransformStep', () => {
-    let _ = 0;
-    let w = Math.sqrt(1/8);
-    let input0 = Shaders.data(new Float32Array([
-        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_,
-        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
-    ])).toFloatTexture(4, 4);
-    let input1 = Shaders.data(new Float32Array([
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_,
-        w,_,_,_, w,_,_,_, w,_,_,_, w,_,_,_
-    ])).toFloatTexture(4, 4);
-    let control = CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 4);
-    assertThat(GateShaders.fourierTransformStep(input0, control, 0, 3).readFloatOutputs(4, 4)).isApproximatelyEqualTo(
-        Seq.repeat([0.25,0,0,0], 16).flatten().toFloat32Array());
-    assertThat(GateShaders.fourierTransformStep(input1, control, 0, 3).readFloatOutputs(4, 4)).isApproximatelyEqualTo(
-        Seq.range(16).map(i => Complex.polar(0.25, Math.PI*i/8)).flatMap(c => [c.real, c.imag, 0, 0]).toFloat32Array(),
-        0.0001);
 });

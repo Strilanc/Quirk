@@ -9,6 +9,7 @@ import {seq, Seq} from "src/base/Seq.js"
 import Config from "src/Config.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
+import {MysteryGateSymbol, MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 class ToolboxWidget {
     /**
@@ -27,8 +28,8 @@ class ToolboxWidget {
      * @private
      */
     gateDrawRect(groupIndex, gateIndex) {
-        let dx = Math.floor(gateIndex / 3);
-        let dy = gateIndex % 3;
+        let dx = gateIndex % 2;
+        let dy = Math.floor(gateIndex / 2);
 
         let x = this.area.x + Config.TOOLBOX_MARGIN_X +
             dx * Config.TOOLBOX_GATE_SPAN +
@@ -58,22 +59,22 @@ class ToolboxWidget {
      *
      * @param {undefined|!Point} pt
      *
-     * @returns {?{groupIndex: !int, gateIndex: !int, gate: !Gate}}
+     * @returns {undefined|!{groupIndex: !int, gateIndex: !int, gate: !Gate}}
      */
     findGateAt(pt) {
         if (pt === undefined) {
-            return null;
+            return undefined;
         }
-        for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
-            let group = Gates.Sets[groupIndex];
+        for (let groupIndex = 0; groupIndex < Gates.ToolboxGroups.length; groupIndex++) {
+            let group = Gates.ToolboxGroups[groupIndex];
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
-                if (gate !== null && this.gateDrawRect(groupIndex, gateIndex).containsPoint(Util.notNull(pt))) {
-                    return {groupIndex: groupIndex, gateIndex: gateIndex, gate: Util.notNull(gate)};
+                if (gate !== undefined && this.gateDrawRect(groupIndex, gateIndex).containsPoint(pt)) {
+                    return {groupIndex: groupIndex, gateIndex: gateIndex, gate: gate};
                 }
             }
         }
-        return null;
+        return undefined;
     }
 
     /**
@@ -99,36 +100,37 @@ class ToolboxWidget {
     paint(painter, stats, hand) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
-        for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
-            let group = Gates.Sets[groupIndex];
+        for (let groupIndex = 0; groupIndex < Gates.ToolboxGroups.length; groupIndex++) {
+            let group = Gates.ToolboxGroups[groupIndex];
             painter.printLine(group.hint, this.groupLabelRect(groupIndex), 0.5, 'black', 16);
 
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
-                if (gate !== null) {
-                    let rect = this.gateDrawRect(groupIndex, gateIndex);
-                    let isHighlighted = seq(hand.hoverPoints()).any(pt => rect.containsPoint(pt));
-                    let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
-                    painter.noteTouchBlocker({rect, cursor: 'pointer'});
-                    drawer(new GateDrawParams(
-                        painter,
-                        true,
-                        isHighlighted,
-                        false,
-                        false,
-                        rect,
-                        Util.notNull(gate),
-                        stats,
-                        null,
-                        [],
-                        undefined));
+                if (gate === undefined) {
+                    continue;
                 }
+                let rect = this.gateDrawRect(groupIndex, gateIndex);
+                let isHighlighted = seq(hand.hoverPoints()).any(pt => rect.containsPoint(pt));
+                let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
+                painter.noteTouchBlocker({rect, cursor: 'pointer'});
+                drawer(new GateDrawParams(
+                    painter,
+                    true,
+                    isHighlighted,
+                    false,
+                    false,
+                    rect,
+                    Util.notNull(gate),
+                    stats,
+                    null,
+                    [],
+                    undefined));
             }
         }
 
         // Draw tooltip when hovering, but also when dragging a gate over its own toolbox spot.
         let f = this.findGateAt(hand.pos);
-        if (f !== null && (hand.heldGate === undefined || f.gate.symbol === hand.heldGate.symbol)) {
+        if (f !== undefined && (hand.heldGate === undefined || f.gate.symbol === hand.heldGate.symbol)) {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
             let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
                 snapInside(painter.paintableArea().skipTop(gateRect.y));
@@ -145,7 +147,7 @@ class ToolboxWidget {
     }
 
     desiredWidth() {
-        return this.gateDrawRect(Gates.Sets.length - 1, 5).right() + 5;
+        return this.gateDrawRect(Gates.ToolboxGroups.length - 1, 5).right() + 5;
     }
 
     /**
@@ -158,12 +160,12 @@ class ToolboxWidget {
         }
 
         let f = this.findGateAt(hand.pos);
-        if (f === null) {
+        if (f === undefined) {
             return hand;
         }
 
-        if (f.gate.symbol === Gates.Misc.MysteryGateSymbol) {
-            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Misc.MysteryGateMaker();
+        if (f.gate.symbol === MysteryGateSymbol) {
+            Gates.ToolboxGroups[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
         }
         return hand.withHeldGate(f.gate, new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
     }
@@ -175,7 +177,7 @@ class ToolboxWidget {
     stableDuration(hand) {
         return seq(hand.hoverPoints()).
             map(p => this.findGateAt(p)).
-            filter(e => e !== null).
+            filter(e => e !== undefined).
             map(e => e.gate.stableDuration()).
             min(Infinity);
     }

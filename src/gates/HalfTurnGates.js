@@ -71,3 +71,10 @@ HalfTurnGates.H = Gate.fromKnownMatrix(
     "Creates simple superpositions.\n" +
     "Maps ON to ON + OFF.\n" +
     "Maps OFF to ON - OFF.");
+
+HalfTurnGates.all = [
+    HalfTurnGates.X,
+    HalfTurnGates.Y,
+    HalfTurnGates.Z,
+    HalfTurnGates.H
+];

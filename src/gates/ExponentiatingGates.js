@@ -65,3 +65,12 @@ ExponentiatingGates.ZBackward = Gate.fromVaryingMatrix(
     "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.").
     markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.makeCycleDrawer(-1, 0.5, 2));
+
+ExponentiatingGates.all = [
+    ExponentiatingGates.XBackward,
+    ExponentiatingGates.YBackward,
+    ExponentiatingGates.ZBackward,
+    ExponentiatingGates.XForward,
+    ExponentiatingGates.YForward,
+    ExponentiatingGates.ZForward
+];

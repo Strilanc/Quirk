@@ -85,5 +85,10 @@ PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Ga
     withHeight(span).
     withCustomShader((val, con, bit) => phaseGradient(val, con, bit, span, -1)));
 
+PhaseGradientGates.all = [
+    ...PhaseGradientGates.PhaseGradientFamily.all,
+    ...PhaseGradientGates.PhaseDegradientFamily.all
+];
+
 export default PhaseGradientGates;
 export { PhaseGradientGates, phaseGradient }

@@ -34,10 +34,6 @@ const SUBTRACTION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c
     let actual = a + (b << sa);
     return expected === actual ? 1 : 0;
 });
-const COUNTING_MATRIX_MAKER = span =>
-        t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0);
-const UNCOUNTING_MATRIX_MAKER = span =>
-        t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r+Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0);
 
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+1",
@@ -85,30 +81,9 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     withHeight(span).
     withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2),-1)));
 
-ArithmeticGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
-    "(+1)^⌈t⌉",
-    "Counting Gate",
-    "Adds an increasing little-endian count into a block of qubits.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withKnownMatrixFunc(span >= 4 ? undefined : COUNTING_MATRIX_MAKER(span)).
-    withSerializedId("Counting" + span).
-    withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span)).
-    withHeight(span).
-    withStableDuration(1.0 / (1<<span)).
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-        Math.floor(time*(1<<span)))));
-
-ArithmeticGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
-    "(-1)^⌈t⌉",
-    "Down Counting Gate",
-    "Subtracts an increasing little-endian count from a block of qubits.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withKnownMatrixFunc(UNCOUNTING_MATRIX_MAKER(span)).
-    withSerializedId("Uncounting" + span).
-    withCustomDrawer(GatePainting.SQUARE_WAVE_DRAWER_MAKER(0, 1 << span, true)).
-    withHeight(span).
-    withStableDuration(1.0 / (1<<span)).
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-        -Math.floor(time*(1<<span)))));
+ArithmeticGates.all = [
+    ...ArithmeticGates.IncrementFamily.all,
+    ...ArithmeticGates.DecrementFamily.all,
+    ...ArithmeticGates.AdditionFamily.all,
+    ...ArithmeticGates.SubtractionFamily.all
+];

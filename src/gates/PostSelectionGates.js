@@ -36,3 +36,10 @@ PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
     "Keeps ON-OFF states, discards ON+OFF states, and renormalizes\n" +
     "(Corresponds to restarting until the right answer happens.)").
     withCustomDrawer(GatePainting.POST_SELECT_DRAWER);
+
+PostSelectionGates.all = [
+    PostSelectionGates.PostSelectOff,
+    PostSelectionGates.PostSelectOn,
+    PostSelectionGates.PostSelectPlus,
+    PostSelectionGates.PostSelectMinus
+];

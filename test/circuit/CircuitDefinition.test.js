@@ -26,7 +26,7 @@ const TEST_GATES = new Map([
     ['H', H],
     ['•', C],
     ['◦', A],
-    ['.', Gates.Misc.SpacerGate],
+    ['.', Gates.SpacerGate],
 
     ['M', M],
     ['%', Gates.Displays.ChanceDisplay],

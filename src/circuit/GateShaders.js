@@ -124,49 +124,6 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
  * @param {!WglTexture} inputTexture
  * @param {!WglTexture} controlTexture
  * @param {!int} qubitIndex
- * @returns {!WglConfiguredShader}
- */
-GateShaders.universalNot = (inputTexture, controlTexture, qubitIndex) =>
-    new WglConfiguredShader(destinationTexture => {
-        UNIVERSAL_NOT_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("bit", 1 << qubitIndex)
-        ).renderTo(destinationTexture);
-    });
-const UNIVERSAL_NOT_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float bit;
-
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float hasBit = mod(floor(state / bit), 2.0);
-        float partnerState = state + bit * (1.0 - 2.0 * hasBit);
-        vec2 uv = uvFor(state);
-        vec2 partnerUv = uvFor(partnerState);
-
-        float control = texture2D(controlTexture, uv).x;
-        vec2 val = vec4(texture2D(inputTexture, uv)).xy;
-        vec2 partnerVal = vec4(texture2D(inputTexture, partnerUv)).xy;
-        vec2 outUncontrolled = vec2(partnerVal.x, -partnerVal.y) * (1.0 - 2.0 * hasBit);
-        vec2 outVal = (1.0 - control) * val + control * outUncontrolled;
-        gl_FragColor = vec4(outVal.x, outVal.y, 0.0, 0.0);
-    }`);
-
-/**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
  * @param {!int} qubitSpan
  * @param {!int} incrementAmount
  * @returns {!WglConfiguredShader}
@@ -216,61 +173,6 @@ const INCREMENT_SHADER = new WglShader(`
  * @param {!WglTexture} inputTexture
  * @param {!WglTexture} controlTexture
  * @param {!int} qubitIndex
- * @param {!int} stepIndex
- * @returns {!WglConfiguredShader}
- */
-GateShaders.fourierTransformStep = (inputTexture, controlTexture, qubitIndex, stepIndex) =>
-    new WglConfiguredShader(destinationTexture => {
-        FOURIER_TRANSFORM_STEP_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitIndex", 1 << qubitIndex),
-            WglArg.float("stepIndex", 1 << stepIndex)
-        ).renderTo(destinationTexture);
-    });
-const FOURIER_TRANSFORM_STEP_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float qubitIndex;
-    uniform float stepIndex;
-
-    vec2 toUv(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float targetIndex = qubitIndex * stepIndex;
-        float bit = mod(floor(state / targetIndex), 2.0);
-        float state0 = state - bit*targetIndex;
-        float state1 = state0 + targetIndex;
-
-        float control = texture2D(controlTexture, toUv(state)).x;
-        vec2 amp0 = texture2D(inputTexture, toUv(state0)).xy;
-        vec2 amp1 = texture2D(inputTexture, toUv(state1)).xy;
-
-        float phase1 = -mod(floor(state / qubitIndex), stepIndex) * 3.141592653589793 / stepIndex;
-        float c = cos(phase1);
-        float s = sin(phase1);
-        mat2 rot = mat2(c,-s,
-                        s, c);
-        vec2 phasedAmp1 = rot*amp1;
-
-        vec2 outAmp = (amp0 + phasedAmp1*(1.0-bit*2.0))*sqrt(0.5);
-        vec2 inAmp = bit*amp1 + (1.0-bit)*amp0;
-        vec2 amp = control*outAmp + (1.0-control)*inAmp;
-        gl_FragColor = vec4(amp.x, amp.y, 0.0, 0.0);
-    }`);
-
-/**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
  * @param {!int} qubitSrcSpan
  * @param {!int} qubitDstSpan
  * @param {!int} scaleFactor
@@ -310,56 +212,6 @@ const ADDITION_SHADER = new WglShader(`
         float stateDst = mod(floor((state / qubitIndex) / qubitSrcSpan), qubitDstSpan);
         float newDst = mod(stateDst + (qubitDstSpan - stateSrc) * scaleFactor, qubitDstSpan);
         float newState = state + (newDst - stateDst) * qubitIndex * qubitSrcSpan;
-
-        vec2 oldUv = uvFor(state);
-        float control = texture2D(controlTexture, oldUv).x;
-
-        vec2 newUv = uvFor(newState);
-        vec2 usedUv = control*newUv + (1.0-control)*oldUv;
-
-        gl_FragColor = texture2D(inputTexture, usedUv);
-    }`);
-
-/**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
- * @param {!int} qubitSpan
- * @param {!int} shiftAmount
- * @returns {!WglConfiguredShader}
- */
-GateShaders.cycleBits = (inputTexture, controlTexture, qubitIndex, qubitSpan, shiftAmount) =>
-    new WglConfiguredShader(destinationTexture => {
-        CYCLE_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitIndex", 1 << qubitIndex),
-            WglArg.float("qubitSpan", 1 << qubitSpan),
-            WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, qubitSpan))
-        ).renderTo(destinationTexture);
-    });
-const CYCLE_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float shiftAmount;
-    uniform float qubitIndex;
-    uniform float qubitSpan;
-
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float val = mod(floor(state / qubitIndex), qubitSpan);
-        float newVal = val * shiftAmount;
-        newVal = mod(newVal, qubitSpan) + floor(newVal / qubitSpan);
-        float newState = state + (newVal - val) * qubitIndex;
 
         vec2 oldUv = uvFor(state);
         float control = texture2D(controlTexture, oldUv).x;

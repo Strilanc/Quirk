@@ -494,7 +494,7 @@ class CircuitDefinition {
         return g !== undefined &&
             g !== Gates.Special.Control &&
             g !== Gates.Special.AntiControl &&
-            g !== Gates.Misc.SpacerGate &&
+            g !== Gates.SpacerGate &&
             (g !== Gates.Special.SwapHalf || this.colHasEnabledSwapGate(pt.x));
     }
 
