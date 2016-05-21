@@ -19,6 +19,7 @@ import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import BlochSphereDisplay from "src/gates/BlochSphereDisplay.js"
 import Controls from "src/gates/Controls.js"
 import CountingGates from "src/gates/CountingGates.js"
+import CycleBitsGates from "src/gates/CycleBitsGates.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ErrorInjectionGate from "src/gates/Debug_ErrorInjectionGate.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
@@ -64,9 +65,11 @@ Gates.Displays = {
 
 Gates.Arithmetic = ArithmeticGates;
 Gates.CountingGates = CountingGates;
+Gates.CycleBitsGates = CycleBitsGates;
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
+Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
@@ -78,29 +81,7 @@ Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
 Gates.SpacerGate = SpacerGate;
-
-const CYCLE_BITS_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
-    let expected = r;
-    let input = c;
-    let actual = input << 1;
-    actual = (actual & ((1 << span) - 1)) | (actual >> span);
-    return expected === actual ? 1 : 0;
-});
-
-Gates.ExperimentalAndImplausible = {
-    UniversalNot: UniversalNotGate,
-    ErrorInjection: ErrorInjectionGate,
-    CycleBitsFamily: Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-        "<<=1",
-        "Bit Cycle Gate",
-        "Swaps bits in a cycle.").
-        markedAsStable().
-        markedAsOnlyPermutingAndPhasing().
-        withKnownMatrix(span >= 4 ? undefined : CYCLE_BITS_MATRIX_MAKER(span)).
-        withSerializedId("__unstable__cycle" + span).
-        withHeight(span).
-        withCustomShader((val, con, bit) => GateShaders.cycleBits(val, con, bit, span, 1)))
-};
+Gates.UniversalNot = UniversalNotGate;
 
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gates.Sets = [
@@ -245,6 +226,8 @@ Gates.KnownToSerializer = [
     MeasurementGate,
     SwapGateHalf,
     SpacerGate,
+    UniversalNotGate,
+    ErrorInjectionGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -254,7 +237,9 @@ Gates.KnownToSerializer = [
 
     ...ArithmeticGates.all,
     ...CountingGates.all,
+    ...CycleBitsGates.all,
     ...ExponentiatingGates.all,
+    ...FourierTransformGates.all,
     ...HalfTurnGates.all,
     ...QuarterTurnGates.all,
     ...PhaseGradientGates.all,
@@ -262,10 +247,5 @@ Gates.KnownToSerializer = [
     ...PoweringGates.all,
     ...VariousXGates.all,
     ...VariousYGates.all,
-    ...VariousZGates.all,
-    ...FourierTransformGates.all,
-
-    UniversalNotGate,
-    ErrorInjectionGate,
-    ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
+    ...VariousZGates.all
 ];
