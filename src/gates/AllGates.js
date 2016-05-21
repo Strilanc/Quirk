@@ -16,6 +16,7 @@ import Shaders from "src/webgl/Shaders.js"
 
 import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
+import BlochSphereDisplay from "src/gates/BlochSphereDisplay.js"
 import Controls from "src/gates/Controls.js"
 import CountingGates from "src/gates/CountingGates.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
@@ -58,16 +59,7 @@ Gates.Displays = {
     ProbabilityDisplayFamily: ProbabilityDisplayFamily,
     SampleDisplayFamily: SampleDisplayFamily,
     DensityMatrixDisplayFamily: DensityMatrixDisplayFamily,
-
-    BlochSphereDisplay: Gate.fromIdentity(
-        "Bloch",
-        "Bloch Sphere Display",
-        "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.").
-        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-            let {row, col} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(row, col);
-            MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
-        }))
+    BlochSphereDisplay: BlochSphereDisplay
 };
 
 Gates.Arithmetic = ArithmeticGates;
@@ -156,7 +148,7 @@ Gates.Sets = [
             DensityMatrixDisplayFamily.ofSize(1),
             ProbabilityDisplayFamily.ofSize(1),
             null,
-            Gates.Displays.BlochSphereDisplay,
+            BlochSphereDisplay,
             AmplitudeDisplayFamily.ofSize(2)
         ]
     },
@@ -283,7 +275,7 @@ Gates.KnownToSerializer = [
     ...ProbabilityDisplayFamily.all,
     ...SampleDisplayFamily.all,
     ...DensityMatrixDisplayFamily.all,
-    Gates.Displays.BlochSphereDisplay,
+    BlochSphereDisplay,
 
     ...ArithmeticGates.all,
     ...CountingGates.all,
