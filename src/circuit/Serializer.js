@@ -96,12 +96,12 @@ let toJson_Gate = gate => {
         return gate.serializedId;
     }
 
-    if (gate.stableDuration() !== Infinity || gate.knownMatrixAt(0) === undefined) {
-        throw new DetailedError("Can't serialize unknown gate with non-trivial operation.", {gate});
-    }
-
     if (gate.name === "Parse Error") {
         return gate.tag;
+    }
+
+    if (gate.stableDuration() !== Infinity || gate.knownMatrixAt(0) === undefined) {
+        throw new DetailedError("Can't serialize unknown gate with non-trivial operation.", {gate});
     }
 
     let matrix = gate.knownMatrixAt(0.25);

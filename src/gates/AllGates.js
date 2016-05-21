@@ -20,6 +20,7 @@ import BlochSphereDisplay from "src/gates/BlochSphereDisplay.js"
 import Controls from "src/gates/Controls.js"
 import CountingGates from "src/gates/CountingGates.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
+import ErrorInjectionGate from "src/gates/Debug_ErrorInjectionGate.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
@@ -106,16 +107,7 @@ const CYCLE_BITS_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c)
 
 Gates.ExperimentalAndImplausible = {
     UniversalNot: UniversalNotGate,
-    ErrorInjection: Gate.withoutKnownMatrix(
-        "ERR!",
-        "Error Injection Gate",
-        "Throws an exception during circuit stat computations, for testing error paths.").
-        markedAsStable().
-        withCustomShader((inputTex, controlTex, qubit) => {
-            throw new DetailedError("Applied an Error Injection Gate", {qubit});
-        }).
-        withSerializedId("__debug__ErrorInjection").
-        withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red')),
+    ErrorInjection: ErrorInjectionGate,
     CycleBitsFamily: Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
         "<<=1",
         "Bit Cycle Gate",
@@ -270,6 +262,7 @@ Gates.KnownToSerializer = [
     ...Controls.all,
     MeasurementGate,
     SwapGateHalf,
+    SpacerGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -290,8 +283,7 @@ Gates.KnownToSerializer = [
     ...VariousZGates.all,
     ...FourierTransformGates.all,
 
-    SpacerGate,
     UniversalNotGate,
-    Gates.ExperimentalAndImplausible.ErrorInjection,
+    ErrorInjectionGate,
     ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
 ];
