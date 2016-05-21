@@ -71,20 +71,26 @@ function processOutputs([ketPixels, consistentPixel]) {
     let unity = ketPixels[2];
 
     if (!isPure) {
-        let pbuf = new Float32Array(n*2);
+        let pBuf = new Float32Array(n*2);
         for (let k = 0; k < n; k++) {
             let r = ketPixels[k*4];
             let i = ketPixels[k*4+1];
-            pbuf[k*2] = Math.sqrt((r*r + i*i)/unity);
+            pBuf[k*2] = Math.sqrt((r*r + i*i)/unity);
         }
-        return {probabilities: new Matrix(w, h, pbuf), superposition: undefined};
+        return {probabilities: new Matrix(w, h, pBuf), superposition: undefined};
     }
+
+    let phase = Config.PHASE_CANCEL_FIRST_ENTRY_OF_AMPLITUDE_DISPLAYS ? Math.atan2(ketPixels[1], ketPixels[0]) : 0;
+    let c = Math.cos(phase);
+    let s = -Math.sin(phase);
 
     let buf = new Float32Array(n*2);
     let sqrtUnity = Math.sqrt(unity);
     for (let i = 0; i < n; i++) {
-        buf[i*2] = ketPixels[i*4]/sqrtUnity;
-        buf[i*2+1] = ketPixels[i*4+1]/sqrtUnity;
+        let real = ketPixels[i*4]/sqrtUnity;
+        let imag = ketPixels[i*4+1]/sqrtUnity;
+        buf[i*2] = real*c + imag*-s;
+        buf[i*2+1] = real*s + imag*c;
     }
     return {probabilities: undefined, superposition: new Matrix(w, h, buf)};
 }
@@ -308,10 +314,11 @@ const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
         vec2 d = c1 - c2;
         float nan = 0.0*d.x/0.0;
         float err = dot(d, d);
-        err /= max(0.000000000000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
+        // The max up-scaling controls a tricky tradeoff between noisy false positives and blurry false negatives.
+        err /= max(0.00000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
         float m1 = dot(a,a);
         float m2 = dot(b,b);
-        return isNaN(err) || err > 0.0001 ? vec4(nan, nan, nan, nan)
+        return isNaN(err) || err > 0.001 ? vec4(nan, nan, nan, nan)
             : m1 >= m2 ? a
             : b;
     }
