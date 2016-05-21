@@ -112,3 +112,12 @@ ArithmeticGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withou
     withStableDuration(1.0 / (1<<span)).
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
         -Math.floor(time*(1<<span)))));
+
+ArithmeticGates.all = [
+    ...ArithmeticGates.IncrementFamily.all,
+    ...ArithmeticGates.DecrementFamily.all,
+    ...ArithmeticGates.AdditionFamily.all,
+    ...ArithmeticGates.SubtractionFamily.all,
+    ...ArithmeticGates.CountingFamily.all,
+    ...ArithmeticGates.UncountingFamily.all
+];

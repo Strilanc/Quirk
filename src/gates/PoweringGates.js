@@ -65,3 +65,12 @@ PoweringGates.ZBackward = Gate.fromVaryingMatrix(
     "A continuous left-handed cycle between the Z gate and no-op.").
     markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.makeCycleDrawer(-1, 0.5));
+
+PoweringGates.all = [
+    PoweringGates.XForward,
+    PoweringGates.YForward,
+    PoweringGates.ZForward,
+    PoweringGates.XBackward,
+    PoweringGates.YBackward,
+    PoweringGates.ZBackward
+];

@@ -133,6 +133,7 @@ Gates.Displays = {
         }))
 };
 
+Gates.Arithmetic = ArithmeticGates;
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
@@ -257,8 +258,6 @@ Gates.ExperimentalAndImplausible = {
         withHeight(span).
         withCustomShader((val, con, bit) => GateShaders.cycleBits(val, con, bit, span, 1)))
 };
-
-Gates.Arithmetic = ArithmeticGates;
 
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
 Gates.Sets = [
@@ -403,11 +402,6 @@ Gates.KnownToSerializer = [
     Gates.Special.Measurement,
     Gates.Special.SwapHalf,
 
-    PostSelectionGates.PostSelectOff,
-    PostSelectionGates.PostSelectOn,
-    PostSelectionGates.PostSelectPlus,
-    PostSelectionGates.PostSelectMinus,
-
     ...AmplitudeDisplayFamily.all,
     ...Gates.Displays.ProbabilityDisplayFamily.all,
     ...Gates.Displays.SampleDisplayFamily.all,
@@ -418,43 +412,15 @@ Gates.KnownToSerializer = [
     Gates.Misc.ClockPulseGate,
     Gates.Misc.QuarterPhaseClockPulseGate,
 
-    Gates.HalfTurns.H,
-    Gates.HalfTurns.X,
-    Gates.HalfTurns.Y,
-    Gates.HalfTurns.Z,
-
-    Gates.QuarterTurns.SqrtXForward,
-    Gates.QuarterTurns.SqrtYForward,
-    Gates.QuarterTurns.SqrtZForward,
-    Gates.QuarterTurns.SqrtXBackward,
-    Gates.QuarterTurns.SqrtYBackward,
-    Gates.QuarterTurns.SqrtZBackward,
-
-    Gates.Powering.XForward,
-    Gates.Powering.YForward,
-    Gates.Powering.ZForward,
-    Gates.Powering.XBackward,
-    Gates.Powering.YBackward,
-    Gates.Powering.ZBackward,
-
-    Gates.Exponentiating.XBackward,
-    Gates.Exponentiating.YBackward,
-    Gates.Exponentiating.ZBackward,
-    Gates.Exponentiating.XForward,
-    Gates.Exponentiating.YForward,
-    Gates.Exponentiating.ZForward,
-
-    ...Gates.OtherX.all,
-    ...Gates.OtherY.all,
-    ...Gates.OtherZ.all,
-
-    ...Gates.Arithmetic.IncrementFamily.all,
-    ...Gates.Arithmetic.DecrementFamily.all,
-    ...Gates.Arithmetic.AdditionFamily.all,
-    ...Gates.Arithmetic.SubtractionFamily.all,
-    ...Gates.Arithmetic.CountingFamily.all,
-    ...Gates.Arithmetic.UncountingFamily.all,
-
+    ...ArithmeticGates.all,
+    ...ExponentiatingGates.all,
+    ...HalfTurnGates.all,
+    ...QuarterTurnGates.all,
+    ...PostSelectionGates.all,
+    ...PoweringGates.all,
+    ...VariousXGates.all,
+    ...VariousYGates.all,
+    ...VariousZGates.all,
     ...Gates.FourierTransformFamily.all,
     ...Gates.PhaseGradientGates.PhaseGradientFamily.all,
     ...Gates.PhaseGradientGates.PhaseDegradientFamily.all,

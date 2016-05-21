@@ -39,3 +39,12 @@ QuarterTurnGates.SqrtZBackward = Gate.fromKnownMatrix(
     Matrix.fromPauliRotation(0, 0, 0.75),
     "Z^-½ Gate",
     "Adjoint square root of Z.");
+
+QuarterTurnGates.all = [
+    QuarterTurnGates.SqrtXForward,
+    QuarterTurnGates.SqrtYForward,
+    QuarterTurnGates.SqrtZForward,
+    QuarterTurnGates.SqrtXBackward,
+    QuarterTurnGates.SqrtYBackward,
+    QuarterTurnGates.SqrtZBackward
+];
