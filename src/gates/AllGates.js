@@ -25,6 +25,7 @@ import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
+import UniversalNotGate from "src/gates/Impossible_UniversalNotGate.js"
 import VariousXGates from "src/gates/VariousXGates.js"
 import VariousYGates from "src/gates/VariousYGates.js"
 import VariousZGates from "src/gates/VariousZGates.js"
@@ -230,13 +231,7 @@ const CYCLE_BITS_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c)
 });
 
 Gates.ExperimentalAndImplausible = {
-    UniversalNot: Gate.withoutKnownMatrix(
-        "UniNot",
-        "Universal Not Gate",
-        "Mirrors a qubit's state through the origin of the Bloch sphere.\nImpossible in practice.").
-        markedAsStable().
-        withCustomShader(GateShaders.universalNot).
-        withSerializedId("__unstable__UniversalNot"),
+    UniversalNot: UniversalNotGate,
     ErrorInjection: Gate.withoutKnownMatrix(
         "ERR!",
         "Error Injection Gate",
