@@ -95,139 +95,102 @@ Gates.KnownToSerializer = [
     ...VariousZGates.all
 ];
 
-/** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
+/** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.ToolboxGroups = [
     {
         hint: "Probes",
         gates: [
-            MeasurementGate,
-            PostSelectionGates.PostSelectOff,
-            Controls.AntiControl,
-            null,
-            PostSelectionGates.PostSelectOn,
-            Controls.Control
+            MeasurementGate,                  undefined,
+            PostSelectionGates.PostSelectOff, PostSelectionGates.PostSelectOn,
+            Controls.AntiControl,             Controls.Control
         ]
     },
     {
         hint: "Displays",
         gates: [
-            SampleDisplayFamily.ofSize(3),
-            DensityMatrixDisplayFamily.ofSize(1),
-            ProbabilityDisplayFamily.ofSize(1),
-            null,
-            BlochSphereDisplay,
-            AmplitudeDisplayFamily.ofSize(2)
+            SampleDisplayFamily.ofSize(3),        undefined,
+            DensityMatrixDisplayFamily.ofSize(1), BlochSphereDisplay,
+            ProbabilityDisplayFamily.ofSize(1),   AmplitudeDisplayFamily.ofSize(2)
         ]
     },
     {
         hint: "Half Turns",
         gates: [
-            HalfTurnGates.Z,
-            HalfTurnGates.Y,
-            HalfTurnGates.X,
-            SwapGateHalf,
-            null,
-            HalfTurnGates.H
+            HalfTurnGates.Z, SwapGateHalf,
+            HalfTurnGates.Y, undefined,
+            HalfTurnGates.X, HalfTurnGates.H
         ]
     },
     {
         hint: "Quarter Turns",
         gates: [
-            QuarterTurnGates.SqrtZForward,
-            QuarterTurnGates.SqrtYForward,
-            QuarterTurnGates.SqrtXForward,
-            QuarterTurnGates.SqrtZBackward,
-            QuarterTurnGates.SqrtYBackward,
-            QuarterTurnGates.SqrtXBackward
+            QuarterTurnGates.SqrtZForward, QuarterTurnGates.SqrtZBackward,
+            QuarterTurnGates.SqrtYForward, QuarterTurnGates.SqrtYBackward,
+            QuarterTurnGates.SqrtXForward, QuarterTurnGates.SqrtXBackward
         ]
     },
     {
         hint: "Eighth Turns",
         gates: [
-            VariousZGates.Z4,
-            VariousYGates.Y4,
-            VariousXGates.X4,
-            VariousZGates.Z4i,
-            VariousYGates.Y4i,
-            VariousXGates.X4i
+            VariousZGates.Z4, VariousZGates.Z4i,
+            VariousYGates.Y4, VariousYGates.Y4i,
+            VariousXGates.X4, VariousXGates.X4i
         ]
     },
     {
         hint: 'Misc',
         gates: [
-            PhaseGradientGates.PhaseGradientFamily.ofSize(2),
-            null,
-            FourierTransformGates.FourierTransformFamily.ofSize(2),
-            PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            MysteryGateMaker(),
-            SpacerGate
+            PhaseGradientGates.PhaseGradientFamily.ofSize(2),       PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
+            undefined,                                              MysteryGateMaker(),
+            FourierTransformGates.FourierTransformFamily.ofSize(2), SpacerGate
         ]
     },
     {
         hint: 'Arithmetic',
         gates: [
-
-            CountingGates.CountingFamily.ofSize(2),
-            ArithmeticGates.AdditionFamily.ofSize(4),
-            ArithmeticGates.IncrementFamily.ofSize(2),
-            CountingGates.UncountingFamily.ofSize(2),
-            ArithmeticGates.SubtractionFamily.ofSize(4),
-            ArithmeticGates.DecrementFamily.ofSize(2)
+            CountingGates.CountingFamily.ofSize(2),    CountingGates.UncountingFamily.ofSize(2),
+            ArithmeticGates.AdditionFamily.ofSize(4),  ArithmeticGates.SubtractionFamily.ofSize(4),
+            ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2)
         ]
     },
     {
         hint: "Raising",
         gates: [
-            PoweringGates.ZForward,
-            PoweringGates.YForward,
-            PoweringGates.XForward,
-            PoweringGates.ZBackward,
-            PoweringGates.YBackward,
-            PoweringGates.XBackward
+            PoweringGates.ZForward, PoweringGates.ZBackward,
+            PoweringGates.YForward, PoweringGates.YBackward,
+            PoweringGates.XForward, PoweringGates.XBackward
         ]
     },
     {
         hint: "Exponentiating",
         gates: [
-            ExponentiatingGates.ZForward,
-            ExponentiatingGates.YForward,
-            ExponentiatingGates.XForward,
-            ExponentiatingGates.ZBackward,
-            ExponentiatingGates.YBackward,
-            ExponentiatingGates.XBackward
+            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward,
+            ExponentiatingGates.YForward, ExponentiatingGates.YBackward,
+            ExponentiatingGates.XForward, ExponentiatingGates.XBackward
         ]
     },
     {
         hint: "Other X",
         gates: [
-            VariousXGates.X16,
-            VariousXGates.X8,
-            VariousXGates.X3,
-            VariousXGates.X16i,
-            VariousXGates.X8i,
-            VariousXGates.X3i
+            VariousXGates.X16, VariousXGates.X16i,
+            VariousXGates.X8,  VariousXGates.X8i,
+            VariousXGates.X3,  VariousXGates.X3i
         ]
     },
     {
         hint: "Other Y",
         gates: [
-            VariousYGates.Y16,
-            VariousYGates.Y8,
-            VariousYGates.Y3,
-            VariousYGates.Y16i,
-            VariousYGates.Y8i,
-            VariousYGates.Y3i
+            VariousYGates.Y16, VariousYGates.Y16i,
+            VariousYGates.Y8,  VariousYGates.Y8i,
+            VariousYGates.Y3,  VariousYGates.Y3i
         ]
     },
     {
         hint: "Other Z",
         gates: [
-            VariousZGates.Z16,
-            VariousZGates.Z8,
-            VariousZGates.Z3,
-            VariousZGates.Z16,
-            VariousZGates.Z8i,
-            VariousZGates.Z3i
+            VariousZGates.Z16, VariousZGates.Z16i,
+            VariousZGates.Z8,  VariousZGates.Z8i,
+            VariousZGates.Z3,  VariousZGates.Z3i
         ]
     }
 ];
