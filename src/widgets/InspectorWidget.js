@@ -251,7 +251,7 @@ export default class InspectorWidget {
             1.0 :
             Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
         painter.ctx.save();
-        painter.ctx.translate(50, 190);
+        painter.ctx.translate(70, 190);
         painter.ctx.rotate(Math.PI * 0.05);
         painter.ctx.fillStyle = 'red';
         painter.ctx.font = '12pt Helvetica';
@@ -267,11 +267,11 @@ export default class InspectorWidget {
         painter.ctx.restore();
 
         painter.ctx.beginPath();
-        painter.ctx.moveTo(260, 50);
+        painter.ctx.moveTo(268, 132);
         painter.ctx.bezierCurveTo(
-            250, 85,
-            190, 165,
-            145, 183);
+            260, 170,
+            235, 175,
+            210, 190);
         painter.ctx.moveTo(210, 245);
         painter.ctx.bezierCurveTo(
             275, 245,
@@ -282,7 +282,7 @@ export default class InspectorWidget {
         painter.ctx.stroke();
 
         painter.trace(tracer => {
-            tracer.arrowHead(143, 185, 10, Math.PI*0.82, 1.3);
+            tracer.arrowHead(210, 190, 10, Math.PI*0.84, 1.3);
             tracer.arrowHead(330, 200, 10, Math.PI*-0.23, 1.3);
         }).thenFill('red');
 

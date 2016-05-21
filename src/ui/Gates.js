@@ -709,133 +709,133 @@ Gates.Sets = [
     {
         hint: "Probes",
         gates: [
-            Gates.Special.AntiControl,
-            Gates.Misc.PostSelectOff,
             Gates.Special.Measurement,
-            Gates.Special.Control,
+            Gates.Misc.PostSelectOff,
+            Gates.Special.AntiControl,
+            null,
             Gates.Misc.PostSelectOn,
-            null
+            Gates.Special.Control
         ]
     },
     {
         hint: "Displays",
         gates: [
-            Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
-            DensityMatrixDisplayFamily.ofSize(1),
             Gates.Displays.SampleDisplayFamily.ofSize(3),
-            AmplitudeDisplayFamily.ofSize(2),
+            DensityMatrixDisplayFamily.ofSize(1),
+            Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
+            null,
             Gates.Displays.BlochSphereDisplay,
-            null
+            AmplitudeDisplayFamily.ofSize(2)
         ]
     },
     {
         hint: "Half Turns",
         gates: [
-            Gates.HalfTurns.H,
-            null,
-            Gates.Special.SwapHalf,
-            Gates.HalfTurns.X,
+            Gates.HalfTurns.Z,
             Gates.HalfTurns.Y,
-            Gates.HalfTurns.Z
+            Gates.HalfTurns.X,
+            Gates.Special.SwapHalf,
+            null,
+            Gates.HalfTurns.H
         ]
     },
     {
         hint: "Quarter Turns",
         gates: [
-            Gates.QuarterTurns.SqrtXForward,
-            Gates.QuarterTurns.SqrtYForward,
             Gates.QuarterTurns.SqrtZForward,
-            Gates.QuarterTurns.SqrtXBackward,
+            Gates.QuarterTurns.SqrtYForward,
+            Gates.QuarterTurns.SqrtXForward,
+            Gates.QuarterTurns.SqrtZBackward,
             Gates.QuarterTurns.SqrtYBackward,
-            Gates.QuarterTurns.SqrtZBackward
+            Gates.QuarterTurns.SqrtXBackward
         ]
     },
     {
         hint: "Eighth Turns",
         gates: [
-            Gates.OtherX.X4,
-            Gates.OtherY.Y4,
             Gates.OtherZ.Z4,
-            Gates.OtherX.X4i,
+            Gates.OtherY.Y4,
+            Gates.OtherX.X4,
+            Gates.OtherZ.Z4i,
             Gates.OtherY.Y4i,
-            Gates.OtherZ.Z4i
+            Gates.OtherX.X4i
         ]
     },
     {
         hint: 'Misc',
         gates: [
-            Gates.FourierTransformFamily.ofSize(2),
-            null,
             Gates.PhaseGradientFamily.ofSize(2),
-            Gates.Misc.SpacerGate,
+            null,
+            Gates.FourierTransformFamily.ofSize(2),
+            Gates.PhaseDegradientFamily.ofSize(2),
             Gates.Misc.MysteryGateMaker(),
-            Gates.PhaseDegradientFamily.ofSize(2)
+            Gates.Misc.SpacerGate
         ]
     },
     {
         hint: 'Arithmetic',
         gates: [
-            Gates.IncrementFamily.ofSize(2),
-            Gates.AdditionFamily.ofSize(4),
             Gates.CountingFamily.ofSize(2),
-            Gates.DecrementFamily.ofSize(2),
+            Gates.AdditionFamily.ofSize(4),
+            Gates.IncrementFamily.ofSize(2),
+            Gates.UncountingFamily.ofSize(2),
             Gates.SubtractionFamily.ofSize(4),
-            Gates.UncountingFamily.ofSize(2)
+            Gates.DecrementFamily.ofSize(2)
         ]
     },
     {
         hint: "Raising",
         gates: [
-            Gates.Powering.XForward,
-            Gates.Powering.YForward,
             Gates.Powering.ZForward,
-            Gates.Powering.XBackward,
+            Gates.Powering.YForward,
+            Gates.Powering.XForward,
+            Gates.Powering.ZBackward,
             Gates.Powering.YBackward,
-            Gates.Powering.ZBackward
+            Gates.Powering.XBackward
         ]
     },
     {
         hint: "Exponentiating",
         gates: [
-            Gates.Exponentiating.XForward,
-            Gates.Exponentiating.YForward,
             Gates.Exponentiating.ZForward,
-            Gates.Exponentiating.XBackward,
+            Gates.Exponentiating.YForward,
+            Gates.Exponentiating.XForward,
+            Gates.Exponentiating.ZBackward,
             Gates.Exponentiating.YBackward,
-            Gates.Exponentiating.ZBackward
+            Gates.Exponentiating.XBackward
         ]
     },
     {
         hint: "Other X",
         gates: [
-            Gates.OtherX.X3,
-            Gates.OtherX.X8,
             Gates.OtherX.X16,
-            Gates.OtherX.X3i,
+            Gates.OtherX.X8,
+            Gates.OtherX.X3,
+            Gates.OtherX.X16i,
             Gates.OtherX.X8i,
-            Gates.OtherX.X16i
+            Gates.OtherX.X3i
         ]
     },
     {
         hint: "Other Y",
         gates: [
-            Gates.OtherY.Y3,
-            Gates.OtherY.Y8,
             Gates.OtherY.Y16,
-            Gates.OtherY.Y3i,
+            Gates.OtherY.Y8,
+            Gates.OtherY.Y3,
+            Gates.OtherY.Y16i,
             Gates.OtherY.Y8i,
-            Gates.OtherY.Y16i
+            Gates.OtherY.Y3i
         ]
     },
     {
         hint: "Other Z",
         gates: [
-            Gates.OtherZ.Z3,
-            Gates.OtherZ.Z8,
             Gates.OtherZ.Z16,
-            Gates.OtherZ.Z3i,
+            Gates.OtherZ.Z8,
+            Gates.OtherZ.Z3,
+            Gates.OtherZ.Z16,
             Gates.OtherZ.Z8i,
-            Gates.OtherZ.Z16
+            Gates.OtherZ.Z3i
         ]
     }
 ];
