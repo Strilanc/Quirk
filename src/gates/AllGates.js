@@ -16,6 +16,7 @@ import Shaders from "src/webgl/Shaders.js"
 
 import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
+import Controls from "src/gates/Controls.js"
 import CountingGates from "src/gates/CountingGates.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
@@ -42,30 +43,8 @@ export default Gates;
  * Gates that have special behavior requiring custom code / logic to handle.
  */
 Gates.Special = {
-    Control: Gate.fromIdentity(
-        "•",
-        "Control",
-        "Conditions on a qubit being ON.\nGates in the same column will only apply to states meeting the condition."
-    ).withCustomDrawer(args => {
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.DEFAULT_DRAWER(args);
-        }
-        args.painter.fillCircle(args.rect.center(), 5, "black");
-    }),
-
-    AntiControl: Gate.fromIdentity(
-        "◦",
-        "Anti-Control",
-        "Conditions on a qubit being OFF.\nGates in the same column will only apply to states meeting the condition."
-    ).withCustomDrawer(args => {
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.DEFAULT_DRAWER(args);
-        }
-        let p = args.rect.center();
-        args.painter.fillCircle(p, 5);
-        args.painter.strokeCircle(p, 5);
-    }),
-
+    Control: Controls.Control,
+    AntiControl: Controls.AntiControl,
     Measurement: Gate.fromIdentity(
         "Measure",
         "Measurement Gate",
@@ -214,10 +193,10 @@ Gates.Sets = [
         gates: [
             Gates.Special.Measurement,
             PostSelectionGates.PostSelectOff,
-            Gates.Special.AntiControl,
+            Controls.AntiControl,
             null,
             PostSelectionGates.PostSelectOn,
-            Gates.Special.Control
+            Controls.Control
         ]
     },
     {
@@ -272,7 +251,7 @@ Gates.Sets = [
             FourierTransformGates.FourierTransformFamily.ofSize(2),
             PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
             Gates.Misc.MysteryGateMaker(),
-            Gates.Misc.SpacerGate
+            SpacerGate
         ]
     },
     {
@@ -346,8 +325,7 @@ Gates.Sets = [
 
 /** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
-    Gates.Special.Control,
-    Gates.Special.AntiControl,
+    ...Controls.all,
     Gates.Special.Measurement,
     Gates.Special.SwapHalf,
 
