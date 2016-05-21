@@ -37,13 +37,12 @@ import UniversalNotGate from "src/gates/Impossible_UniversalNotGate.js"
 import VariousXGates from "src/gates/VariousXGates.js"
 import VariousYGates from "src/gates/VariousYGates.js"
 import VariousZGates from "src/gates/VariousZGates.js"
+import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 let Gates = {};
 export default Gates;
 
-/**
- * Gates that have special behavior requiring custom code / logic to handle.
- */
+/** Gates that have special behavior requiring custom code / logic to handle. */
 Gates.Special = {
     Control: Controls.Control,
     AntiControl: Controls.AntiControl,
@@ -78,24 +77,7 @@ Gates.PhaseGradientGates = PhaseGradientGates;
 Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
-
-Gates.Misc = {
-    MysteryGateSymbol: "?",
-    MysteryGateMakerWithMatrix: matrix => Gate.fromKnownMatrix(
-        Gates.Misc.MysteryGateSymbol,
-        matrix,
-        "Mystery Gate",
-        "Every time you grab this gate out of the toolbox, it changes.\n" +
-        "Duplicate gates in the circuit by holding shift before dragging.").
-        withCustomDrawer(GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX),
-    MysteryGateMaker: () => Gates.Misc.MysteryGateMakerWithMatrix(Matrix.square(
-            new Complex(Math.random() - 0.5, Math.random() - 0.5),
-            new Complex(Math.random() - 0.5, Math.random() - 0.5),
-            new Complex(Math.random() - 0.5, Math.random() - 0.5),
-            new Complex(Math.random() - 0.5, Math.random() - 0.5)
-        ).closestUnitary()),
-    SpacerGate: SpacerGate
-};
+Gates.SpacerGate = SpacerGate;
 
 const CYCLE_BITS_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
     let expected = r;
@@ -184,7 +166,7 @@ Gates.Sets = [
             null,
             FourierTransformGates.FourierTransformFamily.ofSize(2),
             PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            Gates.Misc.MysteryGateMaker(),
+            MysteryGateMaker(),
             SpacerGate
         ]
     },

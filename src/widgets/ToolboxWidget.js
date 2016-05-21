@@ -9,6 +9,7 @@ import {seq, Seq} from "src/base/Seq.js"
 import Config from "src/Config.js"
 import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
+import {MysteryGateSymbol, MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 class ToolboxWidget {
     /**
@@ -162,8 +163,8 @@ class ToolboxWidget {
             return hand;
         }
 
-        if (f.gate.symbol === Gates.Misc.MysteryGateSymbol) {
-            Gates.Sets[f.groupIndex].gates[f.gateIndex] = Gates.Misc.MysteryGateMaker();
+        if (f.gate.symbol === MysteryGateSymbol) {
+            Gates.Sets[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
         }
         return hand.withHeldGate(f.gate, new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
     }
