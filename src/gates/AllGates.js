@@ -235,54 +235,54 @@ Gates.Sets = [
     {
         hint: "Displays",
         gates: [
-            Gates.Displays.SampleDisplayFamily.ofSize(3),
-            Gates.Displays.DensityMatrixDisplayFamily.ofSize(1),
-            Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
+            SampleDisplayFamily.ofSize(3),
+            DensityMatrixDisplayFamily.ofSize(1),
+            ProbabilityDisplayFamily.ofSize(1),
             null,
             Gates.Displays.BlochSphereDisplay,
-            Gates.Displays.AmplitudeDisplayFamily.ofSize(2)
+            AmplitudeDisplayFamily.ofSize(2)
         ]
     },
     {
         hint: "Half Turns",
         gates: [
-            Gates.HalfTurns.Z,
-            Gates.HalfTurns.Y,
-            Gates.HalfTurns.X,
+            HalfTurnGates.Z,
+            HalfTurnGates.Y,
+            HalfTurnGates.X,
             Gates.Special.SwapHalf,
             null,
-            Gates.HalfTurns.H
+            HalfTurnGates.H
         ]
     },
     {
         hint: "Quarter Turns",
         gates: [
-            Gates.QuarterTurns.SqrtZForward,
-            Gates.QuarterTurns.SqrtYForward,
-            Gates.QuarterTurns.SqrtXForward,
-            Gates.QuarterTurns.SqrtZBackward,
-            Gates.QuarterTurns.SqrtYBackward,
-            Gates.QuarterTurns.SqrtXBackward
+            QuarterTurnGates.SqrtZForward,
+            QuarterTurnGates.SqrtYForward,
+            QuarterTurnGates.SqrtXForward,
+            QuarterTurnGates.SqrtZBackward,
+            QuarterTurnGates.SqrtYBackward,
+            QuarterTurnGates.SqrtXBackward
         ]
     },
     {
         hint: "Eighth Turns",
         gates: [
-            Gates.OtherZ.Z4,
-            Gates.OtherY.Y4,
-            Gates.OtherX.X4,
-            Gates.OtherZ.Z4i,
-            Gates.OtherY.Y4i,
-            Gates.OtherX.X4i
+            VariousZGates.Z4,
+            VariousYGates.Y4,
+            VariousXGates.X4,
+            VariousZGates.Z4i,
+            VariousYGates.Y4i,
+            VariousXGates.X4i
         ]
     },
     {
         hint: 'Misc',
         gates: [
-            Gates.PhaseGradientGates.PhaseGradientFamily.ofSize(2),
+            PhaseGradientGates.PhaseGradientFamily.ofSize(2),
             null,
             Gates.FourierTransformFamily.ofSize(2),
-            Gates.PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
+            PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
             Gates.Misc.MysteryGateMaker(),
             Gates.Misc.SpacerGate
         ]
@@ -302,56 +302,56 @@ Gates.Sets = [
     {
         hint: "Raising",
         gates: [
-            Gates.Powering.ZForward,
-            Gates.Powering.YForward,
-            Gates.Powering.XForward,
-            Gates.Powering.ZBackward,
-            Gates.Powering.YBackward,
-            Gates.Powering.XBackward
+            PoweringGates.ZForward,
+            PoweringGates.YForward,
+            PoweringGates.XForward,
+            PoweringGates.ZBackward,
+            PoweringGates.YBackward,
+            PoweringGates.XBackward
         ]
     },
     {
         hint: "Exponentiating",
         gates: [
-            Gates.Exponentiating.ZForward,
-            Gates.Exponentiating.YForward,
-            Gates.Exponentiating.XForward,
-            Gates.Exponentiating.ZBackward,
-            Gates.Exponentiating.YBackward,
-            Gates.Exponentiating.XBackward
+            ExponentiatingGates.ZForward,
+            ExponentiatingGates.YForward,
+            ExponentiatingGates.XForward,
+            ExponentiatingGates.ZBackward,
+            ExponentiatingGates.YBackward,
+            ExponentiatingGates.XBackward
         ]
     },
     {
         hint: "Other X",
         gates: [
-            Gates.OtherX.X16,
-            Gates.OtherX.X8,
-            Gates.OtherX.X3,
-            Gates.OtherX.X16i,
-            Gates.OtherX.X8i,
-            Gates.OtherX.X3i
+            VariousXGates.X16,
+            VariousXGates.X8,
+            VariousXGates.X3,
+            VariousXGates.X16i,
+            VariousXGates.X8i,
+            VariousXGates.X3i
         ]
     },
     {
         hint: "Other Y",
         gates: [
-            Gates.OtherY.Y16,
-            Gates.OtherY.Y8,
-            Gates.OtherY.Y3,
-            Gates.OtherY.Y16i,
-            Gates.OtherY.Y8i,
-            Gates.OtherY.Y3i
+            VariousYGates.Y16,
+            VariousYGates.Y8,
+            VariousYGates.Y3,
+            VariousYGates.Y16i,
+            VariousYGates.Y8i,
+            VariousYGates.Y3i
         ]
     },
     {
         hint: "Other Z",
         gates: [
-            Gates.OtherZ.Z16,
-            Gates.OtherZ.Z8,
-            Gates.OtherZ.Z3,
-            Gates.OtherZ.Z16,
-            Gates.OtherZ.Z8i,
-            Gates.OtherZ.Z3i
+            VariousZGates.Z16,
+            VariousZGates.Z8,
+            VariousZGates.Z3,
+            VariousZGates.Z16,
+            VariousZGates.Z8i,
+            VariousZGates.Z3i
         ]
     }
 ];
@@ -364,27 +364,26 @@ Gates.KnownToSerializer = [
     Gates.Special.SwapHalf,
 
     ...AmplitudeDisplayFamily.all,
-    ...Gates.Displays.ProbabilityDisplayFamily.all,
-    ...Gates.Displays.SampleDisplayFamily.all,
+    ...ProbabilityDisplayFamily.all,
+    ...SampleDisplayFamily.all,
     ...DensityMatrixDisplayFamily.all,
     Gates.Displays.BlochSphereDisplay,
 
-    SpacerGate,
     ...ArithmeticGates.all,
     ...CountingGates.all,
     ...ExponentiatingGates.all,
     ...HalfTurnGates.all,
     ...QuarterTurnGates.all,
+    ...PhaseGradientGates.all,
     ...PostSelectionGates.all,
     ...PoweringGates.all,
     ...VariousXGates.all,
     ...VariousYGates.all,
     ...VariousZGates.all,
     ...Gates.FourierTransformFamily.all,
-    ...Gates.PhaseGradientGates.PhaseGradientFamily.all,
-    ...Gates.PhaseGradientGates.PhaseDegradientFamily.all,
 
-    Gates.ExperimentalAndImplausible.UniversalNot,
+    SpacerGate,
+    UniversalNotGate,
     Gates.ExperimentalAndImplausible.ErrorInjection,
     ...Gates.ExperimentalAndImplausible.CycleBitsFamily.all
 ];
