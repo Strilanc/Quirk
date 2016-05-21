@@ -19,6 +19,7 @@ import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import CountingGates from "src/gates/CountingGates.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
+import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PostSelectionGates from "src/gates/PostSelectionGates.js"
@@ -142,6 +143,7 @@ Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
 Gates.Exponentiating = ExponentiatingGates;
+Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
 Gates.OtherX = VariousXGates;
 Gates.OtherY = VariousYGates;
@@ -154,20 +156,6 @@ Gates.QuarterTurns = QuarterTurnGates;
 const FOURIER_TRANSFORM_MATRIX_MAKER = span =>
     Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span)));
 
-Gates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "QFT",
-    "Fourier Transform Gate",
-    "Transforms to/from phase frequency space.").
-    markedAsStable().
-    withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
-    withSerializedId("QFT" + span).
-    withHeight(span).
-    withCustomShaders(
-        Seq.range(Math.floor(span/2)).
-            map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
-            concat(Seq.range(span).
-                map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
-            toArray()));
 
 Gates.Misc = {
     MysteryGateSymbol: "?",
@@ -281,7 +269,7 @@ Gates.Sets = [
         gates: [
             PhaseGradientGates.PhaseGradientFamily.ofSize(2),
             null,
-            Gates.FourierTransformFamily.ofSize(2),
+            FourierTransformGates.FourierTransformFamily.ofSize(2),
             PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
             Gates.Misc.MysteryGateMaker(),
             Gates.Misc.SpacerGate
@@ -380,7 +368,7 @@ Gates.KnownToSerializer = [
     ...VariousXGates.all,
     ...VariousYGates.all,
     ...VariousZGates.all,
-    ...Gates.FourierTransformFamily.all,
+    ...FourierTransformGates.all,
 
     SpacerGate,
     UniversalNotGate,

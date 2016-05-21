@@ -173,61 +173,6 @@ const INCREMENT_SHADER = new WglShader(`
  * @param {!WglTexture} inputTexture
  * @param {!WglTexture} controlTexture
  * @param {!int} qubitIndex
- * @param {!int} stepIndex
- * @returns {!WglConfiguredShader}
- */
-GateShaders.fourierTransformStep = (inputTexture, controlTexture, qubitIndex, stepIndex) =>
-    new WglConfiguredShader(destinationTexture => {
-        FOURIER_TRANSFORM_STEP_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitIndex", 1 << qubitIndex),
-            WglArg.float("stepIndex", 1 << stepIndex)
-        ).renderTo(destinationTexture);
-    });
-const FOURIER_TRANSFORM_STEP_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float qubitIndex;
-    uniform float stepIndex;
-
-    vec2 toUv(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float targetIndex = qubitIndex * stepIndex;
-        float bit = mod(floor(state / targetIndex), 2.0);
-        float state0 = state - bit*targetIndex;
-        float state1 = state0 + targetIndex;
-
-        float control = texture2D(controlTexture, toUv(state)).x;
-        vec2 amp0 = texture2D(inputTexture, toUv(state0)).xy;
-        vec2 amp1 = texture2D(inputTexture, toUv(state1)).xy;
-
-        float phase1 = -mod(floor(state / qubitIndex), stepIndex) * 3.141592653589793 / stepIndex;
-        float c = cos(phase1);
-        float s = sin(phase1);
-        mat2 rot = mat2(c,-s,
-                        s, c);
-        vec2 phasedAmp1 = rot*amp1;
-
-        vec2 outAmp = (amp0 + phasedAmp1*(1.0-bit*2.0))*sqrt(0.5);
-        vec2 inAmp = bit*amp1 + (1.0-bit)*amp0;
-        vec2 amp = control*outAmp + (1.0-control)*inAmp;
-        gl_FragColor = vec4(amp.x, amp.y, 0.0, 0.0);
-    }`);
-
-/**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
  * @param {!int} qubitSrcSpan
  * @param {!int} qubitDstSpan
  * @param {!int} scaleFactor
