@@ -28,7 +28,7 @@ if (!canvas) {
     throw new Error("Couldn't find 'drawCanvas'");
 }
 canvas.width = canvasDiv.clientWidth;
-canvas.height = window.innerHeight;
+canvas.height = window.innerHeight*0.9;
 let haveLoaded = false;
 let historyPusher = new HistoryPusher();
 let semiStableRng = new RestartableRng();
