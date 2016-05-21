@@ -62,6 +62,44 @@ export default class MathPainter {
     }
 
     /**
+     * @param {!Painter} painter
+     * @param {!Matrix} matrix The matrix to draw.
+     * @param {!Rect} drawArea The rectangle to draw the matrix within.
+     * @param {!Array.<!Point>} focusPoints
+     * @param {!function(!int, !int) : !string} titleFunc
+     * @param {!function(!int, !int) : !string} valueTextFunc1
+     * @param {!function(!int, !int) : !string=} valueTextFunc2
+     */
+    static paintMatrixTooltip(
+            painter,
+            matrix,
+            drawArea,
+            focusPoints,
+            titleFunc,
+            valueTextFunc1,
+            valueTextFunc2 = () => undefined) {
+        let numCols = matrix.width();
+        let numRows = matrix.height();
+        let {x, y} = drawArea;
+        let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
+        for (let pt of focusPoints) {
+            let c = Math.floor((pt.x - x) / diam);
+            let r = Math.floor((pt.y - y) / diam);
+            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
+                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
+                let v = matrix.cell(c, r);
+                MathPainter.paintDeferredValueTooltip(
+                    painter,
+                    x + diam*c + diam,
+                    y + diam*r,
+                    titleFunc(c, r),
+                    valueTextFunc1(c, r, v),
+                    valueTextFunc2(c, r, v));
+            }
+        }
+    }
+
+    /**
      * Draws a visual representation of a complex matrix.
      * @param {!Painter} painter
      * @param {!Matrix} matrix The matrix to draw.
@@ -69,8 +107,8 @@ export default class MathPainter {
      * @param {undefined|!string} amplitudeCircleFillColor
      * @param {!string} amplitudeCircleStrokeColor
      * @param {undefined|!string} amplitudeProbabilityFillColor
-     * @param {!string=} backColor
-     * @param {!Array.<!Point>} focusPoints
+     * @param {undefined|!string=} backColor
+     * @param {undefined|!string=} amplitudePhaseStrokeColor
      */
     static paintMatrix(painter,
                        matrix,
@@ -79,7 +117,7 @@ export default class MathPainter {
                        amplitudeCircleStrokeColor,
                        amplitudeProbabilityFillColor,
                        backColor = Config.DISPLAY_GATE_BACK_COLOR,
-                       focusPoints = []) {
+                       amplitudePhaseStrokeColor = undefined) {
         let numCols = matrix.width();
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
@@ -87,6 +125,7 @@ export default class MathPainter {
         let unitRadius = diam/2;
         let x = drawArea.x;
         let y = drawArea.y;
+        amplitudePhaseStrokeColor = amplitudePhaseStrokeColor || amplitudeCircleStrokeColor;
         const ε = 0.00005;
 
         painter.fillRect(drawArea, backColor);
@@ -147,7 +186,7 @@ export default class MathPainter {
                     trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * -buf[i+1]);
                 }
             }
-        }).thenStroke(amplitudeCircleStrokeColor);
+        }).thenStroke(amplitudePhaseStrokeColor);
 
         // Dividers.
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
@@ -165,28 +204,6 @@ export default class MathPainter {
                 '16px Helvetica',
                 drawArea.w,
                 drawArea.h);
-        }
-
-        // Tool tips.
-        for (let pt of focusPoints) {
-            let c = Math.floor((pt.x - x) / diam);
-            let r = Math.floor((pt.y - y) / diam);
-            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
-                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
-
-                let f = v => (v >= 0 ? '+' : '') + v.toFixed(2);
-                let g = v => (v >= 0 ? '+' : '') + v.toFixed(4);
-                let v = matrix.cell(c, r);
-                let d = v.abs();
-                let p = v.phase() * 180 / Math.PI;
-                MathPainter.paintDeferredValueTooltip(
-                    painter,
-                    x + diam*c + diam,
-                    y + diam*r,
-                    `Amplitude of |${Util.bin(r*matrix.width() + c, Math.round(Math.log2(numRows*numCols)))}⟩`,
-                    'val:' + v.toString(new Format(false, 0, 5, ", ")),
-                    `mag²:${g(d)}, phase:${f(p)}°`);
-            }
         }
     }
 

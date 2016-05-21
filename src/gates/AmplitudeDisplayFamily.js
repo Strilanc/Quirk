@@ -6,6 +6,7 @@ import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/ui/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
+import Format from "src/base/Format.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
@@ -301,13 +302,16 @@ const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
         return vec2(c1.x*c2.x - c1.y*c2.y, c1.x*c2.y + c1.y*c2.x);
     }
     vec4 mergeRatios(vec4 a, vec4 b) {
+        float m1 = dot(a,a);
+        float m2 = dot(b,b);
         vec2 c1 = mul(a.xy, b.zw);
         vec2 c2 = mul(a.zw, b.xy);
         vec2 d = c1 - c2;
         float nan = 0.0*d.x/0.0;
         float err = dot(d, d);
+        err /= max(0.000000000000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
         return isNaN(err) || err > 0.0001 ? vec4(nan, nan, nan, nan)
-            : dot(a,a) >= dot(b,b) ? a
+            : m1 >= m2 ? a
             : b;
     }
 
@@ -341,6 +345,9 @@ function pipelineToSumAll(w, h) {
     return result;
 }
 
+/**
+ * @type {!function(!GateDrawParams)}
+ */
 const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args => {
     let n = args.gate.height;
     let {probabilities, superposition} = args.customStats || {
@@ -348,32 +355,68 @@ const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args =
         superposition: Matrix.zero(1 << n, 1 << n).times(NaN)
     };
     let matrix = probabilities || superposition;
+    let isIncoherent = superposition === undefined;
     let dw = args.rect.w - args.rect.h*matrix.width()/matrix.height();
     let drawRect = args.rect.skipLeft(dw/2).skipRight(dw/2);
-    if (superposition !== undefined) {
-        MathPainter.paintMatrix(
-            args.painter,
-            superposition,
-            drawRect,
-            Config.SUPERPOSITION_MID_COLOR,
-            'black',
-            Config.SUPERPOSITION_FORE_COLOR,
-            Config.SUPERPOSITION_BACK_COLOR,
-            args.focusPoints);
+    MathPainter.paintMatrix(
+        args.painter,
+        matrix,
+        drawRect,
+        Config.SUPERPOSITION_MID_COLOR,
+        'black',
+        Config.SUPERPOSITION_FORE_COLOR,
+        Config.SUPERPOSITION_BACK_COLOR,
+        isIncoherent ? 'transparent' : 'black');
+
+    let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+    if (isIncoherent) {
+        MathPainter.paintMatrixTooltip(args.painter, matrix, drawRect, args.focusPoints,
+            (c, r) => `Chance of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩ [amplitude not defined]`,
+            (c, r, v) => `raw: ${(v.norm2()*100).toFixed(4)}%, log: ${(Math.log10(v.norm2())*10).toFixed(1)} dB`,
+            (c, r, v) => '[entangled with other qubits]');
+    } else {
+        MathPainter.paintMatrixTooltip(args.painter, matrix, drawRect, args.focusPoints,
+            (c, r) => `Amplitude of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩`,
+            (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
+            (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
     }
-    if (probabilities !== undefined) {
-        MathPainter.paintMatrix(
-            args.painter,
-            probabilities,
-            drawRect,
-            'transparent',
-            'transparent',
-            Config.SUPERPOSITION_FORE_COLOR,
-            Config.SUPERPOSITION_BACK_COLOR,
-            args.focusPoints);
-    }
+
+    paintErrorIfPresent(args, isIncoherent);
 });
 
+/**
+ * @param {!GateDrawParams} args
+ * @param {!boolean} isIncoherent
+ */
+function paintErrorIfPresent(args, isIncoherent) {
+    /** @type {undefined|!string} */
+    let err = undefined;
+    let {col, row} = args.positionInCircuit;
+    let measured = ((args.stats.circuitDefinition.colIsMeasuredMask(col) >> row) & ((1 << args.gate.height) - 1)) !== 0;
+    if (isIncoherent) {
+        err = 'incoherent';
+    } else if (measured) {
+        err = args.gate.width <= 2 ? 'deferring measure' : 'deferring measurement';
+    }
+    if (err !== undefined) {
+        args.painter.print(
+            err,
+            args.rect.x+args.rect.w/2,
+            args.rect.y+args.rect.h,
+            'center',
+            'hanging',
+            'red',
+            '12px Helvetica',
+            args.rect.w,
+            args.rect.h,
+            undefined);
+    }
+}
+
+/**
+ * @param {!int} span
+ * @returns {!Gate}
+ */
 function amplitudeDisplayMaker(span) {
     return new Gate(
         "Amps",
