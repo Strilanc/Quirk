@@ -1,7 +1,7 @@
 import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
 import GateColumn from "src/circuit/GateColumn.js"
 
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
 

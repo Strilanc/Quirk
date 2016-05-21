@@ -2,7 +2,7 @@ import { Suite, assertThat } from "test/TestUtil.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
 
 import Format from "src/base/Format.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Painter from "src/ui/Painter.js"
 import Rect from "src/math/Rect.js"
 import Complex from "src/math/Complex.js"

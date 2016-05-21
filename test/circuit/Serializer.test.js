@@ -7,7 +7,7 @@ import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GatePainting from "src/ui/GatePainting.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("Serializer");

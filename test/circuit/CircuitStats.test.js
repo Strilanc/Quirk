@@ -3,7 +3,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import Gates from "src/ui/Gates.js"
+import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 
 let suite = new Suite("CircuitStats");
