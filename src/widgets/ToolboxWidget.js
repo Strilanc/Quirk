@@ -65,8 +65,8 @@ class ToolboxWidget {
         if (pt === undefined) {
             return null;
         }
-        for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
-            let group = Gates.Sets[groupIndex];
+        for (let groupIndex = 0; groupIndex < Gates.ToolboxGroups.length; groupIndex++) {
+            let group = Gates.ToolboxGroups[groupIndex];
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
                 if (gate !== null && this.gateDrawRect(groupIndex, gateIndex).containsPoint(Util.notNull(pt))) {
@@ -100,8 +100,8 @@ class ToolboxWidget {
     paint(painter, stats, hand) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
-        for (let groupIndex = 0; groupIndex < Gates.Sets.length; groupIndex++) {
-            let group = Gates.Sets[groupIndex];
+        for (let groupIndex = 0; groupIndex < Gates.ToolboxGroups.length; groupIndex++) {
+            let group = Gates.ToolboxGroups[groupIndex];
             painter.printLine(group.hint, this.groupLabelRect(groupIndex), 0.5, 'black', 16);
 
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
@@ -146,7 +146,7 @@ class ToolboxWidget {
     }
 
     desiredWidth() {
-        return this.gateDrawRect(Gates.Sets.length - 1, 5).right() + 5;
+        return this.gateDrawRect(Gates.ToolboxGroups.length - 1, 5).right() + 5;
     }
 
     /**
@@ -164,7 +164,7 @@ class ToolboxWidget {
         }
 
         if (f.gate.symbol === MysteryGateSymbol) {
-            Gates.Sets[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
+            Gates.ToolboxGroups[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
         }
         return hand.withHeldGate(f.gate, new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
     }

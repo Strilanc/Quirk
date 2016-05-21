@@ -1,19 +1,3 @@
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import DetailedError from "src/base/DetailedError.js"
-import Config from "src/Config.js"
-import Complex from "src/math/Complex.js"
-import DisplayShaders from "src/circuit/DisplayShaders.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import MathPainter from "src/ui/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
-import ShaderPipeline from "src/circuit/ShaderPipeline.js"
-import Shaders from "src/webgl/Shaders.js"
-
 import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import BlochSphereDisplay from "src/gates/BlochSphereDisplay.js"
@@ -50,7 +34,6 @@ Gates.Special = {
     Measurement: MeasurementGate,
     SwapHalf: SwapGateHalf
 };
-
 /**
  * Gates that display information without affecting the state.
  * (In reality these would require multiple runs of the circuit to do tomography.)
@@ -62,7 +45,6 @@ Gates.Displays = {
     DensityMatrixDisplayFamily: DensityMatrixDisplayFamily,
     BlochSphereDisplay: BlochSphereDisplay
 };
-
 Gates.Arithmetic = ArithmeticGates;
 Gates.CountingGates = CountingGates;
 Gates.CycleBitsGates = CycleBitsGates;
@@ -83,8 +65,38 @@ Gates.QuarterTurns = QuarterTurnGates;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 
+/** @type {!Array.<!Gate>} */
+Gates.KnownToSerializer = [
+    ...Controls.all,
+    MeasurementGate,
+    SwapGateHalf,
+    SpacerGate,
+    UniversalNotGate,
+    ErrorInjectionGate,
+
+    ...AmplitudeDisplayFamily.all,
+    ...ProbabilityDisplayFamily.all,
+    ...SampleDisplayFamily.all,
+    ...DensityMatrixDisplayFamily.all,
+    BlochSphereDisplay,
+
+    ...ArithmeticGates.all,
+    ...CountingGates.all,
+    ...CycleBitsGates.all,
+    ...ExponentiatingGates.all,
+    ...FourierTransformGates.all,
+    ...HalfTurnGates.all,
+    ...QuarterTurnGates.all,
+    ...PhaseGradientGates.all,
+    ...PostSelectionGates.all,
+    ...PoweringGates.all,
+    ...VariousXGates.all,
+    ...VariousYGates.all,
+    ...VariousZGates.all
+];
+
 /** @type {!Array<!{hint: !string, gates: !Array<?Gate>}>} */
-Gates.Sets = [
+Gates.ToolboxGroups = [
     {
         hint: "Probes",
         gates: [
@@ -218,34 +230,4 @@ Gates.Sets = [
             VariousZGates.Z3i
         ]
     }
-];
-
-/** @type {!Array.<!Gate>} */
-Gates.KnownToSerializer = [
-    ...Controls.all,
-    MeasurementGate,
-    SwapGateHalf,
-    SpacerGate,
-    UniversalNotGate,
-    ErrorInjectionGate,
-
-    ...AmplitudeDisplayFamily.all,
-    ...ProbabilityDisplayFamily.all,
-    ...SampleDisplayFamily.all,
-    ...DensityMatrixDisplayFamily.all,
-    BlochSphereDisplay,
-
-    ...ArithmeticGates.all,
-    ...CountingGates.all,
-    ...CycleBitsGates.all,
-    ...ExponentiatingGates.all,
-    ...FourierTransformGates.all,
-    ...HalfTurnGates.all,
-    ...QuarterTurnGates.all,
-    ...PhaseGradientGates.all,
-    ...PostSelectionGates.all,
-    ...PoweringGates.all,
-    ...VariousXGates.all,
-    ...VariousYGates.all,
-    ...VariousZGates.all
 ];
