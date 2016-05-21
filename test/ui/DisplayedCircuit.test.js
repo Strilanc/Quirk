@@ -22,7 +22,7 @@ const TEST_GATES = new Map([
     ['D', Gates.Displays.DensityMatrixDisplay2],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
-    ['!', Gates.Misc.PostSelectOn],
+    ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['+', null],
     ['/', null],

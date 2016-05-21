@@ -20,6 +20,7 @@ import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
+import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
@@ -322,6 +323,7 @@ Gates.OtherY = {
 
 Gates.Exponentiating = ExponentiatingGates;
 Gates.Powering = PoweringGates;
+Gates.PostSelectionGates = PostSelectionGates;
 
 Gates.Misc = {
     MysteryGateSymbol: "?",
@@ -338,22 +340,6 @@ Gates.Misc = {
             new Complex(Math.random() - 0.5, Math.random() - 0.5),
             new Complex(Math.random() - 0.5, Math.random() - 0.5)
         ).closestUnitary()),
-
-    PostSelectOff: Gate.fromKnownMatrix(
-        "|0⟩⟨0|",
-        Matrix.square(1, 0, 0, 0),
-        "Post-selection Gate [Off]",
-        "Keeps OFF states, discards ON states, and renormalizes\n" +
-            "(Corresponds to restarting until the right answer happens.)").
-        withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
-
-    PostSelectOn: Gate.fromKnownMatrix(
-        "|1⟩⟨1|",
-        Matrix.square(0, 0, 0, 1),
-        "Post-selection Gate [On]",
-        "Keeps ON states, discards OFF states, and renormalizes.\n" +
-            "(Corresponds to restarting until the right answer happens.)").
-        withCustomDrawer(GatePainting.POST_SELECT_DRAWER),
 
     ClockPulseGate: Gate.fromVaryingMatrix(
         "X^⌈t⌉",
@@ -441,10 +427,10 @@ Gates.Sets = [
         hint: "Probes",
         gates: [
             Gates.Special.Measurement,
-            Gates.Misc.PostSelectOff,
+            PostSelectionGates.PostSelectOff,
             Gates.Special.AntiControl,
             null,
-            Gates.Misc.PostSelectOn,
+            PostSelectionGates.PostSelectOn,
             Gates.Special.Control
         ]
     },
@@ -452,11 +438,11 @@ Gates.Sets = [
         hint: "Displays",
         gates: [
             Gates.Displays.SampleDisplayFamily.ofSize(3),
-            DensityMatrixDisplayFamily.ofSize(1),
+            Gates.Displays.DensityMatrixDisplayFamily.ofSize(1),
             Gates.Displays.ProbabilityDisplayFamily.ofSize(1),
             null,
             Gates.Displays.BlochSphereDisplay,
-            AmplitudeDisplayFamily.ofSize(2)
+            Gates.Displays.AmplitudeDisplayFamily.ofSize(2)
         ]
     },
     {
@@ -575,10 +561,13 @@ Gates.Sets = [
 Gates.KnownToSerializer = [
     Gates.Special.Control,
     Gates.Special.AntiControl,
-    Gates.Misc.PostSelectOff,
-    Gates.Misc.PostSelectOn,
     Gates.Special.Measurement,
     Gates.Special.SwapHalf,
+
+    PostSelectionGates.PostSelectOff,
+    PostSelectionGates.PostSelectOn,
+    PostSelectionGates.PostSelectPlus,
+    PostSelectionGates.PostSelectMinus,
 
     ...AmplitudeDisplayFamily.all,
     ...Gates.Displays.ProbabilityDisplayFamily.all,
