@@ -18,6 +18,7 @@ import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
+import HalfTurnGates from "src/gates/HalfTurnGates.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
@@ -119,81 +120,18 @@ Gates.Displays = {
     BlochSphereDisplay: Gate.fromIdentity(
         "Bloch",
         "Bloch Sphere Display",
-        "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states."
-    ).withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-        let {row, col} = args.positionInCircuit;
-        let ρ = args.stats.qubitDensityMatrix(row, col);
-        MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
-    }))
+        "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.").
+        withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {row, col} = args.positionInCircuit;
+            let ρ = args.stats.qubitDensityMatrix(row, col);
+            MathPainter.paintBlochSphere(args.painter, ρ, args.rect, args.focusPoints);
+        }))
 };
 
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
-
-/**
- * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
- */
-Gates.HalfTurns = {
-    X: Gate.fromKnownMatrix(
-        "X",
-        Matrix.PAULI_X,
-        "Pauli X Gate",
-        "The NOT gate.\nToggles between ON and OFF."
-    ).withCustomDrawer(args => {
-        // The X gate is drawn as a crossed circle when it has controls.
-
-        let hasSingleWireControl =
-            args.positionInCircuit !== null &&
-            args.stats.circuitDefinition.colHasSingleWireControl(args.positionInCircuit.col);
-        let hasDoubleWireControl =
-            args.positionInCircuit !== null &&
-            args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
-        if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
-            GatePainting.DEFAULT_DRAWER(args);
-            return;
-        }
-
-        let drawArea = args.rect.scaledOutwardBy(0.6);
-        args.painter.fillCircle(drawArea.center(), drawArea.w / 2);
-        args.painter.strokeCircle(drawArea.center(), drawArea.w / 2);
-        if (hasSingleWireControl) {
-            args.painter.strokeLine(drawArea.topCenter(), drawArea.bottomCenter());
-        }
-        if (hasDoubleWireControl) {
-            args.painter.strokeLine(drawArea.topCenter().offsetBy(-1, 0), drawArea.bottomCenter().offsetBy(-1, 0));
-            args.painter.strokeLine(drawArea.topCenter().offsetBy(+1, 0), drawArea.bottomCenter().offsetBy(+1, 0));
-        }
-        let isMeasured = args.stats.circuitDefinition.locIsMeasured(
-            new Point(args.positionInCircuit.col, args.positionInCircuit.row));
-        if (isMeasured) {
-            args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, -1), drawArea.centerRight().offsetBy(0, -1));
-            args.painter.strokeLine(drawArea.centerLeft().offsetBy(0, +1), drawArea.centerRight().offsetBy(0, +1));
-        } else {
-            args.painter.strokeLine(drawArea.centerLeft(), drawArea.centerRight());
-        }
-    }),
-
-    Y: Gate.fromKnownMatrix(
-        "Y",
-        Matrix.PAULI_Y,
-        "Pauli Y Gate",
-        "A combination of the X and Z gates."),
-
-    Z: Gate.fromKnownMatrix(
-        "Z",
-        Matrix.PAULI_Z,
-        "Pauli Z Gate",
-        "The phase flip gate.\nNegates phases when the qubit is ON."),
-
-    H: Gate.fromKnownMatrix(
-        "H",
-        Matrix.HADAMARD,
-        "Hadamard Gate",
-        "Creates simple superpositions.\n" +
-        "Maps ON to ON + OFF.\n" +
-        "Maps OFF to ON - OFF.")
-};
+Gates.HalfTurns = HalfTurnGates;
 
 const FOURIER_TRANSFORM_MATRIX_MAKER = span =>
     Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span)));
