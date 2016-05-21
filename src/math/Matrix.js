@@ -169,16 +169,16 @@ class Matrix {
      * @returns {!Matrix}
      */
     static generate(width, height, coefficientRowColGenerator) {
-        let rows = [];
+        let buf = new Float64Array(width*height*2);
         for (let r = 0; r < height; r++) {
-            let row = [];
-            rows.push(row);
             for (let c = 0; c < width; c++) {
-                row.push(Complex.from(coefficientRowColGenerator(r, c)));
+                let k = (r*width + c)*2;
+                let v = coefficientRowColGenerator(r, c);
+                buf[k] = Complex.realPartOf(v);
+                buf[k+1] = Complex.imagPartOf(v);
             }
         }
-
-        return Matrix.fromRows(rows);
+        return new Matrix(width, height, buf);
     }
 
     /**
