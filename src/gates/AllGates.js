@@ -25,6 +25,9 @@ import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
+import VariousXGates from "src/gates/VariousXGates.js"
+import VariousYGates from "src/gates/VariousYGates.js"
+import VariousZGates from "src/gates/VariousZGates.js"
 
 const τ = Math.PI * 2;
 
@@ -133,7 +136,15 @@ Gates.Displays = {
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
+Gates.Exponentiating = ExponentiatingGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.OtherX = VariousXGates;
+Gates.OtherY = VariousYGates;
+Gates.OtherZ = VariousZGates;
+Gates.PhaseGradientGates = PhaseGradientGates;
+Gates.PostSelectionGates = PostSelectionGates;
+Gates.Powering = PoweringGates;
+Gates.QuarterTurns = QuarterTurnGates;
 
 const FOURIER_TRANSFORM_MATRIX_MAKER = span =>
     Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span)));
@@ -152,142 +163,6 @@ Gates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
             concat(Seq.range(span).
                 map(i => (val, con, bit) => GateShaders.fourierTransformStep(val, con, bit, i))).
             toArray()));
-
-Gates.PhaseGradientGates = PhaseGradientGates;
-Gates.QuarterTurns = QuarterTurnGates;
-
-Gates.OtherZ = {
-    Z3: Gate.fromKnownMatrix(
-        "Z^⅓",
-        Matrix.fromPauliRotation(0, 0, 1 / 6),
-        "Z^⅓ Gate",
-        "Principle third root of Z."),
-    Z3i: Gate.fromKnownMatrix(
-        "Z^-⅓",
-        Matrix.fromPauliRotation(0, 0, -1 / 6),
-        "Z^-⅓ Gate",
-        "Adjoint third root of Z."),
-    Z4: Gate.fromKnownMatrix(
-        "Z^¼",
-        Matrix.fromPauliRotation(0, 0, 1 / 8),
-        "Z^¼ Gate",
-        "Principle fourth root of Z.\nAlso known as the 'T' gate."),
-    Z4i: Gate.fromKnownMatrix(
-        "Z^-¼",
-        Matrix.fromPauliRotation(0, 0, -1 / 8),
-        "Z^-¼ Gate",
-        "Adjoint fourth root of Z."),
-    Z8: Gate.fromKnownMatrix(
-        "Z^⅛",
-        Matrix.fromPauliRotation(0, 0, 1 / 16),
-        "Z^⅛ Gate",
-        "Principle eighth root of Z."),
-    Z8i: Gate.fromKnownMatrix(
-        "Z^-⅛",
-        Matrix.fromPauliRotation(0, 0, -1 / 16),
-        "Z^-⅛ Gate",
-        "Adjoint eighth root of Z."),
-    Z16: Gate.fromKnownMatrix(
-        "Z^⅟₁₆",
-        Matrix.fromPauliRotation(0, 0, 1 / 32),
-        "Z^⅟₁₆ Gate",
-        "Principle sixteenth root of Z."),
-    Z16i: Gate.fromKnownMatrix(
-        "Z^-⅟₁₆",
-        Matrix.fromPauliRotation(0, 0, -1 / 32),
-        "Z^-⅟₁₆ Gate",
-        "Adjoint sixteenth root of Z.")
-};
-
-Gates.OtherX = {
-    X3: Gate.fromKnownMatrix(
-        "X^⅓",
-        Matrix.fromPauliRotation(1 / 6, 0, 0),
-        "X^⅓ Gate",
-        "Principle third root of X."),
-    X3i: Gate.fromKnownMatrix(
-        "X^-⅓",
-        Matrix.fromPauliRotation(-1 / 6, 0, 0),
-        "X^-⅓ Gate",
-        "Adjoint third root of X."),
-    X4: Gate.fromKnownMatrix(
-        "X^¼",
-        Matrix.fromPauliRotation(1 / 8, 0, 0),
-        "X^¼ Gate",
-        "Principle fourth root of X."),
-    X4i: Gate.fromKnownMatrix(
-        "X^-¼",
-        Matrix.fromPauliRotation(-1 / 8, 0, 0),
-        "X^-¼ Gate",
-        "Adjoint fourth root of X."),
-    X8: Gate.fromKnownMatrix(
-        "X^⅛",
-        Matrix.fromPauliRotation(1 / 16, 0, 0),
-        "X^⅛ Gate",
-        "Principle eighth root of X."),
-    X8i: Gate.fromKnownMatrix(
-        "X^-⅛",
-        Matrix.fromPauliRotation(-1 / 16, 0, 0),
-        "X^-⅛ Gate",
-        "Adjoint eighth root of X."),
-    X16: Gate.fromKnownMatrix(
-        "X^⅟₁₆",
-        Matrix.fromPauliRotation(1 / 32, 0, 0),
-        "X^⅟₁₆ Gate",
-        "Principle sixteenth root of X."),
-    X16i: Gate.fromKnownMatrix(
-        "X^-⅟₁₆",
-        Matrix.fromPauliRotation(-1 / 32, 0, 0),
-        "X^-⅟₁₆ Gate",
-        "Adjoint sixteenth root of X.")
-};
-
-Gates.OtherY = {
-    Y3: Gate.fromKnownMatrix(
-        "Y^⅓",
-        Matrix.fromPauliRotation(0, 1 / 6, 0),
-        "Y^⅓ Gate",
-        "Principle third root of Y."),
-    Y3i: Gate.fromKnownMatrix(
-        "Y^-⅓",
-        Matrix.fromPauliRotation(0, -1 / 6, 0),
-        "Y^-⅓ Gate",
-        "Adjoint third root of Y."),
-    Y4: Gate.fromKnownMatrix(
-        "Y^¼",
-        Matrix.fromPauliRotation(0, 1 / 8, 0),
-        "Y^¼ Gate",
-        "Principle fourth root of Y."),
-    Y4i: Gate.fromKnownMatrix(
-        "Y^-¼",
-        Matrix.fromPauliRotation(0, -1 / 8, 0),
-        "Y^-¼ Gate",
-        "Adjoint fourth root of Y."),
-    Y8: Gate.fromKnownMatrix(
-        "Y^⅛",
-        Matrix.fromPauliRotation(0, 1 / 16, 0),
-        "Y^⅛ Gate",
-        "Principle eighth root of Y."),
-    Y8i: Gate.fromKnownMatrix(
-        "Y^-⅛",
-        Matrix.fromPauliRotation(0, -1 / 16, 0),
-        "Y^-⅛ Gate",
-        "Adjoint eighth root of Y."),
-    Y16: Gate.fromKnownMatrix(
-        "Y^⅟₁₆",
-        Matrix.fromPauliRotation(0, 1 / 32, 0),
-        "Y^⅟₁₆ Gate",
-        "Principle sixteenth root of Y."),
-    Y16i: Gate.fromKnownMatrix(
-        "Y^-⅟₁₆",
-        Matrix.fromPauliRotation(0, -1 / 32, 0),
-        "Y^-⅟₁₆ Gate",
-        "Adjoint sixteenth root of Y.")
-};
-
-Gates.Exponentiating = ExponentiatingGates;
-Gates.Powering = PoweringGates;
-Gates.PostSelectionGates = PostSelectionGates;
 
 Gates.Misc = {
     MysteryGateSymbol: "?",
@@ -569,32 +444,9 @@ Gates.KnownToSerializer = [
     Gates.Exponentiating.YForward,
     Gates.Exponentiating.ZForward,
 
-    Gates.OtherX.X3,
-    Gates.OtherX.X4,
-    Gates.OtherX.X8,
-    Gates.OtherX.X16,
-    Gates.OtherX.X3i,
-    Gates.OtherX.X4i,
-    Gates.OtherX.X8i,
-    Gates.OtherX.X16i,
-
-    Gates.OtherY.Y3,
-    Gates.OtherY.Y4,
-    Gates.OtherY.Y8,
-    Gates.OtherY.Y16,
-    Gates.OtherY.Y3i,
-    Gates.OtherY.Y4i,
-    Gates.OtherY.Y8i,
-    Gates.OtherY.Y16i,
-
-    Gates.OtherZ.Z3,
-    Gates.OtherZ.Z4,
-    Gates.OtherZ.Z8,
-    Gates.OtherZ.Z16,
-    Gates.OtherZ.Z3i,
-    Gates.OtherZ.Z4i,
-    Gates.OtherZ.Z8i,
-    Gates.OtherZ.Z16i,
+    ...Gates.OtherX.all,
+    ...Gates.OtherY.all,
+    ...Gates.OtherZ.all,
 
     ...Gates.Arithmetic.IncrementFamily.all,
     ...Gates.Arithmetic.DecrementFamily.all,
