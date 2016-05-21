@@ -17,6 +17,7 @@ import Shaders from "src/webgl/Shaders.js"
 import ArithmeticGates from "src/gates/ArithmeticGates.js"
 import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
 import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
+import ExponentiatingGates from "src/gates/ExponentiatingGates.js";
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 
@@ -419,69 +420,8 @@ const ZPow = t => {
     let s = Math.sin(τ * t);
     return new Matrix(2, 2, new Float32Array([1, 0, 0, 0, 0, 0, c, s]));
 };
-const XExp = t => {
-    let c = Math.cos(τ * t);
-    let s = Math.sin(τ * t);
-    return new Matrix(2, 2, new Float32Array([c, 0, 0, -s, 0, -s, c, 0]));
-};
-const YExp = t => {
-    let c = Math.cos(τ * t);
-    let s = Math.sin(τ * t);
-    return new Matrix(2, 2, new Float32Array([c, 0, -s, 0, s, 0, c, 0]));
-};
-const ZExp = t => {
-    let c = Math.cos(τ * t);
-    let s = Math.sin(τ * t);
-    return new Matrix(2, 2, new Float32Array([c, -s, 0, 0, 0, 0, c, s]));
-};
 
-Gates.Exponentiating = {
-    XForward: Gate.fromVaryingMatrix(
-        "e^-iXt",
-        XExp,
-        "X-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the X axis.\nPasses through ±iX instead of X.").
-        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
-
-    XBackward: Gate.fromVaryingMatrix(
-        "e^iXt",
-        t => XExp(-t),
-        "X-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the X axis.\nPasses through ±iX instead of X.").
-        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
-
-    YForward: Gate.fromVaryingMatrix(
-        "e^-iYt",
-        YExp,
-        "Y-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the Y axis.\nPasses through ±iY instead of Y.").
-        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
-
-    YBackward: Gate.fromVaryingMatrix(
-        "e^iYt",
-        t => YExp(-t),
-        "Y-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the Y axis.\nPasses through ±iY instead of Y.").
-        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER),
-
-    ZForward: Gate.fromVaryingMatrix(
-        "e^-iZt",
-        ZExp,
-        "Z-Exponentiating Gate (forward)",
-        "A continuous right-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
-        false,
-        false).
-        withCustomDrawer(GatePainting.CLOCKWISE_CYCLE_DRAWER),
-
-    ZBackward: Gate.fromVaryingMatrix(
-        "e^iZt",
-        t => ZExp(-t),
-        "Z-Exponentiating Gate (backward)",
-        "A continuous left-handed rotation around the Z axis.\nPasses through ±iZ instead of Z.",
-        false,
-        false).
-        withCustomDrawer(GatePainting.MATHWISE_CYCLE_DRAWER)
-};
+Gates.Exponentiating = ExponentiatingGates;
 
 Gates.Powering = {
     XForward: Gate.fromVaryingMatrix(
