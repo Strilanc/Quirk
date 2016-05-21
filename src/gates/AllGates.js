@@ -30,6 +30,7 @@ import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 import SpacerGate from "src/gates/SpacerGate.js"
+import SwapGateHalf from "src/gates/SwapGateHalf.js"
 import UniversalNotGate from "src/gates/Impossible_UniversalNotGate.js"
 import VariousXGates from "src/gates/VariousXGates.js"
 import VariousYGates from "src/gates/VariousYGates.js"
@@ -45,27 +46,7 @@ Gates.Special = {
     Control: Controls.Control,
     AntiControl: Controls.AntiControl,
     Measurement: MeasurementGate,
-
-    SwapHalf: Gate.fromKnownMatrix(
-        "Swap",
-        Matrix.square(
-            1, 0, 0, 0,
-            0, 0, 1, 0,
-            0, 1, 0, 0,
-            0, 0, 0, 1),
-        "Swap Gate [Half]",
-        "Swaps the values of two qubits.\nPlace two swap gate halves in the same column to form a swap gate."
-    ).withCustomDrawer(args => {
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.DEFAULT_DRAWER(args);
-            return;
-        }
-
-        // A swap gate half is shown as a small X (joined by a line to the other half; that's handled elsewhere).
-        let swapRect = Rect.centeredSquareWithRadius(args.rect.center(), args.rect.w / 6);
-        args.painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
-        args.painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
-    })
+    SwapHalf: SwapGateHalf
 };
 
 /**
@@ -185,7 +166,7 @@ Gates.Sets = [
             HalfTurnGates.Z,
             HalfTurnGates.Y,
             HalfTurnGates.X,
-            Gates.Special.SwapHalf,
+            SwapGateHalf,
             null,
             HalfTurnGates.H
         ]
@@ -296,7 +277,7 @@ Gates.Sets = [
 Gates.KnownToSerializer = [
     ...Controls.all,
     MeasurementGate,
-    Gates.Special.SwapHalf,
+    SwapGateHalf,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
