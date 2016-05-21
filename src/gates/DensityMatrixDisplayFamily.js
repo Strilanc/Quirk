@@ -28,8 +28,8 @@ function makeDensityPipeline(w, h, controls, rangeOffset, rangeLength) {
     let offsetReduction = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     w >>= Math.floor(areaReduction/2);
     h >>= Math.ceil(areaReduction/2);
-    result.addStep(w, h, t => CircuitShaders.controlSelect(controls, t));
-    result.addStep(w, h, t => GateShaders.cycleAllBits(t, offsetReduction-rangeOffset));
+    result.addSizedStep(w, h, t => CircuitShaders.controlSelect(controls, t));
+    result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, offsetReduction-rangeOffset));
 
     w <<= Math.floor(rangeLength/2);
     h <<= Math.ceil(rangeLength/2);
@@ -37,16 +37,16 @@ function makeDensityPipeline(w, h, controls, rangeOffset, rangeLength) {
         w <<= 1;
         h >>= 1;
     }
-    result.addStep(w, h, t => DisplayShaders.amplitudesToDensities(t, rangeLength));
+    result.addSizedStep(w, h, t => DisplayShaders.amplitudesToDensities(t, rangeLength));
 
     let remainingQubitCount = Math.round(Math.log2(w*h));
     for (let i = Math.round(Math.log2(w*h)); i > 2*rangeLength; i--) {
         if (h > 1) {
             h >>= 1;
-            result.addStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
+            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
         } else {
             w >>= 1;
-            result.addStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
+            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
         }
         remainingQubitCount -= 1;
     }

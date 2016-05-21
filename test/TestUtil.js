@@ -123,16 +123,40 @@ export class AssertionSubject {
         this.info = info;
     }
 
+    /**
+     * @param {*} newInfo
+     * @returns {!AssertionSubject}
+     */
     withInfo(newInfo) {
         return new AssertionSubject(this.subject, this.id, newInfo);
     }
 
+    /**
+     * @param {!string} message
+     * @private
+     */
     _fail(message) {
         let idMessage = this.id === undefined ? message : `${message} (${this.id})`;
         let infoMessage = this.info === undefined ? idMessage : `${idMessage} (info: ${describe(this.info)})`;
         fail(infoMessage);
     }
 
+    /**
+     * @private
+     */
+    _failExpected(relation, expected) {
+        let act = describe(this.subject);
+        let exp = describe(expected);
+        if (act.length + exp.length < 50) {
+            this._fail(`Got <${act}> but expected it ${relation} <${exp}>.`);
+        } else {
+            this._fail(`Got <\n\t${act}\n> but expected it ${relation} <\n\t${exp}\n>.`);
+        }
+    }
+
+    /**
+     * @param {*} items
+     */
     iteratesAs(...items) {
         let actualItems = [];
         for (let item of this.subject) {
@@ -150,7 +174,7 @@ export class AssertionSubject {
      */
     isEqualTo(other) {
         if (!equate(this.subject, other)) {
-            this._fail(`Got <${describe(this.subject)}> but expected it to equal <${describe(other)}>.`);
+            this._failExpected('to equal', other);
         }
     }
 
@@ -160,7 +184,7 @@ export class AssertionSubject {
      */
     isGreaterThan(other) {
         if (!(this.subject > other)) {
-            this._fail(`Got <${describe(this.subject)}> but expected it to be greater than <${describe(other)}>.`);
+            this._failExpected('to be greater than', other);
         }
     }
 
@@ -169,7 +193,7 @@ export class AssertionSubject {
      */
     isLessThan(other) {
         if (!(this.subject < other)) {
-            this._fail(`Got <${describe(this.subject)}> but expected it to be less than <${describe(other)}>.`);
+            this._failExpected('to be less than', other);
         }
     }
 
@@ -178,7 +202,7 @@ export class AssertionSubject {
      */
     isNotEqualTo(other) {
         if (equate(this.subject, other)) {
-            this._fail(`Got <${describe(this.subject)}> but expected it to NOT equal <${describe(other)}>.`);
+            this._failExpected('to NOT equal', other);
         }
     }
 
@@ -188,7 +212,7 @@ export class AssertionSubject {
      */
     isApproximatelyEqualTo(other, epsilon = 0.000001) {
         if (!isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
-            this._fail(`Got <${describe(this.subject)}> but expected it to approximately equal <${describe(other)}>.`);
+            this._failExpected('to approximately equal', other);
         }
     }
 
@@ -198,8 +222,7 @@ export class AssertionSubject {
      */
     isNotApproximatelyEqualTo(other, epsilon = 0.000001) {
         if (isApproximatelyEqualToHelper(this.subject, other, epsilon)) {
-            this._fail(
-                `Got <${describe(this.subject)}> but expected it to NOT approximately equal <${describe(other)}>.`);
+            this._failExpected('to NOT approximately equal', other);
         }
     }
 }

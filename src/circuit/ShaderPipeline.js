@@ -10,7 +10,7 @@ import { WglConfiguredShader } from "src/webgl/WglShader.js"
 export default class ShaderPipeline {
     constructor() {
         /**
-         * @type {!Array.<!{w: !int, h: !int, f: !function(!WglTexture): !WglConfiguredShader>}
+         * @type {!Array.<!{w: !int, h: !int, shaderFunc: !function(!WglTexture, keepResult: !boolean): !WglConfiguredShader>}
          */
         this.steps = [];
     }
@@ -19,8 +19,37 @@ export default class ShaderPipeline {
      * @param {!int} outWidth
      * @param {!int} outHeight
      * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
+     * @param {!boolean=} keepResult
      */
-    addStep(outWidth, outHeight, nearlyConfiguredShader) {
-        this.steps.push({w: outWidth, h: outHeight, f: nearlyConfiguredShader});
+    addSizedStep(outWidth, outHeight, nearlyConfiguredShader, keepResult=false) {
+        this.steps.push({
+            w: outWidth,
+            h: outHeight,
+            shaderFunc: nearlyConfiguredShader,
+            keepResult});
+    }
+
+    /**
+     * @param {!int} qubitCount
+     * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
+     * @param {!boolean=} keepResult
+     */
+    addPowerSizedStep(qubitCount, nearlyConfiguredShader, keepResult=false) {
+        this.addSizedStep(
+            1 << Math.ceil(qubitCount/2),
+            1 << Math.floor(qubitCount/2),
+            nearlyConfiguredShader,
+            keepResult);
+    }
+
+    /**
+     * @param {!ShaderPipeline} other
+     * @param {!boolean=} keepResult
+     */
+    addPipelineSteps(other, keepResult=false) {
+        for (let i = 0; i < other.steps.length; i++) {
+            let {w, h, shaderFunc} = other.steps[i];
+            this.addSizedStep(w, h, shaderFunc, i === other.steps.length-1 && keepResult);
+        }
     }
 }

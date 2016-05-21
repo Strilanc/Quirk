@@ -62,6 +62,137 @@ export default class MathPainter {
     }
 
     /**
+     * @param {!Painter} painter
+     * @param {!Matrix} matrix The matrix to draw.
+     * @param {!Rect} drawArea The rectangle to draw the matrix within.
+     * @param {!Array.<!Point>} focusPoints
+     * @param {!function(!int, !int) : !string} titleFunc
+     * @param {!function(!int, !int) : !string} valueTextFunc1
+     * @param {!function(!int, !int) : !string=} valueTextFunc2
+     */
+    static paintMatrixTooltip(
+            painter,
+            matrix,
+            drawArea,
+            focusPoints,
+            titleFunc,
+            valueTextFunc1,
+            valueTextFunc2 = () => undefined) {
+        let numCols = matrix.width();
+        let numRows = matrix.height();
+        let {x, y} = drawArea;
+        let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
+        for (let pt of focusPoints) {
+            let c = Math.floor((pt.x - x) / diam);
+            let r = Math.floor((pt.y - y) / diam);
+            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
+                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
+                let v = matrix.cell(c, r);
+                MathPainter.paintDeferredValueTooltip(
+                    painter,
+                    x + diam*c + diam,
+                    y + diam*r,
+                    titleFunc(c, r),
+                    valueTextFunc1(c, r, v),
+                    valueTextFunc2(c, r, v));
+            }
+        }
+    }
+
+    /**
+     * @param {!Tracer} trace
+     * @param {!number} real
+     * @param {!number} imag
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} d
+     * @private
+     */
+    static _traceAmplitudeProbabilitySquare(trace, real, imag, x, y, d) {
+        let p = real*real + imag*imag;
+        if (p > 0.001) {
+            trace.polygon([
+                x, y + d * (1 - p),
+                x + d, y + d * (1 - p),
+                x + d, y + d,
+                x, y + d]);
+        }
+    }
+
+    /**
+     * @param {!Tracer} trace
+     * @param {!number} real
+     * @param {!number} imag
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} d
+     * @private
+     */
+    static _traceProbabilitySquare(trace, real, imag, x, y, d) {
+        let p = real;
+        if (d*p > 0.1) {
+            trace.polygon([
+                x, y + d * (1 - p),
+                x + d, y + d * (1 - p),
+                x + d, y + d,
+                x, y + d]);
+        }
+    }
+
+    /**
+     * @param {!Tracer} trace
+     * @param {!number} real
+     * @param {!number} imag
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} d
+     * @private
+     */
+    static _traceAmplitudeProbabilityCircle(trace, real, imag, x, y, d) {
+        let mag = Math.sqrt(real*real + imag*imag);
+        if (d*mag > 0.5) {
+            trace.circle(x+d/2, y+d/2, mag*d/2);
+        }
+    }
+
+    /**
+     * @param {!Tracer} trace
+     * @param {!number} real
+     * @param {!number} imag
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} d
+     * @private
+     */
+    static _traceAmplitudeLogarithmCircle(trace, real, imag, x, y, d) {
+        let g = 1 + Math.log(real*real + imag*imag)/15;
+        if (g > 0) {
+            trace.circle(x+d/2, y+d/2, g*d/2);
+        }
+    }
+
+    /**
+     * @param {!Tracer} trace
+     * @param {!number} real
+     * @param {!number} imag
+     * @param {!number} x
+     * @param {!number} y
+     * @param {!number} d
+     * @private
+     */
+    static _traceAmplitudePhaseDirection(trace, real, imag, x, y, d) {
+        let mag = Math.sqrt(real*real + imag*imag);
+        let g = 1 + Math.log(mag)/10;
+        let r = Math.max(1, g/mag)*Math.max(d/2, 8);
+        if (isNaN(mag) || r < 0.1) {
+            return;
+        }
+        let cx = x + d/2;
+        let cy = y + d/2;
+        trace.line(cx, cy, cx + real*r, cy - imag*r);
+    }
+
+    /**
      * Draws a visual representation of a complex matrix.
      * @param {!Painter} painter
      * @param {!Matrix} matrix The matrix to draw.
@@ -69,8 +200,9 @@ export default class MathPainter {
      * @param {undefined|!string} amplitudeCircleFillColor
      * @param {!string} amplitudeCircleStrokeColor
      * @param {undefined|!string} amplitudeProbabilityFillColor
-     * @param {!string=} backColor
-     * @param {!Array.<!Point>} focusPoints
+     * @param {undefined|!string=} backColor
+     * @param {undefined|!string=} amplitudePhaseStrokeColor
+     * @param {undefined|!string=} logCircleStrokeColor
      */
     static paintMatrix(painter,
                        matrix,
@@ -79,82 +211,64 @@ export default class MathPainter {
                        amplitudeCircleStrokeColor,
                        amplitudeProbabilityFillColor,
                        backColor = Config.DISPLAY_GATE_BACK_COLOR,
-                       focusPoints = []) {
+                       amplitudePhaseStrokeColor = undefined,
+                       logCircleStrokeColor = '#AAA') {
         let numCols = matrix.width();
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
         let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
-        let unitRadius = diam/2;
-        let x = drawArea.x;
-        let y = drawArea.y;
-        const ε = 0.00005;
+        let {x, y} = drawArea;
+        let hasNaN = matrix.hasNaN();
+        amplitudePhaseStrokeColor = amplitudePhaseStrokeColor || amplitudeCircleStrokeColor;
 
         painter.fillRect(drawArea, backColor);
 
-        // Draw squared magnitude levels.
-        if (amplitudeProbabilityFillColor !== undefined) {
-            painter.trace(trace => {
-                for (let row = 0; row < numRows; row++) {
-                    for (let col = 0; col < numCols; col++) {
-                        let i = (row * numCols + col) * 2;
-                        let p = buf[i] * buf[i] + buf[i + 1] * buf[i + 1];
-                        let mag = Math.sqrt(p);
-                        if (isNaN(mag) || mag < ε) {
-                            continue;
-                        }
-                        let x1 = x + diam * col;
-                        let x2 = x + diam * (col + 1);
-                        let y1 = y + diam * (row + 1 - p);
-                        let y2 = y + diam * (row + 1);
-                        trace.polygon([
-                            x1, y1,
-                            x2, y1,
-                            x2, y2,
-                            x1, y2]);
-                    }
-                }
-            }).thenFill(amplitudeProbabilityFillColor).thenStroke('black', 0.5);
-        }
-
-        // Draw magnitude circles.
-        if (amplitudeCircleFillColor !== undefined) {
-            painter.trace(trace => {
-                for (let row = 0; row < numRows; row++) {
-                    for (let col = 0; col < numCols; col++) {
-                        let i = (row * numCols + col) * 2;
-                        let mag = Math.sqrt(buf[i] * buf[i] + buf[i + 1] * buf[i + 1]);
-                        if (isNaN(mag) || mag < ε) {
-                            continue;
-                        }
-                        trace.circle(x + diam * (col + 0.5), y + diam * (row + 0.5), unitRadius * mag);
-                    }
-                }
-            }).thenFill(amplitudeCircleFillColor).thenStroke(amplitudeCircleStrokeColor, 0.5);
-        }
-
-        // Draw phase lines.
-        painter.trace(trace => {
+        let traceCellsWith = cellTraceFunc => painter.trace(trace => {
             for (let row = 0; row < numRows; row++) {
                 for (let col = 0; col < numCols; col++) {
-                    let i = (row*numCols + col)*2;
-                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
-                    if (isNaN(mag) || mag < ε) {
-                        continue;
-                    }
-                    let x1 = x + diam*(col+0.5);
-                    let y1 = y + diam*(row+0.5);
-                    let clampedRadius = Math.max(unitRadius, 4/mag);
-                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * -buf[i+1]);
+                    let k = (row * numCols + col) * 2;
+                    cellTraceFunc(
+                        trace,
+                        buf[k],
+                        buf[k + 1],
+                        x + diam * col,
+                        y + diam * row,
+                        diam);
                 }
             }
-        }).thenStroke('black');
+        });
+
+        if (!hasNaN) {
+            // Squared magnitude levels.
+            if (amplitudeProbabilityFillColor !== undefined) {
+                traceCellsWith(MathPainter._traceAmplitudeProbabilitySquare).
+                    thenFill(amplitudeProbabilityFillColor).
+                    thenStroke('lightgray', 0.5);
+            }
+
+            // Circles.
+            if (amplitudeCircleFillColor !== undefined) {
+                traceCellsWith(MathPainter._traceAmplitudeProbabilityCircle).
+                    thenFill(amplitudeCircleFillColor).
+                    thenStroke(amplitudeCircleStrokeColor, 0.5);
+
+                traceCellsWith(MathPainter._traceAmplitudeLogarithmCircle).
+                    thenStroke(logCircleStrokeColor, 0.5);
+            }
+
+            // Phase lines.
+            if (logCircleStrokeColor !== undefined) {
+                traceCellsWith(MathPainter._traceAmplitudePhaseDirection).
+                    thenStroke(amplitudePhaseStrokeColor);
+            }
+        }
 
         // Dividers.
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
             thenStroke('lightgray');
 
         // Error text.
-        if (matrix.hasNaN()) {
+        if (hasNaN) {
             painter.print(
                 'NaN',
                 drawArea.x + drawArea.w/2,
@@ -165,28 +279,6 @@ export default class MathPainter {
                 '16px Helvetica',
                 drawArea.w,
                 drawArea.h);
-        }
-
-        // Tool tips.
-        for (let pt of focusPoints) {
-            let c = Math.floor((pt.x - x) / diam);
-            let r = Math.floor((pt.y - y) / diam);
-            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
-                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
-
-                let f = v => (v >= 0 ? '+' : '') + v.toFixed(2);
-                let g = v => (v >= 0 ? '+' : '') + v.toFixed(4);
-                let v = matrix.cell(c, r);
-                let d = v.abs();
-                let p = v.phase() * 180 / Math.PI;
-                MathPainter.paintDeferredValueTooltip(
-                    painter,
-                    x + diam*c + diam,
-                    y + diam*r,
-                    `Amplitude of |${Util.bin(r*matrix.width() + c, Math.round(Math.log2(numRows*numCols)))}⟩`,
-                    'val:' + v.toString(new Format(false, 0, 5, ", ")),
-                    `mag²:${g(d)}, phase:${f(p)}°`);
-            }
         }
     }
 
@@ -351,7 +443,7 @@ export default class MathPainter {
                 c.y-u*Math.sqrt(0.5),
                 'Bloch sphere representation of local state',
                 `r:${g(d)}, ϕ:${f(ϕ*360/τ)}°, θ:${f(θ*360/τ)}°`,
-                `x:${g(x)}, y:${g(y)}, z:${g(z)}`);
+                `x:${g(-x)}, y:${g(y)}, z:${g(-z)}`);
         }
     }
 
@@ -469,56 +561,63 @@ export default class MathPainter {
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
         let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
-        let unitRadius = diam/2;
         let x = drawArea.x;
         let y = drawArea.y;
-        const ε = 0.00003;
+        let hasNaN = matrix.hasNaN();
+
+        let traceCouplingsWith = cellTraceFunc => painter.trace(trace => {
+            for (let row = 0; row < numRows; row++) {
+                for (let col = 0; col < numCols; col++) {
+                    if (col !== row) {
+                        let k = (row * numCols + col) * 2;
+                        cellTraceFunc(
+                            trace,
+                            buf[k],
+                            buf[k + 1],
+                            x + diam * col,
+                            y + diam * row,
+                            diam);
+                    }
+                }
+            }
+        });
+
+        let traceDiagonalWith = cellTraceFunc => painter.trace(trace => {
+            for (let col = 0; col < numRows; col++) {
+                let k = col * (numCols + 1) * 2;
+                cellTraceFunc(
+                    trace,
+                    buf[k],
+                    buf[k + 1],
+                    x + diam * col,
+                    y + diam * col,
+                    diam);
+            }
+        });
 
         painter.fillRect(drawArea, backgroundColor);
 
-        // Draw fills and outlines.
-        painter.trace(trace => {
-            for (let row = 0; row < numRows; row++) {
-                for (let col = 0; col < numCols; col++) {
-                    let i = (row*numCols + col)*2;
-                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
-                    if (isNaN(mag) || mag < ε) {
-                        continue;
-                    }
-                    if (row === col) {
-                        trace.rect(x + diam*col, y + diam * (col + 1), diam, -diam * buf[i]);
-                    } else {
-                        trace.circle(x + diam*(col+0.5), y + diam*(row+0.5), unitRadius * mag);
-                    }
-                }
-            }
-        }).thenFill(fillColor).thenStroke('#040', 0.5);
+        if (!hasNaN) {
+            traceDiagonalWith(MathPainter._traceProbabilitySquare).
+                thenFill(fillColor).
+                thenStroke('#040', 0.5);
 
-        // Draw phase lines.
-        painter.trace(trace => {
-            for (let row = 0; row < numRows; row++) {
-                for (let col = 0; col < numCols; col++) {
-                    if (row === col) {
-                        continue;
-                    }
-                    let i = (row*numCols + col)*2;
-                    let mag = Math.sqrt(buf[i]*buf[i] + buf[i+1]*buf[i+1]);
-                    if (isNaN(mag) || mag < ε) {
-                        continue;
-                    }
-                    let x1 = x + diam*(col+0.5);
-                    let y1 = y + diam*(row+0.5);
-                    let clampedRadius = Math.max(unitRadius, 4/mag);
-                    trace.line(x1, y1, x1 + clampedRadius * buf[i], y1 + clampedRadius * buf[i+1]);
-                }
-            }
-        }).thenStroke('black');
+            traceCouplingsWith(MathPainter._traceAmplitudeProbabilityCircle).
+                thenFill(fillColor).
+                thenStroke('#040', 0.5);
+
+            traceCouplingsWith(MathPainter._traceAmplitudeLogarithmCircle).
+                thenStroke('#BBB', 0.5);
+
+            traceCouplingsWith(MathPainter._traceAmplitudePhaseDirection).
+                thenStroke('black');
+        }
 
         // Dividers.
         painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
             thenStroke('lightgray');
 
-        if (matrix.hasNaN()) {
+        if (hasNaN) {
             painter.print(
                 'NaN',
                 drawArea.x + drawArea.w/2,
@@ -531,29 +630,13 @@ export default class MathPainter {
                 drawArea.h);
         }
 
-        // Tool tips.
-        for (let pt of focusPoints) {
-            let c = Math.floor((pt.x - x) / diam);
-            let r = Math.floor((pt.y - y) / diam);
-            let n = Math.round(Math.log2(numRows));
-            if (c >= 0 && c < matrix.width() && r >= 0 && r < matrix.height()) {
-                painter.strokeRect(new Rect(x + diam*c, y + diam*r, diam, diam), 'orange', 2);
-                if (r === c) {
-                    MathPainter.paintDeferredValueTooltip(
-                        painter,
-                        x + diam*c + diam,
-                        y + diam*r,
-                        `Probability of |${Util.bin(r, n)}⟩`,
-                        new Format(false, 0, 4, ", ").formatFloat(matrix.cell(c, r).real*100) + "%");
-                } else {
-                    MathPainter.paintDeferredValueTooltip(
-                        painter,
-                        x + diam*c + diam,
-                        y + diam*r,
-                        `Coupling of |${Util.bin(c, n)}⟩ to ⟨${Util.bin(r, n)}|`,
-                        matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
-                }
-            }
-        }
+        let n = Math.round(Math.log2(numRows));
+        MathPainter.paintMatrixTooltip(painter, matrix, drawArea, focusPoints,
+            (c, r) => c === r ?
+                `Probability of |${Util.bin(c, n)}⟩` :
+                `Coupling of |${Util.bin(c, n)}⟩ to ⟨${Util.bin(r, n)}|`,
+            (c, r, v) => c === r ?
+                (matrix.cell(c, r).real*100).toFixed(4) + "%" :
+                matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
     }
 }

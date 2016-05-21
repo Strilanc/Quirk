@@ -82,7 +82,9 @@ export default class WidgetPainter {
             Config.OPERATION_FORE_COLOR,
             'black',
             undefined,
-            Config.OPERATION_BACK_COLOR);
+            Config.OPERATION_BACK_COLOR,
+            undefined,
+            'transparent');
         pushRect(matrixRect);
         let n = curMatrix.height();
         let matDescs = WidgetPainter.describeGateTransformations(curMatrix, format);

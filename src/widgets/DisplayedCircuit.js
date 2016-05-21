@@ -3,6 +3,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
 import equate from "src/base/Equate.js"
+import Format from "src/base/Format.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GatePainting from "src/ui/GatePainting.js"
@@ -879,6 +880,7 @@ class DisplayedCircuit {
         let bottomRect = this.gateRect(numWire-1, col);
         let gridRect = new Rect(topRect.x, topRect.y, 0, bottomRect.bottom() - topRect.y);
         gridRect = gridRect.withW(gridRect.h * (colCount/rowCount));
+
         MathPainter.paintMatrix(
             painter,
             amplitudeGrid,
@@ -886,8 +888,12 @@ class DisplayedCircuit {
             numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_MID_COLOR : undefined,
             'black',
             numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_FORE_COLOR : undefined,
-            Config.SUPERPOSITION_BACK_COLOR,
-            hand.hoverPoints());
+            Config.SUPERPOSITION_BACK_COLOR);
+        let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+        MathPainter.paintMatrixTooltip(painter, amplitudeGrid, gridRect, hand.hoverPoints(),
+            (c, r) => `Amplitude of |${Util.bin(r*amplitudeGrid.width() + c, numWire)}⟩`,
+            (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
+            (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
 
         let expandedRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
         let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
@@ -922,7 +928,7 @@ class DisplayedCircuit {
 
         // Hint text.
         painter.printParagraph(
-            "Final amplitudes\n(deferring measurement)",
+            "Final amplitudes\n(assuming measurement deferred)",
             expandedRect.withY(gridRect.bottom() + maxY).withH(40).withW(200),
             new Point(0, 0),
             'gray');

@@ -1,3 +1,5 @@
+import DetailedError from "src/base/DetailedError.js"
+
 /**
  * Miscellaneous utility methods.
  */

@@ -22,17 +22,17 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
     let [w, h] = [controlTexture.width, controlTexture.height];
     let result = new ShaderPipeline();
 
-    result.addStep(w, h, t => DisplayShaders.amplitudesToProbabilities(t, controlTexture));
-    result.addStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
+    result.addSizedStep(w, h, t => DisplayShaders.amplitudesToProbabilities(t, controlTexture));
+    result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
 
     let remainingQubitCount = Math.round(Math.log2(w*h));
     while (remainingQubitCount > rangeLength) {
         if (h > 1) {
             h >>= 1;
-            result.addStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
+            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
         } else {
             w >>= 1;
-            result.addStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
+            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
         }
         remainingQubitCount -= 1;
     }
@@ -65,11 +65,12 @@ function _paintMultiProbabilityDisplay_grid(args) {
     let n = 1 << args.gate.height;
     let d = h/n;
     painter.fillRect(args.rect, Config.DISPLAY_GATE_BACK_COLOR);
+    let r = args.gate.height - 5;
     painter.trace(tracer => {
         for (let i = 1; i < n; i++) {
             tracer.line(x, y + d*i, x+w, y+d*i);
         }
-    }).thenStroke('lightgray');
+    }).thenStroke('lightgray', r <= 0 ? 1 : 1/r);
     painter.strokeRect(args.rect, 'lightgray');
 }
 
