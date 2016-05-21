@@ -23,6 +23,7 @@ import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
+import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 
 const τ = Math.PI * 2;
@@ -153,44 +154,7 @@ Gates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
             toArray()));
 
 Gates.PhaseGradientGates = PhaseGradientGates;
-
-Gates.QuarterTurns = {
-    SqrtXForward: Gate.fromKnownMatrix(
-        "X^½",
-        Matrix.fromPauliRotation(0.25, 0, 0),
-        "√X Gate",
-        "Principle square root of Not."),
-
-    SqrtXBackward: Gate.fromKnownMatrix(
-        "X^-½",
-        Matrix.fromPauliRotation(0.75, 0, 0),
-        "X^-½ Gate",
-        "Adjoint square root of Not."),
-
-    SqrtYForward: Gate.fromKnownMatrix(
-        "Y^½",
-        Matrix.fromPauliRotation(0, 0.25, 0),
-        "√Y Gate",
-        "Principle square root of Y."),
-
-    SqrtYBackward: Gate.fromKnownMatrix(
-        "Y^-½",
-        Matrix.fromPauliRotation(0, 0.75, 0),
-        "Y^-½ Gate",
-        "Adjoint square root of Y."),
-
-    SqrtZForward: Gate.fromKnownMatrix(
-        "Z^½",
-        Matrix.fromPauliRotation(0, 0, 0.25),
-        "√Z Gate",
-        "Principle square root of Z.\nAlso known as the 'S' gate."),
-
-    SqrtZBackward: Gate.fromKnownMatrix(
-        "Z^-½",
-        Matrix.fromPauliRotation(0, 0, 0.75),
-        "Z^-½ Gate",
-        "Adjoint square root of Z.")
-};
+Gates.QuarterTurns = QuarterTurnGates;
 
 Gates.OtherZ = {
     Z3: Gate.fromKnownMatrix(
