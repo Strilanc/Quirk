@@ -197,7 +197,8 @@ const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = new WglShader(`
         vec4 p2 = texture2D(inputTexture, toUv(state + offset));
         gl_FragColor = vec4(
             p1.x + p2.x,
-            p1.z >= p2.z ? p1.y : p2.y,
+            // Bias towards p1 is to keep the choice stable in the face of uniform superpositions and noise.
+            p1.z*1.001 >= p2.z ? p1.y : p2.y,
             p1.z + p2.z,
             0.0);
     }`);
@@ -302,14 +303,14 @@ const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
         return vec2(c1.x*c2.x - c1.y*c2.y, c1.x*c2.y + c1.y*c2.x);
     }
     vec4 mergeRatios(vec4 a, vec4 b) {
-        float m1 = dot(a,a);
-        float m2 = dot(b,b);
         vec2 c1 = mul(a.xy, b.zw);
         vec2 c2 = mul(a.zw, b.xy);
         vec2 d = c1 - c2;
         float nan = 0.0*d.x/0.0;
         float err = dot(d, d);
         err /= max(0.000000000000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
+        float m1 = dot(a,a);
+        float m2 = dot(b,b);
         return isNaN(err) || err > 0.0001 ? vec4(nan, nan, nan, nan)
             : m1 >= m2 ? a
             : b;
