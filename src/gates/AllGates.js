@@ -22,6 +22,7 @@ import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
+import MeasurementGate from "src/gates/MeasurementGate.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
@@ -34,8 +35,6 @@ import VariousXGates from "src/gates/VariousXGates.js"
 import VariousYGates from "src/gates/VariousYGates.js"
 import VariousZGates from "src/gates/VariousZGates.js"
 
-const τ = Math.PI * 2;
-
 let Gates = {};
 export default Gates;
 
@@ -45,33 +44,7 @@ export default Gates;
 Gates.Special = {
     Control: Controls.Control,
     AntiControl: Controls.AntiControl,
-    Measurement: Gate.fromIdentity(
-        "Measure",
-        "Measurement Gate",
-        "Measures a wire's qubit, along the Z axis."
-    ).withCustomDrawer(args => {
-        let backColor = Config.GATE_FILL_COLOR;
-        if (args.isHighlighted) {
-            backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
-        }
-        args.painter.fillRect(args.rect, backColor);
-        args.painter.strokeRect(args.rect);
-
-        let r = args.rect.w*0.4;
-        let {x, y} = args.rect.center();
-        y += r*0.6;
-        let a = -τ/6;
-        let [c, s] = [Math.cos(a)*r*1.5, Math.sin(a)*r*1.5];
-        let [p, q] = [x + c, y + s];
-
-        // Draw the dial and shaft.
-        args.painter.trace(trace => {
-            trace.ctx.arc(x, y, r, τ/2, τ);
-            trace.line(x, y, p, q);
-        }).thenStroke('black');
-        // Draw the indicator head.
-        args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
-    }),
+    Measurement: MeasurementGate,
 
     SwapHalf: Gate.fromKnownMatrix(
         "Swap",
@@ -132,10 +105,6 @@ Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
 
-const FOURIER_TRANSFORM_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span)));
-
-
 Gates.Misc = {
     MysteryGateSymbol: "?",
     MysteryGateMakerWithMatrix: matrix => Gate.fromKnownMatrix(
@@ -191,7 +160,7 @@ Gates.Sets = [
     {
         hint: "Probes",
         gates: [
-            Gates.Special.Measurement,
+            MeasurementGate,
             PostSelectionGates.PostSelectOff,
             Controls.AntiControl,
             null,
@@ -326,7 +295,7 @@ Gates.Sets = [
 /** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
     ...Controls.all,
-    Gates.Special.Measurement,
+    MeasurementGate,
     Gates.Special.SwapHalf,
 
     ...AmplitudeDisplayFamily.all,
