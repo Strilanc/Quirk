@@ -133,7 +133,7 @@ suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_cornerCa
     ]);
     let dataTex = Shaders.data(data).toFloatTexture(2, 2);
     let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(4, 4);
-    let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels, 2, 2);
+    let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels);
     assertThat(decodedPixels).isEqualTo(data);
 });
 
@@ -143,7 +143,7 @@ suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_randomiz
         let data = new Float32Array(Seq.range(diam*diam*4).map(i => Math.random()*10-5).toFloat32Array());
         let dataTex = Shaders.data(data).toFloatTexture(diam, diam);
         let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(diam*2, diam*2);
-        let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels, diam, diam);
+        let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels);
         assertThat(decodedPixels).isEqualTo(data);
     }
 });
@@ -154,6 +154,6 @@ suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_caught",
     ]);
     let dataTex = Shaders.data(data).toFloatTexture(1, 1);
     let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(2, 2);
-    let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels, 1, 1);
+    let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels);
     assertThat(decodedPixels).isEqualTo(data);
 });

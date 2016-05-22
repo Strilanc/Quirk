@@ -131,10 +131,7 @@ CircuitTextures.mergedReadFloats = textures => {
         Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(combinedTexBytes);
 
         let combinedBytePixels = combinedTexBytes.readPixels();
-        combinedPixels = Shaders.decodeByteBufferToFloatBuffer(
-            combinedBytePixels,
-            combinedTex.width,
-            combinedTex.height);
+        combinedPixels = Shaders.decodeByteBufferToFloatBuffer(combinedBytePixels);
         CircuitTextures.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
     } else {
         combinedPixels = combinedTex.readPixels();

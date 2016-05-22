@@ -128,18 +128,18 @@ Shaders.encodeFloatsIntoBytes = inputTexture => new WglConfiguredShader(destinat
 
     FLOATS_TO_ENCODED_BYTES_SHADER.withArgs(
         WglArg.texture("inputTexture", inputTexture, 0),
-        WglArg.vec2("inputTextureSize", inputTexture.width, inputTexture.height)
+        WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
+        WglArg.float("outputWidth", destinationTexture.width)
     ).renderTo(destinationTexture);
 });
 const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
-    /**
-     * The width and height of the input texture.
-     * The output texture should be twice as large in each direction.
-     */
-    uniform vec2 inputTextureSize;
-
-    /** The float texture to encode into bytes. */
+    uniform vec2 inputSize;
     uniform sampler2D inputTexture;
+    uniform float outputWidth;
+
+    vec2 toUv(float state) {
+        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
+    }
 
     /**
      * Encodes a single-precision float into four bytes.
@@ -168,22 +168,15 @@ const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
     }
 
     void main() {
-        vec2 uv = gl_FragCoord.xy / inputTextureSize.xy;
-        vec4 c = texture2D(inputTexture, vec2(mod(uv.x, 1.0), mod(uv.y, 1.0)));
-        float f = 0.0;
-        if (uv.x < 1.0) {
-            if (uv.y < 1.0) {
-                f = c.r;
-            } else {
-                f = c.g;
-            }
-        } else {
-            if (uv.y < 1.0) {
-                f = c.b;
-            } else {
-                f = c.a;
-            }
-        }
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float state = xy.y * outputWidth + xy.x;
+        float inputState = floor(state / 4.0);
+        float c = mod(state, 4.0);
+        vec4 v = texture2D(inputTexture, toUv(inputState));
+        float f = c == 0.0 ? v.x
+                : c == 1.0 ? v.y
+                : c == 2.0 ? v.z
+                : v.w;
         gl_FragColor = encode_float(f);
     }`);
 
@@ -217,24 +210,13 @@ const decodeByteToFloat = (a, b, c, d) => {
 /**
  * Decodes the bytes in a Uint8Array (from a float-encoded-as-bytes texture) back into the desired Float32Array.
  * @param {!Uint8Array} bytes
- * @param {!int} width The width of the float texture this byte buffer is an encoding of.
- * @param {!int} height The height of the float texture this byte buffer is an encoding of.
  * @returns {!Float32Array}
  */
-Shaders.decodeByteBufferToFloatBuffer = (bytes, width, height) => {
-    let decodeAt = (x, y) => {
-        let i = y*width*8 + x*4;
-        return decodeByteToFloat(bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]);
-    };
+Shaders.decodeByteBufferToFloatBuffer = bytes => {
     let result = new Float32Array(bytes.length/4);
-    let n = 0;
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            result[n++] = decodeAt(x, y);
-            result[n++] = decodeAt(x, y+height);
-            result[n++] = decodeAt(x+width, y);
-            result[n++] = decodeAt(x+width, y+height);
-        }
+    for (let i = 0; i < result.length; i++) {
+        let k = i << 2;
+        result[i] = decodeByteToFloat(bytes[k], bytes[k+1], bytes[k+2], bytes[k+3]);
     }
     return result;
 };
