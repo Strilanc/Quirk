@@ -15,10 +15,10 @@ export default HalfTurnGates;
  */
 function NOT_DRAWER(args) {
     let hasSingleWireControl =
-        args.positionInCircuit !== null &&
+        args.positionInCircuit !== undefined &&
         args.stats.circuitDefinition.colHasSingleWireControl(args.positionInCircuit.col);
     let hasDoubleWireControl =
-        args.positionInCircuit !== null &&
+        args.positionInCircuit !== undefined &&
         args.stats.circuitDefinition.colHasDoubleWireControl(args.positionInCircuit.col);
     if ((!hasSingleWireControl && !hasDoubleWireControl) || args.isHighlighted) {
         GatePainting.DEFAULT_DRAWER(args);

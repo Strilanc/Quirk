@@ -28,7 +28,7 @@ GatePainting.MAKE_HIGHLIGHTED_DRAWER =
         args.painter.fillRect(args.rect, backColor);
         args.painter.strokeRect(args.rect);
         GatePainting.paintResizeTab(args);
-        paintGateSymbol(args);
+        GatePainting.paintGateSymbol(args);
     };
 
 /**
@@ -85,7 +85,7 @@ GatePainting.paintResizeTab = args => {
 /**
  * @param {!GateDrawParams} args
  */
-const paintGateSymbol = args => {
+GatePainting.paintGateSymbol = args => {
     let painter = args.painter;
     let symbol = args.gate.symbol;
     let rect = args.rect;
@@ -192,7 +192,7 @@ GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
 const DISPLAY_GATE_DEFAULT_DRAWER = GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.DISPLAY_GATE_IN_TOOLBOX_FILL_COLOR);
 
 GatePainting.makeDisplayDrawer = statePainter => args => {
-    if (args.positionInCircuit === null) {
+    if (args.positionInCircuit === undefined) {
         DISPLAY_GATE_DEFAULT_DRAWER(args);
         return;
     }
@@ -237,18 +237,6 @@ GatePainting.MATRIX_DRAWER = args => {
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
         args.painter.ctx.globalAlpha = 1;
     }
-};
-
-GatePainting.POST_SELECT_DRAWER = args => {
-    if (args.isInToolbox  || args.isHighlighted) {
-        GatePainting.DEFAULT_DRAWER(args);
-        return;
-    }
-
-    args.painter.fillRect(args.rect, Config.BACKGROUND_COLOR_CIRCUIT);
-    args.painter.printParagraph(args.gate.symbol, args.rect, new Point(0.5, 0.5), Config.DEFAULT_TEXT_COLOR, 16);
-    args.painter.printParagraph("post-", args.rect, new Point(0.5, 0), 'red', 10);
-    args.painter.printParagraph("select", args.rect, new Point(0.5, 1), 'red', 10);
 };
 
 /**
