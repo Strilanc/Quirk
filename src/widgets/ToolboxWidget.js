@@ -122,7 +122,7 @@ class ToolboxWidget {
                     rect,
                     Util.notNull(gate),
                     stats,
-                    null,
+                    undefined,
                     [],
                     undefined));
             }

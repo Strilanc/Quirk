@@ -11,7 +11,7 @@ export default class GateDrawParams {
      * @param {!Rect} rect
      * @param {!Gate} gate
      * @param {!CircuitStats} stats
-     * @param {?{row: !int, col: !int}} positionInCircuit
+     * @param {undefined|!{row: !int, col: !int}} positionInCircuit
      * @param {!Array.<!Point>} focusPoints
      * @param {undefined|*} customStats
      */
