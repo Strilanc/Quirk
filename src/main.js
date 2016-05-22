@@ -32,10 +32,13 @@ canvas.width = canvasDiv.clientWidth;
 canvas.height = window.innerHeight*0.9;
 let haveLoaded = false;
 let historyPusher = new HistoryPusher();
-let semiStableRng = new RestartableRng();
-setInterval(() => {
-    semiStableRng = new RestartableRng();
-}, Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS*0.95);
+let semiStableRng = {cur: new RestartableRng()};
+let cycleRng;
+cycleRng = () => {
+    semiStableRng.cur = new RestartableRng();
+    setTimeout(cycleRng, Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS*0.99);
+};
+cycleRng();
 
 //noinspection JSValidateTypes
 /** @type {!HTMLDivElement} */
@@ -143,7 +146,7 @@ const redrawNow = () => {
     let size = desiredCanvasSizeFor(shown);
     canvas.width = size.w;
     canvas.height = size.h;
-    let painter = new Painter(canvas, semiStableRng.restarted());
+    let painter = new Painter(canvas, semiStableRng.cur.restarted());
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats, isShiftHeld);
     painter.paintDeferred();
