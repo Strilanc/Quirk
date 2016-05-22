@@ -1,5 +1,56 @@
 import describe from "src/base/Describe.js"
 
+/**
+ * @type {!Array.<{regex: !Pattern, handler: !function()}>}
+ */
+let knownIssueRegexes = [];
+
+function checkForKnownIssueHandler(subject, isKnownIssueUrl) {
+    if (isKnownIssueUrl !== undefined) {
+        return undefined;
+    }
+    for (let {regex, handler} of knownIssueRegexes) {
+        //noinspection JSUnusedAssignment
+        if (regex.test(subject)) {
+            //noinspection JSUnusedAssignment
+            return handler;
+        }
+    }
+    return undefined;
+}
+
+let showErrorDiv_forced = (callout, subject, body, isKnownIssueUrl) => {
+    // Set shown error details.
+    document.getElementById('error-happened-div').innerText = callout;
+    document.getElementById('error-message-div').innerText = subject;
+    document.getElementById('error-description-div').innerText = body;
+    document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
+    document.getElementById('error-mailto-anchor').href = [
+        'mailto:craig.gidney@gmail.com?subject=',
+        encodeURIComponent('Quirk had an error: ' + subject),
+        '&body=',
+        encodeURIComponent('\n\n\n' + body)
+    ].join('');
+    document.getElementById('error-github-anchor').href = [
+        'https://github.com/Strilanc/Quirk/issues/new?title=',
+        encodeURIComponent('Encountered error: ' + subject),
+        '&body=',
+        encodeURIComponent('\n\n\n' + body)
+    ].join('');
+    document.getElementById('error-image-pre').src = takeScreenshotOfCanvas();
+    setTimeout(() => {
+        document.getElementById('error-image-post').src = takeScreenshotOfCanvas();
+    }, 0);
+    if (isKnownIssueUrl === undefined) {
+        document.getElementById('error-report-div').style.display = 'block';
+        document.getElementById('error-known-div').style.display = 'none';
+    } else {
+        document.getElementById('error-report-div').style.display = 'none';
+        document.getElementById('error-known-div').style.display = 'block';
+        document.getElementById('error-known-issue-anchor').href = isKnownIssueUrl;
+    }
+};
+
 let _alreadySeenBodies = [];
 let _alreadySeenIdentifiers = [];
 /**
@@ -7,9 +58,10 @@ let _alreadySeenIdentifiers = [];
  * @param {!string} subject Subject used for github issue / mailto link.
  * @param {!string} body Body used for github issue / mailto link.
  * @param {!string} identifier A minimal description of the error that shouldn't vary as the circuit is edited, so
+ * @param {undefined|!string} isKnownIssueUrl
  * errors covering other errors also get reported.
  */
-let showErrorDiv = (callout, subject, body, identifier) => {
+let showErrorDiv = (callout, subject, body, identifier, isKnownIssueUrl=undefined) => {
     let errDivStyle = document.getElementById('error-div').style;
     if (errDivStyle.opacity < 0.7) {
         // Partially faded away as user interacted with circuit.
@@ -35,27 +87,13 @@ let showErrorDiv = (callout, subject, body, identifier) => {
         _alreadySeenIdentifiers.push(identifier);
     }
 
-    // Set shown error details.
-    document.getElementById('error-happened-div').innerText = callout;
-    document.getElementById('error-message-div').innerText = subject;
-    document.getElementById('error-description-div').innerText = body;
-    document.getElementById('error-mailto-anchor').innerText = 'Email the issue to craig.gidney@gmail.com';
-    document.getElementById('error-mailto-anchor').href = [
-        'mailto:craig.gidney@gmail.com?subject=',
-        encodeURIComponent('Quirk had an error: ' + subject),
-        '&body=',
-        encodeURIComponent('\n\n\n' + body)
-    ].join('');
-    document.getElementById('error-github-anchor').href = [
-        'https://github.com/Strilanc/Quirk/issues/new?title=',
-        encodeURIComponent('Encountered error: ' + subject),
-        '&body=',
-        encodeURIComponent('\n\n\n' + body)
-    ].join('');
-    document.getElementById('error-image-pre').src = takeScreenshotOfCanvas();
-    setTimeout(() => {
-        document.getElementById('error-image-post').src = takeScreenshotOfCanvas();
-    }, 0);
+    let handler = checkForKnownIssueHandler(subject, isKnownIssueUrl);
+    if (handler !== undefined) {
+        handler();
+        return;
+    }
+
+    showErrorDiv_forced(callout, subject, body, isKnownIssueUrl);
 };
 
 let takeScreenshotOfCanvas = () => {
@@ -103,6 +141,20 @@ let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
         "(Recovered) " + recovery + " @ " + location.substr(0, 200) + "[...]");
 };
 let simplifySrcUrls = textContainingUrls => textContainingUrls.replace(/http.+?\/src\.min\.js/g, 'src.min.js');
+
+let notifyAboutKnownIssue = (summary, url, regexes) => {
+    let handler = () => showErrorDiv(
+        'A known problem is happening. :(',
+        summary,
+        '',
+        summary,
+        url);
+
+    for (let regex of regexes) {
+        knownIssueRegexes.push({regex, handler});
+    }
+    handler();
+};
 
 let drawErrorBox = msg => {
     let canvas = document.getElementById("drawCanvas");
@@ -179,6 +231,6 @@ function onErrorHandler(errorMsg, url, lineNumber, columnNumber, errorObj) {
     return false;
 }
 
-export { notifyAboutRecoveryFromUnexpectedError, onErrorHandler }
+export {notifyAboutRecoveryFromUnexpectedError, onErrorHandler, notifyAboutKnownIssue}
 
 window.onerror = onErrorHandler;
