@@ -68,6 +68,7 @@ CountingGates.ClockPulseGate = Gate.fromVaryingMatrix(
     t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
     "Clock Pulse Gate",
     "Xors a square wave into the target wire.").
+    markedAsOnlyPermutingAndPhasing().
     withCustomDrawer(STAIRCASE_DRAWER(0, 2)).
     withStableDuration(0.5);
 
@@ -76,6 +77,7 @@ CountingGates.QuarterPhaseClockPulseGate = Gate.fromVaryingMatrix(
     t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
     "Clock Pulse Gate (Quarter Phase)",
     "Xors a quarter-phased square wave into the target wire.").
+    markedAsOnlyPermutingAndPhasing().
     withCustomDrawer(STAIRCASE_DRAWER(0.75, 2)).
     withStableDuration(0.25);
 
