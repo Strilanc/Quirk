@@ -339,7 +339,13 @@ loadCircuitFromUrl();
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
 setTimeout(() => {
-    initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
     redrawNow();
     document.getElementById("loading-div").style.display = 'none';
+    try {
+        initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
+    } catch (ex) {
+        // If that failed, the user is already getting warnings about WebGL not being supported.
+        // Just silently log it.
+        console.error(ex);
+    }
 }, 0);
