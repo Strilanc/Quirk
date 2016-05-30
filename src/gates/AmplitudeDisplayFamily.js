@@ -487,7 +487,7 @@ function amplitudeDisplayMaker(span) {
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS);
 }
 
-let AmplitudeDisplayFamily = Gate.generateFamily(1, 8, amplitudeDisplayMaker);
+let AmplitudeDisplayFamily = Gate.generateFamily(1, 16, amplitudeDisplayMaker);
 
 export default AmplitudeDisplayFamily;
 export {

@@ -255,17 +255,19 @@ export default class MathPainter {
                 traceCellsWith(MathPainter._traceAmplitudeLogarithmCircle).
                     thenStroke(logCircleStrokeColor, 0.5);
             }
+        }
 
+        // Dividers.
+        painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
+            thenStroke('lightgray');
+
+        if (!hasNaN) {
             // Phase lines.
             if (logCircleStrokeColor !== undefined) {
                 traceCellsWith(MathPainter._traceAmplitudePhaseDirection).
                     thenStroke(amplitudePhaseStrokeColor);
             }
         }
-
-        // Dividers.
-        painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
-            thenStroke('lightgray');
 
         // Error text.
         if (hasNaN) {
