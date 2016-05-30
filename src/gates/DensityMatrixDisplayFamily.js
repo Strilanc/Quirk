@@ -151,7 +151,7 @@ let DoubleWireDensityMatrixDisplay = Gate.fromIdentity(
         MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
     }));
 
-let DensityMatrixDisplayFamily = Gate.generateFamily(1, 5, span =>
+let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleWireDensityMatrixDisplay :
     span === 2 ? DoubleWireDensityMatrixDisplay :
     densityMatrixDisplayMaker(span));

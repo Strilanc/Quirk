@@ -540,8 +540,16 @@ export default class MathPainter {
         }
 
         // Dividers.
-        painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
-            thenStroke('lightgray');
+        let d = drawArea.w/numCols;
+        if (d > 2) {
+            painter.trace(trace => trace.grid(x, y, drawArea.w, drawArea.h, numCols, numRows)).
+                thenStroke('lightgray', Math.min(1, 2/Math.log(numCols)));
+        } else {
+           painter.ctx.save();
+           painter.ctx.globalAlpha *= 0.2;
+           painter.fillRect(drawArea, 'lightgray');
+           painter.ctx.restore();
+        }
 
         if (hasNaN) {
             painter.print(
