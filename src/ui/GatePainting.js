@@ -20,7 +20,7 @@ GatePainting.paintOutline = args => {
         args.painter.strokeLine(r.topRight(), r.bottomRight());
         args.painter.strokeLine(r.bottomLeft(), r.bottomRight());
     }
-    args.painter.strokeRect(args.rect);
+    args.painter.strokeRect(args.rect, 'black');
 };
 
 /**
@@ -34,11 +34,8 @@ GatePainting.MAKE_HIGHLIGHTED_DRAWER =
         if (args.isHighlighted) {
             backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
         }
-        if (args.isInToolbox) {
-          args.painter.strokeRect(args.rect.shiftedBy(0.5, 0.5));
-        }
-        GatePainting.paintOutline(args);
         args.painter.fillRect(args.rect, backColor);
+        GatePainting.paintOutline(args);
         GatePainting.paintResizeTab(args);
         GatePainting.paintGateSymbol(args);
     };
