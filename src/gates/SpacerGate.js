@@ -1,5 +1,6 @@
 import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
+import GatePainting from "src/ui/GatePainting.js"
 import Rect from "src/math/Rect.js"
 
 let SpacerGate = Gate.fromIdentity(
@@ -14,7 +15,7 @@ let SpacerGate = Gate.fromIdentity(
                 backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
             }
             args.painter.fillRect(args.rect, backColor);
-            args.painter.strokeRect(args.rect);
+            GatePainting.paintOutline(args);
         } else {
             // Whitespace for the ellipsis.
             let {x, y} = args.rect.center();

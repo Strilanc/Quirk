@@ -1,5 +1,6 @@
 import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
+import GatePainting from "src/ui/GatePainting.js"
 
 let MeasurementGate = Gate.fromIdentity(
     "Measure",
@@ -11,7 +12,7 @@ let MeasurementGate = Gate.fromIdentity(
             backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
         }
         args.painter.fillRect(args.rect, backColor);
-        args.painter.strokeRect(args.rect);
+        GatePainting.paintOutline(args);
 
         const τ = Math.PI * 2;
         let r = args.rect.w*0.4;
