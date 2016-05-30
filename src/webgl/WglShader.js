@@ -126,8 +126,10 @@ class WglCompiledShader {
         gl.linkProgram(program);
 
         let warnings = gl.getProgramInfoLog(program);
-        if (warnings !== '' && Config.SUPPRESSED_GLSL_WARNING_PATTERNS.every(e => !e.test(warnings))) {
-            console.warn('gl.getProgramInfoLog()', warnings);
+        if (warnings !== '' &&
+                warnings !== '\0' && // [happened in Ubuntu with NVIDIA GK107GL]
+                Config.SUPPRESSED_GLSL_WARNING_PATTERNS.every(e => !e.test(warnings))) {
+            console.warn('Shader compile caused warnings', 'gl.getProgramInfoLog()', warnings);
         }
 
         if (gl.getProgramParameter(program, GL.LINK_STATUS) === false) {
