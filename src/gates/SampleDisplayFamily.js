@@ -102,5 +102,5 @@ function sampleGateMaker(span) {
         withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS);
 }
 
-let SampleDisplayFamily = Gate.generateFamily(1, 8, sampleGateMaker);
+let SampleDisplayFamily = Gate.generateFamily(1, 16, sampleGateMaker);
 export default SampleDisplayFamily;
