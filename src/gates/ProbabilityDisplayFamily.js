@@ -65,6 +65,14 @@ function _paintMultiProbabilityDisplay_grid(args) {
     let n = 1 << args.gate.height;
     let d = h/n;
     painter.fillRect(args.rect, Config.DISPLAY_GATE_BACK_COLOR);
+
+    if (d < 1) {
+        args.painter.ctx.save();
+        args.painter.ctx.globalAlpha *= 0.2;
+        painter.fillRect(args.rect, 'lightgray');
+        args.painter.ctx.restore();
+        return;
+    }
     let r = args.gate.height - 5;
     painter.trace(tracer => {
         for (let i = 1; i < n; i++) {
@@ -78,7 +86,9 @@ function _paintMultiProbabilityDisplay_probabilityBars(args) {
     let {painter, rect: {x, y, w, h}, customStats: probabilities} = args;
     let n = 1 << args.gate.height;
     let d = h/n;
+    let e = Math.max(d, 1);
 
+    painter.ctx.save();
     painter.ctx.beginPath();
     painter.ctx.moveTo(x, y);
     for (let i = 0; i < n; i++) {
@@ -86,35 +96,42 @@ function _paintMultiProbabilityDisplay_probabilityBars(args) {
         let px = x + w*p;
         let py = y + d*i;
         painter.ctx.lineTo(px, py);
-        painter.ctx.lineTo(px, py+d);
+        painter.ctx.lineTo(px, py+e);
     }
     painter.ctx.lineTo(x, y+h);
     painter.ctx.lineTo(x, y);
 
     painter.ctx.strokeStyle = 'gray';
+    painter.ctx.lineWidth = 1;
     painter.ctx.stroke();
     painter.ctx.fillStyle = Config.DISPLAY_GATE_FORE_COLOR;
     painter.ctx.fill();
+    painter.ctx.restore();
 }
 
 function _paintMultiProbabilityDisplay_logarithmHints(args) {
     let {painter, rect: {x, y, w, h}, customStats: probabilities} = args;
     let n = 1 << args.gate.height;
     let d = h/n;
+    let e = Math.max(d, 1)
 
+    painter.ctx.save();
     painter.ctx.beginPath();
     painter.ctx.moveTo(x, y);
+    let s = 1/(4 + Math.max(8,args.gate.height))
     for (let i = 0; i < n; i++) {
         let p = probabilities.rawBuffer()[i * 2];
-        let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) / 12));
+        let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) * s));
         let py = y + d * i;
         painter.ctx.lineTo(px, py);
-        painter.ctx.lineTo(px, py + d);
+        painter.ctx.lineTo(px, py + e);
     }
     painter.ctx.lineTo(x, y + h);
 
+    painter.ctx.lineWidth = 1;
     painter.ctx.strokeStyle = '#CCC';
     painter.ctx.stroke();
+    painter.ctx.restore();
 }
 
 function _paintMultiProbabilityDisplay_tooltips(args) {
@@ -203,7 +220,7 @@ let SingleChanceGate = Gate.fromIdentity(
             args.focusPoints);
     }));
 
-let ProbabilityDisplayFamily = Gate.generateFamily(1, 8, span =>
+let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
     span === 1 ? SingleChanceGate : multiChanceGateMaker(span));
 export default ProbabilityDisplayFamily;
 export { makeProbabilitySpanPipeline, probabilityPixelsToColumnVector };
