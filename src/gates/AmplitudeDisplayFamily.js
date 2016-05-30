@@ -61,7 +61,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 /**
  * @param {!Float32Array} ketPixels
  * @param {!Float32Array} consistentPixel
- * @returns {!{probabilities: undefined|!Float32Array, superposition: undefined|!Matrix}}
+ * @returns {!{probabilities: undefined|!Float32Array, superposition: undefined|!Matrix, phaseLockIndex: undefined|!int}}
  */
 function processOutputs([ketPixels, consistentPixel]) {
     let n = ketPixels.length >> 2;
@@ -71,16 +71,11 @@ function processOutputs([ketPixels, consistentPixel]) {
     let unity = ketPixels[2];
 
     if (!isPure) {
-        let pBuf = new Float32Array(n*2);
-        for (let k = 0; k < n; k++) {
-            let r = ketPixels[k*4];
-            let i = ketPixels[k*4+1];
-            pBuf[k*2] = Math.sqrt((r*r + i*i)/unity);
-        }
-        return {probabilities: new Matrix(w, h, pBuf), superposition: undefined};
+        return _processOutputs_probabilities(w, h, n, unity, ketPixels);
     }
 
-    let phase = Config.PHASE_CANCEL_FIRST_ENTRY_OF_AMPLITUDE_DISPLAYS ? Math.atan2(ketPixels[1], ketPixels[0]) : 0;
+    let phaseIndex = _processOutputs_pickPhaseLockIndex(ketPixels);
+    let phase = Math.atan2(ketPixels[phaseIndex*4+1], ketPixels[phaseIndex*4]);
     let c = Math.cos(phase);
     let s = -Math.sin(phase);
 
@@ -92,7 +87,40 @@ function processOutputs([ketPixels, consistentPixel]) {
         buf[i*2] = real*c + imag*-s;
         buf[i*2+1] = real*s + imag*c;
     }
-    return {probabilities: undefined, superposition: new Matrix(w, h, buf)};
+    return {
+        probabilities: undefined,
+        superposition: new Matrix(w, h, buf),
+        phaseLockIndex: phaseIndex
+    };
+}
+
+function _processOutputs_pickPhaseLockIndex(ketPixels) {
+    let result = 0;
+    let best = 0;
+    for (let k = 0; k < ketPixels.length; k += 4) {
+        let r = ketPixels[k];
+        let i = ketPixels[k+1];
+        let m = r*r + i*i;
+        if (m > best*10000) {
+            best = m;
+            result = k >> 2;
+        }
+    }
+    return result;
+}
+
+function _processOutputs_probabilities(w, h, n, unity, ketPixels) {
+    let pBuf = new Float32Array(n*2);
+    for (let k = 0; k < n; k++) {
+        let r = ketPixels[k*4];
+        let i = ketPixels[k*4+1];
+        pBuf[k*2] = Math.sqrt((r*r + i*i)/unity);
+    }
+    return {
+        probabilities: new Matrix(w, h, pBuf),
+        superposition: undefined,
+        phaseLockIndex: undefined
+    };
 }
 
 /**
@@ -359,9 +387,10 @@ function pipelineToSumAll(w, h) {
  */
 const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args => {
     let n = args.gate.height;
-    let {probabilities, superposition} = args.customStats || {
+    let {probabilities, superposition, phaseLockIndex} = args.customStats || {
         probabilities: undefined,
-        superposition: Matrix.zero(1 << n, 1 << n).times(NaN)
+        superposition: Matrix.zero(1 << n, 1 << n).times(NaN),
+        phaseLockIndex: undefined
     };
     let matrix = probabilities || superposition;
     let isIncoherent = superposition === undefined;
@@ -388,6 +417,25 @@ const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args =
             (c, r) => `Amplitude of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩`,
             (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
             (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
+        if (phaseLockIndex !== undefined) {
+            let cw = drawRect.w/matrix.width();
+            let rh = drawRect.h/matrix.height();
+            let c = phaseLockIndex % matrix.width();
+            let r = Math.floor(phaseLockIndex / matrix.width());
+            let cx = drawRect.x + cw*(c+0.5);
+            let cy = drawRect.y + rh*(r+0.5);
+            args.painter.strokeLine(new Point(cx, cy), new Point(cx + cw/2, cy), 'red', 2);
+            args.painter.print(
+                'fixed',
+                cx + 0.5*cw,
+                cy,
+                'right',
+                'bottom',
+                'red',
+                '12px monospace',
+                cw*0.5,
+                rh*0.5);
+        }
     }
 
     paintErrorIfPresent(args, isIncoherent);
