@@ -1,14 +1,23 @@
 import {notifyAboutKnownIssue} from "src/fallback.js"
 
 /** @returns {!boolean} */
+function detectWebGlNotSupported() {
+    let canvas = document.createElement('canvas');
+    let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    return gl === null || gl === undefined;
+}
+
+/** @returns {!boolean} */
 function detectFloatTexturesNotSupported() {
-    return document.createElement('canvas').getContext('webgl').getExtension('OES_texture_float') === null;
+    let canvas = document.createElement('canvas');
+    let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    return gl.getExtension('OES_texture_float') === null;
 }
 
 /** @returns {!boolean} */
 function detectFloatRenderingNotSupported() {
     let canvas = document.createElement('canvas');
-    let gl = canvas.getContext('webgl');
+    let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     gl.getExtension('OES_texture_float');
     let texture = gl.createTexture();
     let frameBuffer = gl.createFramebuffer();
@@ -23,7 +32,12 @@ function detectFloatRenderingNotSupported() {
     return gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE;
 }
 
-if (detectFloatTexturesNotSupported()) {
+if (detectWebGlNotSupported()) {
+    notifyAboutKnownIssue(
+        "Can't simulate circuits. Your browser doesn't support WebGL, or has it disabled.",
+        "https://github.com/Strilanc/Quirk/issues/168",
+        [/Computing circuit values failed/, /Error creating WebGL context./])
+} else if (detectFloatTexturesNotSupported()) {
     notifyAboutKnownIssue(
         "Can't simulate circuits. Your browser/GPU doesn't support creating floating point textures.",
         "https://github.com/Strilanc/Quirk/issues/156",
