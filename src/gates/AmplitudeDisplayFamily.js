@@ -120,7 +120,7 @@ const AMPLITUDES_TO_POLAR_KETS_SHADER = new WglShader(`
         float state = xy.y * outputWidth + xy.x;
         vec2 ri = texture2D(inputTexture, toUv(state)).xy;
         float mag = dot(ri, ri);
-        float phase = atan(ri.y, ri.x);
+        float phase = mag == 0.0 ? 0.0 : atan(ri.y, ri.x);
         gl_FragColor = vec4(mag, phase, mag, 0.0);
     }`);
 
@@ -445,10 +445,11 @@ export default AmplitudeDisplayFamily;
 export {
     AmplitudeDisplayFamily,
     amplitudesToPolarKets,
-    pipelineToSpreadLengthAcrossPolarKets,
-    pipelineToAggregateRepresentativePolarKet,
     convertAwayFromPolar,
-    toRatiosVsRepresentative,
+    makeAmplitudeSpanPipeline,
+    pipelineToAggregateRepresentativePolarKet,
     pipelineToFoldConsistentRatios,
-    pipelineToSumAll
+    pipelineToSpreadLengthAcrossPolarKets,
+    pipelineToSumAll,
+    toRatiosVsRepresentative
 };

@@ -1,12 +1,13 @@
 import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import {
     amplitudesToPolarKets,
-    pipelineToSpreadLengthAcrossPolarKets,
-    pipelineToAggregateRepresentativePolarKet,
     convertAwayFromPolar,
-    toRatiosVsRepresentative,
+    makeAmplitudeSpanPipeline,
+    pipelineToAggregateRepresentativePolarKet,
     pipelineToFoldConsistentRatios,
-    pipelineToSumAll
+    pipelineToSpreadLengthAcrossPolarKets,
+    pipelineToSumAll,
+    toRatiosVsRepresentative
 } from "src/gates/AmplitudeDisplayFamily.js"
 
 import CircuitShaders from "src/circuit/CircuitShaders.js"
@@ -31,6 +32,15 @@ suite.webGlTest("amplitudesToPolarKets", () => {
         2,Math.PI*3/4,2,0,
         0.25,Math.PI/2,0.25,0
     ]), 0.0001);
+});
+
+suite.webGlTest("amplitudesToPolarKets_zero", () => {
+    let input = Shaders.data(new Float32Array([
+        0,0,0,0
+    ])).toFloatTexture(1, 1);
+    assertThat(amplitudesToPolarKets(input).readFloatOutputs(1, 1)).isEqualTo(new Float32Array([
+        0,0,0,0
+    ]));
 });
 
 suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
@@ -227,3 +237,18 @@ suite.webGlTest("pipelineToSumAll", () => {
     ]));
     CircuitTextures.doneWithTexture(out);
 });
+
+suite.webGlTest("makeAmplitudeSpanPipeline_00", () => {
+    let inp = Shaders.data(new Float32Array([1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0])).
+        toFloatTexture(2, 2);
+    let pipe = makeAmplitudeSpanPipeline(inp, Controls.NONE, 0, 2);
+    let out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipe);
+    assertThat(out[0].readPixels()).isEqualTo(
+        new Float32Array([1,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]));
+    assertThat(out[1].readPixels()).isEqualTo(new Float32Array([1,0,1,0]));
+
+    CircuitTextures.doneWithTexture(out[0]);
+    CircuitTextures.doneWithTexture(out[1]);
+    inp.ensureDeinitialized();
+});
+
