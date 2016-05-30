@@ -2,6 +2,7 @@ import { Suite, assertThat } from "test/TestUtil.js"
 import WglArg from "src/webgl/WglArg.js"
 import WglShader from "src/webgl/WglShader.js"
 import WglTexture from "src/webgl/WglTexture.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 let suite = new Suite("WglTexture");
 
@@ -11,7 +12,8 @@ suite.webGlTest("readPixels_bytes", () => {
     let shader = new WglShader(`
         uniform float v;
         void main() {
-            gl_FragColor = vec4(gl_FragCoord.xy / vec2(255.0, 255.0), v, 0.5);
+            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+            gl_FragColor = vec4(xy / 255.0, v, 128.0/255.0);
         }`);
 
     let texture = new WglTexture(w, h, WebGLRenderingContext.UNSIGNED_BYTE);
@@ -23,6 +25,25 @@ suite.webGlTest("readPixels_bytes", () => {
         0, 1, 10, 128,
         1, 1, 10, 128
     ]));
+});
+
+suite.webGlTest("readPixels_bytes_all", () => {
+    let w = 1<<3;
+    let h = 1<<3;
+    let shader = new WglShader(`
+        void main() {
+            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+            float s = (xy.y*8.0 + xy.x)*4.0;
+            gl_FragColor = vec4(
+                (s+0.0)/255.0,
+                (s+1.0)/255.0,
+                (s+2.0)/255.0,
+                (s+3.0)/255.0);
+        }`).withArgs();
+
+    assertThat(shader.readByteOutputs(w, h)).isEqualTo(new Uint8Array(
+        Seq.range(256).toArray()
+    ));
 });
 
 suite.webGlTest("readPixels_floats", () => {

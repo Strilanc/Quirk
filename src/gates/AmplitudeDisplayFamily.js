@@ -120,7 +120,7 @@ const AMPLITUDES_TO_POLAR_KETS_SHADER = new WglShader(`
         float state = xy.y * outputWidth + xy.x;
         vec2 ri = texture2D(inputTexture, toUv(state)).xy;
         float mag = dot(ri, ri);
-        float phase = atan(ri.y, ri.x);
+        float phase = mag == 0.0 ? 0.0 : atan(ri.y, ri.x);
         gl_FragColor = vec4(mag, phase, mag, 0.0);
     }`);
 
@@ -288,7 +288,8 @@ function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
                 WglArg.vec2('inputSize', inp.width, inp.height),
                 WglArg.float('outputWidth', dst.width),
                 WglArg.texture('inputTexture', inp, 0),
-                WglArg.float('bit', 1 << (includedQubitCount - bit - 1))
+                WglArg.float('bit', 1 << (includedQubitCount - bit - 1)),
+                WglArg.float('u_NaN', NaN)
             ).renderTo(dst)));
     }
     return result;
@@ -298,6 +299,7 @@ const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
     uniform vec2 inputSize;
     uniform sampler2D inputTexture;
     uniform float bit;
+    uniform float u_NaN;
 
     bool isNaN(float val) {
         return val < 0.0 || 0.0 < val || val == 0.0 ? false : true;
@@ -312,13 +314,12 @@ const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
         vec2 c1 = mul(a.xy, b.zw);
         vec2 c2 = mul(a.zw, b.xy);
         vec2 d = c1 - c2;
-        float nan = 0.0*d.x/0.0;
         float err = dot(d, d);
         // The max up-scaling controls a tricky tradeoff between noisy false positives and blurry false negatives.
         err /= max(0.00000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
         float m1 = dot(a,a);
         float m2 = dot(b,b);
-        return isNaN(err) || err > 0.001 ? vec4(nan, nan, nan, nan)
+        return isNaN(err) || err > 0.001 ? vec4(u_NaN, u_NaN, u_NaN, u_NaN)
             : m1 >= m2 ? a
             : b;
     }
@@ -444,10 +445,11 @@ export default AmplitudeDisplayFamily;
 export {
     AmplitudeDisplayFamily,
     amplitudesToPolarKets,
-    pipelineToSpreadLengthAcrossPolarKets,
-    pipelineToAggregateRepresentativePolarKet,
     convertAwayFromPolar,
-    toRatiosVsRepresentative,
+    makeAmplitudeSpanPipeline,
+    pipelineToAggregateRepresentativePolarKet,
     pipelineToFoldConsistentRatios,
-    pipelineToSumAll
+    pipelineToSpreadLengthAcrossPolarKets,
+    pipelineToSumAll,
+    toRatiosVsRepresentative
 };
