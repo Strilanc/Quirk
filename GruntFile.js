@@ -53,6 +53,22 @@ module.exports = function(grunt) {
             }
         },
         concat: {
+            'concat-html-template-debug': {
+                src: [
+                    'template/html_before_src.html',
+                    'out/tmp/concatenated-src.js',
+                    'template/html_after_src.html'
+                ],
+                dest: 'out/quirk.html'
+            },
+            'concat-html-template-src': {
+                src: [
+                    'template/html_before_src.html',
+                    'out/tmp/minified-src.js',
+                    'template/html_after_src.html'
+                ],
+                dest: 'out/quirk.html'
+            },
             'concat-traceur-src': {
                 options: {
                     separator: ';'
@@ -62,18 +78,7 @@ module.exports = function(grunt) {
                     'out/tmp/traceur/src/**/*.js',
                     'out/tmp/traceur/bootstrap_post_src/**/*.js'
                 ],
-                dest: 'out/tmp/all-src.js'
-            },
-            'concat-traceur-debug': {
-                options: {
-                    separator: ';'
-                },
-                src: [
-                    'out/tmp/traceur/bootstrap_pre_src/**/*.js',
-                    'out/tmp/traceur/src/**/*.js',
-                    'out/tmp/traceur/bootstrap_post_src/**/*.js'
-                ],
-                dest: 'out/src.min.js'
+                dest: 'out/tmp/concatenated-src.js'
             },
             'concat-traceur-test': {
                 options: {
@@ -90,26 +95,18 @@ module.exports = function(grunt) {
             }
         },
         uglify: {
-            'uglify-concated-src': {
+            'uglify-concatenated-src': {
                 options: {
                     maxLineLen: 128
                 },
                 files: {
-                    'out/src.min.js': ['out/tmp/all-src.js']
+                    'out/tmp/minified-src.js': ['out/tmp/concatenated-src.js']
                 }
             }
         },
         clean: {
             'clean-tmp': ['out/tmp'],
             'clean-out': ['out/']
-        },
-        copy: {
-            'copy-res-to-out': {
-                cwd: 'res/',
-                src: '*',
-                dest: 'out/',
-                expand: true
-            }
         },
         makeTestPostBootstrap: {
             options: {
@@ -124,7 +121,7 @@ module.exports = function(grunt) {
         var getters = packagedFiles.map(function(e) {
             return '$traceurRuntime.getModule("' + e + '");';
         }).join('\n');
-        grunt.file.write(dst, getters + '\n//# sourceURL=src.min.js');
+        grunt.file.write(dst, getters);
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
@@ -139,16 +136,16 @@ module.exports = function(grunt) {
         'traceur:translate-src',
         'bootstrap-get-packages:src/main.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat-traceur-src',
-        'uglify:uglify-concated-src',
-        'copy:copy-res-to-out',
+        'uglify:uglify-concatenated-src',
+        'concat:concat-html-template-src',
         'clean:clean-tmp'
     ]);
     grunt.registerTask('build-debug', [
         'clean:clean-tmp',
         'traceur:translate-src',
         'bootstrap-get-packages:src/main.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
-        'concat:concat-traceur-debug',
-        'copy:copy-res-to-out',
+        'concat:concat-traceur-src',
+        'concat:concat-html-template-debug',
         'clean:clean-tmp'
     ]);
     grunt.registerTask('build-test', [

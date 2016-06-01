@@ -69,12 +69,12 @@ If you want to make changes to Quirk's code, this is how you get the code and tu
 
     `npm run test-firefox`
 
-5. Build the output files.
+5. Build the output.
 
     `npm run build`
 
-6. Confirm the output works by opening `out/index.html` with a web browser.
+6. Confirm the output works by opening `out/quirk.html` with a web browser.
 
-    `firefox out/index.html`
+    `firefox out/quirk.html`
 
-7. Copy `out/index.html`, `out/src.min.js`, and `out/favicon.ico` to wherever you want.
+7. Copy `out/quirk.html` to wherever you want.

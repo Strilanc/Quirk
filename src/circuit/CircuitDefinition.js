@@ -86,6 +86,13 @@ class CircuitDefinition {
     }
 
     /**
+     * @returns {!boolean}
+     */
+    isEmpty() {
+        return this.columns.length === 0;
+    }
+
+    /**
      * @param {*} other
      * @returns {!boolean}
      */
@@ -355,6 +362,13 @@ class CircuitDefinition {
             best = Math.max(best, c.minimumRequiredWireCount());
         }
         return best;
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    withMinimumWireCount() {
+        return this.withWireCount(this.minimumRequiredWireCount());
     }
 
     /**
