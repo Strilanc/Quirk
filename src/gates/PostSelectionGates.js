@@ -1,3 +1,4 @@
+import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/ui/GatePainting.js"
 import Matrix from "src/math/Matrix.js"
@@ -56,9 +57,19 @@ PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 
+PostSelectionGates.PostSelectCross = Gate.fromKnownMatrix(
+    "|X⟩⟨X|",
+    Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(Math.sqrt(0.5)),
+    "Post-selection Gate [X]",
+    "Keeps ON+iOFF states, discards ON-iOFF states, and renormalizes\n" +
+    "(Corresponds to restarting until the right answer happens.)").
+    withCustomDrawer(POST_SELECT_DRAWER).
+    markedAsAffectsOtherWires();
+
 PostSelectionGates.all = [
     PostSelectionGates.PostSelectOff,
     PostSelectionGates.PostSelectOn,
     PostSelectionGates.PostSelectPlus,
-    PostSelectionGates.PostSelectMinus
+    PostSelectionGates.PostSelectMinus,
+    PostSelectionGates.PostSelectCross
 ];

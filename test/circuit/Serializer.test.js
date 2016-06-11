@@ -79,8 +79,8 @@ suite.test("roundTrip_circuitDefinition", () => {
 });
 
 const IDS_THAT_SHOULD_BE_KNOWN = [
-    "•", "◦", "⊕", "⊖",
-    "|0⟩⟨0|", "|1⟩⟨1|", "|+⟩⟨+|", "|-⟩⟨-|",
+    "•", "◦", "⊕", "⊖", "⊗",
+    "|0⟩⟨0|", "|1⟩⟨1|", "|+⟩⟨+|", "|-⟩⟨-|", "|X⟩⟨X|",
     "Measure",
     "Swap",
     "…",

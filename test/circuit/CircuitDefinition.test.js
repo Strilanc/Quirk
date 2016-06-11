@@ -29,6 +29,7 @@ const TEST_GATES = new Map([
     ['◦', A],
     ['⊖', Gates.Controls.MinusControl],
     ['⊕', Gates.Controls.PlusControl],
+    ['⊗', Gates.Controls.CrossControl],
     ['.', Gates.SpacerGate],
 
     ['M', M],
@@ -510,15 +511,17 @@ suite.test("findGateCoveringSlot", () => {
 });
 
 suite.test("colControls", () => {
-    let c = circuit(`-•-◦-⊖-⊕-M-⊕-⊖-◦-•-`);
+    let c = circuit(`-•-◦-⊖⊗⊕-M-⊕⊗⊖-◦-•-`);
     assertThat(c.colControls(-1)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(0)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(1)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(3)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(5)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(6)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(7)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(9)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(11)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(12)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(13)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(15)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(17)).isEqualTo(Controls.bit(0, true));

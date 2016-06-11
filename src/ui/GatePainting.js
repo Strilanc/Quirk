@@ -23,6 +23,15 @@ GatePainting.paintOutline = args => {
     args.painter.strokeRect(args.rect, 'black');
 };
 
+GatePainting.paintBackground =
+    (args, toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => {
+        let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
+        if (args.isHighlighted) {
+            backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
+        }
+        args.painter.fillRect(args.rect, backColor);
+    };
+
 /**
  * @param {!string=} toolboxFillColor
  * @param {!string=} normalFillColor
@@ -30,11 +39,7 @@ GatePainting.paintOutline = args => {
  */
 GatePainting.MAKE_HIGHLIGHTED_DRAWER =
     (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
-        let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
-        if (args.isHighlighted) {
-            backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
-        }
-        args.painter.fillRect(args.rect, backColor);
+        GatePainting.paintBackground(args, toolboxFillColor, normalFillColor);
         GatePainting.paintOutline(args);
         GatePainting.paintResizeTab(args);
         GatePainting.paintGateSymbol(args);
