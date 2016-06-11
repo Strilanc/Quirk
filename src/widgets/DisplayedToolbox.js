@@ -220,7 +220,7 @@ class DisplayedToolbox {
         }
 
         if (f.gate.symbol === MysteryGateSymbol) {
-            this.toolboxGroups[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
+            setTimeout(() => { this.toolboxGroups[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker(); }, 0.1);
         }
         return hand.withHeldGate(f.gate, new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
     }
