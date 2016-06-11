@@ -16,6 +16,7 @@ import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
+import ReverseBitsGateFamily from "src/gates/ReverseBitsGateFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 import SpacerGate from "src/gates/SpacerGate.js"
 import SwapGateHalf from "src/gates/SwapGateHalf.js"
@@ -65,6 +66,7 @@ Gates.PhaseGradientGates = PhaseGradientGates;
 Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
+Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 Gates.ZeroGate = ZeroGate;
@@ -96,6 +98,7 @@ Gates.KnownToSerializer = [
     ...PhaseGradientGates.all,
     ...PostSelectionGates.all,
     ...PoweringGates.all,
+    ...ReverseBitsGateFamily.all,
     ...VariousXGates.all,
     ...VariousYGates.all,
     ...VariousZGates.all
@@ -144,10 +147,10 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: 'Phases',
+        hint: 'Fourier',
         gates: [
             PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined, undefined,
+            undefined, ReverseBitsGateFamily.ofSize(2),
             FourierTransformGates.FourierTransformFamily.ofSize(2),
                 FourierTransformGates.InverseFourierTransformFamily.ofSize(2)
         ]
