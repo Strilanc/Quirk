@@ -26,7 +26,8 @@ PostSelectionGates.PostSelectOff = Gate.fromKnownMatrix(
     "Post-selection Gate [Off]",
     "Keeps OFF states, discards ON states, and renormalizes\n" +
         "(Corresponds to restarting until the right answer happens.)").
-    withCustomDrawer(POST_SELECT_DRAWER);
+    withCustomDrawer(POST_SELECT_DRAWER).
+    markedAsAffectsOtherWires();
 
 PostSelectionGates.PostSelectOn = Gate.fromKnownMatrix(
     "|1⟩⟨1|",
@@ -34,7 +35,8 @@ PostSelectionGates.PostSelectOn = Gate.fromKnownMatrix(
     "Post-selection Gate [On]",
     "Keeps ON states, discards OFF states, and renormalizes.\n" +
         "(Corresponds to restarting until the right answer happens.)").
-    withCustomDrawer(POST_SELECT_DRAWER);
+    withCustomDrawer(POST_SELECT_DRAWER).
+    markedAsAffectsOtherWires();
 
 PostSelectionGates.PostSelectPlus = Gate.fromKnownMatrix(
     "|+⟩⟨+|",
@@ -42,7 +44,8 @@ PostSelectionGates.PostSelectPlus = Gate.fromKnownMatrix(
     "Post-selection Gate [+]",
     "Keeps ON+OFF states, discards ON-OFF states, and renormalizes\n" +
     "(Corresponds to restarting until the right answer happens.)").
-    withCustomDrawer(POST_SELECT_DRAWER);
+    withCustomDrawer(POST_SELECT_DRAWER).
+    markedAsAffectsOtherWires();
 
 PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
     "|-⟩⟨-|",
@@ -50,7 +53,8 @@ PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
     "Post-selection Gate [-]",
     "Keeps ON-OFF states, discards ON+OFF states, and renormalizes\n" +
     "(Corresponds to restarting until the right answer happens.)").
-    withCustomDrawer(POST_SELECT_DRAWER);
+    withCustomDrawer(POST_SELECT_DRAWER).
+    markedAsAffectsOtherWires();
 
 PostSelectionGates.all = [
     PostSelectionGates.PostSelectOff,

@@ -74,6 +74,11 @@ class Gate {
          * @private
          */
         this._effectCreatesSuperpositions = undefined;
+        /**
+         * @type {!boolean}
+         * @private
+         */
+        this._affectsOtherWires = false;
     }
 
     /**
@@ -187,6 +192,15 @@ class Gate {
     /**
      * @returns {!Gate}
      */
+    markedAsAffectsOtherWires() {
+        let g = this._copy();
+        g._affectsOtherWires = true;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
     markedAsStable() {
         let g = this._copy();
         g._stableDuration = Infinity;
@@ -214,6 +228,7 @@ class Gate {
         g._hasNoEffect = this._hasNoEffect;
         g._effectPermutesStates = this._effectPermutesStates;
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
+        g._affectsOtherWires = this._affectsOtherWires;
         return g;
     }
 
@@ -364,18 +379,34 @@ class Gate {
             undefined;
     }
 
+    /**
+     *
+     */
+    affectsOtherWires() {
+        return this._affectsOtherWires;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
     effectMightPermutesStates() {
         return this._effectPermutesStates !== undefined ? this._effectPermutesStates :
             this._knownMatrix !== undefined ? !this._knownMatrix.isDiagonal() :
             true;
     }
 
+    /**
+     * @returns {!boolean}
+     */
     effectMightCreateSuperpositions() {
         return this._effectCreatesSuperpositions !== undefined ? this._effectCreatesSuperpositions :
             this._knownMatrix !== undefined ? !this._knownMatrix.isPhasedPermutation() :
             true;
     }
 
+    /**
+     * @returns {!boolean}
+     */
     definitelyHasNoEffect() {
         return this._hasNoEffect !== undefined ? this._hasNoEffect :
             this._knownMatrix !== undefined ? this._knownMatrix.isIdentity() :

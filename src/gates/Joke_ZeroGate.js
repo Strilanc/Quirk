@@ -7,6 +7,7 @@ const ZeroGate = Gate.fromKnownMatrix(
     Matrix.square(0, 0, 0, 0),
     "Zero Gate",
     "Destroys the universe.").
-    withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('white', '#666'));
+    withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('white', '#666')).
+    markedAsAffectsOtherWires();
 
 export default ZeroGate;

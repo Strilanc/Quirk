@@ -479,31 +479,25 @@ class DisplayedCircuit {
     _drawColumnControlWires(painter, gateColumn, columnIndex, stats) {
         let n = gateColumn.gates.length;
         let gs = gateColumn.gates;
+        let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
+
+        if (stats.circuitDefinition.colHasNonLocalGates(columnIndex)) {
+            painter.ctx.save();
+            painter.ctx.setLineDash([1, 4]);
+            painter.strokeLine(
+                new Point(x, this.gateRect(0, 0).y),
+                new Point(x, this.gateRect(this.circuitDefinition.numWires-1, 0).bottom()));
+            painter.ctx.restore();
+        }
 
         let hasTwoSwaps = stats.circuitDefinition.colHasEnabledSwapGate(columnIndex);
 
-        let canBeControlled =
-            i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i));
+        let firstLast = p => [Seq.range(n).filter(p).first(null), Seq.range(n).filter(p).last(null)];
+        let [t1, t2] = firstLast(i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i)));
+        let [c1, c2] = firstLast(i => this.circuitDefinition.locStartsSingleControlWire(new Point(columnIndex, i)));
+        let [cc1, cc2] = firstLast(i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i)));
+        let [s1, s2] = firstLast(i => hasTwoSwaps && gs[i] === Gates.Special.SwapHalf);
 
-        let causesSingleWire =
-            i => this.circuitDefinition.locStartsSingleControlWire(new Point(columnIndex, i));
-
-        let causesDoubleWire =
-            i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i));
-
-        let isMatchedSwap = i =>
-            hasTwoSwaps && gs[i] === Gates.Special.SwapHalf;
-
-        let t1 = Seq.range(n).filter(canBeControlled).first(null);
-        let t2 = Seq.range(n).filter(canBeControlled).last(null);
-        let c1 = Seq.range(n).filter(causesSingleWire).first(null);
-        let c2 = Seq.range(n).filter(causesSingleWire).last(null);
-        let cc1 = Seq.range(n).filter(causesDoubleWire).first(null);
-        let cc2 = Seq.range(n).filter(causesDoubleWire).last(null);
-        let s1 = Seq.range(n).filter(isMatchedSwap).first(null);
-        let s2 = Seq.range(n).filter(isMatchedSwap).last(null);
-
-        let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
         if (c1 !== null && t1 !== null) {
             let y1 =  this.wireRect(Math.min(t1, c1)).center().y;
             let y2 = this.wireRect(Math.max(t2, c2)).center().y;

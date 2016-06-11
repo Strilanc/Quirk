@@ -420,6 +420,20 @@ suite.test("colHasDoubleQubitDisplayMask", () => {
                  ----`).isEqualTo([0, 2, 0, 4, 5, 0, 0]);
 });
 
+suite.test("colHasNonLocalGates", () => {
+    let c = circuit(`-M-•-
+                     --!--
+                     ---X-`);
+    assertFalse(c.colHasNonLocalGates(-1));
+    assertFalse(c.colHasNonLocalGates(0));
+    assertFalse(c.colHasNonLocalGates(1));
+    assertTrue(c.colHasNonLocalGates(2));
+    assertFalse(c.colHasNonLocalGates(3));
+    assertFalse(c.colHasNonLocalGates(4));
+    assertFalse(c.colHasNonLocalGates(5));
+    assertFalse(c.colHasNonLocalGates(6));
+});
+
 suite.test("locIsMeasured", () => {
     let c = circuit(`-M---
                      ---M-

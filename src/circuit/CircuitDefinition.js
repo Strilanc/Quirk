@@ -500,6 +500,17 @@ class CircuitDefinition {
     }
 
     /**
+     * @param {int} col
+     * @returns {boolean}
+     */
+    colHasNonLocalGates(col) {
+        if (col < 0 || col >= this.columns.length) {
+            return false;
+        }
+        return seq(this.columns[col].gates).any(e => e !== null && e.affectsOtherWires());
+    }
+
+    /**
      * @param {!Point} pt
      * @returns {!boolean}
      */
