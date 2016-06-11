@@ -10,6 +10,7 @@ import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
 import MeasurementGate from "src/gates/MeasurementGate.js"
+import MultiplyAccumulateGates from "src/gates/MultiplyAccumulateGates.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
@@ -56,6 +57,7 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.OtherX = VariousXGates;
 Gates.OtherY = VariousYGates;
 Gates.OtherZ = VariousZGates;
@@ -89,6 +91,7 @@ Gates.KnownToSerializer = [
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
+    ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
     ...PhaseGradientGates.all,
     ...PostSelectionGates.all,
@@ -166,7 +169,8 @@ Gates.BottomToolboxGroups = [
         gates: [
             ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
             ArithmeticGates.AdditionFamily.ofSize(4), ArithmeticGates.SubtractionFamily.ofSize(4),
-            undefined, undefined
+            MultiplyAccumulateGates.MultiplyAddFamily.ofSize(4),
+                MultiplyAccumulateGates.MultiplySubtractFamily.ofSize(4)
         ]
     },
     {

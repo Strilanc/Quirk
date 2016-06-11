@@ -25,7 +25,9 @@ export default class GateShaders {}
  */
 GateShaders.qubitOperation = (inputTexture, operation, qubitIndex, controlTexture) =>
     new WglConfiguredShader(destinationTexture => {
-        Util.need(operation.width() === 2 && operation.height() === 2);
+        if (operation.width() !== 2 || operation.height() !== 2) {
+            throw new DetailedError("Not a single-qubit operation.", {operation});
+        }
         let [ar, ai, br, bi, cr, ci, dr, di] = operation.rawBuffer();
         CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
             WglArg.vec2("inputSize", destinationTexture.width, destinationTexture.height),
