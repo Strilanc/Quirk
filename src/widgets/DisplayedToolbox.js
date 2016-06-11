@@ -11,7 +11,7 @@ import Painter from "src/ui/Painter.js"
 import WidgetPainter from "src/ui/WidgetPainter.js"
 import {MysteryGateSymbol, MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
-class ToolboxWidget {
+class DisplayedToolbox {
     /**
      * That thing showing gates you can grab.
      * @param {!Rect} area
@@ -78,11 +78,11 @@ class ToolboxWidget {
     }
 
     /**
-     * @param {!ToolboxWidget|*} other
+     * @param {!DisplayedToolbox|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
-        return other instanceof ToolboxWidget && this.area.isEqualTo(other.area);
+        return other instanceof DisplayedToolbox && this.area.isEqualTo(other.area);
     }
 
     /**
@@ -171,9 +171,9 @@ class ToolboxWidget {
     }
 
     /**
-    * @param {!Hand} hand
-    * @returns {Infinity|!number}
-    */
+     * @param {!Hand} hand
+     * @returns {Infinity|!number}
+     */
     stableDuration(hand) {
         return seq(hand.hoverPoints()).
             map(p => this.findGateAt(p)).
@@ -183,4 +183,4 @@ class ToolboxWidget {
     }
 }
 
-export default ToolboxWidget;
+export default DisplayedToolbox;

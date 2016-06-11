@@ -10,7 +10,7 @@ import Hand from "src/ui/Hand.js"
 import Painter from "src/ui/Painter.js"
 import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import ToolboxWidget from "src/widgets/ToolboxWidget.js"
+import DisplayedToolbox from "src/widgets/DisplayedToolbox.js"
 import Util from "src/base/Util.js"
 
 const TOOLBOX_HEIGHT = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
@@ -19,14 +19,14 @@ export default class InspectorWidget {
     /**
      * @param {!Rect} drawArea
      * @param {!DisplayedCircuit} circuitWidget
-     * @param {!ToolboxWidget} toolboxWidget
+     * @param {!DisplayedToolbox} displayedToolbox
      * @param {!Hand} hand
      */
-    constructor(drawArea, circuitWidget, toolboxWidget, hand) {
+    constructor(drawArea, circuitWidget, displayedToolbox, hand) {
         /** @type {!DisplayedCircuit} */
         this.displayedCircuit = circuitWidget;
-        /** @type {!ToolboxWidget} */
-        this.toolboxWidget = toolboxWidget;
+        /** @type {!DisplayedToolbox} */
+        this.displayedToolbox = displayedToolbox;
         /** @type {!Hand} */
         this.hand = hand;
         /** @type {!Rect} */
@@ -36,7 +36,7 @@ export default class InspectorWidget {
     }
 
     desiredWidth() {
-        return Math.max(this.toolboxWidget.desiredWidth(), this.displayedCircuit.desiredWidth());
+        return Math.max(this.displayedToolbox.desiredWidth(), this.displayedCircuit.desiredWidth());
     }
 
     /**
@@ -45,7 +45,7 @@ export default class InspectorWidget {
     updateArea(drawArea) {
         this.drawArea = drawArea;
 
-        this.toolboxWidget.updateArea(drawArea.takeTop(TOOLBOX_HEIGHT));
+        this.displayedToolbox.updateArea(drawArea.takeTop(TOOLBOX_HEIGHT));
     }
 
     /**
@@ -56,7 +56,7 @@ export default class InspectorWidget {
         return new InspectorWidget(
             drawArea,
             DisplayedCircuit.empty(TOOLBOX_HEIGHT),
-            new ToolboxWidget(drawArea.takeTop(TOOLBOX_HEIGHT)),
+            new DisplayedToolbox(drawArea.takeTop(TOOLBOX_HEIGHT)),
             Hand.EMPTY);
     }
 
@@ -68,7 +68,7 @@ export default class InspectorWidget {
     paint(painter, stats, shift) {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
-        this.toolboxWidget.paint(painter, stats, this.hand);
+        this.displayedToolbox.paint(painter, stats, this.hand);
         this.displayedCircuit.paint(painter, this.hand, stats, shift);
         this._paintHand(painter, stats);
         this._drawHint(painter);
@@ -113,7 +113,7 @@ export default class InspectorWidget {
         let hand = this.hand;
         let circuit = this.displayedCircuit;
 
-        hand = this.toolboxWidget.tryGrab(hand);
+        hand = this.displayedToolbox.tryGrab(hand);
         let x = circuit.tryGrab(hand, duplicate);
         hand = x.newHand;
         circuit = x.newCircuit;
@@ -121,7 +121,7 @@ export default class InspectorWidget {
         return new InspectorWidget(
             this.drawArea,
             circuit,
-            this.toolboxWidget,
+            this.displayedToolbox,
             hand);
     }
 
@@ -137,7 +137,7 @@ export default class InspectorWidget {
         return other instanceof InspectorWidget &&
             this.drawArea.isEqualTo(other.drawArea) &&
             this.displayedCircuit.isEqualTo(other.displayedCircuit) &&
-            this.toolboxWidget.isEqualTo(other.toolboxWidget) &&
+            this.displayedToolbox.isEqualTo(other.displayedToolbox) &&
             this.hand.isEqualTo(other.hand);
     }
 
@@ -149,7 +149,7 @@ export default class InspectorWidget {
         if (circuitWidget === this.displayedCircuit) {
             return this;
         }
-        return new InspectorWidget(this.drawArea, circuitWidget, this.toolboxWidget, this.hand);
+        return new InspectorWidget(this.drawArea, circuitWidget, this.displayedToolbox, this.hand);
     }
 
     /**
@@ -194,7 +194,7 @@ export default class InspectorWidget {
      */
     stableDuration() {
         return seq([
-            this.toolboxWidget.stableDuration(this.hand),
+            this.displayedToolbox.stableDuration(this.hand),
             this.hand.stableDuration(),
             this.displayedCircuit.stableDuration()
         ]).min(Infinity);
@@ -208,7 +208,7 @@ export default class InspectorWidget {
         return new InspectorWidget(
             this.drawArea,
             this.displayedCircuit,
-            this.toolboxWidget,
+            this.displayedToolbox,
             hand);
     }
 
@@ -220,7 +220,7 @@ export default class InspectorWidget {
         return new InspectorWidget(
             this.drawArea,
             DisplayedCircuit.empty(TOOLBOX_HEIGHT).withCircuit(newCircuitDefinition),
-            this.toolboxWidget,
+            this.displayedToolbox,
             Hand.EMPTY);
     }
 
