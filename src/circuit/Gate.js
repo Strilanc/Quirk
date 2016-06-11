@@ -253,6 +253,9 @@ class Gate {
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
+        if (this.gateFamily.length === 1 && this.gateFamily[0] === this) {
+            g.gateFamily = [g];
+        }
         g._knownMatrix = this._knownMatrix;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
