@@ -20,24 +20,39 @@
                 Loading Quirk...<br/>
                 <div style="font-size: 15px">(A toy quantum circuit simulator.)</div>
             </div>
-            <div id="noscript-div">
+            <div id="noscript-div" class="noscript-warning">
                 You appear to have JavaScript blocked. But Quirk is made out of JavaScript... :(
             </div>
+            <noscript>
+                <div class="noscript-warning">
+                    You appear to have JavaScript blocked. But Quirk is made out of JavaScript... :(
+                </div>
+            </noscript>
             <style scoped>
-                #noscript-div {
+                .noscript-warning {
                     color: red;
                     font-size: 24px;
                     position: absolute;
                     top: 25%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    animation-duration: 0.5s;
+                    animation-duration: 2.0s;
                     animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
-                    -moz-animation-duration: 0.5s;
+                    -moz-animation-duration: 2.0s;
                     -moz-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
-                    -webkit-animation-duration: 0.5s;
+                    -webkit-animation-duration: 2.0s;
                     -webkit-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
-                    -o-animation-duration: 0.5s;
+                    -o-animation-duration: 2.0s;
+                    -o-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                }
+                #noscript-div {
+                    animation-duration: 2.0s;
+                    animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                    -moz-animation-duration: 2.0s;
+                    -moz-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                    -webkit-animation-duration: 2.0s;
+                    -webkit-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                    -o-animation-duration: 2.0s;
                     -o-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
                 }
                 @keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
