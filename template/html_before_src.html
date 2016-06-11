@@ -20,9 +20,47 @@
                 Loading Quirk...<br/>
                 <div style="font-size: 15px">(A toy quantum circuit simulator.)</div>
             </div>
-            <div id="noscript-div" style="color: red; font-size: 24px; position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);">
+            <div id="noscript-div">
                 You appear to have JavaScript blocked. But Quirk is made out of JavaScript... :(
             </div>
+            <style scoped>
+                #noscript-div {
+                    color: red;
+                    font-size: 24px;
+                    position: absolute;
+                    top: 25%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    animation-duration: 0.5s;
+                    animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                    -moz-animation-duration: 0.5s;
+                    -moz-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                    -webkit-animation-duration: 0.5s;
+                    -webkit-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                    -o-animation-duration: 0.5s;
+                    -o-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
+                }
+                @keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    75% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @-webkit-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    75% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @-moz-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    75% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @-o-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    75% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            </style>
             <script>
                 document.getElementById('noscript-div').style.display = 'none';
             </script>
@@ -78,4 +116,3 @@ document.QUIRK_QUINE_ALL_HTML_ORIGINAL = '<!DOCTYPE html>\n<html>\n    ' +
 //HACK WARNING: following line is grepped for by the code when saving an offline copy with a preset circuit.
 document.DEFAULT_CIRCUIT = undefined;
 //HACK WARNING: above line is grepped for by the code when saving an offline copy with a preset circuit.
-
