@@ -12,8 +12,8 @@ const TEST_GATES = new Map([
     ['Y', Gates.HalfTurns.Y],
     ['Z', Gates.HalfTurns.Z],
     ['H', Gates.HalfTurns.H],
-    ['•', Gates.Special.Control],
-    ['◦', Gates.Special.AntiControl],
+    ['•', Gates.Controls.Control],
+    ['◦', Gates.Controls.AntiControl],
     ['.', Gates.SpacerGate],
 
     ['M', Gates.Special.Measurement],

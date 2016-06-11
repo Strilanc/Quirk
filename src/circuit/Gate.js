@@ -79,6 +79,16 @@ class Gate {
          * @private
          */
         this._affectsOtherWires = false;
+
+        /**
+         * @type {undefined|!boolean}
+         * @private
+         */
+        this._controlBit = undefined;
+        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        this.preShaders = [];
+        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        this.postShaders = [];
     }
 
     /**
@@ -115,6 +125,17 @@ class Gate {
     withKnownMatrixFunc(matrixFunc) {
         let g = this._copy();
         g._knownMatrixFunc = matrixFunc;
+        return g;
+    }
+
+    /**
+     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} before
+     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} after
+     */
+    withSetupShaders(before, after) {
+        let g = this._copy();
+        g.preShaders = before;
+        g.postShaders = after;
         return g;
     }
 
@@ -199,6 +220,16 @@ class Gate {
     }
 
     /**
+     * @param {!boolean} bit
+     * @returns {!Gate}
+     */
+    markedAsControl(bit) {
+        let g = this._copy();
+        g._controlBit = bit;
+        return g;
+    }
+
+    /**
      * @returns {!Gate}
      */
     markedAsStable() {
@@ -229,6 +260,9 @@ class Gate {
         g._effectPermutesStates = this._effectPermutesStates;
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
         g._affectsOtherWires = this._affectsOtherWires;
+        g._controlBit = this._controlBit;
+        g.preShaders = this.preShaders;
+        g.postShaders = this.postShaders;
         return g;
     }
 
@@ -380,10 +414,24 @@ class Gate {
     }
 
     /**
-     *
+     * @returns {!boolean}
      */
     affectsOtherWires() {
         return this._affectsOtherWires;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    isControl() {
+        return this._controlBit !== undefined;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    controlBit() {
+        return this._controlBit;
     }
 
     /**

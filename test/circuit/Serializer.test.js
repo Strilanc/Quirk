@@ -63,7 +63,7 @@ suite.test("roundTrip_GateColumn", () => {
             Gates.HalfTurns.X,
             Gates.Powering.XForward,
             Gates.Special.SwapHalf,
-            Gates.Special.Control,
+            Gates.Controls.Control,
             null]),
         [1, "X", "X^t", "Swap", "\u2022", 1]);
 });

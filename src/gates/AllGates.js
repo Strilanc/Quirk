@@ -32,8 +32,6 @@ export default Gates;
 
 /** Gates that have special behavior requiring custom code / logic to handle. */
 Gates.Special = {
-    Control: Controls.Control,
-    AntiControl: Controls.AntiControl,
     Measurement: MeasurementGate,
     SwapHalf: SwapGateHalf
 };
@@ -49,6 +47,7 @@ Gates.Displays = {
     BlochSphereDisplay: BlochSphereDisplay
 };
 Gates.Arithmetic = ArithmeticGates;
+Gates.Controls = Controls;
 Gates.CountingGates = CountingGates;
 Gates.CycleBitsGates = CycleBitsGates;
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
