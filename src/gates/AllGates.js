@@ -140,9 +140,12 @@ Gates.ToolboxGroups = [
     {
         hint: 'Misc',
         gates: [
-            PhaseGradientGates.PhaseGradientFamily.ofSize(2),       PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined,                                              MysteryGateMaker(),
-            FourierTransformGates.FourierTransformFamily.ofSize(2), SpacerGate
+            PhaseGradientGates.PhaseGradientFamily.ofSize(2),
+                    PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
+            SpacerGate,
+                    MysteryGateMaker(),
+            FourierTransformGates.FourierTransformFamily.ofSize(2),
+                    FourierTransformGates.InverseFourierTransformFamily.ofSize(2)
         ]
     },
     {
