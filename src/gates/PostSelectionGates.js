@@ -15,8 +15,8 @@ let POST_SELECT_DRAWER = args => {
 
     if (!args.isInToolbox) {
         let {x, y, w, h} = args.rect;
-        args.painter.print("post-", x + w / 2, y, 'center', 'hanging', 'red', '10px Helvetica', w, h / 2);
-        args.painter.print("select", x + w / 2, y + h, 'center', 'bottom', 'red', '10px Helvetica', w, h / 2);
+        args.painter.print("post-", x + w / 2, y, 'center', 'hanging', 'red', '10px sans-serif', w, h / 2);
+        args.painter.print("select", x + w / 2, y + h, 'center', 'bottom', 'red', '10px sans-serif', w, h / 2);
     }
 };
 

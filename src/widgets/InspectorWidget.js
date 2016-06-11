@@ -1,16 +1,17 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
-import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
 import Config from "src/Config.js"
+import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
+import DisplayedToolbox from "src/widgets/DisplayedToolbox.js"
 import GateDrawParams from "src/ui/GateDrawParams.js"
 import GatePainting from "src/ui/GatePainting.js"
+import Gates from "src/gates/AllGates.js"
 import MathPainter from "src/ui/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
 import Painter from "src/ui/Painter.js"
 import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import DisplayedToolbox from "src/widgets/DisplayedToolbox.js"
 import Util from "src/base/Util.js"
 
 const TOOLBOX_HEIGHT = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
@@ -19,14 +20,17 @@ export default class InspectorWidget {
     /**
      * @param {!Rect} drawArea
      * @param {!DisplayedCircuit} circuitWidget
-     * @param {!DisplayedToolbox} displayedToolbox
+     * @param {!DisplayedToolbox} displayedToolboxTop
+     * @param {!DisplayedToolbox} displayedToolboxBottom
      * @param {!Hand} hand
      */
-    constructor(drawArea, circuitWidget, displayedToolbox, hand) {
+    constructor(drawArea, circuitWidget, displayedToolboxTop, displayedToolboxBottom, hand) {
         /** @type {!DisplayedCircuit} */
         this.displayedCircuit = circuitWidget;
         /** @type {!DisplayedToolbox} */
-        this.displayedToolbox = displayedToolbox;
+        this.displayedToolboxTop = displayedToolboxTop;
+        /** @type {!DisplayedToolbox} */
+        this.displayedToolboxBottom = displayedToolboxBottom;
         /** @type {!Hand} */
         this.hand = hand;
         /** @type {!Rect} */
@@ -36,7 +40,11 @@ export default class InspectorWidget {
     }
 
     desiredWidth() {
-        return Math.max(this.displayedToolbox.desiredWidth(), this.displayedCircuit.desiredWidth());
+        return Math.max(
+            this.displayedToolboxTop.desiredWidth(),
+            Math.max(
+                this.displayedCircuit.desiredWidth(),
+                this.displayedToolboxBottom.desiredWidth()));
     }
 
     /**
@@ -45,7 +53,8 @@ export default class InspectorWidget {
     updateArea(drawArea) {
         this.drawArea = drawArea;
 
-        this.displayedToolbox.updateArea(drawArea.takeTop(TOOLBOX_HEIGHT));
+        this.displayedToolboxTop = this.displayedToolboxTop.withArea(drawArea.takeTop(TOOLBOX_HEIGHT));
+        this.displayedToolboxBottom = this.displayedToolboxBottom.withArea(drawArea.takeBottom(TOOLBOX_HEIGHT));
     }
 
     /**
@@ -56,7 +65,8 @@ export default class InspectorWidget {
         return new InspectorWidget(
             drawArea,
             DisplayedCircuit.empty(TOOLBOX_HEIGHT),
-            new DisplayedToolbox(drawArea.takeTop(TOOLBOX_HEIGHT)),
+            new DisplayedToolbox('Toolbox', drawArea.takeTop(TOOLBOX_HEIGHT), Gates.TopToolboxGroups, true),
+            new DisplayedToolbox('Toolbox₂', drawArea.takeBottom(TOOLBOX_HEIGHT), Gates.BottomToolboxGroups, false),
             Hand.EMPTY);
     }
 
@@ -68,20 +78,11 @@ export default class InspectorWidget {
     paint(painter, stats, shift) {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
-        this.displayedToolbox.paint(painter, stats, this.hand);
-        this.displayedCircuit.paint(painter, this.hand, stats, shift);
+        this.displayedToolboxTop.paint(painter, stats, this.hand);
+        this.displayedToolboxBottom.paint(painter, stats, this.hand);
+        this.displayedCircuit.paint(painter, this.hand, stats);
         this._paintHand(painter, stats);
         this._drawHint(painter);
-
-        // When a gate is being dragged off the bottom, this fades it out instead of clipping it.
-        let y1 = this.displayedCircuit.top +
-            DisplayedCircuit.desiredHeight(this.displayedCircuit.circuitDefinition.numWires);
-        let y2 = this.drawArea.bottom();
-        var gradient = painter.ctx.createLinearGradient(0, y1, 0, y2);
-        gradient.addColorStop(0, 'rgba(255,255,255,0)');
-        gradient.addColorStop(1, 'white');
-        painter.ctx.fillStyle = gradient;
-        painter.ctx.fillRect(0, y1, this.drawArea.w, y2-y1);
     }
 
     /**
@@ -113,7 +114,8 @@ export default class InspectorWidget {
         let hand = this.hand;
         let circuit = this.displayedCircuit;
 
-        hand = this.displayedToolbox.tryGrab(hand);
+        hand = this.displayedToolboxTop.tryGrab(hand);
+        hand = this.displayedToolboxBottom.tryGrab(hand);
         let x = circuit.tryGrab(hand, duplicate);
         hand = x.newHand;
         circuit = x.newCircuit;
@@ -121,7 +123,8 @@ export default class InspectorWidget {
         return new InspectorWidget(
             this.drawArea,
             circuit,
-            this.displayedToolbox,
+            this.displayedToolboxTop,
+            this.displayedToolboxBottom,
             hand);
     }
 
@@ -137,7 +140,8 @@ export default class InspectorWidget {
         return other instanceof InspectorWidget &&
             this.drawArea.isEqualTo(other.drawArea) &&
             this.displayedCircuit.isEqualTo(other.displayedCircuit) &&
-            this.displayedToolbox.isEqualTo(other.displayedToolbox) &&
+            this.displayedToolboxTop.isEqualTo(other.displayedToolboxTop) &&
+            this.displayedToolboxBottom.isEqualTo(other.displayedToolboxBottom) &&
             this.hand.isEqualTo(other.hand);
     }
 
@@ -149,7 +153,12 @@ export default class InspectorWidget {
         if (circuitWidget === this.displayedCircuit) {
             return this;
         }
-        return new InspectorWidget(this.drawArea, circuitWidget, this.displayedToolbox, this.hand);
+        return new InspectorWidget(
+            this.drawArea,
+            circuitWidget,
+            this.displayedToolboxTop,
+            this.displayedToolboxBottom,
+            this.hand);
     }
 
     /**
@@ -194,7 +203,8 @@ export default class InspectorWidget {
      */
     stableDuration() {
         return seq([
-            this.displayedToolbox.stableDuration(this.hand),
+            this.displayedToolboxTop.stableDuration(this.hand),
+            this.displayedToolboxBottom.stableDuration(this.hand),
             this.hand.stableDuration(),
             this.displayedCircuit.stableDuration()
         ]).min(Infinity);
@@ -208,7 +218,8 @@ export default class InspectorWidget {
         return new InspectorWidget(
             this.drawArea,
             this.displayedCircuit,
-            this.displayedToolbox,
+            this.displayedToolboxTop,
+            this.displayedToolboxBottom,
             hand);
     }
 
@@ -220,22 +231,18 @@ export default class InspectorWidget {
         return new InspectorWidget(
             this.drawArea,
             DisplayedCircuit.empty(TOOLBOX_HEIGHT).withCircuit(newCircuitDefinition),
-            this.displayedToolbox,
+            this.displayedToolboxTop,
+            this.displayedToolboxBottom,
             Hand.EMPTY);
     }
 
     /**
-     * @param {undefined|!int=} wireCount
      * @returns {!number}
      */
-    static defaultHeight(wireCount = undefined) {
-        if (wireCount === undefined) {
-            wireCount = Config.MIN_WIRE_COUNT;
-        }
+    desiredHeight() {
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
-        let circuitHeight = DisplayedCircuit.desiredHeight(wireCount);
-        let paddingHeight = 50;
-        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight + circuitHeight + paddingHeight);
+        let circuitHeight = this.displayedCircuit.desiredHeight();
+        return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight*2 + circuitHeight);
     }
 
     /**
@@ -254,7 +261,7 @@ export default class InspectorWidget {
         painter.ctx.translate(70, 190);
         painter.ctx.rotate(Math.PI * 0.05);
         painter.ctx.fillStyle = 'red';
-        painter.ctx.font = '12pt Helvetica';
+        painter.ctx.font = '16px sans-serif';
         painter.ctx.fillText("drag gates onto circuit", 0, 0);
         painter.ctx.restore();
 
@@ -262,7 +269,7 @@ export default class InspectorWidget {
         painter.ctx.translate(50, 240);
         painter.ctx.rotate(Math.PI * 0.02);
         painter.ctx.fillStyle = 'red';
-        painter.ctx.font = '12pt Helvetica';
+        painter.ctx.font = '16px sans-serif';
         painter.ctx.fillText("watch outputs change", 0, 0);
         painter.ctx.restore();
 

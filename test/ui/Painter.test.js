@@ -103,7 +103,7 @@ suite.canvasAppearanceTest("printParagraph_multiline", 40, 40, canvas => {
         new Point(0.5, 0),
         "black",
         12,
-        "Helvetica");
+        "sans-serif");
     assertThat(used).isApproximatelyEqualTo(new Rect(1.5, 0, 37, 36), 2.5);
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABsElEQVRYhe2X27HEIAiGrcEabMES7MAKaMAW6Nx9IoM' +
 'EMNmTy5kdH5jZDVn4FtFfAiL2Jw0Aegjh8PvhZwApcEppSBBC2Ky1tj0vpQy+WuvwfozxHkBKhIg9xthLKR0Re611A2+tDX+Cf7+9glQlLVGMsddaNyB' +
@@ -122,7 +122,7 @@ suite.canvasAppearanceTest("printParagraph_shrink", 40, 40, canvas => {
         new Point(0.5, 0),
         "black",
         12,
-        "Helvetica");
+        "sans-serif");
     assertThat(used).isApproximatelyEqualTo(new Rect(1, 0, 38, 40), 2.5);
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAACU0lEQVRYhd2Yy5HEIAxEiYEYSEEhkIEiIAFSIHPtSap' +
 'GxjasP+XdAzVljxHPQvS0JrTWxA9mFmbe3N8bOWcppUw9uxo7tNak1iohBAkhSCnFgjCz3WdmyTlLSsmuQwiSc+7ul1K6eLVWYeZunsbCNVtrdp1Sspc' +

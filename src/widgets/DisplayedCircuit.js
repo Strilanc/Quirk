@@ -23,6 +23,8 @@ let CIRCUIT_OP_LEFT_SPACING = 35;
 /** @type {!number} */
 let CIRCUIT_OP_RIGHT_SPACING = 5;
 
+const SUPERPOSITION_GRID_LABEL_SPAN = 50;
+
 class DisplayedCircuit {
     /**
      *
@@ -79,11 +81,12 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!int} wireCount
      * @returns {!number}
      */
-    static desiredHeight(wireCount) {
-        return Math.max(Config.MIN_WIRE_COUNT, wireCount) * Config.WIRE_SPACING + 100;
+    desiredHeight() {
+        let n = Math.max(Config.MIN_WIRE_COUNT, this.circuitDefinition.numWires) -
+            (this._extraWireStartIndex !== undefined ? 1 : 0);
+        return Math.max(n, this.circuitDefinition.minimumRequiredWireCount()) * Config.WIRE_SPACING + 55;
     }
 
     /**
@@ -96,7 +99,14 @@ class DisplayedCircuit {
             2 + // Wire chance and bloch sphere displays.
             1 // Density matrix displays.
         );
-        return r.x + this.height() + 5; // Superposition display.
+
+        // Superposition display
+        let topRect = this.gateRect(0, 0);
+        let bottomRect = this.gateRect(this.circuitDefinition.numWires-1, 0);
+        let gridW = (bottomRect.bottom() - topRect.y) * (this.circuitDefinition.numWires % 2 === 0 ? 1 : 0.5);
+        let eGridW = gridW + SUPERPOSITION_GRID_LABEL_SPAN + 50;
+
+        return r.x + eGridW;
     }
 
     /**
@@ -169,7 +179,7 @@ class DisplayedCircuit {
      * @returns {undefined|!number}
      */
     findOpHalfColumnAt(p) {
-        if (p.x < 0 || p.y < top || p.y > top + this.height()) {
+        if (p.x < 0 || p.y < top || p.y > top + this.desiredHeight()) {
             return undefined;
         }
 
@@ -227,11 +237,7 @@ class DisplayedCircuit {
         }
 
         let dx = opSeparation * operationIndex - tweak + CIRCUIT_OP_LEFT_SPACING;
-        return new Rect(dx, this.top, opWidth, this.height());
-    }
-
-    height() {
-        return DisplayedCircuit.desiredHeight(this.circuitDefinition.numWires);
+        return new Rect(dx, this.top, opWidth, this.desiredHeight());
     }
 
     /**
@@ -288,17 +294,16 @@ class DisplayedCircuit {
      * @param {!Painter} painter
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
-     * @param {!boolean} shift
      */
-    paint(painter, hand, stats, shift) {
+    paint(painter, hand, stats) {
         painter.fillRect(
-            new Rect(0, this.top, this.height(), painter.canvas.clientWidth,
-            Config.BACKGROUND_COLOR_CIRCUIT));
+            new Rect(0, this.top, painter.canvas.clientWidth, this.desiredHeight()),
+            Config.BACKGROUND_COLOR_CIRCUIT);
 
         this._drawWires(painter);
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
-            this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats, shift);
+            this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }
 
         this._drawOutputDisplays(painter, stats, hand);
@@ -315,7 +320,7 @@ class DisplayedCircuit {
         for (let row = 0; row < drawnWireCount; row++) {
             let wireRect = this.wireRect(row);
             let y = wireRect.center().y;
-            painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px Helvetica', 20, Config.WIRE_SPACING);
+            painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING);
         }
 
         // Wires (doubled-up for measured sections).
@@ -686,7 +691,7 @@ class DisplayedCircuit {
         let clampedWireCount = Math.min(
             Config.MAX_WIRE_COUNT,
             Math.max(
-                neededWireCountForPlacement,
+                Math.min(1, neededWireCountForPlacement),
                 Math.max(Config.MIN_WIRE_COUNT, desiredWireCount) + extraWireCount));
         return this.withCircuit(this.circuitDefinition.withWireCount(clampedWireCount)).
             _withExtraWireStartIndex(extraWireCount === 0 ? undefined : this.circuitDefinition.numWires);
@@ -896,7 +901,9 @@ class DisplayedCircuit {
             (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
             (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
 
-        let expandedRect = gridRect.withW(gridRect.w + 50).withH(gridRect.h + 50);
+        let expandedRect = gridRect.
+            withW(gridRect.w + SUPERPOSITION_GRID_LABEL_SPAN).
+            withH(gridRect.h + SUPERPOSITION_GRID_LABEL_SPAN);
         let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
 
         // Row labels.
@@ -904,9 +911,17 @@ class DisplayedCircuit {
             let label = "_".repeat(colWires) + Util.bin(i, rowWires);
             let x = gridRect.right();
             let y = expandedRect.y + dh*(i+0.5);
-            painter.print(label, x + 2, y, 'left', 'middle', 'black', '12px monospace', 50, dh, (w, h) => {
-                painter.fillRect(new Rect(x, y-h/2, w + 4, h), 'lightgray');
-            });
+            painter.print(
+                label,
+                x + 2,
+                y,
+                'left',
+                'middle',
+                'black',
+                '12px monospace',
+                SUPERPOSITION_GRID_LABEL_SPAN,
+                dh,
+                (w, h) => painter.fillRect(new Rect(x, y-h/2, w + 4, h), 'lightgray'));
         }
 
         // Column labels.
@@ -920,19 +935,46 @@ class DisplayedCircuit {
             let label = Util.bin(i, colWires) + "_".repeat(rowWires);
             let x = expandedRect.x + dw*(i+0.5);
             let y = gridRect.bottom();
-            painter.print(label, y + 2, -x, 'left', 'middle', 'black', '12px monospace', 50, dw, (w, h) => {
-                painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray');
-                maxY = Math.max(maxY, w + 8);
-            });
+            painter.print(
+                label,
+                y + 2,
+                -x,
+                'left',
+                'middle',
+                'black',
+                '12px monospace',
+                SUPERPOSITION_GRID_LABEL_SPAN,
+                dw,
+                (w, h) => {
+                    painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray');
+                    maxY = Math.max(maxY, w + 8);
+                });
         }
         painter.ctx.restore();
 
         // Hint text.
-        painter.printParagraph(
-            "Final amplitudes\n(assuming measurement deferred)",
-            expandedRect.withY(gridRect.bottom() + maxY).withH(40).withW(200),
-            new Point(0, 0),
-            'gray');
+        painter.print(
+            'Final amplitudes',
+            gridRect.right() + 3,
+            gridRect.bottom() + 3,
+            'left',
+            'top',
+            'gray',
+            '12px sans-serif',
+            100,
+            20);
+
+        if (this.circuitDefinition.colIsMeasuredMask(Infinity) !== 0) {
+            painter.printParagraph(
+                "(assuming measurement deferred)",
+                new Rect(
+                    gridRect.right() + 3,
+                    gridRect.bottom() + 20,
+                    100,
+                    75),
+                new Point(0.5, 0),
+                'red');
+        }
     }
 }
 

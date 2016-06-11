@@ -14,11 +14,20 @@ import {MysteryGateSymbol, MysteryGateMaker} from "src/gates/Joke_MysteryGate.js
 class DisplayedToolbox {
     /**
      * That thing showing gates you can grab.
+     * @param {!string} name
      * @param {!Rect} area
-     * @property {!Rect} area
+     * @param {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} toolboxGroups
+     * @param {!boolean} labelsOnTop
      */
-    constructor(area) {
+    constructor(name, area, toolboxGroups, labelsOnTop) {
+        /** @type {!String} */
+        this.name = name;
+        /** @type {!Rect} */
         this.area = area;
+        /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
+        this.toolboxGroups = toolboxGroups;
+        /** @type {!boolean} */
+        this.labelsOnTop = labelsOnTop;
     }
 
     /**
@@ -34,7 +43,8 @@ class DisplayedToolbox {
         let x = this.area.x + Config.TOOLBOX_MARGIN_X +
             dx * Config.TOOLBOX_GATE_SPAN +
             groupIndex * Config.TOOLBOX_GROUP_SPAN;
-        let y = this.area.y + Config.TOOLBOX_MARGIN_Y +
+        let y = this.area.y +
+            (this.labelsOnTop ? Config.TOOLBOX_MARGIN_Y : 3) +
             dy * Config.TOOLBOX_GATE_SPAN;
 
         return new Rect(
@@ -50,9 +60,15 @@ class DisplayedToolbox {
      * @private
      */
     groupLabelRect(groupIndex) {
-        let r = this.gateDrawRect(groupIndex, 0);
-        let c = new Point(r.x + Config.TOOLBOX_GATE_SPAN - Config.TOOLBOX_GATE_SPACING / 2, r.y - 10);
-        return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y - 5, Config.TOOLBOX_GATE_SPAN*2, 14);
+        if (this.labelsOnTop) {
+            let r = this.gateDrawRect(groupIndex, 0);
+            let c = new Point(r.x + Config.TOOLBOX_GATE_SPAN - Config.TOOLBOX_GATE_SPACING / 2, r.y - 18);
+            return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y, Config.TOOLBOX_GATE_SPAN * 2, 20);
+        }
+
+        let r = this.gateDrawRect(groupIndex, 4);
+        let c = new Point(r.x + Config.TOOLBOX_GATE_SPAN - Config.TOOLBOX_GATE_SPACING / 2, r.bottom());
+        return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y+2, Config.TOOLBOX_GATE_SPAN * 2, 20);
     }
 
     /**
@@ -65,8 +81,8 @@ class DisplayedToolbox {
         if (pt === undefined) {
             return undefined;
         }
-        for (let groupIndex = 0; groupIndex < Gates.ToolboxGroups.length; groupIndex++) {
-            let group = Gates.ToolboxGroups[groupIndex];
+        for (let groupIndex = 0; groupIndex < this.toolboxGroups.length; groupIndex++) {
+            let group = this.toolboxGroups[groupIndex];
             for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
                 let gate = group.gates[gateIndex];
                 if (gate !== undefined && this.gateDrawRect(groupIndex, gateIndex).containsPoint(pt)) {
@@ -82,14 +98,19 @@ class DisplayedToolbox {
      * @returns {!boolean}
      */
     isEqualTo(other) {
-        return other instanceof DisplayedToolbox && this.area.isEqualTo(other.area);
+        return other instanceof DisplayedToolbox &&
+            this.name === other.name &&
+            this.area.isEqualTo(other.area) &&
+            this.toolboxGroups === other.toolboxGroups &&
+            this.labelsOnTop === other.labelsOnTop;
     }
 
     /**
      * @param {!Rect} drawArea
+     * @returns {!DisplayedToolbox}
      */
-    updateArea(drawArea) {
-        this.area = drawArea;
+    withArea(drawArea) {
+        return new DisplayedToolbox(this.name, drawArea, this.toolboxGroups, this.labelsOnTop);
     }
 
     /**
@@ -100,54 +121,88 @@ class DisplayedToolbox {
     paint(painter, stats, hand) {
         painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
 
-        for (let groupIndex = 0; groupIndex < Gates.ToolboxGroups.length; groupIndex++) {
-            let group = Gates.ToolboxGroups[groupIndex];
-            painter.printLine(group.hint, this.groupLabelRect(groupIndex), 0.5, 'black', 16);
-
-            for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
-                let gate = group.gates[gateIndex];
-                if (gate === undefined) {
-                    continue;
-                }
-                let rect = this.gateDrawRect(groupIndex, gateIndex);
-                let isHighlighted = seq(hand.hoverPoints()).any(pt => rect.containsPoint(pt));
-                let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
-                painter.noteTouchBlocker({rect, cursor: 'pointer'});
-                drawer(new GateDrawParams(
-                    painter,
-                    true,
-                    isHighlighted,
-                    false,
-                    false,
-                    rect,
-                    Util.notNull(gate),
-                    stats,
-                    undefined,
-                    [],
-                    undefined));
-            }
+        for (let groupIndex = 0; groupIndex < this.toolboxGroups.length; groupIndex++) {
+            this._paintGroup(painter, groupIndex, stats, hand);
         }
 
+        let r = new Rect(this.area.x, this.area.y, Config.TOOLBOX_MARGIN_X, this.area.h);
+        let {x, y} = r.center();
+        painter.ctx.save();
+        painter.ctx.translate(x, y);
+        painter.ctx.rotate(-Math.PI/2);
+        painter.printLine(this.name, new Rect(-r.h / 2, -r.w / 2, r.h, r.w), 0.5, 'black', 24);
+        painter.ctx.restore();
+
+        this._paintTooltips(painter, stats, hand);
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!int} groupIndex
+     * @param {!CircuitStats} stats
+     * @param {!Hand} hand
+     * @private
+     */
+    _paintGroup(painter, groupIndex, stats, hand) {
+        let group = this.toolboxGroups[groupIndex];
+        let r = this.groupLabelRect(groupIndex);
+        painter.print(
+            group.hint,
+            r.x + r.w/2,
+            r.y + r.h/2,
+            'center',
+            'middle',
+            'black',
+            '16px sans-serif',
+            r.w,
+            r.h);
+
+        for (let gateIndex = 0; gateIndex < group.gates.length; gateIndex++) {
+            let gate = group.gates[gateIndex];
+            if (gate === undefined) {
+                continue;
+            }
+            let rect = this.gateDrawRect(groupIndex, gateIndex);
+            let isHighlighted = seq(hand.hoverPoints()).any(pt => rect.containsPoint(pt));
+            let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
+            painter.noteTouchBlocker({rect, cursor: 'pointer'});
+            drawer(new GateDrawParams(
+                painter,
+                true,
+                isHighlighted,
+                false,
+                false,
+                rect,
+                Util.notNull(gate),
+                stats,
+                undefined,
+                [],
+                undefined));
+        }
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!CircuitStats} stats
+     * @param {!Hand} hand
+     * @private
+     */
+    _paintTooltips(painter, stats, hand) {
         // Draw tooltip when hovering, but also when dragging a gate over its own toolbox spot.
         let f = this.findGateAt(hand.pos);
         if (f !== undefined && (hand.heldGate === undefined || f.gate.symbol === hand.heldGate.symbol)) {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
             let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
-                snapInside(painter.paintableArea().skipTop(gateRect.y));
+                snapInside(painter.paintableArea().skipRight(10).skipBottom(20));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
         }
-
-        let r = new Rect(0, 0, Config.TOOLBOX_MARGIN_X, this.area.h);
-        let {x, y} = r.center();
-        painter.ctx.save();
-        painter.ctx.translate(x, y);
-        painter.ctx.rotate(-Math.PI/2);
-        painter.printLine("Toolbox", new Rect(-r.h / 2, -r.w / 2, r.h, r.w), 0.5, 'black', 24);
-        painter.ctx.restore();
     }
 
+    /**
+     * @returns {!number}
+     */
     desiredWidth() {
-        return this.gateDrawRect(Gates.ToolboxGroups.length - 1, 5).right() + 5;
+        return this.gateDrawRect(this.toolboxGroups.length - 1, 5).right() + 5;
     }
 
     /**
@@ -165,7 +220,7 @@ class DisplayedToolbox {
         }
 
         if (f.gate.symbol === MysteryGateSymbol) {
-            Gates.ToolboxGroups[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
+            this.toolboxGroups[f.groupIndex].gates[f.gateIndex] = MysteryGateMaker();
         }
         return hand.withHeldGate(f.gate, new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
     }

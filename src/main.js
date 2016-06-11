@@ -120,7 +120,7 @@ let currentCircuitStatsCache =
 let desiredCanvasSizeFor = curInspector => {
     return {
         w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
-        h: InspectorWidget.defaultHeight(curInspector.displayedCircuit.circuitDefinition.numWires)
+        h: curInspector.desiredHeight()
     };
 };
 
@@ -186,7 +186,7 @@ const redrawNow = () => {
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
-const useInspector = (newInspector, keepInHistory) => {
+const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
     if (inspector.isEqualTo(newInspector)) {
         return false;
     }
@@ -197,7 +197,9 @@ const useInspector = (newInspector, keepInHistory) => {
         importantStateChangeHappened(jsonText);
     }
 
-    scheduleRedraw();
+    if (!avoidRedraw) {
+        scheduleRedraw();
+    }
     return true;
 };
 
@@ -211,7 +213,7 @@ watchDrags(canvasDiv,
         let oldInspector = inspector;
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
-        if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
+        if (!useInspector(newInspector, false, true) || !newInspector.hand.isBusy()) {
             return;
         }
 

@@ -463,7 +463,7 @@ function paintErrorIfPresent(args, isIncoherent) {
             'center',
             'hanging',
             'red',
-            '12px Helvetica',
+            '12px sans-serif',
             args.rect.w,
             args.rect.h,
             undefined);

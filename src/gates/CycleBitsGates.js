@@ -56,7 +56,7 @@ const CYCLE_SHADER = new WglShader(`
         gl_FragColor = texture2D(inputTexture, usedUv);
     }`);
 
-const CYCLE_BITS_MATRIX_MAKER = (shift, span) => Matrix.generate(1<<span, 1<<span, (r, c) => {
+const makeCycleBitsMatrix = (shift, span) => Matrix.generate(1<<span, 1<<span, (r, c) => {
     shift = Util.properMod(shift, span);
     let expected = r;
     let input = c;
@@ -66,24 +66,24 @@ const CYCLE_BITS_MATRIX_MAKER = (shift, span) => Matrix.generate(1<<span, 1<<spa
 });
 
 CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<1",
-    "Bit Cycle Gate",
-    "Swaps bits in a cycle.").
+    "<<\n↓",
+    "Left Shift Gate",
+    "Rotates bits in a downward cycle.").
     markedAsStable().
     markedAsOnlyPermutingAndPhasing().
-    withKnownMatrix(span >= 4 ? undefined : CYCLE_BITS_MATRIX_MAKER(1, span)).
-    withSerializedId("__unstable__<<1_" + span).
+    withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
+    withSerializedId("<<" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => cycleBits(val, con, bit, span, 1)));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>1",
-    "Bit Cycle Gate",
-    "Swaps bits in a cycle.").
+    ">>\n↑",
+    "Right Shift Gate",
+    "Rotates bits in an upward cycle.").
     markedAsStable().
     markedAsOnlyPermutingAndPhasing().
-    withKnownMatrix(span >= 4 ? undefined : CYCLE_BITS_MATRIX_MAKER(-1, span)).
-    withSerializedId("__unstable__>>1_" + span).
+    withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
+    withSerializedId(">>" + span).
     withHeight(span).
     withCustomShader((val, con, bit) => cycleBits(val, con, bit, span, -1)));
 
@@ -93,4 +93,4 @@ CycleBitsGates.all = [
 ];
 
 export default CycleBitsGates;
-export {CycleBitsGates, cycleBits};
+export {CycleBitsGates, cycleBits, makeCycleBitsMatrix};
