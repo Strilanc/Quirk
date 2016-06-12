@@ -66,7 +66,7 @@ let PhaseGradientGates = {};
 PhaseGradientGates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^#",
     "Phase Gradient Gate",
-    "Phases by an amount proportional to the little endian number represented by a block of qubits.").
+    "Phases proportional to the number represented by some bits.").
     markedAsOnlyPhasing().
     markedAsStable().
     withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
@@ -77,7 +77,7 @@ PhaseGradientGates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate
 PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^-#",
     "Inverse Phase Gradient Gate",
-    "Phases by a negative amount proportional to the little endian number represented by a block of qubits.").
+    "Counter-phases proportional to the number represented by some bits.").
     markedAsOnlyPhasing().
     markedAsStable().
     withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).

@@ -9,8 +9,7 @@ let MysteryGateMakerWithMatrix = matrix => Gate.fromKnownMatrix(
     MysteryGateSymbol,
     matrix,
     "Mystery Gate",
-    "Different every time.\n" +
-        "(Use shift+drag to copy circuit gates.").
+    "Different every time.\n(Use shift+drag to copy circuit gates.)").
     withCustomDrawer(GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX);
 
 let MysteryGateMaker = () => MysteryGateMakerWithMatrix(Matrix.square(
