@@ -232,17 +232,28 @@ export default class CircuitStats {
         let qubitPairDensityTexes = [];
         let customStats = [];
         let customStatsMap = [];
+        let noControlsTex = CircuitTextures.control(numWires, Controls.NONE);
         let outputTex = CircuitTextures.aggregateWithReuse(
             CircuitTextures.zero(numWires),
             Seq.range(numCols),
             (stateTex, col) => {
-                let gateCol = circuitDefinition.columns[col];
-                let controls = gateCol.controls();
-                let controlTex = CircuitTextures.control(numWires, controls);
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
+                    stateTex,
+                    circuitDefinition.getSetupShadersInCol(col, true),
+                    (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
+
+                let gateCol = circuitDefinition.columns[col];
+                let controls = circuitDefinition.colControls(col);
+                let controlTex = CircuitTextures.control(numWires, controls);
+                stateTex = CircuitTextures.aggregateWithReuse(
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
                     (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex, time));
+
+                stateTex = CircuitTextures.aggregateWithReuse(
+                    stateTex,
+                    circuitDefinition.getSetupShadersInCol(col, false),
+                    (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
 
                 for (let row of circuitDefinition.customStatRowsInCol(col)) {
                     let pipeline = gateCol.gates[row].customStatPipelineMaker(stateTex, controlTex, row, controls);
@@ -268,6 +279,7 @@ export default class CircuitStats {
                 return stateTex;
             });
         qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
+        CircuitTextures.doneWithTexture(noControlsTex);
 
         // -- READ ALL TEXTURES --
 

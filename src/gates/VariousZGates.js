@@ -38,18 +38,37 @@ VariousZGates.Z16 = Gate.fromKnownMatrix(
     "Z^⅟₁₆",
     Matrix.fromPauliRotation(0, 0, 1 / 32),
     "Z^⅟₁₆ Gate",
-    "Principle sixteenth root of Z.");
+    "Principle 16'th root of Z.");
 VariousZGates.Z16i = Gate.fromKnownMatrix(
     "Z^-⅟₁₆",
     Matrix.fromPauliRotation(0, 0, -1 / 32),
     "Z^-⅟₁₆ Gate",
-    "Adjoint sixteenth root of Z.");
+    "Adjoint 16'th root of Z.");
+
+VariousZGates.Z32 = Gate.fromKnownMatrix(
+    "Z^⅟₃₂",
+    Matrix.fromPauliRotation(0, 0, 1 / 64),
+    "Z^⅟₃₂ Gate",
+    "Principle 32'nd root of Z.");
+VariousZGates.Z64 = Gate.fromKnownMatrix(
+    "Z^⅟₆₄",
+    Matrix.fromPauliRotation(0, 0, 1 / 128),
+    "Z^⅟₆₄ Gate",
+    "Principle 64'th root of Z.");
+VariousZGates.Z128 = Gate.fromKnownMatrix(
+    "Z^⅟₁₂₈",
+    Matrix.fromPauliRotation(0, 0, 1 / 256),
+    "Z^⅟₁₂₈ Gate",
+    "Principle 128'th root of Z.");
 
 VariousZGates.all =[
     VariousZGates.Z3,
     VariousZGates.Z4,
     VariousZGates.Z8,
     VariousZGates.Z16,
+    VariousZGates.Z32,
+    VariousZGates.Z64,
+    VariousZGates.Z128,
     VariousZGates.Z3i,
     VariousZGates.Z4i,
     VariousZGates.Z8i,

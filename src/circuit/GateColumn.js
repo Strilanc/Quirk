@@ -62,33 +62,23 @@ class GateColumn {
         return [swapIndices];
     }
 
-    /**
-     * @returns {!Controls}
-     */
-    controls() {
-        return Seq.
-            range(this.gates.length).
-            map(i =>
-                this.gates[i] === Gates.Special.Control ? Controls.bit(i, true) :
-                this.gates[i] === Gates.Special.AntiControl ? Controls.bit(i, false) :
-                Controls.NONE).
-            aggregate(Controls.NONE, (a, e) => a.and(e));
-    }
-
-    hasControl() {
-        return seq(this.gates).any(gate => gate === Gates.Special.Control || gate === Gates.Special.AntiControl);
+    hasControl(inputMeasureMask) {
+        return this.hasCoherentControl(inputMeasureMask) || this.hasMeasuredControl(inputMeasureMask);
     }
 
     hasCoherentControl(inputMeasureMask) {
         return Seq.range(this.gates.length).any(i =>
             (inputMeasureMask & (1 << i)) === 0 &&
-                (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
+            this.gates[i] !== null &&
+            this.gates[i].isControl());
     }
 
     hasMeasuredControl(inputMeasureMask) {
         return Seq.range(this.gates.length).any(i =>
             (inputMeasureMask & (1 << i)) !== 0 &&
-                (this.gates[i] === Gates.Special.Control || this.gates[i] === Gates.Special.AntiControl));
+            this.gates[i] !== null &&
+            this.gates[i].definitelyHasNoEffect() &&
+            this.gates[i].isControl());
     }
 
     /**
@@ -99,6 +89,7 @@ class GateColumn {
      */
     _disabledReason(inputMeasureMask, row) {
         let g = this.gates[row];
+        let rowIsMeasured = (inputMeasureMask & (1 << row)) !== 0;
 
         if (g === null) {
             return undefined;
@@ -108,33 +99,16 @@ class GateColumn {
             return "parse\nerror";
         }
 
-        if (g === Gates.Special.Measurement && this.hasControl() && (inputMeasureMask & (1 << row)) === 0) {
+        if (g === Gates.Special.Measurement && this.hasControl() && !rowIsMeasured) {
             return "can't\ncontrol\n(sorry)";
         }
 
         if (g === Gates.Special.SwapHalf) {
-            let swapRows = Seq.range(this.gates.length).
-                filter(row => this.gates[row] === Gates.Special.SwapHalf);
-            let n = swapRows.count();
-            if (n === 1) {
-                return "need\nother\nswap";
-            }
-            if (n > 2) {
-                return "too\nmany\nswap";
-            }
-
-            let affectsMeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) !== 0);
-            let affectsUnmeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) === 0);
-            if (affectsMeasured && this.hasCoherentControl(inputMeasureMask)) {
-                return "no\nremix\n(sorry)";
-            }
-            if (affectsMeasured && affectsUnmeasured && this.hasControl()) {
-                return "no\nremix\n(sorry)";
-            }
+            return this._disabledReason_swapGate(inputMeasureMask);
         }
 
-        for (let j = 1; j < g.height; j++) {
-            if (this.gates[row + j] === Gates.Special.Control || this.gates[row + j] === Gates.Special.AntiControl) {
+        for (let j = 1; j < g.height && row + j < this.gates.length; j++) {
+            if (this.gates[row + j] !== null && this.gates[row + j].isControl()) {
                 return "control\ninside";
             }
         }
@@ -149,6 +123,34 @@ class GateColumn {
             if (g.effectMightPermutesStates() && (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
                 return "no\nremix\n(sorry)";
             }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * @param {!int} inputMeasureMask
+     * @returns {undefined|!string}
+     * @private
+     */
+    _disabledReason_swapGate(inputMeasureMask) {
+        let swapRows = Seq.range(this.gates.length).
+            filter(row => this.gates[row] === Gates.Special.SwapHalf);
+        let n = swapRows.count();
+        if (n === 1) {
+            return "need\nother\nswap";
+        }
+        if (n > 2) {
+            return "too\nmany\nswap";
+        }
+
+        let affectsMeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) !== 0);
+        let affectsUnmeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) === 0);
+        if (affectsMeasured && this.hasCoherentControl(inputMeasureMask)) {
+            return "no\nremix\n(sorry)";
+        }
+        if (affectsMeasured && affectsUnmeasured && this.hasControl()) {
+            return "no\nremix\n(sorry)";
         }
 
         return undefined;

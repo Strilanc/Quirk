@@ -430,6 +430,24 @@ class Matrix {
     }
 
     /**
+     * @returns {!Matrix} The transpose of the receiving matrix.
+     */
+    transpose() {
+        let w = this._height;
+        let h = this._width;
+        let newBuf = new Float64Array(w*h*2);
+        for (let r = 0; r < h; r++) {
+            for (let c = 0; c < w; c++) {
+                let kIn = (c*this._width + r)*2;
+                let kOut = (r*w + c)*2;
+                newBuf[kOut] = this._buffer[kIn];
+                newBuf[kOut+1] = this._buffer[kIn+1];
+            }
+        }
+        return new Matrix(w, h, newBuf);
+    }
+
+    /**
      * Returns the matrix' trace (i.e. the sum of its diagonal elements, i.e. the sum of its eigenvalues
      * if it's square).
      * @returns {!Complex}

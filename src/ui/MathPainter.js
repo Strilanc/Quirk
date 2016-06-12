@@ -278,7 +278,7 @@ export default class MathPainter {
                 'center',
                 'middle',
                 'red',
-                '16px Helvetica',
+                '16px sans-serif',
                 drawArea.w,
                 drawArea.h);
         }
@@ -301,7 +301,7 @@ export default class MathPainter {
             valueText,
             valueText2 = undefined,
             backColor = Config.DISPLAY_GATE_BACK_COLOR) {
-        const labelFont = '12px Helvetica';
+        const labelFont = '12px sans-serif';
         const valueFont = 'bold 12px monospace';
         painter.defer(() => {
             painter.ctx.font = labelFont;
@@ -559,7 +559,7 @@ export default class MathPainter {
                 'center',
                 'middle',
                 'red',
-                '16px Helvetica',
+                '16px sans-serif',
                 drawArea.w,
                 drawArea.h);
         }

@@ -2,6 +2,7 @@ import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/T
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 
 import Complex from "src/math/Complex.js"
+import Controls from "src/circuit/Controls.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import Gates from "src/gates/AllGates.js"
@@ -9,14 +10,14 @@ import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Seq from "src/base/Seq.js"
 
-let suite = new Suite("CircuitStats");
+let suite = new Suite("CircuitDefinition");
 
 const X = Gates.HalfTurns.X;
 const Y = Gates.HalfTurns.Y;
 const Z = Gates.HalfTurns.Z;
 const H = Gates.HalfTurns.H;
-const C = Gates.Special.Control;
-const A = Gates.Special.AntiControl;
+const C = Gates.Controls.Control;
+const A = Gates.Controls.AntiControl;
 const _ = null;
 const M = Gates.Special.Measurement;
 const TEST_GATES = new Map([
@@ -26,6 +27,9 @@ const TEST_GATES = new Map([
     ['H', H],
     ['•', C],
     ['◦', A],
+    ['⊖', Gates.Controls.MinusControl],
+    ['⊕', Gates.Controls.PlusControl],
+    ['⊗', Gates.Controls.CrossControl],
     ['.', Gates.SpacerGate],
 
     ['M', M],
@@ -420,6 +424,20 @@ suite.test("colHasDoubleQubitDisplayMask", () => {
                  ----`).isEqualTo([0, 2, 0, 4, 5, 0, 0]);
 });
 
+suite.test("colHasNonLocalGates", () => {
+    let c = circuit(`-M-•-
+                     --!--
+                     ---X-`);
+    assertFalse(c.colHasNonLocalGates(-1));
+    assertFalse(c.colHasNonLocalGates(0));
+    assertFalse(c.colHasNonLocalGates(1));
+    assertTrue(c.colHasNonLocalGates(2));
+    assertFalse(c.colHasNonLocalGates(3));
+    assertFalse(c.colHasNonLocalGates(4));
+    assertFalse(c.colHasNonLocalGates(5));
+    assertFalse(c.colHasNonLocalGates(6));
+});
+
 suite.test("locIsMeasured", () => {
     let c = circuit(`-M---
                      ---M-
@@ -460,7 +478,7 @@ suite.test("gateInSlot", () => {
     assertThat(c.gateInSlot(0, 2)).isEqualTo(undefined);
     assertThat(c.gateInSlot(1, 2)).isEqualTo(undefined);
     assertThat(c.gateInSlot(2, 2)).isEqualTo(undefined);
-    assertThat(c.gateInSlot(3, 2)).isEqualTo(Gates.Special.Control);
+    assertThat(c.gateInSlot(3, 2)).isEqualTo(Gates.Controls.Control);
 });
 
 suite.test("findGateCoveringSlot", () => {
@@ -484,12 +502,39 @@ suite.test("findGateCoveringSlot", () => {
     assertThat(c.findGateCoveringSlot(0, 2)).isEqualTo(undefined);
     assertThat(c.findGateCoveringSlot(1, 2)).isEqualTo({col: 1, row: 1, gate: TEST_GATES.get('#')});
     assertThat(c.findGateCoveringSlot(2, 2)).isEqualTo({col: 1, row: 1, gate: TEST_GATES.get('#')});
-    assertThat(c.findGateCoveringSlot(3, 2)).isEqualTo({col: 3, row: 2, gate: Gates.Special.Control});
+    assertThat(c.findGateCoveringSlot(3, 2)).isEqualTo({col: 3, row: 2, gate: Gates.Controls.Control});
 
     // Small following gates take priority when overlap happens somehow.
     assertThat(circuit('#X\nYZ').findGateCoveringSlot(1, 0)).isEqualTo({col: 1, row: 0, gate: X});
     assertThat(circuit('#X\nYZ').findGateCoveringSlot(0, 1)).isEqualTo({col: 0, row: 1, gate: Y});
     assertThat(circuit('#X\nYZ').findGateCoveringSlot(1, 1)).isEqualTo({col: 1, row: 1, gate: Z});
+});
+
+suite.test("colControls", () => {
+    let c = circuit(`-•-◦-⊖⊗⊕-M-⊕⊗⊖-◦-•-`);
+    assertThat(c.colControls(-1)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(0)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(1)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(3)).isEqualTo(Controls.bit(0, false));
+    assertThat(c.colControls(5)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(6)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(7)).isEqualTo(Controls.bit(0, false));
+    assertThat(c.colControls(9)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(11)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(12)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(13)).isEqualTo(Controls.NONE);
+    assertThat(c.colControls(15)).isEqualTo(Controls.bit(0, false));
+    assertThat(c.colControls(17)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(102)).isEqualTo(Controls.NONE);
+
+    let c2 = circuit(`--•◦◦-
+                      -X◦•s-
+                      ---s•-`);
+    assertThat(c2.colControls(0)).isEqualTo(Controls.NONE);
+    assertThat(c2.colControls(1)).isEqualTo(Controls.NONE);
+    assertThat(c2.colControls(2)).isEqualTo(new Controls(3, 1));
+    assertThat(c2.colControls(3)).isEqualTo(new Controls(3, 2));
+    assertThat(c2.colControls(4)).isEqualTo(new Controls(5, 4));
 });
 
 suite.test("locIsControl", () => {
@@ -771,6 +816,47 @@ suite.test("gateAtLocIsDisabledReason", () => {
     good(1, 1, `---
                -D•
                -X◦`);
+});
+
+suite.test("gateAtLocIsDisabledReason_controls", () => {
+    let c = circuit(`-•-◦-⊖-⊕-M-⊕-⊖-◦-•-`);
+
+    let bad = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isNotEqualTo(undefined);
+    let good = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isEqualTo(undefined);
+
+    good(1, 1, `---
+                M•-
+                ---`);
+
+    good(1, 1, `---
+                M◦-
+                ---`);
+
+    bad(1, 1, `---
+               M⊖-
+               ---`);
+
+    bad(1, 1, `---
+               M⊕-
+               ---`);
+
+    good(1, 1, `---
+                -•M
+                ---`);
+
+    good(1, 1, `---
+                -◦M
+                ---`);
+
+    good(1, 1, `---
+                -⊖M
+                ---`);
+
+    good(1, 1, `---
+                -⊕M
+                ---`);
 });
 
 suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {

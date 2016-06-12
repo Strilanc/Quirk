@@ -4,12 +4,12 @@ import GateShaders from "src/circuit/GateShaders.js"
 import Matrix from "src/math/Matrix.js"
 
 let ArithmeticGates = {};
-export default ArithmeticGates;
 
-const INCREMENT_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r-1) & ((1<<span)-1)) === c ? 1 : 0);
-const DECREMENT_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => ((r+1) & ((1<<span)-1)) === c ? 1 : 0);
+const makeOffsetMatrix = (offset, qubitSpan) =>
+    Matrix.generate(1<<qubitSpan, 1<<qubitSpan, (r, c) => ((r-offset) & ((1<<qubitSpan)-1)) === c ? 1 : 0);
+
+const INCREMENT_MATRIX_MAKER = span => makeOffsetMatrix(1, span);
+const DECREMENT_MATRIX_MAKER = span => makeOffsetMatrix(-1, span);
 const ADDITION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
     let expected = r;
     let input = c;
@@ -36,7 +36,7 @@ const SUBTRACTION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c
 });
 
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+1",
+    "++",
     "Increment Gate",
     "Adds 1 to the little-endian number represented by a block of qubits.").
     markedAsOnlyPermutingAndPhasing().
@@ -47,7 +47,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)));
 
 ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-1",
+    "- -",
     "Decrement Gate",
     "Subtracts 1 from the little-endian number represented by a block of qubits.").
     markedAsOnlyPermutingAndPhasing().
@@ -87,3 +87,6 @@ ArithmeticGates.all = [
     ...ArithmeticGates.AdditionFamily.all,
     ...ArithmeticGates.SubtractionFamily.all
 ];
+
+export default ArithmeticGates;
+export {ArithmeticGates, makeOffsetMatrix}

@@ -55,7 +55,7 @@ function _paintSampleDisplay_result(args) {
             'center',
             'middle',
             'black',
-            '16px Helvetica',
+            '16px sans-serif',
             w,
             d);
     }

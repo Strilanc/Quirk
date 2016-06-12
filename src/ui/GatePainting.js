@@ -23,6 +23,15 @@ GatePainting.paintOutline = args => {
     args.painter.strokeRect(args.rect, 'black');
 };
 
+GatePainting.paintBackground =
+    (args, toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => {
+        let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
+        if (args.isHighlighted) {
+            backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
+        }
+        args.painter.fillRect(args.rect, backColor);
+    };
+
 /**
  * @param {!string=} toolboxFillColor
  * @param {!string=} normalFillColor
@@ -30,11 +39,7 @@ GatePainting.paintOutline = args => {
  */
 GatePainting.MAKE_HIGHLIGHTED_DRAWER =
     (toolboxFillColor = Config.GATE_FILL_COLOR, normalFillColor = Config.GATE_FILL_COLOR) => args => {
-        let backColor = args.isInToolbox ? toolboxFillColor : normalFillColor;
-        if (args.isHighlighted) {
-            backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
-        }
-        args.painter.fillRect(args.rect, backColor);
+        GatePainting.paintBackground(args, toolboxFillColor, normalFillColor);
         GatePainting.paintOutline(args);
         GatePainting.paintResizeTab(args);
         GatePainting.paintGateSymbol(args);
@@ -98,15 +103,19 @@ GatePainting.paintGateSymbol = args => {
     let painter = args.painter;
     let symbol = args.gate.symbol;
     let rect = args.rect;
-    const font = '16px Helvetica';
+    const font = '16px sans-serif';
     rect = rect.paddedBy(-2);
 
-    let note = args.gate.gateFamily.length > 1 && args.isInToolbox ? "↕" : undefined;
+    let defaultNote = args.gate.gateFamily.length > 1 && args.isInToolbox
+        ? "↕"
+        : undefined;
     let noteIndex = symbol.indexOf('\n');
+    let forcedNote = undefined;
     if (noteIndex !== -1) {
-        note = symbol.substring(noteIndex + 1);
+        forcedNote = symbol.substring(noteIndex + 1);
         symbol = symbol.substring(0, noteIndex);
     }
+    let note = forcedNote || defaultNote;
     if (note !== undefined && (args.isInToolbox || args.isHighlighted)) {
         painter.print(
             note,
@@ -115,9 +124,9 @@ GatePainting.paintGateSymbol = args => {
             'right',
             'bottom',
             'black' ,
-            '12px Helvetica',
+            '16px sans-serif',
             rect.w,
-            rect.h);
+            rect.h/2);
     }
 
     let parts = symbol.split("^");
@@ -170,7 +179,7 @@ GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
     }
 
     let backColor = args.isHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : Config.GATE_FILL_COLOR;
-    const font = '16px Helvetica';
+    const font = '16px sans-serif';
     args.painter.fillRect(args.rect, backColor);
     let p = 0;
     for (let i = 0; i < labels.length; i++) {

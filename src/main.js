@@ -36,6 +36,7 @@ let semiStableRng = {cur: new RestartableRng()};
 let cycleRng;
 cycleRng = () => {
     semiStableRng.cur = new RestartableRng();
+    //noinspection DynamicallyGeneratedCodeJS
     setTimeout(cycleRng, Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS*0.99);
 };
 cycleRng();
@@ -68,6 +69,29 @@ const restore = jsonText => {
 /** @type {!Revision} */
 let revision = Revision.startingAt(snapshot());
 
+let saveOfflineCopyOfCurrentCircuit = () => {
+    let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
+    let targetLinePrefix = 'document.DEFAULT_CIRCUIT = ';
+    let modStart = originalHtml.indexOf(targetLinePrefix) + targetLinePrefix.length;
+    let modStop = originalHtml.indexOf(';\n', modStart);
+    let moddedHtml = originalHtml.slice(0, modStart) + JSON.stringify(snapshot()) + originalHtml.slice(modStop);
+
+    let anchor = document.createElement("a");
+    //noinspection JSUnresolvedVariable,JSUnresolvedFunction
+    anchor.href = window.URL !== undefined ?
+        window.URL.createObjectURL(new Blob([moddedHtml], {type: 'text/html;charset=UTF-8'})) :
+        'data:application/octet-stream,' + encodeURI(moddedHtml);
+    anchor.download = inspector.displayedCircuit.circuitDefinition.isEmpty() ?
+        'Quirk.html' :
+        `Quirk with Circuit - ${inspector.displayedCircuit.circuitDefinition.readableHash()}.html`;
+    try {
+        canvasDiv.appendChild(anchor);
+        anchor.click();
+    } finally {
+        canvasDiv.removeChild(anchor);
+    }
+};
+
 const getCircuitCycleTime = (() => {
     /**
      * Milliseconds.
@@ -96,7 +120,7 @@ let currentCircuitStatsCache =
 let desiredCanvasSizeFor = curInspector => {
     return {
         w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
-        h: InspectorWidget.defaultHeight(curInspector.displayedCircuit.circuitDefinition.numWires)
+        h: curInspector.desiredHeight()
     };
 };
 
@@ -162,7 +186,7 @@ const redrawNow = () => {
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
-const useInspector = (newInspector, keepInHistory) => {
+const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
     if (inspector.isEqualTo(newInspector)) {
         return false;
     }
@@ -173,7 +197,9 @@ const useInspector = (newInspector, keepInHistory) => {
         importantStateChangeHappened(jsonText);
     }
 
-    scheduleRedraw();
+    if (!avoidRedraw) {
+        scheduleRedraw();
+    }
     return true;
 };
 
@@ -187,7 +213,7 @@ watchDrags(canvasDiv,
         let oldInspector = inspector;
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
-        if (!useInspector(newInspector, false) || !newInspector.hand.isBusy()) {
+        if (!useInspector(newInspector, false, true) || !newInspector.hand.isBusy()) {
             return;
         }
 
@@ -272,16 +298,24 @@ window.addEventListener('resize', scheduleRedraw, false);
 // Keyboard shortcuts (undo, redo).
 document.addEventListener("keydown", e => {
     setShiftHeld(e.shiftKey);
+    const S_KEY = 83;
     const Y_KEY = 89;
     const Z_KEY = 90;
+    let isSave = e.keyCode === S_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
     let isUndo = e.keyCode === Z_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
     let isRedo1 = e.keyCode === Z_KEY && e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey;
     let isRedo2 = e.keyCode === Y_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
+    if (isSave) {
+        saveOfflineCopyOfCurrentCircuit();
+        e.preventDefault();
+    }
     if (isUndo) {
         restore(revision.undo());
+        e.preventDefault();
     }
     if (isRedo1 || isRedo2) {
         restore(revision.redo());
+        e.preventDefault();
     }
 });
 document.addEventListener("keyup", e => {
@@ -311,7 +345,8 @@ const loadCircuitFromUrl = () => {
         historyPusher.currentStateIsMemorableButUnknown();
         let params = getHashParameters();
         if (!params.has(Config.URL_CIRCUIT_PARAM_KEY)) {
-            params.set(Config.URL_CIRCUIT_PARAM_KEY, JSON.stringify(Serializer.toJson(CircuitDefinition.EMPTY)));
+            let def = document.DEFAULT_CIRCUIT || JSON.stringify(Serializer.toJson(CircuitDefinition.EMPTY));
+            params.set(Config.URL_CIRCUIT_PARAM_KEY, def);
         }
 
         let jsonText = params.get(Config.URL_CIRCUIT_PARAM_KEY);

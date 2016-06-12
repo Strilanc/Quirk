@@ -10,11 +10,13 @@ import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
 import MeasurementGate from "src/gates/MeasurementGate.js"
+import MultiplyAccumulateGates from "src/gates/MultiplyAccumulateGates.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
 import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
 import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
+import ReverseBitsGateFamily from "src/gates/ReverseBitsGateFamily.js"
 import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
 import SpacerGate from "src/gates/SpacerGate.js"
 import SwapGateHalf from "src/gates/SwapGateHalf.js"
@@ -22,6 +24,7 @@ import UniversalNotGate from "src/gates/Impossible_UniversalNotGate.js"
 import VariousXGates from "src/gates/VariousXGates.js"
 import VariousYGates from "src/gates/VariousYGates.js"
 import VariousZGates from "src/gates/VariousZGates.js"
+import ZeroGate from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 let Gates = {};
@@ -29,8 +32,6 @@ export default Gates;
 
 /** Gates that have special behavior requiring custom code / logic to handle. */
 Gates.Special = {
-    Control: Controls.Control,
-    AntiControl: Controls.AntiControl,
     Measurement: MeasurementGate,
     SwapHalf: SwapGateHalf
 };
@@ -46,6 +47,7 @@ Gates.Displays = {
     BlochSphereDisplay: BlochSphereDisplay
 };
 Gates.Arithmetic = ArithmeticGates;
+Gates.Controls = Controls;
 Gates.CountingGates = CountingGates;
 Gates.CycleBitsGates = CycleBitsGates;
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
@@ -55,6 +57,7 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.OtherX = VariousXGates;
 Gates.OtherY = VariousYGates;
 Gates.OtherZ = VariousZGates;
@@ -62,8 +65,10 @@ Gates.PhaseGradientGates = PhaseGradientGates;
 Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
+Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
+Gates.ZeroGate = ZeroGate;
 
 /** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
@@ -73,6 +78,7 @@ Gates.KnownToSerializer = [
     SpacerGate,
     UniversalNotGate,
     ErrorInjectionGate,
+    ZeroGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -86,17 +92,19 @@ Gates.KnownToSerializer = [
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
+    ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
     ...PhaseGradientGates.all,
     ...PostSelectionGates.all,
     ...PoweringGates.all,
+    ...ReverseBitsGateFamily.all,
     ...VariousXGates.all,
     ...VariousYGates.all,
     ...VariousZGates.all
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
-Gates.ToolboxGroups = [
+Gates.TopToolboxGroups = [
     {
         hint: "Probes",
         gates: [
@@ -138,58 +146,80 @@ Gates.ToolboxGroups = [
         ]
     },
     {
-        hint: 'Misc',
+        hint: 'Fourier',
         gates: [
-            PhaseGradientGates.PhaseGradientFamily.ofSize(2),       PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined,                                              MysteryGateMaker(),
-            FourierTransformGates.FourierTransformFamily.ofSize(2), SpacerGate
+            PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
+            undefined, ReverseBitsGateFamily.ofSize(2),
+            FourierTransformGates.FourierTransformFamily.ofSize(2),
+                FourierTransformGates.InverseFourierTransformFamily.ofSize(2)
         ]
     },
     {
+        hint: 'Silly',
+        gates: [
+            ZeroGate, undefined,
+            MysteryGateMaker(), undefined,
+            SpacerGate, undefined
+        ]
+    }
+];
+
+/** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
+Gates.BottomToolboxGroups = [
+    {
         hint: 'Arithmetic',
         gates: [
-            CountingGates.CountingFamily.ofSize(2),    CountingGates.UncountingFamily.ofSize(2),
-            ArithmeticGates.AdditionFamily.ofSize(4),  ArithmeticGates.SubtractionFamily.ofSize(4),
-            ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2)
+            ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
+            ArithmeticGates.AdditionFamily.ofSize(4), ArithmeticGates.SubtractionFamily.ofSize(4),
+            MultiplyAccumulateGates.MultiplyAddFamily.ofSize(4),
+                MultiplyAccumulateGates.MultiplySubtractFamily.ofSize(4)
+        ]
+    },
+    {
+        hint: "Cycling",
+        gates: [
+            CountingGates.CountingFamily.ofSize(2),          CountingGates.UncountingFamily.ofSize(2),
+            CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
+            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
         ]
     },
     {
         hint: "Raising",
         gates: [
-            PoweringGates.ZForward, PoweringGates.ZBackward,
+            PoweringGates.XForward, PoweringGates.XBackward,
             PoweringGates.YForward, PoweringGates.YBackward,
-            PoweringGates.XForward, PoweringGates.XBackward
+            PoweringGates.ZForward, PoweringGates.ZBackward
         ]
     },
     {
         hint: "Exponentiating",
         gates: [
-            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward,
+            ExponentiatingGates.XForward, ExponentiatingGates.XBackward,
             ExponentiatingGates.YForward, ExponentiatingGates.YBackward,
-            ExponentiatingGates.XForward, ExponentiatingGates.XBackward
+            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward
         ]
     },
     {
-        hint: "Other X",
+        hint: "Various X",
         gates: [
-            VariousXGates.X16, VariousXGates.X16i,
             VariousXGates.X8,  VariousXGates.X8i,
+            VariousXGates.X16, VariousXGates.X16i,
             VariousXGates.X3,  VariousXGates.X3i
         ]
     },
     {
-        hint: "Other Y",
+        hint: "Various Y",
         gates: [
-            VariousYGates.Y16, VariousYGates.Y16i,
             VariousYGates.Y8,  VariousYGates.Y8i,
+            VariousYGates.Y16, VariousYGates.Y16i,
             VariousYGates.Y3,  VariousYGates.Y3i
         ]
     },
     {
-        hint: "Other Z",
+        hint: "Various Z",
         gates: [
-            VariousZGates.Z16, VariousZGates.Z16i,
             VariousZGates.Z8,  VariousZGates.Z8i,
+            VariousZGates.Z16, VariousZGates.Z16i,
             VariousZGates.Z3,  VariousZGates.Z3i
         ]
     }

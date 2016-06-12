@@ -74,6 +74,21 @@ class Gate {
          * @private
          */
         this._effectCreatesSuperpositions = undefined;
+        /**
+         * @type {!boolean}
+         * @private
+         */
+        this._affectsOtherWires = false;
+
+        /**
+         * @type {undefined|!boolean}
+         * @private
+         */
+        this._controlBit = undefined;
+        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        this.preShaders = [];
+        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        this.postShaders = [];
     }
 
     /**
@@ -110,6 +125,17 @@ class Gate {
     withKnownMatrixFunc(matrixFunc) {
         let g = this._copy();
         g._knownMatrixFunc = matrixFunc;
+        return g;
+    }
+
+    /**
+     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} before
+     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} after
+     */
+    withSetupShaders(before, after) {
+        let g = this._copy();
+        g.preShaders = before;
+        g.postShaders = after;
         return g;
     }
 
@@ -187,6 +213,25 @@ class Gate {
     /**
      * @returns {!Gate}
      */
+    markedAsAffectsOtherWires() {
+        let g = this._copy();
+        g._affectsOtherWires = true;
+        return g;
+    }
+
+    /**
+     * @param {!boolean} bit
+     * @returns {!Gate}
+     */
+    markedAsControl(bit) {
+        let g = this._copy();
+        g._controlBit = bit;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
     markedAsStable() {
         let g = this._copy();
         g._stableDuration = Infinity;
@@ -208,12 +253,19 @@ class Gate {
         g.width = this.width;
         g.height = this.height;
         g.gateFamily = this.gateFamily;
+        if (this.gateFamily.length === 1 && this.gateFamily[0] === this) {
+            g.gateFamily = [g];
+        }
         g._knownMatrix = this._knownMatrix;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
         g._hasNoEffect = this._hasNoEffect;
         g._effectPermutesStates = this._effectPermutesStates;
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
+        g._affectsOtherWires = this._affectsOtherWires;
+        g._controlBit = this._controlBit;
+        g.preShaders = this.preShaders;
+        g.postShaders = this.postShaders;
         return g;
     }
 
@@ -364,18 +416,48 @@ class Gate {
             undefined;
     }
 
+    /**
+     * @returns {!boolean}
+     */
+    affectsOtherWires() {
+        return this._affectsOtherWires;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    isControl() {
+        return this._controlBit !== undefined;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    controlBit() {
+        return this._controlBit;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
     effectMightPermutesStates() {
         return this._effectPermutesStates !== undefined ? this._effectPermutesStates :
             this._knownMatrix !== undefined ? !this._knownMatrix.isDiagonal() :
             true;
     }
 
+    /**
+     * @returns {!boolean}
+     */
     effectMightCreateSuperpositions() {
         return this._effectCreatesSuperpositions !== undefined ? this._effectCreatesSuperpositions :
             this._knownMatrix !== undefined ? !this._knownMatrix.isPhasedPermutation() :
             true;
     }
 
+    /**
+     * @returns {!boolean}
+     */
     definitelyHasNoEffect() {
         return this._hasNoEffect !== undefined ? this._hasNoEffect :
             this._knownMatrix !== undefined ? this._knownMatrix.isIdentity() :

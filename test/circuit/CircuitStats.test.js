@@ -11,7 +11,7 @@ let suite = new Suite("CircuitStats");
 //suite.webGlTest("smoke", () => {
 //    let circuit = new CircuitDefinition.from([
 //        [null, Gates.HalfTurns.H],
-//        [Gates.HalfTurns.X, Gates.Special.Control]
+//        [Gates.HalfTurns.X, Gates.Controls.Control]
 //    ]);
 //    let s = CircuitStats.fromCircuitAtTime(circuit, 0.5);
 //    assertThat(s.circuitDefinition).isEqualTo(circuit);
@@ -30,8 +30,8 @@ let suite = new Suite("CircuitStats");
 //suite.webGlTest("wireProbabilityJustAfter", () => {
 //    let X = Gates.HalfTurns.X;
 //    let H = Gates.HalfTurns.H;
-//    let IsOn = Gates.Special.Control;
-//    let IsOff = Gates.Special.AntiControl;
+//    let IsOn = Gates.Controls.Control;
+//    let IsOff = Gates.Controls.AntiControl;
 //
 //    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
 //        [H, null, null],
@@ -67,8 +67,8 @@ let suite = new Suite("CircuitStats");
 //
 //suite.webGlTest("controlledWireProbabilityJustAfter_independent", () => {
 //    let H = Gates.HalfTurns.H;
-//    let IsOn = Gates.Special.Control;
-//    let IsOff = Gates.Special.AntiControl;
+//    let IsOn = Gates.Controls.Control;
+//    let IsOff = Gates.Controls.AntiControl;
 //    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
 //        [H, H, H],
 //        [IsOn, IsOff, null]
@@ -98,8 +98,8 @@ let suite = new Suite("CircuitStats");
 //suite.webGlTest("controlledWireProbabilityJustAfter_dependent", () => {
 //    let X = Gates.HalfTurns.X;
 //    let H = Gates.HalfTurns.H;
-//    let IsOn = Gates.Special.Control;
-//    let IsOff = Gates.Special.AntiControl;
+//    let IsOn = Gates.Controls.Control;
+//    let IsOff = Gates.Controls.AntiControl;
 //
 //    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([
 //        [H, null, null],
@@ -138,7 +138,7 @@ let suite = new Suite("CircuitStats");
 //});
 //
 //suite.webGlTest("wireProbabilities_inControl", () => {
-//    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([[Gates.Special.Control]]), 0);
+//    let s = CircuitStats.fromCircuitAtTime(CircuitDefinition.from([[Gates.Controls.Control]]), 0);
 //    assertThat(s.wireProbabilityJustAfter(0, -1)).isEqualTo(0);
 //    assertThat(s.wireProbabilityJustAfter(0, 0)).isEqualTo(0);
 //    assertThat(s.wireProbabilityJustAfter(0, 1)).isEqualTo(0);

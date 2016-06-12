@@ -4,6 +4,9 @@ import GateShaders from "src/circuit/GateShaders.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 
+import {makeOffsetMatrix} from "src/gates/ArithmeticGates.js"
+import {makeCycleBitsMatrix, cycleBits} from "src/gates/CycleBitsGates.js"
+
 let CountingGates = {};
 export default CountingGates;
 
@@ -58,10 +61,10 @@ let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
     args.painter.ctx.restore();
 };
 
-const COUNTING_MATRIX_MAKER = span =>
-        t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r-Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0);
-const UNCOUNTING_MATRIX_MAKER = span =>
-        t => Matrix.generate(1<<span, 1<<span, (r, c) => ((r+Math.floor(t*(1<<span))) & ((1<<span)-1)) === c ? 1 : 0);
+const COUNTING_MATRIX_MAKER = span => t => makeOffsetMatrix(Math.floor(t*(1<<span)), span);
+const UNCOUNTING_MATRIX_MAKER = span => t => makeOffsetMatrix(-Math.floor(t*(1<<span)), span);
+const LEFT_SHIFTING_MATRIX_MAKER = span => t => makeCycleBitsMatrix(Math.floor(t*span), span);
+const RIGHT_SHIFTING_MATRIX_MAKER = span => t => makeCycleBitsMatrix(-Math.floor(t*span), span);
 
 CountingGates.ClockPulseGate = Gate.fromVaryingMatrix(
     "X^⌈t⌉",
@@ -82,7 +85,7 @@ CountingGates.QuarterPhaseClockPulseGate = Gate.fromVaryingMatrix(
     withStableDuration(0.25);
 
 CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
-    "(+1)^⌈t⌉",
+    "+⌈t⌉",
     "Counting Gate",
     "Adds an increasing little-endian count into a block of qubits.").
     markedAsOnlyPermutingAndPhasing().
@@ -96,12 +99,12 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKno
         Math.floor(time*(1<<span)))));
 
 CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
-    "(-1)^⌈t⌉",
+    "-⌈t⌉",
     "Down Counting Gate",
     "Subtracts an increasing little-endian count from a block of qubits.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
-    withKnownMatrixFunc(UNCOUNTING_MATRIX_MAKER(span)).
+    withKnownMatrixFunc(span >= 4 ? undefined : UNCOUNTING_MATRIX_MAKER(span)).
     withSerializedId("Uncounting" + span).
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
     withHeight(span).
@@ -109,9 +112,37 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
     withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
         -Math.floor(time*(1<<span)))));
 
+CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
+    ">>⌈t⌉\n↑",
+    "Right-Shift Cycling Gate",
+    "Right-shifts a block of bits upward by more and more, rotating bits that fall off the top back to the bottom.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrixFunc(span >= 4 ? undefined : RIGHT_SHIFTING_MATRIX_MAKER(span)).
+    withSerializedId(">>t" + span).
+    withCustomDrawer(STAIRCASE_DRAWER(0, span)).
+    withHeight(span).
+    withStableDuration(1.0 / span).
+    withCustomShader((val, con, bit, time) => cycleBits(val, con, bit, span, -Math.floor(time*span))));
+
+CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
+    "<<⌈t⌉\n↓",
+    "Left-Shift Cycling Gate",
+    "Left-shifts a block of bits downward by more and more, rotating bits that fall off the bottom back to the top.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withKnownMatrixFunc(span >= 4 ? undefined : LEFT_SHIFTING_MATRIX_MAKER(span)).
+    withSerializedId("<<t" + span).
+    withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
+    withHeight(span).
+    withStableDuration(1.0 / span).
+    withCustomShader((val, con, bit, time) => cycleBits(val, con, bit, span, Math.floor(time*span))));
+
 CountingGates.all = [
     CountingGates.ClockPulseGate,
     CountingGates.QuarterPhaseClockPulseGate,
     ...CountingGates.CountingFamily.all,
-    ...CountingGates.UncountingFamily.all
+    ...CountingGates.UncountingFamily.all,
+    ...CountingGates.RightShiftRotatingFamily.all,
+    ...CountingGates.LeftShiftRotatingFamily.all
 ];

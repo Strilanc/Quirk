@@ -269,6 +269,17 @@ suite.test("adjoint", () => {
     assertThat(Matrix.col(1, 2, Complex.I).adjoint()).isEqualTo(Matrix.row(1, 2, Complex.I.neg()));
 });
 
+suite.test("transpose", () => {
+    let v = Matrix.square(
+        new Complex(2, 3), new Complex(5, 7),
+        new Complex(11, 13), new Complex(17, 19));
+    let a = Matrix.square(
+        new Complex(2, 3), new Complex(11, 13),
+        new Complex(5, 7), new Complex(17, 19));
+    assertThat(v.transpose()).isEqualTo(a);
+    assertThat(Matrix.col(1, 2, Complex.I).transpose()).isEqualTo(Matrix.row(1, 2, Complex.I));
+});
+
 suite.test("times_scalar", () => {
     let v = Matrix.square(new Complex(2, 3), new Complex(5, 7),
                           new Complex(11, 13), new Complex(17, 19));
