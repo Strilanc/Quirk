@@ -11,7 +11,7 @@ let SwapGateHalf = Gate.fromKnownMatrix(
         0, 1, 0, 0,
         0, 0, 0, 1),
     "Swap Gate [Half]",
-    "Swaps the values of two qubits.\nPlace two swap gate halves in the same column to form a swap gate.").
+    "Swaps the values of two qubits.\n(Place two in the same column.)").
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.DEFAULT_DRAWER(args);

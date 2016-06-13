@@ -5,7 +5,7 @@ import GatePainting from "src/ui/GatePainting.js"
 let MeasurementGate = Gate.fromIdentity(
     "Measure",
     "Measurement Gate",
-    "Measures a wire's qubit, along the Z axis.").
+    "Measures a wire's qubit along the Z axis.").
     withCustomDrawer(args => {
         let backColor = Config.GATE_FILL_COLOR;
         if (args.isHighlighted) {

@@ -283,10 +283,18 @@ canvasDiv.addEventListener('mousedown', ev => {
 });
 
 // When mouse moves without dragging, track it (for showing hints and things).
-canvasDiv.addEventListener('mousemove', ev => {
+document.addEventListener('mousemove', ev => {
     if (!inspector.hand.isBusy()) {
         ev.preventDefault();
         let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));
+        let newInspector = inspector.withHand(newHand);
+        useInspector(newInspector, false);
+    }
+});
+document.addEventListener('mouseleave', ev => {
+    if (!inspector.hand.isBusy()) {
+        ev.preventDefault();
+        let newHand = inspector.hand.withPos(undefined);
         let newInspector = inspector.withHand(newHand);
         useInspector(newInspector, false);
     }

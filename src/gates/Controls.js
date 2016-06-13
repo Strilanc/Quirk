@@ -43,6 +43,7 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
     markedAsControl(false).
     withSerializedId("⊕").
     withCustomShaders([]).
+    markedAsStable().
     withSetupShaders(
         [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)],
         [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
@@ -65,6 +66,7 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
     withSerializedId("⊖").
     withCustomShaders([]).
     markedAsControl(true).
+    markedAsStable().
     withSetupShaders(
         [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)],
         [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
@@ -88,6 +90,7 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     markedAsControl(true).
     withSerializedId("⊗").
     withCustomShaders([]).
+    markedAsStable().
     withSetupShaders(
         [(val, con, bit) => GateShaders.qubitOperation(val, x2, bit, con)],
         [(val, con, bit) => GateShaders.qubitOperation(val, x1, bit, con)]).

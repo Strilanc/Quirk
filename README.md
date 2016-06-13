@@ -1,4 +1,4 @@
-# <a href="http://algorithmicassertions.com/quirk">Quirk <img src="res/favicon.ico" alt="Icon" title="Icon" /></a>
+# <a href="http://algorithmicassertions.com/quirk">Quirk <img src="doc/favicon.ico" alt="Icon" title="Icon" /></a>
 
 [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)
 [![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)
@@ -29,19 +29,19 @@ Quirk assumes you already know background facts like "each wire represents a qub
 
 **[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)**
 
-# Screenshots and Example Circuits
+# Examples
 
-Quantum teleportation circuit, with Bloch-sphere state displays inserted:
+Basic usage demo:
 
-![Quantum teleportation](/doc/README_TeleportationLoop.gif)
+![Demo](/doc/README_Demo.gif)
 
-Quantum pigeonhole circuit, showing the toolbox and default after-circuit state displays:
+Grover search circuit with chance and sample displays (showing that the chance of success increases):
 
-![The Inspector](/doc/README_Pigeonhole.png)
+![Grover search](/doc/README_Grover.gif)
 
-Reacting and animating smoothly while working with ten qubits:
+Quantum teleportation circuit with Bloch sphere displays (showing that the qubit at the top has ended up at the bottom):
 
-![Ten qubits animation](/doc/README_TenQubitsLoop.gif)
+![Quantum teleportation](/doc/README_Teleportation.gif)
 
 # Building the Code
 
