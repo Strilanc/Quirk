@@ -31,15 +31,15 @@ Quirk assumes you already know background facts like "each wire represents a qub
 
 # Examples
 
-Basic usage demo:
+**Basic usage demo**:
 
 ![Demo](/doc/README_Demo.gif)
 
-Grover search circuit with chance and sample displays (showing that the chance of success increases):
+**Grover search circuit** with chance and sample displays (showing that the chance of success increases):
 
 ![Grover search](/doc/README_Grover.gif)
 
-Quantum teleportation circuit with Bloch sphere displays (showing that the qubit at the top has ended up at the bottom):
+**Quantum teleportation circuit** with Bloch sphere displays (showing that the qubit at the top has ended up at the bottom):
 
 ![Quantum teleportation](/doc/README_Teleportation.gif)
 
