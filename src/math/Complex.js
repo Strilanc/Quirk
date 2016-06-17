@@ -121,21 +121,39 @@ class Complex {
     toString(format) {
         format = format || Format.EXACT;
 
-        if (format.allowAbbreviation) {
-            if (Math.abs(this.imag) <= format.maxAbbreviationError) {
-                return format.formatFloat(this.real);
-            }
-            if (Math.abs(this.real) <= format.maxAbbreviationError) {
-                if (Math.abs(this.imag - 1) <= format.maxAbbreviationError) {
-                    return "i";
-                }
-                if (Math.abs(this.imag + 1) <= format.maxAbbreviationError) {
-                    return "-i";
-                }
-                return format.formatFloat(this.imag) + "i";
-            }
-        }
+        return format.allowAbbreviation ?
+            this._toString_allowSingleValue(format) :
+            this._toString_bothValues(format);
+    }
 
+    /**
+     * @param {!Format} format
+     * @returns {!string}
+     * @private
+     */
+    _toString_allowSingleValue(format) {
+        if (Math.abs(this.imag) <= format.maxAbbreviationError) {
+            return format.formatFloat(this.real);
+        }
+        if (Math.abs(this.real) <= format.maxAbbreviationError) {
+            if (Math.abs(this.imag - 1) <= format.maxAbbreviationError) {
+                return "i";
+            }
+            if (Math.abs(this.imag + 1) <= format.maxAbbreviationError) {
+                return "-i";
+            }
+            return format.formatFloat(this.imag) + "i";
+        }
+        
+        return this._toString_bothValues(format);
+    }
+    
+    /**
+     * @param {!Format} format
+     * @returns {!string}
+     * @private
+     */
+    _toString_bothValues(format) {
         let separator = this.imag >= 0 ? "+" : "-";
         let imagFactor = format.allowAbbreviation && Math.abs(Math.abs(this.imag) - 1) <= format.maxAbbreviationError ?
             "" :
