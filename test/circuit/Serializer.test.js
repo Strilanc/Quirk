@@ -114,8 +114,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     ">>2", ">>3", ">>4", ">>5", ">>6", ">>7", ">>8", ">>9", ">>10", ">>11", ">>12", ">>13", ">>14", ">>15", ">>16",
     "QFT1", "QFT2", "QFT3", "QFT4", "QFT5", "QFT6", "QFT7", "QFT8", "QFT9", "QFT10", "QFT11", "QFT12", "QFT13", "QFT14", "QFT15", "QFT16",
     "QFT†1", "QFT†2", "QFT†3", "QFT†4", "QFT†5", "QFT†6", "QFT†7", "QFT†8", "QFT†9", "QFT†10", "QFT†11", "QFT†12", "QFT†13", "QFT†14", "QFT†15", "QFT†16",
-    "c+=ab2", "c+=ab3", "c+=ab4", "c+=ab5", "c+=ab6", "c+=ab7", "c+=ab8", "c+=ab9", "c+=ab10", "c+=ab11", "c+=ab12", "c+=ab13", "c+=ab14", "c+=ab15", "c+=ab16",
-    "c-=ab2", "c-=ab3", "c-=ab4", "c-=ab5", "c-=ab6", "c-=ab7", "c-=ab8", "c-=ab9", "c-=ab10", "c-=ab11", "c-=ab12", "c-=ab13", "c-=ab14", "c-=ab15", "c-=ab16",
+    "c+=ab3", "c+=ab4", "c+=ab5", "c+=ab6", "c+=ab7", "c+=ab8", "c+=ab9", "c+=ab10", "c+=ab11", "c+=ab12", "c+=ab13", "c+=ab14", "c+=ab15", "c+=ab16",
+    "c-=ab3", "c-=ab4", "c-=ab5", "c-=ab6", "c-=ab7", "c-=ab8", "c-=ab9", "c-=ab10", "c-=ab11", "c-=ab12", "c-=ab13", "c-=ab14", "c-=ab15", "c-=ab16",
     "PhaseGradient1", "PhaseGradient2", "PhaseGradient3", "PhaseGradient4", "PhaseGradient5", "PhaseGradient6", "PhaseGradient7", "PhaseGradient8", "PhaseGradient9", "PhaseGradient10", "PhaseGradient11", "PhaseGradient12", "PhaseGradient13", "PhaseGradient14", "PhaseGradient15", "PhaseGradient16",
     "PhaseUngradient1", "PhaseUngradient2", "PhaseUngradient3", "PhaseUngradient4", "PhaseUngradient5", "PhaseUngradient6", "PhaseUngradient7", "PhaseUngradient8", "PhaseUngradient9", "PhaseUngradient10", "PhaseUngradient11", "PhaseUngradient12", "PhaseUngradient13", "PhaseUngradient14", "PhaseUngradient15", "PhaseUngradient16",
     "rev2", "rev3", "rev4", "rev5", "rev6", "rev7", "rev8", "rev9", "rev10", "rev11", "rev12", "rev13", "rev14", "rev15", "rev16"

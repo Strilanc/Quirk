@@ -199,7 +199,7 @@ GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
             'middle',
             'black',
             font,
-            args.rect.w,
+            args.rect.w-2,
             args.rect.h*(p2-p));
         p = p2;
     }
