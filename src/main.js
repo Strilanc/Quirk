@@ -18,8 +18,45 @@ import Serializer from "src/circuit/Serializer.js"
 import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
+import selectAndCopyToClipboard from "src/browser/Clipboard.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
+const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
+const redoButton = /** @type {!HTMLButtonElement} */ document.getElementById('redo-button');
+const importButton = /** @type {!HTMLButtonElement} */ document.getElementById('import-button');
+const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
+const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
+const exportCircuitJsonElement = /** @type {HTMLPreElement} */ document.getElementById('export-circuit-json-pre');
+const exportJsonCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-json-copy-button');
+const downloadOfflineButton = /** @type {HTMLButtonElement} */ document.getElementById('download-offline-copy-button');
+const exportJsonCopyResult = /** @type {HTMLElement} */ document.getElementById('export-json-copy-result');
+const exportLinkCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-link-copy-button');
+const exportLinkCopyResult = /** @type {HTMLElement} */ document.getElementById('export-link-copy-result');
+const exportEscapedLinkAnchor = /** @type {HTMLAnchorElement} */ document.getElementById('export-escaped-anchor');
+const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
+
+exportButton.addEventListener('click', () => { exportDiv.style.display = 'block'; });
+exportOverlay.addEventListener('click', () => { exportDiv.style.display = 'none'; });
+
+/**
+ * @param {!HTMLButtonElement} button
+ * @param {!HTMLElement} contentElement
+ * @param {!HTMLElement} resultElement
+ */
+let setupCopy = (button, contentElement, resultElement) => button.addEventListener('click', () => {
+    //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+    try {
+        selectAndCopyToClipboard(contentElement);
+        resultElement.innerText = "Done!";
+    } catch (ex) {
+        resultElement.innerText = "It didn't work...";
+        console.warn('Clipboard copy failed.', ex);
+    }
+    button.disabled = true;
+    setTimeout(() => { resultElement.innerText = ""; button.disabled = false; }, 1000);
+});
+setupCopy(exportJsonCopyButton, exportCircuitJsonElement, exportJsonCopyResult);
+setupCopy(exportLinkCopyButton, exportEscapedLinkAnchor, exportLinkCopyResult);
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
@@ -48,10 +85,28 @@ const inspectorDiv = document.getElementById("inspectorDiv");
 /** @type {!InspectorWidget} */
 let inspector = InspectorWidget.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
 
+const offlineCopyTitle = () => {
+    return inspector.displayedCircuit.circuitDefinition.isEmpty() ?
+        'Quirk.html' :
+        `Quirk with Circuit - ${inspector.displayedCircuit.circuitDefinition.readableHash()}.html`;
+};
+
 const importantStateChangeHappened = jsonText => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     historyPusher.stateChange(jsonText, urlHash);
     document.title = `Quirk: ${inspector.displayedCircuit.circuitDefinition.readableHash()}`;
+
+    let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
+    exportEscapedLinkAnchor.href = escapedUrlHash;
+    exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
+    downloadOfflineButton.innerText = `Download "${offlineCopyTitle()}"`;
+    //noinspection UnusedCatchParameterJS
+    try {
+        let val = JSON.parse(jsonText);
+        exportCircuitJsonElement.innerText = JSON.stringify(val, null, '  ');
+    } catch (_) {
+        exportCircuitJsonElement.innerText = jsonText;
+    }
 };
 
 const snapshot = () => JSON.stringify(Serializer.toJson(inspector.displayedCircuit.circuitDefinition), null, 0);
@@ -62,35 +117,48 @@ const restore = jsonText => {
     if (jsonText === undefined) {
         return;
     }
-    importantStateChangeHappened(jsonText);
     inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
+    importantStateChangeHappened(jsonText);
     redrawThrottle.trigger();
 };
 /** @type {!Revision} */
 let revision = Revision.startingAt(snapshot());
 
-let saveOfflineCopyOfCurrentCircuit = () => {
+downloadOfflineButton.addEventListener('click', () => {
+    downloadOfflineButton.disabled = true;
+    setTimeout(() => { downloadOfflineButton.disabled = false; }, 1000);
     let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
+
+    // Inject default circuit.
     let targetLinePrefix = 'document.DEFAULT_CIRCUIT = ';
     let modStart = originalHtml.indexOf(targetLinePrefix) + targetLinePrefix.length;
     let modStop = originalHtml.indexOf(';\n', modStart);
     let moddedHtml = originalHtml.slice(0, modStart) + JSON.stringify(snapshot()) + originalHtml.slice(modStop);
 
+    // Strip analytics. (Note: beware the search matching these string literals, which will appear in the code!)
+    let anaStart = moddedHtml.indexOf('<!-- ' + 'Start Analytics -->');
+    if (anaStart !== -1) {
+        let stopTag = '<!-- ' + 'End Analytics -->';
+        let anaStop = moddedHtml.indexOf(stopTag, anaStart);
+        if (anaStop !== -1) {
+            moddedHtml = moddedHtml.substring(0, anaStart) + moddedHtml.substring(anaStop + stopTag.length);
+        }
+    }
+
+    // Trigger save dialog.
     let anchor = document.createElement("a");
     //noinspection JSUnresolvedVariable,JSUnresolvedFunction
     anchor.href = window.URL !== undefined ?
         window.URL.createObjectURL(new Blob([moddedHtml], {type: 'text/html;charset=UTF-8'})) :
         'data:application/octet-stream,' + encodeURI(moddedHtml);
-    anchor.download = inspector.displayedCircuit.circuitDefinition.isEmpty() ?
-        'Quirk.html' :
-        `Quirk with Circuit - ${inspector.displayedCircuit.circuitDefinition.readableHash()}.html`;
+    anchor.download = offlineCopyTitle();
     try {
         canvasDiv.appendChild(anchor);
         anchor.click();
     } finally {
         canvasDiv.removeChild(anchor);
     }
-};
+});
 
 const getCircuitCycleTime = (() => {
     /**
@@ -200,6 +268,9 @@ const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
     if (!avoidRedraw) {
         scheduleRedraw();
     }
+
+    undoButton.disabled = revision.isAtBeginningOfHistory();
+    redoButton.disabled = revision.isAtEndOfHistory();
     return true;
 };
 
@@ -285,7 +356,6 @@ canvasDiv.addEventListener('mousedown', ev => {
 // When mouse moves without dragging, track it (for showing hints and things).
 document.addEventListener('mousemove', ev => {
     if (!inspector.hand.isBusy()) {
-        ev.preventDefault();
         let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));
         let newInspector = inspector.withHand(newHand);
         useInspector(newInspector, false);
@@ -293,7 +363,6 @@ document.addEventListener('mousemove', ev => {
 });
 document.addEventListener('mouseleave', ev => {
     if (!inspector.hand.isBusy()) {
-        ev.preventDefault();
         let newHand = inspector.hand.withPos(undefined);
         let newInspector = inspector.withHand(newHand);
         useInspector(newInspector, false);
@@ -303,19 +372,20 @@ document.addEventListener('mouseleave', ev => {
 // Resize drawn circuit as window size changes.
 window.addEventListener('resize', scheduleRedraw, false);
 
+undoButton.addEventListener('click', () => restore(revision.undo()));
+redoButton.addEventListener('click', () => restore(revision.redo()));
+
 // Keyboard shortcuts (undo, redo).
 document.addEventListener("keydown", e => {
     setShiftHeld(e.shiftKey);
-    const S_KEY = 83;
     const Y_KEY = 89;
     const Z_KEY = 90;
-    let isSave = e.keyCode === S_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
+    const ESC_KEY = 27;
     let isUndo = e.keyCode === Z_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
     let isRedo1 = e.keyCode === Z_KEY && e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey;
     let isRedo2 = e.keyCode === Y_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
-    if (isSave) {
-        saveOfflineCopyOfCurrentCircuit();
-        e.preventDefault();
+    if (e.keyCode === ESC_KEY) {
+        exportDiv.style.display = 'none';
     }
     if (isUndo) {
         restore(revision.undo());
@@ -381,6 +451,7 @@ loadCircuitFromUrl();
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
+inspectorDiv.style.display = 'block';
 setTimeout(() => {
     redrawNow();
     document.getElementById("loading-div").style.display = 'none';

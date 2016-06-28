@@ -11,7 +11,6 @@ Config.EMPTY_CIRCUIT_TITLE = 'Toy Quantum Circuit Simulator';
 // Beware setting it too high.
 Config.MAX_WIRE_COUNT = 16;
 Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 14;
-Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 17;
 
 Config.MIN_WIRE_COUNT = 2;
 Config.MIN_COL_COUNT = 5;

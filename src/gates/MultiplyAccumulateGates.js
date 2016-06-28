@@ -7,12 +7,17 @@ import {WglShader, WglConfiguredShader} from "src/webgl/WglShader.js"
 
 let MultiplyAccumulateGates = {};
 
+let sectionSizes = totalSize => {
+    let c = Math.ceil(totalSize / 2);
+    let b = Math.ceil((totalSize - c) / 2);
+    let a = Math.max(totalSize - c - b, 1);
+    return [a, b, totalSize - a - b];
+};
+
 const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generate(1<<span, 1<<span, (row, col) => {
     let expected = row;
     let input = col;
-    let sa = Math.floor(span/4);
-    let sb = Math.floor(span/4);
-    let sc = span - sa - sb;
+    let [sa, sb, sc] = sectionSizes(span);
     let a = input & ((1 << sa) - 1);
     let b = (input >> sa) & ((1 << sb) - 1);
     let c = input >> (sa + sb);
@@ -79,7 +84,7 @@ const MULTIPLY_ACCUMULATE_SHADER = new WglShader(`
         gl_FragColor = texture2D(inputTexture, usedUv);
     }`);
 
-MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
+MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(3, 16, span => Gate.withoutKnownMatrix(
     "c+=ab",
     "Multiply-Add Gate",
     "Adds the product of two numbers into a third.").
@@ -89,18 +94,21 @@ MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(2, 16, span => G
     withSerializedId("c+=ab" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(
         ["a", "b", "c+=ab"],
-        [Math.floor(span/4) / span, Math.floor(span/4) / span])).
+        sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader((val, con, bit) =>GateShaders.multiplyAccumulate(
-        val,
-        con,
-        bit,
-        Math.floor(span/4),
-        Math.floor(span/4),
-        span - Math.floor(span/4)*2,
-        +1)));
+    withCustomShader((val, con, bit) => {
+        let [a, b, c] = sectionSizes(span);
+        return GateShaders.multiplyAccumulate(
+            val,
+            con,
+            bit,
+            a,
+            b,
+            c,
+            +1)
+    }));
 
-MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
+MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(3, 16, span => Gate.withoutKnownMatrix(
     "c-=ab",
     "Multiply-Subtract Gate",
     "Subtracts the product of two numbers from a third.").
@@ -110,16 +118,19 @@ MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(2, 16, span
     withSerializedId("c-=ab" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(
         ["a", "b", "c-=ab"],
-        [Math.floor(span/4) / span, Math.floor(span/4) / span])).
+        sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.multiplyAccumulate(
-        val,
-        con,
-        bit,
-        Math.floor(span/4),
-        Math.floor(span/4),
-        span - Math.floor(span/4)*2,
-        -1)));
+    withCustomShader((val, con, bit) => {
+        let [a, b, c] = sectionSizes(span);
+        return GateShaders.multiplyAccumulate(
+            val,
+            con,
+            bit,
+            a,
+            b,
+            c,
+            -1)
+    }));
 
 MultiplyAccumulateGates.all = [
     ...MultiplyAccumulateGates.MultiplyAddFamily.all,

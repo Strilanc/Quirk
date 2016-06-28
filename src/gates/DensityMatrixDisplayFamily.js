@@ -138,21 +138,7 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
         MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
     }));
 
-let DoubleWireDensityMatrixDisplay = Gate.fromIdentity(
-    "Density",
-    "Density Matrix Display",
-    "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
-    withSerializedId("Density2").
-    withWidth(2).
-    withHeight(2).
-    withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-        let {row, col} = args.positionInCircuit;
-        let ρ = args.stats.qubitPairDensityMatrix(row, col);
-        MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-    }));
-
 let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleWireDensityMatrixDisplay :
-    span === 2 ? DoubleWireDensityMatrixDisplay :
     densityMatrixDisplayMaker(span));
 export default DensityMatrixDisplayFamily;
