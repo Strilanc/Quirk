@@ -25,6 +25,8 @@ let CIRCUIT_OP_RIGHT_SPACING = 5;
 
 const SUPERPOSITION_GRID_LABEL_SPAN = 50;
 
+const EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS = 3;
+
 class DisplayedCircuit {
     /**
      *
@@ -93,20 +95,7 @@ class DisplayedCircuit {
      * @returns {!number}
      */
     desiredWidth() {
-        let r = this.opRect(
-            this.circuitDefinition.columns.length + // Operations.
-            1 + // Spacer.
-            2 + // Wire chance and bloch sphere displays.
-            1 // Density matrix displays.
-        );
-
-        // Superposition display
-        let topRect = this.gateRect(0, 0);
-        let bottomRect = this.gateRect(this.circuitDefinition.numWires-1, 0);
-        let gridW = (bottomRect.bottom() - topRect.y) * (this.circuitDefinition.numWires % 2 === 0 ? 1 : 0.5);
-        let eGridW = gridW + SUPERPOSITION_GRID_LABEL_SPAN + 50;
-
-        return r.x + eGridW;
+        return this._rectForSuperpositionDisplay().right() + 101;
     }
 
     /**
@@ -307,6 +296,7 @@ class DisplayedCircuit {
         }
 
         this._drawOutputDisplays(painter, stats, hand);
+        this._drawHintLabels(painter, stats);
     }
 
     /**
@@ -818,39 +808,47 @@ class DisplayedCircuit {
      * @private
      */
     _drawOutputDisplays(painter, stats, hand) {
-        let colCount = Math.max(
-                Config.MIN_COL_COUNT + (this._compressedColumnIndex !== undefined ? 1 : 0),
-                this.circuitDefinition.columns.length) + 1;
+        let chanceCol = this._clampedCircuitColCount() + 1;
+        let blochCol = chanceCol + 1;
+        let densityCol = blochCol + 1;
         let numWire = this.importantWireCount();
 
         for (let i = 0; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
-            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, colCount), hand.hoverPoints());
+            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, chanceCol), hand.hoverPoints());
             let m = stats.qubitDensityMatrix(i, Infinity);
             if (m !== undefined) {
-                paintBlochSphereDisplay(painter, m, this.gateRect(i, colCount+1), hand.hoverPoints());
+                paintBlochSphereDisplay(painter, m, this.gateRect(i, blochCol), hand.hoverPoints());
             }
         }
 
-        let offset = colCount+2;
         for (let i = 0; i + 1 <= numWire; i++) {
             let m = stats.qubitDensityMatrix(i, Infinity);
-            let topLeft = this.gateRect(i, offset).topLeft();
-            let wh = this.gateRect(i, offset).bottom() - topLeft.y;
+            let topLeft = this.gateRect(i, densityCol).topLeft();
+            let wh = this.gateRect(i, densityCol).bottom() - topLeft.y;
             let r = new Rect(topLeft.x, topLeft.y, wh, wh);
             MathPainter.paintDensityMatrix(painter, m, r, hand.hoverPoints());
         }
-        offset += 1;
 
         let bottom = this.wireRect(numWire-1).bottom();
-        let right = this.opRect(colCount - 1).x;
+        let x = this.opRect(chanceCol - 1).x;
         painter.printParagraph(
             "Local wire states\n(Chance/Bloch/Density)",
-            new Rect(right+25, bottom+4, 190, 40),
+            new Rect(x+25, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
 
-        this._drawOutputSuperpositionDisplay(painter, stats, offset, hand);
+        this._drawOutputSuperpositionDisplay(painter, stats, hand);
+    }
+
+    /**
+     * @returns {!number} The number of columns used for drawing the circuit, before the output display.
+     * @private
+     */
+    _clampedCircuitColCount() {
+        return Math.max(
+            this.circuitDefinition.columns.length,
+            Config.MIN_COL_COUNT + (this._compressedColumnIndex !== undefined ? 1 : 0));
     }
 
     /**
@@ -858,29 +856,14 @@ class DisplayedCircuit {
      *
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
-     * @param {!int} col
      * @param {!Hand} hand
      * @private
      */
-    _drawOutputSuperpositionDisplay(painter, stats, col, hand) {
+    _drawOutputSuperpositionDisplay(painter, stats, hand) {
+        let amplitudeGrid = this._outputStateAsMatrix(stats);
+        let gridRect = this._rectForSuperpositionDisplay();
+
         let numWire = this.importantWireCount();
-        if (numWire >= Config.NO_SUPERPOSITION_DRAWING_WIRE_THRESHOLD) {
-            return;
-        }
-
-        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
-        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
-        let outputStateBuffer = stats.finalState.rawBuffer();
-        if (stats.circuitDefinition.numWires !== this.importantWireCount()) {
-            outputStateBuffer = outputStateBuffer.slice(0, outputStateBuffer.length/2);
-        }
-        let amplitudeGrid = new Matrix(colCount, rowCount, outputStateBuffer);
-
-        let topRect = this.gateRect(0, col);
-        let bottomRect = this.gateRect(numWire-1, col);
-        let gridRect = new Rect(topRect.x, topRect.y, 0, bottomRect.bottom() - topRect.y);
-        gridRect = gridRect.withW(gridRect.h * (colCount/rowCount));
-
         MathPainter.paintMatrix(
             painter,
             amplitudeGrid,
@@ -895,16 +878,25 @@ class DisplayedCircuit {
             (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
             (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
 
-        let expandedRect = gridRect.
-            withW(gridRect.w + SUPERPOSITION_GRID_LABEL_SPAN).
-            withH(gridRect.h + SUPERPOSITION_GRID_LABEL_SPAN);
+        this._drawOutputSuperpositionDisplay_labels(painter);
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @private
+     */
+    _drawOutputSuperpositionDisplay_labels(painter) {
+        let gridRect = this._rectForSuperpositionDisplay();
+        let numWire = this.importantWireCount();
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
         let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
 
         // Row labels.
         for (let i = 0; i < rowCount; i++) {
             let label = "_".repeat(colWires) + Util.bin(i, rowWires);
             let x = gridRect.right();
-            let y = expandedRect.y + dh*(i+0.5);
+            let y = gridRect.y + dh*(i+0.5);
             painter.print(
                 label,
                 x + 2,
@@ -921,13 +913,9 @@ class DisplayedCircuit {
         // Column labels.
         painter.ctx.save();
         painter.ctx.rotate(Math.PI/2);
-        let maxY = 0;
         for (let i = 0; i < colCount; i++) {
-            let labelRect = expandedRect.skipTop(gridRect.h + 2).skipLeft(dw*i).skipBottom(2).withW(dw);
-            labelRect = new Rect(labelRect.y, -labelRect.x-labelRect.w, labelRect.h, labelRect.w);
-
             let label = Util.bin(i, colWires) + "_".repeat(rowWires);
-            let x = expandedRect.x + dw*(i+0.5);
+            let x = gridRect.x + dw*(i+0.5);
             let y = gridRect.bottom();
             painter.print(
                 label,
@@ -939,14 +927,54 @@ class DisplayedCircuit {
                 '12px monospace',
                 SUPERPOSITION_GRID_LABEL_SPAN,
                 dw,
-                (w, h) => {
-                    painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray');
-                    maxY = Math.max(maxY, w + 8);
-                });
+                (w, h) => painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray'));
         }
         painter.ctx.restore();
+    }
 
-        // Hint text.
+    /**
+     * @param {!CircuitStats} stats
+     * @returns {!Matrix}
+     * @private
+     */
+    _outputStateAsMatrix(stats) {
+        let numWire = this.importantWireCount();
+        let buf = stats.finalState.rawBuffer();
+        if (stats.circuitDefinition.numWires !== numWire) {
+            buf = buf.slice(0, 2 << numWire);
+        }
+
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
+        return new Matrix(colCount, rowCount, buf);
+    }
+
+    /**
+     * @returns {!Rect}
+     * @private
+     */
+    _rectForSuperpositionDisplay() {
+        let col = this._clampedCircuitColCount() + EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS + 1;
+        let numWire = this.importantWireCount();
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
+        let topRect = this.gateRect(0, col);
+        let bottomRect = this.gateRect(numWire-1, col);
+        let gridRect = new Rect(topRect.x, topRect.y, 0, bottomRect.bottom() - topRect.y);
+        return gridRect.withW(gridRect.h * (colCount/rowCount));
+    }
+
+    /**
+     * Draws a peek gate on each wire at the right-hand side of the circuit.
+     *
+     * @param {!Painter} painter
+     * @param {!CircuitStats} stats
+     * @private
+     */
+    _drawHintLabels(painter, stats) {
+        let gridRect = this._rectForSuperpositionDisplay();
+
+        // Amplitude hint.
         painter.print(
             'Final amplitudes',
             gridRect.right() + 3,
@@ -958,6 +986,7 @@ class DisplayedCircuit {
             100,
             20);
 
+        // Deferred measurement warning.
         if (this.circuitDefinition.colIsMeasuredMask(Infinity) !== 0) {
             painter.printParagraph(
                 "(assuming measurement deferred)",
@@ -968,6 +997,22 @@ class DisplayedCircuit {
                     75),
                 new Point(0.5, 0),
                 'red');
+        }
+
+        // Discard rate warning.
+        if (stats.postSelectionSurvivalRate < 0.99) {
+            let rate = Math.round(100 - stats.postSelectionSurvivalRate * 100);
+            let rateDesc = stats.postSelectionSurvivalRate === 0 ? "100" : rate < 100 ? rate : ">99";
+            painter.print(
+                `(Discard rate: ${rateDesc}%)`,
+                this.opRect(this._clampedCircuitColCount()+2).center().x,
+                gridRect.bottom() + SUPERPOSITION_GRID_LABEL_SPAN,
+                'center',
+                'bottom',
+                'red',
+                '14px sans-serif',
+                800,
+                50);
         }
     }
 }

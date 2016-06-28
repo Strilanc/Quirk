@@ -20,12 +20,14 @@ export default class CircuitStats {
      * @param {!number} time
      * @param {!Array.<!Array.<!Matrix>>} singleQubitDensities
      * @param {!Matrix} finalState
+     * @param {NaN|!number} postSelectionSurvivalRate
      * @param {!Map<!string, *>} customStatsProcessed
      */
     constructor(circuitDefinition,
                 time,
                 singleQubitDensities,
                 finalState,
+                postSelectionSurvivalRate,
                 customStatsProcessed) {
         /**
          * The circuit that these stats apply to.
@@ -50,6 +52,10 @@ export default class CircuitStats {
          * @type {!Matrix}
          */
         this.finalState = finalState;
+        /**
+         * @type {NaN|!number}
+         */
+        this.postSelectionSurvivalRate = postSelectionSurvivalRate;
         /**
          * @type {!Map.<!string, *>}
          * @private
@@ -118,6 +124,7 @@ export default class CircuitStats {
             time,
             this._qubitDensities,
             this.finalState,
+            this.postSelectionSurvivalRate,
             this._customStatsProcessed);
     }
 
@@ -139,6 +146,7 @@ export default class CircuitStats {
                 time,
                 [],
                 Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
+                NaN,
                 new Map());
         }
     }
@@ -286,6 +294,7 @@ export default class CircuitStats {
             time,
             qubitDensities,
             outputSuperposition,
+            unity,
             customStatsProcessed);
     }
 }
