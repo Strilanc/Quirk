@@ -218,12 +218,12 @@ export default class CircuitStats {
             CircuitTextures.zero(numWires),
             Seq.range(numCols),
             (stateTex, col) => {
+                // Apply 'before column' setup shaders.
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.getSetupShadersInCol(col, true),
                     (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
 
-                let gateCol = circuitDefinition.columns[col];
                 let controls = circuitDefinition.colControls(col);
                 let controlTex = CircuitTextures.control(numWires, controls);
                 stateTex = CircuitTextures.aggregateWithReuse(
@@ -231,12 +231,9 @@ export default class CircuitStats {
                     circuitDefinition.operationShadersInColAt(col, time),
                     (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex, time));
 
-                stateTex = CircuitTextures.aggregateWithReuse(
-                    stateTex,
-                    circuitDefinition.getSetupShadersInCol(col, false),
-                    (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
-
+                // Compute custom stats for display gates. (Happens after computation so post-selection has effect.)
                 for (let row of circuitDefinition.customStatRowsInCol(col)) {
+                    let gateCol = circuitDefinition.columns[col];
                     let pipeline = gateCol.gates[row].customStatPipelineMaker(stateTex, controlTex, row, controls);
                     customStatsMap.push({
                         col,
@@ -245,14 +242,20 @@ export default class CircuitStats {
                     });
                     customStats.push(CircuitTextures.evaluatePipelineWithIntermediateCleanup(stateTex, pipeline));
                 }
+                CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
 
-                // Stats for inline displays.
+                // Compute individual qubit densities, where needed.
                 qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(
                     stateTex,
                     controls,
                     circuitDefinition.colHasSingleQubitDisplayMask(col)));
 
-                CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
+                // Apply 'after column' setup shaders.
+                stateTex = CircuitTextures.aggregateWithReuse(
+                    stateTex,
+                    circuitDefinition.getSetupShadersInCol(col, false),
+                    (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
+
                 return stateTex;
             });
         qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
