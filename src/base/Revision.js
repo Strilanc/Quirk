@@ -33,6 +33,20 @@ class Revision {
     }
 
     /**
+     * @returns {!boolean}
+     */
+    isAtBeginningOfHistory() {
+        return this.index === 0 && !this.isWorkingOnCommit;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    isAtEndOfHistory() {
+        return this.index === this.history.length - 1;
+    }
+
+    /**
      * Throws away all revisions and resets the given state.
      * @param {*} state
      * @returns {void}

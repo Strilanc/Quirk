@@ -1,4 +1,4 @@
-import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
+import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Revision from "src/base/Revision.js"
 
 let suite = new Suite("Revision");
@@ -104,6 +104,26 @@ suite.test("undo", () => {
     assertThat(new Revision(["abc", "def", "xyz"], 1, false).undo()).isEqualTo("abc");
     assertThat(new Revision(["abc", "def", "xyz"], 0, true).undo()).isEqualTo("abc");
     assertThat(new Revision(["abc", "def", "xyz"], 0, false).undo()).isEqualTo(undefined);
+});
+
+suite.test("isAtBeginningOfHistory", () => {
+    assertTrue(new Revision(["abc"], 0, false).isAtBeginningOfHistory());
+    assertFalse(new Revision(["abc"], 0, true).isAtBeginningOfHistory());
+
+    assertTrue(new Revision(["abc", "123"], 0, false).isAtBeginningOfHistory());
+    assertFalse(new Revision(["abc", "123"], 0, true).isAtBeginningOfHistory());
+    assertFalse(new Revision(["abc", "123"], 1, false).isAtBeginningOfHistory());
+    assertFalse(new Revision(["abc", "123"], 1, true).isAtBeginningOfHistory());
+});
+
+suite.test("isAtBeginningOfHistory", () => {
+    assertTrue(new Revision(["abc"], 0, false).isAtEndOfHistory());
+    assertTrue(new Revision(["abc"], 0, true).isAtEndOfHistory());
+
+    assertFalse(new Revision(["abc", "123"], 0, false).isAtEndOfHistory());
+    assertFalse(new Revision(["abc", "123"], 0, true).isAtEndOfHistory());
+    assertTrue(new Revision(["abc", "123"], 1, false).isAtEndOfHistory());
+    assertTrue(new Revision(["abc", "123"], 1, true).isAtEndOfHistory());
 });
 
 suite.test("redo", () => {
