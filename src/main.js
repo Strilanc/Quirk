@@ -18,7 +18,8 @@ import Serializer from "src/circuit/Serializer.js"
 import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
-import selectAndCopyToClipboard from "src/browser/Clipboard.js"
+import { selectAndCopyToClipboard } from "src/browser/Clipboard.js"
+import { saveFile } from "src/browser/SaveFile.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
@@ -130,34 +131,31 @@ downloadOfflineButton.addEventListener('click', () => {
     let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
 
     // Inject default circuit.
-    let targetLinePrefix = 'document.DEFAULT_CIRCUIT = ';
-    let modStart = originalHtml.indexOf(targetLinePrefix) + targetLinePrefix.length;
-    let modStop = originalHtml.indexOf(';\n', modStart);
-    let moddedHtml = originalHtml.slice(0, modStart) + JSON.stringify(snapshot()) + originalHtml.slice(modStop);
+    let startDefaultTag = '//DEFAULT_CIRCUIT_START\n';
+    let endDefaultTag = '//DEFAULT_CIRCUIT_END\n';
+    let modStart = originalHtml.indexOf(startDefaultTag);
+    let modStop = originalHtml.indexOf(endDefaultTag, modStart);
+    let moddedHtml =
+        originalHtml.substring(0, modStart) +
+        startDefaultTag +
+        'document.DEFAULT_CIRCUIT = ' + JSON.stringify(snapshot()) + ';\n' +
+        originalHtml.substring(modStop);
 
-    // Strip analytics. (Note: beware the search matching these string literals, which will appear in the code!)
-    let anaStart = moddedHtml.indexOf('<!-- ' + 'Start Analytics -->');
+    // Strip analytics.
+    let anaStartTag = '<!-- Start Analytics -->\n';
+    let anaStart = moddedHtml.indexOf(anaStartTag);
     if (anaStart !== -1) {
-        let stopTag = '<!-- ' + 'End Analytics -->';
-        let anaStop = moddedHtml.indexOf(stopTag, anaStart);
+        let anaStopTag = '<!-- End Analytics -->\n';
+        let anaStop = moddedHtml.indexOf(anaStopTag, anaStart);
         if (anaStop !== -1) {
-            moddedHtml = moddedHtml.substring(0, anaStart) + moddedHtml.substring(anaStop + stopTag.length);
+            moddedHtml =
+                moddedHtml.substring(0, anaStart) +
+                anaStartTag +
+                moddedHtml.substring(anaStop);
         }
     }
 
-    // Trigger save dialog.
-    let anchor = document.createElement("a");
-    //noinspection JSUnresolvedVariable,JSUnresolvedFunction
-    anchor.href = window.URL !== undefined ?
-        window.URL.createObjectURL(new Blob([moddedHtml], {type: 'text/html;charset=UTF-8'})) :
-        'data:application/octet-stream,' + encodeURI(moddedHtml);
-    anchor.download = offlineCopyTitle();
-    try {
-        canvasDiv.appendChild(anchor);
-        anchor.click();
-    } finally {
-        canvasDiv.removeChild(anchor);
-    }
+    saveFile(offlineCopyTitle(), moddedHtml);
 });
 
 const getCircuitCycleTime = (() => {
@@ -361,7 +359,7 @@ document.addEventListener('mousemove', ev => {
         useInspector(newInspector, false);
     }
 });
-document.addEventListener('mouseleave', ev => {
+document.addEventListener('mouseleave', () => {
     if (!inspector.hand.isBusy()) {
         let newHand = inspector.hand.withPos(undefined);
         let newInspector = inspector.withHand(newHand);
@@ -418,7 +416,16 @@ const getHashParameters = () => {
     return paramsMap;
 };
 
+const showEmptyExport = () => {
+    exportEscapedLinkAnchor.href = document.location.href.split("#")[0];
+    exportEscapedLinkAnchor.innerText = exportEscapedLinkAnchor.href;
+    downloadOfflineButton.innerText = `Download "Quirk.html"`;
+    exportCircuitJsonElement.innerText = JSON.stringify(Serializer.toJson(CircuitDefinition.EMPTY), null, '  ');
+};
+
 const loadCircuitFromUrl = () => {
+    showEmptyExport();
+
     try {
         historyPusher.currentStateIsMemorableButUnknown();
         let params = getHashParameters();
