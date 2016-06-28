@@ -222,5 +222,13 @@ Gates.BottomToolboxGroups = [
             VariousZGates.Z16, VariousZGates.Z16i,
             VariousZGates.Z3,  VariousZGates.Z3i
         ]
+    },
+    {
+        hint: "Other Probes",
+        gates: [
+            Controls.PlusControl, Controls.MinusControl,
+            Controls.CrossControl, PostSelectionGates.PostSelectCross,
+            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
+        ]
     }
 ];
