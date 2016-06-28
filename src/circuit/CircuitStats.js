@@ -18,15 +18,13 @@ export default class CircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
-     * @param {!Array.<!Array.<!Matrix>>} qubitDensities
-     * @param {!Array.<!Array.<!Matrix>>} qubitPairDensities
+     * @param {!Array.<!Array.<!Matrix>>} singleQubitDensities
      * @param {!Matrix} finalState
      * @param {!Map<!string, *>} customStatsProcessed
      */
     constructor(circuitDefinition,
                 time,
-                qubitDensities,
-                qubitPairDensities,
+                singleQubitDensities,
                 finalState,
                 customStatsProcessed) {
         /**
@@ -40,15 +38,13 @@ export default class CircuitStats {
          */
         this.time = time;
         /**
+         * The density matrix of individual qubits.
+         * (This case is special-cased, instead of using customStats like the other density displays, because
+         *  single-qubit displays are so much more common. Also they appear in bulk at the end of the circuit.)
          * @type {!Array.<!Array.<!Matrix>>}
          * @private
          */
-        this._qubitDensities = qubitDensities;
-        /**
-         * @type {!Array.<!Array.<!Matrix>>}
-         * @private
-         */
-        this._qubitPairDensities = qubitPairDensities;
+        this._qubitDensities = singleQubitDensities;
         /**
          * The output quantum superposition, as a column vector.
          * @type {!Matrix}
@@ -62,6 +58,10 @@ export default class CircuitStats {
     }
 
     /**
+     * Returns the density matrix of a qubit at a particular point in the circuit.
+     *
+     * Note: only available if there was a corresponding display gate at that position. Otherwise result is NaN.
+     *
      * @param {!int} wireIndex
      * @param {!int} colIndex
      * @returns {!Matrix}
@@ -96,30 +96,6 @@ export default class CircuitStats {
     }
 
     /**
-     * @param {!int} wireIndex
-     * @param {!int} colIndex
-     * @returns {!Matrix}
-     */
-    qubitPairDensityMatrix(wireIndex, colIndex) {
-        if (wireIndex < 0) {
-            throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
-        }
-
-        // The initial state is all-qubits-off.
-        if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
-            let buf = new Float32Array(4*4*2);
-            buf[0] = 1;
-            return new Matrix(4, 4, buf);
-        }
-
-        let col = Math.min(colIndex, this._qubitPairDensities.length - 1);
-        if (col < 0 || wireIndex >= this._qubitPairDensities[col].length) {
-            return Matrix.zero(4, 4).times(NaN);
-        }
-        return this._qubitPairDensities[col][wireIndex];
-    }
-
-    /**
      * Returns the probability that a wire would be on if it was measured just before a given column, but conditioned on
      * wires with controls in that column matching their controls.
      * A wire is never conditioned on itself; self-conditions are ignored when computing the probability.
@@ -141,7 +117,6 @@ export default class CircuitStats {
             this.circuitDefinition,
             time,
             this._qubitDensities,
-            this._qubitPairDensities,
             this.finalState,
             this._customStatsProcessed);
     }
@@ -162,7 +137,6 @@ export default class CircuitStats {
             return new CircuitStats(
                 circuitDefinition,
                 time,
-                [],
                 [],
                 Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
                 new Map());
@@ -229,7 +203,6 @@ export default class CircuitStats {
         // -- DEFINE TEXTURES TO BE COMPUTED --
 
         let qubitDensityTexes = [];
-        let qubitPairDensityTexes = [];
         let customStats = [];
         let customStatsMap = [];
         let noControlsTex = CircuitTextures.control(numWires, Controls.NONE);
@@ -270,10 +243,6 @@ export default class CircuitStats {
                     stateTex,
                     controls,
                     circuitDefinition.colHasSingleQubitDisplayMask(col)));
-                qubitPairDensityTexes.push(CircuitTextures.superpositionToQubitPairDensities(
-                    stateTex,
-                    controls,
-                    circuitDefinition.colHasDoubleQubitDisplayMask(col)));
 
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return stateTex;
@@ -286,7 +255,6 @@ export default class CircuitStats {
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
             outputTex,
             qubitDensityTexes,
-            qubitPairDensityTexes,
             customStats});
 
         // -- INTERPRET --
@@ -305,14 +273,6 @@ export default class CircuitStats {
                 // All wires have an output display in the after-last column.
                 col === numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(col))
         ).toArray();
-        let qubitPairDensities = seq(pixelData.qubitPairDensityTexes).mapWithIndex((pixels, col) =>
-            CircuitStats.scatterAndDecohereDensities(
-                CircuitTextures.pixelsToQubitPairDensityMatrices(pixels),
-                numWires,
-                2,
-                circuitDefinition.colIsMeasuredMask(col),
-                circuitDefinition.colHasDoubleQubitDisplayMask(col))
-        ).toArray();
 
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {
@@ -325,7 +285,6 @@ export default class CircuitStats {
             circuitDefinition,
             time,
             qubitDensities,
-            qubitPairDensities,
             outputSuperposition,
             customStatsProcessed);
     }
