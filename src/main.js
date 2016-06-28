@@ -97,6 +97,7 @@ const importantStateChangeHappened = jsonText => {
     historyPusher.stateChange(jsonText, urlHash);
     document.title = `Quirk: ${inspector.displayedCircuit.circuitDefinition.readableHash()}`;
 
+    updateButtonStates();
     let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
     exportEscapedLinkAnchor.href = escapedUrlHash;
     exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
@@ -252,6 +253,11 @@ const redrawNow = () => {
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
+const updateButtonStates = () => {
+    undoButton.disabled = revision.isAtBeginningOfHistory();
+    redoButton.disabled = revision.isAtEndOfHistory();
+};
+
 const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
     if (inspector.isEqualTo(newInspector)) {
         return false;
@@ -267,8 +273,7 @@ const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
         scheduleRedraw();
     }
 
-    undoButton.disabled = revision.isAtBeginningOfHistory();
-    redoButton.disabled = revision.isAtEndOfHistory();
+    updateButtonStates();
     return true;
 };
 
@@ -287,10 +292,10 @@ watchDrags(canvasDiv,
         }
 
         // Add extra wire temporarily.
+        revision.startedWorkingOnCommit();
         useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
             afterGrabbing(ev.shiftKey), false);
 
-        revision.startedWorkingOnCommit();
         ev.preventDefault();
     },
     /**
@@ -458,8 +463,9 @@ loadCircuitFromUrl();
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
-inspectorDiv.style.display = 'block';
 setTimeout(() => {
+    inspectorDiv.style.display = 'block';
+    updateButtonStates();
     redrawNow();
     document.getElementById("loading-div").style.display = 'none';
     try {

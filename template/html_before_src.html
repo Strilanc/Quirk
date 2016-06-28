@@ -35,15 +35,15 @@
         </div>
         <div id="inspectorDiv" style="display: none">
             <div style="margin: 5px;">
-                <button id="export-button">Export</button>
+                <button id="export-button" style="min-width: 50px; min-height: 30px;">Export</button>
                 &nbsp;
                 &nbsp;
-                <button id="undo-button">Undo</button>
-                <button id="redo-button">Redo</button>
+                <button id="undo-button" style="min-width: 50px; min-height: 30px;">Undo</button>
+                <button id="redo-button" style="min-width: 50px; min-height: 30px;">Redo</button>
                 &nbsp;
                 &nbsp;
                 <a href="https://github.com/Strilanc/Quirk/"
-                   style="font-size: 16px;">About Quirk</a>
+                   style="font-size: 18px;">About Quirk</a>
             </div>
             <div id="canvasDiv" style="width: 100%; touch-action: manipulation; tab-index: 0; position: relative;">
                 <canvas id="drawCanvas"></canvas>
@@ -145,8 +145,12 @@
             You appear to have JavaScript blocked. But Quirk is made out of JavaScript... :(
         </div>
         <script>
-document.QUIRK_QUINE_ALL_HTML_ORIGINAL = '<!'+'DOCTYPE html>\n<'+'html>\n    ' + document.documentElement.innerHTML + '\n<' + '/html>';
-document.getElementById('noscript-div').style.display = 'none';
+          document.getElementById('noscript-div').style.display = 'none';
+        </script>
+        <script>
+          document.getElementById('noscript-div').style.display = 'block';
+          document.QUIRK_QUINE_ALL_HTML_ORIGINAL = '<!'+'DOCTYPE html>\n<'+'html>\n    ' + document.documentElement.innerHTML + '\n<' + '/html>';
+          document.getElementById('noscript-div').style.display = 'none';
 //DEFAULT_CIRCUIT_START
 document.DEFAULT_CIRCUIT = undefined;
 //DEFAULT_CIRCUIT_END
