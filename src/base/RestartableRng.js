@@ -1,8 +1,3 @@
-const COLLECTION_CUTOFF = 1000;
-const BAD_TO_STRING_RESULT = new (function(){})().toString();
-const RECURSE_LIMIT_DESCRIPTION = "!recursion-limit!";
-const DEFAULT_RECURSION_LIMIT = 10;
-
 /**
  * A random number generator that records its results, so you can make a restarted copy.
  */
