@@ -1,7 +1,7 @@
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
 import DetailedError from "src/base/DetailedError.js"
-import { ObservableSource } from "src/base/Obs.js"
+import { ObservableSource, ObservableValue } from "src/base/Obs.js"
 
 /**
  * A simple linear revision history tracker, for supporting undo and redo functionality.
@@ -28,13 +28,22 @@ class Revision {
         this.isWorkingOnCommit = isWorkingOnCommit;
         /** @type {!ObservableSource */
         this._changes = new ObservableSource();
+        /** @type {!ObservableSource */
+        this._latestActiveCommit = new ObservableValue(this.history[this.index]);
     }
 
     /**
-     * @returns {!Observable}
+     * @returns {!Observable.<*>}
      */
     changes() {
         return this._changes.observable();
+    }
+
+    /**
+     * @returns {!Observable.<*>}
+     */
+    latestActiveCommit() {
+        return this._latestActiveCommit.observable();
     }
 
     /**
@@ -69,6 +78,7 @@ class Revision {
         this.index = 0;
         this.isWorkingOnCommit = false;
         this._changes.send(state);
+        this._latestActiveCommit.set(state);
     }
 
     /**
@@ -107,6 +117,7 @@ class Revision {
         this.history.splice(this.index, this.history.length - this.index);
         this.history.push(newCheckpoint);
         this._changes.send(newCheckpoint);
+        this._latestActiveCommit.set(newCheckpoint);
     }
 
     /**
@@ -124,6 +135,7 @@ class Revision {
         this.isWorkingOnCommit = false;
         let result = this.history[this.index];
         this._changes.send(result);
+        this._latestActiveCommit.set(result);
         return result;
     }
 
@@ -139,6 +151,7 @@ class Revision {
         this.isWorkingOnCommit = false;
         let result = this.history[this.index];
         this._changes.send(result);
+        this._latestActiveCommit.set(result);
         return result;
     }
 

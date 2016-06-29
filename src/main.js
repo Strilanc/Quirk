@@ -23,18 +23,8 @@ import { saveFile } from "src/browser/SaveFile.js"
 import { ObservableValue } from "src/base/Obs.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
-const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
-const redoButton = /** @type {!HTMLButtonElement} */ document.getElementById('redo-button');
-const importButton = /** @type {!HTMLButtonElement} */ document.getElementById('import-button');
 const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
 const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
-const exportCircuitJsonElement = /** @type {HTMLPreElement} */ document.getElementById('export-circuit-json-pre');
-const exportJsonCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-json-copy-button');
-const downloadOfflineButton = /** @type {HTMLButtonElement} */ document.getElementById('download-offline-copy-button');
-const exportJsonCopyResult = /** @type {HTMLElement} */ document.getElementById('export-json-copy-result');
-const exportLinkCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-link-copy-button');
-const exportLinkCopyResult = /** @type {HTMLElement} */ document.getElementById('export-link-copy-result');
-const exportEscapedLinkAnchor = /** @type {HTMLAnchorElement} */ document.getElementById('export-escaped-anchor');
 const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
 
 exportButton.addEventListener('click', () => { exportDiv.style.display = 'block'; });
@@ -45,7 +35,7 @@ exportOverlay.addEventListener('click', () => { exportDiv.style.display = 'none'
  * @param {!HTMLElement} contentElement
  * @param {!HTMLElement} resultElement
  */
-let setupCopy = (button, contentElement, resultElement) => button.addEventListener('click', () => {
+let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) => button.addEventListener('click', () => {
     //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
     try {
         selectAndCopyToClipboard(contentElement);
@@ -57,8 +47,6 @@ let setupCopy = (button, contentElement, resultElement) => button.addEventListen
     button.disabled = true;
     setTimeout(() => { resultElement.innerText = ""; button.disabled = false; }, 1000);
 });
-setupCopy(exportJsonCopyButton, exportCircuitJsonElement, exportJsonCopyResult);
-setupCopy(exportLinkCopyButton, exportEscapedLinkAnchor, exportLinkCopyResult);
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
@@ -87,29 +75,129 @@ const inspectorDiv = document.getElementById("inspectorDiv");
 /** @type {ObservableValue.<!DisplayedInspector>} */
 const inspector = new ObservableValue(DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
 
-const offlineCopyTitle = newInspector => {
-    return newInspector.displayedCircuit.circuitDefinition.isEmpty() ?
-        'Quirk.html' :
-        `Quirk with Circuit - ${newInspector.displayedCircuit.circuitDefinition.readableHash()}.html`;
-};
+/** @type {!Revision} */
+let revision = Revision.startingAt(inspector.get().snapshot());
+
+// Undo / redo.
+(() => {
+    const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
+    const redoButton = /** @type {!HTMLButtonElement} */ document.getElementById('redo-button');
+    revision.changes().subscribe(() => {
+        undoButton.disabled = revision.isAtBeginningOfHistory();
+        redoButton.disabled = revision.isAtEndOfHistory();
+    });
+
+    undoButton.addEventListener('click', () => restore(revision.undo()));
+    redoButton.addEventListener('click', () => restore(revision.redo()));
+
+    document.addEventListener("keydown", e => {
+        const Y_KEY = 89;
+        const Z_KEY = 90;
+        let isUndo = e.keyCode === Z_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
+        let isRedo1 = e.keyCode === Z_KEY && e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey;
+        let isRedo2 = e.keyCode === Y_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
+        if (isUndo) {
+            restore(revision.undo());
+            e.preventDefault();
+        }
+        if (isRedo1 || isRedo2) {
+            restore(revision.redo());
+            e.preventDefault();
+        }
+    });
+})();
 
 const importantStateChangeHappened = (jsonText, newInspector) => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     historyPusher.stateChange(jsonText, urlHash);
     document.title = `Quirk: ${newInspector.displayedCircuit.circuitDefinition.readableHash()}`;
-
-    let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
-    exportEscapedLinkAnchor.href = escapedUrlHash;
-    exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
-    downloadOfflineButton.innerText = `Download "${offlineCopyTitle(newInspector)}"`;
-    //noinspection UnusedCatchParameterJS
-    try {
-        let val = JSON.parse(jsonText);
-        exportCircuitJsonElement.innerText = JSON.stringify(val, null, '  ');
-    } catch (_) {
-        exportCircuitJsonElement.innerText = jsonText;
-    }
 };
+
+// Export escaped link.
+(() => {
+    const exportLinkCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-link-copy-button');
+    const exportLinkCopyResult = /** @type {HTMLElement} */ document.getElementById('export-link-copy-result');
+    const exportEscapedLinkAnchor = /** @type {HTMLAnchorElement} */ document.getElementById('export-escaped-anchor');
+    setupButtonElementCopyToClipboard(exportLinkCopyButton, exportEscapedLinkAnchor, exportLinkCopyResult);
+    revision.latestActiveCommit().subscribe(jsonText => {
+        let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
+        exportEscapedLinkAnchor.href = escapedUrlHash;
+        exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
+    });
+})();
+
+// Export JSON.
+(() => {
+    const exportJsonCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-json-copy-button');
+    const exportCircuitJsonElement = /** @type {HTMLPreElement} */ document.getElementById('export-circuit-json-pre');
+    const exportJsonCopyResult = /** @type {HTMLElement} */ document.getElementById('export-json-copy-result');
+    setupButtonElementCopyToClipboard(exportJsonCopyButton, exportCircuitJsonElement, exportJsonCopyResult);
+    revision.latestActiveCommit().subscribe(jsonText => {
+        //noinspection UnusedCatchParameterJS
+        try {
+            let val = JSON.parse(jsonText);
+            exportCircuitJsonElement.innerText = JSON.stringify(val, null, '  ');
+        } catch (_) {
+            exportCircuitJsonElement.innerText = jsonText;
+        }
+    });
+})();
+
+// Export offline copy.
+(() => {
+    const downloadButton = /** @type {HTMLButtonElement} */ document.getElementById('download-offline-copy-button');
+
+    const fileNameForState = jsonText => {
+        //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+        try {
+            let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+            if (!circuitDef.isEmpty()) {
+                return `Quirk with Circuit - ${circuitDef.readableHash()}.html`;
+            }
+        } catch (_) {
+        }
+        return 'Quirk.html';
+    };
+
+    revision.latestActiveCommit().subscribe(jsonText => {
+        downloadButton.innerText = `Download "${fileNameForState(jsonText)}"`;
+    });
+
+    downloadButton.addEventListener('click', () => {
+        downloadButton.disabled = true;
+        setTimeout(() => {
+            downloadButton.disabled = false;
+        }, 1000);
+        let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
+
+        // Inject default circuit.
+        let startDefaultTag = '//DEFAULT_CIRCUIT_START\n';
+        let endDefaultTag = '//DEFAULT_CIRCUIT_END\n';
+        let modStart = originalHtml.indexOf(startDefaultTag);
+        let modStop = originalHtml.indexOf(endDefaultTag, modStart);
+        let moddedHtml =
+            originalHtml.substring(0, modStart) +
+            startDefaultTag +
+            'document.DEFAULT_CIRCUIT = ' + JSON.stringify(inspector.get().snapshot()) + ';\n' +
+            originalHtml.substring(modStop);
+
+        // Strip analytics.
+        let anaStartTag = '<!-- Start Analytics -->\n';
+        let anaStart = moddedHtml.indexOf(anaStartTag);
+        if (anaStart !== -1) {
+            let anaStopTag = '<!-- End Analytics -->\n';
+            let anaStop = moddedHtml.indexOf(anaStopTag, anaStart);
+            if (anaStop !== -1) {
+                moddedHtml =
+                    moddedHtml.substring(0, anaStart) +
+                    anaStartTag +
+                    moddedHtml.substring(anaStop);
+            }
+        }
+
+        saveFile(fileNameForState(inspector.get()), moddedHtml);
+    });
+})();
 
 /**
  * @param {undefined|!string} jsonText
@@ -123,46 +211,6 @@ const restore = jsonText => {
     importantStateChangeHappened(jsonText, newInspector);
     inspector.set(newInspector);
 };
-
-/** @type {!Revision} */
-let revision = Revision.startingAt(inspector.get().snapshot());
-revision.changes().subscribe(() => {
-    undoButton.disabled = revision.isAtBeginningOfHistory();
-    redoButton.disabled = revision.isAtEndOfHistory();
-});
-
-downloadOfflineButton.addEventListener('click', () => {
-    downloadOfflineButton.disabled = true;
-    setTimeout(() => { downloadOfflineButton.disabled = false; }, 1000);
-    let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
-
-    // Inject default circuit.
-    let startDefaultTag = '//DEFAULT_CIRCUIT_START\n';
-    let endDefaultTag = '//DEFAULT_CIRCUIT_END\n';
-    let modStart = originalHtml.indexOf(startDefaultTag);
-    let modStop = originalHtml.indexOf(endDefaultTag, modStart);
-    let moddedHtml =
-        originalHtml.substring(0, modStart) +
-        startDefaultTag +
-        'document.DEFAULT_CIRCUIT = ' + JSON.stringify(inspector.get().snapshot()) + ';\n' +
-        originalHtml.substring(modStop);
-
-    // Strip analytics.
-    let anaStartTag = '<!-- Start Analytics -->\n';
-    let anaStart = moddedHtml.indexOf(anaStartTag);
-    if (anaStart !== -1) {
-        let anaStopTag = '<!-- End Analytics -->\n';
-        let anaStop = moddedHtml.indexOf(anaStopTag, anaStart);
-        if (anaStop !== -1) {
-            moddedHtml =
-                moddedHtml.substring(0, anaStart) +
-                anaStartTag +
-                moddedHtml.substring(anaStop);
-        }
-    }
-
-    saveFile(offlineCopyTitle(inspector.get()), moddedHtml);
-});
 
 const getCircuitCycleTime = (() => {
     /**
@@ -371,28 +419,12 @@ document.addEventListener('mouseleave', () => {
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 inspector.observable().subscribe(() => redrawThrottle.trigger());
 
-undoButton.addEventListener('click', () => restore(revision.undo()));
-redoButton.addEventListener('click', () => restore(revision.redo()));
-
 // Keyboard shortcuts (undo, redo).
 document.addEventListener("keydown", e => {
     setShiftHeld(e.shiftKey);
-    const Y_KEY = 89;
-    const Z_KEY = 90;
     const ESC_KEY = 27;
-    let isUndo = e.keyCode === Z_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
-    let isRedo1 = e.keyCode === Z_KEY && e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey;
-    let isRedo2 = e.keyCode === Y_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
     if (e.keyCode === ESC_KEY) {
         exportDiv.style.display = 'none';
-    }
-    if (isUndo) {
-        restore(revision.undo());
-        e.preventDefault();
-    }
-    if (isRedo1 || isRedo2) {
-        restore(revision.redo());
-        e.preventDefault();
     }
 });
 document.addEventListener("keyup", e => {
@@ -417,16 +449,7 @@ const getHashParameters = () => {
     return paramsMap;
 };
 
-const showEmptyExport = () => {
-    exportEscapedLinkAnchor.href = document.location.href.split("#")[0];
-    exportEscapedLinkAnchor.innerText = exportEscapedLinkAnchor.href;
-    downloadOfflineButton.innerText = `Download "Quirk.html"`;
-    exportCircuitJsonElement.innerText = JSON.stringify(Serializer.toJson(CircuitDefinition.EMPTY), null, '  ');
-};
-
 const loadCircuitFromUrl = () => {
-    showEmptyExport();
-
     try {
         historyPusher.currentStateIsMemorableButUnknown();
         let params = getHashParameters();
@@ -441,7 +464,7 @@ const loadCircuitFromUrl = () => {
         let circuitDef = Serializer.fromJson(CircuitDefinition, json);
         useInspector(inspector.get().withCircuitDefinition(circuitDef), true);
         revision.clear(inspector.get().snapshot());
-        if (circuitDef.columns.length === 0 && params.size === 1) {
+        if (circuitDef.isEmpty() && params.size === 1) {
             historyPusher.currentStateIsNotMemorable();
         } else {
             importantStateChangeHappened(jsonText, inspector.get());
