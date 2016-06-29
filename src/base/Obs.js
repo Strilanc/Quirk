@@ -60,6 +60,54 @@ class Observable {
     map(transformFunc) {
         return new Observable(observer => this.subscribe(item => observer(transformFunc(item))));
     }
+
+    /**
+     * @returns {!Observable.<T>} An observable that forwards all the items from all the observables observed by the
+     * receiving observable of observables.
+     * @template T
+     */
+    flatten() {
+        return new Observable(observer => {
+            let unsubs = [];
+            unsubs.push(this.subscribe(observable => unsubs.push(observable.subscribe(observer))));
+            return () => {
+                for (let unsub of unsubs) {
+                    unsub()
+                }
+            }
+        });
+    }
+
+    /**
+     * @param {!HTMLElement|!HTMLDocument} element
+     * @param {!string} eventKey
+     * @returns {!Observable.<*>} An observable corresponding to an event fired from an element.
+     */
+    static elementEvent(element, eventKey) {
+        return new Observable(observer => {
+            element.addEventListener(eventKey, observer);
+            return () => element.removeEventListener(eventKey, observer);
+        });
+    }
+
+    /**
+     * @returns {!Observable.<T>} An observable with the same events, but filtering out any event value that's the same
+     * as the previous one.
+     * @template T
+     */
+    whenDifferent() {
+        return new Observable(observer => {
+            let hasLast = false;
+            let last = undefined;
+            return this.subscribe(item => {
+                if (!hasLast || last !== item) {
+                    last = item;
+                    hasLast = true;
+                    observer(item);
+                }
+            });
+        });
+    }
 }
 
 class ObservableSource {

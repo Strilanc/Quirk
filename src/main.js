@@ -20,33 +20,9 @@ import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 import { selectAndCopyToClipboard } from "src/browser/Clipboard.js"
 import { saveFile } from "src/browser/SaveFile.js"
-import { ObservableValue } from "src/base/Obs.js"
+import { Observable, ObservableValue } from "src/base/Obs.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
-const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
-const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
-const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
-
-exportButton.addEventListener('click', () => { exportDiv.style.display = 'block'; });
-exportOverlay.addEventListener('click', () => { exportDiv.style.display = 'none'; });
-
-/**
- * @param {!HTMLButtonElement} button
- * @param {!HTMLElement} contentElement
- * @param {!HTMLElement} resultElement
- */
-let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) => button.addEventListener('click', () => {
-    //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
-    try {
-        selectAndCopyToClipboard(contentElement);
-        resultElement.innerText = "Done!";
-    } catch (ex) {
-        resultElement.innerText = "It didn't work...";
-        console.warn('Clipboard copy failed.', ex);
-    }
-    button.disabled = true;
-    setTimeout(() => { resultElement.innerText = ""; button.disabled = false; }, 1000);
-});
 
 //noinspection JSValidateTypes
 /** @type {!HTMLCanvasElement} */
@@ -107,11 +83,38 @@ let revision = Revision.startingAt(inspector.get().snapshot());
     });
 })();
 
-const importantStateChangeHappened = (jsonText, newInspector) => {
-    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    historyPusher.stateChange(jsonText, urlHash);
-    document.title = `Quirk: ${newInspector.displayedCircuit.circuitDefinition.readableHash()}`;
-};
+// Show/hide exports.
+(() => {
+    const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
+    const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
+    const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
+    exportButton.addEventListener('click', () => { exportDiv.style.display = 'block'; });
+    exportOverlay.addEventListener('click', () => { exportDiv.style.display = 'none'; });
+    document.addEventListener('keydown', e => {
+        const ESC_KEY = 27;
+        if (e.keyCode === ESC_KEY) {
+            exportDiv.style.display = 'none';
+        }
+    });
+})();
+
+/**
+ * @param {!HTMLButtonElement} button
+ * @param {!HTMLElement} contentElement
+ * @param {!HTMLElement} resultElement
+ */
+let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) => button.addEventListener('click', () => {
+    //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+    try {
+        selectAndCopyToClipboard(contentElement);
+        resultElement.innerText = "Done!";
+    } catch (ex) {
+        resultElement.innerText = "It didn't work...";
+        console.warn('Clipboard copy failed.', ex);
+    }
+    button.disabled = true;
+    setTimeout(() => { resultElement.innerText = ""; button.disabled = false; }, 1000);
+});
 
 // Export escaped link.
 (() => {
@@ -199,6 +202,12 @@ const importantStateChangeHappened = (jsonText, newInspector) => {
     });
 })();
 
+const importantStateChangeHappened = (jsonText, newInspector) => {
+    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    historyPusher.stateChange(jsonText, urlHash);
+    document.title = `Quirk: ${newInspector.displayedCircuit.circuitDefinition.readableHash()}`;
+};
+
 /**
  * @param {undefined|!string} jsonText
  */
@@ -256,15 +265,14 @@ const syncArea = ins => {
 
 let scrollBlocker = new TouchScrollBlocker(canvasDiv);
 
+let isShiftHeld = false;
+Observable.of(Observable.elementEvent(document, 'keydown'), Observable.elementEvent(document, 'keyup')).
+    flatten().
+    map(e => e.shiftKey).
+    subscribe(e => { isShiftHeld = e.shiftKey; });
+
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
-let isShiftHeld = false;
-const setShiftHeld = newShift => {
-    if (newShift === isShiftHeld) {
-        return;
-    }
-    isShiftHeld = newShift;
-};
 const redrawNow = () => {
     if (!haveLoaded) {
         // Don't draw while loading. It's a huge source of false-positive circuit-load-failed errors during development.
@@ -418,18 +426,6 @@ document.addEventListener('mouseleave', () => {
 // Resize drawn circuit as window size changes.
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 inspector.observable().subscribe(() => redrawThrottle.trigger());
-
-// Keyboard shortcuts (undo, redo).
-document.addEventListener("keydown", e => {
-    setShiftHeld(e.shiftKey);
-    const ESC_KEY = 27;
-    if (e.keyCode === ESC_KEY) {
-        exportDiv.style.display = 'none';
-    }
-});
-document.addEventListener("keyup", e => {
-    setShiftHeld(e.shiftKey);
-});
 
 // Pull initial circuit out of URL '#x=y' arguments.
 const getHashParameters = () => {
