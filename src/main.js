@@ -7,7 +7,7 @@ import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
 import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
-import InspectorWidget from "src/widgets/InspectorWidget.js"
+import DisplayedInspector from "src/widgets/DisplayedInspector.js"
 import HistoryPusher from "src/browser/HistoryPusher.js"
 import Painter from "src/ui/Painter.js"
 import Point from "src/math/Point.js"
@@ -84,24 +84,24 @@ cycleRng();
 /** @type {!HTMLDivElement} */
 const inspectorDiv = document.getElementById("inspectorDiv");
 
-/** @type {ObservableValue.<!InspectorWidget>} */
-const inspector = new ObservableValue(InspectorWidget.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
+/** @type {ObservableValue.<!DisplayedInspector>} */
+const inspector = new ObservableValue(DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
 
-const offlineCopyTitle = () => {
-    return inspector.get().displayedCircuit.circuitDefinition.isEmpty() ?
+const offlineCopyTitle = newInspector => {
+    return newInspector.displayedCircuit.circuitDefinition.isEmpty() ?
         'Quirk.html' :
-        `Quirk with Circuit - ${inspector.get().displayedCircuit.circuitDefinition.readableHash()}.html`;
+        `Quirk with Circuit - ${newInspector.displayedCircuit.circuitDefinition.readableHash()}.html`;
 };
 
-const importantStateChangeHappened = jsonText => {
+const importantStateChangeHappened = (jsonText, newInspector) => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     historyPusher.stateChange(jsonText, urlHash);
-    document.title = `Quirk: ${inspector.get().displayedCircuit.circuitDefinition.readableHash()}`;
+    document.title = `Quirk: ${newInspector.displayedCircuit.circuitDefinition.readableHash()}`;
 
     let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
     exportEscapedLinkAnchor.href = escapedUrlHash;
     exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
-    downloadOfflineButton.innerText = `Download "${offlineCopyTitle()}"`;
+    downloadOfflineButton.innerText = `Download "${offlineCopyTitle(newInspector)}"`;
     //noinspection UnusedCatchParameterJS
     try {
         let val = JSON.parse(jsonText);
@@ -111,7 +111,6 @@ const importantStateChangeHappened = jsonText => {
     }
 };
 
-const snapshot = () => JSON.stringify(Serializer.toJson(inspector.get().displayedCircuit.circuitDefinition), null, 0);
 /**
  * @param {undefined|!string} jsonText
  */
@@ -119,13 +118,14 @@ const restore = jsonText => {
     if (jsonText === undefined) {
         return;
     }
-    inspector.set(inspector.get().withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText))));
-    importantStateChangeHappened(jsonText);
-    redrawThrottle.trigger();
+    let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+    let newInspector = inspector.get().withCircuitDefinition(circuitDef);
+    importantStateChangeHappened(jsonText, newInspector);
+    inspector.set(newInspector);
 };
 
 /** @type {!Revision} */
-let revision = Revision.startingAt(snapshot());
+let revision = Revision.startingAt(inspector.get().snapshot());
 revision.changes().subscribe(() => {
     undoButton.disabled = revision.isAtBeginningOfHistory();
     redoButton.disabled = revision.isAtEndOfHistory();
@@ -144,7 +144,7 @@ downloadOfflineButton.addEventListener('click', () => {
     let moddedHtml =
         originalHtml.substring(0, modStart) +
         startDefaultTag +
-        'document.DEFAULT_CIRCUIT = ' + JSON.stringify(snapshot()) + ';\n' +
+        'document.DEFAULT_CIRCUIT = ' + JSON.stringify(inspector.get().snapshot()) + ';\n' +
         originalHtml.substring(modStop);
 
     // Strip analytics.
@@ -161,7 +161,7 @@ downloadOfflineButton.addEventListener('click', () => {
         }
     }
 
-    saveFile(offlineCopyTitle(), moddedHtml);
+    saveFile(offlineCopyTitle(inspector.get()), moddedHtml);
 });
 
 const getCircuitCycleTime = (() => {
@@ -197,8 +197,8 @@ let desiredCanvasSizeFor = curInspector => {
 };
 
 /**
- * @param {!InspectorWidget} ins
- * @returns {!InspectorWidget}
+ * @param {!DisplayedInspector} ins
+ * @returns {!DisplayedInspector}
  */
 const syncArea = ins => {
     let size = desiredCanvasSizeFor(ins);
@@ -210,14 +210,12 @@ let scrollBlocker = new TouchScrollBlocker(canvasDiv);
 
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
-const scheduleRedraw = () => redrawThrottle.trigger();
 let isShiftHeld = false;
 const setShiftHeld = newShift => {
     if (newShift === isShiftHeld) {
         return;
     }
     isShiftHeld = newShift;
-    scheduleRedraw();
 };
 const redrawNow = () => {
     if (!haveLoaded) {
@@ -253,26 +251,23 @@ const redrawNow = () => {
 
     let dt = inspector.get().stableDuration();
     if (dt < Infinity) {
-        window.requestAnimationFrame(scheduleRedraw);
+        window.requestAnimationFrame(() => redrawThrottle.trigger());
     }
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
 
-const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
+const useInspector = (newInspector, keepInHistory) => {
     if (inspector.get().isEqualTo(newInspector)) {
         return false;
     }
-    inspector.set(newInspector);
-    let jsonText = snapshot();
+
+    let jsonText = newInspector.snapshot();
     if (keepInHistory) {
         revision.commit(jsonText);
-        importantStateChangeHappened(jsonText);
+        importantStateChangeHappened(jsonText, newInspector);
     }
-
-    if (!avoidRedraw) {
-        scheduleRedraw();
-    }
+    inspector.set(newInspector);
 
     return true;
 };
@@ -287,7 +282,7 @@ watchDrags(canvasDiv,
         let oldInspector = inspector.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
-        if (!useInspector(newInspector, false, true) || !newInspector.hand.isBusy()) {
+        if (inspector.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }
 
@@ -373,7 +368,8 @@ document.addEventListener('mouseleave', () => {
 });
 
 // Resize drawn circuit as window size changes.
-window.addEventListener('resize', scheduleRedraw, false);
+window.addEventListener('resize', () => redrawThrottle.trigger(), false);
+inspector.observable().subscribe(() => redrawThrottle.trigger());
 
 undoButton.addEventListener('click', () => restore(revision.undo()));
 redoButton.addEventListener('click', () => restore(revision.redo()));
@@ -444,11 +440,11 @@ const loadCircuitFromUrl = () => {
         let json = JSON.parse(jsonText);
         let circuitDef = Serializer.fromJson(CircuitDefinition, json);
         useInspector(inspector.get().withCircuitDefinition(circuitDef), true);
-        revision.clear(snapshot());
+        revision.clear(inspector.get().snapshot());
         if (circuitDef.columns.length === 0 && params.size === 1) {
             historyPusher.currentStateIsNotMemorable();
         } else {
-            importantStateChangeHappened(jsonText);
+            importantStateChangeHappened(jsonText, inspector.get());
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
