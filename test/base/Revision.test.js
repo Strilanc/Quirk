@@ -227,3 +227,55 @@ suite.test("commit", () => {
     r.commit("t");
     assertThat(r).isEqualTo(new Revision(["abc", "def", "t"], 2, false));
 });
+
+suite.test("changes", () => {
+    let r = Revision.startingAt('abc');
+    let a = [];
+    let s = r.changes().subscribe(e => a.push(e));
+    assertThat(a).isEqualTo([]);
+    r.commit('123');
+    assertThat(a).isEqualTo(['123']);
+    r.undo();
+    assertThat(a).isEqualTo(['123', 'abc']);
+    r.undo();
+    assertThat(a).isEqualTo(['123', 'abc']);
+    r.redo();
+    assertThat(a).isEqualTo(['123', 'abc', '123']);
+    r.redo();
+    assertThat(a).isEqualTo(['123', 'abc', '123']);
+    r.startedWorkingOnCommit();
+    assertThat(a).isEqualTo(['123', 'abc', '123', undefined]);
+    r.cancelCommitBeingWorkedOn();
+    assertThat(a).isEqualTo(['123', 'abc', '123', undefined, '123']);
+    r.clear('xyz');
+    assertThat(a).isEqualTo(['123', 'abc', '123', undefined, '123', 'xyz']);
+    s();
+    r.clear('nope');
+    assertThat(a).isEqualTo(['123', 'abc', '123', undefined, '123', 'xyz']);
+});
+
+suite.test("latestActiveCommit", () => {
+    let r = Revision.startingAt('abc');
+    let a = [];
+    let s = r.latestActiveCommit().subscribe(e => a.push(e));
+    assertThat(a).isEqualTo(['abc']);
+    r.commit('123');
+    assertThat(a).isEqualTo(['abc', '123']);
+    r.undo();
+    assertThat(a).isEqualTo(['abc', '123', 'abc']);
+    r.undo();
+    assertThat(a).isEqualTo(['abc', '123', 'abc']);
+    r.redo();
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123']);
+    r.redo();
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123']);
+    r.startedWorkingOnCommit();
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123']);
+    r.cancelCommitBeingWorkedOn();
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', '123']);
+    r.clear('xyz');
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', '123', 'xyz']);
+    s();
+    r.clear('nope');
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', '123', 'xyz']);
+});

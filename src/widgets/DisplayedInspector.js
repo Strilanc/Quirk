@@ -11,12 +11,13 @@ import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
 import Painter from "src/ui/Painter.js"
 import Rect from "src/math/Rect.js"
+import Serializer from "src/circuit/Serializer.js"
 import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
 
 const TOOLBOX_HEIGHT = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
 
-export default class InspectorWidget {
+export default class DisplayedInspector {
     /**
      * @param {!Rect} drawArea
      * @param {!DisplayedCircuit} circuitWidget
@@ -59,10 +60,10 @@ export default class InspectorWidget {
 
     /**
      * @param {!Rect} drawArea
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     static empty(drawArea) {
-        return new InspectorWidget(
+        return new DisplayedInspector(
             drawArea,
             DisplayedCircuit.empty(TOOLBOX_HEIGHT),
             new DisplayedToolbox('Toolbox', drawArea.takeTop(TOOLBOX_HEIGHT), Gates.TopToolboxGroups, true),
@@ -108,7 +109,7 @@ export default class InspectorWidget {
 
     /**
      * @param {!boolean} duplicate
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     afterGrabbing(duplicate=false) {
         let hand = this.hand;
@@ -120,7 +121,7 @@ export default class InspectorWidget {
         hand = x.newHand;
         circuit = x.newCircuit;
 
-        return new InspectorWidget(
+        return new DisplayedInspector(
             this.drawArea,
             circuit,
             this.displayedToolboxTop,
@@ -129,7 +130,7 @@ export default class InspectorWidget {
     }
 
     /**
-     * @param {!InspectorWidget|*} other
+     * @param {!DisplayedInspector|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {
@@ -137,7 +138,7 @@ export default class InspectorWidget {
             return true;
         }
         //noinspection JSUnresolvedVariable
-        return other instanceof InspectorWidget &&
+        return other instanceof DisplayedInspector &&
             this.drawArea.isEqualTo(other.drawArea) &&
             this.displayedCircuit.isEqualTo(other.displayedCircuit) &&
             this.displayedToolboxTop.isEqualTo(other.displayedToolboxTop) &&
@@ -147,13 +148,13 @@ export default class InspectorWidget {
 
     /**
      * @param {!DisplayedCircuit} circuitWidget
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     withCircuitWidget(circuitWidget) {
         if (circuitWidget === this.displayedCircuit) {
             return this;
         }
-        return new InspectorWidget(
+        return new DisplayedInspector(
             this.drawArea,
             circuitWidget,
             this.displayedToolboxTop,
@@ -164,14 +165,14 @@ export default class InspectorWidget {
     /**
      * @param {!Hand} hand
      * @param {!int} extraWires
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     withJustEnoughWires(hand, extraWires) {
         return this.withCircuitWidget(this.displayedCircuit.withJustEnoughWires(hand, extraWires));
     }
 
     /**
-    * @returns {!InspectorWidget}
+    * @returns {!DisplayedInspector}
     */
     afterTidyingUp() {
         return this.withCircuitWidget(this.displayedCircuit.afterTidyingUp());
@@ -190,7 +191,7 @@ export default class InspectorWidget {
     }
 
     /**
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     afterDropping() {
         return this.
@@ -212,10 +213,10 @@ export default class InspectorWidget {
 
     /**
      * @param {!Hand} hand
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     withHand(hand) {
-        return new InspectorWidget(
+        return new DisplayedInspector(
             this.drawArea,
             this.displayedCircuit,
             this.displayedToolboxTop,
@@ -225,15 +226,15 @@ export default class InspectorWidget {
 
     /**
      * @param {!CircuitDefinition} newCircuitDefinition
-     * @returns {!InspectorWidget}
+     * @returns {!DisplayedInspector}
      */
     withCircuitDefinition(newCircuitDefinition) {
-        return new InspectorWidget(
+        return new DisplayedInspector(
             this.drawArea,
             DisplayedCircuit.empty(TOOLBOX_HEIGHT).withCircuit(newCircuitDefinition),
             this.displayedToolboxTop,
             this.displayedToolboxBottom,
-            Hand.EMPTY);
+            this.hand.withDrop());
     }
 
     /**
@@ -243,6 +244,13 @@ export default class InspectorWidget {
         let toolboxHeight = 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
         let circuitHeight = this.displayedCircuit.desiredHeight();
         return Math.max(Config.MINIMUM_CANVAS_HEIGHT, toolboxHeight*2 + circuitHeight);
+    }
+
+    /**
+     * @returns {!string}
+     */
+    snapshot() {
+        return JSON.stringify(Serializer.toJson(this.displayedCircuit.circuitDefinition), null, 0);
     }
 
     /**

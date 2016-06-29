@@ -14,8 +14,8 @@ Controls.Control = Gate.fromIdentity(
     markedAsControl(true).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
             GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
         }
         args.painter.fillCircle(args.rect.center(), 5, "black");
     });
@@ -28,8 +28,8 @@ Controls.AntiControl = Gate.fromIdentity(
     markedAsControl(false).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
             GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
         }
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
@@ -50,8 +50,8 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
         [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
             GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
         }
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
@@ -74,8 +74,8 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
         [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
             GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
         }
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
@@ -99,8 +99,8 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
         [(val, con, bit) => GateShaders.qubitOperation(val, x1, bit, con)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
             GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
         }
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
@@ -108,6 +108,9 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
         let r = 5*Math.sqrt(0.5);
         args.painter.strokeLine(p.offsetBy(+r, +r), p.offsetBy(-r, -r));
         args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintOutline(args);
+        }
     });
 
 Controls.all = [

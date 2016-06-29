@@ -20,4 +20,4 @@ function selectAndCopyToClipboard(element) {
     }
 }
 
-export default selectAndCopyToClipboard;
+export { selectAndCopyToClipboard }

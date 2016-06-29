@@ -48,7 +48,7 @@ export default class Serializer {
                 return fromJ(json);
             }
         }
-        throw new Error(`Don't know how to deserialize JSON ${describe(value)} into an instance of ${expectedType}.`);
+        throw new Error(`Don't know how to deserialize JSON ${describe(json)} into an instance of ${expectedType}.`);
     }
 }
 

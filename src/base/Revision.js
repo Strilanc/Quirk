@@ -1,6 +1,7 @@
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
 import DetailedError from "src/base/DetailedError.js"
+import { ObservableSource, ObservableValue } from "src/base/Obs.js"
 
 /**
  * A simple linear revision history tracker, for supporting undo and redo functionality.
@@ -15,6 +16,9 @@ class Revision {
         if (index < 0 || index >= history.length) {
             throw new DetailedError("Bad index", {history, index, isWorkingOnCommit});
         }
+        if (!Array.isArray(history)) {
+            throw new DetailedError("Bad history", {history, index, isWorkingOnCommit});
+        }
 
         /** @type {!Array.<*>} */
         this.history = history;
@@ -22,6 +26,24 @@ class Revision {
         this.index = index;
         /** @type {!boolean} */
         this.isWorkingOnCommit = isWorkingOnCommit;
+        /** @type {!ObservableSource */
+        this._changes = new ObservableSource();
+        /** @type {!ObservableSource */
+        this._latestActiveCommit = new ObservableValue(this.history[this.index]);
+    }
+
+    /**
+     * @returns {!Observable.<*>}
+     */
+    changes() {
+        return this._changes.observable();
+    }
+
+    /**
+     * @returns {!Observable.<*>}
+     */
+    latestActiveCommit() {
+        return this._latestActiveCommit.observable();
     }
 
     /**
@@ -55,6 +77,8 @@ class Revision {
         this.history = [state];
         this.index = 0;
         this.isWorkingOnCommit = false;
+        this._changes.send(state);
+        this._latestActiveCommit.set(state);
     }
 
     /**
@@ -64,6 +88,7 @@ class Revision {
      */
     startedWorkingOnCommit() {
         this.isWorkingOnCommit = true;
+        this._changes.send(undefined);
     }
 
     /**
@@ -73,7 +98,10 @@ class Revision {
      */
     cancelCommitBeingWorkedOn() {
         this.isWorkingOnCommit = false;
-        return this.history[this.index];
+        let result = this.history[this.index];
+        this._changes.send(result);
+        this._latestActiveCommit.set(result);
+        return result;
     }
 
     /**
@@ -82,13 +110,16 @@ class Revision {
      * @returns {void}
      */
     commit(newCheckpoint) {
-        this.isWorkingOnCommit = false;
         if (newCheckpoint === this.history[this.index]) {
+            this.cancelCommitBeingWorkedOn();
             return;
         }
+        this.isWorkingOnCommit = false;
         this.index += 1;
         this.history.splice(this.index, this.history.length - this.index);
         this.history.push(newCheckpoint);
+        this._changes.send(newCheckpoint);
+        this._latestActiveCommit.set(newCheckpoint);
     }
 
     /**
@@ -104,7 +135,10 @@ class Revision {
             this.index -= 1;
         }
         this.isWorkingOnCommit = false;
-        return this.history[this.index];
+        let result = this.history[this.index];
+        this._changes.send(result);
+        this._latestActiveCommit.set(result);
+        return result;
     }
 
     /**
@@ -117,7 +151,10 @@ class Revision {
         }
         this.index += 1;
         this.isWorkingOnCommit = false;
-        return this.history[this.index];
+        let result = this.history[this.index];
+        this._changes.send(result);
+        this._latestActiveCommit.set(result);
+        return result;
     }
 
     /**
