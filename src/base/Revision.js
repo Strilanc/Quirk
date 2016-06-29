@@ -1,6 +1,7 @@
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
 import DetailedError from "src/base/DetailedError.js"
+import { ObservableSource } from "src/base/Obs.js"
 
 /**
  * A simple linear revision history tracker, for supporting undo and redo functionality.
@@ -15,6 +16,9 @@ class Revision {
         if (index < 0 || index >= history.length) {
             throw new DetailedError("Bad index", {history, index, isWorkingOnCommit});
         }
+        if (!Array.isArray(history)) {
+            throw new DetailedError("Bad history", {history, index, isWorkingOnCommit});
+        }
 
         /** @type {!Array.<*>} */
         this.history = history;
@@ -22,6 +26,15 @@ class Revision {
         this.index = index;
         /** @type {!boolean} */
         this.isWorkingOnCommit = isWorkingOnCommit;
+        /** @type {!ObservableSource */
+        this._changes = new ObservableSource();
+    }
+
+    /**
+     * @returns {!Observable}
+     */
+    changes() {
+        return this._changes.observable();
     }
 
     /**
@@ -55,6 +68,7 @@ class Revision {
         this.history = [state];
         this.index = 0;
         this.isWorkingOnCommit = false;
+        this._changes.send(state);
     }
 
     /**
@@ -64,6 +78,7 @@ class Revision {
      */
     startedWorkingOnCommit() {
         this.isWorkingOnCommit = true;
+        this._changes.send(undefined);
     }
 
     /**
@@ -73,7 +88,9 @@ class Revision {
      */
     cancelCommitBeingWorkedOn() {
         this.isWorkingOnCommit = false;
-        return this.history[this.index];
+        let result = this.history[this.index];
+        this._changes.send(result);
+        return result;
     }
 
     /**
@@ -89,6 +106,7 @@ class Revision {
         this.index += 1;
         this.history.splice(this.index, this.history.length - this.index);
         this.history.push(newCheckpoint);
+        this._changes.send(newCheckpoint);
     }
 
     /**
@@ -104,7 +122,9 @@ class Revision {
             this.index -= 1;
         }
         this.isWorkingOnCommit = false;
-        return this.history[this.index];
+        let result = this.history[this.index];
+        this._changes.send(result);
+        return result;
     }
 
     /**
@@ -117,7 +137,9 @@ class Revision {
         }
         this.index += 1;
         this.isWorkingOnCommit = false;
-        return this.history[this.index];
+        let result = this.history[this.index];
+        this._changes.send(result);
+        return result;
     }
 
     /**

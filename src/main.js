@@ -20,6 +20,7 @@ import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 import { selectAndCopyToClipboard } from "src/browser/Clipboard.js"
 import { saveFile } from "src/browser/SaveFile.js"
+import { ObservableValue } from "src/base/Obs.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
@@ -83,21 +84,20 @@ cycleRng();
 /** @type {!HTMLDivElement} */
 const inspectorDiv = document.getElementById("inspectorDiv");
 
-/** @type {!InspectorWidget} */
-let inspector = InspectorWidget.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight));
+/** @type {ObservableValue.<!InspectorWidget>} */
+const inspector = new ObservableValue(InspectorWidget.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
 
 const offlineCopyTitle = () => {
-    return inspector.displayedCircuit.circuitDefinition.isEmpty() ?
+    return inspector.get().displayedCircuit.circuitDefinition.isEmpty() ?
         'Quirk.html' :
-        `Quirk with Circuit - ${inspector.displayedCircuit.circuitDefinition.readableHash()}.html`;
+        `Quirk with Circuit - ${inspector.get().displayedCircuit.circuitDefinition.readableHash()}.html`;
 };
 
 const importantStateChangeHappened = jsonText => {
     let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
     historyPusher.stateChange(jsonText, urlHash);
-    document.title = `Quirk: ${inspector.displayedCircuit.circuitDefinition.readableHash()}`;
+    document.title = `Quirk: ${inspector.get().displayedCircuit.circuitDefinition.readableHash()}`;
 
-    updateButtonStates();
     let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
     exportEscapedLinkAnchor.href = escapedUrlHash;
     exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
@@ -111,7 +111,7 @@ const importantStateChangeHappened = jsonText => {
     }
 };
 
-const snapshot = () => JSON.stringify(Serializer.toJson(inspector.displayedCircuit.circuitDefinition), null, 0);
+const snapshot = () => JSON.stringify(Serializer.toJson(inspector.get().displayedCircuit.circuitDefinition), null, 0);
 /**
  * @param {undefined|!string} jsonText
  */
@@ -119,12 +119,17 @@ const restore = jsonText => {
     if (jsonText === undefined) {
         return;
     }
-    inspector = inspector.withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText)));
+    inspector.set(inspector.get().withCircuitDefinition(Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText))));
     importantStateChangeHappened(jsonText);
     redrawThrottle.trigger();
 };
+
 /** @type {!Revision} */
 let revision = Revision.startingAt(snapshot());
+revision.changes().subscribe(() => {
+    undoButton.disabled = revision.isAtBeginningOfHistory();
+    redoButton.disabled = revision.isAtEndOfHistory();
+});
 
 downloadOfflineButton.addEventListener('click', () => {
     downloadOfflineButton.disabled = true;
@@ -182,7 +187,7 @@ const getCircuitCycleTime = (() => {
 })();
 
 let currentCircuitStatsCache =
-    new CycleCircuitStats(inspector.displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
+    new CycleCircuitStats(inspector.get().displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
 let desiredCanvasSizeFor = curInspector => {
     return {
@@ -220,7 +225,7 @@ const redrawNow = () => {
         return;
     }
 
-    let shown = syncArea(inspector).previewDrop();
+    let shown = syncArea(inspector.get()).previewDrop();
     if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.displayedCircuit.circuitDefinition)) {
         // Maybe this fresh new circuit isn't failing. Clear the error tint.
         let errDivStyle = document.getElementById('error-div').style;
@@ -242,27 +247,23 @@ const redrawNow = () => {
     shown.paint(painter, stats, isShiftHeld);
     painter.paintDeferred();
 
-    inspector.hand.paintCursor(painter);
+    inspector.get().hand.paintCursor(painter);
     scrollBlocker.setBlockers(painter.touchBlockers, painter.desiredCursorStyle);
     canvas.style.cursor = painter.desiredCursorStyle || 'auto';
 
-    let dt = inspector.stableDuration();
+    let dt = inspector.get().stableDuration();
     if (dt < Infinity) {
         window.requestAnimationFrame(scheduleRedraw);
     }
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 
-const updateButtonStates = () => {
-    undoButton.disabled = revision.isAtBeginningOfHistory();
-    redoButton.disabled = revision.isAtEndOfHistory();
-};
 
 const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
-    if (inspector.isEqualTo(newInspector)) {
+    if (inspector.get().isEqualTo(newInspector)) {
         return false;
     }
-    inspector = newInspector;
+    inspector.set(newInspector);
     let jsonText = snapshot();
     if (keepInHistory) {
         revision.commit(jsonText);
@@ -273,7 +274,6 @@ const useInspector = (newInspector, keepInHistory, avoidRedraw=false) => {
         scheduleRedraw();
     }
 
-    updateButtonStates();
     return true;
 };
 
@@ -284,7 +284,7 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
-        let oldInspector = inspector;
+        let oldInspector = inspector.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
         if (!useInspector(newInspector, false, true) || !newInspector.hand.isBusy()) {
@@ -312,12 +312,12 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
-        if (!inspector.hand.isBusy()) {
+        if (!inspector.get().hand.isBusy()) {
             return;
         }
 
-        let newHand = inspector.hand.withPos(pt);
-        let newInspector = inspector.withHand(newHand);
+        let newHand = inspector.get().hand.withPos(pt);
+        let newInspector = inspector.get().withHand(newHand);
         useInspector(newInspector, false);
         ev.preventDefault();
     },
@@ -327,12 +327,12 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
-        if (!inspector.hand.isBusy()) {
+        if (!inspector.get().hand.isBusy()) {
             return;
         }
 
-        let newHand = inspector.hand.withPos(pt);
-        let newInspector = syncArea(inspector).withHand(newHand).afterDropping().afterTidyingUp();
+        let newHand = inspector.get().hand.withPos(pt);
+        let newInspector = syncArea(inspector.get()).withHand(newHand).afterDropping().afterTidyingUp();
         let clearHand = newInspector.hand.withPos(undefined);
         let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(clearHand, 0);
         useInspector(clearInspector, true);
@@ -344,8 +344,8 @@ canvasDiv.addEventListener('mousedown', ev => {
     if (!isMiddleClicking(ev)) {
         return;
     }
-    let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));
-    let newInspector = syncArea(inspector).
+    let newHand = inspector.get().hand.withPos(eventPosRelativeTo(ev, canvas));
+    let newInspector = syncArea(inspector.get()).
         withHand(newHand).
         afterGrabbing(false). // Grab the gate.
         withHand(newHand). // Lose the gate.
@@ -358,16 +358,16 @@ canvasDiv.addEventListener('mousedown', ev => {
 
 // When mouse moves without dragging, track it (for showing hints and things).
 document.addEventListener('mousemove', ev => {
-    if (!inspector.hand.isBusy()) {
-        let newHand = inspector.hand.withPos(eventPosRelativeTo(ev, canvas));
-        let newInspector = inspector.withHand(newHand);
+    if (!inspector.get().hand.isBusy()) {
+        let newHand = inspector.get().hand.withPos(eventPosRelativeTo(ev, canvas));
+        let newInspector = inspector.get().withHand(newHand);
         useInspector(newInspector, false);
     }
 });
 document.addEventListener('mouseleave', () => {
-    if (!inspector.hand.isBusy()) {
-        let newHand = inspector.hand.withPos(undefined);
-        let newInspector = inspector.withHand(newHand);
+    if (!inspector.get().hand.isBusy()) {
+        let newHand = inspector.get().hand.withPos(undefined);
+        let newInspector = inspector.get().withHand(newHand);
         useInspector(newInspector, false);
     }
 });
@@ -443,7 +443,7 @@ const loadCircuitFromUrl = () => {
         historyPusher.currentStateIsMemorableAndEqualTo(jsonText);
         let json = JSON.parse(jsonText);
         let circuitDef = Serializer.fromJson(CircuitDefinition, json);
-        useInspector(inspector.withCircuitDefinition(circuitDef), true);
+        useInspector(inspector.get().withCircuitDefinition(circuitDef), true);
         revision.clear(snapshot());
         if (circuitDef.columns.length === 0 && params.size === 1) {
             historyPusher.currentStateIsNotMemorable();
@@ -465,7 +465,6 @@ loadCircuitFromUrl();
 haveLoaded = true;
 setTimeout(() => {
     inspectorDiv.style.display = 'block';
-    updateButtonStates();
     redrawNow();
     document.getElementById("loading-div").style.display = 'none';
     try {
