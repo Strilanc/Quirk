@@ -207,7 +207,7 @@ let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) 
             }
         }
 
-        saveFile(fileNameForState(displayed.get()), moddedHtml);
+        saveFile(fileNameForState(displayed.get().snapshot()), moddedHtml);
     });
 })();
 
