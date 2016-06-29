@@ -202,11 +202,25 @@ let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) 
     });
 })();
 
-const importantStateChangeHappened = (jsonText, newInspector) => {
-    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    historyPusher.stateChange(jsonText, urlHash);
-    document.title = `Quirk: ${newInspector.displayedCircuit.circuitDefinition.readableHash()}`;
-};
+// Title of page.
+(() => {
+    const titleForState = jsonText => {
+        //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+        try {
+            let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+            if (!circuitDef.isEmpty()) {
+                return `Quirk: ${circuitDef.readableHash()}`;
+            }
+        } catch (_) {
+        }
+        return 'Quirk: Toy Quantum Circuit Simulator';
+    };
+
+    revision.latestActiveCommit().subscribe(jsonText => {
+        // Add a slight delay, so that history changes use the old title.
+        setTimeout(() => { document.title = titleForState(jsonText); }, 0);
+    });
+})();
 
 /**
  * @param {undefined|!string} jsonText
@@ -217,7 +231,6 @@ const restore = jsonText => {
     }
     let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
     let newInspector = inspector.get().withCircuitDefinition(circuitDef);
-    importantStateChangeHappened(jsonText, newInspector);
     inspector.set(newInspector);
 };
 
@@ -311,7 +324,8 @@ const redrawNow = () => {
     }
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
-
+window.addEventListener('resize', () => redrawThrottle.trigger(), false);
+inspector.observable().subscribe(() => redrawThrottle.trigger());
 
 const useInspector = (newInspector, keepInHistory) => {
     if (inspector.get().isEqualTo(newInspector)) {
@@ -321,7 +335,6 @@ const useInspector = (newInspector, keepInHistory) => {
     let jsonText = newInspector.snapshot();
     if (keepInHistory) {
         revision.commit(jsonText);
-        importantStateChangeHappened(jsonText, newInspector);
     }
     inspector.set(newInspector);
 
@@ -423,10 +436,6 @@ document.addEventListener('mouseleave', () => {
     }
 });
 
-// Resize drawn circuit as window size changes.
-window.addEventListener('resize', () => redrawThrottle.trigger(), false);
-inspector.observable().subscribe(() => redrawThrottle.trigger());
-
 // Pull initial circuit out of URL '#x=y' arguments.
 const getHashParameters = () => {
     let hashText = document.location.hash.substr(1);
@@ -463,7 +472,8 @@ const loadCircuitFromUrl = () => {
         if (circuitDef.isEmpty() && params.size === 1) {
             historyPusher.currentStateIsNotMemorable();
         } else {
-            importantStateChangeHappened(jsonText, inspector.get());
+            let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+            historyPusher.stateChange(jsonText, urlHash);
         }
     } catch (ex) {
         notifyAboutRecoveryFromUnexpectedError(
@@ -475,6 +485,13 @@ const loadCircuitFromUrl = () => {
 
 window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl();
+
+revision.changes().subscribe(jsonText => {
+    if (jsonText !== undefined) {
+        let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+        historyPusher.stateChange(jsonText, urlHash);
+    }
+});
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
