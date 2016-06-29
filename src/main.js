@@ -34,25 +34,34 @@ if (!canvas) {
 canvas.width = canvasDiv.clientWidth;
 canvas.height = window.innerHeight*0.9;
 let haveLoaded = false;
-let historyPusher = new HistoryPusher();
-let semiStableRng = {cur: new RestartableRng()};
-let cycleRng;
-cycleRng = () => {
-    semiStableRng.cur = new RestartableRng();
-    //noinspection DynamicallyGeneratedCodeJS
-    setTimeout(cycleRng, Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS*0.99);
-};
-cycleRng();
+const historyPusher = new HistoryPusher();
+const semiStableRng = (() => {
+    const target = {cur: new RestartableRng()};
+    let cycleRng;
+    cycleRng = () => {
+        target.cur = new RestartableRng();
+        //noinspection DynamicallyGeneratedCodeJS
+        setTimeout(cycleRng, Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS*0.99);
+    };
+    cycleRng();
+    return target;
+})();
 
 //noinspection JSValidateTypes
 /** @type {!HTMLDivElement} */
 const inspectorDiv = document.getElementById("inspectorDiv");
 
 /** @type {ObservableValue.<!DisplayedInspector>} */
-const inspector = new ObservableValue(DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
-
+const displayed = new ObservableValue(
+    DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
 /** @type {!Revision} */
-let revision = Revision.startingAt(inspector.get().snapshot());
+let revision = Revision.startingAt(displayed.get().snapshot());
+
+revision.latestActiveCommit().subscribe(jsonText => {
+    let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+    let newInspector = displayed.get().withCircuitDefinition(circuitDef);
+    displayed.set(newInspector);
+});
 
 // Undo / redo.
 (() => {
@@ -63,8 +72,8 @@ let revision = Revision.startingAt(inspector.get().snapshot());
         redoButton.disabled = revision.isAtEndOfHistory();
     });
 
-    undoButton.addEventListener('click', () => restore(revision.undo()));
-    redoButton.addEventListener('click', () => restore(revision.redo()));
+    undoButton.addEventListener('click', () => revision.undo());
+    redoButton.addEventListener('click', () => revision.redo());
 
     document.addEventListener("keydown", e => {
         const Y_KEY = 89;
@@ -73,11 +82,11 @@ let revision = Revision.startingAt(inspector.get().snapshot());
         let isRedo1 = e.keyCode === Z_KEY && e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey;
         let isRedo2 = e.keyCode === Y_KEY && e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey;
         if (isUndo) {
-            restore(revision.undo());
+            revision.undo();
             e.preventDefault();
         }
         if (isRedo1 || isRedo2) {
-            restore(revision.redo());
+            revision.redo();
             e.preventDefault();
         }
     });
@@ -181,7 +190,7 @@ let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) 
         let moddedHtml =
             originalHtml.substring(0, modStart) +
             startDefaultTag +
-            'document.DEFAULT_CIRCUIT = ' + JSON.stringify(inspector.get().snapshot()) + ';\n' +
+            'document.DEFAULT_CIRCUIT = ' + JSON.stringify(displayed.get().snapshot()) + ';\n' +
             originalHtml.substring(modStop);
 
         // Strip analytics.
@@ -198,7 +207,7 @@ let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) 
             }
         }
 
-        saveFile(fileNameForState(inspector.get()), moddedHtml);
+        saveFile(fileNameForState(displayed.get()), moddedHtml);
     });
 })();
 
@@ -221,18 +230,6 @@ let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) 
         setTimeout(() => { document.title = titleForState(jsonText); }, 0);
     });
 })();
-
-/**
- * @param {undefined|!string} jsonText
- */
-const restore = jsonText => {
-    if (jsonText === undefined) {
-        return;
-    }
-    let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
-    let newInspector = inspector.get().withCircuitDefinition(circuitDef);
-    inspector.set(newInspector);
-};
 
 const getCircuitCycleTime = (() => {
     /**
@@ -257,7 +254,7 @@ const getCircuitCycleTime = (() => {
 })();
 
 let currentCircuitStatsCache =
-    new CycleCircuitStats(inspector.get().displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
+    new CycleCircuitStats(displayed.get().displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
 
 let desiredCanvasSizeFor = curInspector => {
     return {
@@ -276,8 +273,6 @@ const syncArea = ins => {
     return ins;
 };
 
-let scrollBlocker = new TouchScrollBlocker(canvasDiv);
-
 let isShiftHeld = false;
 Observable.of(Observable.elementEvent(document, 'keydown'), Observable.elementEvent(document, 'keyup')).
     flatten().
@@ -286,13 +281,14 @@ Observable.of(Observable.elementEvent(document, 'keydown'), Observable.elementEv
 
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
+const scrollBlocker = new TouchScrollBlocker(canvasDiv);
 const redrawNow = () => {
     if (!haveLoaded) {
         // Don't draw while loading. It's a huge source of false-positive circuit-load-failed errors during development.
         return;
     }
 
-    let shown = syncArea(inspector.get()).previewDrop();
+    let shown = syncArea(displayed.get()).previewDrop();
     if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.displayedCircuit.circuitDefinition)) {
         // Maybe this fresh new circuit isn't failing. Clear the error tint.
         let errDivStyle = document.getElementById('error-div').style;
@@ -314,32 +310,18 @@ const redrawNow = () => {
     shown.paint(painter, stats, isShiftHeld);
     painter.paintDeferred();
 
-    inspector.get().hand.paintCursor(painter);
+    displayed.get().hand.paintCursor(painter);
     scrollBlocker.setBlockers(painter.touchBlockers, painter.desiredCursorStyle);
     canvas.style.cursor = painter.desiredCursorStyle || 'auto';
 
-    let dt = inspector.get().stableDuration();
+    let dt = displayed.get().stableDuration();
     if (dt < Infinity) {
         window.requestAnimationFrame(() => redrawThrottle.trigger());
     }
 };
 redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
-inspector.observable().subscribe(() => redrawThrottle.trigger());
-
-const useInspector = (newInspector, keepInHistory) => {
-    if (inspector.get().isEqualTo(newInspector)) {
-        return false;
-    }
-
-    let jsonText = newInspector.snapshot();
-    if (keepInHistory) {
-        revision.commit(jsonText);
-    }
-    inspector.set(newInspector);
-
-    return true;
-};
+displayed.observable().subscribe(() => redrawThrottle.trigger());
 
 watchDrags(canvasDiv,
     /**
@@ -348,17 +330,18 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
-        let oldInspector = inspector.get();
+        let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
-        if (inspector.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
+        if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }
 
         // Add extra wire temporarily.
         revision.startedWorkingOnCommit();
-        useInspector(syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
-            afterGrabbing(ev.shiftKey), false);
+        displayed.set(
+            syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
+                afterGrabbing(ev.shiftKey));
 
         ev.preventDefault();
     },
@@ -367,7 +350,7 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     ev => {
-        restore(revision.cancelCommitBeingWorkedOn());
+        revision.cancelCommitBeingWorkedOn();
         ev.preventDefault();
     },
     /**
@@ -376,13 +359,13 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
-        if (!inspector.get().hand.isBusy()) {
+        if (!displayed.get().hand.isBusy()) {
             return;
         }
 
-        let newHand = inspector.get().hand.withPos(pt);
-        let newInspector = inspector.get().withHand(newHand);
-        useInspector(newInspector, false);
+        let newHand = displayed.get().hand.withPos(pt);
+        let newInspector = displayed.get().withHand(newHand);
+        displayed.set(newInspector);
         ev.preventDefault();
     },
     /**
@@ -391,15 +374,15 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
-        if (!inspector.get().hand.isBusy()) {
+        if (!displayed.get().hand.isBusy()) {
             return;
         }
 
-        let newHand = inspector.get().hand.withPos(pt);
-        let newInspector = syncArea(inspector.get()).withHand(newHand).afterDropping().afterTidyingUp();
+        let newHand = displayed.get().hand.withPos(pt);
+        let newInspector = syncArea(displayed.get()).withHand(newHand).afterDropping().afterTidyingUp();
         let clearHand = newInspector.hand.withPos(undefined);
-        let clearInspector = newInspector.withHand(clearHand).withJustEnoughWires(clearHand, 0);
-        useInspector(clearInspector, true);
+        let clearInspector = newInspector.withJustEnoughWires(clearHand, 0);
+        revision.commit(clearInspector.snapshot());
         ev.preventDefault();
     });
 
@@ -408,31 +391,32 @@ canvasDiv.addEventListener('mousedown', ev => {
     if (!isMiddleClicking(ev)) {
         return;
     }
-    let newHand = inspector.get().hand.withPos(eventPosRelativeTo(ev, canvas));
-    let newInspector = syncArea(inspector.get()).
+    let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
+    let newInspector = syncArea(displayed.get()).
         withHand(newHand).
         afterGrabbing(false). // Grab the gate.
         withHand(newHand). // Lose the gate.
         afterTidyingUp().
         withJustEnoughWires(newHand, 0);
-    if (useInspector(newInspector, true)) {
+    if (!displayed.get().isEqualTo(newInspector)) {
+        revision.commit(newInspector.snapshot());
         ev.preventDefault();
     }
 });
 
 // When mouse moves without dragging, track it (for showing hints and things).
 document.addEventListener('mousemove', ev => {
-    if (!inspector.get().hand.isBusy()) {
-        let newHand = inspector.get().hand.withPos(eventPosRelativeTo(ev, canvas));
-        let newInspector = inspector.get().withHand(newHand);
-        useInspector(newInspector, false);
+    if (!displayed.get().hand.isBusy()) {
+        let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
+        let newInspector = displayed.get().withHand(newHand);
+        displayed.set(newInspector);
     }
 });
 document.addEventListener('mouseleave', () => {
-    if (!inspector.get().hand.isBusy()) {
-        let newHand = inspector.get().hand.withPos(undefined);
-        let newInspector = inspector.get().withHand(newHand);
-        useInspector(newInspector, false);
+    if (!displayed.get().hand.isBusy()) {
+        let newHand = displayed.get().hand.withPos(undefined);
+        let newInspector = displayed.get().withHand(newHand);
+        displayed.set(newInspector);
     }
 });
 
@@ -467,8 +451,7 @@ const loadCircuitFromUrl = () => {
         historyPusher.currentStateIsMemorableAndEqualTo(jsonText);
         let json = JSON.parse(jsonText);
         let circuitDef = Serializer.fromJson(CircuitDefinition, json);
-        useInspector(inspector.get().withCircuitDefinition(circuitDef), true);
-        revision.clear(inspector.get().snapshot());
+        revision.clear(displayed.get().withCircuitDefinition(circuitDef).snapshot());
         if (circuitDef.isEmpty() && params.size === 1) {
             historyPusher.currentStateIsNotMemorable();
         } else {
@@ -486,11 +469,9 @@ const loadCircuitFromUrl = () => {
 window.onpopstate = () => loadCircuitFromUrl(false);
 loadCircuitFromUrl();
 
-revision.changes().subscribe(jsonText => {
-    if (jsonText !== undefined) {
-        let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-        historyPusher.stateChange(jsonText, urlHash);
-    }
+revision.latestActiveCommit().whenDifferent().skip(1).subscribe(jsonText => {
+    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+    historyPusher.stateChange(jsonText, urlHash);
 });
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.

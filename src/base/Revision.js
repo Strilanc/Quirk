@@ -100,6 +100,7 @@ class Revision {
         this.isWorkingOnCommit = false;
         let result = this.history[this.index];
         this._changes.send(result);
+        this._latestActiveCommit.set(result);
         return result;
     }
 
@@ -109,10 +110,11 @@ class Revision {
      * @returns {void}
      */
     commit(newCheckpoint) {
-        this.isWorkingOnCommit = false;
         if (newCheckpoint === this.history[this.index]) {
+            this.cancelCommitBeingWorkedOn();
             return;
         }
+        this.isWorkingOnCommit = false;
         this.index += 1;
         this.history.splice(this.index, this.history.length - this.index);
         this.history.push(newCheckpoint);

@@ -91,16 +91,36 @@ class Observable {
     }
 
     /**
+     *
+     * @param {!int} count
+     * @returns {!Observable.<T>
+     * @template T
+     */
+    skip(count) {
+        return new Observable(observer => {
+            let remaining = count;
+            return this.subscribe(item => {
+                if (remaining > 0) {
+                    remaining -= 1;
+                } else {
+                    observer(item);
+                }
+            })
+        })
+    }
+
+    /**
      * @returns {!Observable.<T>} An observable with the same events, but filtering out any event value that's the same
      * as the previous one.
      * @template T
      */
-    whenDifferent() {
+    whenDifferent(equater = undefined) {
+        let eq = equater || ((e1, e2) => e1 === e2);
         return new Observable(observer => {
             let hasLast = false;
             let last = undefined;
             return this.subscribe(item => {
-                if (!hasLast || last !== item) {
+                if (!hasLast || !eq(last, item)) {
                     last = item;
                     hasLast = true;
                     observer(item);

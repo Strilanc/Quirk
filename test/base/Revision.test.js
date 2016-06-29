@@ -272,10 +272,10 @@ suite.test("latestActiveCommit", () => {
     r.startedWorkingOnCommit();
     assertThat(a).isEqualTo(['abc', '123', 'abc', '123']);
     r.cancelCommitBeingWorkedOn();
-    assertThat(a).isEqualTo(['abc', '123', 'abc', '123']);
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', '123']);
     r.clear('xyz');
-    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', 'xyz']);
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', '123', 'xyz']);
     s();
     r.clear('nope');
-    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', 'xyz']);
+    assertThat(a).isEqualTo(['abc', '123', 'abc', '123', '123', 'xyz']);
 });

@@ -234,7 +234,7 @@ export default class DisplayedInspector {
             DisplayedCircuit.empty(TOOLBOX_HEIGHT).withCircuit(newCircuitDefinition),
             this.displayedToolboxTop,
             this.displayedToolboxBottom,
-            Hand.EMPTY);
+            this.hand.withDrop());
     }
 
     /**

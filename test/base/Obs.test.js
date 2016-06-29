@@ -26,6 +26,16 @@ suite.test("Observable.map", () => {
 suite.test("Observable.whenDifferent", () => {
     assertThat(Observable.of(1, 2, 2, 3).whenDifferent().snapshot()).isEqualTo([1, 2, 3]);
     assertThat(Observable.of(undefined, 2, 2, 3).whenDifferent().snapshot()).isEqualTo([undefined, 2, 3]);
+    assertThat(Observable.of(2, 3, 5, 7, 10, 13, 17, 19, 23).whenDifferent((e1, e2) => e1 % 3 === e2 % 3).snapshot()).
+        isEqualTo([2, 3, 5, 7, 17, 19, 23]);
+});
+
+suite.test("Observable.skip", () => {
+    assertThat(Observable.of(1, 2, 3).skip(0).snapshot()).isEqualTo([1, 2, 3]);
+    assertThat(Observable.of(1, 2, 3).skip(1).snapshot()).isEqualTo([2, 3]);
+    assertThat(Observable.of(1, 2, 3).skip(2).snapshot()).isEqualTo([3]);
+    assertThat(Observable.of(1, 2, 3).skip(3).snapshot()).isEqualTo([]);
+    assertThat(Observable.of(1, 2, 3).skip(5).snapshot()).isEqualTo([]);
 });
 
 suite.test("Observable.flatten", () => {
