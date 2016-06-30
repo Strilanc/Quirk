@@ -1,5 +1,5 @@
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import Matrix from "src/math/Matrix.js"
 import Rect from "src/math/Rect.js"
 

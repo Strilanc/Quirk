@@ -1,4 +1,4 @@
-import Painter from "src/ui/Painter.js"
+import Painter from "src/draw/Painter.js"
 import Format from "src/base/Format.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"

@@ -1,6 +1,6 @@
 import DetailedError from "src/base/DetailedError.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 
 let ErrorInjectionGate = Gate.withoutKnownMatrix(
     "ERR!",

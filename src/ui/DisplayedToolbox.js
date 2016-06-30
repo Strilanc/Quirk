@@ -1,14 +1,14 @@
 import Util from "src/base/Util.js"
 import Gates from "src/gates/AllGates.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import GateDrawParams from "src/ui/GateDrawParams.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GateDrawParams from "src/draw/GateDrawParams.js"
+import GatePainting from "src/draw/GatePainting.js"
 import Rect from "src/math/Rect.js"
 import Point from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 import Config from "src/Config.js"
-import Painter from "src/ui/Painter.js"
-import WidgetPainter from "src/ui/WidgetPainter.js"
+import Painter from "src/draw/Painter.js"
+import WidgetPainter from "src/draw/WidgetPainter.js"
 import {MysteryGateSymbol, MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 class DisplayedToolbox {

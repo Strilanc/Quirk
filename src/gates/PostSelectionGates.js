@@ -1,6 +1,6 @@
 import Complex from "src/math/Complex.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import Matrix from "src/math/Matrix.js"
 
 let PostSelectionGates = {};
