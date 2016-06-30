@@ -20,6 +20,7 @@ import { Observable, ObservableValue } from "src/base/Obs.js"
 import { initExports } from "src/ui/exports.js"
 import { initUndoRedo } from "src/ui/undo.js"
 import { initUrlCircuitSync } from "src/ui/url.js"
+import { initTitleSync } from "src/ui/title.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 
@@ -54,34 +55,12 @@ const displayed = new ObservableValue(
     DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
 /** @type {!Revision} */
 let revision = Revision.startingAt(displayed.get().snapshot());
-initExports(revision);
-initUndoRedo(revision);
 
 revision.latestActiveCommit().subscribe(jsonText => {
     let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
     let newInspector = displayed.get().withCircuitDefinition(circuitDef);
     displayed.set(newInspector);
 });
-
-// Title of page.
-(() => {
-    const titleForState = jsonText => {
-        //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
-        try {
-            let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
-            if (!circuitDef.isEmpty()) {
-                return `Quirk: ${circuitDef.readableHash()}`;
-            }
-        } catch (_) {
-        }
-        return 'Quirk: Toy Quantum Circuit Simulator';
-    };
-
-    revision.latestActiveCommit().subscribe(jsonText => {
-        // Add a slight delay, so that history changes use the old title.
-        setTimeout(() => { document.title = titleForState(jsonText); }, 0);
-    });
-})();
 
 const getCircuitCycleTime = (() => {
     /**
@@ -273,6 +252,9 @@ document.addEventListener('mouseleave', () => {
 });
 
 initUrlCircuitSync(revision);
+initExports(revision);
+initUndoRedo(revision);
+initTitleSync(revision);
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
