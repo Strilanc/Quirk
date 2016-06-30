@@ -6,7 +6,6 @@ import {} from "src/issues.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
-import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
 import DisplayedInspector from "src/ui/DisplayedInspector.js"
 import Painter from "src/draw/Painter.js"
 import Rect from "src/math/Rect.js"
@@ -14,6 +13,7 @@ import RestartableRng from "src/base/RestartableRng.js"
 import Revision from "src/base/Revision.js"
 import Serializer from "src/circuit/Serializer.js"
 import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
+import Util from "src/base/Util.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 import { Observable, ObservableValue } from "src/base/Obs.js"
@@ -21,6 +21,7 @@ import { initExports } from "src/ui/exports.js"
 import { initUndoRedo } from "src/ui/undo.js"
 import { initUrlCircuitSync } from "src/ui/url.js"
 import { initTitleSync } from "src/ui/title.js"
+import { simulate } from "src/ui/sim.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 
@@ -62,31 +63,6 @@ revision.latestActiveCommit().subscribe(jsonText => {
     displayed.set(newInspector);
 });
 
-const getCircuitCycleTime = (() => {
-    /**
-     * Milliseconds.
-     * @type {!number}
-     */
-    let _circuitCycleTime = 0;
-    /**
-     * Milliseconds.
-     * @type {!number}
-     */
-    let _prevRealTime = performance.now();
-
-    return () => {
-        let nextRealTime = performance.now();
-        let elapsed = (nextRealTime - _prevRealTime) / Config.CYCLE_DURATION_MS;
-        _circuitCycleTime += elapsed;
-        _circuitCycleTime %= 1;
-        _prevRealTime = nextRealTime;
-        return _circuitCycleTime;
-    };
-})();
-
-let currentCircuitStatsCache =
-    new CycleCircuitStats(displayed.get().displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
-
 let desiredCanvasSizeFor = curInspector => {
     return {
         w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
@@ -110,6 +86,18 @@ Observable.of(Observable.elementEvent(document, 'keydown'), Observable.elementEv
     map(e => e.shiftKey).
     subscribe(e => { isShiftHeld = e.shiftKey; });
 
+// Gradually fade out old errors as user manipulates circuit.
+displayed.observable().
+    map(e => e.displayedCircuit.circuitDefinition).
+    whenDifferent(Util.CUSTOM_IS_EQUAL_TO_EQUALITY).
+    subscribe(() => {
+        let errDivStyle = document.getElementById('error-div').style;
+        errDivStyle.opacity *= 0.9;
+        if (errDivStyle.opacity < 0.06) {
+            errDivStyle.display = 'None'
+        }
+    });
+
 /** @type {!CooldownThrottle} */
 let redrawThrottle;
 const scrollBlocker = new TouchScrollBlocker(canvasDiv);
@@ -120,18 +108,7 @@ const redrawNow = () => {
     }
 
     let shown = syncArea(displayed.get()).previewDrop();
-    if (!currentCircuitStatsCache.circuitDefinition.isEqualTo(shown.displayedCircuit.circuitDefinition)) {
-        // Maybe this fresh new circuit isn't failing. Clear the error tint.
-        let errDivStyle = document.getElementById('error-div').style;
-        errDivStyle.opacity *= 0.9;
-        if (errDivStyle.opacity < 0.06) {
-            errDivStyle.display = 'None'
-        }
-
-        currentCircuitStatsCache =
-            new CycleCircuitStats(shown.displayedCircuit.circuitDefinition, Config.TIME_CACHE_GRANULARITY);
-    }
-    let stats = currentCircuitStatsCache.statsAtApproximateTime(getCircuitCycleTime());
+    let stats = simulate(shown.displayedCircuit.circuitDefinition);
 
     let size = desiredCanvasSizeFor(shown);
     canvas.width = size.w;
