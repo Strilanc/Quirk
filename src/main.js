@@ -8,7 +8,6 @@ import CooldownThrottle from "src/base/CooldownThrottle.js"
 import Config from "src/Config.js"
 import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
 import DisplayedInspector from "src/ui/DisplayedInspector.js"
-import HistoryPusher from "src/browser/HistoryPusher.js"
 import Painter from "src/draw/Painter.js"
 import Rect from "src/math/Rect.js"
 import RestartableRng from "src/base/RestartableRng.js"
@@ -20,6 +19,7 @@ import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/Mo
 import { Observable, ObservableValue } from "src/base/Obs.js"
 import { initExports } from "src/ui/exports.js"
 import { initUndoRedo } from "src/ui/undo.js"
+import { initUrlCircuitSync } from "src/ui/url.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 
@@ -33,7 +33,6 @@ if (!canvas) {
 canvas.width = canvasDiv.clientWidth;
 canvas.height = window.innerHeight*0.9;
 let haveLoaded = false;
-const historyPusher = new HistoryPusher();
 const semiStableRng = (() => {
     const target = {cur: new RestartableRng()};
     let cycleRng;
@@ -273,59 +272,7 @@ document.addEventListener('mouseleave', () => {
     }
 });
 
-// Pull initial circuit out of URL '#x=y' arguments.
-const getHashParameters = () => {
-    let hashText = document.location.hash.substr(1);
-    let paramsMap = new Map();
-    if (hashText !== "") {
-        for (let keyVal of hashText.split("&")) {
-            let eq = keyVal.indexOf("=");
-            if (eq === -1) {
-                continue;
-            }
-            let key = keyVal.substring(0, eq);
-            let val = decodeURIComponent(keyVal.substring(eq + 1));
-            paramsMap.set(key, val);
-        }
-    }
-    return paramsMap;
-};
-
-const loadCircuitFromUrl = () => {
-    try {
-        historyPusher.currentStateIsMemorableButUnknown();
-        let params = getHashParameters();
-        if (!params.has(Config.URL_CIRCUIT_PARAM_KEY)) {
-            let def = document.DEFAULT_CIRCUIT || JSON.stringify(Serializer.toJson(CircuitDefinition.EMPTY));
-            params.set(Config.URL_CIRCUIT_PARAM_KEY, def);
-        }
-
-        let jsonText = params.get(Config.URL_CIRCUIT_PARAM_KEY);
-        historyPusher.currentStateIsMemorableAndEqualTo(jsonText);
-        let json = JSON.parse(jsonText);
-        let circuitDef = Serializer.fromJson(CircuitDefinition, json);
-        revision.clear(displayed.get().withCircuitDefinition(circuitDef).snapshot());
-        if (circuitDef.isEmpty() && params.size === 1) {
-            historyPusher.currentStateIsNotMemorable();
-        } else {
-            let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-            historyPusher.stateChange(jsonText, urlHash);
-        }
-    } catch (ex) {
-        notifyAboutRecoveryFromUnexpectedError(
-            "Defaulted to an empty circuit. Failed to understand circuit from URL.",
-            {document_location_hash: document.location.hash},
-            ex);
-    }
-};
-
-window.onpopstate = () => loadCircuitFromUrl(false);
-loadCircuitFromUrl();
-
-revision.latestActiveCommit().whenDifferent().skip(1).subscribe(jsonText => {
-    let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-    historyPusher.stateChange(jsonText, urlHash);
-});
+initUrlCircuitSync(revision);
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
