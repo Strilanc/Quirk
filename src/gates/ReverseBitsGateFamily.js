@@ -1,6 +1,19 @@
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import Gate from "src/circuit/Gate.js"
+import Matrix from "src/math/Matrix.js"
 import Seq from "src/base/Seq.js"
+
+let reverseBits = (val, len) => {
+    let r = 0;
+    for (let i = 0; i < len; i++) {
+        if (((val >> i) & 1) !== 0) {
+            r |= 1 << (len - i - 1);
+        }
+    }
+    return r;
+};
+
+let reverseBitsMatrix = span => Matrix.generateTransition(1<<span, e => reverseBits(e, span));
 
 let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "Reverse",
@@ -10,6 +23,7 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnown
     markedAsOnlyPermutingAndPhasing().
     withSerializedId("rev" + span).
     withHeight(span).
+    withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
     withCustomShaders(Seq.range(Math.floor(span/2)).
         map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
         toArray()));

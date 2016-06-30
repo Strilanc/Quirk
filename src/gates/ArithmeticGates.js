@@ -6,33 +6,27 @@ import Matrix from "src/math/Matrix.js"
 let ArithmeticGates = {};
 
 const makeOffsetMatrix = (offset, qubitSpan) =>
-    Matrix.generate(1<<qubitSpan, 1<<qubitSpan, (r, c) => ((r-offset) & ((1<<qubitSpan)-1)) === c ? 1 : 0);
+    Matrix.generateTransition(1<<qubitSpan, e => (e + offset) & ((1<<qubitSpan)-1));
 
 const INCREMENT_MATRIX_MAKER = span => makeOffsetMatrix(1, span);
 const DECREMENT_MATRIX_MAKER = span => makeOffsetMatrix(-1, span);
-const ADDITION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
-    let expected = r;
-    let input = c;
+const ADDITION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e => {
     let sa = Math.floor(span/2);
     let sb = Math.ceil(span/2);
-    let a = input & ((1 << sa) - 1);
-    let b = input >> sa;
+    let a = e & ((1 << sa) - 1);
+    let b = e >> sa;
     b += a;
     b &= ((1 << sb) - 1);
-    let actual = a + (b << sa);
-    return expected === actual ? 1 : 0;
+    return a + (b << sa);
 });
-const SUBTRACTION_MATRIX_MAKER = span => Matrix.generate(1<<span, 1<<span, (r, c) => {
-    let expected = r;
-    let input = c;
+const SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e => {
     let sa = Math.floor(span/2);
     let sb = Math.ceil(span/2);
-    let a = input & ((1 << sa) - 1);
-    let b = input >> sa;
+    let a = e & ((1 << sa) - 1);
+    let b = e >> sa;
     b -= a;
     b &= ((1 << sb) - 1);
-    let actual = a + (b << sa);
-    return expected === actual ? 1 : 0;
+    return a + (b << sa);
 });
 
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(

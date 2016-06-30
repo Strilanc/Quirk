@@ -14,17 +14,14 @@ let sectionSizes = totalSize => {
     return [a, b, totalSize - a - b];
 };
 
-const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generate(1<<span, 1<<span, (row, col) => {
-    let expected = row;
-    let input = col;
+const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransition(1<<span, e => {
     let [sa, sb, sc] = sectionSizes(span);
-    let a = input & ((1 << sa) - 1);
-    let b = (input >> sa) & ((1 << sb) - 1);
-    let c = input >> (sa + sb);
+    let a = e & ((1 << sa) - 1);
+    let b = (e >> sa) & ((1 << sb) - 1);
+    let c = e >> (sa + sb);
     c += a*b*scaleFactor;
     c &= ((1 << sc) - 1);
-    let actual = a | (b << sa) | (c << (sa+sb));
-    return expected === actual ? 1 : 0;
+    return a | (b << sa) | (c << (sa+sb));
 });
 
 /**
