@@ -10,7 +10,6 @@ import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
 import DisplayedInspector from "src/widgets/DisplayedInspector.js"
 import HistoryPusher from "src/browser/HistoryPusher.js"
 import Painter from "src/ui/Painter.js"
-import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import RestartableRng from "src/base/RestartableRng.js"
 import Revision from "src/base/Revision.js"
@@ -18,9 +17,8 @@ import Serializer from "src/circuit/Serializer.js"
 import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
-import { selectAndCopyToClipboard } from "src/browser/Clipboard.js"
-import { saveFile } from "src/browser/SaveFile.js"
 import { Observable, ObservableValue } from "src/base/Obs.js"
+import { initExports } from "src/ui/exports.js"
 
 const canvasDiv = document.getElementById("canvasDiv");
 
@@ -56,6 +54,7 @@ const displayed = new ObservableValue(
     DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
 /** @type {!Revision} */
 let revision = Revision.startingAt(displayed.get().snapshot());
+initExports(revision);
 
 revision.latestActiveCommit().subscribe(jsonText => {
     let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
@@ -89,125 +88,6 @@ revision.latestActiveCommit().subscribe(jsonText => {
             revision.redo();
             e.preventDefault();
         }
-    });
-})();
-
-// Show/hide exports.
-(() => {
-    const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
-    const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
-    const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
-    exportButton.addEventListener('click', () => { exportDiv.style.display = 'block'; });
-    exportOverlay.addEventListener('click', () => { exportDiv.style.display = 'none'; });
-    document.addEventListener('keydown', e => {
-        const ESC_KEY = 27;
-        if (e.keyCode === ESC_KEY) {
-            exportDiv.style.display = 'none';
-        }
-    });
-})();
-
-/**
- * @param {!HTMLButtonElement} button
- * @param {!HTMLElement} contentElement
- * @param {!HTMLElement} resultElement
- */
-let setupButtonElementCopyToClipboard = (button, contentElement, resultElement) => button.addEventListener('click', () => {
-    //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
-    try {
-        selectAndCopyToClipboard(contentElement);
-        resultElement.innerText = "Done!";
-    } catch (ex) {
-        resultElement.innerText = "It didn't work...";
-        console.warn('Clipboard copy failed.', ex);
-    }
-    button.disabled = true;
-    setTimeout(() => { resultElement.innerText = ""; button.disabled = false; }, 1000);
-});
-
-// Export escaped link.
-(() => {
-    const exportLinkCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-link-copy-button');
-    const exportLinkCopyResult = /** @type {HTMLElement} */ document.getElementById('export-link-copy-result');
-    const exportEscapedLinkAnchor = /** @type {HTMLAnchorElement} */ document.getElementById('export-escaped-anchor');
-    setupButtonElementCopyToClipboard(exportLinkCopyButton, exportEscapedLinkAnchor, exportLinkCopyResult);
-    revision.latestActiveCommit().subscribe(jsonText => {
-        let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
-        exportEscapedLinkAnchor.href = escapedUrlHash;
-        exportEscapedLinkAnchor.innerText = document.location.href.split("#")[0] + escapedUrlHash;
-    });
-})();
-
-// Export JSON.
-(() => {
-    const exportJsonCopyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-json-copy-button');
-    const exportCircuitJsonElement = /** @type {HTMLPreElement} */ document.getElementById('export-circuit-json-pre');
-    const exportJsonCopyResult = /** @type {HTMLElement} */ document.getElementById('export-json-copy-result');
-    setupButtonElementCopyToClipboard(exportJsonCopyButton, exportCircuitJsonElement, exportJsonCopyResult);
-    revision.latestActiveCommit().subscribe(jsonText => {
-        //noinspection UnusedCatchParameterJS
-        try {
-            let val = JSON.parse(jsonText);
-            exportCircuitJsonElement.innerText = JSON.stringify(val, null, '  ');
-        } catch (_) {
-            exportCircuitJsonElement.innerText = jsonText;
-        }
-    });
-})();
-
-// Export offline copy.
-(() => {
-    const downloadButton = /** @type {HTMLButtonElement} */ document.getElementById('download-offline-copy-button');
-
-    const fileNameForState = jsonText => {
-        //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
-        try {
-            let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
-            if (!circuitDef.isEmpty()) {
-                return `Quirk with Circuit - ${circuitDef.readableHash()}.html`;
-            }
-        } catch (_) {
-        }
-        return 'Quirk.html';
-    };
-
-    revision.latestActiveCommit().subscribe(jsonText => {
-        downloadButton.innerText = `Download "${fileNameForState(jsonText)}"`;
-    });
-
-    downloadButton.addEventListener('click', () => {
-        downloadButton.disabled = true;
-        setTimeout(() => {
-            downloadButton.disabled = false;
-        }, 1000);
-        let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
-
-        // Inject default circuit.
-        let startDefaultTag = '//DEFAULT_CIRCUIT_START\n';
-        let endDefaultTag = '//DEFAULT_CIRCUIT_END\n';
-        let modStart = originalHtml.indexOf(startDefaultTag);
-        let modStop = originalHtml.indexOf(endDefaultTag, modStart);
-        let moddedHtml =
-            originalHtml.substring(0, modStart) +
-            startDefaultTag +
-            'document.DEFAULT_CIRCUIT = ' + JSON.stringify(displayed.get().snapshot()) + ';\n' +
-            originalHtml.substring(modStop);
-
-        // Strip analytics.
-        let anaStartTag = '<!-- Start Analytics -->\n';
-        let anaStart = moddedHtml.indexOf(anaStartTag);
-        if (anaStart !== -1) {
-            let anaStopTag = '<!-- End Analytics -->\n';
-            let anaStop = moddedHtml.indexOf(anaStopTag, anaStart);
-            if (anaStop !== -1) {
-                moddedHtml =
-                    moddedHtml.substring(0, anaStart) +
-                    anaStartTag +
-                    moddedHtml.substring(anaStop);
-            }
-        }
-
-        saveFile(fileNameForState(displayed.get().snapshot()), moddedHtml);
     });
 })();
 
@@ -355,7 +235,7 @@ watchDrags(canvasDiv,
     },
     /**
      * Drag
-     * @param {?Point} pt
+     * @param {undefined|!Point} pt
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {

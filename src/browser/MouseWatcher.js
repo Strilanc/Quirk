@@ -30,8 +30,8 @@ let eventPosRelativeTo = (ev, element) => {
  * @param {!HTMLElement} element
  * @param {!function(!Point, !MouseEvent|!TouchEvent) : void} grabHandler
  * @param {!function(!MouseEvent|!TouchEvent) : void} cancelHandler
- * @param {!function(?Point, !MouseEvent|!TouchEvent) : void} dragHandler
- * @param {!function(?Point, !MouseEvent|!TouchEvent) : void} dropHandler
+ * @param {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} dragHandler
+ * @param {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} dropHandler
  * @returns {!function(void) : void} Call this to dispose the watcher (removing any global callbacks it added).
  */
 let watchDrags = (element, grabHandler, cancelHandler, dragHandler, dropHandler) => {
@@ -55,8 +55,8 @@ class DragWatcher {
      * @param {!HTMLElement} element
      * @param {!function(!Point, !MouseEvent|!TouchEvent) : void} grabHandler
      * @param {!function(!MouseEvent|!TouchEvent) : void} cancelHandler
-     * @param {!function(?Point, !MouseEvent|!TouchEvent) : void} dragHandler
-     * @param {!function(?Point, !MouseEvent|!TouchEvent) : void} dropHandler
+     * @param {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} dragHandler
+     * @param {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} dropHandler
      */
     constructor(element, grabHandler, cancelHandler, dragHandler, dropHandler) {
         /** @type {!HTMLElement} */
@@ -65,9 +65,9 @@ class DragWatcher {
         this._grabHandler = grabHandler;
         /** @type {!function(!MouseEvent|!TouchEvent) : void} */
         this._cancelHandler = cancelHandler;
-        /** @type {!function(?Point, !MouseEvent|!TouchEvent) : void} */
+        /** @type {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} */
         this._dragHandler = dragHandler;
-        /** @type {!function(?Point, !MouseEvent|!TouchEvent) : void} */
+        /** @type {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} */
         this._dropHandler = dropHandler;
         /** @type {undefined|*} */
         this._grabPointerId = undefined;
