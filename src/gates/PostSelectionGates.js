@@ -26,7 +26,7 @@ PostSelectionGates.PostSelectOff = Gate.fromKnownMatrix(
     Matrix.square(1, 0, 0, 0),
     "Post-selection Gate [Off]",
     "Keeps OFF states, discards ON states.\n" +
-        "Restart until satisfied.").
+        "Means 'restart until satisfied'.").
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 
@@ -35,7 +35,7 @@ PostSelectionGates.PostSelectOn = Gate.fromKnownMatrix(
     Matrix.square(0, 0, 0, 1),
     "Post-selection Gate [On]",
     "Keeps ON states, discards OFF states.\n" +
-        "Restart until satisfied.").
+        "Means 'restart until satisfied'.").
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 
@@ -44,7 +44,7 @@ PostSelectionGates.PostSelectPlus = Gate.fromKnownMatrix(
     Matrix.square(1, 1, 1, 1).times(0.5),
     "Post-selection Gate [Plus]",
     "Keeps ON+OFF states, discards ON-OFF states.\n" +
-        "Restart until satisfied.").
+        "Means 'restart until satisfied'.").
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 
@@ -53,7 +53,7 @@ PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
     Matrix.square(1, -1, -1, 1).times(0.5),
     "Post-selection Gate [Minus]",
     "Keeps ON-OFF states, discards ON+OFF states\n" +
-        "Restart until satisfied.").
+        "Means 'restart until satisfied'.").
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 
@@ -62,7 +62,7 @@ PostSelectionGates.PostSelectCross = Gate.fromKnownMatrix(
     Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(0.5),
     "Post-selection Gate [Cross]",
     "Keeps ON+iOFF states, discards ON-iOFF states.\n" +
-        "Restart until satisfied.").
+        "Means 'restart until satisfied'.").
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 

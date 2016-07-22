@@ -11,6 +11,7 @@ import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
 import MeasurementGate from "src/gates/MeasurementGate.js"
 import MultiplyAccumulateGates from "src/gates/MultiplyAccumulateGates.js"
+import NeGate from "src/gates/Joke_NeGate.js"
 import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
 import PostSelectionGates from "src/gates/PostSelectionGates.js"
 import PoweringGates from "src/gates/PoweringGates.js"
@@ -69,6 +70,7 @@ Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 Gates.ZeroGate = ZeroGate;
+Gates.NeGate = NeGate;
 
 /** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
@@ -79,6 +81,7 @@ Gates.KnownToSerializer = [
     UniversalNotGate,
     ErrorInjectionGate,
     ZeroGate,
+    NeGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -157,8 +160,8 @@ Gates.TopToolboxGroups = [
     {
         hint: 'Silly',
         gates: [
-            ZeroGate, undefined,
-            MysteryGateMaker(), undefined,
+            ZeroGate,   MysteryGateMaker(),
+            NeGate,     undefined,
             SpacerGate, undefined
         ]
     }

@@ -49,7 +49,7 @@ const UNIVERSAL_NOT_SHADER = new WglShader(`
 let UniversalNotGate = Gate.withoutKnownMatrix(
     "UniNot",
     "Universal Not Gate",
-    "Mirrors a qubit's state through the origin of the Bloch sphere.\nImpossible in practice.").
+    "Mirrors through the origin of the Bloch sphere.\nImpossible in practice.").
     markedAsStable().
     withCustomShader(universalNot).
     withSerializedId("__unstable__UniversalNot").

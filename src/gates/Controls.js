@@ -9,7 +9,7 @@ export default Controls;
 Controls.Control = Gate.fromIdentity(
     "•",
     "Control",
-    "Conditions on a qubit being ON.\nGates in the same column will only apply to states meeting the condition.").
+    "Conditions on a qubit being ON.\nGates in the same column only apply to states meeting the condition.").
     withSerializedId("•").
     markedAsControl(true).
     withCustomDrawer(args => {
@@ -23,7 +23,7 @@ Controls.Control = Gate.fromIdentity(
 Controls.AntiControl = Gate.fromIdentity(
     "◦",
     "Anti-Control",
-    "Conditions on a qubit being OFF.\nGates in the same column will only apply to states meeting the condition.").
+    "Conditions on a qubit being OFF.\nGates in the same column only apply to states meeting the condition.").
     withSerializedId("◦").
     markedAsControl(false).
     withCustomDrawer(args => {
@@ -40,7 +40,7 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
     "⊕",
     "Plus Control",
     "Conditions on a qubit being ON+OFF.\n" +
-        "Gates in the same column will only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(false).
     withSerializedId("⊕").
     withCustomShaders([]).
@@ -64,7 +64,7 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
     "⊖",
     "Minus Control",
     "Conditions on a qubit being ON-OFF.\n" +
-        "Gates in the same column will only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     withSerializedId("⊖").
     withCustomShaders([]).
     markedAsControl(true).
@@ -89,7 +89,7 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     "⊗",
     "Cross Control",
     "Conditions on a qubit being ON+iOFF.\n" +
-        "Gates in the same column will only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(true).
     withSerializedId("⊗").
     withCustomShaders([]).
