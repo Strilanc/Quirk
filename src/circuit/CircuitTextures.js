@@ -147,14 +147,15 @@ CircuitTextures.mergedReadFloats = textures => {
 };
 
 /**
- * @param {!WglTexture} inputTex
- * @param {!WglTexture} controlTex
- * @param {!number} time
- * @param {!function(inputTex:!WglTexture,controlTex:!WglTexture,time:!number):!WglConfiguredShader} customShader
+ * @param {!CircuitEvalArgs} circuitEvalArgs
+ * @param {!function(!CircuitEvalArgs):!WglConfiguredShader} customShader
  */
-CircuitTextures.applyCustomShader = (customShader, inputTex, controlTex, time) => {
-    let result = allocSameSizedTexture(inputTex);
-    customShader(inputTex, controlTex, time).renderTo(result);
+CircuitTextures.applyCustomShader = (customShader, circuitEvalArgs) => {
+    let result = allocSameSizedTexture(circuitEvalArgs.inputAmplitudesTexture);
+    customShader(
+        circuitEvalArgs.inputAmplitudesTexture,
+        circuitEvalArgs.controlsTexture,
+        circuitEvalArgs.time).renderTo(result);
     return result;
 };
 

@@ -1,17 +1,18 @@
-import DetailedError from "src/base/DetailedError.js"
-import Gates from "src/gates/AllGates.js"
-import Format from "src/base/Format.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
+import CircuitShaders from "src/circuit/CircuitShaders.js"
+import CircuitTextures from "src/circuit/CircuitTextures.js"
 import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
-import Point from "src/math/Point.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Shaders from "src/webgl/Shaders.js"
-import { seq, Seq } from "src/base/Seq.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
-import Util from "src/base/Util.js"
+import DetailedError from "src/base/DetailedError.js"
+import Format from "src/base/Format.js"
+import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
+import Point from "src/math/Point.js"
+import Shaders from "src/webgl/Shaders.js"
 import Serializer from "src/circuit/Serializer.js"
+import Util from "src/base/Util.js"
+import { seq, Seq } from "src/base/Seq.js"
 import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
 
 export default class CircuitStats {
@@ -219,17 +220,19 @@ export default class CircuitStats {
             Seq.range(numCols),
             (stateTex, col) => {
                 // Apply 'before column' setup shaders.
+                let setupArgs = new CircuitEvalArgs(time, Controls.NONE, noControlsTex, undefined, new Map());
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.getSetupShadersInCol(col, true),
-                    (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
+                    (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withInputTexture(v)));
 
                 let controls = circuitDefinition.colControls(col);
                 let controlTex = CircuitTextures.control(numWires, controls);
+                let colArgs = new CircuitEvalArgs(time, controls, controlTex, undefined, new Map());
                 stateTex = CircuitTextures.aggregateWithReuse(
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
-                    (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, controlTex, time));
+                    (v, f) => CircuitTextures.applyCustomShader(f, colArgs.withInputTexture(v)));
 
                 // Compute custom stats for display gates. (Happens after computation so post-selection has effect.)
                 for (let row of circuitDefinition.customStatRowsInCol(col)) {
@@ -254,7 +257,7 @@ export default class CircuitStats {
                 stateTex = CircuitTextures.aggregateWithReuse(
                     stateTex,
                     circuitDefinition.getSetupShadersInCol(col, false),
-                    (v, f) => CircuitTextures.applyCustomShader(f, v, noControlsTex, time));
+                    (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withInputTexture(v)));
 
                 return stateTex;
             });

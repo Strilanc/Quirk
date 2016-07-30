@@ -1,6 +1,7 @@
 import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
 import Gates from "src/gates/AllGates.js"
 
+import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import CircuitTextures from "src/circuit/CircuitTextures.js"
 import Controls from "src/circuit/Controls.js"
@@ -30,7 +31,12 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
         let output = CircuitTextures.aggregateReusingIntermediates(
             input,
             gate.customShaders.map(f => (inTex, conTex, t) => f(inTex, conTex, bit, t)),
-            (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, accTex, control, time));
+            (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, new CircuitEvalArgs(
+                time,
+                Controls.NONE,
+                control,
+                accTex,
+                new Map())));
         let col = CircuitTextures.pixelsToAmplitudes(output.readPixels(), 1.0);
         CircuitTextures.doneWithTexture(output);
         cols.push(col);
