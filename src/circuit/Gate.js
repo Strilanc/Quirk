@@ -79,6 +79,10 @@ class Gate {
          * @private
          */
         this._affectsOtherWires = false;
+        /**
+         * @type {!boolean}
+         */
+        this.isControlWireSource = false;
 
         /**
          * @type {undefined|!boolean}
@@ -238,6 +242,16 @@ class Gate {
     markedAsControl(bit) {
         let g = this._copy();
         g._controlBit = bit;
+        g.isControlWireSource = true;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    markedAsControlWireSource() {
+        let g = this._copy();
+        g.isControlWireSource = true;
         return g;
     }
 
@@ -276,6 +290,7 @@ class Gate {
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
+        g.isControlWireSource = this.isControlWireSource;
         g.preShaders = this.preShaders;
         g.postShaders = this.postShaders;
         g.customColumnContextProvider = this.customColumnContextProvider;

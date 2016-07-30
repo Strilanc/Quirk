@@ -489,9 +489,9 @@ class CircuitDefinition {
      * @param {!Point} pt
      * @returns {!boolean}
      */
-    locIsControl(pt) {
+    locIsControlWireStarter(pt) {
         let gate = this.gateInSlot(pt.x, pt.y);
-        return gate !== undefined && gate.isControl();
+        return gate !== undefined && gate.isControlWireSource;
     }
 
     /**
@@ -499,7 +499,9 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locStartsSingleControlWire(pt) {
-        return this.locIsControl(pt) && !this.locIsMeasured(pt) && this.gateAtLocIsDisabledReason(pt) === undefined;
+        return this.locIsControlWireStarter(pt) &&
+            !this.locIsMeasured(pt) &&
+            this.gateAtLocIsDisabledReason(pt) === undefined;
     }
 
     /**
@@ -507,7 +509,9 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locStartsDoubleControlWire(pt) {
-        return this.locIsControl(pt) && this.locIsMeasured(pt) && this.gateAtLocIsDisabledReason(pt) === undefined;
+        return this.locIsControlWireStarter(pt) &&
+            this.locIsMeasured(pt) &&
+            this.gateAtLocIsDisabledReason(pt) === undefined;
     }
 
     /**

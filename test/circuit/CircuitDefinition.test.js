@@ -540,33 +540,33 @@ suite.test("colControls", () => {
     assertThat(c2.colControls(4)).isEqualTo(new Controls(5, 4));
 });
 
-suite.test("locIsControl", () => {
+suite.test("locIsControlWireStarter", () => {
     let c = circuit(`Z•Y--
                      -#/%◦
                      -/◦•-`);
 
-    assertFalse(c.locIsControl(new Point(-10, 0)));
-    assertFalse(c.locIsControl(new Point(+10, 0)));
-    assertFalse(c.locIsControl(new Point(0, -10)));
-    assertFalse(c.locIsControl(new Point(0, +10)));
+    assertFalse(c.locIsControlWireStarter(new Point(-10, 0)));
+    assertFalse(c.locIsControlWireStarter(new Point(+10, 0)));
+    assertFalse(c.locIsControlWireStarter(new Point(0, -10)));
+    assertFalse(c.locIsControlWireStarter(new Point(0, +10)));
 
-    assertFalse(c.locIsControl(new Point(0, 0)));
-    assertTrue(c.locIsControl(new Point(1, 0)));
-    assertFalse(c.locIsControl(new Point(2, 0)));
-    assertFalse(c.locIsControl(new Point(3, 0)));
-    assertFalse(c.locIsControl(new Point(4, 0)));
+    assertFalse(c.locIsControlWireStarter(new Point(0, 0)));
+    assertTrue(c.locIsControlWireStarter(new Point(1, 0)));
+    assertFalse(c.locIsControlWireStarter(new Point(2, 0)));
+    assertFalse(c.locIsControlWireStarter(new Point(3, 0)));
+    assertFalse(c.locIsControlWireStarter(new Point(4, 0)));
 
-    assertFalse(c.locIsControl(new Point(0, 1)));
-    assertFalse(c.locIsControl(new Point(1, 1)));
-    assertFalse(c.locIsControl(new Point(2, 1)));
-    assertFalse(c.locIsControl(new Point(3, 1)));
-    assertTrue(c.locIsControl(new Point(4, 1)));
+    assertFalse(c.locIsControlWireStarter(new Point(0, 1)));
+    assertFalse(c.locIsControlWireStarter(new Point(1, 1)));
+    assertFalse(c.locIsControlWireStarter(new Point(2, 1)));
+    assertFalse(c.locIsControlWireStarter(new Point(3, 1)));
+    assertTrue(c.locIsControlWireStarter(new Point(4, 1)));
 
-    assertFalse(c.locIsControl(new Point(0, 2)));
-    assertFalse(c.locIsControl(new Point(1, 2)));
-    assertTrue(c.locIsControl(new Point(2, 2)));
-    assertTrue(c.locIsControl(new Point(3, 2)));
-    assertFalse(c.locIsControl(new Point(4, 2)));
+    assertFalse(c.locIsControlWireStarter(new Point(0, 2)));
+    assertFalse(c.locIsControlWireStarter(new Point(1, 2)));
+    assertTrue(c.locIsControlWireStarter(new Point(2, 2)));
+    assertTrue(c.locIsControlWireStarter(new Point(3, 2)));
+    assertFalse(c.locIsControlWireStarter(new Point(4, 2)));
 });
 
 suite.test("locStartsSingleControlWire", () => {
@@ -939,11 +939,11 @@ suite.test("colCustomContextFromGates", () => {
                      --X--`);
     assertThat(c.colCustomContextFromGates(-10)).isEqualTo(new Map());
     assertThat(c.colCustomContextFromGates(0)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(1)).isEqualTo(new Map([["Let A=", {offset: 0, length: 1}]]));
+    assertThat(c.colCustomContextFromGates(1)).isEqualTo(new Map([["Input Range A", {offset: 0, length: 1}]]));
     assertThat(c.colCustomContextFromGates(2)).isEqualTo(new Map());
     assertThat(c.colCustomContextFromGates(3)).isEqualTo(new Map([
-        ["Let A=", {offset: 1, length: 1}],
-        ["Let B=", {offset: 0, length: 1}]
+        ["Input Range A", {offset: 1, length: 1}],
+        ["Input Range B", {offset: 0, length: 1}]
     ]));
     assertThat(c.colCustomContextFromGates(4)).isEqualTo(new Map());
     assertThat(c.colCustomContextFromGates(5)).isEqualTo(new Map());

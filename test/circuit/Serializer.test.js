@@ -3,6 +3,8 @@ import Serializer from "src/circuit/Serializer.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
+import describe from "src/base/Describe.js"
+import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
@@ -15,8 +17,13 @@ import {Seq, seq} from "src/base/Seq.js"
 let suite = new Suite("Serializer");
 
 let assertRoundTrip = (t, v, s) => {
-    assertThat(Serializer.fromJson(t, s)).isEqualTo(v);
-    assertThat(Serializer.toJson(v)).isEqualTo(s);
+    try {
+        assertThat(Serializer.fromJson(t, s)).isEqualTo(v);
+        assertThat(Serializer.toJson(v)).isEqualTo(s);
+    } catch (failure) {
+        console.error(`Failed to round-trip: ${describe(s)} <--> ${describe(v)}`);
+        throw failure;
+    }
 };
 
 suite.test("roundTrip_Complex", () => {
@@ -84,8 +91,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "Measure",
     "Swap",
     "…",
-    "LetA1", "LetA2", "LetA3", "LetA4", "LetA5", "LetA6", "LetA7", "LetA8", "LetA9", "LetA10", "LetA11", "LetA12", "LetA13", "LetA14", "LetA15", "LetA16",
-    "LetB1", "LetB2", "LetB3", "LetB4", "LetB5", "LetB6", "LetB7", "LetB8", "LetB9", "LetB10", "LetB11", "LetB12", "LetB13", "LetB14", "LetB15", "LetB16",
+    "inputA1", "inputA2", "inputA3", "inputA4", "inputA5", "inputA6", "inputA7", "inputA8", "inputA9", "inputA10", "inputA11", "inputA12", "inputA13", "inputA14", "inputA15", "inputA16",
+    "inputB1", "inputB2", "inputB3", "inputB4", "inputB5", "inputB6", "inputB7", "inputB8", "inputB9", "inputB10", "inputB11", "inputB12", "inputB13", "inputB14", "inputB15", "inputB16",
     "__error__",
     "0", "NeGate",
     "H",
@@ -106,7 +113,9 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "inc1", "inc2", "inc3", "inc4", "inc5", "inc6", "inc7", "inc8", "inc9", "inc10", "inc11", "inc12", "inc13", "inc14", "inc15", "inc16",
     "dec1", "dec2", "dec3", "dec4", "dec5", "dec6", "dec7", "dec8", "dec9", "dec10", "dec11", "dec12", "dec13", "dec14", "dec15", "dec16",
     "add2", "add3", "add4", "add5", "add6", "add7", "add8", "add9", "add10", "add11", "add12", "add13", "add14", "add15", "add16",
+    "+=A1", "+=A2", "+=A3", "+=A4", "+=A5", "+=A6", "+=A7", "+=A8", "+=A9", "+=A10", "+=A11", "+=A12", "+=A13", "+=A14", "+=A15", "+=A16",
     "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "sub10", "sub11", "sub12", "sub13", "sub14", "sub15", "sub16",
+    "-=A1", "-=A2", "-=A3", "-=A4", "-=A5", "-=A6", "-=A7", "-=A8", "-=A9", "-=A10", "-=A11", "-=A12", "-=A13", "-=A14", "-=A15", "-=A16",
     "X^⌈t⌉", "X^⌈t-¼⌉",
     "Counting1", "Counting2", "Counting3", "Counting4", "Counting5", "Counting6", "Counting7", "Counting8",
     "Uncounting1", "Uncounting2", "Uncounting3", "Uncounting4", "Uncounting5", "Uncounting6", "Uncounting7", "Uncounting8",

@@ -132,7 +132,7 @@ class GateColumn {
             for (let {key: otherKey} of g === null ? [] : g.customColumnContextProvider(i)) {
                 //noinspection JSUnusedAssignment
                 if (keys.has(otherKey)) {
-                    return "double\nlet";
+                    return "already\ndefined";
                 }
             }
         }

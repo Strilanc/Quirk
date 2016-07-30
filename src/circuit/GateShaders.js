@@ -173,59 +173,6 @@ const INCREMENT_SHADER = new WglShader(`
 
 /**
  * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
- * @param {!int} qubitSrcSpan
- * @param {!int} qubitDstSpan
- * @param {!int} scaleFactor
- * @returns {!WglConfiguredShader}
- */
-GateShaders.addition = (inputTexture, controlTexture, qubitIndex, qubitSrcSpan, qubitDstSpan, scaleFactor) =>
-    new WglConfiguredShader(destinationTexture => {
-        ADDITION_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitIndex", 1 << qubitIndex),
-            WglArg.float("qubitSrcSpan", 1 << qubitSrcSpan),
-            WglArg.float("qubitDstSpan", 1 << qubitDstSpan),
-            WglArg.float("scaleFactor", scaleFactor)
-        ).renderTo(destinationTexture);
-    });
-const ADDITION_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float scaleFactor;
-    uniform float qubitIndex;
-    uniform float qubitSrcSpan;
-    uniform float qubitDstSpan;
-
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float stateSrc = mod(floor(state / qubitIndex), qubitSrcSpan);
-        float stateDst = mod(floor((state / qubitIndex) / qubitSrcSpan), qubitDstSpan);
-        float newDst = mod(stateDst + (qubitDstSpan - stateSrc) * scaleFactor, qubitDstSpan);
-        float newState = state + (newDst - stateDst) * qubitIndex * qubitSrcSpan;
-
-        vec2 oldUv = uvFor(state);
-        float control = texture2D(controlTexture, oldUv).x;
-
-        vec2 newUv = uvFor(newState);
-        vec2 usedUv = control*newUv + (1.0-control)*oldUv;
-
-        gl_FragColor = texture2D(inputTexture, usedUv);
-    }`);
-
-/**
- * @param {!WglTexture} inputTexture
  * @param {!int} shiftAmount
  * @returns {!WglConfiguredShader}
  */
