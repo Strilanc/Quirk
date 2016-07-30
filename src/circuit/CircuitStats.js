@@ -219,25 +219,40 @@ export default class CircuitStats {
             CircuitTextures.zero(numWires),
             Seq.range(numCols),
             (stateTex, col) => {
+                let customContext = circuitDefinition.colCustomContextFromGates(col);
+
                 // Apply 'before column' setup shaders.
-                let setupArgs = new CircuitEvalArgs(time, Controls.NONE, noControlsTex, undefined, new Map());
+                let setupArgs = new CircuitEvalArgs(
+                    time,
+                    undefined,
+                    Controls.NONE,
+                    noControlsTex,
+                    undefined,
+                    customContext);
                 stateTex = CircuitTextures.aggregateReusingIntermediates(
                     stateTex,
                     circuitDefinition.getSetupShadersInCol(col, true),
-                    (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withInputTexture(v)));
+                    (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withStateTexture(v)));
 
                 let controls = circuitDefinition.colControls(col);
                 let controlTex = CircuitTextures.control(numWires, controls);
-                let colArgs = new CircuitEvalArgs(time, controls, controlTex, undefined, new Map());
+                let colArgs = new CircuitEvalArgs(
+                    time,
+                    undefined,
+                    controls,
+                    controlTex,
+                    undefined,
+                    customContext);
                 stateTex = CircuitTextures.aggregateWithReuse(
                     stateTex,
                     circuitDefinition.operationShadersInColAt(col, time),
-                    (v, f) => CircuitTextures.applyCustomShader(f, colArgs.withInputTexture(v)));
+                    (v, f) => CircuitTextures.applyCustomShader(f, colArgs.withStateTexture(v)));
 
                 // Compute custom stats for display gates. (Happens after computation so post-selection has effect.)
                 for (let row of circuitDefinition.customStatRowsInCol(col)) {
                     let gateCol = circuitDefinition.columns[col];
-                    let pipeline = gateCol.gates[row].customStatPipelineMaker(stateTex, controlTex, row, controls);
+                    let pipeline = gateCol.gates[row].customStatPipelineMaker(
+                        colArgs.withStateTexture(stateTex).withRow(row));
                     customStatsMap.push({
                         col,
                         row,
@@ -257,7 +272,7 @@ export default class CircuitStats {
                 stateTex = CircuitTextures.aggregateWithReuse(
                     stateTex,
                     circuitDefinition.getSetupShadersInCol(col, false),
-                    (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withInputTexture(v)));
+                    (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withStateTexture(v)));
 
                 return stateTex;
             });
@@ -290,6 +305,7 @@ export default class CircuitStats {
 
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {
+            //noinspection JSUnusedAssignment
             let func = circuitDefinition.gateInSlot(col, row).customStatPostProcesser || (e => e);
             //noinspection JSUnusedAssignment
             customStatsProcessed.set(col+":"+row, func(pixelData.customStats[out], circuitDefinition, col, row));

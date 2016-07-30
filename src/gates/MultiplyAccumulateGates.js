@@ -93,12 +93,12 @@ MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(3, 16, span => G
         ["a", "b", "c+=ab"],
         sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader((val, con, bit) => {
+    withCustomShader(args => {
         let [a, b, c] = sectionSizes(span);
         return GateShaders.multiplyAccumulate(
-            val,
-            con,
-            bit,
+            args.stateTexture,
+            args.controlsTexture,
+            args.row,
             a,
             b,
             c,
@@ -117,12 +117,12 @@ MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(3, 16, span
         ["a", "b", "c-=ab"],
         sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader((val, con, bit) => {
+    withCustomShader(args => {
         let [a, b, c] = sectionSizes(span);
         return GateShaders.multiplyAccumulate(
-            val,
-            con,
-            bit,
+            args.stateTexture,
+            args.controlsTexture,
+            args.row,
             a,
             b,
             c,

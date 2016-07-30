@@ -95,8 +95,12 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKno
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-        Math.floor(time*(1<<span)))));
+    withCustomShader(args => GateShaders.increment(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        Math.floor(args.time*(1<<span)))));
 
 CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "-⌈t⌉",
@@ -109,8 +113,12 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-        -Math.floor(time*(1<<span)))));
+    withCustomShader(args => GateShaders.increment(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        -Math.floor(args.time*(1<<span)))));
 
 CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     ">>⌈t⌉\n↑",
@@ -123,7 +131,12 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
     withCustomDrawer(STAIRCASE_DRAWER(0, span)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader((val, con, bit, time) => cycleBits(val, con, bit, span, -Math.floor(time*span))));
+    withCustomShader(args => cycleBits(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        -Math.floor(args.time*span))));
 
 CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "<<⌈t⌉\n↓",
@@ -136,7 +149,12 @@ CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.
     withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader((val, con, bit, time) => cycleBits(val, con, bit, span, Math.floor(time*span))));
+    withCustomShader(args => cycleBits(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        Math.floor(args.time*span))));
 
 CountingGates.all = [
     CountingGates.ClockPulseGate,

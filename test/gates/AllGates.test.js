@@ -33,6 +33,7 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
             gate.customShaders.map(f => (inTex, conTex, t) => f(inTex, conTex, bit, t)),
             (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, new CircuitEvalArgs(
                 time,
+                bit,
                 Controls.NONE,
                 control,
                 accTex,

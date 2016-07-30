@@ -482,7 +482,11 @@ function amplitudeDisplayMaker(span) {
         withHeight(span).
         withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
         withSerializedId("Amps" + span).
-        withCustomStatPipelineMaker((val, con, bit, controls) => makeAmplitudeSpanPipeline(val, controls, bit, span)).
+        withCustomStatPipelineMaker(args => makeAmplitudeSpanPipeline(
+            args.inputTexture,
+            args.controls,
+            args.row,
+            span)).
         withCustomStatPostProcessor(processOutputs).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS);
 }

@@ -4,24 +4,28 @@
 export default class CircuitEvalArgs {
     /**
      * @param {!number} time
+     * @param {undefined|!int} row
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
-     * @param {!WglTexture} inputAmplitudesTexture
+     * @param {undefined|!WglTexture} stateTexture
      * @param {!Map.<!string, *>} customContextFromGates
      */
     constructor(time,
+                row,
                 controls,
                 controlsTexture,
-                inputAmplitudesTexture,
+                stateTexture,
                 customContextFromGates) {
         /** @type {!number} */
         this.time = time;
+        /** @type {undefined|!int} */
+        this.row = row;
         /** @type {!Controls} */
         this.controls = controls;
         /** @type {!WglTexture} */
         this.controlsTexture = controlsTexture;
-        /** @type {!WglTexture} */
-        this.inputAmplitudesTexture = inputAmplitudesTexture;
+        /** @type {undefined|!WglTexture} */
+        this.stateTexture = stateTexture;
         /** @type {!Map.<!string, *>} */
         this.customContextFromGates = customContextFromGates;
     }
@@ -33,19 +37,30 @@ export default class CircuitEvalArgs {
     _clone() {
         return new CircuitEvalArgs(
             this.time,
+            this.row,
             this.controls,
             this.controlsTexture,
-            this.inputAmplitudesTexture,
+            this.stateTexture,
             this.customContextFromGates);
     }
 
     /**
-     * @param {!WglTexture} inputAmplitudesTexture
+     * @param {!WglTexture} newStateTexture
      * @returns {!CircuitEvalArgs}
      */
-    withInputTexture(inputAmplitudesTexture) {
+    withStateTexture(newStateTexture) {
         let r = this._clone();
-        r.inputAmplitudesTexture = inputAmplitudesTexture;
+        r.stateTexture = newStateTexture;
+        return r;
+    }
+
+    /**
+     * @param {!int} row
+     * @returns {!CircuitEvalArgs}
+     */
+    withRow(row) {
+        let r = this._clone();
+        r.row = row;
         return r;
     }
 }

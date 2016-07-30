@@ -70,7 +70,7 @@ PhaseGradientGates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate
     withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseGradient" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => phaseGradient(val, con, bit, span)));
+    withCustomShader(args => phaseGradient(args.stateTexture, args.controlsTexture, args.row, span)));
 
 PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^-#",
@@ -81,7 +81,7 @@ PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Ga
     withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseUngradient" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => phaseGradient(val, con, bit, span, -1)));
+    withCustomShader(args => phaseGradient(args.stateTexture, args.controlsTexture, args.row, span, -1)));
 
 PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseGradientFamily.all,

@@ -38,7 +38,12 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
     withSerializedId("inc" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, +1)));
+    withCustomShader(args => GateShaders.increment(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        +1)));
 
 ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "- -",
@@ -49,7 +54,12 @@ ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
     withSerializedId("dec" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.increment(val, con, bit, span, -1)));
+    withCustomShader(args => GateShaders.increment(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        -1)));
 
 ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b+=a",
@@ -61,7 +71,13 @@ ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.without
     withSerializedId("add" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2), 1)));
+    withCustomShader(args => GateShaders.addition(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        Math.floor(span/2),
+        Math.ceil(span/2),
+        +1)));
 
 ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b-=a",
@@ -73,7 +89,13 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
-    withCustomShader((val, con, bit) => GateShaders.addition(val, con, bit, Math.floor(span/2), Math.ceil(span/2),-1)));
+    withCustomShader(args => GateShaders.addition(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        Math.floor(span/2),
+        Math.ceil(span/2),
+        -1)));
 
 ArithmeticGates.all = [
     ...ArithmeticGates.IncrementFamily.all,

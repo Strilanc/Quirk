@@ -35,7 +35,7 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
-        /** @type {undefined|!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.customShaders = undefined;
         /** @type {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} */
         this.customStatPipelineMaker = undefined;
@@ -85,9 +85,9 @@ class Gate {
          * @private
          */
         this._controlBit = undefined;
-        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.preShaders = [];
-        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.postShaders = [];
         /**
          * @param {!int} qubit
@@ -141,8 +141,8 @@ class Gate {
     }
 
     /**
-     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} before
-     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} after
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} before
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} after
      */
     withSetupShaders(before, after) {
         let g = this._copy();
@@ -354,7 +354,7 @@ class Gate {
     }
 
     /**
-     * @param {!Array.<!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader>} shaderFuncs
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} shaderFuncs
      * @returns {!Gate}
      */
     withCustomShaders(shaderFuncs) {
@@ -364,7 +364,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} customStatePipelineMaker
+     * @param {undefined|!function(!!CircuitEvalArgs) : !ShaderPipeline} customStatePipelineMaker
      * @returns {!Gate}
      */
     withCustomStatPipelineMaker(customStatePipelineMaker) {
@@ -384,7 +384,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader} shaderFunc
+     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
      * @returns {!Gate}
      */
     withCustomShader(shaderFunc) {

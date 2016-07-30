@@ -46,8 +46,8 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)],
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -70,8 +70,8 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
     markedAsControl(true).
     markedAsStable().
     withSetupShaders(
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)],
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -95,8 +95,8 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [(val, con, bit) => GateShaders.qubitOperation(val, x2, bit, con)],
-        [(val, con, bit) => GateShaders.qubitOperation(val, x1, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, x2, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, x1, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -122,8 +122,8 @@ Controls.AntiCrossControl = Gate.withoutKnownMatrix(
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-    [(val, con, bit) => GateShaders.qubitOperation(val, x2, bit, con)],
-    [(val, con, bit) => GateShaders.qubitOperation(val, x1, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, x1, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, x2, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);

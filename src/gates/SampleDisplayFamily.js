@@ -96,7 +96,7 @@ function sampleGateMaker(span) {
         "Shows a random sample of possible measurement outcomes.\nUse controls to see conditional samples.").
         withHeight(span).
         withSerializedId("Sample" + span).
-        withCustomStatPipelineMaker((val, con, bit) => makeProbabilitySpanPipeline(con, bit, span)).
+        withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
         withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS);

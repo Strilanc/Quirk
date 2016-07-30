@@ -613,7 +613,7 @@ class CircuitDefinition {
     /**
      * @param {!int} colIndex
      * @param {!number} time
-     * @returns {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture):!WglConfiguredShader>}
+     * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
      */
     operationShadersInColAt(colIndex, time) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
@@ -632,25 +632,25 @@ class CircuitDefinition {
                 }
 
                 if (gate.customShaders !== undefined) {
-                    return gate.customShaders.map(f => (inTex, conTex) => f(inTex, conTex, i, time));
+                    return gate.customShaders.map(f => e => f(e.withRow(i)));
                 }
 
                 let m = gate.knownMatrixAt(time);
                 if (m === undefined) {
                     throw new DetailedError("Bad gate", {gate});
                 }
-                return [(inTex, conTex) => GateShaders.qubitOperation(inTex, m, i, conTex)];
+                return [args => GateShaders.qubitOperation(args.stateTexture, m, i, args.controlsTexture)];
             }).
             flatten();
         let swaps = col.swapPairs().
-            map(([i1, i2]) => (inTex, conTex) => CircuitShaders.swap(inTex, i1, i2, conTex));
+            map(([i1, i2]) => args => CircuitShaders.swap(args.stateTexture, i1, i2, args.controlsTexture));
         return nonSwaps.concat(swaps).toArray();
     }
 
     /**
      * @param {!int} colIndex
      * @param {!boolean} beforeNotAfter
-     * @returns {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture,time:!number):!WglConfiguredShader>}
+     * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
      */
     getSetupShadersInCol(colIndex, beforeNotAfter) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
@@ -664,7 +664,7 @@ class CircuitDefinition {
                     return [];
                 }
                 let shaders = beforeNotAfter ? gate.preShaders : gate.postShaders;
-                return shaders.map(f => (v,c,t) => f(v,c,i,t));
+                return shaders.map(f => e => f(e.withRow(i)));
             }).
             flatten().
             toArray();

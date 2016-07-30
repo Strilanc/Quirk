@@ -16,6 +16,7 @@ const TEST_GATES = new Map([
     ['Z', Gates.HalfTurns.Z],
     ['H', Gates.HalfTurns.H],
     ['•', Gates.Controls.Control],
+    ['⊕', Gates.Controls.PlusControl],
 
     ['M', Gates.Special.Measurement],
     ['@', Gates.Displays.BlochSphereDisplay],
@@ -28,8 +29,8 @@ const TEST_GATES = new Map([
 const circuit = diagram => CircuitDefinition.fromTextDiagram(TEST_GATES, diagram);
 
 suite.webGlTest("smoke", () => {
-    let c = circuit(`--X-H---•--
-                     --•-H---X--
+    let c = circuit(`--X-H---•⊕-
+                     --•-H---XX-
                      -H--M--@---`);
     let stats = CircuitStats.fromCircuitAtTime(c, 0.1);
     assertTrue(stats.circuitDefinition.colHasControls(2));

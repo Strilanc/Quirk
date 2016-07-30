@@ -25,7 +25,11 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnown
     withHeight(span).
     withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
     withCustomShaders(Seq.range(Math.floor(span/2)).
-        map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + span - i - 1, con)).
+        map(i => args => CircuitShaders.swap(
+            args.stateTexture,
+            args.row + i,
+            args.row + span - i - 1,
+            args.controlsTexture)).
         toArray()));
 
 export default ReverseBitsGateFamily;

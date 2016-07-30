@@ -116,8 +116,12 @@ function densityMatrixDisplayMaker(span) {
         withWidth(span).
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
-        withCustomStatPipelineMaker((val, conTex, bit, controls) =>
-            makeDensityPipeline(conTex.width, conTex.height, controls, bit, span)).
+        withCustomStatPipelineMaker(args => makeDensityPipeline(
+            args.controlsTexture.width,
+            args.controlsTexture.height,
+            args.controls,
+            args.row,
+            span)).
         withCustomStatPostProcessor(densityPixelsToMatrix);
 }
 

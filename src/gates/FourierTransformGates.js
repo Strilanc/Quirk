@@ -67,12 +67,24 @@ const INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER = span =>
 
 let FourierTransformGates = {};
 
-let swapShaders = n => Seq.range(Math.floor(n/2)).
-    map(i => (val, con, bit) => CircuitShaders.swap(val, bit + i, bit + n - i - 1, con));
+let swapShaders = n => Seq.range(Math.floor(n/2)).map(i => args => CircuitShaders.swap(
+    args.stateTexture,
+    args.row + i,
+    args.row + n - i - 1,
+    args.controlsTexture));
 let gradShaders = (n, factor) => Seq.range(n).
     flatMap(i => [
-        (val, con, bit) => controlledPhaseGradient(val, con, bit, i + 1, factor),
-        (val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit + i, con)
+        args => controlledPhaseGradient(
+            args.stateTexture,
+            args.controlsTexture,
+            args.row,
+            i + 1,
+            factor),
+        args => GateShaders.qubitOperation(
+            args.stateTexture,
+            Matrix.HADAMARD,
+            args.row + i,
+            args.controlsTexture)
     ]).
     skip(1);
 
