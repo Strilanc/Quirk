@@ -1,6 +1,7 @@
 // It's important that the polyfills and error fallback get loaded first!
 import {} from "src/browser/Polyfills.js"
-import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+import {hookErrorHandler, notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+hookErrorHandler();
 import {} from "src/issues.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"

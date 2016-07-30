@@ -112,11 +112,38 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
             GatePainting.paintOutline(args);
         }
     });
+Controls.AntiCrossControl = Gate.withoutKnownMatrix(
+    "(/)",
+    "Anti-Cross Control",
+    "Conditions on a qubit being ON-iOFF.\n" +
+    "Gates in the same column only apply to states meeting the condition.").
+    markedAsControl(true).
+    withSerializedId("(/)").
+    withCustomShaders([]).
+    markedAsStable().
+    withSetupShaders(
+    [(val, con, bit) => GateShaders.qubitOperation(val, x2, bit, con)],
+    [(val, con, bit) => GateShaders.qubitOperation(val, x1, bit, con)]).
+    withCustomDrawer(args => {
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
+        }
+        let p = args.rect.center();
+        args.painter.fillCircle(p, 5);
+        args.painter.strokeCircle(p, 5);
+        let r = 5*Math.sqrt(0.5)*1.1;
+        args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintOutline(args);
+        }
+    });
 
 Controls.all = [
     Controls.Control,
     Controls.AntiControl,
     Controls.PlusControl,
     Controls.MinusControl,
-    Controls.CrossControl
+    Controls.CrossControl,
+    Controls.AntiCrossControl
 ];

@@ -66,10 +66,20 @@ PostSelectionGates.PostSelectCross = Gate.fromKnownMatrix(
     withCustomDrawer(POST_SELECT_DRAWER).
     markedAsAffectsOtherWires();
 
+PostSelectionGates.PostSelectAntiCross = Gate.fromKnownMatrix(
+    "|/⟩⟨/|",
+    Matrix.square(1, Complex.I, Complex.I.neg(), 1).times(0.5),
+    "Post-selection Gate [Cross]",
+    "Keeps ON-iOFF states, discards ON+iOFF states.\n" +
+        "Means 'restart until satisfied'.").
+    withCustomDrawer(POST_SELECT_DRAWER).
+    markedAsAffectsOtherWires();
+
 PostSelectionGates.all = [
     PostSelectionGates.PostSelectOff,
     PostSelectionGates.PostSelectOn,
     PostSelectionGates.PostSelectPlus,
     PostSelectionGates.PostSelectMinus,
-    PostSelectionGates.PostSelectCross
+    PostSelectionGates.PostSelectCross,
+    PostSelectionGates.PostSelectAntiCross
 ];
