@@ -499,7 +499,7 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locStartsSingleControlWire(pt) {
-        return this.locIsControl(pt) && !this.locIsMeasured(pt);
+        return this.locIsControl(pt) && !this.locIsMeasured(pt) && this.gateAtLocIsDisabledReason(pt) === undefined;
     }
 
     /**
@@ -507,7 +507,7 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     locStartsDoubleControlWire(pt) {
-        return this.locIsControl(pt) && this.locIsMeasured(pt);
+        return this.locIsControl(pt) && this.locIsMeasured(pt) && this.gateAtLocIsDisabledReason(pt) === undefined;
     }
 
     /**
