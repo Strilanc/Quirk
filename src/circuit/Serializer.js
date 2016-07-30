@@ -170,7 +170,9 @@ let fromJson_Gate = json => {
             symbol,
             "Parse Error",
             describe(ex)).
-            withCustomDrawer(drawer).withTag(json);
+            withCustomDrawer(drawer).
+            withTag(json).
+            withCustomDisableReasonFinder(() => "parse\nerror");
     }
 
     if (symbol === MysteryGateSymbol && matrix !== undefined) {

@@ -84,6 +84,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "Measure",
     "Swap",
     "…",
+    "LetA1", "LetA2", "LetA3", "LetA4", "LetA5", "LetA6", "LetA7", "LetA8", "LetA9", "LetA10", "LetA11", "LetA12", "LetA13", "LetA14", "LetA15", "LetA16",
+    "LetB1", "LetB2", "LetB3", "LetB4", "LetB5", "LetB6", "LetB7", "LetB8", "LetB9", "LetB10", "LetB11", "LetB12", "LetB13", "LetB14", "LetB15", "LetB16",
     "__error__",
     "0", "NeGate",
     "H",

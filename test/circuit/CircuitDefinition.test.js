@@ -32,6 +32,9 @@ const TEST_GATES = new Map([
     ['⊗', Gates.Controls.CrossControl],
     ['.', Gates.SpacerGate],
 
+    ['a', Gates.LetVariableGates.LetAFamily.ofSize(1)],
+    ['b', Gates.LetVariableGates.LetBFamily.ofSize(1)],
+
     ['M', M],
     ['%', Gates.Displays.ChanceDisplay],
     ['d', Gates.Displays.DensityMatrixDisplay],
@@ -819,7 +822,7 @@ suite.test("gateAtLocIsDisabledReason", () => {
 });
 
 suite.test("gateAtLocIsDisabledReason_controls", () => {
-    let c = circuit(`-•-◦-⊖-⊕-M-⊕-⊖-◦-•-`);
+    assertThat(circuit(`-•-◦-⊖-⊕-M-⊕-⊖-◦-•-`)).isNotEqualTo(undefined);
 
     let bad = (col, row, diagram) =>
         assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isNotEqualTo(undefined);
@@ -856,6 +859,37 @@ suite.test("gateAtLocIsDisabledReason_controls", () => {
 
     good(1, 1, `---
                 -⊕M
+                ---`);
+});
+
+suite.test("gateAtLocIsDisabledReason_tagCollision", () => {
+    let bad = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isNotEqualTo(undefined);
+    let good = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isEqualTo(undefined);
+
+    good(1, 1, `---
+                -a-
+                ---`);
+
+    good(1, 1, `---
+                aa-
+                ---`);
+
+    good(1, 1, `---
+                -a-
+                -a-`);
+
+    bad(1, 1, `-a-
+               -a-
+               ---`);
+
+    bad(1, 1, `-b-
+               -b-
+               ---`);
+
+    good(1, 1, `-b-
+                -a-
                 ---`);
 });
 
@@ -897,6 +931,24 @@ suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {
                 MD/
                 M//`);
 
+});
+
+suite.test("colCustomContextFromGates", () => {
+    let c = circuit(`-a-b-
+                     -a-a-
+                     --X--`);
+    assertThat(c.colCustomContextFromGates(-10)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(1)).isEqualTo(new Map([["Let A=", {offset: 0, length: 1}]]));
+    assertThat(c.colCustomContextFromGates(2)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(3)).isEqualTo(new Map([
+        ["Let A=", {offset: 1, length: 1}],
+        ["Let B=", {offset: 0, length: 1}]
+    ]));
+    assertThat(c.colCustomContextFromGates(4)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(5)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(100)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(Infinity)).isEqualTo(new Map());
 });
 
 suite.test("operationShadersInColAt", () => {

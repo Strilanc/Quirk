@@ -409,6 +409,28 @@ class CircuitDefinition {
 
     /**
      * @param {!int} col
+     * @returns {!Map.<!string, *>}
+     */
+    colCustomContextFromGates(col) {
+        let result = new Map();
+        if (col < 0 || col >= this.columns.length) {
+            return result;
+        }
+        let c = this.columns[col];
+        for (let row = 0; row < c.gates.length; row++) {
+            let g = c.gates[row];
+            if (g !== null && this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined) {
+                for (let {key, val} of g.customColumnContextProvider(row)) {
+                    //noinspection JSUnusedAssignment
+                    result.set(key, val);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param {!int} col
      * @returns {!int}
      */
     colHasDoubleQubitDisplayMask(col) {

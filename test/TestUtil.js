@@ -2,7 +2,8 @@
 import describe from "src/base/Describe.js"
 import equate from "src/base/Equate.js"
 
-let assertionSubjectIndexInCurrentTest = 0;
+/** @type {!int} */
+let assertionSubjectIndexForNextTest = 1;
 
 function isArrayIsh(value) {
     return Array.isArray(value) ||
@@ -106,7 +107,7 @@ export class AssertionSubject {
      */
     constructor(subject, id=undefined, info=undefined) {
         sanityCheck(subject);
-        assertionSubjectIndexInCurrentTest += 1;
+        assertionSubjectIndexForNextTest += 1;
 
         /**
          * The "actual" value, to be compared against expected values.
@@ -237,7 +238,7 @@ export function assertThat(subject, extraArgCatcher) {
     if (extraArgCatcher !== undefined) {
         fail('Extra assertThat arg');
     }
-    return new AssertionSubject(subject, 'assertThat #' + assertionSubjectIndexInCurrentTest);
+    return new AssertionSubject(subject, 'assertThat #' + assertionSubjectIndexForNextTest);
 }
 
 export function assertTrue(subject) {
@@ -316,9 +317,9 @@ export class Suite {
      */
     test(name, method) {
         this.tests.push([name, status => {
-            assertionSubjectIndexInCurrentTest = 0;
+            assertionSubjectIndexForNextTest = 1;
             let result = method(status);
-            if (result === undefined && assertionSubjectIndexInCurrentTest === 0) {
+            if (result === undefined && assertionSubjectIndexForNextTest === 1) {
                 console.warn(`No assertions in test '${name}' of suite '${this.name}'.`);
             }
             return result;

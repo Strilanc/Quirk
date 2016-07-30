@@ -7,13 +7,13 @@ export default class CircuitEvalArgs {
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
      * @param {!WglTexture} inputAmplitudesTexture
-     * @param {!Map.<!string, {offset: !int, length: !int}>} letVariableRanges
+     * @param {!Map.<!string, *>} customContextFromGates
      */
     constructor(time,
                 controls,
                 controlsTexture,
                 inputAmplitudesTexture,
-                letVariableRanges) {
+                customContextFromGates) {
         /** @type {!number} */
         this.time = time;
         /** @type {!Controls} */
@@ -22,8 +22,8 @@ export default class CircuitEvalArgs {
         this.controlsTexture = controlsTexture;
         /** @type {!WglTexture} */
         this.inputAmplitudesTexture = inputAmplitudesTexture;
-        /** @type {!Map.<!string, {offset: !int, length: !int}>} */
-        this.letVariableRanges = letVariableRanges;
+        /** @type {!Map.<!string, *>} */
+        this.customContextFromGates = customContextFromGates;
     }
 
     /**
@@ -36,7 +36,7 @@ export default class CircuitEvalArgs {
             this.controls,
             this.controlsTexture,
             this.inputAmplitudesTexture,
-            this.letVariableRanges);
+            this.customContextFromGates);
     }
 
     /**

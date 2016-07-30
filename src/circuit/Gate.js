@@ -89,6 +89,18 @@ class Gate {
         this.preShaders = [];
         /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
         this.postShaders = [];
+        /**
+         * @param {!int} qubit
+         * @returns {!Array.<!{key: !string, value: *}>}
+         */
+        this.customColumnContextProvider = qubit => [];
+        /**
+         * @param {!GateColumn} col
+         * @param {!int} qubit
+         * @param {!int} measuredMask
+         * @returns {undefined|!string}
+         */
+        this.customDisableReasonFinder = (col, qubit, measuredMask) => undefined;
     }
 
     /**
@@ -266,6 +278,8 @@ class Gate {
         g._controlBit = this._controlBit;
         g.preShaders = this.preShaders;
         g.postShaders = this.postShaders;
+        g.customColumnContextProvider = this.customColumnContextProvider;
+        g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
     }
 
@@ -276,6 +290,26 @@ class Gate {
     withStableDuration(duration) {
         let g = this._copy();
         g._stableDuration = duration;
+        return g;
+    }
+
+    /**
+     * @param {!function(qubit:!int):!Array.<!{key: !string, value: *}>} customColumnContextProvider
+     * @returns {!Gate}
+     */
+    withCustomColumnContextProvider(customColumnContextProvider) {
+        let g = this._copy();
+        g.customColumnContextProvider = customColumnContextProvider;
+        return g;
+    }
+
+    /**
+     * @param {!function(col:!GateColumn, qubit:!int, measuredMask:!int) : undefined|string} customDisableReasonFinder
+     * @returns {!Gate}
+     */
+    withCustomDisableReasonFinder(customDisableReasonFinder) {
+        let g = this._copy();
+        g.customDisableReasonFinder = customDisableReasonFinder;
         return g;
     }
 

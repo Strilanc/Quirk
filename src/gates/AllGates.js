@@ -9,6 +9,7 @@ import ErrorInjectionGate from "src/gates/Debug_ErrorInjectionGate.js"
 import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
 import FourierTransformGates from "src/gates/FourierTransformGates.js"
 import HalfTurnGates from "src/gates/HalfTurnGates.js"
+import LetVariableGates from "src/gates/LetVariableGates.js"
 import MeasurementGate from "src/gates/MeasurementGate.js"
 import MultiplyAccumulateGates from "src/gates/MultiplyAccumulateGates.js"
 import NeGate from "src/gates/Joke_NeGate.js"
@@ -71,10 +72,12 @@ Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 Gates.ZeroGate = ZeroGate;
 Gates.NeGate = NeGate;
+Gates.LetVariableGates = LetVariableGates;
 
 /** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
     ...Controls.all,
+    ...LetVariableGates.all,
     MeasurementGate,
     SwapGateHalf,
     SpacerGate,
