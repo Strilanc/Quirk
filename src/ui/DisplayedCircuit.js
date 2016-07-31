@@ -168,7 +168,7 @@ class DisplayedCircuit {
      * @returns {undefined|!number}
      */
     findOpHalfColumnAt(p) {
-        if (p.x < 0 || p.y < top || p.y > top + this.desiredHeight()) {
+        if (p.x < 0 || p.y < this.top || p.y > this.top + this.desiredHeight()) {
             return undefined;
         }
 
