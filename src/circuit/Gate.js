@@ -555,6 +555,24 @@ class Gate {
     toString() {
         return `Gate(${this.symbol})`;
     }
+
+    static needColumnContextDisabledReasonFinder(failMsg, ...keys) {
+        return col => {
+            let remaining = new Set(keys);
+            for (let i = 0; i < col.gates.length; i++) {
+                let g = col.gates[i];
+                if (g !== null) {
+                    for (let c of g.customColumnContextProvider(i)) {
+                        remaining.delete(c.key);
+                        if (remaining.size === 0) {
+                            return undefined;
+                        }
+                    }
+                }
+            }
+            return failMsg;
+        };
+    }
 }
 
 export default Gate;

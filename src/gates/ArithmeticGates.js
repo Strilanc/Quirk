@@ -158,16 +158,6 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
         Math.ceil(span/2),
         -1)));
 
-let needKey = key => col => {
-    for (let i = 0; i < col.gates.length; i++) {
-        let g = col.gates[i];
-        if (g !== null && g.customColumnContextProvider(i).map(e => e.key).indexOf('Input Range A') !== -1) {
-            return undefined;
-        }
-    }
-    return "need\ninput\nA";
-};
-
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+=A",
     "Addition Gate [input A]",
@@ -176,7 +166,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     markedAsStable().
     withHeight(span).
     withSerializedId("+=A" + span).
-    withCustomDisableReasonFinder(needKey('Input Range A')).
+    withCustomDisableReasonFinder(Gate.needColumnContextDisabledReasonFinder('need\ninput\nA', 'Input Range A')).
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
         return additionShaderFunc(
@@ -197,7 +187,7 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     markedAsStable().
     withHeight(span).
     withSerializedId("-=A" + span).
-    withCustomDisableReasonFinder(needKey('Input Range A')).
+    withCustomDisableReasonFinder(Gate.needColumnContextDisabledReasonFinder('need\ninput\nA', 'Input Range A')).
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
         return additionShaderFunc(

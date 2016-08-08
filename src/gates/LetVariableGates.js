@@ -1,13 +1,14 @@
 import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/draw/GatePainting.js"
+import { shadersForReverseOfSize } from "src/gates/ReverseBitsGateFamily.js"
 
 let LetVariableGates = {};
 
-let makeLetGate = key => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
-    `input ${key}`,
-    `Input Gate [${key}]`,
+let makeLetGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
+    (reverse ? 'rev ' : '') + `input ${key}`,
+    `Input Gate [${key}]` + (reverse ? ' [reversed]' : ''),
     `Marks some qubits as input '${key}'.`).
-    withSerializedId(`input${key}${span}`).
+    withSerializedId((reverse ? 'rev' : '') + `input${key}${span}`).
     withHeight(span).
     markedAsControlWireSource().
     withCustomColumnContextProvider(qubitIndex => [{
@@ -17,18 +18,15 @@ let makeLetGate = key => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
             length: span
         }
     }]).
+    withSetupShaders(
+        reverse ? shadersForReverseOfSize(span) : [],
+        reverse ? shadersForReverseOfSize(span) : []).
     withCustomDrawer(args => {
+        GatePainting.paintBackground(args);
         if (args.isInToolbox) {
-            GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
         } else {
-            let ctx = args.painter.ctx;
-            ctx.save();
-            args.painter.strokeRect(args.rect, '#888');
-            args.painter.strokeLine(args.rect.topCenter(), args.rect.bottomCenter());
-            ctx.globalAlpha *= 0.93;
-            GatePainting.paintBackground(args);
-            ctx.restore();
+            args.painter.strokeRect(args.rect, '#AAA');
         }
         GatePainting.paintResizeTab(args);
 
@@ -44,7 +42,7 @@ let makeLetGate = key => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
             args.rect.w - 2,
             args.rect.h / 2);
         args.painter.print(
-            key,
+            key + (reverse ? '[::-1]' : ''),
             x,
             y+2,
             'center',
@@ -55,12 +53,16 @@ let makeLetGate = key => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
             args.rect.h / 2);
     }));
 
-LetVariableGates.LetAFamily = makeLetGate('A');
-LetVariableGates.LetBFamily = makeLetGate('B');
+LetVariableGates.LetAFamily = makeLetGate('A', false);
+LetVariableGates.LetBFamily = makeLetGate('B', false);
+LetVariableGates.RevLetAFamily = makeLetGate('A', true);
+LetVariableGates.RevLetBFamily = makeLetGate('B', true);
 
 LetVariableGates.all = [
     ...LetVariableGates.LetAFamily.all,
-    ...LetVariableGates.LetBFamily.all
+    ...LetVariableGates.LetBFamily.all,
+    ...LetVariableGates.RevLetAFamily.all,
+    ...LetVariableGates.RevLetBFamily.all
 ];
 
 export default LetVariableGates;

@@ -15,6 +15,16 @@ let reverseBits = (val, len) => {
 
 let reverseBitsMatrix = span => Matrix.generateTransition(1<<span, e => reverseBits(e, span));
 
+function shadersForReverseOfSize(span) {
+    return Seq.range(Math.floor(span/2)).
+        map(i => args => CircuitShaders.swap(
+            args.stateTexture,
+            args.row + i,
+            args.row + span - i - 1,
+            args.controlsTexture)).
+        toArray();
+}
+
 let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "Reverse",
     "Reverse Bits Gate",
@@ -24,12 +34,7 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnown
     withSerializedId("rev" + span).
     withHeight(span).
     withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
-    withCustomShaders(Seq.range(Math.floor(span/2)).
-        map(i => args => CircuitShaders.swap(
-            args.stateTexture,
-            args.row + i,
-            args.row + span - i - 1,
-            args.controlsTexture)).
-        toArray()));
+    withCustomShaders(shadersForReverseOfSize(span)));
 
 export default ReverseBitsGateFamily;
+export { ReverseBitsGateFamily, shadersForReverseOfSize }
