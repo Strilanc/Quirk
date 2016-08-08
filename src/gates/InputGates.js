@@ -2,9 +2,9 @@ import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/draw/GatePainting.js"
 import { shadersForReverseOfSize } from "src/gates/ReverseBitsGateFamily.js"
 
-let LetVariableGates = {};
+let InputGates = {};
 
-let makeLetGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
+let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
     (reverse ? 'rev ' : '') + `input ${key}`,
     `Input Gate [${key}]` + (reverse ? ' [reversed]' : ''),
     `Marks some qubits as input '${key}'.`).
@@ -53,17 +53,17 @@ let makeLetGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.from
             args.rect.h / 2);
     }));
 
-LetVariableGates.LetAFamily = makeLetGate('A', false);
-LetVariableGates.LetBFamily = makeLetGate('B', false);
-LetVariableGates.RevLetAFamily = makeLetGate('A', true);
-LetVariableGates.RevLetBFamily = makeLetGate('B', true);
+InputGates.InputAFamily = makeInputGate('A', false);
+InputGates.InputBFamily = makeInputGate('B', false);
+InputGates.InputRevAFamily = makeInputGate('A', true);
+InputGates.InputRevBFamily = makeInputGate('B', true);
 
-LetVariableGates.all = [
-    ...LetVariableGates.LetAFamily.all,
-    ...LetVariableGates.LetBFamily.all,
-    ...LetVariableGates.RevLetAFamily.all,
-    ...LetVariableGates.RevLetBFamily.all
+InputGates.all = [
+    ...InputGates.InputAFamily.all,
+    ...InputGates.InputBFamily.all,
+    ...InputGates.InputRevAFamily.all,
+    ...InputGates.InputRevBFamily.all
 ];
 
-export default LetVariableGates;
-export {LetVariableGates}
+export default InputGates;
+export {InputGates}

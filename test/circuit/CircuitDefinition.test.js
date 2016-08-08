@@ -32,8 +32,8 @@ const TEST_GATES = new Map([
     ['⊗', Gates.Controls.CrossControl],
     ['.', Gates.SpacerGate],
 
-    ['a', Gates.LetVariableGates.LetAFamily.ofSize(1)],
-    ['b', Gates.LetVariableGates.LetBFamily.ofSize(1)],
+    ['a', Gates.InputGates.InputAFamily.ofSize(1)],
+    ['b', Gates.InputGates.InputBFamily.ofSize(1)],
 
     ['M', M],
     ['%', Gates.Displays.ChanceDisplay],
