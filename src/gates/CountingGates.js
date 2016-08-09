@@ -1,3 +1,4 @@
+import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
 import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
@@ -22,7 +23,7 @@ const staircaseCurve = steps => {
 };
 
 let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
-    GatePainting.DEFAULT_DRAWER(args);
+    GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.TIME_DEPENDENT_HIGHLIGHT_COLOR)(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
@@ -32,7 +33,7 @@ let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
     let yOn = args.rect.y + 3;
     let yNeutral = args.rect.bottom();
     let yOff = args.rect.bottom() - 3;
-    if (flip) {
+    if (!flip) {
         [yOn, yOff] = [yOff, yOn];
         yNeutral = args.rect.y;
     }

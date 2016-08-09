@@ -264,7 +264,7 @@ GatePainting.MATRIX_DRAWER = args => {
  * @returns {!function(!GateDrawParams) : *}
  */
 GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
-    GatePainting.DEFAULT_DRAWER(args);
+    GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.TIME_DEPENDENT_HIGHLIGHT_COLOR)(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
