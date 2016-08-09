@@ -121,7 +121,7 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
         -Math.floor(args.time*(1<<span)))));
 
 CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>⌈t⌉\n↑",
+    "↟⌈t⌉",
     "Right-Shift Cycling Gate",
     "Right-shifts a block of bits upward by more and more, rotating bits that fall off the top back to the bottom.").
     markedAsOnlyPermutingAndPhasing().
@@ -139,7 +139,7 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
         -Math.floor(args.time*span))));
 
 CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<⌈t⌉\n↓",
+    "↡⌈t⌉",
     "Left-Shift Cycling Gate",
     "Left-shifts a block of bits downward by more and more, rotating bits that fall off the bottom back to the top.").
     markedAsOnlyPermutingAndPhasing().

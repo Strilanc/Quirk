@@ -62,7 +62,7 @@ const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, 
 });
 
 CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<\n↓",
+    "↡",
     "Left Shift Gate",
     "Rotates bits in a downward cycle.").
     markedAsStable().
@@ -78,7 +78,7 @@ CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.without
         +1)));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>\n↑",
+    "↟",
     "Right Shift Gate",
     "Rotates bits in an upward cycle.").
     markedAsStable().
