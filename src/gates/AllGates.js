@@ -161,6 +161,14 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
+        hint: "Other Probes",
+        gates: [
+            Controls.PlusControl, Controls.MinusControl,
+            Controls.CrossControl, PostSelectionGates.PostSelectCross,
+            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
+        ]
+    },
+    {
         hint: 'Silly',
         gates: [
             ZeroGate,   MysteryGateMaker(),
@@ -173,12 +181,19 @@ Gates.TopToolboxGroups = [
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.BottomToolboxGroups = [
     {
+        hint: "Inputs",
+        gates: [
+            InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
+            undefined, undefined,
+            InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2)
+        ]
+    }, {
         hint: 'Arithmetic',
         gates: [
             ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
-            ArithmeticGates.AdditionFamily.ofSize(4), ArithmeticGates.SubtractionFamily.ofSize(4),
-            MultiplyAccumulateGates.MultiplyAddFamily.ofSize(4),
-                MultiplyAccumulateGates.MultiplySubtractFamily.ofSize(4)
+            ArithmeticGates.PlusAFamily.ofSize(2), ArithmeticGates.MinusAFamily.ofSize(2),
+            MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
+                MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2)
         ]
     },
     {
@@ -227,14 +242,6 @@ Gates.BottomToolboxGroups = [
             VariousZGates.Z8,  VariousZGates.Z8i,
             VariousZGates.Z16, VariousZGates.Z16i,
             VariousZGates.Z3,  VariousZGates.Z3i
-        ]
-    },
-    {
-        hint: "Other Probes",
-        gates: [
-            Controls.PlusControl, Controls.MinusControl,
-            Controls.CrossControl, PostSelectionGates.PostSelectCross,
-            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
         ]
     }
 ];
