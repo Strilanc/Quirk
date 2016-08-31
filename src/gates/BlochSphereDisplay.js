@@ -1,7 +1,7 @@
 import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
-import MathPainter from "src/ui/MathPainter.js"
+import GatePainting from "src/draw/GatePainting.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Point from "src/math/Point.js"
 
 /**

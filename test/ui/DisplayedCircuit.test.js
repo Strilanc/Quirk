@@ -1,5 +1,5 @@
 import { Suite, assertThat, assertThrows, fail } from "test/TestUtil.js"
-import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
+import DisplayedCircuit from "src/ui/DisplayedCircuit.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Config from "src/Config.js"

@@ -1,15 +1,15 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitStats from "src/circuit/CircuitStats.js"
 import Config from "src/Config.js"
-import DisplayedCircuit from "src/widgets/DisplayedCircuit.js"
-import DisplayedToolbox from "src/widgets/DisplayedToolbox.js"
-import GateDrawParams from "src/ui/GateDrawParams.js"
-import GatePainting from "src/ui/GatePainting.js"
+import DisplayedCircuit from "src/ui/DisplayedCircuit.js"
+import DisplayedToolbox from "src/ui/DisplayedToolbox.js"
+import GateDrawParams from "src/draw/GateDrawParams.js"
+import GatePainting from "src/draw/GatePainting.js"
 import Gates from "src/gates/AllGates.js"
-import MathPainter from "src/ui/MathPainter.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Hand from "src/ui/Hand.js"
-import Painter from "src/ui/Painter.js"
+import Painter from "src/draw/Painter.js"
 import Rect from "src/math/Rect.js"
 import Serializer from "src/circuit/Serializer.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -74,9 +74,8 @@ export default class DisplayedInspector {
     /**
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
-     * @param {!boolean} shift
      */
-    paint(painter, stats, shift) {
+    paint(painter, stats) {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         this.displayedToolboxTop.paint(painter, stats, this.hand);

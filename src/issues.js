@@ -1,23 +1,20 @@
 import {notifyAboutKnownIssue} from "src/fallback.js"
 
+let canvas = document.createElement('canvas');
+let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
 /** @returns {!boolean} */
 function detectWebGlNotSupported() {
-    let canvas = document.createElement('canvas');
-    let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     return gl === null || gl === undefined;
 }
 
 /** @returns {!boolean} */
 function detectFloatTexturesNotSupported() {
-    let canvas = document.createElement('canvas');
-    let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     return gl.getExtension('OES_texture_float') === null;
 }
 
 /** @returns {!boolean} */
 function detectFloatRenderingNotSupported() {
-    let canvas = document.createElement('canvas');
-    let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     gl.getExtension('OES_texture_float');
     let texture = gl.createTexture();
     let frameBuffer = gl.createFramebuffer();
@@ -48,3 +45,6 @@ if (detectWebGlNotSupported()) {
         "https://github.com/Strilanc/Quirk/issues/157",
         [/FRAMEBUFFER_INCOMPLETE_ATTACHMENT/])
 }
+
+canvas = null;
+gl = null;

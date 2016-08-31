@@ -1,6 +1,6 @@
 import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 
 let MeasurementGate = Gate.fromIdentity(
     "Measure",
@@ -29,5 +29,12 @@ let MeasurementGate = Gate.fromIdentity(
         }).thenStroke('black');
         // Draw the indicator head.
         args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
+    }).
+    withCustomDisableReasonFinder(args => {
+        let isMeasured = (args.measuredMask & (1<<args.outerRow)) !== 0;
+        if (args.innerColumn.hasControl() && !isMeasured) {
+            return "can't\ncontrol\n(sorry)";
+        }
+        return undefined;
     });
 export default MeasurementGate;

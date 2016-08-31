@@ -6,7 +6,7 @@ import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Util from "src/base/Util.js"
@@ -170,7 +170,9 @@ let fromJson_Gate = json => {
             symbol,
             "Parse Error",
             describe(ex)).
-            withCustomDrawer(drawer).withTag(json);
+            withCustomDrawer(drawer).
+            withTag(json).
+            withCustomDisableReasonFinder(() => "parse\nerror");
     }
 
     if (symbol === MysteryGateSymbol && matrix !== undefined) {

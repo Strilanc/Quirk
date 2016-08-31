@@ -3,10 +3,12 @@ import Serializer from "src/circuit/Serializer.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
+import describe from "src/base/Describe.js"
+import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
@@ -15,8 +17,13 @@ import {Seq, seq} from "src/base/Seq.js"
 let suite = new Suite("Serializer");
 
 let assertRoundTrip = (t, v, s) => {
-    assertThat(Serializer.fromJson(t, s)).isEqualTo(v);
-    assertThat(Serializer.toJson(v)).isEqualTo(s);
+    try {
+        assertThat(Serializer.fromJson(t, s)).isEqualTo(v);
+        assertThat(Serializer.toJson(v)).isEqualTo(s);
+    } catch (failure) {
+        console.error(`Failed to round-trip: ${describe(s)} <--> ${describe(v)}`);
+        throw failure;
+    }
 };
 
 suite.test("roundTrip_Complex", () => {
@@ -79,13 +86,17 @@ suite.test("roundTrip_circuitDefinition", () => {
 });
 
 const IDS_THAT_SHOULD_BE_KNOWN = [
-    "•", "◦", "⊕", "⊖", "⊗",
-    "|0⟩⟨0|", "|1⟩⟨1|", "|+⟩⟨+|", "|-⟩⟨-|", "|X⟩⟨X|",
+    "•", "◦", "⊕", "⊖", "⊗", "(/)",
+    "|0⟩⟨0|", "|1⟩⟨1|", "|+⟩⟨+|", "|-⟩⟨-|", "|X⟩⟨X|", "|/⟩⟨/|",
     "Measure",
     "Swap",
     "…",
+    "inputA1", "inputA2", "inputA3", "inputA4", "inputA5", "inputA6", "inputA7", "inputA8", "inputA9", "inputA10", "inputA11", "inputA12", "inputA13", "inputA14", "inputA15", "inputA16",
+    "inputB1", "inputB2", "inputB3", "inputB4", "inputB5", "inputB6", "inputB7", "inputB8", "inputB9", "inputB10", "inputB11", "inputB12", "inputB13", "inputB14", "inputB15", "inputB16",
+    "revinputA1", "revinputA2", "revinputA3", "revinputA4", "revinputA5", "revinputA6", "revinputA7", "revinputA8", "revinputA9", "revinputA10", "revinputA11", "revinputA12", "revinputA13", "revinputA14", "revinputA15", "revinputA16",
+    "revinputB1", "revinputB2", "revinputB3", "revinputB4", "revinputB5", "revinputB6", "revinputB7", "revinputB8", "revinputB9", "revinputB10", "revinputB11", "revinputB12", "revinputB13", "revinputB14", "revinputB15", "revinputB16",
     "__error__",
-    "0",
+    "0", "NeGate",
     "H",
     "X", "Y", "Z",
     "X^½", "X^⅓", "X^¼", "X^⅛", "X^⅟₁₆",
@@ -104,7 +115,9 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "inc1", "inc2", "inc3", "inc4", "inc5", "inc6", "inc7", "inc8", "inc9", "inc10", "inc11", "inc12", "inc13", "inc14", "inc15", "inc16",
     "dec1", "dec2", "dec3", "dec4", "dec5", "dec6", "dec7", "dec8", "dec9", "dec10", "dec11", "dec12", "dec13", "dec14", "dec15", "dec16",
     "add2", "add3", "add4", "add5", "add6", "add7", "add8", "add9", "add10", "add11", "add12", "add13", "add14", "add15", "add16",
+    "+=A1", "+=A2", "+=A3", "+=A4", "+=A5", "+=A6", "+=A7", "+=A8", "+=A9", "+=A10", "+=A11", "+=A12", "+=A13", "+=A14", "+=A15", "+=A16",
     "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "sub10", "sub11", "sub12", "sub13", "sub14", "sub15", "sub16",
+    "-=A1", "-=A2", "-=A3", "-=A4", "-=A5", "-=A6", "-=A7", "-=A8", "-=A9", "-=A10", "-=A11", "-=A12", "-=A13", "-=A14", "-=A15", "-=A16",
     "X^⌈t⌉", "X^⌈t-¼⌉",
     "Counting1", "Counting2", "Counting3", "Counting4", "Counting5", "Counting6", "Counting7", "Counting8",
     "Uncounting1", "Uncounting2", "Uncounting3", "Uncounting4", "Uncounting5", "Uncounting6", "Uncounting7", "Uncounting8",
@@ -116,6 +129,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "QFT†1", "QFT†2", "QFT†3", "QFT†4", "QFT†5", "QFT†6", "QFT†7", "QFT†8", "QFT†9", "QFT†10", "QFT†11", "QFT†12", "QFT†13", "QFT†14", "QFT†15", "QFT†16",
     "c+=ab3", "c+=ab4", "c+=ab5", "c+=ab6", "c+=ab7", "c+=ab8", "c+=ab9", "c+=ab10", "c+=ab11", "c+=ab12", "c+=ab13", "c+=ab14", "c+=ab15", "c+=ab16",
     "c-=ab3", "c-=ab4", "c-=ab5", "c-=ab6", "c-=ab7", "c-=ab8", "c-=ab9", "c-=ab10", "c-=ab11", "c-=ab12", "c-=ab13", "c-=ab14", "c-=ab15", "c-=ab16",
+    "+=AB1", "+=AB2", "+=AB3", "+=AB4", "+=AB5", "+=AB6", "+=AB7", "+=AB8", "+=AB9", "+=AB10", "+=AB11", "+=AB12", "+=AB13", "+=AB14", "+=AB15", "+=AB16",
+    "-=AB1", "-=AB2", "-=AB3", "-=AB4", "-=AB5", "-=AB6", "-=AB7", "-=AB8", "-=AB9", "-=AB10", "-=AB11", "-=AB12", "-=AB13", "-=AB14", "-=AB15", "-=AB16",
     "PhaseGradient1", "PhaseGradient2", "PhaseGradient3", "PhaseGradient4", "PhaseGradient5", "PhaseGradient6", "PhaseGradient7", "PhaseGradient8", "PhaseGradient9", "PhaseGradient10", "PhaseGradient11", "PhaseGradient12", "PhaseGradient13", "PhaseGradient14", "PhaseGradient15", "PhaseGradient16",
     "PhaseUngradient1", "PhaseUngradient2", "PhaseUngradient3", "PhaseUngradient4", "PhaseUngradient5", "PhaseUngradient6", "PhaseUngradient7", "PhaseUngradient8", "PhaseUngradient9", "PhaseUngradient10", "PhaseUngradient11", "PhaseUngradient12", "PhaseUngradient13", "PhaseUngradient14", "PhaseUngradient15", "PhaseUngradient16",
     "rev2", "rev3", "rev4", "rev5", "rev6", "rev7", "rev8", "rev9", "rev10", "rev11", "rev12", "rev13", "rev14", "rev15", "rev16"

@@ -1,0 +1,141 @@
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import Config from "src/Config.js"
+import Serializer from "src/circuit/Serializer.js"
+import { selectAndCopyToClipboard } from "src/browser/Clipboard.js"
+import { saveFile } from "src/browser/SaveFile.js"
+
+/**
+ * @param {!Revision} revision
+ */
+function initExports(revision) {
+    // Show/hide exports overlay.
+    (() => {
+        const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
+        const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
+        const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
+        exportButton.addEventListener('click', () => {
+            exportDiv.style.display = 'block';
+        });
+        exportOverlay.addEventListener('click', () => {
+            exportDiv.style.display = 'none';
+        });
+        document.addEventListener('keydown', e => {
+            const ESC_KEY = 27;
+            if (e.keyCode === ESC_KEY) {
+                exportDiv.style.display = 'none';
+            }
+        });
+    })();
+
+    /**
+     * @param {!HTMLButtonElement} button
+     * @param {!HTMLElement} contentElement
+     * @param {!HTMLElement} resultElement
+     */
+    const setupButtonElementCopyToClipboard = (button, contentElement, resultElement) =>
+        button.addEventListener('click', () => {
+            //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+            try {
+                selectAndCopyToClipboard(contentElement);
+                resultElement.innerText = "Done!";
+            } catch (ex) {
+                resultElement.innerText = "It didn't work...";
+                console.warn('Clipboard copy failed.', ex);
+            }
+            button.disabled = true;
+            setTimeout(() => {
+                resultElement.innerText = "";
+                button.disabled = false;
+            }, 1000);
+        });
+
+    // Export escaped link.
+    (() => {
+        const linkElement = /** @type {HTMLAnchorElement} */ document.getElementById('export-escaped-anchor');
+        const copyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-link-copy-button');
+        const copyResultElement = /** @type {HTMLElement} */ document.getElementById('export-link-copy-result');
+        setupButtonElementCopyToClipboard(copyButton, linkElement, copyResultElement);
+        revision.latestActiveCommit().subscribe(jsonText => {
+            let escapedUrlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + encodeURIComponent(jsonText);
+            linkElement.href = escapedUrlHash;
+            linkElement.innerText = document.location.href.split("#")[0] + escapedUrlHash;
+        });
+    })();
+
+    // Export JSON.
+    (() => {
+        const jsonTextElement = /** @type {HTMLPreElement} */ document.getElementById('export-circuit-json-pre');
+        const copyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-json-copy-button');
+        const copyResultElement = /** @type {HTMLElement} */ document.getElementById('export-json-copy-result');
+        setupButtonElementCopyToClipboard(copyButton, jsonTextElement, copyResultElement);
+        revision.latestActiveCommit().subscribe(jsonText => {
+            //noinspection UnusedCatchParameterJS
+            try {
+                let val = JSON.parse(jsonText);
+                jsonTextElement.innerText = JSON.stringify(val, null, '  ');
+            } catch (_) {
+                jsonTextElement.innerText = jsonText;
+            }
+        });
+    })();
+
+    // Export offline copy.
+    (() => {
+        const downloadButton = /** @type {HTMLButtonElement} */ document.getElementById('download-offline-copy-button');
+
+        const fileNameForState = jsonText => {
+            //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+            try {
+                let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+                if (!circuitDef.isEmpty()) {
+                    return `Quirk with Circuit - ${circuitDef.readableHash()}.html`;
+                }
+            } catch (_) {
+            }
+            return 'Quirk.html';
+        };
+
+        let latest;
+        revision.latestActiveCommit().subscribe(jsonText => {
+            downloadButton.innerText = `Download "${fileNameForState(jsonText)}"`;
+            latest = jsonText;
+        });
+
+        downloadButton.addEventListener('click', () => {
+            downloadButton.disabled = true;
+            setTimeout(() => {
+                downloadButton.disabled = false;
+            }, 1000);
+            let originalHtml = document.QUIRK_QUINE_ALL_HTML_ORIGINAL;
+
+            // Inject default circuit.
+            let startDefaultTag = '//DEFAULT_CIRCUIT_START\n';
+            let endDefaultTag = '//DEFAULT_CIRCUIT_END\n';
+            let modStart = originalHtml.indexOf(startDefaultTag);
+            let modStop = originalHtml.indexOf(endDefaultTag, modStart);
+            let moddedHtml =
+                originalHtml.substring(0, modStart) +
+                startDefaultTag +
+                'document.DEFAULT_CIRCUIT = ' + latest + ';\n' +
+                originalHtml.substring(modStop);
+
+            // Strip analytics.
+            let anaStartTag = '<!-- Start Analytics -->\n';
+            let anaStart = moddedHtml.indexOf(anaStartTag);
+            if (anaStart !== -1) {
+                let anaStopTag = '<!-- End Analytics -->\n';
+                let anaStop = moddedHtml.indexOf(anaStopTag, anaStart);
+                if (anaStop !== -1) {
+                    moddedHtml =
+                        moddedHtml.substring(0, anaStart) +
+                        anaStartTag +
+                        moddedHtml.substring(anaStop);
+                }
+            }
+
+            saveFile(fileNameForState(latest), moddedHtml);
+        });
+    })();
+}
+
+export { initExports }

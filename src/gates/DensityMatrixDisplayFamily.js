@@ -2,9 +2,9 @@ import Config from "src/Config.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
-import MathPainter from "src/ui/MathPainter.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
@@ -116,8 +116,12 @@ function densityMatrixDisplayMaker(span) {
         withWidth(span).
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
-        withCustomStatPipelineMaker((val, conTex, bit, controls) =>
-            makeDensityPipeline(conTex.width, conTex.height, controls, bit, span)).
+        withCustomStatPipelineMaker(args => makeDensityPipeline(
+            args.controlsTexture.width,
+            args.controlsTexture.height,
+            args.controls,
+            args.row,
+            span)).
         withCustomStatPostProcessor(densityPixelsToMatrix);
 }
 

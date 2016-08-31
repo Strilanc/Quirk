@@ -5,6 +5,12 @@ import describe from "src/base/Describe.js"
  */
 let knownIssueRegexes = [];
 
+let isHooked = false;
+function hookErrorHandler() {
+    isHooked = true;
+    window.onerror = onErrorHandler;
+}
+
 function checkForKnownIssueHandler(subject, isKnownIssueUrl) {
     if (isKnownIssueUrl !== undefined) {
         return undefined;
@@ -110,6 +116,9 @@ let takeScreenshotOfCanvas = () => {
  * @param {*} error The exception object.
  */
 let notifyAboutRecoveryFromUnexpectedError = (recovery, context, error) => {
+    if (!isHooked) {
+        throw error;
+    }
     console.error('Recovered from unexpected error', {recovery, context, error});
 
     let location = error.stack || "unknown";
@@ -231,6 +240,4 @@ function onErrorHandler(errorMsg, url, lineNumber, columnNumber, errorObj) {
     return false;
 }
 
-export {notifyAboutRecoveryFromUnexpectedError, onErrorHandler, notifyAboutKnownIssue}
-
-window.onerror = onErrorHandler;
+export {hookErrorHandler, notifyAboutRecoveryFromUnexpectedError, onErrorHandler, notifyAboutKnownIssue}

@@ -1,9 +1,9 @@
 import Config from "src/Config.js"
 import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
-import MathPainter from "src/ui/MathPainter.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
@@ -96,7 +96,7 @@ function sampleGateMaker(span) {
         "Shows a random sample of possible measurement outcomes.\nUse controls to see conditional samples.").
         withHeight(span).
         withSerializedId("Sample" + span).
-        withCustomStatPipelineMaker((val, con, bit) => makeProbabilitySpanPipeline(con, bit, span)).
+        withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
         withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS);

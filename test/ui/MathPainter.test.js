@@ -1,5 +1,5 @@
 import { Suite, assertThat, fail } from "test/TestUtil.js"
-import MathPainter from "src/ui/MathPainter.js"
+import MathPainter from "src/draw/MathPainter.js"
 
 let suite = new Suite("MathPainter");
 

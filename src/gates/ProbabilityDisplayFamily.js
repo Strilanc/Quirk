@@ -1,9 +1,9 @@
 import Config from "src/Config.js"
 import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
-import MathPainter from "src/ui/MathPainter.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
@@ -202,7 +202,7 @@ function multiChanceGateMaker(span) {
         "Shows chances of outcomes if a measurement was performed.\nUse controls to see conditional probabilities.").
         withHeight(span).
         withSerializedId("Chance" + span).
-        withCustomStatPipelineMaker((val, con, bit) => makeProbabilitySpanPipeline(con, bit, span)).
+        withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay));
 }

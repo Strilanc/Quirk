@@ -99,6 +99,24 @@ suite.test("generate", () => {
         isEqualTo("{{0, 10, 20}, {1, 11, 21}}");
 });
 
+suite.test("generateDiagonal", () => {
+    assertThat(Matrix.generateDiagonal(4, e => new Complex(e, 1))).
+        isEqualTo(Matrix.square(
+            new Complex(0, 1), 0, 0, 0,
+            0, new Complex(1, 1), 0, 0,
+            0, 0, new Complex(2, 1), 0,
+            0, 0, 0, new Complex(3, 1)));
+});
+
+suite.test("generateTransition", () => {
+    assertThat(Matrix.generateTransition(4, e => (e + 1) & 3)).
+        isEqualTo(Matrix.square(
+            0, 0, 0, 1,
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0));
+});
+
 suite.test("zero", () => {
     assertThat(Matrix.zero(1, 1).toString()).isEqualTo("{{0}}");
     assertThat(Matrix.zero(2, 1).toString()).isEqualTo("{{0, 0}}");

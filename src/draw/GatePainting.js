@@ -1,7 +1,7 @@
 import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
-import GateDrawParams from "src/ui/GateDrawParams.js"
-import MathPainter from "src/ui/MathPainter.js"
+import GateDrawParams from "src/draw/GateDrawParams.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
@@ -264,7 +264,7 @@ GatePainting.MATRIX_DRAWER = args => {
  * @returns {!function(!GateDrawParams) : *}
  */
 GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
-    GatePainting.DEFAULT_DRAWER(args);
+    GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.TIME_DEPENDENT_HIGHLIGHT_COLOR)(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;

@@ -4,10 +4,10 @@ import CircuitTextures from "src/circuit/CircuitTextures.js"
 import DetailedError from "src/base/DetailedError.js"
 import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
 import Format from "src/base/Format.js"
-import MathPainter from "src/ui/MathPainter.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
@@ -482,7 +482,11 @@ function amplitudeDisplayMaker(span) {
         withHeight(span).
         withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
         withSerializedId("Amps" + span).
-        withCustomStatPipelineMaker((val, con, bit, controls) => makeAmplitudeSpanPipeline(val, controls, bit, span)).
+        withCustomStatPipelineMaker(args => makeAmplitudeSpanPipeline(
+            args.inputTexture,
+            args.controls,
+            args.row,
+            span)).
         withCustomStatPostProcessor(processOutputs).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS);
 }

@@ -1,5 +1,5 @@
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
 import Matrix from "src/math/Matrix.js"
 
@@ -9,7 +9,7 @@ export default Controls;
 Controls.Control = Gate.fromIdentity(
     "•",
     "Control",
-    "Conditions on a qubit being ON.\nGates in the same column will only apply to states meeting the condition.").
+    "Conditions on a qubit being ON.\nGates in the same column only apply to states meeting the condition.").
     withSerializedId("•").
     markedAsControl(true).
     withCustomDrawer(args => {
@@ -23,7 +23,7 @@ Controls.Control = Gate.fromIdentity(
 Controls.AntiControl = Gate.fromIdentity(
     "◦",
     "Anti-Control",
-    "Conditions on a qubit being OFF.\nGates in the same column will only apply to states meeting the condition.").
+    "Conditions on a qubit being OFF.\nGates in the same column only apply to states meeting the condition.").
     withSerializedId("◦").
     markedAsControl(false).
     withCustomDrawer(args => {
@@ -40,14 +40,14 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
     "⊕",
     "Plus Control",
     "Conditions on a qubit being ON+OFF.\n" +
-        "Gates in the same column will only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(false).
     withSerializedId("⊕").
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)],
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -64,14 +64,14 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
     "⊖",
     "Minus Control",
     "Conditions on a qubit being ON-OFF.\n" +
-        "Gates in the same column will only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     withSerializedId("⊖").
     withCustomShaders([]).
     markedAsControl(true).
     markedAsStable().
     withSetupShaders(
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)],
-        [(val, con, bit) => GateShaders.qubitOperation(val, Matrix.HADAMARD, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -89,14 +89,14 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     "⊗",
     "Cross Control",
     "Conditions on a qubit being ON+iOFF.\n" +
-        "Gates in the same column will only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(true).
     withSerializedId("⊗").
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [(val, con, bit) => GateShaders.qubitOperation(val, x2, bit, con)],
-        [(val, con, bit) => GateShaders.qubitOperation(val, x1, bit, con)]).
+        [args => GateShaders.qubitOperation(args.stateTexture, x2, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, x1, args.row, args.controlsTexture)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -112,11 +112,38 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
             GatePainting.paintOutline(args);
         }
     });
+Controls.AntiCrossControl = Gate.withoutKnownMatrix(
+    "(/)",
+    "Anti-Cross Control",
+    "Conditions on a qubit being ON-iOFF.\n" +
+    "Gates in the same column only apply to states meeting the condition.").
+    markedAsControl(true).
+    withSerializedId("(/)").
+    withCustomShaders([]).
+    markedAsStable().
+    withSetupShaders(
+        [args => GateShaders.qubitOperation(args.stateTexture, x1, args.row, args.controlsTexture)],
+        [args => GateShaders.qubitOperation(args.stateTexture, x2, args.row, args.controlsTexture)]).
+    withCustomDrawer(args => {
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
+        }
+        let p = args.rect.center();
+        args.painter.fillCircle(p, 5);
+        args.painter.strokeCircle(p, 5);
+        let r = 5*Math.sqrt(0.5)*1.1;
+        args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintOutline(args);
+        }
+    });
 
 Controls.all = [
     Controls.Control,
     Controls.AntiControl,
     Controls.PlusControl,
     Controls.MinusControl,
-    Controls.CrossControl
+    Controls.CrossControl,
+    Controls.AntiCrossControl
 ];

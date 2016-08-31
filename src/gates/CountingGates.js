@@ -1,5 +1,6 @@
+import Config from "src/Config.js"
 import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/ui/GatePainting.js"
+import GatePainting from "src/draw/GatePainting.js"
 import GateShaders from "src/circuit/GateShaders.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
@@ -22,7 +23,7 @@ const staircaseCurve = steps => {
 };
 
 let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
-    GatePainting.DEFAULT_DRAWER(args);
+    GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.TIME_DEPENDENT_HIGHLIGHT_COLOR)(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
         return;
@@ -32,7 +33,7 @@ let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
     let yOn = args.rect.y + 3;
     let yNeutral = args.rect.bottom();
     let yOff = args.rect.bottom() - 3;
-    if (flip) {
+    if (!flip) {
         [yOn, yOff] = [yOff, yOn];
         yNeutral = args.rect.y;
     }
@@ -95,8 +96,12 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKno
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-        Math.floor(time*(1<<span)))));
+    withCustomShader(args => GateShaders.increment(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        Math.floor(args.time*(1<<span)))));
 
 CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "-⌈t⌉",
@@ -109,11 +114,15 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader((val, con, bit, time) => GateShaders.increment(val, con, bit, span,
-        -Math.floor(time*(1<<span)))));
+    withCustomShader(args => GateShaders.increment(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        -Math.floor(args.time*(1<<span)))));
 
 CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>⌈t⌉\n↑",
+    "↟⌈t⌉",
     "Right-Shift Cycling Gate",
     "Right-shifts a block of bits upward by more and more, rotating bits that fall off the top back to the bottom.").
     markedAsOnlyPermutingAndPhasing().
@@ -123,10 +132,15 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
     withCustomDrawer(STAIRCASE_DRAWER(0, span)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader((val, con, bit, time) => cycleBits(val, con, bit, span, -Math.floor(time*span))));
+    withCustomShader(args => cycleBits(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        -Math.floor(args.time*span))));
 
 CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<⌈t⌉\n↓",
+    "↡⌈t⌉",
     "Left-Shift Cycling Gate",
     "Left-shifts a block of bits downward by more and more, rotating bits that fall off the bottom back to the top.").
     markedAsOnlyPermutingAndPhasing().
@@ -136,7 +150,12 @@ CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.
     withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader((val, con, bit, time) => cycleBits(val, con, bit, span, Math.floor(time*span))));
+    withCustomShader(args => cycleBits(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        Math.floor(args.time*span))));
 
 CountingGates.all = [
     CountingGates.ClockPulseGate,

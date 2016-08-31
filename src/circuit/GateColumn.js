@@ -1,5 +1,6 @@
 import DetailedError from "src/base/DetailedError.js"
 import Gate from "src/circuit/Gate.js"
+import GateCheckArgs from "src/circuit/GateCheckArgs.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
@@ -84,36 +85,74 @@ class GateColumn {
     /**
      * @param {!int} inputMeasureMask
      * @param {!int} row
+     * @param {!int} outerRowOffset
+     * @param {!Map<!string, *>} context
      * @returns {undefined|!string}
      * @private
      */
-    _disabledReason(inputMeasureMask, row) {
+    _disabledReason(inputMeasureMask, row, outerRowOffset, context) {
         let g = this.gates[row];
-        let rowIsMeasured = (inputMeasureMask & (1 << row)) !== 0;
-
         if (g === null) {
             return undefined;
         }
 
-        if (g.name === "Parse Error") {
-            return "parse\nerror";
+        let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context);
+        let customDisableReason = g.customDisableReasonFinder(args);
+        if (customDisableReason !== undefined) {
+            return customDisableReason;
         }
 
-        if (g === Gates.Special.Measurement && this.hasControl() && !rowIsMeasured) {
-            return "can't\ncontrol\n(sorry)";
+        let disabledInside = this._disabledReason_controlInside(row);
+        if (disabledInside !== undefined) {
+            return disabledInside;
         }
 
-        if (g === Gates.Special.SwapHalf) {
-            return this._disabledReason_swapGate(inputMeasureMask);
+        let disabledRemix = this._disabledReason_remixing(row, inputMeasureMask);
+        if (disabledRemix !== undefined) {
+            return disabledRemix;
         }
 
-        for (let j = 1; j < g.height && row + j < this.gates.length; j++) {
-            if (this.gates[row + j] !== null && this.gates[row + j].isControl()) {
-                return "control\ninside";
+        let disabledCollision = this._disabledReason_overlappingTags(row);
+        if (disabledCollision !== undefined) {
+            return disabledCollision;
+        }
+
+        return undefined;
+    }
+
+    /**
+     * @param {!int} row
+     * @returns {undefined|!string}
+     * @private
+     */
+    _disabledReason_overlappingTags(row) {
+        let keys = new Set(this.gates[row].customColumnContextProvider(row).map(e => e.key));
+        if (keys.length === 0) {
+            return undefined;
+        }
+
+        for (let i = 0; i < row; i++) {
+            let g = this.gates[i];
+            for (let {key: otherKey} of g === null ? [] : g.customColumnContextProvider(i)) {
+                //noinspection JSUnusedAssignment
+                if (keys.has(otherKey)) {
+                    return "already\ndefined";
+                }
             }
         }
 
+        return undefined;
+    }
+
+    /**
+     * @param {!int} row
+     * @param {!int} inputMeasureMask
+     * @returns {undefined|!string}
+     * @private
+     */
+    _disabledReason_remixing(row, inputMeasureMask) {
         // Measured qubits can't be re-superposed for implementation simplicity reasons.
+        let g = this.gates[row];
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
@@ -124,35 +163,21 @@ class GateColumn {
                 return "no\nremix\n(sorry)";
             }
         }
-
         return undefined;
     }
 
     /**
-     * @param {!int} inputMeasureMask
+     * @param {!int} row
      * @returns {undefined|!string}
      * @private
      */
-    _disabledReason_swapGate(inputMeasureMask) {
-        let swapRows = Seq.range(this.gates.length).
-            filter(row => this.gates[row] === Gates.Special.SwapHalf);
-        let n = swapRows.count();
-        if (n === 1) {
-            return "need\nother\nswap";
+    _disabledReason_controlInside(row) {
+        let g = this.gates[row];
+        for (let j = 1; j < g.height && row + j < this.gates.length; j++) {
+            if (this.gates[row + j] !== null && this.gates[row + j].isControl()) {
+                return "control\ninside";
+            }
         }
-        if (n > 2) {
-            return "too\nmany\nswap";
-        }
-
-        let affectsMeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) !== 0);
-        let affectsUnmeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) === 0);
-        if (affectsMeasured && this.hasCoherentControl(inputMeasureMask)) {
-            return "no\nremix\n(sorry)";
-        }
-        if (affectsMeasured && affectsUnmeasured && this.hasControl()) {
-            return "no\nremix\n(sorry)";
-        }
-
         return undefined;
     }
 
@@ -173,8 +198,23 @@ class GateColumn {
             max(-Infinity);
     }
 
-    disabledReasons(inputMeasureMask) {
-        return Seq.range(this.gates.length).map(i => this._disabledReason(inputMeasureMask, i)).toArray();
+    /**
+     * @param {!int} inputMeasureMask
+     * @param {!int} outerRowOffset
+     * @param {!Map.<!string, *>} outerContext
+     * @returns {!Array.<undefined|!string>}
+     */
+    disabledReasons(inputMeasureMask, outerRowOffset, outerContext) {
+        let context = Util.mergeMaps(
+            outerContext,
+            new Map(seq(this.gates).
+                mapWithIndex((g, row) => g === null ? [] : g.customColumnContextProvider(row + outerRowOffset)).
+                reverse().
+                flatten().
+                map(({key, val}) => [key, val])));
+        return Seq.range(this.gates.length).
+            map(row => this._disabledReason(inputMeasureMask, row, outerRowOffset, context)).
+            toArray();
     }
 
     nextMeasureMask(inputMeasureMask, disabledReasons) {

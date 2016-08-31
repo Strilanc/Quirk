@@ -165,7 +165,7 @@ class Matrix {
      * Returns a matrix of the given dimensions, using the given function to generate the coefficients.
      * @param {!int} width
      * @param {!int} height
-     * @param {!function} coefficientRowColGenerator
+     * @param {!function(!int, !int): (!number|!Complex)} coefficientRowColGenerator
      * @returns {!Matrix}
      */
     static generate(width, height, coefficientRowColGenerator) {
@@ -179,6 +179,39 @@ class Matrix {
             }
         }
         return new Matrix(width, height, buf);
+    }
+
+    /**
+     * Returns a diagonal matrix of the given size, using the given function to generate the diagonal coefficients.
+     * @param {!int} size
+     * @param {!function(!int): (!number|!Complex)} coefficientFunc
+     * @returns {!Matrix}
+     */
+    static generateDiagonal(size, coefficientFunc) {
+        let buf = new Float64Array(size*size*2);
+        for (let i = 0; i < size; i++) {
+            let k = i*(size+1)*2;
+            let v = coefficientFunc(i);
+            buf[k] = Complex.realPartOf(v);
+            buf[k+1] = Complex.imagPartOf(v);
+        }
+        return new Matrix(size, size, buf);
+    }
+
+    /**
+     * Returns a matrix of the given size, with each column being mapped to a row by the transition function.
+     * @param {!int} size
+     * @param {!function(!int): !int} transitionFunc
+     * @returns {!Matrix}
+     */
+    static generateTransition(size, transitionFunc) {
+        let buf = new Float64Array(size*size*2);
+        for (let c = 0; c < size; c++) {
+            let r = transitionFunc(c);
+            let k = (r*size + c)*2;
+            buf[(r*size + c)*2] = 1;
+        }
+        return new Matrix(size, size, buf);
     }
 
     /**
@@ -726,7 +759,7 @@ class Matrix {
             if ((n & m2) !== 0) { s |= m1; }
             return s;
         };
-        return Matrix.generate(1 << numWires, 1 << numWires, (r, c) => bitSwap(r) === c ? 1 : 0);
+        return Matrix.generateTransition(1<<numWires, bitSwap);
     }
 
     /**
@@ -1193,7 +1226,7 @@ class Matrix {
         }
 
         // Discard off-diagonal elements.
-        S = Matrix.generate(S._width, S._height, (col, row) => col === row ? S.cell(col, row).abs() : 0);
+        S = Matrix.generateDiagonal(S._width, k => S.cell(k, k).abs());
 
         return {U, S, V};
     }

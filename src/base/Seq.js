@@ -49,6 +49,7 @@ class Seq {
         let iterable;
         let iterator;
         if (obj instanceof Seq) {
+            // Avoid double-wrapping.
             iterable = obj._iterable;
             iterator = obj[Symbol.iterator];
         } else if (isIteratorFunction) {
@@ -67,7 +68,7 @@ class Seq {
          * @type {!(T[])|!Iterable.<T>|*}
          * @template T
          */
-        this._iterable = iterable; // Avoid double-wrapping.
+        this._iterable = iterable;
 
         /**
          * Iterates over the sequence's items.

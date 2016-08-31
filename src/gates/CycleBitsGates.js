@@ -56,17 +56,13 @@ const CYCLE_SHADER = new WglShader(`
         gl_FragColor = texture2D(inputTexture, usedUv);
     }`);
 
-const makeCycleBitsMatrix = (shift, span) => Matrix.generate(1<<span, 1<<span, (r, c) => {
+const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, e => {
     shift = Util.properMod(shift, span);
-    let expected = r;
-    let input = c;
-    let actual = input << shift;
-    actual = (actual & ((1 << span) - 1)) | (actual >> span);
-    return expected === actual ? 1 : 0;
+    return ((e << shift) & ((1 << span) - 1)) | (e >> (span - shift));
 });
 
 CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<\n↓",
+    "↡",
     "Left Shift Gate",
     "Rotates bits in a downward cycle.").
     markedAsStable().
@@ -74,10 +70,15 @@ CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.without
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
     withSerializedId("<<" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => cycleBits(val, con, bit, span, 1)));
+    withCustomShader(args => cycleBits(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        +1)));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>\n↑",
+    "↟",
     "Right Shift Gate",
     "Rotates bits in an upward cycle.").
     markedAsStable().
@@ -85,7 +86,12 @@ CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
     withSerializedId(">>" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => cycleBits(val, con, bit, span, -1)));
+    withCustomShader(args => cycleBits(
+        args.stateTexture,
+        args.controlsTexture,
+        args.row,
+        span,
+        -1)));
 
 CycleBitsGates.all = [
     ...CycleBitsGates.CycleBitsFamily.all,

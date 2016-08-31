@@ -6,10 +6,8 @@ import WglArg from "src/webgl/WglArg.js"
 import { WglConfiguredShader, WglShader } from "src/webgl/WglShader.js"
 
 const τ = Math.PI * 2;
-const GRADIENT_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, τ*r/(2<<span)) : 0);
-const DE_GRADIENT_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => r === c ? Complex.polar(1, -τ*r/(2<<span)) : 0);
+const GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Complex.polar(1, τ*k/(2<<span)));
+const DE_GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Complex.polar(1, -τ*k/(2<<span)));
 
 /**
  * @param {!WglTexture} inputTexture Superposition stored as a grid of amplitudes.
@@ -72,7 +70,7 @@ PhaseGradientGates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate
     withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseGradient" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => phaseGradient(val, con, bit, span)));
+    withCustomShader(args => phaseGradient(args.stateTexture, args.controlsTexture, args.row, span)));
 
 PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^-#",
@@ -83,7 +81,7 @@ PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Ga
     withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseUngradient" + span).
     withHeight(span).
-    withCustomShader((val, con, bit) => phaseGradient(val, con, bit, span, -1)));
+    withCustomShader(args => phaseGradient(args.stateTexture, args.controlsTexture, args.row, span, -1)));
 
 PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseGradientFamily.all,

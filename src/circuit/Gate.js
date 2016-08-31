@@ -1,7 +1,7 @@
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
-import GateDrawParams from "src/ui/GateDrawParams.js"
-import MathPainter from "src/ui/MathPainter.js"
+import GateDrawParams from "src/draw/GateDrawParams.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
@@ -35,7 +35,9 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
-        /** @type {undefined|!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        /** @type {undefined|!function(!!CircuitEvalArgs) : !WglTexture} */
+        this.customTextureTransform = undefined;
+        /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.customShaders = undefined;
         /** @type {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} */
         this.customStatPipelineMaker = undefined;
@@ -79,16 +81,30 @@ class Gate {
          * @private
          */
         this._affectsOtherWires = false;
+        /**
+         * @type {!boolean}
+         */
+        this.isControlWireSource = false;
 
         /**
          * @type {undefined|!boolean}
          * @private
          */
         this._controlBit = undefined;
-        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.preShaders = [];
-        /** @type {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} */
+        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.postShaders = [];
+        /**
+         * @param {!int} qubit
+         * @returns {!Array.<!{key: !string, value: *}>}
+         */
+        this.customColumnContextProvider = qubit => [];
+        /**
+         * @param {!GateCheckArgs} args
+         * @returns {undefined|!string}
+         */
+        this.customDisableReasonFinder = args => undefined;
     }
 
     /**
@@ -129,8 +145,8 @@ class Gate {
     }
 
     /**
-     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} before
-     * @param {!Array.<!function(inputTex:!WglTexture,controlTex:!WglTexture, qubit:!int, time:!number):!WglConfiguredShader>} after
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} before
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} after
      */
     withSetupShaders(before, after) {
         let g = this._copy();
@@ -226,6 +242,16 @@ class Gate {
     markedAsControl(bit) {
         let g = this._copy();
         g._controlBit = bit;
+        g.isControlWireSource = true;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    markedAsControlWireSource() {
+        let g = this._copy();
+        g.isControlWireSource = true;
         return g;
     }
 
@@ -264,8 +290,12 @@ class Gate {
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
+        g.isControlWireSource = this.isControlWireSource;
         g.preShaders = this.preShaders;
         g.postShaders = this.postShaders;
+        g.customTextureTransform = this.customTextureTransform;
+        g.customColumnContextProvider = this.customColumnContextProvider;
+        g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
     }
 
@@ -276,6 +306,26 @@ class Gate {
     withStableDuration(duration) {
         let g = this._copy();
         g._stableDuration = duration;
+        return g;
+    }
+
+    /**
+     * @param {!function(qubit:!int):!Array.<!{key: !string, value: *}>} customColumnContextProvider
+     * @returns {!Gate}
+     */
+    withCustomColumnContextProvider(customColumnContextProvider) {
+        let g = this._copy();
+        g.customColumnContextProvider = customColumnContextProvider;
+        return g;
+    }
+
+    /**
+     * @param {!function(!GateCheckArgs) : undefined|!string} customDisableReasonFinder
+     * @returns {!Gate}
+     */
+    withCustomDisableReasonFinder(customDisableReasonFinder) {
+        let g = this._copy();
+        g.customDisableReasonFinder = customDisableReasonFinder;
         return g;
     }
 
@@ -320,7 +370,7 @@ class Gate {
     }
 
     /**
-     * @param {!Array.<!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader>} shaderFuncs
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} shaderFuncs
      * @returns {!Gate}
      */
     withCustomShaders(shaderFuncs) {
@@ -330,7 +380,17 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} customStatePipelineMaker
+     * @param {!function(!CircuitEvalArgs) : !WglTexture} func
+     * @returns {!Gate}
+     */
+    withCustomTextureTransform(func) {
+        let g = this._copy();
+        g.customTextureTransform = func;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!!CircuitEvalArgs) : !ShaderPipeline} customStatePipelineMaker
      * @returns {!Gate}
      */
     withCustomStatPipelineMaker(customStatePipelineMaker) {
@@ -350,7 +410,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(inputTex: !WglTexture, controlTex: !WglTexture, qubit: !int, time: !number) : !WglConfiguredShader} shaderFunc
+     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
      * @returns {!Gate}
      */
     withCustomShader(shaderFunc) {
@@ -505,6 +565,38 @@ class Gate {
      */
     toString() {
         return `Gate(${this.symbol})`;
+    }
+
+    /**
+     * @param {!string} missingMsg
+     * @param {...!string} keys
+     * @returns {!function(!GateCheckArgs) : undefined|!string}
+     */
+    static disableReasonFinder_needInput(missingMsg, ...keys) {
+        return args => {
+            let row = args.outerRow;
+            if (seq(keys).any(key => !args.context.has(key))) {
+                return missingMsg;
+            }
+            let vals = seq(keys).map(key => args.context.get(key));
+
+            console.log(args.context);
+            if (vals.any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
+                console.log({vals: vals.toArray(), row});
+                return "input\ninside";
+            }
+
+            if (args.gate.effectMightPermutesStates()) {
+                let hasMeasuredOutputs = ((args.measuredMask >> row) & ((1 << args.gate.height) - 1)) !== 0;
+                let hasUnmeasuredInputs =
+                    vals.any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
+                if (hasUnmeasuredInputs && hasMeasuredOutputs) {
+                    return "no\nremix\n(sorry)";
+                }
+            }
+
+            return undefined;
+        };
     }
 }
 
