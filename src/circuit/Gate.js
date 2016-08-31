@@ -580,9 +580,7 @@ class Gate {
             }
             let vals = seq(keys).map(key => args.context.get(key));
 
-            console.log(args.context);
             if (vals.any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
-                console.log({vals: vals.toArray(), row});
                 return "input\ninside";
             }
 
