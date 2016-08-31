@@ -1,5 +1,6 @@
 import DetailedError from "src/base/DetailedError.js"
 import Gate from "src/circuit/Gate.js"
+import GateCheckArgs from "src/circuit/GateCheckArgs.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Controls from "src/circuit/Controls.js"
@@ -84,16 +85,19 @@ class GateColumn {
     /**
      * @param {!int} inputMeasureMask
      * @param {!int} row
+     * @param {!int} outerRowOffset
+     * @param {!Map<!string, *>} context
      * @returns {undefined|!string}
      * @private
      */
-    _disabledReason(inputMeasureMask, row) {
+    _disabledReason(inputMeasureMask, row, outerRowOffset, context) {
         let g = this.gates[row];
         if (g === null) {
             return undefined;
         }
 
-        let customDisableReason = g.customDisableReasonFinder(this, row, inputMeasureMask);
+        let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context);
+        let customDisableReason = g.customDisableReasonFinder(args);
         if (customDisableReason !== undefined) {
             return customDisableReason;
         }
@@ -163,27 +167,6 @@ class GateColumn {
     }
 
     /**
-     * @param {!Array.<!string>} keys
-     * @returns {!Array.<*>}
-     */
-    findFirstContextsIncludingDisabled(keys) {
-        let remainingKeys = new Set(keys);
-        let results = [];
-        for (let i = 0; i < this.gates.length; i++) {
-            if (this.gates[i] === null) {
-                continue;
-            }
-            for (let c of this.gates[i].customColumnContextProvider(i)) {
-                //noinspection JSUnusedAssignment
-                if (remainingKeys.delete(c.key)) {
-                    results.push(c.val);
-                }
-            }
-        }
-        return results;
-    }
-
-    /**
      * @param {!int} row
      * @returns {undefined|!string}
      * @private
@@ -215,8 +198,23 @@ class GateColumn {
             max(-Infinity);
     }
 
-    disabledReasons(inputMeasureMask) {
-        return Seq.range(this.gates.length).map(i => this._disabledReason(inputMeasureMask, i)).toArray();
+    /**
+     * @param {!int} inputMeasureMask
+     * @param {!int} outerRowOffset
+     * @param {!Map.<!string, *>} outerContext
+     * @returns {!Array.<undefined|!string>}
+     */
+    disabledReasons(inputMeasureMask, outerRowOffset, outerContext) {
+        let context = Util.mergeMaps(
+            outerContext,
+            new Map(seq(this.gates).
+                mapWithIndex((g, row) => g === null ? [] : g.customColumnContextProvider(row + outerRowOffset)).
+                reverse().
+                flatten().
+                map(({key, val}) => [key, val])));
+        return Seq.range(this.gates.length).
+            map(row => this._disabledReason(inputMeasureMask, row, outerRowOffset, context)).
+            toArray();
     }
 
     nextMeasureMask(inputMeasureMask, disabledReasons) {

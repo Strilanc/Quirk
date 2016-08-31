@@ -30,9 +30,9 @@ let MeasurementGate = Gate.fromIdentity(
         // Draw the indicator head.
         args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
     }).
-    withCustomDisableReasonFinder((col, qubit, inputMeasureMask) => {
-        let isMeasured = (inputMeasureMask & (1<<qubit)) !== 0;
-        if (col.hasControl() && !isMeasured) {
+    withCustomDisableReasonFinder(args => {
+        let isMeasured = (args.measuredMask & (1<<args.outerRow)) !== 0;
+        if (args.innerColumn.hasControl() && !isMeasured) {
             return "can't\ncontrol\n(sorry)";
         }
         return undefined;

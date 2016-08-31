@@ -20,8 +20,10 @@ class CircuitDefinition {
     /**
      * @param {!int} numWires
      * @param {!Array.<!GateColumn>} columns
+     * @param {!int=} outerRowOffset
+     * @param {!Map.<!string, *>=} outerContext
      */
-    constructor(numWires, columns) {
+    constructor(numWires, columns, outerRowOffset=0, outerContext=new Map()) {
         if (numWires < 0) {
             throw new DetailedError("Bad numWires", {numWires})
         }
@@ -52,7 +54,7 @@ class CircuitDefinition {
         this._measureMasks = [0];
         let mask = 0;
         for (let col of columns) {
-            let reasons = col.disabledReasons(mask);
+            let reasons = col.disabledReasons(mask, outerRowOffset, outerContext);
             mask = col.nextMeasureMask(mask, reasons);
             this._disabledReasons.push(reasons);
             this._measureMasks.push(mask);
@@ -63,6 +65,15 @@ class CircuitDefinition {
          * @private
          */
         this._gateSlotCoverMap = this._computeGateSlotCoverMap();
+    }
+
+    /**
+     * @param {!int} outerRowOffset
+     * @param {!Map.<!string, *>} outerContext
+     * @returns {!CircuitDefinition}
+     */
+    withDisabledReasonsForEmbeddedContext(outerRowOffset, outerContext) {
+        return new CircuitDefinition(this.numWires, this.columns, outerRowOffset, outerContext);
     }
 
     /**
@@ -683,8 +694,14 @@ class CircuitDefinition {
             return [];
         }
         return seq(this.columns[colIndex].gates).
-            mapWithIndex((gate, row) => gate === null || gate.customTextureTransform === undefined ? undefined :
-                args => gate.customTextureTransform(args.withRow(row + rowOffset))).
+            mapWithIndex((gate, row) => {
+                if (gate === null ||
+                        gate.customTextureTransform === undefined ||
+                        this.gateAtLocIsDisabledReason(new Point(colIndex, row)) !== undefined) {
+                    return undefined;
+                }
+                return args => gate.customTextureTransform(args.withRow(row + rowOffset));
+            }).
             filter(e => e !== undefined).
             toArray();
     }

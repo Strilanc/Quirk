@@ -101,12 +101,10 @@ class Gate {
          */
         this.customColumnContextProvider = qubit => [];
         /**
-         * @param {!GateColumn} col
-         * @param {!int} qubit
-         * @param {!int} measuredMask
+         * @param {!GateCheckArgs} args
          * @returns {undefined|!string}
          */
-        this.customDisableReasonFinder = (col, qubit, measuredMask) => undefined;
+        this.customDisableReasonFinder = args => undefined;
     }
 
     /**
@@ -322,7 +320,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(col:!GateColumn, qubit:!int, measuredMask:!int) : undefined|string} customDisableReasonFinder
+     * @param {!function(!GateCheckArgs) : undefined|!string} customDisableReasonFinder
      * @returns {!Gate}
      */
     withCustomDisableReasonFinder(customDisableReasonFinder) {
@@ -570,35 +568,28 @@ class Gate {
     }
 
     /**
-     * @param {!string} failMsg
-     * @param {...!string} keys
-     * @returns {!function(!GateColumn) : undefined|!string}
-     */
-    static disableReasonFinder_needColumnContext(failMsg, ...keys) {
-        return col => col.findFirstContextsIncludingDisabled(keys).length === keys.length ? undefined : failMsg;
-    }
-
-    /**
      * @param {!string} missingMsg
      * @param {...!string} keys
-     * @returns {!function(!GateColumn) : undefined|!string}
+     * @returns {!function(!GateCheckArgs) : undefined|!string}
      */
     static disableReasonFinder_needInput(missingMsg, ...keys) {
-        return (col, qubit, measuredMask) => {
-            let g = col.gates[qubit];
-            let ranges = col.findFirstContextsIncludingDisabled(keys);
-            if (ranges.length < keys.length) {
+        return args => {
+            let row = args.outerRow;
+            if (seq(keys).any(key => !args.context.has(key))) {
                 return missingMsg;
             }
+            let vals = seq(keys).map(key => args.context.get(key));
 
-            if (seq(ranges).any(({offset, length}) => offset + length > qubit && qubit + g.height > offset)) {
+            console.log(args.context);
+            if (vals.any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
+                console.log({vals: vals.toArray(), row});
                 return "input\ninside";
             }
 
-            if (g.effectMightPermutesStates()) {
-                let hasMeasuredOutputs = ((measuredMask >> qubit) & ((1 << g.height) - 1)) !== 0;
+            if (args.gate.effectMightPermutesStates()) {
+                let hasMeasuredOutputs = ((args.measuredMask >> row) & ((1 << args.gate.height) - 1)) !== 0;
                 let hasUnmeasuredInputs =
-                    seq(ranges).any(({offset, length}) => ((~measuredMask >> offset) & ((1 << length) - 1)) !== 0);
+                    vals.any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
                 if (hasUnmeasuredInputs && hasMeasuredOutputs) {
                     return "no\nremix\n(sorry)";
                 }

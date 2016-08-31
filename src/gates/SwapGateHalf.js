@@ -24,7 +24,8 @@ let SwapGateHalf = Gate.fromKnownMatrix(
         args.painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
         args.painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
     }).
-    withCustomDisableReasonFinder((col, qubit, inputMeasureMask) => {
+    withCustomDisableReasonFinder(args => {
+        let col = args.innerColumn;
         let swapRows = Seq.range(col.gates.length).filter(row => col.gates[row] === SwapGateHalf);
         let n = swapRows.count();
         if (n === 1) {
@@ -34,9 +35,9 @@ let SwapGateHalf = Gate.fromKnownMatrix(
             return "too\nmany\nswap";
         }
 
-        let affectsMeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) !== 0);
-        let affectsUnmeasured = swapRows.any(r => (inputMeasureMask & (1 << r)) === 0);
-        if (affectsMeasured && col.hasCoherentControl(inputMeasureMask)) {
+        let affectsMeasured = swapRows.any(r => (args.measuredMask & (1 << r)) !== 0);
+        let affectsUnmeasured = swapRows.any(r => (args.measuredMask & (1 << r)) === 0);
+        if (affectsMeasured && col.hasCoherentControl(args.measuredMask)) {
             return "no\nremix\n(sorry)";
         }
         if (affectsMeasured && affectsUnmeasured && col.hasControl()) {

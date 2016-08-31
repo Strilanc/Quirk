@@ -74,9 +74,8 @@ export default class DisplayedInspector {
     /**
      * @param {!Painter} painter
      * @param {!CircuitStats} stats
-     * @param {!boolean} shift
      */
-    paint(painter, stats, shift) {
+    paint(painter, stats) {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         this.displayedToolboxTop.paint(painter, stats, this.hand);

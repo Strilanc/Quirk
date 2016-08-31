@@ -322,6 +322,21 @@ export default class Util {
         let result = numerator % denominator;
         return result + (result < 0 ? denominator : 0);
     }
+
+    /**
+     * @param {...!Map}maps
+     * @returns {!Map}
+     */
+    static mergeMaps(...maps) {
+        let result = new Map();
+        for (let map of maps) {
+            for (let [key, val] of map.entries()) {
+                //noinspection JSUnusedAssignment
+                result.set(key, val);
+            }
+        }
+        return result;
+    }
 }
 
 /**
@@ -345,3 +360,4 @@ Util.CUSTOM_IS_EQUAL_TO_EQUALITY = (e1, e2) =>
     e1 === null ? e2 === null :
     e1 === undefined ? e2 === undefined :
     e1.isEqualTo(e2);
+

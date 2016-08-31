@@ -224,7 +224,7 @@ export default class CircuitStats {
                                                     controlsTex,
                                                     time) {
 
-        let colContext = mergeMaps(outerContext, circuitDefinition.colCustomContextFromGates(col));
+        let colContext = Util.mergeMaps(outerContext, circuitDefinition.colCustomContextFromGates(col));
 
         let setupArgs = new CircuitEvalArgs(
             time,
@@ -399,14 +399,29 @@ export default class CircuitStats {
         return Gate.withoutKnownMatrix(symbol, name, blurb).
             withCustomTextureTransform(args => CircuitStats.advanceStateWithCircuit(
                 args.stateTexture,
-                circuitDefinition,
+                circuitDefinition.withDisabledReasonsForEmbeddedContext(args.row, args.customContextFromGates),
                 args.time,
                 args.row,
                 args.wireCount,
                 args.controls,
                 args.customContextFromGates,
                 false).output).
-            withHeight(circuitDefinition.numWires);
+            withHeight(circuitDefinition.numWires).
+            withCustomDisableReasonFinder(args => {
+                let def = circuitDefinition.withDisabledReasonsForEmbeddedContext(args.outerRow, args.context);
+                for (let row = 0; row < def.numWires; row++) {
+                    for (let col = 0; col < def.columns.length; col++) {
+                        let r = def.gateAtLocIsDisabledReason(new Point(col, row));
+                        if (r !== undefined) {
+                            return r;
+                        }
+                        if (def.gateInSlot(col, row) === Gates.Special.Measurement) {
+                            return "hidden\nmeasure\nbroken"
+                        }
+                    }
+                }
+                return undefined;
+            });
     }
 
     /**
@@ -470,19 +485,4 @@ export default class CircuitStats {
             unity,
             customStatsProcessed);
     }
-}
-
-/**
- * @param {...!Map}maps
- * @returns {!Map}
- */
-function mergeMaps(...maps) {
-    let result = new Map();
-    for (let map of maps) {
-        for (let [key, val] of map.entries()) {
-            //noinspection JSUnusedAssignment
-            result.set(key, val);
-        }
-    }
-    return result;
 }

@@ -81,12 +81,6 @@ const syncArea = ins => {
     return ins;
 };
 
-let isShiftHeld = false;
-Observable.of(Observable.elementEvent(document, 'keydown'), Observable.elementEvent(document, 'keyup')).
-    flatten().
-    map(e => e.shiftKey).
-    subscribe(e => { isShiftHeld = e.shiftKey; });
-
 // Gradually fade out old errors as user manipulates circuit.
 displayed.observable().
     map(e => e.displayedCircuit.circuitDefinition).
@@ -116,7 +110,7 @@ const redrawNow = () => {
     canvas.height = size.h;
     let painter = new Painter(canvas, semiStableRng.cur.restarted());
     shown.updateArea(painter.paintableArea());
-    shown.paint(painter, stats, isShiftHeld);
+    shown.paint(painter, stats);
     painter.paintDeferred();
 
     displayed.get().hand.paintCursor(painter);
