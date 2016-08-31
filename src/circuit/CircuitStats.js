@@ -199,7 +199,7 @@ export default class CircuitStats {
     }
 
     /**
-     * @param {!Map} outerContext
+     * @param {!Map.<!string, *>} outerContext
      * @param {!WglTexture} inputState
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!int} col
@@ -269,7 +269,12 @@ export default class CircuitStats {
      * @private
      * @returns {!{qubitDensities:!WglTexture, customGateStats:!Array.<!{row:!int,stat:!WglTexture}>}}
      */
-    static _extractStateStatsNeededByCircuitColumn(state, circuitDefinition, col, controls, controlTex, time) {
+    static _extractStateStatsNeededByCircuitColumn(state,
+                                                   circuitDefinition,
+                                                   col,
+                                                   controls,
+                                                   controlTex,
+                                                   time) {
         // Compute custom stats used by display gates.
         let customGateStats = [];
         for (let row of circuitDefinition.customStatRowsInCol(col)) {
@@ -295,31 +300,41 @@ export default class CircuitStats {
     }
 
     /**
+     * @param {!WglTexture} inputState
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
-     * @returns {!CircuitStats}
+     * @param {!boolean} collectStats
+     * @param {!int} outerStartingRow
+     * @param {!int} outerNumWires
+     * @param {!Controls} outerControls
+     * @param {!Map.<!string, *>} outerContext
+     * @returns {!{output:!WglTexture,colQubitDensities:!Array.<!WglTexture>,customStats:!Array,customStatsMap:!Array}}
+     * @private
      */
-    static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
-        const numWires = circuitDefinition.numWires;
+    static advanceStateWithCircuit(inputState,
+                                   circuitDefinition,
+                                   time,
+                                   outerStartingRow,
+                                   outerNumWires,
+                                   outerControls,
+                                   outerContext,
+                                   collectStats) {
         const numCols = circuitDefinition.columns.length;
-        const allWiresMask = (1 << numWires) - 1;
 
-        // -- DEFINE TEXTURES TO BE COMPUTED --
-
-        let qubitDensityTexes = [];
+        let colQubitDensities = [];
         let customStats = [];
         let customStatsMap = [];
-        let noControlsTex = CircuitTextures.control(numWires, Controls.NONE);
-        let outputTex = CircuitTextures.aggregateWithReuse(
-            CircuitTextures.zero(numWires),
+        let noControlsTex = CircuitTextures.control(outerNumWires, Controls.NONE);
+        let output = CircuitTextures.aggregateWithReuse(
+            inputState,
             Seq.range(numCols),
             (inputState, col) => {
-                let controls = circuitDefinition.colControls(col);
-                let controlTex = CircuitTextures.control(numWires, controls);
+                let controls = outerControls.and(circuitDefinition.colControls(col).shift(outerStartingRow));
+                let controlTex = CircuitTextures.control(outerNumWires, controls);
 
                 let nextState = CircuitStats._advanceStateWithCircuitDefinitionColumn(
-                    0,
-                    new Map(),
+                    outerStartingRow,
+                    outerContext,
                     inputState,
                     circuitDefinition,
                     col,
@@ -328,46 +343,75 @@ export default class CircuitStats {
                     controlTex,
                     time);
 
-                let {qubitDensities, customGateStats} = CircuitStats._extractStateStatsNeededByCircuitColumn(
-                    nextState, // We want to show stats after post-selection, so we use 'next' instead of 'input'.
-                    circuitDefinition,
-                    col,
-                    controls,
-                    controlTex,
-                    time);
-                qubitDensityTexes.push(qubitDensities);
-                for (let {row, stat} of customGateStats) {
-                    //noinspection JSUnusedAssignment
-                    customStatsMap.push({
+                if (collectStats) {
+                    let {qubitDensities, customGateStats} = CircuitStats._extractStateStatsNeededByCircuitColumn(
+                        nextState, // We want to show stats after post-selection, so we use 'next' instead of 'input'.
+                        circuitDefinition,
                         col,
-                        row,
-                        out: customStats.length
-                    });
-                    //noinspection JSUnusedAssignment
-                    customStats.push(stat);
+                        controls,
+                        controlTex,
+                        time);
+                    colQubitDensities.push(qubitDensities);
+                    for (let {row, stat} of customGateStats) {
+                        //noinspection JSUnusedAssignment
+                        customStatsMap.push({
+                            col,
+                            row,
+                            out: customStats.length
+                        });
+                        //noinspection JSUnusedAssignment
+                        customStats.push(stat);
+                    }
                 }
 
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
                 return nextState;
             });
-        qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
+
+        if (collectStats) {
+            const allWiresMask = (1 << outerNumWires) - 1;
+            colQubitDensities.push(CircuitTextures.superpositionToQubitDensities(output, Controls.NONE, allWiresMask));
+        }
+
         CircuitTextures.doneWithTexture(noControlsTex);
+        return {output, colQubitDensities, customStats, customStatsMap};
+    }
 
-        // -- READ ALL TEXTURES --
 
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
+    static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
+        const numWires = circuitDefinition.numWires;
+        const numCols = circuitDefinition.columns.length;
+
+        // Advance state while collecting stats into textures.
+        let {output, colQubitDensities, customStats, customStatsMap} = CircuitStats.advanceStateWithCircuit(
+            CircuitTextures.zero(numWires),
+            circuitDefinition,
+            time,
+            0,
+            circuitDefinition.numWires,
+            Controls.NONE,
+            new Map(),
+            true);
+
+        // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
-            outputTex,
-            qubitDensityTexes,
+            output,
+            colQubitDensities,
             customStats});
 
         // -- INTERPRET --
 
-        let final = pixelData.qubitDensityTexes[pixelData.qubitDensityTexes.length - 1];
+        let final = pixelData.colQubitDensities[pixelData.colQubitDensities.length - 1];
         let unity = final[0] + final[3];
         //noinspection JSCheckFunctionSignatures
-        let outputSuperposition = CircuitTextures.pixelsToAmplitudes(pixelData.outputTex, unity);
+        let outputSuperposition = CircuitTextures.pixelsToAmplitudes(pixelData.output, unity);
 
-        let qubitDensities = seq(pixelData.qubitDensityTexes).mapWithIndex((pixels, col) =>
+        let qubitDensities = seq(pixelData.colQubitDensities).mapWithIndex((pixels, col) =>
             CircuitStats.scatterAndDecohereDensities(
                 CircuitTextures.pixelsToQubitDensityMatrices(pixels),
                 numWires,
