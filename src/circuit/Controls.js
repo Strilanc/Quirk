@@ -103,6 +103,16 @@ class Controls {
             this.inclusionMask | other.inclusionMask,
             this.desiredValueMask | other.desiredValueMask);
     }
+
+    /**
+     * @param {!int} offset
+     * @returns {!Controls}
+     */
+    shift(offset) {
+        return new Controls(
+            this.inclusionMask << offset,
+            this.desiredValueMask << offset)
+    }
 }
 
 /** @type {!Controls} */

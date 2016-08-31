@@ -632,9 +632,10 @@ class CircuitDefinition {
     /**
      * @param {!int} colIndex
      * @param {!number} time
+     * @param {!int} rowOffset
      * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
      */
-    operationShadersInColAt(colIndex, time) {
+    operationShadersInColAt(colIndex, time, rowOffset=0) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return [];
         }
@@ -651,27 +652,31 @@ class CircuitDefinition {
                 }
 
                 if (gate.customShaders !== undefined) {
-                    return gate.customShaders.map(f => e => f(e.withRow(i)));
+                    return gate.customShaders.map(f => e => f(e.withRow(i + rowOffset)));
                 }
 
                 let m = gate.knownMatrixAt(time);
                 if (m === undefined) {
                     throw new DetailedError("Bad gate", {gate});
                 }
-                return [args => GateShaders.qubitOperation(args.stateTexture, m, i, args.controlsTexture)];
+                return [args => GateShaders.qubitOperation(args.stateTexture, m, i + rowOffset, args.controlsTexture)];
             }).
             flatten();
         let swaps = col.swapPairs().
-            map(([i1, i2]) => args => CircuitShaders.swap(args.stateTexture, i1, i2, args.controlsTexture));
+            map(([i1, i2]) => args => CircuitShaders.swap(args.stateTexture,
+                                                          i1 + rowOffset,
+                                                          i2 + rowOffset,
+                                                          args.controlsTexture));
         return nonSwaps.concat(swaps).toArray();
     }
 
     /**
      * @param {!int} colIndex
      * @param {!boolean} beforeNotAfter
+     * @param {!int} rowOffset
      * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
      */
-    getSetupShadersInCol(colIndex, beforeNotAfter) {
+    getSetupShadersInCol(colIndex, beforeNotAfter, rowOffset) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return [];
         }
@@ -683,7 +688,7 @@ class CircuitDefinition {
                     return [];
                 }
                 let shaders = beforeNotAfter ? gate.preShaders : gate.postShaders;
-                return shaders.map(f => e => f(e.withRow(i)));
+                return shaders.map(f => e => f(e.withRow(i + rowOffset)));
             }).
             flatten().
             toArray();
