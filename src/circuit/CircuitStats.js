@@ -81,6 +81,9 @@ export default class CircuitStats {
 
         // The initial state is all-qubits-off.
         if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
+            if (this.qubitDensityMatrix(0, colIndex).hasNaN()) {
+                return Matrix.zero(2, 2).times(NaN);
+            }
             let buf = new Float32Array(2*2*2);
             buf[0] = 1;
             return new Matrix(2, 2, buf);
