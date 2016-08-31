@@ -368,7 +368,7 @@ class CircuitDefinition {
      * and assuming the gate positions are fixed (i.e. wires can only be added or removed from the bottom).
      */
     minimumRequiredWireCount() {
-        let best = 0;
+        let best = 1;
         for (let c of this.columns) {
             best = Math.max(best, c.minimumRequiredWireCount());
         }
