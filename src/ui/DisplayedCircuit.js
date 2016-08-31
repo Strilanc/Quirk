@@ -25,7 +25,7 @@ let CIRCUIT_OP_RIGHT_SPACING = 5;
 
 const SUPERPOSITION_GRID_LABEL_SPAN = 50;
 
-const EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS = 3;
+const EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS = 2;
 
 class DisplayedCircuit {
     /**
@@ -810,7 +810,6 @@ class DisplayedCircuit {
     _drawOutputDisplays(painter, stats, hand) {
         let chanceCol = this._clampedCircuitColCount() + 1;
         let blochCol = chanceCol + 1;
-        let densityCol = blochCol + 1;
         let numWire = this.importantWireCount();
 
         for (let i = 0; i < numWire; i++) {
@@ -822,19 +821,11 @@ class DisplayedCircuit {
             }
         }
 
-        for (let i = 0; i + 1 <= numWire; i++) {
-            let m = stats.qubitDensityMatrix(i, Infinity);
-            let topLeft = this.gateRect(i, densityCol).topLeft();
-            let wh = this.gateRect(i, densityCol).bottom() - topLeft.y;
-            let r = new Rect(topLeft.x, topLeft.y, wh, wh);
-            MathPainter.paintDensityMatrix(painter, m, r, hand.hoverPoints());
-        }
-
         let bottom = this.wireRect(numWire-1).bottom();
         let x = this.opRect(chanceCol - 1).x;
         painter.printParagraph(
-            "Local wire states\n(Chance/Bloch/Density)",
-            new Rect(x+25, bottom+4, 190, 40),
+            "Local wire states\n(Chance/Bloch)",
+            new Rect(x, bottom+4, 190, 40),
             new Point(0.5, 0),
             'gray');
 
