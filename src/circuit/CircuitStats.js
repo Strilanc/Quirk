@@ -208,17 +208,18 @@ export default class CircuitStats {
      * @param {!WglTexture} controlsTex
      * @param {!int} outerStartingRow
      * @param {!number} time
+     * @private
      * @returns {!WglTexture}
      */
     static _advanceStateWithCircuitDefinitionColumn(outerStartingRow,
-                                                   outerContext,
-                                                   inputState,
-                                                   circuitDefinition,
-                                                   col,
-                                                   noControlsTex,
-                                                   controls,
-                                                   controlsTex,
-                                                   time) {
+                                                    outerContext,
+                                                    inputState,
+                                                    circuitDefinition,
+                                                    col,
+                                                    noControlsTex,
+                                                    controls,
+                                                    controlsTex,
+                                                    time) {
 
         let colContext = mergeMaps(outerContext, circuitDefinition.colCustomContextFromGates(col));
 
@@ -259,6 +260,41 @@ export default class CircuitStats {
     }
 
     /**
+     * @param {!WglTexture} state
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!int} col
+     * @param {!Controls} controls
+     * @param {!WglTexture} controlTex
+     * @param {!number} time
+     * @private
+     * @returns {!{qubitDensities:!WglTexture, customGateStats:!Array.<!{row:!int,stat:!WglTexture}>}}
+     */
+    static _extractStateStatsNeededByCircuitColumn(state, circuitDefinition, col, controls, controlTex, time) {
+        // Compute custom stats used by display gates.
+        let customGateStats = [];
+        for (let row of circuitDefinition.customStatRowsInCol(col)) {
+            let statArgs = new CircuitEvalArgs(
+                time,
+                row,
+                controls,
+                controlTex,
+                state,
+                circuitDefinition.colCustomContextFromGates(col));
+            let pipeline = circuitDefinition.columns[col].gates[row].customStatPipelineMaker(statArgs);
+            let stat = CircuitTextures.evaluatePipelineWithIntermediateCleanup(state, pipeline);
+            customGateStats.push({row, stat});
+        }
+
+        // Compute individual qubit densities, where needed.
+        let qubitDensities = CircuitTextures.superpositionToQubitDensities(
+            state,
+            controls,
+            circuitDefinition.colHasSingleQubitDisplayMask(col));
+
+        return {qubitDensities, customGateStats};
+    }
+
+    /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
      * @returns {!CircuitStats}
@@ -292,32 +328,26 @@ export default class CircuitStats {
                     controlTex,
                     time);
 
-                // Compute custom stats for display gates. (Happens after computation so post-selection has effect.)
-                for (let row of circuitDefinition.customStatRowsInCol(col)) {
-                    let statArgs = new CircuitEvalArgs(
-                        time,
-                        row,
-                        controls,
-                        controlTex,
-                        nextState,
-                        circuitDefinition.colCustomContextFromGates(col));
-                    let pipeline = circuitDefinition.columns[col].gates[row].customStatPipelineMaker(statArgs);
+                let {qubitDensities, customGateStats} = CircuitStats._extractStateStatsNeededByCircuitColumn(
+                    nextState, // We want to show stats after post-selection, so we use 'next' instead of 'input'.
+                    circuitDefinition,
+                    col,
+                    controls,
+                    controlTex,
+                    time);
+                qubitDensityTexes.push(qubitDensities);
+                for (let {row, stat} of customGateStats) {
+                    //noinspection JSUnusedAssignment
                     customStatsMap.push({
                         col,
                         row,
                         out: customStats.length
                     });
-                    customStats.push(CircuitTextures.evaluatePipelineWithIntermediateCleanup(nextState, pipeline));
+                    //noinspection JSUnusedAssignment
+                    customStats.push(stat);
                 }
 
-                // Compute individual qubit densities, where needed.
-                qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(
-                    nextState,
-                    controls,
-                    circuitDefinition.colHasSingleQubitDisplayMask(col)));
-
                 CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
-
                 return nextState;
             });
         qubitDensityTexes.push(CircuitTextures.superpositionToQubitDensities(outputTex, Controls.NONE, allWiresMask));
