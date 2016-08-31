@@ -941,7 +941,9 @@ class DisplayedCircuit {
         let numWire = this.importantWireCount();
         let buf = stats.finalState.rawBuffer();
         if (stats.circuitDefinition.numWires !== numWire) {
-            buf = buf.slice(0, 2 << numWire);
+            let r = new Float32Array(2 << numWire);
+            r.set(buf);
+            buf = r;
         }
 
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];

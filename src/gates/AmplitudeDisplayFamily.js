@@ -59,11 +59,13 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 }
 
 /**
- * @param {!Float32Array} ketPixels
- * @param {!Float32Array} consistentPixel
- * @returns {!{probabilities: undefined|!Float32Array, superposition: undefined|!Matrix, phaseLockIndex: undefined|!int}}
+ * @param {!int} span
+ * @param {!Array.<!Float32Array>} pixelGroups
+ * @param {!CircuitDefinition} circuitDefinition
+ * @returns {!{probabilities: undefined|!Float32Array, superposition: undefined|!Matrix, phaseLockIndex:undefined|!int}}
  */
-function processOutputs([ketPixels, consistentPixel]) {
+function processOutputs(span, pixelGroups, circuitDefinition) {
+    let [ketPixels, consistentPixel] = pixelGroups;
     let n = ketPixels.length >> 2;
     let w = n === 2 ? 2 : 1 << Math.floor(Math.round(Math.log2(n))/2);
     let h = n/w;
@@ -74,8 +76,8 @@ function processOutputs([ketPixels, consistentPixel]) {
         return _processOutputs_probabilities(w, h, n, unity, ketPixels);
     }
 
-    let phaseIndex = _processOutputs_pickPhaseLockIndex(ketPixels);
-    let phase = Math.atan2(ketPixels[phaseIndex*4+1], ketPixels[phaseIndex*4]);
+    let phaseIndex = span === circuitDefinition.numWires ? undefined : _processOutputs_pickPhaseLockIndex(ketPixels);
+    let phase = phaseIndex === undefined ? 0 : Math.atan2(ketPixels[phaseIndex*4+1], ketPixels[phaseIndex*4]);
     let c = Math.cos(phase);
     let s = -Math.sin(phase);
 
@@ -94,6 +96,11 @@ function processOutputs([ketPixels, consistentPixel]) {
     };
 }
 
+/**
+ * @param {!Float32Array} ketPixels
+ * @returns {!int}
+ * @private
+ */
 function _processOutputs_pickPhaseLockIndex(ketPixels) {
     let result = 0;
     let best = 0;
@@ -487,7 +494,7 @@ function amplitudeDisplayMaker(span) {
             args.controls,
             args.row,
             span)).
-        withCustomStatPostProcessor(processOutputs).
+        withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS);
 }
 

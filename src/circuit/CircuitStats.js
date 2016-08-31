@@ -430,6 +430,7 @@ export default class CircuitStats {
      * @returns {!CircuitStats}
      */
     static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
+        circuitDefinition = circuitDefinition.withMinimumWireCount();
         const numWires = circuitDefinition.numWires;
         const numCols = circuitDefinition.columns.length;
 
