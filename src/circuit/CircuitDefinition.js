@@ -451,9 +451,24 @@ class CircuitDefinition {
     locIsMeasured(pt) {
         let row = pt.y;
         if (row < 0 || row >= this.numWires) {
-            return false
+            return false;
         }
         return (this.colIsMeasuredMask(pt.x) & (1 << row)) !== 0;
+    }
+
+    /**
+     * @param {!Point} pt
+     * @returns {undefined|boolean}
+     */
+    locClassifyMeasuredIncludingGateExtension(pt) {
+        let row = pt.y;
+        if (row < 0 || row >= this.numWires) {
+            return false;
+        }
+        let gate = this.columns[pt.x].gates[row];
+        let h = gate === null ? 1 : gate.height;
+        let r = (this.colIsMeasuredMask(pt.x) >> row) & ((1 << h) - 1);
+        return r === 0 ? false : r === (1 << h) - 1 ? true : undefined;
     }
 
     /**
@@ -500,7 +515,7 @@ class CircuitDefinition {
      */
     locStartsSingleControlWire(pt) {
         return this.locIsControlWireStarter(pt) &&
-            !this.locIsMeasured(pt) &&
+            this.locClassifyMeasuredIncludingGateExtension(pt) !== true &&
             this.gateAtLocIsDisabledReason(pt) === undefined;
     }
 
@@ -510,7 +525,7 @@ class CircuitDefinition {
      */
     locStartsDoubleControlWire(pt) {
         return this.locIsControlWireStarter(pt) &&
-            this.locIsMeasured(pt) &&
+            this.locClassifyMeasuredIncludingGateExtension(pt) !== false &&
             this.gateAtLocIsDisabledReason(pt) === undefined;
     }
 
