@@ -33,7 +33,13 @@ const TEST_GATES = new Map([
     ['.', Gates.SpacerGate],
 
     ['a', Gates.InputGates.InputAFamily.ofSize(1)],
+    ['A', Gates.InputGates.InputAFamily.ofSize(2)],
     ['b', Gates.InputGates.InputBFamily.ofSize(1)],
+    ['B', Gates.InputGates.InputBFamily.ofSize(2)],
+    ['⩮', Gates.MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(1)],
+    ['⩲', Gates.Arithmetic.PlusAFamily.ofSize(1)],
+    ['⨧', Gates.Arithmetic.PlusAFamily.ofSize(2)],
+
 
     ['M', M],
     ['%', Gates.Displays.ChanceDisplay],
@@ -884,6 +890,10 @@ suite.test("gateAtLocIsDisabledReason_tagCollision", () => {
                -a-
                ---`);
 
+    bad(1, 1, `-a-
+               -A-
+               -#-`);
+
     bad(1, 1, `-b-
                -b-
                ---`);
@@ -891,6 +901,154 @@ suite.test("gateAtLocIsDisabledReason_tagCollision", () => {
     good(1, 1, `-b-
                 -a-
                 ---`);
+});
+
+suite.test("gateAtLocIsDisabledReason_needInput", () => {
+    let bad = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isNotEqualTo(undefined);
+    let good = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isEqualTo(undefined);
+
+    good(1, 1, `---
+                -X-
+                ---`);
+
+    bad(1, 1, `---
+               -⩲-
+               ---`);
+
+    bad(1, 1, `-b-
+               -⩲-
+               ---`);
+
+    good(1, 1, `-a-
+                -⩲-
+                ---`);
+
+    // Still works when one of the inputs is broken.
+    good(1, 1, `-a-
+                -⩲-
+                -a-`);
+
+    bad(1, 1, `---
+               -⨧-
+               -#-`);
+
+    good(1, 1, `-a-
+                -⨧-
+                -#-`);
+
+    // Overlap.
+    bad(1, 1, `-A-
+               -⨧-
+               -#-`);
+
+    bad(1, 1, `---
+               -⩮-
+               ---`);
+
+    bad(1, 1, `-a-
+               -⩮-
+               ---`);
+
+    bad(1, 1, `-b-
+               -⩮-
+               ---`);
+
+    good(1, 1, `-a-
+                -⩮-
+                -b-`);
+});
+
+suite.test("gateAtLocIsDisabledReason_tagWithWrongCoherence", () => {
+    let bad = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isNotEqualTo(undefined);
+    let good = (col, row, diagram) =>
+        assertThat(circuit(diagram).gateAtLocIsDisabledReason(new Point(col, row))).isEqualTo(undefined);
+
+
+    good(3, 1, `---a-
+                ---⩲-
+                -----`);
+
+    good(3, 1, `-M-a-
+                ---⩲-
+                -----`);
+
+    bad(3, 1, `---a-
+               -M-⩲-
+               -----`);
+
+    good(3, 1, `-M-a-
+                -M-⩲-
+                -----`);
+
+    good(3, 2, `---A-
+                ---#-
+                ---⨧-
+                ---#-`);
+
+    good(3, 2, `---A-
+                -M-#-
+                ---⨧-
+                ---#-`);
+
+    bad(3, 2, `---A-
+               ---#-
+               -M-⨧-
+               ---#-`);
+
+    bad(3, 2, `---A-
+               ---#-
+               ---⨧-
+               -M-#-`);
+
+    bad(3, 2, `---A-
+               ---#-
+               -M-⨧-
+               -M-#-`);
+
+    good(3, 2, `-M-A-
+                -M-#-
+                ---⨧-
+                ---#-`);
+
+    good(3, 2, `-M-A-
+                -M-#-
+                -M-⨧-
+                -M-#-`);
+
+    good(3, 1, `---a-
+                ---⩮-
+                ---b-`);
+
+    good(3, 1, `-M-a-
+                ---⩮-
+                ---b-`);
+
+    good(3, 1, `---a-
+                ---⩮-
+                -M-b-`);
+
+    good(3, 1, `-M-a-
+                ---⩮-
+                -M-b-`);
+
+    bad(3, 1, `---a-
+               -M-⩮-
+               ---b-`);
+
+    bad(3, 1, `-M-a-
+               -M-⩮-
+               ---b-`);
+
+    bad(3, 1, `---a-
+               -M-⩮-
+               -M-b-`);
+
+    good(3, 1, `-M-a-
+                -M-⩮-
+                -M-b-`);
 });
 
 suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {

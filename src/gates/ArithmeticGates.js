@@ -161,12 +161,12 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+=A",
     "Addition Gate [input A]",
-    "Adds 'input A' qubits into the qubits covered by this gate.").
+    "Adds 'input A' into the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withHeight(span).
     withSerializedId("+=A" + span).
-    withCustomDisableReasonFinder(Gate.needColumnContextDisabledReasonFinder('need\ninput\nA', 'Input Range A')).
+    withCustomDisableReasonFinder(Gate.disableReasonFinder_needInput('need\ninput\nA', 'Input Range A')).
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
         return additionShaderFunc(
@@ -182,12 +182,12 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-=A",
     "Subtraction Gate [input A]",
-    "Subtracts 'input A' qubits out of the qubits covered by this gate.").
+    "Subtracts 'input A' out of the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withHeight(span).
     withSerializedId("-=A" + span).
-    withCustomDisableReasonFinder(Gate.needColumnContextDisabledReasonFinder('need\ninput\nA', 'Input Range A')).
+    withCustomDisableReasonFinder(Gate.disableReasonFinder_needInput('need\ninput\nA', 'Input Range A')).
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
         return additionShaderFunc(

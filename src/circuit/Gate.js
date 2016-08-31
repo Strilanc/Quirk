@@ -556,21 +556,42 @@ class Gate {
         return `Gate(${this.symbol})`;
     }
 
-    static needColumnContextDisabledReasonFinder(failMsg, ...keys) {
-        return col => {
-            let remaining = new Set(keys);
-            for (let i = 0; i < col.gates.length; i++) {
-                let g = col.gates[i];
-                if (g !== null) {
-                    for (let c of g.customColumnContextProvider(i)) {
-                        remaining.delete(c.key);
-                        if (remaining.size === 0) {
-                            return undefined;
-                        }
-                    }
+    /**
+     * @param {!string} failMsg
+     * @param {...!string} keys
+     * @returns {!function(!GateColumn) : undefined|!string}
+     */
+    static disableReasonFinder_needColumnContext(failMsg, ...keys) {
+        return col => col.findFirstContextsIncludingDisabled(keys).length === keys.length ? undefined : failMsg;
+    }
+
+    /**
+     * @param {!string} missingMsg
+     * @param {...!string} keys
+     * @returns {!function(!GateColumn) : undefined|!string}
+     */
+    static disableReasonFinder_needInput(missingMsg, ...keys) {
+        return (col, qubit, measuredMask) => {
+            let g = col.gates[qubit];
+            let ranges = col.findFirstContextsIncludingDisabled(keys);
+            if (ranges.length < keys.length) {
+                return missingMsg;
+            }
+
+            if (seq(ranges).any(({offset, length}) => offset + length > qubit && qubit + g.height > offset)) {
+                return "input\ninside";
+            }
+
+            if (g.effectMightPermutesStates()) {
+                let hasMeasuredOutputs = ((measuredMask >> qubit) & ((1 << g.height) - 1)) !== 0;
+                let hasUnmeasuredInputs =
+                    seq(ranges).any(({offset, length}) => ((~measuredMask >> offset) & ((1 << length) - 1)) !== 0);
+                if (hasUnmeasuredInputs && hasMeasuredOutputs) {
+                    return "no\nremix\n(sorry)";
                 }
             }
-            return failMsg;
+
+            return undefined;
         };
     }
 }

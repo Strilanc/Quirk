@@ -163,6 +163,27 @@ class GateColumn {
     }
 
     /**
+     * @param {!Array.<!string>} keys
+     * @returns {!Array.<*>}
+     */
+    findFirstContextsIncludingDisabled(keys) {
+        let remainingKeys = new Set(keys);
+        let results = [];
+        for (let i = 0; i < this.gates.length; i++) {
+            if (this.gates[i] === null) {
+                continue;
+            }
+            for (let c of this.gates[i].customColumnContextProvider(i)) {
+                //noinspection JSUnusedAssignment
+                if (remainingKeys.delete(c.key)) {
+                    results.push(c.val);
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
      * @param {!int} row
      * @returns {undefined|!string}
      * @private
