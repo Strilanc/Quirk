@@ -36,3 +36,12 @@ suite.webGlTest("smoke", () => {
     assertTrue(stats.circuitDefinition.colHasControls(2));
     assertThat(stats.qubitDensityMatrix(2, 7)).isEqualTo(Matrix.square(0.5, 0, 0, 0.5));
 });
+
+suite.webGlTest("all-gates-in-sequence", () => {
+    let cols = Gates.KnownToSerializer.
+        filter(e => e !== Gates.Special.Measurement && e !== Gates.ErrorInjection && e.height <= 8).
+        map(e => new GateColumn([e, null, null, null, null, null, null, null]));
+    let c = new CircuitDefinition(8, cols);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0.1);
+    assertThat(stats).isNotEqualTo(undefined);
+});
