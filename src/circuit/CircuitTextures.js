@@ -149,6 +149,7 @@ CircuitTextures.mergedReadFloats = textures => {
 /**
  * @param {!CircuitEvalArgs} circuitEvalArgs
  * @param {!function(!CircuitEvalArgs):!WglConfiguredShader} customShader
+ * @returns {!WglTexture}
  */
 CircuitTextures.applyCustomShader = (customShader, circuitEvalArgs) => {
     let result = allocSameSizedTexture(circuitEvalArgs.stateTexture);

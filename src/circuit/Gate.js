@@ -35,6 +35,8 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
+        /** @type {undefined|!function(!!CircuitEvalArgs) : !WglTexture} */
+        this.customTextureTransform = undefined;
         /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.customShaders = undefined;
         /** @type {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} */
@@ -293,6 +295,7 @@ class Gate {
         g.isControlWireSource = this.isControlWireSource;
         g.preShaders = this.preShaders;
         g.postShaders = this.postShaders;
+        g.customTextureTransform = this.customTextureTransform;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
@@ -375,6 +378,16 @@ class Gate {
     withCustomShaders(shaderFuncs) {
         let g = this._copy();
         g.customShaders = shaderFuncs;
+        return g;
+    }
+
+    /**
+     * @param {!function(!CircuitEvalArgs) : !WglTexture} func
+     * @returns {!Gate}
+     */
+    withCustomTextureTransform(func) {
+        let g = this._copy();
+        g.customTextureTransform = func;
         return g;
     }
 

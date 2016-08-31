@@ -631,19 +631,18 @@ class CircuitDefinition {
 
     /**
      * @param {!int} colIndex
-     * @param {!number} time
      * @param {!int} rowOffset
      * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
      */
-    operationShadersInColAt(colIndex, time, rowOffset=0) {
+    operationShadersInColAt(colIndex, rowOffset=0) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return [];
         }
 
         let col = this.columns[colIndex];
         let nonSwaps = seq(col.gates).
-            mapWithIndex((gate, i) => {
-                let pt = new Point(colIndex, i);
+            mapWithIndex((gate, row) => {
+                let pt = new Point(colIndex, row);
                 if (gate === null ||
                         gate.definitelyHasNoEffect() ||
                         gate === Gates.Special.SwapHalf ||
@@ -652,14 +651,18 @@ class CircuitDefinition {
                 }
 
                 if (gate.customShaders !== undefined) {
-                    return gate.customShaders.map(f => e => f(e.withRow(i + rowOffset)));
+                    return gate.customShaders.map(f => e => f(e.withRow(row + rowOffset)));
                 }
 
-                let m = gate.knownMatrixAt(time);
-                if (m === undefined) {
-                    throw new DetailedError("Bad gate", {gate});
+                if (gate.customTextureTransform !== undefined) {
+                    return [];
                 }
-                return [args => GateShaders.qubitOperation(args.stateTexture, m, i + rowOffset, args.controlsTexture)];
+
+                return [args => GateShaders.qubitOperation(
+                    args.stateTexture,
+                    gate.knownMatrixAt(args.time),
+                    row + rowOffset,
+                    args.controlsTexture)];
             }).
             flatten();
         let swaps = col.swapPairs().
@@ -668,6 +671,22 @@ class CircuitDefinition {
                                                           i2 + rowOffset,
                                                           args.controlsTexture));
         return nonSwaps.concat(swaps).toArray();
+    }
+
+    /**
+     * @param {!int} colIndex
+     * @param {!int} rowOffset
+     * @returns {!Array.<!function(!CircuitEvalArgs):!WglTexture>}
+     */
+    textureTransformsInColAt(colIndex, rowOffset=0) {
+        if (colIndex < 0 || colIndex >= this.columns.length) {
+            return [];
+        }
+        return seq(this.columns[colIndex].gates).
+            mapWithIndex((gate, row) => gate === null || gate.customTextureTransform === undefined ? undefined :
+                args => gate.customTextureTransform(args.withRow(row + rowOffset))).
+            filter(e => e !== undefined).
+            toArray();
     }
 
     /**

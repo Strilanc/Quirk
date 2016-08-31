@@ -1112,37 +1112,37 @@ suite.test("colCustomContextFromGates", () => {
 suite.test("operationShadersInColAt", () => {
     assertThat(circuit(`-
                         -
-                        -`).operationShadersInColAt(0, 0.2).length).isEqualTo(0);
+                        -`).operationShadersInColAt(0).length).isEqualTo(0);
 
     assertThat(circuit(`-
                         -
-                        t`).operationShadersInColAt(0, 0.2).length).isEqualTo(1);
+                        t`).operationShadersInColAt(0).length).isEqualTo(1);
     assertThat(circuit(`-
                         -
                         -`).operationShadersInColAt(0, 0).length).isEqualTo(0);
 
     assertThat(circuit(`-
                         X
-                        X`).operationShadersInColAt(0, 0.2).length).isEqualTo(2);
+                        X`).operationShadersInColAt(0).length).isEqualTo(2);
     assertThat(circuit(`•
                         X
-                        X`).operationShadersInColAt(0, 0.2).length).isEqualTo(2);
+                        X`).operationShadersInColAt(0).length).isEqualTo(2);
     assertThat(circuit(`-•
                         MX
                         -X`).operationShadersInColAt(1, 0.2).length).isEqualTo(1);
 
     assertThat(circuit(`%-
                         D/
-                        //`).operationShadersInColAt(0, 0.2).length).isEqualTo(0);
+                        //`).operationShadersInColAt(0).length).isEqualTo(0);
 
     assertThat(circuit(`s
                         -
-                        s`).operationShadersInColAt(0, 0.2).length).isEqualTo(1);
+                        s`).operationShadersInColAt(0).length).isEqualTo(1);
 
 
     assertThat(circuit(`-
                         2
-                        /`).operationShadersInColAt(0, 0.2).length).isEqualTo(1);
+                        /`).operationShadersInColAt(0).length).isEqualTo(1);
 });
 
 suite.test("isSlotRectCoveredByGateInSameColumn", () => {

@@ -247,12 +247,16 @@ export default class CircuitStats {
         // Apply gates in column.
         let almostNextState = CircuitTextures.aggregateWithReuse(
             preparedState,
-            circuitDefinition.operationShadersInColAt(col, time, outerStartingRow),
+            circuitDefinition.operationShadersInColAt(col, outerStartingRow),
             (v, f) => CircuitTextures.applyCustomShader(f, colArgs.withStateTexture(v)));
+        let almostAlmostNextState = CircuitTextures.aggregateWithReuse(
+            almostNextState,
+            circuitDefinition.textureTransformsInColAt(col, outerStartingRow),
+            (v, f) => f(colArgs.withStateTexture(v)));
 
         // Apply 'after column' un-setup shaders.
         let nextState = CircuitTextures.aggregateWithReuse(
-            almostNextState,
+            almostAlmostNextState,
             circuitDefinition.getSetupShadersInCol(col, false, outerStartingRow),
             (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withStateTexture(v)));
 
