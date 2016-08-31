@@ -5,6 +5,7 @@ export default class CircuitEvalArgs {
     /**
      * @param {!number} time
      * @param {undefined|!int} row
+     * @param {!int} wireCount
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
      * @param {undefined|!WglTexture} stateTexture
@@ -12,6 +13,7 @@ export default class CircuitEvalArgs {
      */
     constructor(time,
                 row,
+                wireCount,
                 controls,
                 controlsTexture,
                 stateTexture,
@@ -20,6 +22,8 @@ export default class CircuitEvalArgs {
         this.time = time;
         /** @type {undefined|!int} */
         this.row = row;
+        /** @type {!int} */
+        this.wireCount = wireCount;
         /** @type {!Controls} */
         this.controls = controls;
         /** @type {!WglTexture} */
@@ -38,6 +42,7 @@ export default class CircuitEvalArgs {
         return new CircuitEvalArgs(
             this.time,
             this.row,
+            this.wireCount,
             this.controls,
             this.controlsTexture,
             this.stateTexture,

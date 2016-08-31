@@ -34,6 +34,7 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
             (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, new CircuitEvalArgs(
                 time,
                 bit,
+                numQubits,
                 Controls.NONE,
                 control,
                 accTex,

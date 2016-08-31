@@ -6,6 +6,7 @@ import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
 import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
+import Gate from "src/circuit/Gate.js"
 import Gates from "src/gates/AllGates.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
@@ -199,6 +200,8 @@ export default class CircuitStats {
     }
 
     /**
+     * @param {!int} outerStartingRow
+     * @param {!int} outerWireCount
      * @param {!Map.<!string, *>} outerContext
      * @param {!WglTexture} inputState
      * @param {!CircuitDefinition} circuitDefinition
@@ -206,12 +209,12 @@ export default class CircuitStats {
      * @param {!WglTexture} noControlsTex
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTex
-     * @param {!int} outerStartingRow
      * @param {!number} time
-     * @private
      * @returns {!WglTexture}
+     * @private
      */
     static _advanceStateWithCircuitDefinitionColumn(outerStartingRow,
+                                                    outerWireCount,
                                                     outerContext,
                                                     inputState,
                                                     circuitDefinition,
@@ -226,6 +229,7 @@ export default class CircuitStats {
         let setupArgs = new CircuitEvalArgs(
             time,
             undefined,
+            outerWireCount,
             Controls.NONE,
             noControlsTex,
             undefined,
@@ -233,6 +237,7 @@ export default class CircuitStats {
         let colArgs = new CircuitEvalArgs(
             time,
             undefined,
+            outerWireCount,
             controls,
             controlsTex,
             undefined,
@@ -285,6 +290,7 @@ export default class CircuitStats {
             let statArgs = new CircuitEvalArgs(
                 time,
                 row,
+                circuitDefinition.numWires,
                 controls,
                 controlTex,
                 state,
@@ -329,7 +335,7 @@ export default class CircuitStats {
         let customStats = [];
         let customStatsMap = [];
         let noControlsTex = CircuitTextures.control(outerNumWires, Controls.NONE);
-        let output = CircuitTextures.aggregateWithReuse(
+        let output = CircuitTextures.aggregateReusingIntermediates(
             inputState,
             Seq.range(numCols),
             (inputState, col) => {
@@ -338,6 +344,7 @@ export default class CircuitStats {
 
                 let nextState = CircuitStats._advanceStateWithCircuitDefinitionColumn(
                     outerStartingRow,
+                    outerNumWires,
                     outerContext,
                     inputState,
                     circuitDefinition,
@@ -368,19 +375,39 @@ export default class CircuitStats {
                     }
                 }
 
-                CircuitTextures.doneWithTexture(controlTex, "controlTex in fromCircuitAtTime");
+                CircuitTextures.doneWithTexture(controlTex, "controlTex in advanceStateWithCircuit");
                 return nextState;
             });
 
         if (collectStats) {
-            const allWiresMask = (1 << outerNumWires) - 1;
+            const allWiresMask = (1 << circuitDefinition.numWires) - 1;
             colQubitDensities.push(CircuitTextures.superpositionToQubitDensities(output, Controls.NONE, allWiresMask));
         }
 
-        CircuitTextures.doneWithTexture(noControlsTex);
+        CircuitTextures.doneWithTexture(noControlsTex, "noControlsTex in advanceStateWithCircuit");
         return {output, colQubitDensities, customStats, customStatsMap};
     }
 
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!string} symbol
+     * @param {!string} name
+     * @param {!string} blurb
+     * @returns {!Gate}
+     */
+    static circuitDefinitionToGate(circuitDefinition, symbol, name, blurb) {
+        return Gate.withoutKnownMatrix(symbol, name, blurb).
+            withCustomTextureTransform(args => CircuitStats.advanceStateWithCircuit(
+                args.stateTexture,
+                circuitDefinition,
+                args.time,
+                args.row,
+                args.wireCount,
+                args.controls,
+                args.customContextFromGates,
+                false).output).
+            withHeight(circuitDefinition.numWires);
+    }
 
     /**
      * @param {!CircuitDefinition} circuitDefinition
@@ -392,15 +419,17 @@ export default class CircuitStats {
         const numCols = circuitDefinition.columns.length;
 
         // Advance state while collecting stats into textures.
+        let initialState = CircuitTextures.zero(numWires);
         let {output, colQubitDensities, customStats, customStatsMap} = CircuitStats.advanceStateWithCircuit(
-            CircuitTextures.zero(numWires),
+            initialState,
             circuitDefinition,
             time,
             0,
-            circuitDefinition.numWires,
+            numWires,
             Controls.NONE,
             new Map(),
             true);
+        CircuitTextures.doneWithTexture(initialState, "initialState in _fromCircuitAtTime_noFallback");
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
