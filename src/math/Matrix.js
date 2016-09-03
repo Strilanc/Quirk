@@ -598,7 +598,11 @@ class Matrix {
      * @returns {!number}
      */
     norm2() {
-        return seq(this.rows()).flatten().map(e => e.norm2()).sum();
+        let t = 0;
+        for (let e of this._buffer) {
+            t += e*e;
+        }
+        return t;
     }
 
     /**
@@ -641,8 +645,7 @@ class Matrix {
         Util.need(operation2x2._width === 2 && operation2x2._height === 2, "Matrix.timesQubitOperation: not 2x2");
 
         let {_width: w, _height: h, _buffer: old} = this;
-        let [[{real: ar, imag: ai}, {real: br, imag: bi}],
-             [{real: cr, imag: ci}, {real: dr, imag: di}]] = operation2x2.rows();
+        let [ar, ai, br, bi, cr, ci, dr, di] = operation2x2._buffer;
 
         Util.need(h >= (2 << qubitIndex), "Matrix.timesQubitOperation: qubit index out of range");
 
@@ -741,7 +744,11 @@ class Matrix {
      * @private
      */
     transformRealAndImagComponentsWith(func) {
-        return Matrix.fromRows(this.rows().map(row => row.map(cell => new Complex(func(cell.real), func(cell.imag)))));
+        let buf = this._buffer.slice();
+        for (let i = 0; i < buf.length; i++) {
+            buf[i] = func(buf[i]);
+        }
+        return new Matrix(this._width, this._height, buf);
     }
 
     /**
@@ -825,7 +832,10 @@ class Matrix {
      * @private
      */
     _inline_rowMix_preMultiply(row1, row2, op) {
-        let [[a, b], [c, d]] = op.rows();
+        let a = new Complex(op._buffer[0], op._buffer[1]);
+        let b = new Complex(op._buffer[2], op._buffer[3]);
+        let c = new Complex(op._buffer[4], op._buffer[5]);
+        let d = new Complex(op._buffer[6], op._buffer[7]);
         for (let col = 0; col < this._width; col++) {
             let x = this.cell(col, row1);
             let y = this.cell(col, row2);
@@ -847,7 +857,10 @@ class Matrix {
      * @private
      */
     _inline_colMix_postMultiply(col1, col2, op) {
-        let [[a, b], [c, d]] = op.rows();
+        let a = new Complex(op._buffer[0], op._buffer[1]);
+        let b = new Complex(op._buffer[2], op._buffer[3]);
+        let c = new Complex(op._buffer[4], op._buffer[5]);
+        let d = new Complex(op._buffer[6], op._buffer[7]);
         for (let row = 0; row < this._width; row++) {
             let x = this.cell(col1, row);
             let y = this.cell(col2, row);
@@ -953,8 +966,10 @@ class Matrix {
         if (this.width() !== 2 || this.height() !== 2) {
             throw new Error("Not implemented: non-2x2 eigen decomposition");
         }
-        let [[a, b],
-             [c, d]] = this.rows();
+        let a = new Complex(this._buffer[0], this._buffer[1]);
+        let b = new Complex(this._buffer[2], this._buffer[3]);
+        let c = new Complex(this._buffer[4], this._buffer[5]);
+        let d = new Complex(this._buffer[6], this._buffer[7]);
         let vals = Complex.rootsOfQuadratic(
             Complex.ONE,
             a.plus(d).times(-1),
@@ -1059,8 +1074,10 @@ class Matrix {
         Util.need(this.isUnitary(0.01), "Need a unitary matrix.");
 
         // Extract orthogonal components, adjusting for factors of i.
-        let [[a, b],
-             [c, d]] = this.rows();
+        let a = new Complex(this._buffer[0], this._buffer[1]);
+        let b = new Complex(this._buffer[2], this._buffer[3]);
+        let c = new Complex(this._buffer[4], this._buffer[5]);
+        let d = new Complex(this._buffer[6], this._buffer[7]);
         let wφ = a.plus(d);
         let xφ = b.plus(c).dividedBy(Complex.I);
         let yφ = b.minus(c);
@@ -1233,7 +1250,11 @@ class Matrix {
 
     getColumn(colIndex) {
         Util.need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
-        return this.rows().map(r => r[colIndex]);
+        let col = [];
+        for (let r = 0; r < this._height; r++) {
+            col.push(this.cell(colIndex, r));
+        }
+        return col;
     }
 
     /**

@@ -217,6 +217,7 @@ export default class MathPainter {
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
         let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
+        drawArea = drawArea.withW(diam * numCols).withH(diam*numRows);
         let {x, y} = drawArea;
         let hasNaN = matrix.hasNaN();
         amplitudePhaseStrokeColor = amplitudePhaseStrokeColor || amplitudeCircleStrokeColor;
