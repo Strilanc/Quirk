@@ -832,10 +832,7 @@ class Matrix {
      * @private
      */
     _inline_rowMix_preMultiply(row1, row2, op) {
-        let a = new Complex(op._buffer[0], op._buffer[1]);
-        let b = new Complex(op._buffer[2], op._buffer[3]);
-        let c = new Complex(op._buffer[4], op._buffer[5]);
-        let d = new Complex(op._buffer[6], op._buffer[7]);
+        let [a, b, c, d] = op._2x2Breakdown();
         for (let col = 0; col < this._width; col++) {
             let x = this.cell(col, row1);
             let y = this.cell(col, row2);
@@ -857,10 +854,7 @@ class Matrix {
      * @private
      */
     _inline_colMix_postMultiply(col1, col2, op) {
-        let a = new Complex(op._buffer[0], op._buffer[1]);
-        let b = new Complex(op._buffer[2], op._buffer[3]);
-        let c = new Complex(op._buffer[4], op._buffer[5]);
-        let d = new Complex(op._buffer[6], op._buffer[7]);
+        let [a, b, c, d] = op._2x2Breakdown();
         for (let row = 0; row < this._width; row++) {
             let x = this.cell(col1, row);
             let y = this.cell(col2, row);
@@ -966,10 +960,7 @@ class Matrix {
         if (this.width() !== 2 || this.height() !== 2) {
             throw new Error("Not implemented: non-2x2 eigen decomposition");
         }
-        let a = new Complex(this._buffer[0], this._buffer[1]);
-        let b = new Complex(this._buffer[2], this._buffer[3]);
-        let c = new Complex(this._buffer[4], this._buffer[5]);
-        let d = new Complex(this._buffer[6], this._buffer[7]);
+        let [a, b, c, d] = this._2x2Breakdown();
         let vals = Complex.rootsOfQuadratic(
             Complex.ONE,
             a.plus(d).times(-1),
@@ -1064,6 +1055,17 @@ class Matrix {
     }
 
     /**
+     * @returns {!Array.<!Complex>}
+     * @private
+     */
+    _2x2Breakdown() {
+        return [new Complex(this._buffer[0], this._buffer[1]),
+                new Complex(this._buffer[2], this._buffer[3]),
+                new Complex(this._buffer[4], this._buffer[5]),
+                new Complex(this._buffer[6], this._buffer[7])];
+    }
+
+    /**
      * Given a single-qubit operation matrix U, finds φ, θ, and v=[x,y,z] that satisfy
      * U = exp(i φ) (I cos(θ/2) - v σ i sin(θ/2))
      *
@@ -1074,10 +1076,7 @@ class Matrix {
         Util.need(this.isUnitary(0.01), "Need a unitary matrix.");
 
         // Extract orthogonal components, adjusting for factors of i.
-        let a = new Complex(this._buffer[0], this._buffer[1]);
-        let b = new Complex(this._buffer[2], this._buffer[3]);
-        let c = new Complex(this._buffer[4], this._buffer[5]);
-        let d = new Complex(this._buffer[6], this._buffer[7]);
+        let [a, b, c, d] = this._2x2Breakdown();
         let wφ = a.plus(d);
         let xφ = b.plus(c).dividedBy(Complex.I);
         let yφ = b.minus(c);
@@ -1261,8 +1260,8 @@ class Matrix {
      * Returns the unitary matrix closest to the receiving matrix, "repairing" it into a unitary form.
      * @returns {!Matrix}
      */
-    closestUnitary() {
-        let svd = this.singularValueDecomposition();
+    closestUnitary(epsilon=0, maxIterations=100) {
+        let svd = this.singularValueDecomposition(epsilon, maxIterations);
         return svd.U.times(svd.V);
     }
 }
