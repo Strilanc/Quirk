@@ -185,6 +185,16 @@ class Complex {
                         return Complex.ZERO;
                     }
 
+                    // Fraction?
+                    if (dif.indexOf('/') !== -1) {
+                        let parts = dif.split('/').map(e => e === '' ? Complex.ONE : Complex.parse(e));
+                        let t = parts[0];
+                        for (let i = 1; i < parts.length; i++) {
+                            t = t.dividedBy(parts[i]);
+                        }
+                        return t;
+                    }
+
                     let isImaginaryPart = dif[dif.length - 1] === "i";
                     if (isImaginaryPart) {
                         dif = dif.slice(0, dif.length - 1);

@@ -207,41 +207,41 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Raising",
         gates: [
-            PoweringGates.XForward, PoweringGates.XBackward,
+            PoweringGates.ZForward, PoweringGates.ZBackward,
             PoweringGates.YForward, PoweringGates.YBackward,
-            PoweringGates.ZForward, PoweringGates.ZBackward
+            PoweringGates.XForward, PoweringGates.XBackward
         ]
     },
     {
         hint: "Exponentiating",
         gates: [
-            ExponentiatingGates.XForward, ExponentiatingGates.XBackward,
+            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward,
             ExponentiatingGates.YForward, ExponentiatingGates.YBackward,
-            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward
+            ExponentiatingGates.XForward, ExponentiatingGates.XBackward
         ]
     },
     {
-        hint: "Various X",
-        gates: [
-            VariousXGates.X8,  VariousXGates.X8i,
-            VariousXGates.X16, VariousXGates.X16i,
-            VariousXGates.X3,  VariousXGates.X3i
-        ]
-    },
-    {
-        hint: "Various Y",
-        gates: [
-            VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousYGates.Y16, VariousYGates.Y16i,
-            VariousYGates.Y3,  VariousYGates.Y3i
-        ]
-    },
-    {
-        hint: "Various Z",
+        hint: "1/8",
         gates: [
             VariousZGates.Z8,  VariousZGates.Z8i,
+            VariousYGates.Y8,  VariousYGates.Y8i,
+            VariousXGates.X8,  VariousXGates.X8i
+        ]
+    },
+    {
+        hint: "1/16",
+        gates: [
             VariousZGates.Z16, VariousZGates.Z16i,
-            VariousZGates.Z3,  VariousZGates.Z3i
+            VariousYGates.Y16, VariousYGates.Y16i,
+            VariousXGates.X16, VariousXGates.X16i
+        ]
+    },
+    {
+        hint: "Custom",
+        gates: [
+            undefined, undefined,
+            undefined, undefined,
+            undefined, undefined
         ]
     }
 ];

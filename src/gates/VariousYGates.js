@@ -44,14 +44,26 @@ VariousYGates.Y16i = Gate.fromKnownMatrix(
     Matrix.fromPauliRotation(0, -1 / 32, 0),
     "Y^-⅟₁₆ Gate",
     "Adjoint sixteenth root of Y.");
+VariousYGates.Y32 = Gate.fromKnownMatrix(
+    "Y^⅟₃₂",
+    Matrix.fromPauliRotation(0, 1 / 64, 0),
+    "Y^⅟₃₂ Gate",
+    "Principle 32'nd root of Y.");
+VariousYGates.Y32i = Gate.fromKnownMatrix(
+    "Y^-⅟₃₂",
+    Matrix.fromPauliRotation(0, -1 / 64, 0),
+    "Y^-⅟₃₂ Gate",
+    "Adjoint 32'nd root of Y.");
 
 VariousYGates.all =[
     VariousYGates.Y3,
     VariousYGates.Y4,
     VariousYGates.Y8,
     VariousYGates.Y16,
+    VariousYGates.Y32,
     VariousYGates.Y3i,
     VariousYGates.Y4i,
     VariousYGates.Y8i,
-    VariousYGates.Y16i
+    VariousYGates.Y16i,
+    VariousYGates.Y32i
 ];

@@ -146,6 +146,8 @@ suite.test("parse", () => {
     assertThat(Complex.parse("-5+2i")).isEqualTo(new Complex(-5, 2));
     assertThat(Complex.parse("-5-2i")).isEqualTo(new Complex(-5, -2));
 
+    assertThat(Complex.parse("3/2i")).isEqualTo(new Complex(0, -1.5));
+
     assertThat(Complex.parse("\u221A2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
 
     assertThat(Complex.parse("1e-10")).isEqualTo(new Complex(0.0000000001, 0));
