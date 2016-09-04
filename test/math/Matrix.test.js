@@ -589,14 +589,23 @@ suite.test("singularValueDecomposition_randomized", () => {
 });
 
 suite.test("closestUnitary_2x2", () => {
+    let i = Complex.I;
+    let ni = i.neg();
     assertThat(Matrix.square(0, 0, 0, 0).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(1, 0, 0, 1));
     assertThat(Matrix.square(2, 0, 0, 0.0001).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(1, 0, 0, 1));
     assertThat(Matrix.square(0, 0.5, 0.0001, 0).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(0, 1, 1, 0));
-    assertThat(Matrix.square(1, Complex.I, -1, Complex.I.times(-1)).closestUnitary()).
-        isApproximatelyEqualTo(Matrix.square(1, 0, 0, Complex.I.times(-1)));
+    assertThat(Matrix.square(1, i, -1, ni).closestUnitary()).
+        isApproximatelyEqualTo(Matrix.square(1, 0, 0, ni));
+
+    let m = Matrix.square(
+        1,  1,  1,  1,
+        1,  i, -1, ni,
+        1, -1,  1, -1,
+        1, ni, -1,  i);
+    assertThat(m.closestUnitary(0.001)).isApproximatelyEqualTo(m.times(0.5));
 });
 
 suite.test("eigenDecomposition", () => {

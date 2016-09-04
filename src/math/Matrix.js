@@ -916,6 +916,11 @@ class Matrix {
                 R._inline_rowMix_preMultiply(col, row, op);
                 Q._inline_colMix_postMultiply(col, row, op.adjoint());
             }
+
+            // Cancel imaginary factors on diagonal.
+            let u = R.cell(row, row).unit();
+            R._inline_rowScale_preMultiply(row, u.conjugate());
+            Q._inline_colScale_postMultiply(row, u);
         }
         return {Q, R};
     }
@@ -1225,13 +1230,15 @@ class Matrix {
             this._unordered_singularValueDecomposition_2x2() :
             this._unordered_singularValueDecomposition_iterative(epsilon, maxIterations);
 
-        // Fix ordering.
+        // Fix ordering, so that the singular values are ascending.
         let permutation = Seq.range(this._width).sortedBy(i => -S.cell(i, i).norm2()).toArray();
         for (let i = 0; i < S._width; i++) {
             let j = permutation[i];
             if (i !== j) {
                 U._inline_colMix_postMultiply(i, j, Matrix.PAULI_X);
-                S._inline_rowMix_preMultiply(i, j, Matrix.PAULI_X);
+                V._inline_rowMix_preMultiply(i, j, Matrix.PAULI_X);
+                [S._buffer[i*2], S._buffer[j*2]] = [S._buffer[j*2], S._buffer[i*2]];
+                [S._buffer[i*2+1], S._buffer[j*2+1]] = [S._buffer[j*2+1], S._buffer[i*2+1]];
                 [permutation[j], permutation[i]] = [permutation[i], permutation[j]]
             }
         }
