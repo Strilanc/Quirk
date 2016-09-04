@@ -1,4 +1,5 @@
 import DetailedError from "src/base/DetailedError.js"
+import CooldownThrottle from "src/base/CooldownThrottle.js"
 
 /**
  * An observable sequence of events.
@@ -75,6 +76,33 @@ class Observable {
                     unsub()
                 }
             }
+        });
+    }
+
+    /**
+     * Starts a timer after each completed send, delays sending any more values until the timer expires, and skips
+     * intermediate values when a newer value arrives from the source while the timer is still running down.
+     * @param {!number} cooldownMillis
+     * @returns {!Observable.<T>}
+     * @template T
+     */
+    throttleLatest(cooldownMillis) {
+        return new Observable(observer => {
+            let latest = undefined;
+            let isKilled = false;
+            let throttle = new CooldownThrottle(() => {
+                if (!isKilled) {
+                    observer(latest);
+                }
+            }, cooldownMillis);
+            let unsub = this.subscribe(e => {
+                latest = e;
+                throttle.trigger();
+            });
+            return () => {
+                isKilled = true;
+                unsub();
+            };
         });
     }
 
