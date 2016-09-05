@@ -85,6 +85,10 @@ class Gate {
          * @type {!boolean}
          */
         this.isControlWireSource = false;
+        /**
+         * @type {undefined|!CircuitDefinition}
+         */
+        this.knownCircuit = undefined;
 
         /**
          * @type {undefined|!boolean}
@@ -283,6 +287,7 @@ class Gate {
             g.gateFamily = [g];
         }
         g._knownMatrix = this._knownMatrix;
+        g.knownCircuit = this.knownCircuit;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
         g._hasNoEffect = this._hasNoEffect;
@@ -306,6 +311,16 @@ class Gate {
     withStableDuration(duration) {
         let g = this._copy();
         g._stableDuration = duration;
+        return g;
+    }
+
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @returns {!Gate}
+     */
+    withKnownCircuit(circuitDefinition) {
+        let g = this._copy();
+        g.knownCircuit = circuitDefinition;
         return g;
     }
 

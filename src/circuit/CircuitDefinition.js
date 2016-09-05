@@ -1,6 +1,7 @@
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
+import CustomGateSet from "src/circuit/CustomGateSet.js"
 import DetailedError from "src/base/DetailedError.js"
 import GateColumn from "src/circuit/GateColumn.js"
 import GateShaders from "src/circuit/GateShaders.js"
@@ -20,10 +21,11 @@ class CircuitDefinition {
     /**
      * @param {!int} numWires
      * @param {!Array.<!GateColumn>} columns
-     * @param {!int=} outerRowOffset
-     * @param {!Map.<!string, *>=} outerContext
+     * @param {undefined|!int=} outerRowOffset
+     * @param {undefined|!Map.<!string, *>=} outerContext
+     * @param {!CustomGateSet} customGateSet
      */
-    constructor(numWires, columns, outerRowOffset=0, outerContext=new Map()) {
+    constructor(numWires, columns, outerRowOffset=0, outerContext=new Map(), customGateSet=new CustomGateSet()) {
         if (numWires < 0) {
             throw new DetailedError("Bad numWires", {numWires})
         }
@@ -41,6 +43,11 @@ class CircuitDefinition {
         this.numWires = numWires;
         /** @type {!Array.<!GateColumn>} */
         this.columns = columns;
+        /** @type {!CustomGateSet} */
+        this.customGateSet = customGateSet;
+
+        this.outerRowOffset = outerRowOffset;
+        this.outerContext = outerContext;
 
         /**
          * @type {!Array.<undefined|!string>}
@@ -73,7 +80,7 @@ class CircuitDefinition {
      * @returns {!CircuitDefinition}
      */
     withDisabledReasonsForEmbeddedContext(outerRowOffset, outerContext) {
-        return new CircuitDefinition(this.numWires, this.columns, outerRowOffset, outerContext);
+        return new CircuitDefinition(this.numWires, this.columns, outerRowOffset, outerContext, this.customGateSet);
     }
 
     /**
@@ -203,13 +210,16 @@ class CircuitDefinition {
     }
 
     /**
-     * @oaram {!Array.<!GateColumn>} cols
+     * @param {!Array.<!GateColumn>} cols
      * @returns {!CircuitDefinition}
      */
     withColumns(cols) {
         return new CircuitDefinition(
             this.numWires,
-            cols)
+            cols,
+            this.outerRowOffset,
+            this.outerContext,
+            this.customGateSet);
     }
 
     /**
@@ -343,7 +353,10 @@ class CircuitDefinition {
         let used = this._usedColumns();
         return new CircuitDefinition(
             this.numWires,
-            seq(this.columns).filterWithIndex((e, i) => used.has(i)).toArray());
+            seq(this.columns).filterWithIndex((e, i) => used.has(i)).toArray(),
+            this.outerRowOffset,
+            this.outerContext,
+            this.customGateSet);
     }
 
     /**
@@ -360,7 +373,10 @@ class CircuitDefinition {
                 seq(c.gates).
                     take(newWireCount).
                     padded(newWireCount, null).
-                    toArray())));
+                    toArray())),
+            this.outerRowOffset,
+            this.outerContext,
+            this.customGateSet);
     }
 
     /**

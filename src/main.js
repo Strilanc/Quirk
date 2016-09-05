@@ -19,6 +19,7 @@ import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 import { Observable, ObservableValue } from "src/base/Obs.js"
 import { initExports } from "src/ui/exports.js"
+import { initForge } from "src/ui/forge.js"
 import { initUndoRedo } from "src/ui/undo.js"
 import { initUrlCircuitSync } from "src/ui/url.js"
 import { initTitleSync } from "src/ui/title.js"
@@ -225,6 +226,7 @@ document.addEventListener('mouseleave', () => {
 
 initUrlCircuitSync(revision);
 initExports(revision);
+initForge(revision);
 initUndoRedo(revision);
 initTitleSync(revision);
 

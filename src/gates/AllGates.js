@@ -29,6 +29,8 @@ import VariousZGates from "src/gates/VariousZGates.js"
 import ZeroGate from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
+import {seq, Seq} from "src/base/Seq.js"
+
 let Gates = {};
 export default Gates;
 
@@ -108,6 +110,16 @@ Gates.KnownToSerializer = [
     ...VariousYGates.all,
     ...VariousZGates.all
 ];
+
+let gatesById = seq(Gates.KnownToSerializer).keyedBy(g => g.serializedId);
+/**
+ * @param {!String} id
+ * @param {!CustomGateSet} customGateSet
+ * @returns {undefined|!Gate}
+ */
+Gates.findKnownGateById = (id, customGateSet) => {
+    return gatesById.has(id) ? gatesById.get(id) : customGateSet.findGateWithSerializedId(id);
+};
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.TopToolboxGroups = [
