@@ -247,13 +247,5 @@ Gates.BottomToolboxGroups = [
             VariousYGates.Y16, VariousYGates.Y16i,
             VariousXGates.X16, VariousXGates.X16i
         ]
-    },
-    {
-        hint: "Custom",
-        gates: [
-            undefined, undefined,
-            undefined, undefined,
-            undefined, undefined
-        ]
     }
 ];

@@ -140,13 +140,15 @@ export default class WidgetPainter {
      * @param {!Rect} area
      * @param {!Gate} gate
      * @param {!number} time
+     * @param {!boolean=true} mayNeedToScale
+     * @returns {!{maxW: number, maxH: number}}
      */
-    static paintGateTooltip(painter, area, gate, time) {
+    static paintGateTooltip(painter, area, gate, time, mayNeedToScale=true) {
         painter.ctx.save();
         painter.ctx.translate(area.x, area.y);
         area = area.withX(0).withY(0);
-        let scale = Math.min(area.w/500, area.h/200);
-        if (scale < 1) {
+        let scale = Math.min(area.w/500, area.h/300);
+        if (mayNeedToScale && scale < 1) {
             painter.ctx.scale(scale, scale);
             area = area.withH(area.h/scale).withW(area.w/scale);
         }
@@ -159,6 +161,7 @@ export default class WidgetPainter {
         WidgetPainter.paintGateTooltipHelper(painter, w, gate, time);
 
         painter.ctx.restore();
+        return {maxW: maxX, maxH: maxY};
     }
 
     static describeKet(bitCount, bitMask, factor, format) {

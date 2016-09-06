@@ -78,7 +78,7 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
     let json = Serializer.toJson(circuit);
     assertThat(json).isEqualTo({
         cols: [[1, '~~test']],
-        gates: [{id: '~~test', symbol: 'sym', matrix: '{{2,3},{5,7}}'}]
+        gates: [{id: '~~test', name: 'sym', matrix: '{{2,3},{5,7}}'}]
     });
 
     let circuit2 = Serializer.fromJson(CircuitDefinition, json);
@@ -117,8 +117,8 @@ suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
     let json = Serializer.toJson(circuit);
     assertThat(json).isEqualTo({
         cols: [['~~test', '~~wombo']], gates: [
-            {id: '~~test', symbol: 'sym', matrix: '{{2,3},{5,7}}'},
-            {id: '~~wombo', symbol: 'combo', circuit: {cols:[['~~test', '~~test']]}}]
+            {id: '~~test', name: 'sym', matrix: '{{2,3},{5,7}}'},
+            {id: '~~wombo', name: 'combo', circuit: {cols:[['~~test', '~~test']]}}]
     });
 });
 

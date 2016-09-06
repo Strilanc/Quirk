@@ -18,8 +18,9 @@ class DisplayedToolbox {
      * @param {!Rect} area
      * @param {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} toolboxGroups
      * @param {!boolean} labelsOnTop
+     * @param {undefined|!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>=} originalGroups
      */
-    constructor(name, area, toolboxGroups, labelsOnTop) {
+    constructor(name, area, toolboxGroups, labelsOnTop, originalGroups=undefined) {
         /** @type {!String} */
         this.name = name;
         /** @type {!Rect} */
@@ -28,6 +29,26 @@ class DisplayedToolbox {
         this.toolboxGroups = toolboxGroups;
         /** @type {!boolean} */
         this.labelsOnTop = labelsOnTop;
+        /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
+        this._originalGroups = originalGroups || this.toolboxGroups;
+    }
+
+    /**
+     * @param {!CustomGateSet} customGateSet
+     */
+    withCustomGatesInserted(customGateSet) {
+        let groups = [...this._originalGroups];
+        for (let i = 0; i < Math.max(1, customGateSet.gates.length); i += 6) {
+            let group = {
+                hint: 'Custom Gates',
+                gates: [undefined, undefined, undefined, undefined, undefined, undefined]
+            };
+            for (let j = 0; j < 6 && i + j < customGateSet.gates.length; j++) {
+                group.gates[j] = customGateSet.gates[i + j];
+            }
+            groups.push(group);
+        }
+        return new DisplayedToolbox(this.name, this.area, groups, this.labelsOnTop, this._originalGroups);
     }
 
     /**
@@ -110,7 +131,7 @@ class DisplayedToolbox {
      * @returns {!DisplayedToolbox}
      */
     withArea(drawArea) {
-        return new DisplayedToolbox(this.name, drawArea, this.toolboxGroups, this.labelsOnTop);
+        return new DisplayedToolbox(this.name, drawArea, this.toolboxGroups, this.labelsOnTop, this._originalGroups);
     }
 
     /**
@@ -192,9 +213,17 @@ class DisplayedToolbox {
         let f = this.findGateAt(hand.pos);
         if (f !== undefined && (hand.heldGate === undefined || f.gate.symbol === hand.heldGate.symbol)) {
             let gateRect = this.gateDrawRect(f.groupIndex, f.gateIndex);
-            let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, 500, 200).
+
+            painter.ctx.save();
+            painter.ctx.globalAlpha = 0;
+            let {maxW, maxH} = WidgetPainter.paintGateTooltip(
+                painter, new Rect(0, 0, 500, 300), f.gate, stats.time, true);
+            let mayNeedToScale = maxW >= 500 || maxH >= 300;
+            painter.ctx.restore();
+
+            let hintRect = new Rect(gateRect.right() + 1, gateRect.center().y, maxW, maxH).
                 snapInside(painter.paintableArea().skipRight(10).skipBottom(20));
-            painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time));
+            painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time, mayNeedToScale));
         }
     }
 

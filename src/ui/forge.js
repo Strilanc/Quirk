@@ -30,6 +30,7 @@ function initForge(revision) {
         const forgeDiv = /** @type {HTMLDivElement} */ document.getElementById('gate-forge-div');
         forgeButton.addEventListener('click', () => {
             forgeDiv.style.display = 'block';
+            txtName.value = '';
             obsShow.send(undefined);
         });
         obsHide.observable().subscribe(() => {
@@ -77,22 +78,43 @@ function initForge(revision) {
         }
     }
 
+    function createCustomGateAndClose(gate) {
+        let c = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
+        revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(gate)), null, 0));
+        obsHide.send(undefined);
+    }
+
     (() => {
         const rotationCanvas = /** @type {!HTMLCanvasElement} */ document.getElementById('gate-forge-rotation-canvas');
+        const rotationButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-button');
         const txtYaw = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-yaw');
         const txtPitch = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-pitch');
         const txtRoll = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-roll');
         const txtPhase = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-phase');
-        let redraw = () => computeAndPaintOp(rotationCanvas, () => {
-            let f = e => e.value === '' ? 0 : parseFloat(e.value) / 360;
-            let op = Matrix.identity(2).times(Complex.polar(1, f(txtPhase) * Math.PI * 2));
-            op = Matrix.fromPauliRotation(0, f(txtRoll), 0).times(op);
-            op = Matrix.fromPauliRotation(f(txtPitch), 0, 0).times(op);
-            return Matrix.fromPauliRotation(0, 0, f(txtYaw)).times(op);
-        });
+
+        function parseRotation() {
+            let f = e => e.value === '' ? 0 : parseFloat(e.value) * Math.PI / 180;
+            let yaw = f(txtYaw);
+            let roll = f(txtRoll);
+            let pitch = f(txtPitch);
+            let phase = f(txtPhase);
+            let op = Matrix.identity(2).times(Complex.polar(1, phase));
+            op = Matrix.PAULI_Y.liftApply(e => e.times(Complex.I).times(-roll/2).exp()).times(op);
+            op = Matrix.PAULI_X.liftApply(e => e.times(Complex.I).times(-pitch/2).exp()).times(op);
+            op = Matrix.PAULI_Z.liftApply(e => e.times(Complex.I).times(-yaw/2).exp()).times(op);
+            return op;
+        }
+
+        let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation);
         Observable.of(obsShow.observable(), ...[txtPhase, txtPitch, txtRoll, txtYaw].map(textEditObservable)).
             flatten().
             subscribe(redraw);
+
+        rotationButton.addEventListener('click', () => {
+            let gate = Gate.fromKnownMatrix(txtName.value, parseRotation(), 'Custom Rotation Gate', '').
+                withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32));
+            createCustomGateAndClose(gate);
+        });
     })();
 
     (() => {
@@ -151,11 +173,9 @@ function initForge(revision) {
             subscribe(redraw);
 
         matrixButton.addEventListener('click', () => {
-            let c = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
-            let g = Gate.fromKnownMatrix(txtName.value, parseMatrix(), 'name', 'blurb').
+            let gate = Gate.fromKnownMatrix(txtName.value, parseMatrix(), 'Custom Matrix Gate', '').
                 withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32));
-            revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(g)), null, 0));
-            obsHide.send(undefined);
+            createCustomGateAndClose(gate);
         });
     })();
 }
