@@ -118,8 +118,8 @@ let toJson_Gate = (gate, context=new CustomGateSet()) => {
     if (gate.serializedId !== "") {
         result.id = gate.serializedId;
     }
-    if (gate.serializedId !== gate.symbol && gate.serializedId.startsWith("~~")) {
-        result.symbol = gate.symbol;
+    if (gate.serializedId.startsWith("~~") ? gate.symbol !== '' : gate.symbol !== gate.serializedId) {
+        result.name = gate.symbol;
     }
     return result;
 };
@@ -173,8 +173,9 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
     let id = _getGateId(json);
     let matrixProp = json["matrix"];
     let circuitProp = json["circuit"];
-    let drawer = id === "" ? GatePainting.MATRIX_DRAWER : GatePainting.DEFAULT_DRAWER;
-    let symbol = json.symbol === undefined ? id : json.symbol;
+    let symbol = json.name !== undefined ? json.name :
+        id.startsWith('~~') ? '' : id;
+    let drawer = symbol === "" ? GatePainting.MATRIX_DRAWER : GatePainting.DEFAULT_DRAWER;
 
     try {
         // Special case the mystery gate.

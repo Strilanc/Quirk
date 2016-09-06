@@ -1,10 +1,14 @@
-import Painter from "src/draw/Painter.js"
-import Config from "src/Config.js"
-import MathPainter from "src/draw/MathPainter.js"
+import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
+import Config from "src/Config.js"
+import Format from "src/base/Format.js"
+import Gate from "src/circuit/Gate.js"
+import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
-import Rect from "src/math/Rect.js"
+import Painter from "src/draw/Painter.js"
 import Point from "src/math/Point.js"
+import Rect from "src/math/Rect.js"
+import Serializer from "src/circuit/Serializer.js"
 import { textEditObservable } from "src/browser/EventUtil.js"
 import { Observable, ObservableSource } from "src/base/Obs.js"
 
@@ -13,6 +17,11 @@ import { Observable, ObservableSource } from "src/base/Obs.js"
  */
 function initForge(revision) {
     const obsShow = new ObservableSource();
+    const obsHide = new ObservableSource();
+    const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-name');
+    /** @type {!String} */
+    let latestInspectorText;
+    revision.latestActiveCommit().subscribe(e => { latestInspectorText = e; });
 
     // Show/hide exports overlay.
     (() => {
@@ -23,13 +32,16 @@ function initForge(revision) {
             forgeDiv.style.display = 'block';
             obsShow.send(undefined);
         });
-        forgeOverlay.addEventListener('click', () => {
+        obsHide.observable().subscribe(() => {
             forgeDiv.style.display = 'none';
+        });
+        forgeOverlay.addEventListener('click', () => {
+            obsHide.send(undefined);
         });
         document.addEventListener('keydown', e => {
             const ESC_KEY = 27;
             if (e.keyCode === ESC_KEY) {
-                forgeDiv.style.display = 'none';
+                obsHide.send(undefined);
             }
         });
     })();
@@ -65,10 +77,6 @@ function initForge(revision) {
         }
     }
 
-    function addGate(gate) {
-
-    }
-
     (() => {
         const rotationCanvas = /** @type {!HTMLCanvasElement} */ document.getElementById('gate-forge-rotation-canvas');
         const txtYaw = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-yaw');
@@ -91,8 +99,9 @@ function initForge(revision) {
         const matrixCanvas = /** @type {!HTMLCanvasElement} */ document.getElementById('gate-forge-matrix-canvas');
         const txtMatrix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix');
         const chkFix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-fix');
+        const matrixButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-button');
 
-        function parseMatrix() {
+        function parseMatrix_noCorrection() {
             let s = txtMatrix.value;
             if (s === '') {
                 s = txtMatrix.placeholder;
@@ -121,21 +130,33 @@ function initForge(revision) {
             if (n > (1<<8)) {
                 throw Error("Max custom matrix operation size is 4 qubits.")
             }
+            //noinspection JSCheckFunctionSignatures
             return Matrix.square(...parts, ...new Array(n - parts.length).fill(0));
         }
 
-        let redraw = () => computeAndPaintOp(matrixCanvas, () => {
-            let op = parseMatrix();
+        function parseMatrix() {
+            let op = parseMatrix_noCorrection();
             if (chkFix.checked) {
                 op = op.closestUnitary(0.0001);
+                op = Matrix.parse(op.toString(new Format(true, 0.00000001, undefined, ",")));
             }
             return op;
-        });
+        }
+
+        let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrix);
 
         Observable.of(obsShow.observable(), textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
+
+        matrixButton.addEventListener('click', () => {
+            let c = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
+            let g = Gate.fromKnownMatrix(txtName.value, parseMatrix(), 'name', 'blurb').
+                withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32));
+            revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(g)), null, 0));
+            obsHide.send(undefined);
+        });
     })();
 }
 

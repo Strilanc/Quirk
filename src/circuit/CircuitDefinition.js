@@ -779,6 +779,19 @@ class CircuitDefinition {
         }
         return false;
     }
+
+    /**
+     * @param {!Gate} gate
+     * @returns {!CircuitDefinition}
+     */
+    withCustomGate(gate) {
+        return new CircuitDefinition(
+            this.numWires,
+            this.columns,
+            this.outerRowOffset,
+            this.outerContext,
+            this.customGateSet.withGate(gate));
+    }
 }
 
 CircuitDefinition.EMPTY = new CircuitDefinition(0, []);
