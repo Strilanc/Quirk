@@ -34,6 +34,55 @@ const SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e =>
 /**
  * @param {!WglTexture} inputTexture
  * @param {!WglTexture} controlTexture
+ * @param {!int} qubitIndex
+ * @param {!int} qubitSpan
+ * @param {!int} incrementAmount
+ * @returns {!WglConfiguredShader}
+ */
+const incrementShaderFunc = (inputTexture, controlTexture, qubitIndex, qubitSpan, incrementAmount) =>
+    new WglConfiguredShader(destinationTexture => {
+        INCREMENT_SHADER.withArgs(
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.texture("controlTexture", controlTexture, 1),
+            WglArg.float("outputWidth", destinationTexture.width),
+            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
+            WglArg.float("qubitIndex", 1 << qubitIndex),
+            WglArg.float("qubitSpan", 1 << qubitSpan),
+            WglArg.float("incrementAmount", incrementAmount)
+        ).renderTo(destinationTexture);
+    });
+const INCREMENT_SHADER = new WglShader(`
+    uniform sampler2D inputTexture;
+    uniform sampler2D controlTexture;
+    uniform float outputWidth;
+    uniform vec2 inputSize;
+    uniform float incrementAmount;
+    uniform float qubitIndex;
+    uniform float qubitSpan;
+
+    vec2 uvFor(float state) {
+        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
+    }
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float oldState = xy.y * outputWidth + xy.x;
+        float oldStateTarget = mod(floor(oldState / qubitIndex), qubitSpan);
+        float newStateTarget = mod(oldStateTarget - incrementAmount + qubitSpan, qubitSpan);
+        float newState = oldState + (newStateTarget - oldStateTarget) * qubitIndex;
+
+        vec2 oldUv = uvFor(oldState);
+        float control = texture2D(controlTexture, oldUv).x;
+
+        vec2 newUv = uvFor(newState);
+        vec2 usedUv = control*newUv + (1.0-control)*oldUv;
+
+        gl_FragColor = texture2D(inputTexture, usedUv);
+    }`);
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @param {!WglTexture} controlTexture
  * @param {!int} srcOffset
  * @param {!int} srcSpan
  * @param {!int} dstOffset
@@ -97,7 +146,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
     withSerializedId("inc" + span).
     withHeight(span).
-    withCustomShader(args => GateShaders.increment(
+    withCustomShader(args => incrementShaderFunc(
         args.stateTexture,
         args.controlsTexture,
         args.row,
@@ -113,7 +162,7 @@ ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
     withSerializedId("dec" + span).
     withHeight(span).
-    withCustomShader(args => GateShaders.increment(
+    withCustomShader(args => incrementShaderFunc(
         args.stateTexture,
         args.controlsTexture,
         args.row,
@@ -210,4 +259,4 @@ ArithmeticGates.all = [
 ];
 
 export default ArithmeticGates;
-export {ArithmeticGates, makeOffsetMatrix, additionShaderFunc}
+export {ArithmeticGates, makeOffsetMatrix, incrementShaderFunc, additionShaderFunc}

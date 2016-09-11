@@ -127,69 +127,6 @@ suite.webGlTest("qubitOperation_matrix", () => {
         ]));
 });
 
-suite.webGlTest('increment', () => {
-    let input = Shaders.data(Seq.range(4*8+1).skip(1).toFloat32Array()).toFloatTexture(4, 2);
-    let assertAbout = (index, span, control, amount) => assertThat(GateShaders.increment(
-        input,
-        CircuitShaders.controlMask(control).toFloatTexture(4, 2),
-        index,
-        span,
-        amount).readFloatOutputs(4, 2));
-
-    // Full increment.
-    assertAbout(0, 3, Controls.NONE, 0).isEqualTo(input.readPixels());
-    assertAbout(0, 3, Controls.NONE, -1).isEqualTo(new Float32Array([
-        5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,1,2,3,4
-    ]));
-    assertAbout(0, 3, Controls.NONE, -5).isEqualTo(new Float32Array([
-        21,22,23,24,25,26,27,28,29,30,31,32,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
-    ]));
-    assertAbout(0, 3, Controls.NONE, 1).isEqualTo(new Float32Array([
-        29,30,31,32,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28
-    ]));
-
-    // Single-bit increments.
-    assertAbout(0, 1, Controls.NONE, 0).isEqualTo(input.readPixels());
-    assertAbout(0, 1, Controls.NONE, -1).isEqualTo(new Float32Array([
-        5,6,7,8,1,2,3,4,13,14,15,16,9,10,11,12,21,22,23,24,17,18,19,20,29,30,31,32,25,26,27,28
-    ]));
-    assertAbout(0, 1, Controls.NONE, 1).isEqualTo(new Float32Array([
-        5,6,7,8,1,2,3,4,13,14,15,16,9,10,11,12,21,22,23,24,17,18,19,20,29,30,31,32,25,26,27,28
-    ]));
-    assertAbout(1, 1, Controls.NONE, -1).isEqualTo(new Float32Array([
-        9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8,25,26,27,28,29,30,31,32,17,18,19,20,21,22,23,24
-    ]));
-    assertAbout(2, 1, Controls.NONE, -1).isEqualTo(new Float32Array([
-        17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
-    ]));
-
-    // Two-bit increments.
-    assertAbout(0, 2, Controls.NONE, 0).isEqualTo(input.readPixels());
-    assertAbout(0, 2, Controls.NONE, -1).isEqualTo(new Float32Array([
-        5,6,7,8,9,10,11,12,13,14,15,16,1,2,3,4,21,22,23,24,25,26,27,28,29,30,31,32,17,18,19,20
-    ]));
-    assertAbout(0, 2, Controls.NONE, 1).isEqualTo(new Float32Array([
-        13,14,15,16,1,2,3,4,5,6,7,8,9,10,11,12,29,30,31,32,17,18,19,20,21,22,23,24,25,26,27,28
-    ]));
-    assertAbout(1, 2, Controls.NONE, -1).isEqualTo(new Float32Array([
-        9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,1,2,3,4,5,6,7,8
-    ]));
-    assertAbout(1, 2, Controls.NONE, 1).isEqualTo(new Float32Array([
-        25,26,27,28,29,30,31,32,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24
-    ]));
-
-    // Controlled increments.
-    assertAbout(0, 1, Controls.bit(2, false), -1).isEqualTo(new Float32Array([
-        5,6,7,8,1,2,3,4,13,14,15,16,9,10,11,12,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32
-    ]));
-    assertAbout(0, 1, Controls.bit(2, true), -1).isEqualTo(new Float32Array([
-        1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,21,22,23,24,17,18,19,20,29,30,31,32,25,26,27,28
-    ]));
-    assertAbout(1, 2, Controls.bit(0, true), 1).isEqualTo(new Float32Array([
-        1,2,3,4,29,30,31,32,9,10,11,12,5,6,7,8,17,18,19,20,13,14,15,16,25,26,27,28,21,22,23,24
-    ]));
-});
-
 suite.webGlTest('cycleAllBits', () => {
     let actual = GateShaders.cycleAllBits(
         Shaders.data(Seq.range(4*16+1).skip(1).toFloat32Array()).toFloatTexture(4, 4),
