@@ -594,6 +594,46 @@ class Matrix {
     }
 
     /**
+     * @param {!Matrix} stateVector
+     * @param {!int} qubitIndex
+     * @param {!Controls} controls
+     * @returns {!Matrix}
+     */
+    applyToStateVectorAtQubitWithControls(stateVector, qubitIndex, controls) {
+        let chunkSize = this._width*2;
+        let chunkBuf = stateVector._buffer.slice(0, chunkSize);
+        let strideLength = 2 << qubitIndex;
+        let strideChunkSize = strideLength*chunkSize >> 1;
+        let resultBuf = stateVector._buffer.slice();
+        for (let strideChunkStart = 0; strideChunkStart < resultBuf.length; strideChunkStart += strideChunkSize) {
+            for (let strideOffset = 0; strideOffset < strideLength; strideOffset += 2) {
+                if (!controls.allowsState((strideChunkStart | strideOffset) >> 1)) {
+                    continue;
+                }
+
+                // Collect inputs into a small contiguous vector.
+                let k = strideChunkStart + strideOffset;
+                for (let i = 0; i < chunkBuf.length; i += 2) {
+                    chunkBuf[i] = stateVector._buffer[k];
+                    chunkBuf[i+1] = stateVector._buffer[k+1];
+                    k += strideLength;
+                }
+
+                let transformedChunk = this.times(new Matrix(1, chunkBuf.length >> 1, chunkBuf));
+
+                // Scatter outputs.
+                k = strideChunkStart + strideOffset;
+                for (let i = 0; i < chunkBuf.length; i += 2) {
+                    resultBuf[k] = transformedChunk._buffer[i];
+                    resultBuf[k+1] = transformedChunk._buffer[i+1];
+                    k += strideLength;
+                }
+            }
+        }
+        return new Matrix(1, stateVector.height(), resultBuf);
+    }
+
+    /**
      * Returns the receiving matrix's squared euclidean length.
      * @returns {!number}
      */
