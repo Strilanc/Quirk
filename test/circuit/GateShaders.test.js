@@ -1,6 +1,7 @@
 import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
 import GateShaders from "src/circuit/GateShaders.js"
+import { assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix } from "test/CircuitOperationTestUtil.js"
 
 import Complex from "src/math/Complex.js"
 import Controls from "src/circuit/Controls.js"
@@ -137,4 +138,25 @@ suite.webGlTest('cycleAllBits', () => {
         5, 6, 7, 8, 13,14,15,16, 21,22,23,24, 29,30,31,32,
         37,38,39,40, 45,46,47,48, 53,54,55,56, 61,62,63,64
     ]));
+});
+
+suite.webGlTest("qubitOperation_sampleAgainstMatrix", () => {
+    let repeats = 3;
+    let matrix = Matrix.generate(2, 2, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
+    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
+        args => GateShaders.qubitOperation(args.stateTexture, matrix, args.row, args.controlsTexture),
+        matrix,
+        repeats);
+});
+
+suite.webGlTest("matrixOperationShaderFunc_sampleAgainstMatrix", () => {
+    let repeats = 3;
+    for (let size = 1; size < 5; size++) {
+        let d = 1<<size;
+        let matrix = Matrix.generate(d, d, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
+        assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
+            args => GateShaders.matrixOperationShaderFunc(args.stateTexture, matrix, args.row, args.controlsTexture),
+            matrix,
+            repeats);
+    }
 });

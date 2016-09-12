@@ -55,6 +55,18 @@ export default class WglArg {
 
     /**
      * @param {!string} name
+     * @param {!Float32Array|!Float64Array} buf
+     * @returns {!WglArg}
+     */
+    static float_array(name, buf) {
+        if (buf instanceof Float64Array) {
+            buf = new Float32Array(buf);
+        }
+        return new WglArg(WglArg.FLOAT_ARRAY_TYPE, name, buf);
+    }
+
+    /**
+     * @param {!string} name
      * @param {!number} x
      * @param {!number} y
      * @param {!number} z
@@ -103,6 +115,7 @@ WglArg.BOOL_TYPE = "bool";
 WglArg.FLOAT_TYPE = "float";
 WglArg.INT_TYPE = "int";
 WglArg.VEC2_TYPE = "vec2";
+WglArg.FLOAT_ARRAY_TYPE = "float[]";
 WglArg.VEC4_TYPE = "vec4";
 WglArg.MAT4_TYPE = "mat4";
 WglArg.WGL_TEXTURE_TYPE = "wgl_texture";
@@ -117,6 +130,7 @@ WglArg.INPUT_ACTION_MAP = new Map([
     [WglArg.INT_TYPE, (ctx, loc, val) => ctx.gl.uniform1i(loc, val)],
     [WglArg.FLOAT_TYPE, (ctx, loc, val) => ctx.gl.uniform1f(loc, val)],
     [WglArg.VEC2_TYPE, (ctx, loc, [x,y]) => ctx.gl.uniform2f(loc, x, y)],
+    [WglArg.FLOAT_ARRAY_TYPE, (ctx, loc, buf) => ctx.gl.uniform1fv(loc, buf)],
     [WglArg.VEC4_TYPE, (ctx, loc, [r,g,b,a]) => ctx.gl.uniform4f(loc, r, g, b, a)],
     [WglArg.MAT4_TYPE, (ctx, loc, val) => ctx.gl.uniformMatrix4fv(loc, false, val)],
     [WglArg.WGL_TEXTURE_TYPE, (ctx, loc, {unit, texture}) => {

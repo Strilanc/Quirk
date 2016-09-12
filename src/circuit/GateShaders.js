@@ -122,6 +122,73 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
         gl_FragColor = vec4(outputAmplitude, 0.0, 0.0);
     }`);
 
+const matrixOperationShaderMaker = qubitCount => new WglShader(`
+    uniform sampler2D inputTexture;
+    uniform sampler2D controlTexture;
+    uniform vec2 inputSize;
+    uniform float outputWidth;
+    uniform float qubitIndex;
+    uniform float coefs[${2<<(2*qubitCount)}];
+
+    vec2 uvFor(float state) {
+        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
+    }
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float outputState = xy.y * outputWidth + xy.x;
+        float outputId = mod(floor(outputState / qubitIndex), ${1<<qubitCount}.0);
+
+        float firstInputState = outputState - outputId * qubitIndex;
+        int rowOffset = int(outputId);
+
+        vec2 t = vec2(0.0, 0.0);
+        for (int d = 0; d < ${1<<qubitCount}; d++) {
+            // Can't index by rowOffset, since it's not a constant, so we do a const brute force loop searching for it.
+            if (d == rowOffset) {
+                for (int k = 0; k < ${1<<qubitCount}; k++) {
+                    vec2 v = texture2D(inputTexture, uvFor(firstInputState + qubitIndex*float(k))).xy;
+                    float r = coefs[d*${2<<qubitCount} + k*2];
+                    float i = coefs[d*${2<<qubitCount} + k*2 + 1];
+                    t += vec2(v.x*r - v.y*i, v.x*i + v.y*r);
+                }
+            }
+        }
+
+        vec2 targetUv = uvFor(outputState);
+        float control = texture2D(controlTexture, targetUv).x;
+        gl_FragColor = control * vec4(t.x, t.y, 0.0, 0.0)
+                     + (1.0-control) * texture2D(inputTexture, targetUv);
+    }`);
+const matrix_operation_shaders = [
+    undefined,
+    matrixOperationShaderMaker(1),
+    matrixOperationShaderMaker(2),
+    matrixOperationShaderMaker(3),
+    matrixOperationShaderMaker(4)
+];
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @param {!WglTexture} controlTexture
+ * @param {!Matrix} mat
+ * @param {!int} qubitIndex
+ * @returns {!WglConfiguredShader}
+ */
+GateShaders.matrixOperationShaderFunc = (inputTexture, mat, qubitIndex, controlTexture) => {
+    let shader = matrix_operation_shaders[Math.round(Math.log2(mat.width()))];
+    return new WglConfiguredShader(destinationTexture => {
+        shader.withArgs(
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.texture("controlTexture", controlTexture, 1),
+            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
+            WglArg.float("outputWidth", destinationTexture.width),
+            WglArg.float("qubitIndex", 1 << qubitIndex),
+            WglArg.float_array("coefs", mat.rawBuffer())
+        ).renderTo(destinationTexture);
+    });
+};
+
 /**
  * @param {!WglTexture} inputTexture
  * @param {!int} shiftAmount
