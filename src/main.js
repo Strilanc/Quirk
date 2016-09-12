@@ -216,7 +216,7 @@ canvasDiv.addEventListener('mousemove', ev => {
         displayed.set(newInspector);
     }
 });
-document.addEventListener('mouseleave', () => {
+canvasDiv.addEventListener('mouseleave', () => {
     if (!displayed.get().hand.isBusy()) {
         let newHand = displayed.get().hand.withPos(undefined);
         let newInspector = displayed.get().withHand(newHand);
