@@ -183,7 +183,7 @@ export default class MathPainter {
     static _traceAmplitudePhaseDirection(trace, real, imag, x, y, d) {
         let mag = Math.sqrt(real*real + imag*imag);
         let g = 1 + Math.log(mag)/10;
-        let r = Math.max(1, g/mag)*Math.max(d/2, 8);
+        let r = Math.max(1, g/mag)*Math.max(d/2, 5);
         if (isNaN(mag) || r < 0.1) {
             return;
         }

@@ -87,15 +87,17 @@ export default class WidgetPainter {
             'transparent');
         pushRect(matrixRect);
         let n = curMatrix.height();
-        let matDescs = WidgetPainter.describeGateTransformations(curMatrix, format);
-        let rowHeight = matrixDescRect.h / n;
-        for (let r = 0; r < n; r++) {
-            pushRect(painter.printParagraph(
-                matDescs[r],
-                matrixDescRect.skipTop(r * rowHeight).takeTop(rowHeight),
-                new Point(0, 0.5),
-                'black',
-                12));
+        if (n <= 4) {
+            let matDescs = WidgetPainter.describeGateTransformations(curMatrix, format);
+            let rowHeight = matrixDescRect.h / n;
+            for (let r = 0; r < n; r++) {
+                pushRect(painter.printParagraph(
+                    matDescs[r],
+                    matrixDescRect.skipTop(r * rowHeight).takeTop(rowHeight),
+                    new Point(0, 0.5),
+                    'black',
+                    12));
+            }
         }
 
         // Bloch sphere interpretation.
