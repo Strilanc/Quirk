@@ -161,12 +161,12 @@ CircuitTextures.applyCustomShader = (customShader, circuitEvalArgs) => {
  * @param {!WglTexture} stateTex
  * @param {!WglTexture} controlTex
  * @param {!int} qubitIndex
- * @param {!Matrix} qubitOperation
+ * @param {!Matrix} matrix
  * @returns {!WglTexture}
  */
-CircuitTextures.qubitOperation = (stateTex, controlTex, qubitIndex, qubitOperation) => {
+CircuitTextures.matrixOperation = (stateTex, controlTex, qubitIndex, matrix) => {
     let result = allocSameSizedTexture(stateTex);
-    GateShaders.qubitOperation(stateTex, qubitOperation, qubitIndex, controlTex).renderTo(result);
+    GateShaders.matrixOperation(stateTex, matrix, qubitIndex, controlTex).renderTo(result);
     return result;
 };
 

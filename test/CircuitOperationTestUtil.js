@@ -7,6 +7,11 @@ import Shaders from "src/webgl/Shaders.js"
 import Matrix from "src/math/Matrix.js"
 import WglTexture from "src/webgl/WglTexture.js"
 
+/**
+ * @param {function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
+ * @param {!Matrix} matrix
+ * @param {!int=1} repeats
+ */
 function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, matrix, repeats=1) {
     for (let i = 0; i < repeats; i++) {
         assertThatRandomTestOfCircuitOperationActsLikeMatrix(args => {
@@ -22,7 +27,6 @@ function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, 
  * @param {!Matrix} matrix
  */
 function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix) {
-    Math.random = () => 0;
     let qubitSpan = Math.round(Math.log2(matrix.height()));
     let extraWires = Math.floor(Math.random()*5);
     let time = Math.random();
@@ -68,4 +72,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix)
     controlsTexture.ensureDeinitialized();
 }
 
-export { assertThatRandomTestOfCircuitOperationActsLikeMatrix, assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix }
+export {
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix,
+    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix
+}

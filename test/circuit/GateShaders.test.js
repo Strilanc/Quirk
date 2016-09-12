@@ -13,7 +13,7 @@ import WglTexture from "src/webgl/WglTexture.js"
 
 let suite = new Suite("GateShaders");
 
-suite.webGlTest("qubitOperation_controls", () => {
+suite.webGlTest("matrixOperation_controls", () => {
     let cnt = e => CircuitShaders.controlMask(e).toFloatTexture(4, 2);
     let m = Matrix.square(1, Complex.I.neg(), Complex.I, -1);
     let inp = Shaders.data(new Float32Array([
@@ -27,7 +27,7 @@ suite.webGlTest("qubitOperation_controls", () => {
         17, 19, 0, 0
     ])).toFloatTexture(4, 2);
 
-    assertThat(GateShaders.qubitOperation(inp, m, 0, cnt(Controls.bit(3, false))).readFloatOutputs(4, 2)).
+    assertThat(GateShaders.matrixOperation(inp, m, 0, cnt(Controls.bit(3, false))).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             7, -1, 0, 0,
             -7, -3, 0, 0,
@@ -39,7 +39,7 @@ suite.webGlTest("qubitOperation_controls", () => {
             -30, -8, 0, 0
         ]));
 
-    assertThat(GateShaders.qubitOperation(inp, m, 0, cnt(Controls.bit(1, false))).readFloatOutputs(4, 2)).
+    assertThat(GateShaders.matrixOperation(inp, m, 0, cnt(Controls.bit(1, false))).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             7, -1, 0, 0,
             -7, -3, 0, 0,
@@ -51,7 +51,7 @@ suite.webGlTest("qubitOperation_controls", () => {
             17, 19, 0, 0
         ]));
 
-    assertThat(GateShaders.qubitOperation(inp, m, 0, cnt(Controls.bit(1, true))).readFloatOutputs(4, 2)).
+    assertThat(GateShaders.matrixOperation(inp, m, 0, cnt(Controls.bit(1, true))).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             2, 3, 0, 0,
             4, 5, 0, 0,
@@ -63,7 +63,7 @@ suite.webGlTest("qubitOperation_controls", () => {
             -30, -8, 0, 0
         ]));
 
-    assertThat(GateShaders.qubitOperation(inp, m, 0, cnt(Controls.bit(2, false))).readFloatOutputs(4, 2)).
+    assertThat(GateShaders.matrixOperation(inp, m, 0, cnt(Controls.bit(2, false))).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             7, -1, 0, 0,
             -7, -3, 0, 0,
@@ -75,7 +75,7 @@ suite.webGlTest("qubitOperation_controls", () => {
             17, 19, 0, 0
         ]));
 
-    assertThat(GateShaders.qubitOperation(inp, m, 1, cnt(Controls.bit(3, false))).readFloatOutputs(4, 2)).
+    assertThat(GateShaders.matrixOperation(inp, m, 1, cnt(Controls.bit(3, false))).readFloatOutputs(4, 2)).
         isEqualTo(new Float32Array([
             9, -3, 0, 0,
             13, -3, 0, 0,
@@ -87,7 +87,7 @@ suite.webGlTest("qubitOperation_controls", () => {
             -24, -14, 0, 0
         ]));
 
-    assertThat(GateShaders.qubitOperation(inp, Matrix.zero(2, 2), 0, cnt(Controls.bit(3, false))).
+    assertThat(GateShaders.matrixOperation(inp, Matrix.zero(2, 2), 0, cnt(Controls.bit(3, false))).
         readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -100,28 +100,28 @@ suite.webGlTest("qubitOperation_controls", () => {
     ]));
 });
 
-suite.webGlTest("qubitOperation_matrix", () => {
+suite.webGlTest("matrixOperation_matrix", () => {
     let inp = Shaders.data(new Float32Array([
         1, 2, 0, 0,
         3, 27, 0, 0
     ])).toFloatTexture(2, 1);
     let cnt = CircuitShaders.controlMask(Controls.NONE).toFloatTexture(2, 1);
-    assertThat(GateShaders.qubitOperation(inp, Matrix.square(1, 0, 0, 0), 0, cnt).readFloatOutputs(2, 1)).
+    assertThat(GateShaders.matrixOperation(inp, Matrix.square(1, 0, 0, 0), 0, cnt).readFloatOutputs(2, 1)).
         isEqualTo(new Float32Array([
             1, 2, 0, 0,
             0, 0, 0, 0
         ]));
-    assertThat(GateShaders.qubitOperation(inp, Matrix.square(0, 1, 0, 0), 0, cnt).readFloatOutputs(2, 1)).
+    assertThat(GateShaders.matrixOperation(inp, Matrix.square(0, 1, 0, 0), 0, cnt).readFloatOutputs(2, 1)).
         isEqualTo(new Float32Array([
             3, 27, 0, 0,
             0, 0, 0, 0
         ]));
-    assertThat(GateShaders.qubitOperation(inp, Matrix.square(0, 0, 1, 0), 0, cnt).readFloatOutputs(2, 1)).
+    assertThat(GateShaders.matrixOperation(inp, Matrix.square(0, 0, 1, 0), 0, cnt).readFloatOutputs(2, 1)).
         isEqualTo(new Float32Array([
             0, 0, 0, 0,
             1, 2, 0, 0
         ]));
-    assertThat(GateShaders.qubitOperation(inp, Matrix.square(0, 0, 0, 1), 0, cnt).readFloatOutputs(2, 1)).
+    assertThat(GateShaders.matrixOperation(inp, Matrix.square(0, 0, 0, 1), 0, cnt).readFloatOutputs(2, 1)).
         isEqualTo(new Float32Array([
             0, 0, 0, 0,
             3, 27, 0, 0
@@ -140,22 +140,13 @@ suite.webGlTest('cycleAllBits', () => {
     ]));
 });
 
-suite.webGlTest("qubitOperation_sampleAgainstMatrix", () => {
-    let repeats = 3;
-    let matrix = Matrix.generate(2, 2, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
-        args => GateShaders.qubitOperation(args.stateTexture, matrix, args.row, args.controlsTexture),
-        matrix,
-        repeats);
-});
-
-suite.webGlTest("matrixOperationShaderFunc_sampleAgainstMatrix", () => {
+suite.webGlTest("matrixOperation_sampleShaderAgainstMatrix", () => {
     let repeats = 3;
     for (let size = 1; size < 5; size++) {
         let d = 1<<size;
         let matrix = Matrix.generate(d, d, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
         assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
-            args => GateShaders.matrixOperationShaderFunc(args.stateTexture, matrix, args.row, args.controlsTexture),
+            args => GateShaders.matrixOperation(args.stateTexture, matrix, args.row, args.controlsTexture),
             matrix,
             repeats);
     }

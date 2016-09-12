@@ -685,7 +685,7 @@ class CircuitDefinition {
                     return [];
                 }
 
-                return [args => GateShaders.qubitOperation(
+                return [args => GateShaders.matrixOperation(
                     args.stateTexture,
                     gate.knownMatrixAt(args.time),
                     row + rowOffset,

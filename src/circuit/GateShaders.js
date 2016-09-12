@@ -23,7 +23,7 @@ export default class GateShaders {}
  * @param {!WglTexture} controlTexture
  * @returns {!WglConfiguredShader}
  */
-GateShaders.qubitOperation = (inputTexture, operation, qubitIndex, controlTexture) =>
+let singleQubitOperationFunc = (inputTexture, operation, qubitIndex, controlTexture) =>
     new WglConfiguredShader(destinationTexture => {
         if (operation.width() !== 2 || operation.height() !== 2) {
             throw new DetailedError("Not a single-qubit operation.", {operation});
@@ -122,7 +122,7 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
         gl_FragColor = vec4(outputAmplitude, 0.0, 0.0);
     }`);
 
-const matrixOperationShaderMaker = qubitCount => new WglShader(`
+const multiQubitOperationMaker = qubitCount => new WglShader(`
     uniform sampler2D inputTexture;
     uniform sampler2D controlTexture;
     uniform vec2 inputSize;
@@ -161,11 +161,9 @@ const matrixOperationShaderMaker = qubitCount => new WglShader(`
                      + (1.0-control) * texture2D(inputTexture, targetUv);
     }`);
 const matrix_operation_shaders = [
-    undefined,
-    matrixOperationShaderMaker(1),
-    matrixOperationShaderMaker(2),
-    matrixOperationShaderMaker(3),
-    matrixOperationShaderMaker(4)
+    multiQubitOperationMaker(2),
+    multiQubitOperationMaker(3),
+    multiQubitOperationMaker(4)
 ];
 
 /**
@@ -175,8 +173,17 @@ const matrix_operation_shaders = [
  * @param {!int} qubitIndex
  * @returns {!WglConfiguredShader}
  */
-GateShaders.matrixOperationShaderFunc = (inputTexture, mat, qubitIndex, controlTexture) => {
-    let shader = matrix_operation_shaders[Math.round(Math.log2(mat.width()))];
+GateShaders.matrixOperation = (inputTexture, mat, qubitIndex, controlTexture) => {
+    if (mat.width() === 2) {
+        return singleQubitOperationFunc(inputTexture, mat, qubitIndex, controlTexture);
+    }
+    if (!Util.isPowerOf2(mat.width())) {
+        throw new DetailedError("Matrix size isn't a power of 2.", {mat, qubitIndex});
+    }
+    if (mat.width() > 1 << 4) {
+        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {mat, qubitIndex});
+    }
+    let shader = matrix_operation_shaders[Math.round(Math.log2(mat.width())) - 2];
     return new WglConfiguredShader(destinationTexture => {
         shader.withArgs(
             WglArg.texture("inputTexture", inputTexture, 0),
