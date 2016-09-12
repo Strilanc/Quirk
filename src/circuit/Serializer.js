@@ -157,8 +157,8 @@ function _parseGateMatrix(matrixProp) {
     if (matrix.width() !== matrix.height()) {
         throw new Error("Gate matrix must be square.");
     }
-    if (matrix.width() < 2 || !Util.isPowerOf2(matrix.width())) {
-        throw new Error("Gate matrix size must be at least 2, and a power of 2.");
+    if (matrix.width() < 2 || matrix.width() > 1 << 4 || !Util.isPowerOf2(matrix.width())) {
+        throw new Error("Supported gate matrix sizes are 2, 4, 8, and 16.");
     }
     return matrix;
 }
@@ -189,9 +189,15 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
 
         // Given matrix?
         if (matrixProp !== undefined) {
+            let mat = _parseGateMatrix(matrixProp);
+            let height = Math.round(Math.log2(mat.height()));
+            let width = symbol === '' ? height : 1;
+
             return Gate.fromKnownMatrix(symbol, _parseGateMatrix(matrixProp), name, blurb).
                 withCustomDrawer(drawer).
-                withSerializedId(id);
+                withSerializedId(id).
+                withHeight(height).
+                withWidth(width);
         }
 
         // Given circuit?

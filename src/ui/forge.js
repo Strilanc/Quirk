@@ -173,8 +173,13 @@ function initForge(revision) {
             subscribe(redraw);
 
         matrixButton.addEventListener('click', () => {
-            let gate = Gate.fromKnownMatrix(txtName.value, parseMatrix(), 'Custom Matrix Gate', '').
-                withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32));
+            let mat = parseMatrix();
+            let name = txtName.value.trim();
+            let h = Math.round(Math.log2(mat.height()));
+            let gate = Gate.fromKnownMatrix(name, mat, 'Custom Matrix Gate', '').
+                withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
+                withHeight(h).
+                withWidth(name === '' ? h : 1);
             createCustomGateAndClose(gate);
         });
     })();
