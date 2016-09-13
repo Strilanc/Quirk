@@ -67,7 +67,7 @@ suite.test("roundTrip_Gate", () => {
 
 suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
     let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
-        withSerializedId("~~test");
+        withSerializedId("~test");
     let circuit = new CircuitDefinition(
         2,
         [new GateColumn([null, customGate])],
@@ -77,8 +77,8 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
 
     let json = Serializer.toJson(circuit);
     assertThat(json).isEqualTo({
-        cols: [[1, '~~test']],
-        gates: [{id: '~~test', name: 'sym', matrix: '{{2,3},{5,7}}'}]
+        cols: [[1, '~test']],
+        gates: [{id: '~test', name: 'sym', matrix: '{{2,3},{5,7}}'}]
     });
 
     let circuit2 = Serializer.fromJson(CircuitDefinition, json);
@@ -94,7 +94,7 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
 
 suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
     let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
-        withSerializedId("~~test");
+        withSerializedId("~test");
     let circuitForGate = new CircuitDefinition(
         2,
         [new GateColumn([customGate, customGate])],
@@ -105,7 +105,7 @@ suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
         circuitForGate,
         'combo',
         'name',
-        'blurb').withSerializedId('~~wombo');
+        'blurb').withSerializedId('~wombo');
 
     let circuit = new CircuitDefinition(
         3,
@@ -116,9 +116,9 @@ suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
 
     let json = Serializer.toJson(circuit);
     assertThat(json).isEqualTo({
-        cols: [['~~test', '~~wombo']], gates: [
-            {id: '~~test', name: 'sym', matrix: '{{2,3},{5,7}}'},
-            {id: '~~wombo', name: 'combo', circuit: {cols:[['~~test', '~~test']]}}]
+        cols: [['~test', '~wombo']], gates: [
+            {id: '~test', name: 'sym', matrix: '{{2,3},{5,7}}'},
+            {id: '~wombo', name: 'combo', circuit: {cols:[['~test', '~test']]}}]
     });
 });
 

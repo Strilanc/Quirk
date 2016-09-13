@@ -15,8 +15,8 @@ export default class CustomGateSet {
      * @returns {!CustomGateSet}
      */
     withGate(gate) {
-        if (!gate.serializedId.startsWith("~~")) {
-            throw new DetailedError("Custom gates' serialized id must start with '~~'.", {gate});
+        if (!gate.serializedId.startsWith("~")) {
+            throw new DetailedError("Custom gates' serialized id must start with '~'.", {gate});
         }
         if (this.findGateWithSerializedId(gate.serializedId)) {
             throw new DetailedError("Duplicate serialized id.", {gate});

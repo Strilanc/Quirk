@@ -112,7 +112,7 @@ function initForge(revision) {
 
         rotationButton.addEventListener('click', () => {
             let gate = Gate.fromKnownMatrix(txtName.value, parseRotation(), 'Custom Rotation Gate', '').
-                withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32));
+                withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32));
             createCustomGateAndClose(gate);
         });
     })();
@@ -160,7 +160,7 @@ function initForge(revision) {
             let op = parseMatrix_noCorrection();
             if (chkFix.checked) {
                 op = op.closestUnitary(0.0001);
-                op = Matrix.parse(op.toString(new Format(true, 0.00000001, undefined, ",")));
+                op = Matrix.parse(op.toString(new Format(true, 0.0000001, 7, ",")));
             }
             return op;
         }
@@ -177,7 +177,7 @@ function initForge(revision) {
             let name = txtName.value.trim();
             let h = Math.round(Math.log2(mat.height()));
             let gate = Gate.fromKnownMatrix(name, mat, 'Custom Matrix Gate', '').
-                withSerializedId('~~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
+                withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
                 withHeight(h).
                 withWidth(name === '' ? h : 1);
             createCustomGateAndClose(gate);
