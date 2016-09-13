@@ -145,7 +145,7 @@ function initForge(revision) {
             let parts = s.split(',').map(e => e === '' ? 0 : Complex.parse(e));
 
             // Pad with zeroes up to next size that makes sense.
-            let n = 1 << (2*Math.max(1, Math.floor(Math.log2(Math.sqrt(parts.length)))));
+            let n = Math.max(4, 1 << (2*Math.max(1, Math.floor(Math.log2(Math.sqrt(parts.length))))));
             if (n < parts.length) {
                 n <<= 2;
             }

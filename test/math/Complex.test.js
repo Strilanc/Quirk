@@ -398,6 +398,11 @@ suite.test("raisedTo", () => {
     assertThat(e.raisedTo(i.times(3*π/4))).isEqualTo(new Complex(-s, s));
     assertThat(e.raisedTo(i.times(5*π/4))).isEqualTo(new Complex(-s, -s));
 
+    // Zero.
+    assertThat(Complex.ZERO.raisedTo(2)).isEqualTo(0);
+    assertThat(Complex.ZERO.raisedTo(new Complex(1, 3))).isEqualTo(0);
+    assertThat(new Complex(2, 3).raisedTo(0)).isEqualTo(1);
+
     // Base negative 1.
     assertThat(new Complex(-1, 0).raisedTo(0)).isEqualTo(1);
     assertThat(new Complex(-1, 0).raisedTo(0.5)).isEqualTo(i);

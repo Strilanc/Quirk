@@ -462,8 +462,14 @@ class Complex {
      * @returns {!Complex}
      */
     raisedTo(exponent) {
-        if (exponent === 0.5 && this.imag === 0 && this.real > 0) {
+        if (exponent === 0.5 && this.imag === 0 && this.real >= 0) {
             return new Complex(Math.sqrt(this.real), 0);
+        }
+        if (Complex.ZERO.isEqualTo(exponent)) {
+            return Complex.ONE;
+        }
+        if (this.isEqualTo(Complex.ZERO)) {
+            return Complex.ZERO;
         }
         return this.ln().times(Complex.from(exponent)).exp();
     }
