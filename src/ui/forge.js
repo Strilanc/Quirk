@@ -48,7 +48,8 @@ function initForge(revision) {
         });
     })();
 
-    function computeAndPaintOp(canvas, opGetter) {
+    function computeAndPaintOp(canvas, opGetter, button) {
+        button.disabled = true;
         let painter = new Painter(canvas);
         painter.clear();
         let d = Math.min((canvas.width - 5)/2, canvas.height);
@@ -69,6 +70,7 @@ function initForge(revision) {
             if (op.width() === 2 && op.isUnitary(0.009)) {
                 MathPainter.paintBlochSphereRotation(painter, op, rect2);
             }
+            button.disabled = false;
         } catch (ex) {
             painter.printParagraph(
                 ex+"",
@@ -106,13 +108,22 @@ function initForge(revision) {
             return op;
         }
 
-        let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation);
+        let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation, rotationButton);
         Observable.of(obsShow.observable(), ...[txtPhase, txtPitch, txtRoll, txtYaw].map(textEditObservable)).
             flatten().
+            throttleLatest(100).
             subscribe(redraw);
 
         rotationButton.addEventListener('click', () => {
-            let gate = Gate.fromKnownMatrix(txtName.value, parseRotation(), 'Custom Rotation Gate', '').
+            let mat;
+            try {
+                mat = parseRotation();
+            } catch (ex) {
+                console.warn(ex);
+                return; // Button is about to be disabled, so no handling required.
+            }
+
+            let gate = Gate.fromKnownMatrix(txtName.value, mat, 'Custom Rotation Gate', '').
                 withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32));
             createCustomGateAndClose(gate);
         });
@@ -169,7 +180,7 @@ function initForge(revision) {
             return op;
         }
 
-        let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrix);
+        let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrix, matrixButton);
 
         Observable.of(obsShow.observable(), textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
             flatten().
@@ -177,7 +188,14 @@ function initForge(revision) {
             subscribe(redraw);
 
         matrixButton.addEventListener('click', () => {
-            let mat = parseMatrix();
+            let mat;
+            try {
+                mat = parseMatrix();
+            } catch (ex) {
+                console.warn(ex);
+                return; // Button is about to be disabled, so no handling required.
+            }
+
             let name = txtName.value.trim();
             let h = Math.round(Math.log2(mat.height()));
             let gate = Gate.fromKnownMatrix(name, mat, 'Custom Matrix Gate', '').

@@ -63,6 +63,15 @@ class Observable {
     }
 
     /**
+     * @param {!function(T):void} action
+     * @returns {!Observable.<T>}
+     * @template T
+     */
+    peek(action) {
+        return this.map(e => { action(); return e; });
+    }
+
+    /**
      * @returns {!Observable.<T>} An observable that forwards all the items from all the observables observed by the
      * receiving observable of observables.
      * @template T
