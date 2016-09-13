@@ -87,7 +87,7 @@ suite.test("parse", () => {
     assertThat(Matrix.parse("{{\u221A2}}")).isEqualTo(
         Matrix.square(Math.sqrt(2)));
 
-    assertThat(Matrix.parse("{{\u00BD-\u00BDi, 5}, {-i, 0}}")).isEqualTo(
+    assertThat(Matrix.parse("{{½-½i, 5}, {-i, 0}}")).isEqualTo(
         Matrix.square(new Complex(0.5, -0.5), 5, new Complex(0, -1), 0));
     assertThat(Matrix.parse("{{1, 2, i}}")).isEqualTo(
         Matrix.row(1, 2, Complex.I));
@@ -552,7 +552,7 @@ const assertSvdDecompositionWorksFor = m => {
     assertThat(S.isDiagonal(0.00001)).withInfo({m, U, S, V, test: "S diagonal"}).isEqualTo(true);
     assertThat(Seq.range(S.width()).every(i => Math.abs(S.cell(i, i).phase()) < 0.000001)).
         withInfo({m, U, S, V, test: "S is positive"}).isEqualTo(true);
-    assertThat(U.times(S).times(V)).withInfo({m, U, S, V}).isApproximatelyEqualTo(m, 0.0001);
+    assertThat(U.times(S).times(V)).withInfo({m, U, S, V}).isApproximatelyEqualTo(m, 0.001);
 };
 
 suite.test("singularValueDecomposition", () => {

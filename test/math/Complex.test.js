@@ -118,14 +118,16 @@ suite.test("toString", () => {
     assertThat(new Complex(1/3, 0).toString(Format.EXACT)).isEqualTo("\u2153");
     assertThat(new Complex(1/3, 0).toString(Format.MINIFIED)).isEqualTo("\u2153");
     assertThat(new Complex(1/3, 0).toString(Format.SIMPLIFIED)).isEqualTo("\u2153");
+});
 
+suite.test("toString_perturbed", () => {
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.CONSISTENT)).isEqualTo("+0.33+0.00i");
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.EXACT)).isEqualTo("0.3333433333333333");
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.MINIFIED)).isEqualTo("0.3333433333333333");
     assertThat(new Complex(1/3+0.00001, 0).toString(Format.SIMPLIFIED)).isEqualTo("\u2153");
 });
 
-suite.test("parse", () => {
+suite.test("parse_raw", () => {
     assertThrows(() => Complex.parse(""));
     assertThrows(() => Complex.parse("abc"));
     assertThrows(() => Complex.parse("1e_plus1"));
@@ -146,14 +148,36 @@ suite.test("parse", () => {
     assertThat(Complex.parse("-5+2i")).isEqualTo(new Complex(-5, 2));
     assertThat(Complex.parse("-5-2i")).isEqualTo(new Complex(-5, -2));
 
-    assertThat(Complex.parse("3/2i")).isEqualTo(new Complex(0, -1.5));
+    assertThat(Complex.parse("3/2i")).isEqualTo(new Complex(0, 1.5));
 
     assertThat(Complex.parse("\u221A2-\u2153i")).isEqualTo(new Complex(Math.sqrt(2), -1/3));
 
     assertThat(Complex.parse("1e-10")).isEqualTo(new Complex(0.0000000001, 0));
     assertThat(Complex.parse("1e+10")).isEqualTo(new Complex(10000000000, 0));
     assertThat(Complex.parse("2.5e-10")).isEqualTo(new Complex(0.00000000025, 0));
+    assertThat(Complex.parse("2.5E-10")).isEqualTo(new Complex(0.00000000025, 0));
     assertThat(Complex.parse("2.5e+10")).isEqualTo(new Complex(25000000000, 0));
+});
+
+suite.test("parse_expressions", () => {
+    assertThat(Complex.parse("1/3")).isEqualTo(1/3);
+    assertThat(Complex.parse("2/3/5")).isEqualTo((2/3)/5);
+    assertThat(Complex.parse("2/3/5*7/13")).isEqualTo(((((2/3)/5))*7)/13);
+    assertThat(Complex.parse("2-3-5")).isEqualTo(-6);
+    assertThat(Complex.parse("1/3+2i")).isEqualTo(new Complex(1/3, 2));
+    assertThat(Complex.parse("(1/3)+2i")).isEqualTo(new Complex(1/3, 2));
+    assertThat(Complex.parse("1/(3+2i)")).isEqualTo(Complex.ONE.dividedBy(new Complex(3, 2)));
+    assertThat(Complex.parse("1/sqrt(3+2i)")).isEqualTo(Complex.ONE.dividedBy(new Complex(3, 2).raisedTo(0.5)));
+
+    assertThat(Complex.parse("i^i")).isEqualTo(0.20787957635076193);
+    assertThat(Complex.parse("√i")).isEqualTo(new Complex(Math.sqrt(0.5), Math.sqrt(0.5)));
+    assertThat(Complex.parse("√4i")).isEqualTo(new Complex(0, 2));
+    assertThat(Complex.parse("sqrt4i")).isEqualTo(new Complex(0, 2));
+    assertThat(Complex.parse("sqrt√4i")).isEqualTo(new Complex(0, Math.sqrt(2)));
+    assertThat(Complex.parse("sqrt√4-i")).isEqualTo(new Complex(Math.sqrt(2), -1));
+    assertThat(Complex.parse("----------1")).isEqualTo(1);
+    assertThat(Complex.parse("---------1")).isEqualTo(-1);
+    assertThat(Complex.parse("---+--+--1")).isEqualTo(-1);
 });
 
 suite.test("norm2", () => {

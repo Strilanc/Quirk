@@ -835,3 +835,13 @@ suite.test("stride", () => {
 
     assertThat(Seq.range(100).stride(10)).isEqualTo(Seq.range(10).map(e => e*10));
 });
+
+suite.test("segmentBy", () => {
+    assertThat(seq([]).segmentBy(() => { throw new Error(); })).iteratesAs();
+    assertThat(seq([1]).segmentBy(e => e + 1)).iteratesAs([1]);
+    assertThat(seq([2, 3, 5, 7, 11, 13]).segmentBy(e => e % 4)).iteratesAs([2], [3], [5], [7, 11], [13]);
+    assertThat(seq([1, 2, 3, 4, 5, 6, 7, 8, 9]).segmentBy(e => e >> 2)).
+        iteratesAs([1, 2, 3], [4, 5, 6, 7], [8, 9]);
+    assertThat(seq([1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3]).segmentBy(e => e >> 2)).
+        iteratesAs([1, 2, 3], [4, 5, 6, 7], [8, 9], [1, 2, 3]);
+});

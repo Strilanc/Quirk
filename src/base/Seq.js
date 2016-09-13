@@ -183,7 +183,7 @@ class Seq {
             for (let i = 0; i < count; i++) {
                 yield i;
             }
-        })
+        });
     }
 
     /**
@@ -822,6 +822,31 @@ class Seq {
     */
     distinct() {
         return this.distinctBy(e => e);
+    }
+
+    /**
+     * @param {!function(T):*} keySelector
+     * @returns {!Seq.<T>}
+     * @template T
+     */
+    segmentBy(keySelector) {
+        let seq = this;
+        return Seq.fromGenerator(function*() {
+            let group = [];
+            let lastKey = undefined;
+            for (let item of seq) {
+                let itemKey = keySelector(item);
+                if (group.length > 0 && itemKey !== lastKey) {
+                    yield group;
+                    group = [];
+                }
+                group.push(item);
+                lastKey = itemKey;
+            }
+            if (group.length > 0) {
+                yield group;
+            }
+        });
     }
 
     /**
