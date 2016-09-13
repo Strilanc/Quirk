@@ -9,7 +9,7 @@ function initUndoRedo(revision) {
 
     const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
     const redoButton = /** @type {!HTMLButtonElement} */ document.getElementById('redo-button');
-    revision.changes().subscribe(() => {
+    revision.latestActiveCommit().subscribe(() => {
         undoButton.disabled = revision.isAtBeginningOfHistory();
         redoButton.disabled = revision.isAtEndOfHistory();
     });
