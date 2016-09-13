@@ -76,8 +76,10 @@ class Matrix {
 
         let seqRows = seq(rows);
         let h = rows.length;
-        let w = seqRows.map(e => e.length).distinct().single(0);
-        Util.need(w > 0, "consistent non-zero width", rows);
+        let w = seqRows.map(e => e.length).distinct().single(null);
+        if (w === null) {
+            throw new DetailedError("Inconsistent row widths.", {rows});
+        }
 
         let buffer = new Float64Array(w * h * 2);
         let i = 0;

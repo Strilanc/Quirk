@@ -9,6 +9,7 @@ import Painter from "src/draw/Painter.js"
 import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Serializer from "src/circuit/Serializer.js"
+import Util from "src/base/Util.js"
 import { textEditObservable } from "src/browser/EventUtil.js"
 import { Observable, ObservableSource } from "src/base/Obs.js"
 
@@ -158,6 +159,9 @@ function initForge(revision) {
 
         function parseMatrix() {
             let op = parseMatrix_noCorrection();
+            if (op.width() !== op.height() || op.width() < 2 || op.width() > 16 || !Util.isPowerOf2(op.width())) {
+                throw Error("Matrix must be 2x2, 4x4, 8x8, or 16x16.")
+            }
             if (chkFix.checked) {
                 op = op.closestUnitary(0.0001);
                 op = Matrix.parse(op.toString(new Format(true, 0.0000001, 7, ",")));
