@@ -98,7 +98,7 @@
                         <input id='gate-forge-name' type="text" placeholder="[show matrix]" style="width:7em;font-size:20px;"> Gate Symbol<br/><br/>
                     </div>
 
-                    <div style="margin: 20px 0 0 0;">
+                    <span style="margin: 20px 0 0 0;">
                         <table>
                             <tr>
                                 <th>From Rotation</th>
@@ -130,9 +130,9 @@
                                 <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>OR</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                                 <td>
                                     From part of current circuit:<br/>
-                                    <input type="text" size="2" placeholder="1:∞" style="margin:0.5em 0 0 0;"> column range<br/>
-                                    <input type="text" size="2" placeholder="1:∞" style="margin:0.5em 0 0.5em 0;"> wire range<br/>
-                                    <strong><span>No</span></strong> inputs
+                                    <input id="gate-forge-circuit-cols" type="text" size="2" placeholder="1:∞" style="margin:0.5em 0 0 0;"> column range<br/>
+                                    <input id="gate-forge-circuit-rows" type="text" size="2" placeholder="1:∞" style="margin:0.5em 0 0.5em 0;"> wire range<br/>
+                                    Required Inputs: <span id="gate-forge-circuit-inputs">(none)</span>
                                 </td>
                             </tr>
                             <tr>
@@ -145,7 +145,7 @@
                                 </td>
                                 <td></td>
                                 <td>
-                                    <canvas style="padding:5px;border:1px black solid;width:225px;height:100px;margin:10px 0 0 0;"></canvas>
+                                    <canvas id="gate-forge-circuit-canvas" style="padding:5px;border:1px black solid;width:225px;height:100px;margin:10px 0 0 0;"></canvas>
                                 </td>
                             </tr>
                             <tr>

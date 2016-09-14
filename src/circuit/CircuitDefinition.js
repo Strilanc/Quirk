@@ -24,8 +24,14 @@ class CircuitDefinition {
      * @param {undefined|!int=} outerRowOffset
      * @param {undefined|!Map.<!string, *>=} outerContext
      * @param {!CustomGateSet} customGateSet
+     * @param {!boolean} isNested
      */
-    constructor(numWires, columns, outerRowOffset=0, outerContext=new Map(), customGateSet=new CustomGateSet()) {
+    constructor(numWires,
+                columns,
+                outerRowOffset=0,
+                outerContext=new Map(),
+                customGateSet=new CustomGateSet(),
+                isNested=false) {
         if (numWires < 0) {
             throw new DetailedError("Bad numWires", {numWires})
         }
@@ -48,6 +54,7 @@ class CircuitDefinition {
 
         this.outerRowOffset = outerRowOffset;
         this.outerContext = outerContext;
+        this.isNested = isNested;
 
         /**
          * @type {!Array.<undefined|!string>}
@@ -61,7 +68,7 @@ class CircuitDefinition {
         this._measureMasks = [0];
         let mask = 0;
         for (let col of columns) {
-            let reasons = col.disabledReasons(mask, outerRowOffset, outerContext);
+            let reasons = col.disabledReasons(mask, outerRowOffset, outerContext, isNested);
             mask = col.nextMeasureMask(mask, reasons);
             this._disabledReasons.push(reasons);
             this._measureMasks.push(mask);
@@ -75,12 +82,37 @@ class CircuitDefinition {
     }
 
     /**
+     * @returns {!Set.<!String>}
+     */
+    getUnmetContextKeys() {
+        let result = new Set();
+        for (let c = 0; c < this.columns.length; c++) {
+            let col = this.columns[c];
+            let ctx = this.colCustomContextFromGates(c);
+            for (let gate of col.gates) {
+                for (let key of gate === null ? [] : gate.getUnmetContextKeys()) {
+                    if (!ctx.has(key)) {
+                        result.add(key);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * @param {!int} outerRowOffset
      * @param {!Map.<!string, *>} outerContext
      * @returns {!CircuitDefinition}
      */
     withDisabledReasonsForEmbeddedContext(outerRowOffset, outerContext) {
-        return new CircuitDefinition(this.numWires, this.columns, outerRowOffset, outerContext, this.customGateSet);
+        return new CircuitDefinition(
+            this.numWires,
+            this.columns,
+            outerRowOffset,
+            outerContext,
+            this.customGateSet,
+            true);
     }
 
     /**

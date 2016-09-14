@@ -139,6 +139,21 @@ export default class CircuitStats {
      * @param {!number} time
      * @returns {!CircuitStats}
      */
+    static withNanDataFromCircuitAtTime(circuitDefinition, time) {
+        return new CircuitStats(
+            circuitDefinition,
+            time,
+            [],
+            Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
+            NaN,
+            new Map());
+    }
+
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
+     * @param {!number} time
+     * @returns {!CircuitStats}
+     */
     static fromCircuitAtTime(circuitDefinition, time) {
         try {
             return CircuitStats._fromCircuitAtTime_noFallback(circuitDefinition, time);
@@ -147,13 +162,7 @@ export default class CircuitStats {
                 `Defaulted to NaN results. Computing circuit values failed.`,
                 {circuitDefinition: Serializer.toJson(circuitDefinition)},
                 ex);
-            return new CircuitStats(
-                circuitDefinition,
-                time,
-                [],
-                Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
-                NaN,
-                new Map());
+            return CircuitStats.withNanDataFromCircuitAtTime(circuitDefinition, time);
         }
     }
 

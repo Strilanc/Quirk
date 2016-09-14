@@ -1,10 +1,14 @@
 import Axis from "src/math/Axis.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import CircuitStats from "src/circuit/CircuitStats.js"
 import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
+import DisplayedCircuit from "src/ui/DisplayedCircuit.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
+import GateColumn from "src/circuit/GateColumn.js"
+import Hand from "src/ui/Hand.js"
 import MathPainter from "src/draw/MathPainter.js"
 import Matrix from "src/math/Matrix.js"
 import Painter from "src/draw/Painter.js"
@@ -12,8 +16,9 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import Serializer from "src/circuit/Serializer.js"
 import Util from "src/base/Util.js"
-import { textEditObservable } from "src/browser/EventUtil.js"
+import { circuitDefinitionToGate } from "src/circuit/CircuitComputeUtil.js"
 import { Observable, ObservableSource } from "src/base/Obs.js"
+import { textEditObservable } from "src/browser/EventUtil.js"
 
 /**
  * @param {!Revision} revision
@@ -116,6 +121,8 @@ function initForge(revision) {
             if (result.hasNaN()) {
                 throw new DetailedError("NaN", {x, y, z, result});
             }
+
+            result = Matrix.parse(result.toString(new Format(true, 0.0000001, 7, ",")));
             return result;
         }
 
@@ -213,6 +220,120 @@ function initForge(revision) {
                 withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
                 withHeight(h).
                 withWidth(name === '' ? h : 1);
+            createCustomGateAndClose(gate);
+        });
+    })();
+
+    (() => {
+        const circuitCanvas = /** @type {!HTMLCanvasElement} */ document.getElementById('gate-forge-circuit-canvas');
+        const txtCols = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-cols');
+        const txtRows = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-rows');
+        const spanInputs = /** @type {!HTMLElement} */ document.getElementById('gate-forge-circuit-inputs');
+        const circuitButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-button');
+
+        function parseRange(txtBox, maxLen) {
+            let txt = txtBox.value === '' ? txtBox.placeholder : txtBox.value;
+            let parts = txt.split(":").map(e => e.trim());
+            if (parts.length > 2) {
+                throw new Error("Too many colons.");
+            }
+            let min = parseInt(parts[0] || "1");
+            let max = parts[1] === undefined || parts[1] === "" || parts[1] === "∞" ? Infinity : parseInt(parts[1]);
+            if (isNaN(min)) {
+                throw new Error("Not a number: " + parts[0]);
+            }
+            if (isNaN(max)) {
+                throw new Error("Not a number: " + parts[1]);
+            }
+
+            let start = Math.min(maxLen, Math.max(0, min - 1));
+            let end = Math.min(maxLen, Math.max(start, max));
+            return {start, end};
+        }
+
+        function parseCircuitGate() {
+            let circuit = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
+            let colRange = parseRange(txtCols, circuit.columns.length);
+            let rowRange = parseRange(txtRows, circuit.numWires);
+            if (rowRange.end === rowRange.start) {
+                throw new Error("Empty wire range.")
+            }
+
+            let cols = circuit.columns.
+                slice(colRange.start, colRange.end).
+                map(col => new GateColumn(col.gates.slice(rowRange.start, rowRange.end)));
+            let gateCircuit = new CircuitDefinition(rowRange.end - rowRange.start, cols).withUncoveredColumnsRemoved();
+            if (gateCircuit.columns.length === 0) {
+                throw new Error("No gates in included range.");
+            }
+            if (gateCircuit.withMinimumWireCount().numWires > gateCircuit.numWires) {
+                throw new Error("Cut gate in half.")
+            }
+            return circuitDefinitionToGate(
+                gateCircuit,
+                '~' + txtName.text,
+                txtName.text,
+                'A custom gate based on a circuit.');
+        }
+
+        let redraw = () => {
+            circuitButton.disabled = true;
+            let painter = new Painter(circuitCanvas);
+            painter.clear();
+            try {
+                let gate = parseCircuitGate();
+                let keys = gate.getUnmetContextKeys();
+                spanInputs.innerText = keys.size === 0 ?
+                    "(none)" :
+                    [...keys].map(e => e.replace("Input Range ", "")).join(", ");
+                let d = new DisplayedCircuit(
+                    0,
+                    gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
+                        0,
+                        new Map([...keys].map(e => [e, {offset: 0, length: 0}]))),
+                    undefined,
+                    undefined,
+                    undefined);
+                let s = Math.min(
+                    circuitCanvas.width / d.desiredWidth(false),
+                    circuitCanvas.height / d.desiredHeight(false));
+                try {
+                    painter.ctx.save();
+                    if (s < 1) {
+                        painter.ctx.scale(s, s);
+                    }
+                    d.paint(
+                        painter,
+                        new Hand(undefined, undefined, undefined, undefined),
+                        CircuitStats.withNanDataFromCircuitAtTime(gate.knownCircuit, 0),
+                        false);
+                } finally {
+                    painter.ctx.restore();
+                }
+                circuitButton.disabled = false;
+            } catch (ex) {
+                painter.printParagraph(
+                    ex+"",
+                    new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+                    new Point(0, 0),
+                    'red',
+                    24);
+            }
+        };
+
+        Observable.of(obsShow.observable(), textEditObservable(txtCols), textEditObservable(txtRows)).
+            flatten().
+            throttleLatest(100).
+            subscribe(redraw);
+
+        circuitButton.addEventListener('click', () => {
+            let gate;
+            try {
+                gate = parseCircuitGate();
+            } catch (ex) {
+                console.warn(ex);
+                return; // Button is about to be disabled, so no handling required.
+            }
             createCustomGateAndClose(gate);
         });
     })();

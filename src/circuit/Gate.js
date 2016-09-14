@@ -89,6 +89,10 @@ class Gate {
          * @type {undefined|!CircuitDefinition}
          */
         this.knownCircuit = undefined;
+        /**
+         * @type {!Array.<!string>}
+         */
+        this._requiredContextKeys = [];
 
         /**
          * @type {undefined|!boolean}
@@ -125,6 +129,19 @@ class Gate {
         let result = new Gate(symbol, name, blurb);
         result._knownMatrix = matrix;
         result._stableDuration = Infinity;
+        return result;
+    }
+
+    /**
+     * @returns {!Set.<!String>}
+     */
+    getUnmetContextKeys() {
+        let result = new Set(this._requiredContextKeys);
+        if (this.knownCircuit !== undefined) {
+            for (let key of this.knownCircuit.getUnmetContextKeys()) {
+                result.add(key);
+            }
+        }
         return result;
     }
 
@@ -288,6 +305,7 @@ class Gate {
         }
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
+        g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
         g._hasNoEffect = this._hasNoEffect;
@@ -421,6 +439,12 @@ class Gate {
     withCustomStatPostProcessor(pixelFunc) {
         let g = this._copy();
         g.customStatPostProcesser = pixelFunc;
+        return g;
+    }
+
+    withRequiredContextKeys(...keys) {
+        let g = this._copy();
+        g._requiredContextKeys = keys;
         return g;
     }
 

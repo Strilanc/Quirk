@@ -211,7 +211,7 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Cycling",
         gates: [
-            CountingGates.CountingFamily.ofSize(2),          CountingGates.UncountingFamily.ofSize(2),
+            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
             CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
             CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
         ]

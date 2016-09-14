@@ -202,10 +202,8 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
 
         // Given circuit?
         if (circuitProp !== undefined) {
-            return Gate.withoutKnownMatrix(symbol, name, blurb).
-                withKnownCircuit(fromJson_CircuitDefinition(circuitProp)).
-                withCustomDrawer(drawer).
-                withSerializedId(id);
+            let circuit = fromJson_CircuitDefinition(circuitProp);
+            return circuitDefinitionToGate(circuit, symbol, name, blurb);
         }
 
         // Operation not provided. Try to match by id.
