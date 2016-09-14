@@ -2,8 +2,9 @@ import DetailedError from "src/base/DetailedError.js"
 import { Format, UNICODE_FRACTIONS } from "src/base/Format.js"
 import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
+import {parseFormula} from "src/math/FormulaParser.js"
 
-const TOKEN_VALUE_MAP = new Map();
+const PARSE_COMPLEX_TOKEN_MAP = new Map();
 
 /**
  * Represents a complex number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
@@ -191,136 +192,12 @@ class Complex {
     }
 
     /**
-     * @param {!String} text
-     * @returns {!Array.<!String>}
-     * @private
-     */
-    static _tokenize(text) {
-        let tokens = seq(text.toLowerCase().split('+').join(' + ').split('-').join(' - ').split(/\s/)).
-            flatMap(part => seq(part).
-                segmentBy(e => {
-                    if (e.trim() === '') {
-                        return " "
-                    }
-                    if (e.match(/[\.0-9]/)) {
-                        return "#"
-                    }
-                    if (e.match(/[a-z]/)) {
-                        return "a";
-                    }
-                    return e;
-                }).
-                map(e => e.join(''))).
-            filter(e => e.trim() !== '').
-            toArray();
-
-        return Complex._mergeScientificFloatTokens(tokens);
-    }
-
-    /**
-     * @param {!string} token
-     * @returns {!string|!Complex|!{unary_action: undefined|!function(!Complex):!Complex, binary_action: undefined|!function(!Complex, !Complex): !Complex}}
-     * @private
-     */
-    static _translate_token(token) {
-        if (token.match(/[0-9]+(\.[0-9]+)?/)) {
-            return new Complex(parseFloat(token), 0);
-        }
-
-        if (TOKEN_VALUE_MAP.has(token)) {
-            return TOKEN_VALUE_MAP.get(token);
-        }
-
-        throw new DetailedError("Unrecognized token", {token});
-    }
-
-    /**
      * Parses a complex number from an infix arithmetic expression.
      * @param {!string} text
      * @returns {!Complex}
      */
     static parse(text) {
-        let tokens = Complex._tokenize(text).map(Complex._translate_token);
-
-        let ops = [];
-        let vals = [];
-
-        let isValidEndToken = token => token instanceof Complex || token === ")";
-        let isValidEndState = () => vals.length === 1 && ops.length === 0;
-
-        let apply = op => {
-            if (op === "(") {
-                throw new DetailedError("Bad expression: unmatched '('", {text});
-            }
-            if (vals.length < 2) {
-                throw new DetailedError("Bad expression: operated on nothing", {text});
-            }
-            let b = vals.pop();
-            let a = vals.pop();
-            vals.push(op.f(a, b));
-        };
-
-        let closeParen = () => {
-            while (true) {
-                if (ops.length === 0) {
-                    throw new DetailedError("Bad expression: unmatched ')'", {text});
-                }
-                let op = ops.pop();
-                if (op === "(") {
-                    break;
-                }
-                apply(op);
-            }
-        };
-
-        let burnOps = w => {
-            while (ops.length > 0 && vals[vals.length - 1] !== undefined) {
-                let top = ops[ops.length - 1];
-                if (top.w === undefined || top.w < w) {
-                    break;
-                }
-                apply(ops.pop());
-            }
-        };
-
-        let feedOp = (couldBeBinary, token) => {
-            let opToken = couldBeBinary && Complex.I.isEqualTo(token) ? TOKEN_VALUE_MAP.get("*") : token;
-
-            if (opToken.priority !== undefined) {
-                burnOps(opToken.priority);
-            }
-
-            if (couldBeBinary && opToken.binary_action !== undefined) {
-                ops.push({f: opToken.binary_action, w: opToken.priority});
-            } else if (opToken.unary_action !== undefined) {
-                vals.push(undefined);
-                ops.push({f: (a, b) => opToken.unary_action(b), w: opToken.priority});
-            } else if (opToken.binary_action !== undefined) {
-                throw new DetailedError("Bad expression: binary op in bad spot", {text});
-            }
-        };
-
-        let wasValidEndToken = false;
-        for (let token of tokens) {
-            feedOp(wasValidEndToken, token);
-            wasValidEndToken = isValidEndToken(token);
-
-            if (token === "(") {
-                ops.push("(");
-            } else if (token === ")") {
-                closeParen();
-            } else if (token instanceof Complex) {
-                vals.push(token);
-            }
-        }
-
-        burnOps(-Infinity);
-
-        if (!isValidEndState()) {
-            throw new DetailedError("Incomplete expression", {text});
-        }
-
-        return vals[0];
+        return Complex.from(parseFormula(text, PARSE_COMPLEX_TOKEN_MAP));
     }
 
     /**
@@ -517,33 +394,33 @@ Complex.ONE = new Complex(1, 0);
  */
 Complex.I = new Complex(0, 1);
 
-TOKEN_VALUE_MAP.set("i", Complex.I);
-TOKEN_VALUE_MAP.set("(", "(");
-TOKEN_VALUE_MAP.set(")", ")");
+PARSE_COMPLEX_TOKEN_MAP.set("i", Complex.I);
+PARSE_COMPLEX_TOKEN_MAP.set("(", "(");
+PARSE_COMPLEX_TOKEN_MAP.set(")", ")");
 for (let {character, value} of UNICODE_FRACTIONS) {
     //noinspection JSUnusedAssignment
-    TOKEN_VALUE_MAP.set(character, Complex.from(value));
+    PARSE_COMPLEX_TOKEN_MAP.set(character, value);
 }
-TOKEN_VALUE_MAP.set("sqrt", {
-    unary_action: e => e.raisedTo(0.5),
+PARSE_COMPLEX_TOKEN_MAP.set("sqrt", {
+    unary_action: e => Complex.from(e).raisedTo(0.5),
     priority: 4});
-TOKEN_VALUE_MAP.set("^", {
-    binary_action: (a, b) => a.raisedTo(b),
+PARSE_COMPLEX_TOKEN_MAP.set("^", {
+    binary_action: (a, b) => Complex.from(a).raisedTo(b),
     priority: 3});
-TOKEN_VALUE_MAP.set("*", {
-    binary_action: (a, b) => a.times(b),
+PARSE_COMPLEX_TOKEN_MAP.set("*", {
+    binary_action: (a, b) => Complex.from(a).times(b),
     priority: 2});
-TOKEN_VALUE_MAP.set("/", {
-    binary_action: (a, b) => a.dividedBy(b),
+PARSE_COMPLEX_TOKEN_MAP.set("/", {
+    binary_action: (a, b) => Complex.from(a).dividedBy(b),
     priority: 2});
-TOKEN_VALUE_MAP.set("-", {
-    unary_action: e => e.neg(),
-    binary_action: (a, b) => a.minus(b),
+PARSE_COMPLEX_TOKEN_MAP.set("-", {
+    unary_action: e => Complex.from(e).neg(),
+    binary_action: (a, b) => Complex.from(a).minus(b),
     priority: 1});
-TOKEN_VALUE_MAP.set("+", {
+PARSE_COMPLEX_TOKEN_MAP.set("+", {
     unary_action: e => e,
-    binary_action: (a, b) => a.plus(b),
+    binary_action: (a, b) => Complex.from(a).plus(b),
     priority: 1});
-TOKEN_VALUE_MAP.set("√", TOKEN_VALUE_MAP.get("sqrt"));
+PARSE_COMPLEX_TOKEN_MAP.set("√", PARSE_COMPLEX_TOKEN_MAP.get("sqrt"));
 
 export default Complex;

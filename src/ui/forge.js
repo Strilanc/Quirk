@@ -1,6 +1,8 @@
+import Axis from "src/math/Axis.js"
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
+import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import MathPainter from "src/draw/MathPainter.js"
@@ -90,26 +92,35 @@ function initForge(revision) {
     (() => {
         const rotationCanvas = /** @type {!HTMLCanvasElement} */ document.getElementById('gate-forge-rotation-canvas');
         const rotationButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-button');
-        const txtYaw = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-yaw');
-        const txtPitch = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-pitch');
-        const txtRoll = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-roll');
+        const txtAxis = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-axis');
+        const txtAngle = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-angle');
         const txtPhase = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-phase');
 
         function parseRotation() {
-            let f = e => e.value === '' ? 0 : parseFloat(e.value) * Math.PI / 180;
-            let yaw = f(txtYaw);
-            let roll = f(txtRoll);
-            let pitch = f(txtPitch);
-            let phase = f(txtPhase);
-            let op = Matrix.identity(2).times(Complex.polar(1, phase));
-            op = Matrix.PAULI_Y.liftApply(e => e.times(Complex.I).times(-roll/2).exp()).times(op);
-            op = Matrix.PAULI_X.liftApply(e => e.times(Complex.I).times(-pitch/2).exp()).times(op);
-            op = Matrix.PAULI_Z.liftApply(e => e.times(Complex.I).times(-yaw/2).exp()).times(op);
-            return op;
+            let parseAngle = e => parseFloat(e.value === '' ? e.placeholder : e.value) * Math.PI / 180;
+            let w = parseAngle(txtAngle);
+            let phase = parseAngle(txtPhase);
+            let {x, y, z} = Axis.parse(txtAxis.value === '' ? txtAxis.placeholder : txtAxis.value);
+
+            let len = Math.sqrt(x*x + y*y + z*z);
+            x /= len;
+            y /= len;
+            z /= len;
+
+            let [I, X, Y, Z] = [Matrix.identity(2), Matrix.PAULI_X, Matrix.PAULI_Y, Matrix.PAULI_Z];
+            let axisMatrix = X.times(x).plus(Y.times(y)).plus(Z.times(z));
+
+            let result = I.times(Math.cos(w/2)).
+                plus(axisMatrix.times(Complex.I.neg()).times(Math.sin(w/2))).
+                times(Complex.polar(1, phase));
+            if (result.hasNaN()) {
+                throw new DetailedError("NaN", {x, y, z, result});
+            }
+            return result;
         }
 
         let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation, rotationButton);
-        Observable.of(obsShow.observable(), ...[txtPhase, txtPitch, txtRoll, txtYaw].map(textEditObservable)).
+        Observable.of(obsShow.observable(), ...[txtPhase, txtAxis, txtAngle].map(textEditObservable)).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
