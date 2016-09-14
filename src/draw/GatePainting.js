@@ -255,6 +255,7 @@ GatePainting.MATRIX_DRAWER = args => {
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
         args.painter.ctx.globalAlpha = 1;
     }
+    GatePainting.paintOutline(args);
 };
 
 /**

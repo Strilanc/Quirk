@@ -2,7 +2,9 @@ import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/T
 import Serializer from "src/circuit/Serializer.js"
 
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import { circuitDefinitionToGate } from "src/circuit/CircuitComputeUtil.js"
 import Complex from "src/math/Complex.js"
+import CustomGateSet from "src/circuit/CustomGateSet.js"
 import describe from "src/base/Describe.js"
 import DetailedError from "src/base/DetailedError.js"
 import Format from "src/base/Format.js"
@@ -31,14 +33,14 @@ suite.test("roundTrip_Complex", () => {
     assertRoundTrip(Complex, new Complex(2, -3), "2-3i");
     assertRoundTrip(Complex, Complex.I, "i");
     assertRoundTrip(Complex, new Complex(0, -1), "-i");
-    assertRoundTrip(Complex, new Complex(1/3, 0), "\u2153");
-    assertRoundTrip(Complex, new Complex(1/3+0.00001, 0), "0.3333433333333333");
+    assertRoundTrip(Complex, new Complex(1 / 3, 0), "\u2153");
+    assertRoundTrip(Complex, new Complex(1 / 3 + 0.00001, 0), "0.3333433333333333");
 });
 
 suite.test("roundTrip_Matrix", () => {
     assertRoundTrip(Matrix, Matrix.row(1, Complex.I), "{{1,i}}");
     assertRoundTrip(Matrix, Matrix.col(1, Complex.I), "{{1},{i}}");
-    assertRoundTrip(Matrix, Matrix.square(1/3+0.00001, Complex.I.plus(1), -1/3, 0),
+    assertRoundTrip(Matrix, Matrix.square(1 / 3 + 0.00001, Complex.I.plus(1), -1 / 3, 0),
         "{{0.3333433333333333,1+i},{-\u2153,0}}");
 });
 
@@ -61,6 +63,63 @@ suite.test("roundTrip_Gate", () => {
     assertThat(v).isEqualTo({id: "custom_id", matrix: "{{i,-1},{2,3}}"});
     assertThat(g.knownMatrixAt(0)).isEqualTo(g2.knownMatrixAt(0));
     assertThat(g.symbol).isEqualTo(g2.symbol);
+});
+
+suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
+    let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
+        withSerializedId("~test");
+    let circuit = new CircuitDefinition(
+        2,
+        [new GateColumn([null, customGate])],
+        undefined,
+        undefined,
+        new CustomGateSet(customGate));
+
+    let json = Serializer.toJson(circuit);
+    assertThat(json).isEqualTo({
+        cols: [[1, '~test']],
+        gates: [{id: '~test', name: 'sym', matrix: '{{2,3},{5,7}}'}]
+    });
+
+    let circuit2 = Serializer.fromJson(CircuitDefinition, json);
+    assertThat(circuit2.columns.length).isEqualTo(1);
+    assertThat(circuit2.columns[0].gates.length).isEqualTo(2);
+    assertThat(circuit2.columns[0].gates[0]).isEqualTo(null);
+    assertThat(circuit2.columns[0].gates[1].matrix).isEqualTo(customGate.matrix);
+    assertThat(circuit2.columns[0].gates[1].symbol).isEqualTo(customGate.symbol);
+    assertThat(circuit2.columns[0].gates[1].serializedId).isEqualTo(customGate.serializedId);
+    assertThat(circuit2.customGateSet.gates.length).isEqualTo(1);
+    assertTrue(circuit2.customGateSet.gates[0] === circuit2.columns[0].gates[1]);
+});
+
+suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
+    let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
+        withSerializedId("~test");
+    let circuitForGate = new CircuitDefinition(
+        2,
+        [new GateColumn([customGate, customGate])],
+        undefined,
+        undefined,
+        new CustomGateSet(customGate));
+    let circuitGate = circuitDefinitionToGate(
+        circuitForGate,
+        'combo',
+        'name',
+        'blurb').withSerializedId('~wombo');
+
+    let circuit = new CircuitDefinition(
+        3,
+        [new GateColumn([customGate, circuitGate, null])],
+        undefined,
+        undefined,
+        new CustomGateSet(customGate, circuitGate));
+
+    let json = Serializer.toJson(circuit);
+    assertThat(json).isEqualTo({
+        cols: [['~test', '~wombo']], gates: [
+            {id: '~test', name: 'sym', matrix: '{{2,3},{5,7}}'},
+            {id: '~wombo', name: 'combo', circuit: {cols:[['~test', '~test']]}}]
+    });
 });
 
 suite.test("roundTrip_GateColumn", () => {
@@ -99,10 +158,10 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "0", "NeGate",
     "H",
     "X", "Y", "Z",
-    "X^½", "X^⅓", "X^¼", "X^⅛", "X^⅟₁₆",
-    "X^-½", "X^-⅓", "X^-¼", "X^-⅛", "X^-⅟₁₆",
-    "Y^½", "Y^⅓", "Y^¼", "Y^⅛", "Y^⅟₁₆",
-    "Y^-½", "Y^-⅓", "Y^-¼", "Y^-⅛", "Y^-⅟₁₆",
+    "X^½", "X^⅓", "X^¼", "X^⅛", "X^⅟₁₆", "X^⅟₃₂",
+    "X^-½", "X^-⅓", "X^-¼", "X^-⅛", "X^-⅟₁₆", "X^-⅟₃₂",
+    "Y^½", "Y^⅓", "Y^¼", "Y^⅛", "Y^⅟₁₆", "Y^⅟₃₂",
+    "Y^-½", "Y^-⅓", "Y^-¼", "Y^-⅛", "Y^-⅟₁₆", "Y^-⅟₃₂",
     "Z^½", "Z^⅓", "Z^¼", "Z^⅛", "Z^⅟₁₆", "Z^⅟₃₂", "Z^⅟₆₄", "Z^⅟₁₂₈",
     "Z^-½", "Z^-⅓", "Z^-¼", "Z^-⅛", "Z^-⅟₁₆",
     "X^t", "Y^t", "Z^t", "X^-t", "Y^-t", "Z^-t",

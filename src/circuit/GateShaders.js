@@ -23,7 +23,7 @@ export default class GateShaders {}
  * @param {!WglTexture} controlTexture
  * @returns {!WglConfiguredShader}
  */
-GateShaders.qubitOperation = (inputTexture, operation, qubitIndex, controlTexture) =>
+let singleQubitOperationFunc = (inputTexture, operation, qubitIndex, controlTexture) =>
     new WglConfiguredShader(destinationTexture => {
         if (operation.width() !== 2 || operation.height() !== 2) {
             throw new DetailedError("Not a single-qubit operation.", {operation});
@@ -122,34 +122,13 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = new WglShader(`
         gl_FragColor = vec4(outputAmplitude, 0.0, 0.0);
     }`);
 
-/**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
- * @param {!int} qubitSpan
- * @param {!int} incrementAmount
- * @returns {!WglConfiguredShader}
- */
-GateShaders.increment = (inputTexture, controlTexture, qubitIndex, qubitSpan, incrementAmount) =>
-    new WglConfiguredShader(destinationTexture => {
-        INCREMENT_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitIndex", 1 << qubitIndex),
-            WglArg.float("qubitSpan", 1 << qubitSpan),
-            WglArg.float("incrementAmount", incrementAmount)
-        ).renderTo(destinationTexture);
-    });
-const INCREMENT_SHADER = new WglShader(`
+const multiQubitOperationMaker = qubitCount => new WglShader(`
     uniform sampler2D inputTexture;
     uniform sampler2D controlTexture;
-    uniform float outputWidth;
     uniform vec2 inputSize;
-    uniform float incrementAmount;
+    uniform float outputWidth;
     uniform float qubitIndex;
-    uniform float qubitSpan;
+    uniform float coefs[${2<<(2*qubitCount)}];
 
     vec2 uvFor(float state) {
         return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
@@ -157,19 +136,65 @@ const INCREMENT_SHADER = new WglShader(`
 
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float oldState = xy.y * outputWidth + xy.x;
-        float oldStateTarget = mod(floor(oldState / qubitIndex), qubitSpan);
-        float newStateTarget = mod(oldStateTarget - incrementAmount + qubitSpan, qubitSpan);
-        float newState = oldState + (newStateTarget - oldStateTarget) * qubitIndex;
+        float outputState = xy.y * outputWidth + xy.x;
+        float outputId = mod(floor(outputState / qubitIndex), ${1<<qubitCount}.0);
 
-        vec2 oldUv = uvFor(oldState);
-        float control = texture2D(controlTexture, oldUv).x;
+        float firstInputState = outputState - outputId * qubitIndex;
+        int rowOffset = int(outputId);
 
-        vec2 newUv = uvFor(newState);
-        vec2 usedUv = control*newUv + (1.0-control)*oldUv;
+        vec2 t = vec2(0.0, 0.0);
+        for (int d = 0; d < ${1<<qubitCount}; d++) {
+            // Can't index by rowOffset, since it's not a constant, so we do a const brute force loop searching for it.
+            if (d == rowOffset) {
+                for (int k = 0; k < ${1<<qubitCount}; k++) {
+                    vec2 v = texture2D(inputTexture, uvFor(firstInputState + qubitIndex*float(k))).xy;
+                    float r = coefs[d*${2<<qubitCount} + k*2];
+                    float i = coefs[d*${2<<qubitCount} + k*2 + 1];
+                    t += vec2(v.x*r - v.y*i, v.x*i + v.y*r);
+                }
+            }
+        }
 
-        gl_FragColor = texture2D(inputTexture, usedUv);
+        vec2 targetUv = uvFor(outputState);
+        float control = texture2D(controlTexture, targetUv).x;
+        gl_FragColor = control * vec4(t.x, t.y, 0.0, 0.0)
+                     + (1.0-control) * texture2D(inputTexture, targetUv);
     }`);
+const matrix_operation_shaders = [
+    multiQubitOperationMaker(2),
+    multiQubitOperationMaker(3),
+    multiQubitOperationMaker(4)
+];
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @param {!WglTexture} controlTexture
+ * @param {!Matrix} mat
+ * @param {!int} qubitIndex
+ * @returns {!WglConfiguredShader}
+ */
+GateShaders.matrixOperation = (inputTexture, mat, qubitIndex, controlTexture) => {
+    if (mat.width() === 2) {
+        return singleQubitOperationFunc(inputTexture, mat, qubitIndex, controlTexture);
+    }
+    if (!Util.isPowerOf2(mat.width())) {
+        throw new DetailedError("Matrix size isn't a power of 2.", {mat, qubitIndex});
+    }
+    if (mat.width() > 1 << 4) {
+        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {mat, qubitIndex});
+    }
+    let shader = matrix_operation_shaders[Math.round(Math.log2(mat.width())) - 2];
+    return new WglConfiguredShader(destinationTexture => {
+        shader.withArgs(
+            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.texture("controlTexture", controlTexture, 1),
+            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
+            WglArg.float("outputWidth", destinationTexture.width),
+            WglArg.float("qubitIndex", 1 << qubitIndex),
+            WglArg.float_array("coefs", mat.rawBuffer())
+        ).renderTo(destinationTexture);
+    });
+};
 
 /**
  * @param {!WglTexture} inputTexture

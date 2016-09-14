@@ -2,6 +2,7 @@ import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/T
 import Matrix from "src/math/Matrix.js"
 
 import Complex from "src/math/Complex.js"
+import Controls from "src/circuit/Controls.js"
 import Format from "src/base/Format.js"
 import Seq from "src/base/Seq.js"
 
@@ -86,7 +87,7 @@ suite.test("parse", () => {
     assertThat(Matrix.parse("{{\u221A2}}")).isEqualTo(
         Matrix.square(Math.sqrt(2)));
 
-    assertThat(Matrix.parse("{{\u00BD-\u00BDi, 5}, {-i, 0}}")).isEqualTo(
+    assertThat(Matrix.parse("{{½-½i, 5}, {-i, 0}}")).isEqualTo(
         Matrix.square(new Complex(0.5, -0.5), 5, new Complex(0, -1), 0));
     assertThat(Matrix.parse("{{1, 2, i}}")).isEqualTo(
         Matrix.row(1, 2, Complex.I));
@@ -551,7 +552,7 @@ const assertSvdDecompositionWorksFor = m => {
     assertThat(S.isDiagonal(0.00001)).withInfo({m, U, S, V, test: "S diagonal"}).isEqualTo(true);
     assertThat(Seq.range(S.width()).every(i => Math.abs(S.cell(i, i).phase()) < 0.000001)).
         withInfo({m, U, S, V, test: "S is positive"}).isEqualTo(true);
-    assertThat(U.times(S).times(V)).withInfo({m, U, S, V}).isApproximatelyEqualTo(m, 0.0001);
+    assertThat(U.times(S).times(V)).withInfo({m, U, S, V}).isApproximatelyEqualTo(m, 0.001);
 };
 
 suite.test("singularValueDecomposition", () => {
@@ -589,14 +590,23 @@ suite.test("singularValueDecomposition_randomized", () => {
 });
 
 suite.test("closestUnitary_2x2", () => {
+    let i = Complex.I;
+    let ni = i.neg();
     assertThat(Matrix.square(0, 0, 0, 0).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(1, 0, 0, 1));
     assertThat(Matrix.square(2, 0, 0, 0.0001).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(1, 0, 0, 1));
     assertThat(Matrix.square(0, 0.5, 0.0001, 0).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(0, 1, 1, 0));
-    assertThat(Matrix.square(1, Complex.I, -1, Complex.I.times(-1)).closestUnitary()).
-        isApproximatelyEqualTo(Matrix.square(1, 0, 0, Complex.I.times(-1)));
+    assertThat(Matrix.square(1, i, -1, ni).closestUnitary()).
+        isApproximatelyEqualTo(Matrix.square(1, 0, 0, ni));
+
+    let m = Matrix.square(
+        1,  1,  1,  1,
+        1,  i, -1, ni,
+        1, -1,  1, -1,
+        1, ni, -1,  i);
+    assertThat(m.closestUnitary(0.001)).isApproximatelyEqualTo(m.times(0.5));
 });
 
 suite.test("eigenDecomposition", () => {
@@ -1036,4 +1046,54 @@ suite.test("hasNaN", () => {
     assertTrue(Matrix.solo(new Complex(0, NaN)).hasNaN());
     assertTrue(Matrix.square(0, 0, NaN, 0).hasNaN());
     assertFalse(Matrix.square(0, 0, 0, 0).hasNaN());
+});
+
+suite.test("applyToStateVectorAtQubitWithControls", () => {
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 0, Controls.NONE)).isEqualTo(Matrix.col(2, 3, 2, 3, 2, 3, 2, 3));
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 1, Controls.NONE)).isEqualTo(Matrix.col(2, 2, 3, 3, 2, 2, 3, 3));
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 2, Controls.NONE)).isEqualTo(Matrix.col(2, 2, 2, 2, 3, 3, 3, 3));
+
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 2, Controls.bit(0, false))).isEqualTo(Matrix.col(2, 1, 2, 1, 3, 1, 3, 1));
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 2, Controls.bit(0, true))).isEqualTo(Matrix.col(1, 2, 1, 2, 1, 3, 1, 3));
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 2, Controls.bit(1, false))).isEqualTo(Matrix.col(2, 2, 1, 1, 3, 3, 1, 1));
+
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 0, Controls.bit(2, false))).isEqualTo(Matrix.col(2, 3, 2, 3, 1, 1, 1, 1));
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 0, Controls.bit(2, true))).isEqualTo(Matrix.col(1, 1, 1, 1, 2, 3, 2, 3));
+
+    assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
+        Matrix.col(...new Array(8).fill(1)), 1, Controls.bit(0, false).and(Controls.bit(2, true)))).isEqualTo(
+            Matrix.col(1, 1, 1, 1, 2, 1, 3, 1));
+
+    let m = Matrix.square(new Complex(2, 3), new Complex(5, 7), new Complex(11, 13), new Complex(17, 19));
+    let v = Matrix.col(new Complex(108, 109), new Complex(112, 113));
+    let p = m.times(v);
+    assertThat(m.applyToStateVectorAtQubitWithControls(
+            Matrix.col(
+                new Complex(100, 101),
+                new Complex(102, 103),
+                new Complex(104, 105),
+                new Complex(106, 107),
+                new Complex(108, 109),
+                new Complex(110, 111),
+                new Complex(112, 113),
+                new Complex(114, 115)),
+            1,
+            Controls.bit(0, false).and(Controls.bit(2, true)))).
+        isEqualTo(Matrix.col(
+            new Complex(100, 101),
+            new Complex(102, 103),
+            new Complex(104, 105),
+            new Complex(106, 107),
+            p.cell(0, 0),
+            new Complex(110, 111),
+            p.cell(0, 1),
+            new Complex(114, 115)));
 });

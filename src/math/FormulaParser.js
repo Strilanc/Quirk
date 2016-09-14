@@ -1,0 +1,170 @@
+import DetailedError from "src/base/DetailedError.js"
+import {seq, Seq} from "src/base/Seq.js"
+
+/**
+ * @param {!Array.<!String>} tokens
+ * @returns {!Array.<!String>}
+ * @private
+ */
+function _mergeScientificFloatTokens(tokens) {
+    tokens = [...tokens];
+    for (let i = tokens.indexOf('e', 1); i !== -1; i = tokens.indexOf('e', i + 1)) {
+        let s = i - 1;
+        let e = i + 1;
+        if (!tokens[s].match(/[0-9]/)) {
+            continue;
+        }
+        if ((tokens[e] + '').match(/[+-]/)) {
+            e += 1;
+        }
+
+        if ((tokens[e] + '').match(/[0-9]/)) {
+            e += 1;
+            tokens.splice(s, e - s, tokens.slice(s, e).join(''));
+            i -= 1;
+        }
+    }
+    return tokens;
+}
+
+/**
+ * @param {!String} text
+ * @returns {!Array.<!String>}
+ * @private
+ */
+function _tokenize(text) {
+    let tokens = seq(text.toLowerCase().split(/\s/)).
+        flatMap(part => seq(part).
+            segmentBy(e => {
+                if (e.trim() === '') {
+                    return " "
+                }
+                if (e.match(/[\.0-9]/)) {
+                    return "#"
+                }
+                if (e.match(/[_a-z]/)) {
+                    return "a";
+                }
+                return NaN;
+            }).
+            map(e => e.join(''))).
+        filter(e => e.trim() !== '').
+        toArray();
+
+    return _mergeScientificFloatTokens(tokens);
+}
+
+/**
+ * @param {!string} token
+ * @param {!Map.<!string, T|!string|!number>} tokenMap
+ * @returns {!string|T|!{unary_action: undefined|!function(T):T, binary_action: undefined|!function(T, T): T}}
+ * @template T
+ * @private
+ */
+function _translate_token(token, tokenMap) {
+    if (token.match(/[0-9]+(\.[0-9]+)?/)) {
+        return parseFloat(token);
+    }
+
+    if (tokenMap.has(token)) {
+        return tokenMap.get(token);
+    }
+
+    throw new DetailedError("Unrecognized token", {token});
+}
+
+/**
+ * Parses a value from an infix arithmetic expression.
+ * @param {!string} text
+ * @param {!Map.<!string, T|!string|!number>} tokenMap
+ * @returns {T}
+ * @template T
+ */
+function parseFormula(text, tokenMap) {
+    let tokens = _tokenize(text).map(e => _translate_token(e, tokenMap));
+
+    let ops = [];
+    let vals = [];
+
+    // Hack: use the 'priority' field as a signal of 'is an operation'
+    let isValidEndToken = token => token !== "(" && token.priority === undefined;
+    let isValidEndState = () => vals.length === 1 && ops.length === 0;
+
+    let apply = op => {
+        if (op === "(") {
+            throw new DetailedError("Bad expression: unmatched '('", {text});
+        }
+        if (vals.length < 2) {
+            throw new DetailedError("Bad expression: operated on nothing", {text});
+        }
+        let b = vals.pop();
+        let a = vals.pop();
+        vals.push(op.f(a, b));
+    };
+
+    let closeParen = () => {
+        while (true) {
+            if (ops.length === 0) {
+                throw new DetailedError("Bad expression: unmatched ')'", {text});
+            }
+            let op = ops.pop();
+            if (op === "(") {
+                break;
+            }
+            apply(op);
+        }
+    };
+
+    let burnOps = w => {
+        while (ops.length > 0 && vals.length >= 2 && vals[vals.length - 1] !== undefined) {
+            let top = ops[ops.length - 1];
+            if (top.w === undefined || top.w < w) {
+                break;
+            }
+            apply(ops.pop());
+        }
+    };
+
+    let feedOp = (couldBeBinary, token) => {
+        let opToken = couldBeBinary && token.priority === undefined && typeof token !== "string" ?
+            tokenMap.get("*") :
+            token;
+
+        if (opToken.priority !== undefined) {
+            burnOps(opToken.priority);
+        }
+
+        if (couldBeBinary && opToken.binary_action !== undefined) {
+            ops.push({f: opToken.binary_action, w: opToken.priority});
+        } else if (opToken.unary_action !== undefined) {
+            vals.push(undefined);
+            ops.push({f: (a, b) => opToken.unary_action(b), w: Infinity});
+        } else if (opToken.binary_action !== undefined) {
+            throw new DetailedError("Bad expression: binary op in bad spot", {text});
+        }
+    };
+
+    let wasValidEndToken = false;
+    for (let token of tokens) {
+        feedOp(wasValidEndToken, token);
+        wasValidEndToken = isValidEndToken(token);
+
+        if (token === "(") {
+            ops.push("(");
+        } else if (token === ")") {
+            closeParen();
+        } else if (wasValidEndToken) {
+            vals.push(token);
+        }
+    }
+
+    burnOps(-Infinity);
+
+    if (!isValidEndState()) {
+        throw new DetailedError("Incomplete expression", {text});
+    }
+
+    return vals[0];
+}
+
+export { parseFormula };

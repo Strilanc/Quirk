@@ -17,6 +17,6 @@ let MysteryGateMaker = () => MysteryGateMakerWithMatrix(Matrix.square(
     new Complex(Math.random() - 0.5, Math.random() - 0.5),
     new Complex(Math.random() - 0.5, Math.random() - 0.5),
     new Complex(Math.random() - 0.5, Math.random() - 0.5)
-).closestUnitary());
+).closestUnitary(0.00001));
 
 export {MysteryGateSymbol, MysteryGateMaker, MysteryGateMakerWithMatrix};

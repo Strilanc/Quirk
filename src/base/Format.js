@@ -181,3 +181,5 @@ Format.SIMPLIFIED = new Format(true, 0.0005, 3, ", ");
  * @type {!Format}
  */
 Format.CONSISTENT = new Format(false, 0, 2, ", ");
+
+export { Format, UNICODE_FRACTIONS }

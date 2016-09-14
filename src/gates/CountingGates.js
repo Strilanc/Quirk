@@ -5,7 +5,7 @@ import GateShaders from "src/circuit/GateShaders.js"
 import Matrix from "src/math/Matrix.js"
 import Point from "src/math/Point.js"
 
-import {makeOffsetMatrix} from "src/gates/ArithmeticGates.js"
+import {makeOffsetMatrix, incrementShaderFunc} from "src/gates/ArithmeticGates.js"
 import {makeCycleBitsMatrix, cycleBits} from "src/gates/CycleBitsGates.js"
 
 let CountingGates = {};
@@ -96,7 +96,7 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKno
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader(args => GateShaders.increment(
+    withCustomShader(args => incrementShaderFunc(
         args.stateTexture,
         args.controlsTexture,
         args.row,
@@ -114,7 +114,7 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader(args => GateShaders.increment(
+    withCustomShader(args => incrementShaderFunc(
         args.stateTexture,
         args.controlsTexture,
         args.row,
@@ -124,7 +124,7 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
 CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↟⌈t⌉",
     "Right-Shift Cycling Gate",
-    "Right-shifts a block of bits upward by more and more, rotating bits that fall off the top back to the bottom.").
+    "Right-rotates a block of bits by more and more.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : RIGHT_SHIFTING_MATRIX_MAKER(span)).
@@ -142,7 +142,7 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
 CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↡⌈t⌉",
     "Left-Shift Cycling Gate",
-    "Left-shifts a block of bits downward by more and more, rotating bits that fall off the bottom back to the top.").
+    "Left-rotates a block of bits by more and more.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : LEFT_SHIFTING_MATRIX_MAKER(span)).

@@ -312,7 +312,7 @@ suite.test("withWireCount", () => {
 });
 
 suite.test("minimumRequiredWireCount", () => {
-    assertThat(circuit('---').minimumRequiredWireCount()).isEqualTo(0);
+    assertThat(circuit('---').minimumRequiredWireCount()).isEqualTo(1);
     assertThat(circuit('-X-').minimumRequiredWireCount()).isEqualTo(1);
     assertThat(circuit(`-X-
                         ---`).minimumRequiredWireCount()).isEqualTo(1);

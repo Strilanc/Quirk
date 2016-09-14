@@ -39,9 +39,9 @@ suite.webGlTest("smoke", () => {
 
 suite.webGlTest("all-gates-in-sequence", () => {
     let cols = Gates.KnownToSerializer.
-        filter(e => e !== Gates.Special.Measurement && e !== Gates.ErrorInjection && e.height <= 8).
-        map(e => new GateColumn([e, null, null, null, null, null, null, null]));
-    let c = new CircuitDefinition(8, cols);
+        filter(e => e !== Gates.Special.Measurement && e !== Gates.ErrorInjection && e.height <= 6).
+        map(e => new GateColumn([e, null, null, null, null, null]));
+    let c = new CircuitDefinition(6, cols);
     let stats = CircuitStats.fromCircuitAtTime(c, 0.1);
     assertThat(stats).isNotEqualTo(undefined);
 });

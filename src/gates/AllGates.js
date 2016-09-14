@@ -29,6 +29,8 @@ import VariousZGates from "src/gates/VariousZGates.js"
 import ZeroGate from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
+import {seq, Seq} from "src/base/Seq.js"
+
 let Gates = {};
 export default Gates;
 
@@ -108,6 +110,16 @@ Gates.KnownToSerializer = [
     ...VariousYGates.all,
     ...VariousZGates.all
 ];
+
+let gatesById = seq(Gates.KnownToSerializer).keyedBy(g => g.serializedId);
+/**
+ * @param {!String} id
+ * @param {!CustomGateSet} customGateSet
+ * @returns {undefined|!Gate}
+ */
+Gates.findKnownGateById = (id, customGateSet) => {
+    return gatesById.has(id) ? gatesById.get(id) : customGateSet.findGateWithSerializedId(id);
+};
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.TopToolboxGroups = [
@@ -199,7 +211,7 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Cycling",
         gates: [
-            CountingGates.CountingFamily.ofSize(2),          CountingGates.UncountingFamily.ofSize(2),
+            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
             CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
             CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
         ]
@@ -207,41 +219,33 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Raising",
         gates: [
-            PoweringGates.XForward, PoweringGates.XBackward,
+            PoweringGates.ZForward, PoweringGates.ZBackward,
             PoweringGates.YForward, PoweringGates.YBackward,
-            PoweringGates.ZForward, PoweringGates.ZBackward
+            PoweringGates.XForward, PoweringGates.XBackward
         ]
     },
     {
         hint: "Exponentiating",
         gates: [
-            ExponentiatingGates.XForward, ExponentiatingGates.XBackward,
+            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward,
             ExponentiatingGates.YForward, ExponentiatingGates.YBackward,
-            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward
+            ExponentiatingGates.XForward, ExponentiatingGates.XBackward
         ]
     },
     {
-        hint: "Various X",
-        gates: [
-            VariousXGates.X8,  VariousXGates.X8i,
-            VariousXGates.X16, VariousXGates.X16i,
-            VariousXGates.X3,  VariousXGates.X3i
-        ]
-    },
-    {
-        hint: "Various Y",
-        gates: [
-            VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousYGates.Y16, VariousYGates.Y16i,
-            VariousYGates.Y3,  VariousYGates.Y3i
-        ]
-    },
-    {
-        hint: "Various Z",
+        hint: "1/8",
         gates: [
             VariousZGates.Z8,  VariousZGates.Z8i,
+            VariousYGates.Y8,  VariousYGates.Y8i,
+            VariousXGates.X8,  VariousXGates.X8i
+        ]
+    },
+    {
+        hint: "1/16",
+        gates: [
             VariousZGates.Z16, VariousZGates.Z16i,
-            VariousZGates.Z3,  VariousZGates.Z3i
+            VariousYGates.Y16, VariousYGates.Y16i,
+            VariousXGates.X16, VariousXGates.X16i
         ]
     }
 ];

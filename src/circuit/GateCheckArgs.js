@@ -8,12 +8,14 @@ export default class GateCheckArgs {
      * @param {!int} outerRow
      * @param {!int} measuredMask
      * @param {!Map.<!string, *>} context
+     * @param {!boolean} isNested
      */
     constructor(gate,
                 innerColumn,
                 outerRow,
                 measuredMask,
-                context) {
+                context,
+                isNested) {
         /** @type {!Gate} */
         this.gate = gate;
         /** @type {!GateColumn} */
@@ -24,5 +26,7 @@ export default class GateCheckArgs {
         this.measuredMask = measuredMask;
         /** @type {!Map.<!string, *>} */
         this.context = context;
+        /** @type {!boolean} */
+        this.isNested = isNested;
     }
 }

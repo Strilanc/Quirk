@@ -83,18 +83,26 @@ class DisplayedCircuit {
     }
 
     /**
+     * @param {!bool=true} showOutputDisplays
      * @returns {!number}
      */
-    desiredHeight() {
+    desiredHeight(showOutputDisplays=true) {
+        if (!showOutputDisplays) {
+            return this.circuitDefinition.numWires * Config.WIRE_SPACING;
+        }
         let n = Math.max(Config.MIN_WIRE_COUNT, this.circuitDefinition.numWires) -
             (this._extraWireStartIndex !== undefined ? 1 : 0);
         return Math.max(n, this.circuitDefinition.minimumRequiredWireCount()) * Config.WIRE_SPACING + 55;
     }
 
     /**
+     * @param {!bool=true} showOutputDisplays
      * @returns {!number}
      */
-    desiredWidth() {
+    desiredWidth(showOutputDisplays=true) {
+        if (!showOutputDisplays) {
+            return this.gateRect(1, this.circuitDefinition.columns.length).x;
+        }
         return this._rectForSuperpositionDisplay().right() + 101;
     }
 
@@ -283,34 +291,40 @@ class DisplayedCircuit {
      * @param {!Painter} painter
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
+     * @param {!bool=true} showOutputDisplays
      */
-    paint(painter, hand, stats) {
+    paint(painter, hand, stats, showOutputDisplays=true) {
         painter.fillRect(
             new Rect(0, this.top, painter.canvas.clientWidth, this.desiredHeight()),
             Config.BACKGROUND_COLOR_CIRCUIT);
 
-        this._drawWires(painter);
+        this._drawWires(painter, showOutputDisplays);
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
             this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }
 
-        this._drawOutputDisplays(painter, stats, hand);
-        this._drawHintLabels(painter, stats);
+        if (showOutputDisplays) {
+            this._drawOutputDisplays(painter, stats, hand);
+            this._drawHintLabels(painter, stats);
+        }
     }
 
     /**
      * @param {!Painter} painter
+     * @param {!boolean} showLabels
      * @private
      */
-    _drawWires(painter) {
+    _drawWires(painter, showLabels) {
         let drawnWireCount = Math.min(this.circuitDefinition.numWires, (this._extraWireStartIndex || Infinity) + 1);
 
         // Initial value labels
-        for (let row = 0; row < drawnWireCount; row++) {
-            let wireRect = this.wireRect(row);
-            let y = wireRect.center().y;
-            painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING);
+        if (showLabels) {
+            for (let row = 0; row < drawnWireCount; row++) {
+                let wireRect = this.wireRect(row);
+                let y = wireRect.center().y;
+                painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING);
+            }
         }
 
         // Wires (doubled-up for measured sections).
@@ -324,7 +338,9 @@ class DisplayedCircuit {
                 let y = Math.round(wireRect.center().y - 0.5) + 0.5;
                 let lastX = 25;
                 //noinspection ForLoopThatDoesntUseLoopVariableJS
-                for (let col = 0; lastX < painter.canvas.width; col++) {
+                for (let col = 0;
+                        showLabels ? lastX < painter.canvas.width : col <= this.circuitDefinition.columns.length;
+                        col++) {
                     let x = this.opRect(col).center().x;
                     if (this.circuitDefinition.locIsMeasured(new Point(col, row))) {
                         // Measured wire.

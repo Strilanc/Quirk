@@ -31,6 +31,9 @@ let MeasurementGate = Gate.fromIdentity(
         args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
     }).
     withCustomDisableReasonFinder(args => {
+        if (args.isNested) {
+            return "can't\nnest";
+        }
         let isMeasured = (args.measuredMask & (1<<args.outerRow)) !== 0;
         if (args.innerColumn.hasControl() && !isMeasured) {
             return "can't\ncontrol\n(sorry)";

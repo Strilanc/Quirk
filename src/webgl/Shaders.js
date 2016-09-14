@@ -1,3 +1,4 @@
+import DetailedError from "src/base/DetailedError.js"
 import Util from "src/base/Util.js"
 import WglArg from "src/webgl/WglArg.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
@@ -54,7 +55,9 @@ Shaders.coords = new WglShader(`
  */
 Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
     let [w, h] = [destinationTexture.width, destinationTexture.height];
-    Util.need(rgbaData.length === w * h * 4, "rgbaData.length === w * h * 4");
+    if (rgbaData.length !== w * h * 4) {
+        throw new DetailedError("rgbaData.length isn't w * h * 4", {w, h, rgbaData});
+    }
 
     let GL = WebGLRenderingContext;
     let gl = initializedWglContext().gl;

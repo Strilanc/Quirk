@@ -19,7 +19,9 @@ import { initializedWglContext } from "src/webgl/WglContext.js"
 import { watchDrags, isMiddleClicking, eventPosRelativeTo } from "src/browser/MouseWatcher.js"
 import { Observable, ObservableValue } from "src/base/Obs.js"
 import { initExports } from "src/ui/exports.js"
+import { initForge } from "src/ui/forge.js"
 import { initUndoRedo } from "src/ui/undo.js"
+import { initClear } from "src/ui/clear.js"
 import { initUrlCircuitSync } from "src/ui/url.js"
 import { initTitleSync } from "src/ui/title.js"
 import { simulate } from "src/ui/sim.js"
@@ -208,14 +210,14 @@ canvasDiv.addEventListener('mousedown', ev => {
 });
 
 // When mouse moves without dragging, track it (for showing hints and things).
-document.addEventListener('mousemove', ev => {
+canvasDiv.addEventListener('mousemove', ev => {
     if (!displayed.get().hand.isBusy()) {
         let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
         let newInspector = displayed.get().withHand(newHand);
         displayed.set(newInspector);
     }
 });
-document.addEventListener('mouseleave', () => {
+canvasDiv.addEventListener('mouseleave', () => {
     if (!displayed.get().hand.isBusy()) {
         let newHand = displayed.get().hand.withPos(undefined);
         let newInspector = displayed.get().withHand(newHand);
@@ -225,7 +227,9 @@ document.addEventListener('mouseleave', () => {
 
 initUrlCircuitSync(revision);
 initExports(revision);
+initForge(revision);
 initUndoRedo(revision);
+initClear(revision);
 initTitleSync(revision);
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.

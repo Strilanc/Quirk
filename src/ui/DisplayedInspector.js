@@ -31,7 +31,8 @@ export default class DisplayedInspector {
         /** @type {!DisplayedToolbox} */
         this.displayedToolboxTop = displayedToolboxTop;
         /** @type {!DisplayedToolbox} */
-        this.displayedToolboxBottom = displayedToolboxBottom;
+        this.displayedToolboxBottom = displayedToolboxBottom.
+            withCustomGatesInserted(circuitWidget.circuitDefinition.customGateSet);
         /** @type {!Hand} */
         this.hand = hand;
         /** @type {!Rect} */

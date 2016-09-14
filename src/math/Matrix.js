@@ -76,8 +76,10 @@ class Matrix {
 
         let seqRows = seq(rows);
         let h = rows.length;
-        let w = seqRows.map(e => e.length).distinct().single(0);
-        Util.need(w > 0, "consistent non-zero width", rows);
+        let w = seqRows.map(e => e.length).distinct().single(null);
+        if (w === null) {
+            throw new DetailedError("Inconsistent row widths.", {rows});
+        }
 
         let buffer = new Float64Array(w * h * 2);
         let i = 0;
@@ -594,11 +596,55 @@ class Matrix {
     }
 
     /**
+     * @param {!Matrix} stateVector
+     * @param {!int} qubitIndex
+     * @param {!Controls} controls
+     * @returns {!Matrix}
+     */
+    applyToStateVectorAtQubitWithControls(stateVector, qubitIndex, controls) {
+        let chunkSize = this._width*2;
+        let chunkBuf = stateVector._buffer.slice(0, chunkSize);
+        let strideLength = 2 << qubitIndex;
+        let strideChunkSize = strideLength*chunkSize >> 1;
+        let resultBuf = stateVector._buffer.slice();
+        for (let strideChunkStart = 0; strideChunkStart < resultBuf.length; strideChunkStart += strideChunkSize) {
+            for (let strideOffset = 0; strideOffset < strideLength; strideOffset += 2) {
+                if (!controls.allowsState((strideChunkStart | strideOffset) >> 1)) {
+                    continue;
+                }
+
+                // Collect inputs into a small contiguous vector.
+                let k = strideChunkStart + strideOffset;
+                for (let i = 0; i < chunkBuf.length; i += 2) {
+                    chunkBuf[i] = stateVector._buffer[k];
+                    chunkBuf[i+1] = stateVector._buffer[k+1];
+                    k += strideLength;
+                }
+
+                let transformedChunk = this.times(new Matrix(1, chunkBuf.length >> 1, chunkBuf));
+
+                // Scatter outputs.
+                k = strideChunkStart + strideOffset;
+                for (let i = 0; i < chunkBuf.length; i += 2) {
+                    resultBuf[k] = transformedChunk._buffer[i];
+                    resultBuf[k+1] = transformedChunk._buffer[i+1];
+                    k += strideLength;
+                }
+            }
+        }
+        return new Matrix(1, stateVector.height(), resultBuf);
+    }
+
+    /**
      * Returns the receiving matrix's squared euclidean length.
      * @returns {!number}
      */
     norm2() {
-        return seq(this.rows()).flatten().map(e => e.norm2()).sum();
+        let t = 0;
+        for (let e of this._buffer) {
+            t += e*e;
+        }
+        return t;
     }
 
     /**
@@ -641,8 +687,7 @@ class Matrix {
         Util.need(operation2x2._width === 2 && operation2x2._height === 2, "Matrix.timesQubitOperation: not 2x2");
 
         let {_width: w, _height: h, _buffer: old} = this;
-        let [[{real: ar, imag: ai}, {real: br, imag: bi}],
-             [{real: cr, imag: ci}, {real: dr, imag: di}]] = operation2x2.rows();
+        let [ar, ai, br, bi, cr, ci, dr, di] = operation2x2._buffer;
 
         Util.need(h >= (2 << qubitIndex), "Matrix.timesQubitOperation: qubit index out of range");
 
@@ -741,7 +786,11 @@ class Matrix {
      * @private
      */
     transformRealAndImagComponentsWith(func) {
-        return Matrix.fromRows(this.rows().map(row => row.map(cell => new Complex(func(cell.real), func(cell.imag)))));
+        let buf = this._buffer.slice();
+        for (let i = 0; i < buf.length; i++) {
+            buf[i] = func(buf[i]);
+        }
+        return new Matrix(this._width, this._height, buf);
     }
 
     /**
@@ -825,7 +874,7 @@ class Matrix {
      * @private
      */
     _inline_rowMix_preMultiply(row1, row2, op) {
-        let [[a, b], [c, d]] = op.rows();
+        let [a, b, c, d] = op._2x2Breakdown();
         for (let col = 0; col < this._width; col++) {
             let x = this.cell(col, row1);
             let y = this.cell(col, row2);
@@ -847,7 +896,7 @@ class Matrix {
      * @private
      */
     _inline_colMix_postMultiply(col1, col2, op) {
-        let [[a, b], [c, d]] = op.rows();
+        let [a, b, c, d] = op._2x2Breakdown();
         for (let row = 0; row < this._width; row++) {
             let x = this.cell(col1, row);
             let y = this.cell(col2, row);
@@ -909,6 +958,11 @@ class Matrix {
                 R._inline_rowMix_preMultiply(col, row, op);
                 Q._inline_colMix_postMultiply(col, row, op.adjoint());
             }
+
+            // Cancel imaginary factors on diagonal.
+            let u = R.cell(row, row).unit();
+            R._inline_rowScale_preMultiply(row, u.conjugate());
+            Q._inline_colScale_postMultiply(row, u);
         }
         return {Q, R};
     }
@@ -953,8 +1007,7 @@ class Matrix {
         if (this.width() !== 2 || this.height() !== 2) {
             throw new Error("Not implemented: non-2x2 eigen decomposition");
         }
-        let [[a, b],
-             [c, d]] = this.rows();
+        let [a, b, c, d] = this._2x2Breakdown();
         let vals = Complex.rootsOfQuadratic(
             Complex.ONE,
             a.plus(d).times(-1),
@@ -1049,6 +1102,17 @@ class Matrix {
     }
 
     /**
+     * @returns {!Array.<!Complex>}
+     * @private
+     */
+    _2x2Breakdown() {
+        return [new Complex(this._buffer[0], this._buffer[1]),
+                new Complex(this._buffer[2], this._buffer[3]),
+                new Complex(this._buffer[4], this._buffer[5]),
+                new Complex(this._buffer[6], this._buffer[7])];
+    }
+
+    /**
      * Given a single-qubit operation matrix U, finds φ, θ, and v=[x,y,z] that satisfy
      * U = exp(i φ) (I cos(θ/2) - v σ i sin(θ/2))
      *
@@ -1059,8 +1123,7 @@ class Matrix {
         Util.need(this.isUnitary(0.01), "Need a unitary matrix.");
 
         // Extract orthogonal components, adjusting for factors of i.
-        let [[a, b],
-             [c, d]] = this.rows();
+        let [a, b, c, d] = this._2x2Breakdown();
         let wφ = a.plus(d);
         let xφ = b.plus(c).dividedBy(Complex.I);
         let yφ = b.minus(c);
@@ -1209,13 +1272,15 @@ class Matrix {
             this._unordered_singularValueDecomposition_2x2() :
             this._unordered_singularValueDecomposition_iterative(epsilon, maxIterations);
 
-        // Fix ordering.
+        // Fix ordering, so that the singular values are ascending.
         let permutation = Seq.range(this._width).sortedBy(i => -S.cell(i, i).norm2()).toArray();
         for (let i = 0; i < S._width; i++) {
             let j = permutation[i];
             if (i !== j) {
                 U._inline_colMix_postMultiply(i, j, Matrix.PAULI_X);
-                S._inline_rowMix_preMultiply(i, j, Matrix.PAULI_X);
+                V._inline_rowMix_preMultiply(i, j, Matrix.PAULI_X);
+                [S._buffer[i*2], S._buffer[j*2]] = [S._buffer[j*2], S._buffer[i*2]];
+                [S._buffer[i*2+1], S._buffer[j*2+1]] = [S._buffer[j*2+1], S._buffer[i*2+1]];
                 [permutation[j], permutation[i]] = [permutation[i], permutation[j]]
             }
         }
@@ -1233,15 +1298,19 @@ class Matrix {
 
     getColumn(colIndex) {
         Util.need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
-        return this.rows().map(r => r[colIndex]);
+        let col = [];
+        for (let r = 0; r < this._height; r++) {
+            col.push(this.cell(colIndex, r));
+        }
+        return col;
     }
 
     /**
      * Returns the unitary matrix closest to the receiving matrix, "repairing" it into a unitary form.
      * @returns {!Matrix}
      */
-    closestUnitary() {
-        let svd = this.singularValueDecomposition();
+    closestUnitary(epsilon=0, maxIterations=100) {
+        let svd = this.singularValueDecomposition(epsilon, maxIterations);
         return svd.U.times(svd.V);
     }
 }

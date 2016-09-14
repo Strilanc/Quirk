@@ -1,7 +1,10 @@
 import DetailedError from "src/base/DetailedError.js"
-import Format from "src/base/Format.js"
-import Seq from "src/base/Seq.js"
+import { Format, UNICODE_FRACTIONS } from "src/base/Format.js"
+import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
+import {parseFormula} from "src/math/FormulaParser.js"
+
+const PARSE_COMPLEX_TOKEN_MAP = new Map();
 
 /**
  * Represents a complex number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
@@ -80,7 +83,7 @@ class Complex {
      */
     static polar(magnitude, phase) {
         let [cos, sin] = Util.snappedCosSin(phase);
-        return new Complex(magnitude*cos, magnitude*sin);
+        return new Complex(magnitude * cos, magnitude * sin);
     }
 
     /**
@@ -144,10 +147,10 @@ class Complex {
             }
             return format.formatFloat(this.imag) + "i";
         }
-        
+
         return this._toString_bothValues(format);
     }
-    
+
     /**
      * @param {!Format} format
      * @returns {!string}
@@ -163,43 +166,38 @@ class Complex {
     }
 
     /**
-     * Parses a complex number from some text.
+     * @param {!Array.<!String>} tokens
+     * @returns {!Array.<!String>}
+     * @private
+     */
+    static _mergeScientificFloatTokens(tokens) {
+        tokens = [...tokens];
+        for (let i = tokens.indexOf('e', 1); i !== -1; i = tokens.indexOf('e', i + 1)) {
+            let s = i - 1;
+            let e = i + 1;
+            if (!tokens[s].match(/[0-9]/)) {
+                continue;
+            }
+            if ((tokens[e] + '').match(/[+-]/)) {
+                e += 1;
+            }
+
+            if ((tokens[e] + '').match(/[0-9]/)) {
+                e += 1;
+                tokens.splice(s, e - s, tokens.slice(s, e).join(''));
+                i -= 1;
+            }
+        }
+        return tokens;
+    }
+
+    /**
+     * Parses a complex number from an infix arithmetic expression.
      * @param {!string} text
      * @returns {!Complex}
      */
     static parse(text) {
-        let lowText = text.toLowerCase();
-        if (text.trim().length === 0) {
-            throw new DetailedError("Empty", {text});
-        }
-        if (lowText.indexOf("e_plus") !== -1 || lowText.indexOf("e_minus") !== -1) {
-            throw new DetailedError("Invalid", {text});
-        }
-
-        return new Seq(lowText.replace("e+", "e_plus").replace("e-", "e_minus").split("+")).
-            flatMap(summand => new Seq(summand.split("-")).
-                mapWithIndex((rawDif, k) => {
-                    let dif = rawDif.replace("e_minus", "e-").replace("e_plus", "e+");
-                    if (k === 0 && dif === "") {
-                        // Unary negation.
-                        return Complex.ZERO;
-                    }
-
-                    let isImaginaryPart = dif[dif.length - 1] === "i";
-                    if (isImaginaryPart) {
-                        dif = dif.slice(0, dif.length - 1);
-                    }
-
-                    let val = dif === "" ? 1 : Format.parseFloat(dif);
-                    if (isNaN(val)) {
-                        throw new DetailedError("Not a float", {text, dif});
-                    }
-                    return Complex.from(val).
-                        times(isImaginaryPart ? Complex.I : 1).
-                        times(k === 0 ? 1 : -1);
-                })
-            ).
-            aggregate(Complex.ZERO, (a, e) => a.plus(e));
+        return Complex.from(parseFormula(text, PARSE_COMPLEX_TOKEN_MAP));
     }
 
     /**
@@ -341,6 +339,15 @@ class Complex {
      * @returns {!Complex}
      */
     raisedTo(exponent) {
+        if (exponent === 0.5 && this.imag === 0 && this.real >= 0) {
+            return new Complex(Math.sqrt(this.real), 0);
+        }
+        if (Complex.ZERO.isEqualTo(exponent)) {
+            return Complex.ONE;
+        }
+        if (this.isEqualTo(Complex.ZERO)) {
+            return Complex.ZERO;
+        }
         return this.ln().times(Complex.from(exponent)).exp();
     }
 
@@ -386,5 +393,34 @@ Complex.ONE = new Complex(1, 0);
  * @type {!Complex}
  */
 Complex.I = new Complex(0, 1);
+
+PARSE_COMPLEX_TOKEN_MAP.set("i", Complex.I);
+PARSE_COMPLEX_TOKEN_MAP.set("(", "(");
+PARSE_COMPLEX_TOKEN_MAP.set(")", ")");
+for (let {character, value} of UNICODE_FRACTIONS) {
+    //noinspection JSUnusedAssignment
+    PARSE_COMPLEX_TOKEN_MAP.set(character, value);
+}
+PARSE_COMPLEX_TOKEN_MAP.set("sqrt", {
+    unary_action: e => Complex.from(e).raisedTo(0.5),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("^", {
+    binary_action: (a, b) => Complex.from(a).raisedTo(b),
+    priority: 3});
+PARSE_COMPLEX_TOKEN_MAP.set("*", {
+    binary_action: (a, b) => Complex.from(a).times(b),
+    priority: 2});
+PARSE_COMPLEX_TOKEN_MAP.set("/", {
+    binary_action: (a, b) => Complex.from(a).dividedBy(b),
+    priority: 2});
+PARSE_COMPLEX_TOKEN_MAP.set("-", {
+    unary_action: e => Complex.from(e).neg(),
+    binary_action: (a, b) => Complex.from(a).minus(b),
+    priority: 1});
+PARSE_COMPLEX_TOKEN_MAP.set("+", {
+    unary_action: e => e,
+    binary_action: (a, b) => Complex.from(a).plus(b),
+    priority: 1});
+PARSE_COMPLEX_TOKEN_MAP.set("√", PARSE_COMPLEX_TOKEN_MAP.get("sqrt"));
 
 export default Complex;

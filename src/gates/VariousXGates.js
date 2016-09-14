@@ -44,14 +44,26 @@ VariousXGates.X16i = Gate.fromKnownMatrix(
     Matrix.fromPauliRotation(-1 / 32, 0, 0),
     "X^-⅟₁₆ Gate",
     "Adjoint sixteenth root of X.");
+VariousXGates.X32 = Gate.fromKnownMatrix(
+    "X^⅟₃₂",
+    Matrix.fromPauliRotation(1 / 64, 0, 0),
+    "X^⅟₃₂ Gate",
+    "Principle 32'nd root of X.");
+VariousXGates.X32i = Gate.fromKnownMatrix(
+    "X^-⅟₃₂",
+    Matrix.fromPauliRotation(-1 / 64, 0, 0),
+    "X^-⅟₃₂ Gate",
+    "Adjoint 32'nd root of X.");
 
 VariousXGates.all =[
     VariousXGates.X3,
     VariousXGates.X4,
     VariousXGates.X8,
     VariousXGates.X16,
+    VariousXGates.X32,
     VariousXGates.X3i,
     VariousXGates.X4i,
     VariousXGates.X8i,
-    VariousXGates.X16i
+    VariousXGates.X16i,
+    VariousXGates.X32i
 ];

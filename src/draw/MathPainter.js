@@ -183,7 +183,7 @@ export default class MathPainter {
     static _traceAmplitudePhaseDirection(trace, real, imag, x, y, d) {
         let mag = Math.sqrt(real*real + imag*imag);
         let g = 1 + Math.log(mag)/10;
-        let r = Math.max(1, g/mag)*Math.max(d/2, 8);
+        let r = Math.max(1, g/mag)*Math.max(d/2, 5);
         if (isNaN(mag) || r < 0.1) {
             return;
         }
@@ -217,6 +217,7 @@ export default class MathPainter {
         let numRows = matrix.height();
         let buf = matrix.rawBuffer();
         let diam = Math.min(drawArea.w / numCols, drawArea.h / numRows);
+        drawArea = drawArea.withW(diam * numCols).withH(diam*numRows);
         let {x, y} = drawArea;
         let hasNaN = matrix.hasNaN();
         amplitudePhaseStrokeColor = amplitudePhaseStrokeColor || amplitudeCircleStrokeColor;

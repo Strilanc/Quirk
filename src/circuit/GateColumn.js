@@ -87,16 +87,17 @@ class GateColumn {
      * @param {!int} row
      * @param {!int} outerRowOffset
      * @param {!Map<!string, *>} context
+     * @param {!boolean} isNested
      * @returns {undefined|!string}
      * @private
      */
-    _disabledReason(inputMeasureMask, row, outerRowOffset, context) {
+    _disabledReason(inputMeasureMask, row, outerRowOffset, context, isNested) {
         let g = this.gates[row];
         if (g === null) {
             return undefined;
         }
 
-        let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context);
+        let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context, isNested);
         let customDisableReason = g.customDisableReasonFinder(args);
         if (customDisableReason !== undefined) {
             return customDisableReason;
@@ -202,9 +203,10 @@ class GateColumn {
      * @param {!int} inputMeasureMask
      * @param {!int} outerRowOffset
      * @param {!Map.<!string, *>} outerContext
+     * @param {!boolean} isNested
      * @returns {!Array.<undefined|!string>}
      */
-    disabledReasons(inputMeasureMask, outerRowOffset, outerContext) {
+    disabledReasons(inputMeasureMask, outerRowOffset, outerContext, isNested) {
         let context = Util.mergeMaps(
             outerContext,
             new Map(seq(this.gates).
@@ -213,7 +215,7 @@ class GateColumn {
                 flatten().
                 map(({key, val}) => [key, val])));
         return Seq.range(this.gates.length).
-            map(row => this._disabledReason(inputMeasureMask, row, outerRowOffset, context)).
+            map(row => this._disabledReason(inputMeasureMask, row, outerRowOffset, context, isNested)).
             toArray();
     }
 
