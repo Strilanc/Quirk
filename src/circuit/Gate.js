@@ -39,7 +39,7 @@ class Gate {
         this.customTextureTransform = undefined;
         /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.customShaders = undefined;
-        /** @type {undefined|!function(!WglTexture, !WglTexture, !int, !Controls) : !ShaderPipeline} */
+        /** @type {undefined|!function(!CircuitEvalArgs) : !ShaderPipeline} */
         this.customStatPipelineMaker = undefined;
         /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
         this.customStatPostProcesser = undefined;
@@ -423,7 +423,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!!CircuitEvalArgs) : !ShaderPipeline} customStatePipelineMaker
+     * @param {undefined|!function(!CircuitEvalArgs) : !ShaderPipeline} customStatePipelineMaker
      * @returns {!Gate}
      */
     withCustomStatPipelineMaker(customStatePipelineMaker) {
