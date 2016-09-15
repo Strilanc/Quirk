@@ -26,35 +26,35 @@ PoweringGates.XForward = Gate.fromVaryingMatrix(
     "X^t",
     XPow,
     "X-Raising Gate (forward)",
-    "A continuous right-handed cycle between the X gate and no-op.").
+    "Right-handed cycle from no-op to X.").
     withCustomDrawer(GatePainting.makeCycleDrawer(0.5, 1));
 
 PoweringGates.XBackward = Gate.fromVaryingMatrix(
     "X^-t",
     t => XPow(-t),
     "X-Raising Gate (backward)",
-    "A continuous left-handed cycle between the X gate and no-op.").
+    "Left-handed cycle from no-op to X.").
     withCustomDrawer(GatePainting.makeCycleDrawer(-0.5, 1));
 
 PoweringGates.YForward = Gate.fromVaryingMatrix(
     "Y^t",
     YPow,
     "Y-Raising Gate (forward)",
-    "A continuous right-handed cycle between the Y gate and no-op.").
+    "Right-handed cycle from no-op to Y.").
     withCustomDrawer(GatePainting.makeCycleDrawer(-1, 1));
 
 PoweringGates.YBackward = Gate.fromVaryingMatrix(
     "Y^-t",
     t => YPow(-t),
     "Y-Raising Gate (backward)",
-    "A continuous left-handed cycle between the Y gate and no-op.").
+    "Left-handed cycle from no-op to Y.").
     withCustomDrawer(GatePainting.makeCycleDrawer(1, 1));
 
 PoweringGates.ZForward = Gate.fromVaryingMatrix(
     "Z^t",
     ZPow,
     "Z-Raising Gate (forward)",
-    "A continuous right-handed cycle between the Z gate and no-op.").
+    "Right-handed cycle from no-op to Z.").
     markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.makeCycleDrawer(1, 0.5));
 
@@ -62,7 +62,7 @@ PoweringGates.ZBackward = Gate.fromVaryingMatrix(
     "Z^-t",
     t => ZPow(-t),
     "Z-Raising Gate (backward)",
-    "A continuous left-handed cycle between the Z gate and no-op.").
+    "Left-handed cycle from no-op to Z.").
     markedAsOnlyPhasing().
     withCustomDrawer(GatePainting.makeCycleDrawer(-1, 0.5));
 
