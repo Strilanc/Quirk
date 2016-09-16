@@ -215,6 +215,29 @@ suite.test("known_gates_forward_compatible", meta => {
     meta.warn_only = false;
 });
 
+suite.test("parse_nested_circuits", () => {
+    let json = {
+        cols:[["H"],["•","X"],["~oc3t"],["~qoc2"]],
+        gates:[
+            {
+                id:"~oc3t",
+                circuit:{cols:[["H"],["•","X"]]}},
+            {
+                id:"~v9rj",
+                circuit:{cols:[["H"],["•","X"],["~oc3t"]]}
+            },
+            {
+                id:"~qoc2",
+                circuit:{"cols":[["H"],["•","X"],["~oc3t"]]}
+            }
+        ]
+    };
+
+    let circuitDef = Serializer.fromJson(CircuitDefinition, json);
+    let reJson = Serializer.toJson(circuitDef);
+    assertThat(JSON.stringify(reJson)).isEqualTo(JSON.stringify(json));
+});
+
 suite.test("known_gates_toolbox", () => {
     let allToolboxGates = seq(Gates.TopToolboxGroups).
         concat(Gates.BottomToolboxGroups).
@@ -233,7 +256,7 @@ suite.test("known_gates_toolbox", () => {
     //let toolboxIds = new Set(allToolboxGates.map(e => e.serializedId));
     //for (let id of knownIds) {
     //    if (!toolboxIds.has(id)) {
-    //        console.log("hidden id: " + id);
+    //        console.warn("hidden id: " + id);
     //    }
     //}
 });

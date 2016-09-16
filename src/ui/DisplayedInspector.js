@@ -147,16 +147,16 @@ export default class DisplayedInspector {
     }
 
     /**
-     * @param {!DisplayedCircuit} circuitWidget
+     * @param {!DisplayedCircuit} displayedCircuit
      * @returns {!DisplayedInspector}
      */
-    withCircuitWidget(circuitWidget) {
-        if (circuitWidget === this.displayedCircuit) {
+    withDisplayedCircuit(displayedCircuit) {
+        if (displayedCircuit === this.displayedCircuit) {
             return this;
         }
         return new DisplayedInspector(
             this.drawArea,
-            circuitWidget,
+            displayedCircuit,
             this.displayedToolboxTop,
             this.displayedToolboxBottom,
             this.hand);
@@ -168,14 +168,14 @@ export default class DisplayedInspector {
      * @returns {!DisplayedInspector}
      */
     withJustEnoughWires(hand, extraWires) {
-        return this.withCircuitWidget(this.displayedCircuit.withJustEnoughWires(hand, extraWires));
+        return this.withDisplayedCircuit(this.displayedCircuit.withJustEnoughWires(hand, extraWires));
     }
 
     /**
     * @returns {!DisplayedInspector}
     */
     afterTidyingUp() {
-        return this.withCircuitWidget(this.displayedCircuit.afterTidyingUp());
+        return this.withDisplayedCircuit(this.displayedCircuit.afterTidyingUp());
     }
 
     previewDrop() {
@@ -187,7 +187,7 @@ export default class DisplayedInspector {
         let circuitWidget = this.displayedCircuit;
         let previewCircuit = circuitWidget.previewDrop(hand);
         let previewHand = previewCircuit === circuitWidget ? hand : hand.withDrop();
-        return this.withHand(previewHand).withCircuitWidget(previewCircuit);
+        return this.withHand(previewHand).withDisplayedCircuit(previewCircuit);
     }
 
     /**
@@ -195,7 +195,7 @@ export default class DisplayedInspector {
      */
     afterDropping() {
         return this.
-            withCircuitWidget(this.displayedCircuit.afterDropping(this.hand)).
+            withDisplayedCircuit(this.displayedCircuit.afterDropping(this.hand)).
             withHand(this.hand.withDrop());
     }
 

@@ -82,6 +82,17 @@ class CircuitDefinition {
     }
 
     /**
+     * @returns {!int}
+     */
+    gateWeight() {
+        return seq(this.columns).
+            flatMap(e => e.gates).
+            filter(e => e !== null).
+            map(e => e.knownCircuit === undefined ? 1 : e.knownCircuit.gateWeight()).
+            sum();
+    }
+
+    /**
      * @returns {!Set.<!String>}
      */
     getUnmetContextKeys() {

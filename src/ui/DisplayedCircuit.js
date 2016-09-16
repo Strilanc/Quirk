@@ -8,6 +8,7 @@ import GateColumn from "src/circuit/GateColumn.js"
 import GateDrawParams from "src/draw/GateDrawParams.js"
 import GatePainting from "src/draw/GatePainting.js"
 import Gates from "src/gates/AllGates.js"
+import Hand from "src/ui/Hand.js"
 import MathPainter from "src/draw/MathPainter.js"
 import Point from "src/math/Point.js"
 import Matrix from "src/math/Matrix.js"
@@ -20,8 +21,6 @@ import {paintBlochSphereDisplay} from "src/gates/BlochSphereDisplay.js"
 let CIRCUIT_OP_HORIZONTAL_SPACING = 10;
 /** @type {!number} */
 let CIRCUIT_OP_LEFT_SPACING = 35;
-/** @type {!number} */
-let CIRCUIT_OP_RIGHT_SPACING = 5;
 
 const SUPERPOSITION_GRID_LABEL_SPAN = 50;
 
@@ -83,11 +82,11 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!bool=true} showOutputDisplays
+     * @param {!bool=true} forTooltip
      * @returns {!number}
      */
-    desiredHeight(showOutputDisplays=true) {
-        if (!showOutputDisplays) {
+    desiredHeight(forTooltip=false) {
+        if (forTooltip) {
             return this.circuitDefinition.numWires * Config.WIRE_SPACING;
         }
         let n = Math.max(Config.MIN_WIRE_COUNT, this.circuitDefinition.numWires) -
@@ -96,12 +95,12 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!bool=true} showOutputDisplays
+     * @param {!bool=true} forTooltip
      * @returns {!number}
      */
-    desiredWidth(showOutputDisplays=true) {
-        if (!showOutputDisplays) {
-            return this.gateRect(1, this.circuitDefinition.columns.length).x;
+    desiredWidth(forTooltip=false) {
+        if (forTooltip) {
+            return this.gateRect(1, this.circuitDefinition.columns.length).x + CIRCUIT_OP_LEFT_SPACING;
         }
         return this._rectForSuperpositionDisplay().right() + 101;
     }
@@ -291,20 +290,20 @@ class DisplayedCircuit {
      * @param {!Painter} painter
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
-     * @param {!bool=true} showOutputDisplays
+     * @param {!bool=false} forTooltip
+     * @param {!bool} showWires
      */
-    paint(painter, hand, stats, showOutputDisplays=true) {
-        painter.fillRect(
-            new Rect(0, this.top, painter.canvas.clientWidth, this.desiredHeight()),
-            Config.BACKGROUND_COLOR_CIRCUIT);
+    paint(painter, hand, stats, forTooltip=false, showWires=true) {
+        if (showWires) {
+            this._drawWires(painter, !forTooltip);
+        }
 
-        this._drawWires(painter, showOutputDisplays);
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
             this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }
 
-        if (showOutputDisplays) {
+        if (!forTooltip) {
             this._drawOutputDisplays(painter, stats, hand);
             this._drawHintLabels(painter, stats);
         }
@@ -336,7 +335,7 @@ class DisplayedCircuit {
             painter.trace(trace => {
                 let wireRect = this.wireRect(row);
                 let y = Math.round(wireRect.center().y - 0.5) + 0.5;
-                let lastX = 25;
+                let lastX = showLabels ? 25 : 5;
                 //noinspection ForLoopThatDoesntUseLoopVariableJS
                 for (let col = 0;
                         showLabels ? lastX < painter.canvas.width : col <= this.circuitDefinition.columns.length;
@@ -1026,4 +1025,68 @@ class DisplayedCircuit {
     }
 }
 
+/**
+ * @param {!Painter} painter
+ * @param {!CircuitDefinition} circuitDefinition
+ * @param {!Rect} rect
+ * @param {!boolean} showWires
+ * @param {undefined|!int} extraWires
+ * @returns {!{maxW: !number, maxH: !number}}
+ */
+function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWires) {
+    let displayed = new DisplayedCircuit(
+        0,
+        circuitDefinition,
+        undefined,
+        undefined,
+        extraWires === undefined ? undefined : circuitDefinition.numWires - extraWires);
+    let neededWidth = displayed.desiredWidth(true);
+    let neededHeight = displayed.desiredHeight(true);
+    let scaleX = rect.w / neededWidth;
+    let scaleY = rect.h / neededHeight;
+    if (showWires) {
+        let s = Math.min(scaleX, scaleY);
+        scaleX = s;
+        scaleY = s;
+    }
+    let stats = CircuitStats.withNanDataFromCircuitAtTime(circuitDefinition, 0);
+    try {
+        painter.ctx.save();
+        painter.ctx.translate(rect.x, rect.y);
+        painter.ctx.scale(Math.min(1, scaleX), Math.min(1, scaleY));
+        painter.ctx.translate(0, 0);
+        displayed.paint(
+            painter,
+            new Hand(undefined, undefined, undefined, undefined),
+            stats,
+            true,
+            showWires);
+    } finally {
+        painter.ctx.restore();
+    }
+    return {maxW: neededWidth*scaleX, maxH: neededHeight*scaleY};
+}
+
+/**
+ * @param {!GateDrawParams} args
+ */
+let GATE_CIRCUIT_DRAWER = args => {
+    let circuit = args.gate.knownCircuit;
+    if (circuit === undefined) {
+        GatePainting.DEFAULT_DRAWER(args);
+        return;
+    }
+
+    GatePainting.paintBackground(args);
+    drawCircuitTooltip(args.painter, circuit, args.rect, false, undefined);
+    GatePainting.paintOutline(args);
+    if (args.isHighlighted) {
+        args.painter.ctx.globalAlpha = 0.9;
+        args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
+        args.painter.ctx.globalAlpha = 1;
+    }
+    GatePainting.paintOutline(args);
+};
+
 export default DisplayedCircuit;
+export { DisplayedCircuit, drawCircuitTooltip, GATE_CIRCUIT_DRAWER }
