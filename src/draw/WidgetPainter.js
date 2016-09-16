@@ -9,6 +9,7 @@ import Point from "src/math/Point.js"
 import Rect from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
 import Util from "src/base/Util.js"
+import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
 
 export default class WidgetPainter {
 
@@ -47,6 +48,131 @@ export default class WidgetPainter {
 
     /**
      * @param {!Painter} painter
+     * @param {!Gate} gate
+     * @param {undefined|!Matrix} matrix
+     * @param {!number} pad
+     * @param {!number} dispSize
+     * @param {!number} w
+     * @param {!function(!Rect):void} pushRect
+     * @param {!function():!number} nextY
+     * @private
+     */
+    static _paintGateTooltip_matrix(painter, gate, matrix, pad, dispSize, w, pushRect, nextY) {
+        if (matrix === undefined) {
+            return;
+        }
+
+        pushRect(painter.printParagraph('As matrix:', new Rect(pad, nextY(), w, 18), new Point(0, 0), 'black', 12), 0);
+        let matrixRect = new Rect(pad, nextY(), dispSize, dispSize);
+        let matrixDescRect = new Rect(0, matrixRect.y, w - pad, dispSize).skipLeft(matrixRect.right() + pad);
+        MathPainter.paintMatrix(
+            painter,
+            matrix,
+            matrixRect,
+            Config.OPERATION_FORE_COLOR,
+            'black',
+            undefined,
+            Config.OPERATION_BACK_COLOR,
+            undefined,
+            'transparent');
+        pushRect(matrixRect);
+        let n = matrix.height();
+        if (n <= 4) {
+            let format = gate.stableDuration() < 0.2 ? Format.CONSISTENT : Format.SIMPLIFIED;
+            let matDescs = WidgetPainter.describeGateTransformations(matrix, format);
+            let rowHeight = matrixDescRect.h / n;
+            for (let r = 0; r < n; r++) {
+                pushRect(painter.printParagraph(
+                    matDescs[r],
+                    matrixDescRect.skipTop(r * rowHeight).takeTop(rowHeight),
+                    new Point(0, 0.5),
+                    'black',
+                    12));
+            }
+        }
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!Gate} gate
+     * @param {undefined|!Matrix} matrix
+     * @param {!number} pad
+     * @param {!number} dispSize
+     * @param {!number} w
+     * @param {!function(!Rect):void} pushRect
+     * @param {!function():!number} nextY
+     * @private
+     */
+    static _paintGateTooltip_rotation(painter, gate, matrix, pad, dispSize, w, pushRect, nextY) {
+        if (matrix === undefined || matrix.width() !== 2 || !matrix.isUnitary(0.001)) {
+            return;
+        }
+
+        pushRect(painter.printParagraph(
+            'As rotation:',
+            new Rect(pad, nextY(), w, 18),
+            new Point(0, 0),
+            'black',
+            12), 0);
+        let {angle, axis, phase} = matrix.qubitOperationToAngleAxisRotation();
+
+        let blochRect = new Rect(pad, nextY(), dispSize, dispSize);
+        MathPainter.paintBlochSphereRotation(
+            painter,
+            matrix,
+            blochRect,
+            Config.OPERATION_BACK_COLOR,
+            Config.OPERATION_FORE_COLOR);
+        pushRect(blochRect);
+
+        let format = gate.stableDuration() < 0.2 ? Format.CONSISTENT : Format.SIMPLIFIED;
+        let rotDesc = new Seq([
+            `rotates: ${format.formatFloat(angle * 180 / Math.PI)}°`,
+            `around: ${WidgetPainter.describeAxis(axis, format)}`,
+            '',
+            `hidden phase: exp(${format.formatFloat(phase * 180 / Math.PI)}°i)`,
+            ''
+        ]).join('\n');
+        pushRect(painter.printParagraph(
+            rotDesc,
+            new Rect(0, blochRect.y, w - pad, dispSize).skipLeft(blochRect.right() + pad),
+            new Point(0, 0.5),
+            'black',
+            12));
+    }
+
+
+    /**
+     * @param {!Painter} painter
+     * @param {undefined|!CircuitDefinition} circuit
+     * @param {!number} pad
+     * @param {!number} dispSize
+     * @param {!number} w
+     * @param {!function(!Rect):void} pushRect
+     * @param {!function():!number} nextY
+     * @private
+     */
+    static _paintGateTooltip_circuit(painter, circuit, pad, dispSize, w, pushRect, nextY) {
+        if (circuit === undefined) {
+            return;
+        }
+
+        let weight = circuit.gateWeight();
+
+        pushRect(painter.printParagraph(
+            `As circuit (gate weight = ${weight}):`,
+            new Rect(pad, nextY(), w, 18),
+            new Point(0, 0),
+            'black',
+            12), 0);
+
+        let circuitRect = new Rect(pad, nextY(), w, dispSize);
+        let {maxW, maxH} = drawCircuitTooltip(painter, circuit, circuitRect, true, 0);
+        pushRect(circuitRect.withW(maxW).withH(maxH));
+    }
+
+    /**
+     * @param {!Painter} painter
      * @param {!number} w
      * @param {!Gate} gate
      * @param {!number} time
@@ -62,77 +188,20 @@ export default class WidgetPainter {
         };
 
         pushRect(painter.printLine(gate.name, new Rect(pad, maxY, w, 18), 0, "blue", 24));
-        pushRect(painter.printParagraph(gate.blurb, new Rect(pad, maxY, w, 50), new Point(0, 0), 'black', 14));
+        if (gate.blurb !== '') {
+            pushRect(painter.printParagraph(gate.blurb, new Rect(pad, maxY, w, 50), new Point(0, 0), 'black', 14));
+        }
 
-        let curMatrix = gate.knownMatrixAt(time);
-        if (gate.definitelyHasNoEffect() || curMatrix === undefined) {
+        let matrix = gate.knownMatrixAt(time);
+        if (gate.definitelyHasNoEffect()) {
             return {maxX, maxY};
         }
+
         pushRect(new Rect(0, maxY, 1, 0), pad*3);
-        let format = gate.stableDuration() < 0.2 ? Format.CONSISTENT : Format.SIMPLIFIED;
 
-        // Matrix interpretation.
-        pushRect(painter.printParagraph('As matrix:', new Rect(pad, maxY, w, 18), new Point(0, 0), 'black', 12), 0);
-        let matrixRect = new Rect(pad, maxY, dispSize, dispSize);
-        let matrixDescRect = new Rect(0, matrixRect.y, w - pad, dispSize).skipLeft(matrixRect.right() + pad);
-        MathPainter.paintMatrix(
-            painter,
-            curMatrix,
-            matrixRect,
-            Config.OPERATION_FORE_COLOR,
-            'black',
-            undefined,
-            Config.OPERATION_BACK_COLOR,
-            undefined,
-            'transparent');
-        pushRect(matrixRect);
-        let n = curMatrix.height();
-        if (n <= 4) {
-            let matDescs = WidgetPainter.describeGateTransformations(curMatrix, format);
-            let rowHeight = matrixDescRect.h / n;
-            for (let r = 0; r < n; r++) {
-                pushRect(painter.printParagraph(
-                    matDescs[r],
-                    matrixDescRect.skipTop(r * rowHeight).takeTop(rowHeight),
-                    new Point(0, 0.5),
-                    'black',
-                    12));
-            }
-        }
-
-        // Bloch sphere interpretation.
-        if (curMatrix.width() === 2 && curMatrix.isUnitary(0.001)) {
-            pushRect(painter.printParagraph(
-                'As rotation:',
-                new Rect(pad, maxY, w, 18),
-                new Point(0, 0),
-                'black',
-                12), 0);
-            let {angle, axis, phase} = curMatrix.qubitOperationToAngleAxisRotation();
-
-            let blochRect = new Rect(pad, maxY, dispSize, dispSize);
-            MathPainter.paintBlochSphereRotation(
-                painter,
-                curMatrix,
-                blochRect,
-                Config.OPERATION_BACK_COLOR,
-                Config.OPERATION_FORE_COLOR);
-            pushRect(blochRect);
-
-            let rotDesc = new Seq([
-                `rotates: ${format.formatFloat(angle * 180 / Math.PI)}°`,
-                `around: ${WidgetPainter.describeAxis(axis, format)}`,
-                '',
-                `hidden phase: exp(${format.formatFloat(phase * 180 / Math.PI)}°i)`,
-                ''
-            ]).join('\n');
-            pushRect(painter.printParagraph(
-                rotDesc,
-                new Rect(0, blochRect.y, w - pad, dispSize).skipLeft(blochRect.right() + pad),
-                new Point(0, 0.5),
-                'black',
-                12));
-        }
+        WidgetPainter._paintGateTooltip_matrix(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
+        WidgetPainter._paintGateTooltip_rotation(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
+        WidgetPainter._paintGateTooltip_circuit(painter, gate.knownCircuit, pad, dispSize, w, pushRect, () => maxY);
 
         return {maxX, maxY};
     }

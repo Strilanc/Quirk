@@ -12,7 +12,7 @@ import Painter from "src/draw/Painter.js"
 import Rect from "src/math/Rect.js"
 import RestartableRng from "src/base/RestartableRng.js"
 import Revision from "src/base/Revision.js"
-import Serializer from "src/circuit/Serializer.js"
+import { initSerializer, Serializer } from "src/circuit/Serializer.js"
 import TouchScrollBlocker from "src/browser/TouchScrollBlocker.js"
 import Util from "src/base/Util.js"
 import { initializedWglContext } from "src/webgl/WglContext.js"
@@ -25,6 +25,9 @@ import { initClear } from "src/ui/clear.js"
 import { initUrlCircuitSync } from "src/ui/url.js"
 import { initTitleSync } from "src/ui/title.js"
 import { simulate } from "src/ui/sim.js"
+import GatePainting from "src/draw/GatePainting.js"
+import { GATE_CIRCUIT_DRAWER } from "src/ui/DisplayedCircuit.js"
+initSerializer(GatePainting.MATRIX_DRAWER, GATE_CIRCUIT_DRAWER);
 
 const canvasDiv = document.getElementById("canvasDiv");
 

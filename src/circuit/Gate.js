@@ -383,7 +383,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(!GateDrawParams) : void} drawer
+     * @param {undefined|!function(!GateDrawParams) : void} drawer
      * @returns {!Gate}
      */
     withCustomDrawer(drawer) {

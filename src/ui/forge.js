@@ -4,7 +4,7 @@ import CircuitStats from "src/circuit/CircuitStats.js"
 import Complex from "src/math/Complex.js"
 import Config from "src/Config.js"
 import DetailedError from "src/base/DetailedError.js"
-import DisplayedCircuit from "src/ui/DisplayedCircuit.js"
+import { drawCircuitTooltip } from "src/ui/DisplayedCircuit.js"
 import Format from "src/base/Format.js"
 import Gate from "src/circuit/Gate.js"
 import GateColumn from "src/circuit/GateColumn.js"
@@ -88,8 +88,12 @@ function initForge(revision) {
         }
     }
 
-    function createCustomGateAndClose(gate) {
-        let c = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
+    /**
+     * @param {!Gate} gate
+     * @param {undefined|!CircuitDefinition=undefined} circuitDef
+     */
+    function createCustomGateAndClose(gate, circuitDef=undefined) {
+        let c = circuitDef || Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
         revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(gate)), null, 0));
         obsHide.send(undefined);
     }
@@ -266,14 +270,21 @@ function initForge(revision) {
             if (gateCircuit.columns.length === 0) {
                 throw new Error("No gates in included range.");
             }
-            if (gateCircuit.withMinimumWireCount().numWires > gateCircuit.numWires) {
-                throw new Error("Cut gate in half.")
-            }
-            return circuitDefinitionToGate(
+            let minWired = gateCircuit.withMinimumWireCount();
+            let extraWires = Math.max(0, minWired.numWires - gateCircuit.numWires);
+            gateCircuit = minWired;
+
+            let symbol = txtName.value.trim();
+            let id = '~' + Math.floor(Math.random()*(1 << 20)).toString(32);
+
+            let gate = circuitDefinitionToGate(
                 gateCircuit,
-                '~' + txtName.text,
-                txtName.text,
-                'A custom gate based on a circuit.');
+                symbol,
+                id,
+                'A custom gate.')
+                .withSerializedId(id);
+
+            return {extraWires, gate, circuit};
         }
 
         let redraw = () => {
@@ -281,35 +292,19 @@ function initForge(revision) {
             let painter = new Painter(circuitCanvas);
             painter.clear();
             try {
-                let gate = parseCircuitGate();
+                let {gate, extraWires} = parseCircuitGate();
                 let keys = gate.getUnmetContextKeys();
                 spanInputs.innerText = keys.size === 0 ?
                     "(none)" :
                     [...keys].map(e => e.replace("Input Range ", "")).join(", ");
-                let d = new DisplayedCircuit(
-                    0,
+                drawCircuitTooltip(
+                    painter,
                     gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
                         0,
                         new Map([...keys].map(e => [e, {offset: 0, length: 0}]))),
-                    undefined,
-                    undefined,
-                    undefined);
-                let s = Math.min(
-                    circuitCanvas.width / d.desiredWidth(false),
-                    circuitCanvas.height / d.desiredHeight(false));
-                try {
-                    painter.ctx.save();
-                    if (s < 1) {
-                        painter.ctx.scale(s, s);
-                    }
-                    d.paint(
-                        painter,
-                        new Hand(undefined, undefined, undefined, undefined),
-                        CircuitStats.withNanDataFromCircuitAtTime(gate.knownCircuit, 0),
-                        false);
-                } finally {
-                    painter.ctx.restore();
-                }
+                    new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+                    true,
+                    extraWires);
                 circuitButton.disabled = false;
             } catch (ex) {
                 painter.printParagraph(
@@ -327,14 +322,13 @@ function initForge(revision) {
             subscribe(redraw);
 
         circuitButton.addEventListener('click', () => {
-            let gate;
             try {
-                gate = parseCircuitGate();
+                let {gate, circuit} = parseCircuitGate();
+                createCustomGateAndClose(gate, circuit);
             } catch (ex) {
+                // Button is about to be disabled, so no handling required.
                 console.warn(ex);
-                return; // Button is about to be disabled, so no handling required.
             }
-            createCustomGateAndClose(gate);
         });
     })();
 }
