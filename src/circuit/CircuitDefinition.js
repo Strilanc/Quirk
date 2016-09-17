@@ -87,7 +87,7 @@ class CircuitDefinition {
     gateWeight() {
         return seq(this.columns).
             flatMap(e => e.gates).
-            filter(e => e !== null).
+            filter(e => e !== undefined).
             map(e => e.knownCircuit === undefined ? 1 : e.knownCircuit.gateWeight()).
             sum();
     }
@@ -101,7 +101,7 @@ class CircuitDefinition {
             let col = this.columns[c];
             let ctx = this.colCustomContextFromGates(c);
             for (let gate of col.gates) {
-                for (let key of gate === null ? [] : gate.getUnmetContextKeys()) {
+                for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
                     if (!ctx.has(key)) {
                         result.add(key);
                     }
@@ -135,7 +135,7 @@ class CircuitDefinition {
         for (let col = 0; col < this.columns.length; col++) {
             for (let row = 0; row < this.numWires; row++) {
                 let gate = this.columns[col].gates[row];
-                if (gate !== null) {
+                if (gate !== undefined) {
                     for (let i = 0; i < gate.width; i++) {
                         for (let j = 0; j < gate.height; j++) {
                             result.set((col+i)+":"+(row+j), {col, row, gate});
@@ -177,14 +177,14 @@ class CircuitDefinition {
             s +
             wire(Math.ceil(n - s.length)/2);
         let colWidths = Seq.range(this.columns.length).
-            map(c => seq(this.columns[c].gates).map(e => e === null ? 0 : e.serializedId.length).max()).
+            map(c => seq(this.columns[c].gates).map(e => e === undefined ? 0 : e.serializedId.length).max()).
             toArray();
         return `CircuitDefinition (${this.numWires} wires, ${this.columns.length} cols):\n\t` +
             Seq.range(this.numWires).
                 map(r => wire(1) + Seq.range(this.columns.length).
                     map(c => {
                         let g = this.columns[c].gates[r];
-                        let label = g === null ? "" : g.serializedId;
+                        let label = g === undefined ? "" : g.serializedId;
                         return wireAround(colWidths[c], label);
                     }).
                     join(wire(1)) + wire(1)).
@@ -223,7 +223,7 @@ class CircuitDefinition {
     stableDuration() {
         return seq(this.columns).
             flatMap(c => c.gates).
-            filter(g => g !== null).
+            filter(g => g !== undefined).
             map(g => g.stableDuration()).
             min(Infinity);
     }
@@ -239,7 +239,7 @@ class CircuitDefinition {
     readableHash() {
         let allGates = seq(this.columns)
             .flatMap(e => e.gates)
-            .filter(e => e !== null)
+            .filter(e => e !== undefined)
             .map(e => e.symbol)
             .toArray();
         if (allGates.length === 0) {
@@ -308,7 +308,7 @@ class CircuitDefinition {
         for (let col = 0; col < this.columns.length; col++) {
             let paddingRequired = Seq.range(this.numWires).map(row => {
                 let gate = this.columns[col].gates[row];
-                if (gate === null) {
+                if (gate === undefined) {
                     return 0;
                 }
                 let f = this._findWidthWiseOverlapInRect(col, row, gate.width, gate.height);
@@ -362,10 +362,12 @@ class CircuitDefinition {
             }
 
             let keptGates = seq(this.columns[col].gates).
-                mapWithIndex((g, row) => pushedGateIndexes.has(row) ? null : g).
+                mapWithIndex((g, row) => pushedGateIndexes.has(row) ? undefined : g).
                 toArray();
             let pushedGates = seq(this.columns[col].gates).
-                mapWithIndex((g, row) => g !== null && (g.isControl() || pushedGateIndexes.has(row)) ? g : null).
+                mapWithIndex((g, row) => g !== undefined && (g.isControl() || pushedGateIndexes.has(row)) ?
+                    g :
+                    undefined).
                 toArray();
 
             newCols.push(new GateColumn(keptGates));
@@ -415,7 +417,7 @@ class CircuitDefinition {
             this.columns.map(c => new GateColumn(
                 seq(c.gates).
                     take(newWireCount).
-                    padded(newWireCount, null).
+                    padded(newWireCount, undefined).
                     toArray())),
             this.outerRowOffset,
             this.outerContext,
@@ -489,7 +491,7 @@ class CircuitDefinition {
         let c = this.columns[col];
         for (let row = 0; row < c.gates.length; row++) {
             let g = c.gates[row];
-            if (g !== null && this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined) {
+            if (g !== undefined && this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined) {
                 for (let {key, val} of g.customColumnContextProvider(row)) {
                     //noinspection JSUnusedAssignment
                     result.set(key, val);
@@ -536,7 +538,7 @@ class CircuitDefinition {
             return false;
         }
         let gate = this.columns[pt.x].gates[row];
-        let h = gate === null ? 1 : gate.height;
+        let h = gate === undefined ? 1 : gate.height;
         let r = (this.colIsMeasuredMask(pt.x) >> row) & ((1 << h) - 1);
         return r === 0 ? false : r === (1 << h) - 1 ? true : undefined;
     }
@@ -553,7 +555,7 @@ class CircuitDefinition {
             return undefined;
         }
         let gate = this.columns[col].gates[row];
-        return gate === null ? undefined : gate;
+        return gate === undefined ? undefined : gate;
     }
 
     /**
@@ -618,7 +620,7 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return false;
         }
-        return seq(this.columns[col].gates).any(e => e !== null && e.affectsOtherWires());
+        return seq(this.columns[col].gates).any(e => e !== undefined && e.affectsOtherWires());
     }
 
     /**
@@ -680,7 +682,7 @@ class CircuitDefinition {
             map(i => {
                 let g = this.columns[col].gates[i];
                 let isEnabled = this.gateAtLocIsDisabledReason(new Point(col, i)) === undefined;
-                let b = g !== null && isEnabled ? g.controlBit() : undefined;
+                let b = g !== undefined && isEnabled ? g.controlBit() : undefined;
                 return b === undefined ? Controls.NONE :
                     b === false ? Controls.bit(i, false) :
                     Controls.bit(i, true);
@@ -713,7 +715,7 @@ class CircuitDefinition {
         let nonSwaps = seq(col.gates).
             mapWithIndex((gate, row) => {
                 let pt = new Point(colIndex, row);
-                if (gate === null ||
+                if (gate === undefined ||
                         gate.definitelyHasNoEffect() ||
                         gate === Gates.Special.SwapHalf ||
                         this.gateAtLocIsDisabledReason(pt) !== undefined) {
@@ -754,7 +756,7 @@ class CircuitDefinition {
         }
         return seq(this.columns[colIndex].gates).
             mapWithIndex((gate, row) => {
-                if (gate === null ||
+                if (gate === undefined ||
                         gate.customTextureTransform === undefined ||
                         this.gateAtLocIsDisabledReason(new Point(colIndex, row)) !== undefined) {
                     return undefined;
@@ -779,7 +781,7 @@ class CircuitDefinition {
         return seq(col.gates).
             mapWithIndex((gate, i) => {
                 let pt = new Point(colIndex, i);
-                if (gate === null || this.gateAtLocIsDisabledReason(pt) !== undefined) {
+                if (gate === undefined || this.gateAtLocIsDisabledReason(pt) !== undefined) {
                     return [];
                 }
                 let shaders = beforeNotAfter ? gate.preShaders : gate.postShaders;
@@ -801,7 +803,7 @@ class CircuitDefinition {
         let col = this.columns[colIndex];
         return Seq.range(col.gates.length).
             filter(row =>
-                col.gates[row] !== null &&
+                col.gates[row] !== undefined &&
                 col.gates[row].customStatPostProcesser !== undefined &&
                 this.gateAtLocIsDisabledReason(new Point(colIndex, row)) === undefined).
             toArray();

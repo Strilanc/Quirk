@@ -428,7 +428,7 @@ class DisplayedCircuit {
 
         let focusSlot = this._highlightedSlot;
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
-            if (gateColumn.gates[row] === null) {
+            if (gateColumn.gates[row] === undefined) {
                 continue;
             }
             let gate = gateColumn.gates[row];
@@ -750,7 +750,7 @@ class DisplayedCircuit {
 
         let remainingGates = seq(this.circuitDefinition.columns[col].gates).toArray();
         if (!duplicate) {
-            remainingGates[row] = null;
+            remainingGates[row] = undefined;
         }
 
         let newCols = seq(this.circuitDefinition.columns).
@@ -779,7 +779,7 @@ class DisplayedCircuit {
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
             for (let row = 0; row < this.circuitDefinition.numWires; row++) {
                 let gate = this.circuitDefinition.columns[col].gates[row];
-                if (gate === null) {
+                if (gate === undefined) {
                     continue;
                 }
                 let {isResizeHighlighted} =

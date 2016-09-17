@@ -21,10 +21,10 @@ const TEST_GATES = new Map([
     ['M', Gates.Special.Measurement],
     ['@', Gates.Displays.BlochSphereDisplay],
 
-    ['-', null],
-    ['+', null],
-    ['|', null],
-    ['/', null]
+    ['-', undefined],
+    ['+', undefined],
+    ['|', undefined],
+    ['/', undefined]
 ]);
 const circuit = diagram => CircuitDefinition.fromTextDiagram(TEST_GATES, diagram);
 
@@ -40,7 +40,7 @@ suite.webGlTest("smoke", () => {
 suite.webGlTest("all-gates-in-sequence", () => {
     let cols = Gates.KnownToSerializer.
         filter(e => e !== Gates.Special.Measurement && e !== Gates.ErrorInjection && e.height <= 6).
-        map(e => new GateColumn([e, null, null, null, null, null]));
+        map(e => new GateColumn([e, undefined, undefined, undefined, undefined, undefined]));
     let c = new CircuitDefinition(6, cols);
     let stats = CircuitStats.fromCircuitAtTime(c, 0.1);
     assertThat(stats).isNotEqualTo(undefined);

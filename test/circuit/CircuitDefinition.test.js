@@ -18,7 +18,7 @@ const Z = Gates.HalfTurns.Z;
 const H = Gates.HalfTurns.H;
 const C = Gates.Controls.Control;
 const A = Gates.Controls.AntiControl;
-const _ = null;
+const _ = undefined;
 const M = Gates.Special.Measurement;
 const TEST_GATES = new Map([
     ['X', X],
@@ -49,10 +49,10 @@ const TEST_GATES = new Map([
     ['s', Gates.Special.SwapHalf],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
-    ['-', null],
-    ['+', null],
-    ['|', null],
-    ['/', null],
+    ['-', undefined],
+    ['+', undefined],
+    ['|', undefined],
+    ['/', undefined],
 
     ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],

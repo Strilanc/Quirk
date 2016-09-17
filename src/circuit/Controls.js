@@ -57,7 +57,7 @@ class Controls {
         return "Controls: ...__" + Seq.naturals().
             takeWhile(i => (1<<i) <= this.inclusionMask).
             map(this.desiredValueFor.bind(this)).
-            map(e => e === null ? "_" : e ? "1" : "0").
+            map(e => e === undefined ? "_" : e ? "1" : "0").
             reverse().
             join("");
     }
@@ -72,11 +72,11 @@ class Controls {
 
     /**
      * @param {!int} bitIndex
-     * @returns {?boolean}
+     * @returns {undefined|!boolean}
      */
     desiredValueFor(bitIndex) {
         if ((this.inclusionMask & (1 << bitIndex)) === 0) {
-            return null;
+            return undefined;
         }
         return (this.desiredValueMask & (1 << bitIndex)) !== 0;
     }

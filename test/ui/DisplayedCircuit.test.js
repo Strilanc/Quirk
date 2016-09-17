@@ -24,8 +24,8 @@ const TEST_GATES = new Map([
     ['s', Gates.Special.SwapHalf],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
-    ['+', null],
-    ['/', null],
+    ['+', undefined],
+    ['/', undefined],
 
     ['t', Gates.Exponentiating.XForward]
 ]);

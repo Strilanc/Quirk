@@ -254,7 +254,7 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
  * @returns {!object}
  */
 function toJson_GateColumn(v, context=new CustomGateSet()) {
-    return v.gates.map(e => e === null ? 1 : toJson_Gate(e, context));
+    return v.gates.map(e => e === undefined ? 1 : toJson_Gate(e, context));
 }
 
 /**
@@ -267,7 +267,7 @@ let fromJson_GateColumn = (json, context=new CustomGateSet()) => {
     if (!Array.isArray(json)) {
         throw new Error(`GateColumn json should be an array. Json: ${describe(json)}`);
     }
-    return new GateColumn(json.map(e => e === 1 || e === null ? null : fromJson_Gate(e, context)));
+    return new GateColumn(json.map(e => e === 1 || e === undefined ? undefined : fromJson_Gate(e, context)));
 };
 
 /**
@@ -332,7 +332,7 @@ let fromJson_CircuitDefinition = (json, context=undefined) => {
     let numWires = seq(gateCols).map(c => c.minimumRequiredWireCount()).max(0);
     numWires = Math.max(Config.MIN_WIRE_COUNT, Math.min(numWires, Config.MAX_WIRE_COUNT));
     gateCols = gateCols.map(e => new GateColumn(seq(e.gates).
-            padded(numWires, null). // Pad column up to circuit length.
+            padded(numWires, undefined). // Pad column up to circuit length.
             toArray().
             slice(0, numWires))); // Silently discard gates off the edge of the circuit.
 

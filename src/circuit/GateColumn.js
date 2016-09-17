@@ -14,11 +14,12 @@ class GateColumn {
     /**
      * A column of gates in a circuit with many qubits.
      *
-     * @param {!Array.<null|!Gate>} gates The list of gates to apply to each wire, with the i'th gate applying to the i'th wire.
-     * Wires without a gate in this column should use null instead.
+     * @param {!Array.<undefined|!Gate>} gates The list of gates to apply to each wire, with the i'th gate applying to
+     *                                         the i'th wire.
+     * Wires without a gate in this column should use undefined instead.
      */
     constructor(gates) {
-        /** @type {!Array.<null|!Gate>} */
+        /** @type {!Array.<undefined|!Gate>} */
         this.gates = gates;
     }
 
@@ -39,14 +40,14 @@ class GateColumn {
      * @returns {!GateColumn}
      */
     static empty(qubitCount) {
-        return new GateColumn(Seq.repeat(null, qubitCount).toArray());
+        return new GateColumn(Seq.repeat(undefined, qubitCount).toArray());
     }
 
     /**
      * @returns {!boolean}
      */
     isEmpty() {
-        return this.gates.every(e => e === null);
+        return this.gates.every(e => e === undefined);
     }
 
     /**
@@ -70,14 +71,14 @@ class GateColumn {
     hasCoherentControl(inputMeasureMask) {
         return Seq.range(this.gates.length).any(i =>
             (inputMeasureMask & (1 << i)) === 0 &&
-            this.gates[i] !== null &&
+            this.gates[i] !== undefined &&
             this.gates[i].isControl());
     }
 
     hasMeasuredControl(inputMeasureMask) {
         return Seq.range(this.gates.length).any(i =>
             (inputMeasureMask & (1 << i)) !== 0 &&
-            this.gates[i] !== null &&
+            this.gates[i] !== undefined &&
             this.gates[i].definitelyHasNoEffect() &&
             this.gates[i].isControl());
     }
@@ -93,7 +94,7 @@ class GateColumn {
      */
     _disabledReason(inputMeasureMask, row, outerRowOffset, context, isNested) {
         let g = this.gates[row];
-        if (g === null) {
+        if (g === undefined) {
             return undefined;
         }
 
@@ -134,7 +135,7 @@ class GateColumn {
 
         for (let i = 0; i < row; i++) {
             let g = this.gates[i];
-            for (let {key: otherKey} of g === null ? [] : g.customColumnContextProvider(i)) {
+            for (let {key: otherKey} of g === undefined ? [] : g.customColumnContextProvider(i)) {
                 //noinspection JSUnusedAssignment
                 if (keys.has(otherKey)) {
                     return "already\ndefined";
@@ -175,7 +176,7 @@ class GateColumn {
     _disabledReason_controlInside(row) {
         let g = this.gates[row];
         for (let j = 1; j < g.height && row + j < this.gates.length; j++) {
-            if (this.gates[row + j] !== null && this.gates[row + j].isControl()) {
+            if (this.gates[row + j] !== undefined && this.gates[row + j].isControl()) {
                 return "control\ninside";
             }
         }
@@ -185,7 +186,7 @@ class GateColumn {
     minimumRequiredWireCount() {
         let best = 0;
         for (let i = 0; i < this.gates.length; i++) {
-            if (this.gates[i] !== null) {
+            if (this.gates[i] !== undefined) {
                 best = Math.max(best, this.gates[i].height + i);
             }
         }
@@ -194,7 +195,7 @@ class GateColumn {
 
     maximumGateWidth() {
         return seq(this.gates).
-            filter(g => g !== null).
+            filter(g => g !== undefined).
             map(g => g.width).
             max(-Infinity);
     }
@@ -210,7 +211,7 @@ class GateColumn {
         let context = Util.mergeMaps(
             outerContext,
             new Map(seq(this.gates).
-                mapWithIndex((g, row) => g === null ? [] : g.customColumnContextProvider(row + outerRowOffset)).
+                mapWithIndex((g, row) => g === undefined ? [] : g.customColumnContextProvider(row + outerRowOffset)).
                 reverse().
                 flatten().
                 map(({key, val}) => [key, val])));
