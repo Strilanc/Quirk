@@ -1,14 +1,14 @@
-import Painter from "src/draw/Painter.js"
-import Format from "src/base/Format.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Painter} from "src/draw/Painter.js"
+import {Format} from "src/base/Format.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
-import Config from "src/Config.js"
-import Complex from "src/math/Complex.js"
-import Matrix from "src/math/Matrix.js"
+import {Util} from "src/base/Util.js"
+import {Config} from "src/Config.js"
+import {Complex} from "src/math/Complex.js"
+import {Matrix} from "src/math/Matrix.js"
 
-export default class MathPainter {
+class MathPainter {
     static describeProbability(p, fractionalDigits) {
         let v = p * 100;
         let e = Math.pow(10, -fractionalDigits);
@@ -119,6 +119,7 @@ export default class MathPainter {
         }
     }
 
+    //noinspection JSUnusedLocalSymbols
     /**
      * @param {!Tracer} trace
      * @param {!number} real
@@ -400,7 +401,6 @@ export default class MathPainter {
 
         // Draw sphere and axis lines (in not-quite-proper 3d).
         painter.fillCircle(c, u, backgroundColor);
-
         painter.trace(trace => {
             trace.circle(c.x, c.y, u);
             trace.ellipse(c.x, c.y, u, u / 3);
@@ -441,32 +441,50 @@ export default class MathPainter {
         let dPerp1 = projToPt(perpVec1);
         let dPerp2 = projToPt(perpVec2);
 
+        MathPainter._paintBlochSphereRotation_rotationGuideArrows(painter, c, angle, dAxis, dPerp1, dPerp2, fillColor);
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!Point} center
+     * @param {!number} angle
+     * @param {!Point} dAlong
+     * @param {!Point} dPerp1
+     * @param {!Point} dPerp2
+     * @param {!string} fillColor
+     * @private
+     */
+    static _paintBlochSphereRotation_rotationGuideArrows(painter, center, angle, dAlong, dPerp1, dPerp2, fillColor) {
         // Compute the rotation arc.
-        let rotationGuideDeltas = Seq.range(Math.floor(Math.abs(angle) * 64)).
+        let rotationGuideDeltas = Seq.range(Math.floor(Math.abs(angle) * 32)).
             map(i => {
-                let θ = (angle < 0 ? Math.PI - i / 64 : i / 64);
+                let θ = (angle < 0 ? Math.PI - i / 32 : i / 32);
                 return dPerp1.times(Math.cos(θ)).
                     plus(dPerp2.times(Math.sin(θ)));
             }).
             toArray();
 
-        if (rotationGuideDeltas.length > 1) {
-            // Draw the three rotation guides.
-            for (let offsetFactor of [-0.55, 0, 0.55]) {
-                let offsetCenter = c.plus(dAxis.times(offsetFactor));
-                let arcPts = rotationGuideDeltas.map(d => offsetCenter.plus(d));
-                let arrowHeadRoot = arcPts[arcPts.length - 1];
-                let arrowHeadDirection = arrowHeadRoot.plus(arcPts[arcPts.length - 2].times(-1));
-                let arrowHeadPts = [
-                    dAxis.times(0.15),
-                    arrowHeadDirection.times(60),
-                    dAxis.times(-0.15)
-                ].map(d => arrowHeadRoot.plus(d));
+        if (rotationGuideDeltas.length <= 1) {
+            return;
+        }
 
-                painter.strokePath(arcPts, '#444');
-                painter.fillPolygon(arrowHeadPts, fillColor);
-                painter.strokePolygon(arrowHeadPts, '#444');
-            }
+        // Draw the three rotation guides.
+        for (let offsetFactor of [-0.55, 0, 0.55]) {
+            let offsetCenter = center.plus(dAlong.times(offsetFactor));
+            let arcPts = rotationGuideDeltas.map(d => offsetCenter.plus(d));
+            let arrowHeadRoot = arcPts[arcPts.length - 1];
+            let arrowHeadDirection = arrowHeadRoot.plus(arcPts[arcPts.length - 2].times(-1));
+            let arrowHeadPts = [
+                dAlong.times(0.15),
+                arrowHeadDirection.times(30),
+                dAlong.times(-0.15)
+            ].map(d => arrowHeadRoot.plus(d));
+            let interleaved = [].concat.apply([], arrowHeadPts.map(e => [e.x, e.y]));
+
+            painter.strokePath(arcPts, '#444');
+            painter.trace(tracer => tracer.polygon(interleaved)).
+                thenFill(fillColor).
+                thenStroke('#444');
         }
     }
 
@@ -575,3 +593,5 @@ export default class MathPainter {
                 matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
     }
 }
+
+export {MathPainter}

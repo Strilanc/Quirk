@@ -1,5 +1,5 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Serializer from "src/circuit/Serializer.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Serializer} from "src/circuit/Serializer.js"
 
 /**
  * @param {!Revision} revision
@@ -23,4 +23,4 @@ function initTitleSync(revision) {
     });
 }
 
-export { initTitleSync }
+export {initTitleSync}

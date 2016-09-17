@@ -1,7 +1,7 @@
-import DetailedError from "src/base/DetailedError.js"
-import { Format, UNICODE_FRACTIONS } from "src/base/Format.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format, UNICODE_FRACTIONS} from "src/base/Format.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Util} from "src/base/Util.js"
 import {parseFormula} from "src/math/FormulaParser.js"
 
 const PARSE_COMPLEX_TOKEN_MAP = new Map();
@@ -163,32 +163,6 @@ class Complex {
             format.formatFloat(Math.abs(this.imag));
         let prefix = format.allowAbbreviation || format.fixedDigits === undefined || this.real < 0 ? "" : "+";
         return prefix + format.formatFloat(this.real) + separator + imagFactor + "i";
-    }
-
-    /**
-     * @param {!Array.<!String>} tokens
-     * @returns {!Array.<!String>}
-     * @private
-     */
-    static _mergeScientificFloatTokens(tokens) {
-        tokens = [...tokens];
-        for (let i = tokens.indexOf('e', 1); i !== -1; i = tokens.indexOf('e', i + 1)) {
-            let s = i - 1;
-            let e = i + 1;
-            if (!tokens[s].match(/[0-9]/)) {
-                continue;
-            }
-            if ((tokens[e] + '').match(/[+-]/)) {
-                e += 1;
-            }
-
-            if ((tokens[e] + '').match(/[0-9]/)) {
-                e += 1;
-                tokens.splice(s, e - s, tokens.slice(s, e).join(''));
-                i -= 1;
-            }
-        }
-        return tokens;
     }
 
     /**
@@ -423,4 +397,4 @@ PARSE_COMPLEX_TOKEN_MAP.set("+", {
     priority: 1});
 PARSE_COMPLEX_TOKEN_MAP.set("√", PARSE_COMPLEX_TOKEN_MAP.get("sqrt"));
 
-export default Complex;
+export {Complex}

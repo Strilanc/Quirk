@@ -1,7 +1,7 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Matrix from "src/math/Matrix.js"
-import WglArg from "src/webgl/WglArg.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Matrix} from "src/math/Matrix.js"
+import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader, WglConfiguredShader} from "src/webgl/WglShader.js"
 
 let MultiplyAccumulateGates = {};
@@ -209,5 +209,4 @@ MultiplyAccumulateGates.all = [
     ...MultiplyAccumulateGates.MultiplySubtractInputsFamily.all
 ];
 
-export default MultiplyAccumulateGates;
 export {MultiplyAccumulateGates}

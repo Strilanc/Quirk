@@ -1,14 +1,14 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 
-import Complex from "src/math/Complex.js"
-import Controls from "src/circuit/Controls.js"
-import Gate from "src/circuit/Gate.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import Gates from "src/gates/AllGates.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Seq from "src/base/Seq.js"
+import {Complex} from "src/math/Complex.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("CircuitDefinition");
 
@@ -18,7 +18,7 @@ const Z = Gates.HalfTurns.Z;
 const H = Gates.HalfTurns.H;
 const C = Gates.Controls.Control;
 const A = Gates.Controls.AntiControl;
-const _ = null;
+const _ = undefined;
 const M = Gates.Special.Measurement;
 const TEST_GATES = new Map([
     ['X', X],
@@ -49,10 +49,10 @@ const TEST_GATES = new Map([
     ['s', Gates.Special.SwapHalf],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
-    ['-', null],
-    ['+', null],
-    ['|', null],
-    ['/', null],
+    ['-', undefined],
+    ['+', undefined],
+    ['|', undefined],
+    ['/', undefined],
 
     ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
@@ -411,6 +411,7 @@ suite.test("colHasSingleQubitDisplayMask", () => {
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colHasSingleQubitDisplayMask(i-1)).toArray());
     };
 
+    //noinspection SpellCheckingInspection
     assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     assertAbout('%d@').isEqualTo([0, 1, 1, 1, 0, 0]);
     assertAbout(`---%
@@ -425,6 +426,7 @@ suite.test("colHasDoubleQubitDisplayMask", () => {
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colHasDoubleQubitDisplayMask(i-1)).toArray());
     };
 
+    //noinspection SpellCheckingInspection
     assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     assertAbout('D').isEqualTo([0, 1, 0, 0]);
     assertAbout(`---D

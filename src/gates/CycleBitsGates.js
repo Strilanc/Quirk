@@ -1,8 +1,8 @@
-import Gate from "src/circuit/Gate.js"
-import Matrix from "src/math/Matrix.js"
-import Util from "src/base/Util.js"
-import WglArg from "src/webgl/WglArg.js"
-import { WglConfiguredShader, WglShader } from "src/webgl/WglShader.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Util} from "src/base/Util.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
 let CycleBitsGates = {};
 
@@ -98,5 +98,4 @@ CycleBitsGates.all = [
     ...CycleBitsGates.ReverseCycleBitsFamily.all
 ];
 
-export default CycleBitsGates;
 export {CycleBitsGates, cycleBits, makeCycleBitsMatrix};

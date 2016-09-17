@@ -1,6 +1,6 @@
 // Cheat a little bit on the testing library being independent from what it tests
-import describe from "src/base/Describe.js"
-import equate from "src/base/Equate.js"
+import {describe} from "src/base/Describe.js"
+import {equate} from "src/base/Equate.js"
 
 /** @type {!int} */
 let assertionSubjectIndexForNextTest = 1;

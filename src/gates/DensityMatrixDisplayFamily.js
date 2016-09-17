@@ -1,17 +1,17 @@
-import Config from "src/Config.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import DisplayShaders from "src/circuit/DisplayShaders.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Config} from "src/Config.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {DisplayShaders} from "src/circuit/DisplayShaders.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import ShaderPipeline from "src/circuit/ShaderPipeline.js"
-import Shaders from "src/webgl/Shaders.js"
-import Util from "src/base/Util.js"
+import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * @param {!number} w
@@ -145,4 +145,4 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
 let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleWireDensityMatrixDisplay :
     densityMatrixDisplayMaker(span));
-export default DensityMatrixDisplayFamily;
+export {DensityMatrixDisplayFamily}

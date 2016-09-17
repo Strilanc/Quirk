@@ -1,15 +1,15 @@
-import DetailedError from "src/base/DetailedError.js"
-import Util from "src/base/Util.js"
-import WglArg from "src/webgl/WglArg.js"
-import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Util} from "src/base/Util.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglMortalValueSlot} from "src/webgl/WglMortalValueSlot.js"
 import { initializedWglContext }  from "src/webgl/WglContext.js"
-import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
+import {checkGetErrorResult, checkFrameBufferStatusResult} from "src/webgl/WglUtil.js"
 
 /**
  * Stores pixel data for/from the gpu.
  * You can render to and pull data out of it.
  */
-export default class WglTexture {
+class WglTexture {
     /**
      * @param {!int} width
      * @param {!int} height
@@ -168,3 +168,5 @@ export default class WglTexture {
         return outputBuffer;
     }
 }
+
+export {WglTexture}

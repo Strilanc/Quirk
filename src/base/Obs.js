@@ -1,5 +1,5 @@
-import DetailedError from "src/base/DetailedError.js"
-import CooldownThrottle from "src/base/CooldownThrottle.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 
 /**
  * An observable sequence of events.
@@ -68,7 +68,7 @@ class Observable {
      * @template T
      */
     peek(action) {
-        return this.map(e => { action(); return e; });
+        return this.map(e => { action(e); return e; });
     }
 
     /**
@@ -253,4 +253,4 @@ class ObservableValue {
     }
 }
 
-export { Observable, ObservableSource, ObservableValue }
+export {Observable, ObservableSource, ObservableValue}

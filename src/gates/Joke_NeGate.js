@@ -1,6 +1,6 @@
-import Gate from "src/circuit/Gate.js"
-import Matrix from "src/math/Matrix.js"
-import GatePainting from "src/draw/GatePainting.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Matrix} from "src/math/Matrix.js"
+import {GatePainting} from "src/draw/GatePainting.js"
 
 const NeGate = Gate.fromKnownMatrix(
     "-I",
@@ -36,4 +36,4 @@ const NeGate = Gate.fromKnownMatrix(
             args.rect.h);
     });
 
-export default NeGate;
+export {NeGate}

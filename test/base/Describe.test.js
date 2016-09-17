@@ -1,5 +1,5 @@
-import { Suite, assertThat } from "test/TestUtil.js"
-import describe from "src/base/Describe.js"
+import {Suite, assertThat} from "test/TestUtil.js"
+import {describe} from "src/base/Describe.js"
 
 let suite = new Suite("Describe");
 

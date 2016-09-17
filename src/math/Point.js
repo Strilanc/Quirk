@@ -1,7 +1,7 @@
 /**
  * A two dimensional point with real coordinates.
  */
-export default class Point {
+class Point {
     /**
      * @param {!number} x The new point's x coordinate.
      * @param {!number} y The new point's y coordinate.
@@ -89,3 +89,5 @@ export default class Point {
         return Math.sqrt(dx*dx + dy*dy);
     }
 }
+
+export {Point}

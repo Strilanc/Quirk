@@ -1,6 +1,6 @@
-import Config from "src/Config.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
+import {Config} from "src/Config.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
 
 let MeasurementGate = Gate.fromIdentity(
     "Measure",
@@ -40,4 +40,5 @@ let MeasurementGate = Gate.fromIdentity(
         }
         return undefined;
     });
-export default MeasurementGate;
+
+export {MeasurementGate}

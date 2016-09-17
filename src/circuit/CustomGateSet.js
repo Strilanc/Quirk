@@ -1,7 +1,7 @@
-import DetailedError from "src/base/DetailedError.js"
-import Gates from "src/gates/AllGates.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Gates} from "src/gates/AllGates.js"
 
-export default class CustomGateSet {
+class CustomGateSet {
     /**
      * @param {!Gate} gates
      */
@@ -37,3 +37,5 @@ export default class CustomGateSet {
         return undefined;
     }
 }
+
+export {CustomGateSet}

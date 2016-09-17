@@ -1,7 +1,7 @@
 /**
  * A random number generator that records its results, so you can make a restarted copy.
  */
-export default class RestartableRng {
+class RestartableRng {
     /**
      * @private
      */
@@ -38,3 +38,5 @@ export default class RestartableRng {
         return this._cache[p];
     }
 }
+
+export {RestartableRng}

@@ -53,22 +53,6 @@ module.exports = function(grunt) {
             }
         },
         concat: {
-            'concat-html-template-debug': {
-                src: [
-                    'template/html_before_src.html',
-                    'out/tmp/concatenated-src.js',
-                    'template/html_after_src.html'
-                ],
-                dest: 'out/quirk.html'
-            },
-            'concat-html-template-src': {
-                src: [
-                    'template/html_before_src.html',
-                    'out/tmp/minified-src.js',
-                    'template/html_after_src.html'
-                ],
-                dest: 'out/quirk.html'
-            },
             'concat-traceur-src': {
                 options: {
                     separator: ';'
@@ -104,6 +88,15 @@ module.exports = function(grunt) {
                 }
             }
         },
+        include_file: {
+            options: {
+                src: ['template/quirk.template.html'],
+                dest: 'out/tmp/'
+            },
+            your_target: {
+                // Target-specific file lists and/or options go here.
+            }
+        },
         clean: {
             'clean-tmp': ['out/tmp'],
             'clean-out': ['out/']
@@ -124,6 +117,13 @@ module.exports = function(grunt) {
         grunt.file.write(dst, getters);
     });
 
+    grunt.registerTask('inject-js-into-html', function(htmlSrc, jsSrc, dst) {
+        var html = grunt.file.read(htmlSrc);
+        var js = grunt.file.read(jsSrc);
+        var output = html.split("<!-- include src.js -->").join(js);
+        grunt.file.write(dst, output);
+    });
+
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-copy');
@@ -137,7 +137,7 @@ module.exports = function(grunt) {
         'bootstrap-get-packages:src/main.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat-traceur-src',
         'uglify:uglify-concatenated-src',
-        'concat:concat-html-template-src',
+        'inject-js-into-html:template/quirk.template.html:out/tmp/minified-src.js:out/quirk.html',
         'clean:clean-tmp'
     ]);
     grunt.registerTask('build-debug', [
@@ -145,7 +145,7 @@ module.exports = function(grunt) {
         'traceur:translate-src',
         'bootstrap-get-packages:src/main.js:out/tmp/traceur/bootstrap_post_src/run_main.js',
         'concat:concat-traceur-src',
-        'concat:concat-html-template-debug',
+        'inject-js-into-html:template/quirk.template.html:out/tmp/concatenated-src.js:out/quirk.html',
         'clean:clean-tmp'
     ]);
     grunt.registerTask('build-test', [

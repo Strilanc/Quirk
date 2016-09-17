@@ -1,7 +1,7 @@
 /**
  * Values used by the various gate drawing strategies.
  */
-export default class GateDrawParams {
+class GateDrawParams {
     /**
      * @param {!Painter} painter
      * @param {!boolean} isInToolbox
@@ -50,3 +50,5 @@ export default class GateDrawParams {
         this.customStats = customStats;
     }
 }
+
+export {GateDrawParams}

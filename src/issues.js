@@ -46,5 +46,5 @@ if (detectWebGlNotSupported()) {
         [/FRAMEBUFFER_INCOMPLETE_ATTACHMENT/])
 }
 
-canvas = null;
-gl = null;
+canvas = undefined;
+gl = undefined;

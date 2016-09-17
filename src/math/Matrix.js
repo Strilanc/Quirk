@@ -1,8 +1,8 @@
-import Complex from "src/math/Complex.js"
-import DetailedError from "src/base/DetailedError.js"
-import Format from "src/base/Format.js"
+import {Complex} from "src/math/Complex.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format} from "src/base/Format.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * A matrix of complex values.
@@ -211,7 +211,7 @@ class Matrix {
         for (let c = 0; c < size; c++) {
             let r = transitionFunc(c);
             let k = (r*size + c)*2;
-            buf[(r*size + c)*2] = 1;
+            buf[k] = 1;
         }
         return new Matrix(size, size, buf);
     }
@@ -413,7 +413,7 @@ class Matrix {
      * Determines if the matrix contains a NaN.
      * @returns {!boolean}
      */
-    hasNaN(epsilon=0) {
+    hasNaN() {
         for (let i = 0; i < this._buffer.length; i++) {
             if (isNaN(this._buffer[i])) {
                 return true;
@@ -1339,4 +1339,4 @@ Matrix.PAULI_Z = Matrix.square(1, 0, 0, -1);
  */
 Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).times(Math.sqrt(0.5));
 
-export default Matrix;
+export {Matrix}

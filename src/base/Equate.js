@@ -39,7 +39,6 @@ function equate(subject, other) {
     // Object equality.
     return equate_Objects(subject, other);
 }
-export default equate;
 
 const GENERIC_ARRAY_TYPES = [
     Float32Array,
@@ -226,3 +225,5 @@ function equate_Objects(subject, other) {
 
     return true;
 }
+
+export {equate}

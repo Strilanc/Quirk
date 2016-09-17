@@ -1,10 +1,10 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import Matrix from "src/math/Matrix.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Matrix} from "src/math/Matrix.js"
 
-import Complex from "src/math/Complex.js"
-import Controls from "src/circuit/Controls.js"
-import Format from "src/base/Format.js"
-import Seq from "src/base/Seq.js"
+import {Complex} from "src/math/Complex.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Format} from "src/base/Format.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("Matrix");
 
@@ -642,21 +642,21 @@ suite.test("liftApply", () => {
     let i = Complex.I;
     let mi = Complex.I.times(-1);
     let s = Math.sqrt(0.5);
-    let tExpi = t => (c => c.times(i).times(t).exp());
+    let tExpI = t => (c => c.times(i).times(t).exp());
     let tPow = t => (c => c.raisedTo(t));
 
-    assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
-    assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(0, i, i, 0));
-    assertThat(Matrix.PAULI_X.liftApply(tExpi(Math.PI/4))).
+    assertThat(Matrix.PAULI_X.liftApply(tExpI(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
+    assertThat(Matrix.PAULI_X.liftApply(tExpI(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(0, i, i, 0));
+    assertThat(Matrix.PAULI_X.liftApply(tExpI(Math.PI/4))).
         isApproximatelyEqualTo(Matrix.square(1, i, i, 1).times(s));
 
-    assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
-    assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(0, 1, -1, 0));
-    assertThat(Matrix.PAULI_Y.liftApply(tExpi(Math.PI/4))).isApproximatelyEqualTo(Matrix.square(s, s, -s, s));
+    assertThat(Matrix.PAULI_Y.liftApply(tExpI(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
+    assertThat(Matrix.PAULI_Y.liftApply(tExpI(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(0, 1, -1, 0));
+    assertThat(Matrix.PAULI_Y.liftApply(tExpI(Math.PI/4))).isApproximatelyEqualTo(Matrix.square(s, s, -s, s));
 
-    assertThat(Matrix.PAULI_Z.liftApply(tExpi(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
-    assertThat(Matrix.PAULI_Z.liftApply(tExpi(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(i, 0, 0, mi));
-    assertThat(Matrix.PAULI_Z.liftApply(tExpi(Math.PI/4))).
+    assertThat(Matrix.PAULI_Z.liftApply(tExpI(Math.PI))).isApproximatelyEqualTo(Matrix.square(-1, 0, 0, -1));
+    assertThat(Matrix.PAULI_Z.liftApply(tExpI(Math.PI/2))).isApproximatelyEqualTo(Matrix.square(i, 0, 0, mi));
+    assertThat(Matrix.PAULI_Z.liftApply(tExpI(Math.PI/4))).
         isApproximatelyEqualTo(Matrix.square(new Complex(s, s), 0, 0, new Complex(s, -s)));
 
     assertThat(Matrix.PAULI_X.liftApply(tPow(0.5))).
@@ -693,7 +693,7 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     assertThrows(() => Matrix.identity(2).qubitDensityMatrixToBlochVector());
     assertThrows(() => Matrix.square(1, 1, -1, 0).qubitDensityMatrixToBlochVector());
     assertThrows(() => Matrix.square(1, 1, 0, 0).qubitDensityMatrixToBlochVector());
-    assertThrows(() => Matrix.square(1, Complex.i, Complex.i, 0).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.square(1, Complex.I, Complex.I, 0).qubitDensityMatrixToBlochVector());
 
     // Maximally mixed state.
     assertThat(Matrix.identity(2).times(0.5).qubitDensityMatrixToBlochVector()).

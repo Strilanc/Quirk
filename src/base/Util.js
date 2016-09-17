@@ -1,9 +1,9 @@
-import DetailedError from "src/base/DetailedError.js"
+import {DetailedError} from "src/base/DetailedError.js"
 
 /**
  * Miscellaneous utility methods.
  */
-export default class Util {
+class Util {
     /**
      * Checks a precondition, throwing an exception containing the given message in the case of failure.
      * @param {!boolean|*} expression
@@ -361,3 +361,4 @@ Util.CUSTOM_IS_EQUAL_TO_EQUALITY = (e1, e2) =>
     e1 === undefined ? e2 === undefined :
     e1.isEqualTo(e2);
 
+export {Util}

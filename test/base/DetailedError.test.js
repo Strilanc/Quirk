@@ -1,5 +1,5 @@
-import { Suite, assertThat } from "test/TestUtil.js"
-import DetailedError from "src/base/DetailedError.js"
+import {Suite, assertThat} from "test/TestUtil.js"
+import {DetailedError} from "src/base/DetailedError.js"
 
 let suite = new Suite("DetailedError");
 

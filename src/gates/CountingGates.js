@@ -1,15 +1,14 @@
-import Config from "src/Config.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
+import {Config} from "src/Config.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
 
 import {makeOffsetMatrix, incrementShaderFunc} from "src/gates/ArithmeticGates.js"
 import {makeCycleBitsMatrix, cycleBits} from "src/gates/CycleBitsGates.js"
 
 let CountingGates = {};
-export default CountingGates;
 
 const staircaseCurve = steps => {
     let curve = [];
@@ -165,3 +164,5 @@ CountingGates.all = [
     ...CountingGates.RightShiftRotatingFamily.all,
     ...CountingGates.LeftShiftRotatingFamily.all
 ];
+
+export {CountingGates}

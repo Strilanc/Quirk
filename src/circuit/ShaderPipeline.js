@@ -1,13 +1,13 @@
-import DetailedError from "src/base/DetailedError.js"
-import Shaders from "src/webgl/Shaders.js"
-import WglArg from "src/webgl/WglArg.js"
-import WglShader from "src/webgl/WglShader.js"
-import { WglConfiguredShader } from "src/webgl/WglShader.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglShader.js"
 
 /**
  * Stores a sequence of transformations to apply to textures, with output sizes known ahead of time.
  */
-export default class ShaderPipeline {
+class ShaderPipeline {
     constructor() {
         /**
          * @type {!Array.<!{w: !int, h: !int, shaderFunc: !function(!WglTexture, keepResult: !boolean): !WglConfiguredShader>}
@@ -53,3 +53,5 @@ export default class ShaderPipeline {
         }
     }
 }
+
+export {ShaderPipeline}

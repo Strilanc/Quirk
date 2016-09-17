@@ -1,18 +1,17 @@
-import Config from "src/Config.js"
-import Gate from "src/circuit/Gate.js"
-import GateDrawParams from "src/draw/GateDrawParams.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import Seq from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Config} from "src/Config.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateDrawParams} from "src/draw/GateDrawParams.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
+import {Seq} from "src/base/Seq.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * A described and possibly time-varying quantum operation.
  */
-export default class GatePainting {
-}
+class GatePainting {}
 
 GatePainting.paintOutline = args => {
     if (args.isInToolbox) {
@@ -305,3 +304,5 @@ GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
     }
     GatePainting.MATRIX_DRAWER(args);
 };
+
+export {GatePainting}

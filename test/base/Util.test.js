@@ -1,8 +1,8 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import Util from "src/base/Util.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Util} from "src/base/Util.js"
 
-import Rect from "src/math/Rect.js"
-import Seq from "src/base/Seq.js"
+import {Rect} from "src/math/Rect.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("Util");
 
@@ -203,6 +203,7 @@ suite.test("breakLine", () => {
         "words"
     ]);
 
+    //noinspection SpellCheckingInspection
     assertThat(Util.breakLine("a long line can be broken between words", 6, e => e.length)).isEqualTo([
         "a long",
         "line",
@@ -213,6 +214,7 @@ suite.test("breakLine", () => {
         "words"
     ]);
 
+    //noinspection SpellCheckingInspection
     assertThat(Util.breakLine("a long line can be broken between words", 5, e => e.length)).isEqualTo([
         "a",
         "long",

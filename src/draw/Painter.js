@@ -1,12 +1,12 @@
-import Config from "src/Config.js"
-import Format from "src/base/Format.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import RestartableRng from "src/base/RestartableRng.js"
-import Seq from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Config} from "src/Config.js"
+import {Format} from "src/base/Format.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
+import {RestartableRng} from "src/base/RestartableRng.js"
+import {Seq} from "src/base/Seq.js"
+import {Util} from "src/base/Util.js"
 
-export default class Painter {
+class Painter {
     /**
      * @param {!HTMLCanvasElement} canvas
      * @param {!RestartableRng=} rng
@@ -549,3 +549,5 @@ class TraceAction {
         return this;
     }
 }
+
+export {Painter}

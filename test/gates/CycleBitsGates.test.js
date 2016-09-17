@@ -1,10 +1,10 @@
 import {Suite, assertThat} from "test/TestUtil.js"
 import {cycleBits} from "src/gates/CycleBitsGates.js"
 
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Controls from "src/circuit/Controls.js"
-import Seq from "src/base/Seq.js"
-import Shaders from "src/webgl/Shaders.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Seq} from "src/base/Seq.js"
+import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("CycleBitsGates");
 

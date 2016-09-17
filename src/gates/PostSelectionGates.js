@@ -1,10 +1,9 @@
-import Complex from "src/math/Complex.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Matrix from "src/math/Matrix.js"
+import {Complex} from "src/math/Complex.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let PostSelectionGates = {};
-export default PostSelectionGates;
 
 let POST_SELECT_DRAWER = args => {
     if (args.isInToolbox  || args.isHighlighted) {
@@ -83,3 +82,5 @@ PostSelectionGates.all = [
     PostSelectionGates.PostSelectCross,
     PostSelectionGates.PostSelectAntiCross
 ];
+
+export {PostSelectionGates}

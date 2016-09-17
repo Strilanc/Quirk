@@ -1,10 +1,10 @@
 /**
  * Values used by the various gate effects.
  */
-export default class CircuitEvalArgs {
+class CircuitEvalArgs {
     /**
      * @param {!number} time
-     * @param {undefined|!int} row
+     * @param {undefined|!int} qubitRow
      * @param {!int} wireCount
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
@@ -12,7 +12,7 @@ export default class CircuitEvalArgs {
      * @param {!Map.<!string, *>} customContextFromGates
      */
     constructor(time,
-                row,
+                qubitRow,
                 wireCount,
                 controls,
                 controlsTexture,
@@ -21,7 +21,7 @@ export default class CircuitEvalArgs {
         /** @type {!number} */
         this.time = time;
         /** @type {undefined|!int} */
-        this.row = row;
+        this.row = qubitRow;
         /** @type {!int} */
         this.wireCount = wireCount;
         /** @type {!Controls} */
@@ -69,3 +69,5 @@ export default class CircuitEvalArgs {
         return r;
     }
 }
+
+export {CircuitEvalArgs}

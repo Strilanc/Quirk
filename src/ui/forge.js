@@ -1,24 +1,24 @@
-import Axis from "src/math/Axis.js"
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import CircuitStats from "src/circuit/CircuitStats.js"
-import Complex from "src/math/Complex.js"
-import Config from "src/Config.js"
-import DetailedError from "src/base/DetailedError.js"
-import { drawCircuitTooltip } from "src/ui/DisplayedCircuit.js"
-import Format from "src/base/Format.js"
-import Gate from "src/circuit/Gate.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import Hand from "src/ui/Hand.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Painter from "src/draw/Painter.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import Serializer from "src/circuit/Serializer.js"
-import Util from "src/base/Util.js"
-import { circuitDefinitionToGate } from "src/circuit/CircuitComputeUtil.js"
-import { Observable, ObservableSource } from "src/base/Obs.js"
-import { textEditObservable } from "src/browser/EventUtil.js"
+import {Axis} from "src/math/Axis.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "src/circuit/CircuitStats.js"
+import {Complex} from "src/math/Complex.js"
+import {Config} from "src/Config.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
+import {Format} from "src/base/Format.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Hand} from "src/ui/Hand.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Painter} from "src/draw/Painter.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
+import {Serializer} from "src/circuit/Serializer.js"
+import {Util} from "src/base/Util.js"
+import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {Observable, ObservableSource} from "src/base/Obs.js"
+import {textEditObservable} from "src/browser/EventUtil.js"
 
 /**
  * @param {!Revision} revision
@@ -333,4 +333,4 @@ function initForge(revision) {
     })();
 }
 
-export { initForge }
+export {initForge}

@@ -1,11 +1,11 @@
-import Config from "src/Config.js"
-import DetailedError from "src/base/DetailedError.js"
-import GateDrawParams from "src/draw/GateDrawParams.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
-import Util from "src/base/Util.js"
+import {Config} from "src/Config.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {GateDrawParams} from "src/draw/GateDrawParams.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
+import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 /**
@@ -637,4 +637,4 @@ class Gate {
     }
 }
 
-export default Gate;
+export {Gate}

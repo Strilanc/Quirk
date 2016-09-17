@@ -1,7 +1,7 @@
-import Config from "src/Config.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Rect from "src/math/Rect.js"
+import {Config} from "src/Config.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Rect} from "src/math/Rect.js"
 
 let SpacerGate = Gate.fromIdentity(
     "…",
@@ -27,4 +27,4 @@ let SpacerGate = Gate.fromIdentity(
         args.painter.fillCircle(args.rect.center().offsetBy(-7, 0), 2, "black");
     });
 
-export default SpacerGate;
+export {SpacerGate}

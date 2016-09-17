@@ -1,4 +1,4 @@
-import describe from "src/base/Describe.js"
+import {describe} from "src/base/Describe.js"
 
 /**
  * @type {!Array.<{regex: !Pattern, handler: !function()}>}

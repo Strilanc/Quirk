@@ -1,7 +1,7 @@
-import { Suite, assertThat } from "test/TestUtil.js"
-import WglShader from "src/webgl/WglShader.js"
-import WglTexture from "src/webgl/WglTexture.js"
-import Seq from "src/base/Seq.js"
+import {Suite, assertThat} from "test/TestUtil.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("WglShader");
 

@@ -1,7 +1,7 @@
-import { Suite, fail, assertTrue, assertFalse } from "test/TestUtil.js"
-import equate from "src/base/Equate.js"
+import {Suite, fail, assertTrue, assertFalse} from "test/TestUtil.js"
+import {equate} from "src/base/Equate.js"
 
-import describe from "src/base/Describe.js"
+import {describe} from "src/base/Describe.js"
 
 let suite = new Suite("Equate");
 
@@ -12,7 +12,10 @@ class EmptyClass2 {
     constructor() { }
 }
 class PropClass {
-    constructor(v) { this.v = v; }
+    constructor(v) {
+        //noinspection JSUnusedGlobalSymbols
+        this.v = v;
+    }
 }
 class SomeIterable {
     constructor() {}

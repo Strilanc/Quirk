@@ -1,10 +1,10 @@
-import { Suite, assertThat, assertThrows, fail } from "test/TestUtil.js"
-import DisplayedCircuit from "src/ui/DisplayedCircuit.js"
+import {Suite, assertThat, assertThrows, fail} from "test/TestUtil.js"
+import {DisplayedCircuit} from "src/ui/DisplayedCircuit.js"
 
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Config from "src/Config.js"
-import Gates from "src/gates/AllGates.js"
-import Point from "src/math/Point.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Config} from "src/Config.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Point} from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 const TEST_GATES = new Map([
@@ -24,8 +24,8 @@ const TEST_GATES = new Map([
     ['s', Gates.Special.SwapHalf],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
-    ['+', null],
-    ['/', null],
+    ['+', undefined],
+    ['/', undefined],
 
     ['t', Gates.Exponentiating.XForward]
 ]);
@@ -75,7 +75,9 @@ let suite = new Suite("DisplayedCircuit");
 suite.test("constructor_vs_isEqualTo", () => {
     let d1 = CircuitDefinition.fromTextDiagram(TEST_GATES, '+H+\nX+Y');
     let d2 = CircuitDefinition.fromTextDiagram(TEST_GATES, '++++\ntHHH');
+    //noinspection JSCheckFunctionSignatures
     assertThrows(() => new DisplayedCircuit(23, "not a circuit", undefined, undefined, undefined));
+    //noinspection JSCheckFunctionSignatures
     assertThrows(() => new DisplayedCircuit("not a number", d1, undefined, undefined, undefined));
 
     let c1 = new DisplayedCircuit(45, d1, undefined, undefined, undefined);

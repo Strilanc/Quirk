@@ -1,4 +1,4 @@
-import { Suite } from "test/TestUtil.js";
+import {Suite} from "test/TestUtil.js";
 
 let tryPromiseRun = method => {
     try {

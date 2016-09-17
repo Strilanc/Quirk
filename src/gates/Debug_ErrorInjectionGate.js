@@ -1,6 +1,6 @@
-import DetailedError from "src/base/DetailedError.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
 
 let ErrorInjectionGate = Gate.withoutKnownMatrix(
     "ERR!",
@@ -13,4 +13,4 @@ let ErrorInjectionGate = Gate.withoutKnownMatrix(
     withSerializedId("__error__").
     withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red'));
 
-export default ErrorInjectionGate;
+export {ErrorInjectionGate}

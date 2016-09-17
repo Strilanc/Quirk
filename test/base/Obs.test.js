@@ -1,5 +1,5 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import { Observable, ObservableValue, ObservableSource } from "src/base/Obs.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Observable, ObservableValue, ObservableSource} from "src/base/Obs.js"
 
 let suite = new Suite("Obs");
 
@@ -134,4 +134,13 @@ suite.test("ObservableSource_observable_multiple", () => {
     stop1();
     assertThat(out1).isEqualTo(['a', 'b']);
     assertThat(out2).isEqualTo(['a']);
+});
+
+suite.test("peek", () => {
+    let a = [];
+    let v = new ObservableSource();
+    v.observable().peek(e => a.push(e)).subscribe(() => {});
+    assertThat(a).isEqualTo([]);
+    v.send(2);
+    assertThat(a).isEqualTo([2]);
 });

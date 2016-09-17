@@ -1,8 +1,8 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Config from "src/Config.js"
-import Serializer from "src/circuit/Serializer.js"
-import { selectAndCopyToClipboard } from "src/browser/Clipboard.js"
-import { saveFile } from "src/browser/SaveFile.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Config} from "src/Config.js"
+import {Serializer} from "src/circuit/Serializer.js"
+import {selectAndCopyToClipboard} from "src/browser/Clipboard.js"
+import {saveFile} from "src/browser/SaveFile.js"
 
 /**
  * @param {!Revision} revision
@@ -138,4 +138,4 @@ function initExports(revision) {
     })();
 }
 
-export { initExports }
+export {initExports}

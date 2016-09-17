@@ -41,4 +41,4 @@ function initUndoRedo(revision) {
     });
 }
 
-export { initUndoRedo }
+export {initUndoRedo}

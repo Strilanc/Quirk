@@ -1,5 +1,5 @@
-import { assertTrue, assertFalse, assertThat, assertThrows, Suite } from "test/TestUtil.js"
-import Controls from "src/circuit/Controls.js"
+import {assertTrue, assertFalse, assertThat, assertThrows, Suite} from "test/TestUtil.js"
+import {Controls} from "src/circuit/Controls.js"
 
 let suite = new Suite("Controls");
 
@@ -37,14 +37,14 @@ suite.test("allowsState", () => {
 });
 
 suite.test("desiredValueFor", () => {
-    assertThat(Controls.NONE.desiredValueFor(0)).isEqualTo(null);
-    assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(null);
+    assertThat(Controls.NONE.desiredValueFor(0)).isEqualTo(undefined);
+    assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(undefined);
 
     let m = new Controls(0x5, 0x1);
     assertThat(m.desiredValueFor(0)).isEqualTo(true);
-    assertThat(m.desiredValueFor(1)).isEqualTo(null);
+    assertThat(m.desiredValueFor(1)).isEqualTo(undefined);
     assertThat(m.desiredValueFor(2)).isEqualTo(false);
-    assertThat(m.desiredValueFor(3)).isEqualTo(null);
+    assertThat(m.desiredValueFor(3)).isEqualTo(undefined);
 });
 
 suite.test("bit", () => {
@@ -56,7 +56,7 @@ suite.test("bit", () => {
 
 suite.test("and", () => {
     assertThat(Controls.NONE.and(Controls.NONE)).isEqualTo(Controls.NONE);
-    assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(null);
+    assertThat(Controls.NONE.desiredValueFor(1)).isEqualTo(undefined);
 
     let m = new Controls(0x5, 0x1);
     assertThat(Controls.bit(0, true).and(Controls.bit(2, false))).isEqualTo(m);

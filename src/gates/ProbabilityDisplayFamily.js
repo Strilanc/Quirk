@@ -1,16 +1,16 @@
-import Config from "src/Config.js"
-import DisplayShaders from "src/circuit/DisplayShaders.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Config} from "src/Config.js"
+import {DisplayShaders} from "src/circuit/DisplayShaders.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import ShaderPipeline from "src/circuit/ShaderPipeline.js"
-import Shaders from "src/webgl/Shaders.js"
-import Util from "src/base/Util.js"
+import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * @param {!WglTexture} controlTexture
@@ -113,12 +113,12 @@ function _paintMultiProbabilityDisplay_logarithmHints(args) {
     let {painter, rect: {x, y, w, h}, customStats: probabilities} = args;
     let n = 1 << args.gate.height;
     let d = h/n;
-    let e = Math.max(d, 1)
+    let e = Math.max(d, 1);
 
     painter.ctx.save();
     painter.ctx.beginPath();
     painter.ctx.moveTo(x, y);
-    let s = 1/(4 + Math.max(8,args.gate.height))
+    let s = 1/(4 + Math.max(8,args.gate.height));
     for (let i = 0; i < n; i++) {
         let p = probabilities.rawBuffer()[i * 2];
         let px = x + w * Math.min(1, Math.max(0, 1 + Math.log(p) * s));
@@ -222,5 +222,5 @@ let SingleChanceGate = Gate.fromIdentity(
 
 let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
     span === 1 ? SingleChanceGate : multiChanceGateMaker(span));
-export default ProbabilityDisplayFamily;
-export { makeProbabilitySpanPipeline, probabilityPixelsToColumnVector };
+
+export {ProbabilityDisplayFamily, makeProbabilitySpanPipeline, probabilityPixelsToColumnVector};

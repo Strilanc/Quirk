@@ -2,7 +2,7 @@
  * A place for a value associated with a webgl context, that needs to be re-initialized when the context is lost.
  * @template T
  */
-export default class WglMortalValueSlot {
+class WglMortalValueSlot {
     /**
      * @param {!function(void) : T} initializer
      * @param {!function(T) : void} deinitializer
@@ -66,3 +66,5 @@ export default class WglMortalValueSlot {
         }
     }
 }
+
+export {WglMortalValueSlot}

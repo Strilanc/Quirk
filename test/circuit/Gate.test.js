@@ -1,7 +1,7 @@
-import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
-import Gate from "src/circuit/Gate.js"
+import {Suite, assertThat, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Gate} from "src/circuit/Gate.js"
 
-import Matrix from "src/math/Matrix.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let suite = new Suite("Gate");
 

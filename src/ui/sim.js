@@ -1,6 +1,6 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Config from "src/Config.js"
-import CycleCircuitStats from "src/circuit/CycleCircuitStats.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Config} from "src/Config.js"
+import {CycleCircuitStats} from "src/circuit/CycleCircuitStats.js"
 
 const getCircuitCycleTime = (() => {
     /**
@@ -37,4 +37,4 @@ function simulate(circuit) {
     return cache.statsAtApproximateTime(getCircuitCycleTime());
 }
 
-export { simulate }
+export {simulate}

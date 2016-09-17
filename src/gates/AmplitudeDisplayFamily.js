@@ -1,23 +1,23 @@
-import Config from "src/Config.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
-import DetailedError from "src/base/DetailedError.js"
-import DisplayShaders from "src/circuit/DisplayShaders.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Format from "src/base/Format.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Config} from "src/Config.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {DisplayShaders} from "src/circuit/DisplayShaders.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Format} from "src/base/Format.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import ShaderPipeline from "src/circuit/ShaderPipeline.js"
-import Shaders from "src/webgl/Shaders.js"
-import Util from "src/base/Util.js"
-import WglArg from "src/webgl/WglArg.js"
-import WglShader from "src/webgl/WglShader.js"
-import { WglConfiguredShader } from "src/webgl/WglShader.js"
+import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {Util} from "src/base/Util.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglShader.js"
 
 /**
  * @param {!WglTexture} valueTexture
@@ -36,7 +36,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
 
-    let cycledTex = CircuitTextures.allocQubitTexture(totalQubits);
+    let cycledTex = KetTextureUtil.allocQubitTexture(totalQubits);
     result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
         GateShaders.cycleAllBits(inp, lostHeadQubits-rangeOffset).renderTo(dst);
         Shaders.passthrough(dst).renderTo(cycledTex);
@@ -48,7 +48,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
         toRatiosVsRepresentative(cycledTex)(inp).renderTo(dst);
-        CircuitTextures.doneWithTexture(cycledTex);
+        KetTextureUtil.doneWithTexture(cycledTex);
     }));
     result.addPipelineSteps(pipelineToFoldConsistentRatios(rangeLength, totalQubits));
 
@@ -315,7 +315,6 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = new WglShader(`
  */
 function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
-    let f = r => '[' + seq(r).partitioned(4).map(e => e.join(",")).join("] [") + ']';
     for (let bit = 0; bit < includedQubitCount; bit++) {
         result.addPowerSizedStep(
             totalQubitCount - bit - 1,
@@ -500,7 +499,6 @@ function amplitudeDisplayMaker(span) {
 
 let AmplitudeDisplayFamily = Gate.generateFamily(1, 16, amplitudeDisplayMaker);
 
-export default AmplitudeDisplayFamily;
 export {
     AmplitudeDisplayFamily,
     amplitudesToPolarKets,

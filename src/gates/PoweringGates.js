@@ -1,9 +1,8 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let PoweringGates = {};
-export default PoweringGates;
 
 const τ = Math.PI * 2;
 const XPow = t => {
@@ -74,3 +73,5 @@ PoweringGates.all = [
     PoweringGates.YBackward,
     PoweringGates.ZBackward
 ];
+
+export {PoweringGates}

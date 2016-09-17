@@ -1,18 +1,18 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import Serializer from "src/circuit/Serializer.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Serializer} from "src/circuit/Serializer.js"
 
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import { circuitDefinitionToGate } from "src/circuit/CircuitComputeUtil.js"
-import Complex from "src/math/Complex.js"
-import CustomGateSet from "src/circuit/CustomGateSet.js"
-import describe from "src/base/Describe.js"
-import DetailedError from "src/base/DetailedError.js"
-import Format from "src/base/Format.js"
-import Gate from "src/circuit/Gate.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Gates from "src/gates/AllGates.js"
-import Matrix from "src/math/Matrix.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {Complex} from "src/math/Complex.js"
+import {CustomGateSet} from "src/circuit/CustomGateSet.js"
+import {describe} from "src/base/Describe.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format} from "src/base/Format.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Matrix} from "src/math/Matrix.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 import {Seq, seq} from "src/base/Seq.js"
 
@@ -70,7 +70,7 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
         withSerializedId("~test");
     let circuit = new CircuitDefinition(
         2,
-        [new GateColumn([null, customGate])],
+        [new GateColumn([undefined, customGate])],
         undefined,
         undefined,
         new CustomGateSet(customGate));
@@ -84,7 +84,7 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
     let circuit2 = Serializer.fromJson(CircuitDefinition, json);
     assertThat(circuit2.columns.length).isEqualTo(1);
     assertThat(circuit2.columns[0].gates.length).isEqualTo(2);
-    assertThat(circuit2.columns[0].gates[0]).isEqualTo(null);
+    assertThat(circuit2.columns[0].gates[0]).isEqualTo(undefined);
     assertThat(circuit2.columns[0].gates[1].matrix).isEqualTo(customGate.matrix);
     assertThat(circuit2.columns[0].gates[1].symbol).isEqualTo(customGate.symbol);
     assertThat(circuit2.columns[0].gates[1].serializedId).isEqualTo(customGate.serializedId);
@@ -109,7 +109,7 @@ suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
 
     let circuit = new CircuitDefinition(
         3,
-        [new GateColumn([customGate, circuitGate, null])],
+        [new GateColumn([customGate, circuitGate, undefined])],
         undefined,
         undefined,
         new CustomGateSet(customGate, circuitGate));
@@ -126,12 +126,12 @@ suite.test("roundTrip_GateColumn", () => {
     assertRoundTrip(
         GateColumn,
         new GateColumn([
-            null,
+            undefined,
             Gates.HalfTurns.X,
             Gates.Powering.XForward,
             Gates.Special.SwapHalf,
             Gates.Controls.Control,
-            null]),
+            undefined]),
         [1, "X", "X^t", "Swap", "\u2022", 1]);
 });
 
@@ -140,7 +140,7 @@ suite.test("roundTrip_circuitDefinition", () => {
         CircuitDefinition,
         new CircuitDefinition(
             3,
-            [new GateColumn([null, null, Gates.HalfTurns.X])]),
+            [new GateColumn([undefined, undefined, Gates.HalfTurns.X])]),
         {cols: [[1, 1, "X"]]});
 });
 

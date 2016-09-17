@@ -1,4 +1,4 @@
-import DetailedError from "src/base/DetailedError.js"
+import {DetailedError} from "src/base/DetailedError.js"
 import {UNICODE_FRACTIONS} from "src/base/Format.js"
 import {parseFormula} from "src/math/FormulaParser.js"
 
@@ -165,4 +165,4 @@ PARSE_AXIS_TOKEN_MAP.set("+", {
     priority: 1});
 PARSE_AXIS_TOKEN_MAP.set("√", PARSE_AXIS_TOKEN_MAP.get("sqrt"));
 
-export default Axis;
+export {Axis}
