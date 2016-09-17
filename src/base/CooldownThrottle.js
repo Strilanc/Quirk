@@ -27,6 +27,31 @@ class CooldownThrottle {
         this._lastCompletionTime = -Infinity;
     }
 
+    _triggerIdle() {
+        // Still cooling down?
+        let remainingCooldownDuration = this.cooldownDuration - (performance.now() - this._lastCompletionTime);
+        if (remainingCooldownDuration > 0) {
+            this._state = 'waiting';
+            this._forceIdleTriggerAfter(remainingCooldownDuration);
+            return;
+        }
+
+        // Go go go!
+        this._state = 'running';
+        try {
+            this.action();
+        } finally {
+            // Were there any triggers while we were running?
+            this._lastCompletionTime = performance.now();
+            if (this._state === 'running-and-triggered') {
+                this._state = 'waiting';
+                this._forceIdleTriggerAfter(this.cooldownDuration);
+            } else {
+                this._state = 'idle';
+            }
+        }
+    }
+
     /**
      * Asks for the action to be performed as soon as possible.
      * (No effect if the action was already requested but not performed yet.)
@@ -34,24 +59,7 @@ class CooldownThrottle {
     trigger() {
         switch (this._state) {
             case 'idle':
-                let remainingCooldownDuration = this.cooldownDuration - (performance.now() - this._lastCompletionTime);
-                if (remainingCooldownDuration > 0) {
-                    this._state = 'waiting';
-                    this._forceIdleTriggerAfter(remainingCooldownDuration);
-                } else {
-                    this._state = 'running';
-                    try {
-                        this.action();
-                    } finally {
-                        this._lastCompletionTime = performance.now();
-                        if (this._state === 'running-and-triggered') {
-                            this._state = 'waiting';
-                            this._forceIdleTriggerAfter(this.cooldownDuration);
-                        } else {
-                            this._state = 'idle';
-                        }
-                    }
-                }
+                this._triggerIdle();
                 break;
             case 'waiting':
                 // Already triggered. Do nothing.

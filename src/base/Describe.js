@@ -3,14 +3,7 @@ const BAD_TO_STRING_RESULT = new (function(){})().toString();
 const RECURSE_LIMIT_DESCRIPTION = "!recursion-limit!";
 const DEFAULT_RECURSION_LIMIT = 10;
 
-/**
- * Attempts to give a useful and unambiguous description of the given value.
- *
- * @param {*} value
- * @param {!int=} recursionLimit
- * @returns {!string}
- */
-function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
+function try_describe_atomic(value) {
     if (value === null) {
         return "null";
     }
@@ -23,28 +16,42 @@ function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
     if (typeof value === "number") {
         return "" + value;
     }
+    return undefined;
+}
+function try_describe_collection(value, recursionLimit) {
     if (recursionLimit === 0) {
         return RECURSE_LIMIT_DESCRIPTION;
     }
-
     if (value instanceof Map) {
         return describe_Map(value, recursionLimit);
     }
-
     if (value instanceof Set) {
         return describe_Set(value, recursionLimit);
     }
-
     if (value[Symbol.iterator] !== undefined) {
         return describe_Iterable(value, recursionLimit);
     }
-
+    return undefined;
+}
+function describe_fallback(value, recursionLimit) {
     let defaultString = String(value);
     if (defaultString !== BAD_TO_STRING_RESULT) {
         return defaultString;
     }
-
     return describe_Object(value, recursionLimit);
+}
+
+/**
+ * Attempts to give a useful and unambiguous description of the given value.
+ *
+ * @param {*} value
+ * @param {!int=} recursionLimit
+ * @returns {!string}
+ */
+function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
+    return try_describe_atomic(value) ||
+        try_describe_collection(value, recursionLimit) ||
+        describe_fallback(value, recursionLimit);
 }
 
 /**
