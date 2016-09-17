@@ -35,6 +35,7 @@ window.performance.now = window.performance.now || (() => Date.now());
 
 // Safari only puts properties on instances of WebGLRenderingContext.
 const GL = WebGLRenderingContext;
+//noinspection JSValidateTypes
 if (GL !== undefined && GL.INVALID_ENUM === undefined) {
     let keys = [
         'ARRAY_BUFFER',

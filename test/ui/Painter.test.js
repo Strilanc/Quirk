@@ -13,12 +13,14 @@ suite.test("paintableArea", () => {
     assertThat(new Painter(c).paintableArea()).isEqualTo(new Rect(0, 0, 23, 34));
 });
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("clear", 20, 20, canvas => {
     let painter = new Painter(canvas);
     painter.clear('#123456');
 }, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAHklEQVQ4jWMQMgn7T03MMGrgqIGjBo4aOGrgSDUQACM' +
 'egk9y1eLzAAAAAElFTkSuQmCC');
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("strokeLine", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.strokeLine(new Point(5, 10), new Point(32, 35), "blue", 3);
@@ -30,6 +32,7 @@ suite.canvasAppearanceTest("strokeLine", 40, 40, canvas => {
 'jb1VMqhtk3VsUk44NshmscKJSzSAvg72aqLRnkJ1g6hOVdgyyFzw/E5WKBnkXvIkSldbDd/Yn8hWU91aZtAZ6NKtZ8FaZtAK6MciSt8qkbPhFHkWWvVU' +
 'mLYb/NlHkvrfKpDTBX2IUeeitikmNCLDirfkhnYKq3opZs4b1Aa0zVGXvCpwCAAAAAElFTkSuQmCC');
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("strokeRect", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.strokeRect(new Rect(5, 10, 15, 20), "blue", 4);
@@ -39,6 +42,7 @@ suite.canvasAppearanceTest("strokeRect", 40, 40, canvas => {
 'mPvTGhf1AWiD9SwJUzWrXUYUJcKQA3VTcSfXs/gQY4Czg7TcEGGCAAb4eWM02QH9JgO6SAN0lAbpLlgCd2RDY0EVQBCWAp2lbAAmqo12BXQC3ARL8+cR' +
 'f6CSgV4UJcKQA3c5X+9AVewloF9zs/2Aa7gP137GCEm+UmAAAAABJRU5ErkJggg==');
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("strokeCircle", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.strokeCircle(new Point(5, 10), 15, "blue", 3);
@@ -50,6 +54,7 @@ suite.canvasAppearanceTest("strokeCircle", 40, 40, canvas => {
 '/XM8TkD5I1rUVejDtWOSOVr1xVzfasr6yMjryeq32o88ZaV3LyaU2/i0may6IP4uNk0fR2l9uEiX3p7STSUTGOnp6renpOyMQCAQCgUDgH/ANRQswZ2g' +
 'MMfAAAAAASUVORK5CYII=');
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("fillCircle", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.fillCircle(new Point(5, 10), 15, "blue");
@@ -59,6 +64,7 @@ suite.canvasAppearanceTest("fillCircle", 40, 40, canvas => {
 'pqo0vAk0CJTvA3J94/xCBwxkTyN8e+NY5hktmeFtgtDyFSybtcacAPo/OAwe0HPh/jxiJStvwJUnWTK26trtmdtMjUIqXtLFFbfzBavrJ/wt6vDLuYuB' +
 '3Bn/uIuAC1ANFGeEANAVtTqA28UX4BOUyhO0h86AXUB3Uj6cOKu++eZ7neZ7neXfaFuFxi8XufliHAAAAAElFTkSuQmCC');
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("printLine_simple", 40, 40, canvas => {
     let painter = new Painter(canvas);
     let r = new Rect(5, 5, 30, 30);
@@ -77,6 +83,7 @@ suite.canvasAppearanceTest("printLine_simple", 40, 40, canvas => {
 '7rOC8B4pqrhsoxyh6D5LV0gAAAABJRU5ErkJggg==',
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("printLine_aligned", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.clear("gray");
@@ -103,7 +110,7 @@ suite.canvasAppearanceTest("printLine_aligned", 40, 40, canvas => {
 'ALewkMHyWQamrYRhfyq/Wzh6Y864lJiButTi09nKoQosF8lXBHGNg8gSGympoAv/phTXXFGABpk4B/jQftjpRyNhAo6oAAAAASUVORK5CYII=',
     1000); // Text rendering differs quite a bit from system to system... hard to test it effectively.
 
-
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("strokePolygon", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.strokePolygon([
@@ -126,6 +133,7 @@ suite.canvasAppearanceTest("strokePolygon", 40, 40, canvas => {
 'AXqkBI/AyLCAE8Mq1v5sCvQdddU9+AXQW1A86AeoBHQXtA3VEL5Na6+yRxis1CPrlFTd6/oCWQF9BVdA8qAx6A5oBPQU9A/3YpFdqe0rAFKfu0C3QPdB' +
 '90EPQpHvyGTeJsptM1U1qyU0uL8A0oVa3kx2g/W5Xe9zungSdcztdAF0D3QCNRENpRjO2Nv4CO0/DOtNuBZYAAAAASUVORK5CYII=');
 
+//noinspection SpellCheckingInspection
 suite.canvasAppearanceTest("fillPolygon", 40, 40, canvas => {
     let painter = new Painter(canvas);
     painter.fillPolygon([
