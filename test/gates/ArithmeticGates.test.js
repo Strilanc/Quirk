@@ -1,10 +1,10 @@
-import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import { additionShaderFunc, incrementShaderFunc } from "src/gates/ArithmeticGates.js"
+import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {additionShaderFunc, incrementShaderFunc} from "src/gates/ArithmeticGates.js"
 
-import Controls from "src/circuit/Controls.js"
-import Seq from "src/base/Seq.js"
-import Shaders from "src/webgl/Shaders.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Seq} from "src/base/Seq.js"
+import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("ArithmeticGates");
 

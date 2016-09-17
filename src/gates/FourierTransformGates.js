@@ -1,10 +1,10 @@
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Config from "src/Config.js"
-import Complex from "src/math/Complex.js"
-import Gate from "src/circuit/Gate.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Matrix from "src/math/Matrix.js"
-import WglArg from "src/webgl/WglArg.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Config} from "src/Config.js"
+import {Complex} from "src/math/Complex.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Matrix} from "src/math/Matrix.js"
+import {WglArg} from "src/webgl/WglArg.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
@@ -113,5 +113,4 @@ FourierTransformGates.all = [
     ...FourierTransformGates.InverseFourierTransformFamily.all
 ];
 
-export default FourierTransformGates;
 export {controlledPhaseGradient, FourierTransformGates}

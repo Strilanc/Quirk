@@ -1,19 +1,18 @@
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Config from "src/Config.js"
-import Controls from "src/circuit/Controls.js"
-import DetailedError from "src/base/DetailedError.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Matrix from "src/math/Matrix.js"
-import Shaders from "src/webgl/Shaders.js"
-import Util from "src/base/Util.js"
-import WglTexture from "src/webgl/WglTexture.js"
-import { seq, Seq } from "src/base/Seq.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Config} from "src/Config.js"
+import {Controls} from "src/circuit/Controls.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {Util} from "src/base/Util.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.
  */
-export default class KetTextureUtil {
-}
+class KetTextureUtil {}
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */
 const TEXTURE_POOL = new Map();
@@ -372,3 +371,5 @@ KetTextureUtil.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
     CircuitShaders.swap(stateTex, qubitIndex1, qubitIndex2, controlTex).renderTo(result);
     return result;
 };
+
+export {KetTextureUtil}

@@ -1,7 +1,7 @@
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Gate from "src/circuit/Gate.js"
-import Matrix from "src/math/Matrix.js"
-import Seq from "src/base/Seq.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Seq} from "src/base/Seq.js"
 
 let reverseBits = (val, len) => {
     let r = 0;
@@ -36,5 +36,4 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnown
     withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
     withCustomShaders(shadersForReverseOfSize(span)));
 
-export default ReverseBitsGateFamily;
-export { ReverseBitsGateFamily, shadersForReverseOfSize }
+export {ReverseBitsGateFamily, shadersForReverseOfSize}

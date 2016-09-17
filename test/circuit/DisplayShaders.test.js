@@ -1,9 +1,9 @@
-import { Suite, assertThat } from "test/TestUtil.js"
-import DisplayShaders from "src/circuit/DisplayShaders.js"
+import {Suite, assertThat} from "test/TestUtil.js"
+import {DisplayShaders} from "src/circuit/DisplayShaders.js"
 
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Controls from "src/circuit/Controls.js"
-import Shaders from "src/webgl/Shaders.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("DisplayShaders");
 

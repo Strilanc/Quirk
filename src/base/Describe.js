@@ -46,7 +46,6 @@ function describe(value, recursionLimit = DEFAULT_RECURSION_LIMIT) {
 
     return describe_Object(value, recursionLimit);
 }
-export default describe;
 
 /**
  * @param {!Map} map
@@ -129,3 +128,5 @@ function describe_Object(value, limit) {
     let prefix = typeName === {}.constructor.name ? "" : `(Type: ${typeName})`;
     return `${prefix}{${entries.join(", ")}}`;
 }
+
+export {describe}

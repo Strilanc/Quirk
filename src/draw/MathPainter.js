@@ -1,14 +1,14 @@
-import Painter from "src/draw/Painter.js"
-import Format from "src/base/Format.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Painter} from "src/draw/Painter.js"
+import {Format} from "src/base/Format.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
-import Config from "src/Config.js"
-import Complex from "src/math/Complex.js"
-import Matrix from "src/math/Matrix.js"
+import {Util} from "src/base/Util.js"
+import {Config} from "src/Config.js"
+import {Complex} from "src/math/Complex.js"
+import {Matrix} from "src/math/Matrix.js"
 
-export default class MathPainter {
+class MathPainter {
     static describeProbability(p, fractionalDigits) {
         let v = p * 100;
         let e = Math.pow(10, -fractionalDigits);
@@ -575,3 +575,5 @@ export default class MathPainter {
                 matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
     }
 }
+
+export {MathPainter}

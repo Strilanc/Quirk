@@ -1,11 +1,11 @@
-import DetailedError from "src/base/DetailedError.js"
-import Gate from "src/circuit/Gate.js"
-import GateCheckArgs from "src/circuit/GateCheckArgs.js"
-import Gates from "src/gates/AllGates.js"
-import Matrix from "src/math/Matrix.js"
-import Controls from "src/circuit/Controls.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateCheckArgs} from "src/circuit/GateCheckArgs.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Controls} from "src/circuit/Controls.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * A column of gates in a circuit with many qubits.
@@ -278,4 +278,4 @@ class GateColumn {
     }
 }
 
-export default GateColumn;
+export {GateColumn}

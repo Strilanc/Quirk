@@ -1,11 +1,11 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import Gates from "src/gates/AllGates.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Gates} from "src/gates/AllGates.js"
 
-import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import KetTextureUtil from "src/circuit/KetTextureUtil.js"
-import Controls from "src/circuit/Controls.js"
-import Matrix from "src/math/Matrix.js"
+import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 let suite = new Suite("AllGates");

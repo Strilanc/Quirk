@@ -3,7 +3,7 @@
  *
  * Triggering multiple times during the cooldown period only results in one action being performed.
  */
-export default class CooldownThrottle {
+class CooldownThrottle {
     /**
      * @param {!function(void) : void} action
      * @param {!number} cooldownMs
@@ -79,3 +79,5 @@ export default class CooldownThrottle {
         }, duration);
     }
 }
+
+export {CooldownThrottle}

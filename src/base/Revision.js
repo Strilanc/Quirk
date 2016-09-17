@@ -1,7 +1,7 @@
-import describe from "src/base/Describe.js"
-import equate from "src/base/Equate.js"
-import DetailedError from "src/base/DetailedError.js"
-import { ObservableSource, ObservableValue } from "src/base/Obs.js"
+import {describe} from "src/base/Describe.js"
+import {equate} from "src/base/Equate.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {ObservableSource, ObservableValue} from "src/base/Obs.js"
 
 /**
  * A simple linear revision history tracker, for supporting undo and redo functionality.
@@ -182,4 +182,4 @@ class Revision {
     }
 }
 
-export default Revision;
+export {Revision}

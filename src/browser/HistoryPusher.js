@@ -1,9 +1,9 @@
-import DetailedError from "src/base/DetailedError.js"
+import {DetailedError} from "src/base/DetailedError.js"
 
 /**
  * Manages interactions with the browser's history as the app's state changes and frequently updates the URL.
  */
-export default class HistoryPusher {
+class HistoryPusher {
     constructor() {
         /**
          * @type {!boolean}
@@ -79,3 +79,5 @@ export default class HistoryPusher {
         }
     }
 }
+
+export {HistoryPusher}

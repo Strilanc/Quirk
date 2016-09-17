@@ -1,8 +1,7 @@
-import Gate from "src/circuit/Gate.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let QuarterTurnGates = {};
-export default QuarterTurnGates;
 
 QuarterTurnGates.SqrtXForward = Gate.fromKnownMatrix(
     "X^½",
@@ -48,3 +47,5 @@ QuarterTurnGates.all = [
     QuarterTurnGates.SqrtYBackward,
     QuarterTurnGates.SqrtZBackward
 ];
+
+export {QuarterTurnGates}

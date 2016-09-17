@@ -1,12 +1,12 @@
-import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
-import { phaseGradient } from "src/gates/PhaseGradientGates.js"
+import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {phaseGradient} from "src/gates/PhaseGradientGates.js"
 
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Complex from "src/math/Complex.js"
-import Controls from "src/circuit/Controls.js"
-import Matrix from "src/math/Matrix.js"
-import Seq from "src/base/Seq.js"
-import Shaders from "src/webgl/Shaders.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Complex} from "src/math/Complex.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Seq} from "src/base/Seq.js"
+import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("PhaseGradientGates");
 

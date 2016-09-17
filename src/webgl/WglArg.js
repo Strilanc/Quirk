@@ -1,7 +1,7 @@
 /**
  * Describes a uniform argument, for passing into shaders when rendering.
  */
-export default class WglArg {
+class WglArg {
     /**
      * @param {!string} type
      * @param {!string} name
@@ -158,3 +158,5 @@ WglArg.INPUT_ACTION_MAP = new Map([
         gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, texture);
     }]
 ]);
+
+export {WglArg}

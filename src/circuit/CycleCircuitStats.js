@@ -1,9 +1,9 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import CircuitStats from "src/circuit/CircuitStats.js"
-import Seq from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "src/circuit/CircuitStats.js"
+import {Seq} from "src/base/Seq.js"
+import {Util} from "src/base/Util.js"
 
-export default class CycleCircuitStats {
+class CycleCircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!int} timeBucketCount
@@ -50,3 +50,5 @@ export default class CycleCircuitStats {
         return this._cachedCircuitStatsByTime[i].withTime(t);
     }
 }
+
+export {CycleCircuitStats}

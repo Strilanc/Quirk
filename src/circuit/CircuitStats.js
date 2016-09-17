@@ -1,23 +1,23 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import KetTextureUtil from "src/circuit/KetTextureUtil.js"
-import Config from "src/Config.js"
-import Controls from "src/circuit/Controls.js"
-import DetailedError from "src/base/DetailedError.js"
-import Format from "src/base/Format.js"
-import Gate from "src/circuit/Gate.js"
-import Gates from "src/gates/AllGates.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Shaders from "src/webgl/Shaders.js"
-import Serializer from "src/circuit/Serializer.js"
-import Util from "src/base/Util.js"
-import { seq, Seq } from "src/base/Seq.js"
-import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
-import { advanceStateWithCircuit } from "src/circuit/CircuitComputeUtil.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {Config} from "src/Config.js"
+import {Controls} from "src/circuit/Controls.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format} from "src/base/Format.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {Serializer} from "src/circuit/Serializer.js"
+import {Util} from "src/base/Util.js"
+import {seq, Seq} from "src/base/Seq.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
-export default class CircuitStats {
+class CircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
@@ -275,3 +275,5 @@ export default class CircuitStats {
             customStatsProcessed);
     }
 }
+
+export {CircuitStats}

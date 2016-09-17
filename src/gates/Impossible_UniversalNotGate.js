@@ -1,7 +1,7 @@
-import Gate from "src/circuit/Gate.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import WglArg from "src/webgl/WglArg.js"
-import { WglConfiguredShader, WglShader } from "src/webgl/WglShader.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
 /**
  * @param {!WglTexture} inputTexture
@@ -55,5 +55,4 @@ let UniversalNotGate = Gate.withoutKnownMatrix(
     withSerializedId("__unstable__UniversalNot").
     markedAsAffectsOtherWires();
 
-export default UniversalNotGate;
 export {universalNot, UniversalNotGate}

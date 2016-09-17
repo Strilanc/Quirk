@@ -1,4 +1,4 @@
-import DetailedError from "src/base/DetailedError.js"
+import {DetailedError} from "src/base/DetailedError.js"
 
 export const THROW_IF_EMPTY = { if_same_instance_as_this_then_throw: true };
 
@@ -1147,5 +1147,4 @@ class Seq {
  */
 let seq = iterable => new Seq(iterable);
 
-export default Seq;
 export {seq, Seq};

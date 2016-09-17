@@ -1,9 +1,9 @@
-import Complex from "src/math/Complex.js"
-import Gate from "src/circuit/Gate.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Matrix from "src/math/Matrix.js"
-import WglArg from "src/webgl/WglArg.js"
-import { WglConfiguredShader, WglShader } from "src/webgl/WglShader.js"
+import {Complex} from "src/math/Complex.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Matrix} from "src/math/Matrix.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
 const τ = Math.PI * 2;
 const GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Complex.polar(1, τ*k/(2<<span)));
@@ -88,5 +88,4 @@ PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseDegradientFamily.all
 ];
 
-export default PhaseGradientGates;
-export { PhaseGradientGates, phaseGradient }
+export {PhaseGradientGates, phaseGradient}

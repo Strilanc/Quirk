@@ -1,7 +1,7 @@
 /**
  * Stores formatting options, for determining what string output should look like.
  */
-export default class Format {
+class Format {
     /**
      * @param {!boolean} allowAbbreviation
      * @param {!number} maxAbbreviationError
@@ -182,4 +182,4 @@ Format.SIMPLIFIED = new Format(true, 0.0005, 3, ", ");
  */
 Format.CONSISTENT = new Format(false, 0, 2, ", ");
 
-export { Format, UNICODE_FRACTIONS }
+export {Format, UNICODE_FRACTIONS}

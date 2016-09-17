@@ -1,7 +1,7 @@
 /**
  * Configuration parameters for quantum circuit visualizer.
  */
-export default class Config {}
+class Config {}
 
 Config.EMPTY_CIRCUIT_TITLE = 'Toy Quantum Circuit Simulator';
 
@@ -81,3 +81,5 @@ Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = false;
 Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS = true;
 
 Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS = 300;
+
+export {Config}

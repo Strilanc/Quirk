@@ -1,6 +1,6 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Matrix} from "src/math/Matrix.js"
 
 const ZeroGate = Gate.fromKnownMatrix(
     "0",
@@ -29,4 +29,4 @@ const ZeroGate = Gate.fromKnownMatrix(
         GatePainting.paintGateSymbol(args);
     });
 
-export default ZeroGate;
+export {ZeroGate}

@@ -1,8 +1,8 @@
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Config from "src/Config.js"
-import HistoryPusher from "src/browser/HistoryPusher.js"
-import Serializer from "src/circuit/Serializer.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Config} from "src/Config.js"
+import {HistoryPusher} from "src/browser/HistoryPusher.js"
+import {Serializer} from "src/circuit/Serializer.js"
 
 /**
  * @param {!Revision} revision

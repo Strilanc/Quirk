@@ -1,9 +1,9 @@
-import describe from "src/base/Describe.js"
-import DetailedError from "src/base/DetailedError.js"
-import Gate from "src/circuit/Gate.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import Point from "src/math/Point.js"
-import Util from "src/base/Util.js"
+import {describe} from "src/base/Describe.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Point} from "src/math/Point.js"
+import {Util} from "src/base/Util.js"
 
 class Hand {
     /**
@@ -128,6 +128,7 @@ class Hand {
         return this.heldGate === undefined ? Infinity : this.heldGate.stableDuration();
     }
 }
-export default Hand;
 
 Hand.EMPTY = new Hand(undefined, undefined, undefined, undefined);
+
+export {Hand}

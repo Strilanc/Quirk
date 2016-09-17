@@ -1,12 +1,12 @@
-import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
-import KetTextureUtil from "src/circuit/KetTextureUtil.js"
-import Controls from "src/circuit/Controls.js"
-import Gate from "src/circuit/Gate.js"
-import Gates from "src/gates/AllGates.js"
-import Point from "src/math/Point.js"
-import Util from "src/base/Util.js"
-import { seq, Seq } from "src/base/Seq.js"
-import { notifyAboutRecoveryFromUnexpectedError } from "src/fallback.js"
+import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Point} from "src/math/Point.js"
+import {Util} from "src/base/Util.js"
+import {seq, Seq} from "src/base/Seq.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 
 /**
  * @param {!CircuitDefinition} circuitDefinition
@@ -236,4 +236,4 @@ function _advanceStateWithCircuitDefinitionColumn(
     return nextState;
 }
 
-export { circuitDefinitionToGate, advanceStateWithCircuit }
+export {circuitDefinitionToGate, advanceStateWithCircuit}

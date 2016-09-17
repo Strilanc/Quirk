@@ -1,13 +1,12 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
 
 /**
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
  */
 let HalfTurnGates = {};
-export default HalfTurnGates;
 
 /**
  * The X gate is drawn as a crossed circle when it has controls.
@@ -78,3 +77,5 @@ HalfTurnGates.all = [
     HalfTurnGates.Z,
     HalfTurnGates.H
 ];
+
+export {HalfTurnGates}

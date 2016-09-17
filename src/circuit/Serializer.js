@@ -1,15 +1,15 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Complex from "src/math/Complex.js"
-import Config from "src/Config.js"
-import CustomGateSet from "src/circuit/CustomGateSet.js"
-import describe from "src/base/Describe.js"
-import DetailedError from "src/base/DetailedError.js"
-import Format from "src/base/Format.js"
-import Gate from "src/circuit/Gate.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import Gates from "src/gates/AllGates.js"
-import Matrix from "src/math/Matrix.js"
-import Util from "src/base/Util.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Complex} from "src/math/Complex.js"
+import {Config} from "src/Config.js"
+import {CustomGateSet} from "src/circuit/CustomGateSet.js"
+import {describe} from "src/base/Describe.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format} from "src/base/Format.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Util} from "src/base/Util.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {MysteryGateSymbol, MysteryGateMakerWithMatrix} from "src/gates/Joke_MysteryGate.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -25,7 +25,7 @@ function initSerializer(gateMatrixDrawer, gateCircuitDrawer) {
 /**
  * Serializes supported values to/from json elements.
  */
-export default class Serializer {
+class Serializer {
     /**
      * @param {*} value
      * @param {*=undefined} context

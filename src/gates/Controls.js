@@ -1,10 +1,9 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let Controls = {};
-export default Controls;
 
 Controls.Control = Gate.fromIdentity(
     "•",
@@ -147,3 +146,5 @@ Controls.all = [
     Controls.CrossControl,
     Controls.AntiCrossControl
 ];
+
+export {Controls}

@@ -1,17 +1,17 @@
-import Complex from "src/math/Complex.js"
-import Config from "src/Config.js"
-import Format from "src/base/Format.js"
-import Gate from "src/circuit/Gate.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Matrix from "src/math/Matrix.js"
-import Painter from "src/draw/Painter.js"
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Complex} from "src/math/Complex.js"
+import {Config} from "src/Config.js"
+import {Format} from "src/base/Format.js"
+import {Gate} from "src/circuit/Gate.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Painter} from "src/draw/Painter.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Util} from "src/base/Util.js"
 import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
 
-export default class WidgetPainter {
+class WidgetPainter {
 
     /**
      * @param {!Matrix} matrix
@@ -278,3 +278,5 @@ export default class WidgetPainter {
             replace(" + +", " + ");
     }
 }
+
+export {WidgetPainter}

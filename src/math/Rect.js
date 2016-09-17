@@ -1,4 +1,4 @@
-import Point from "src/math/Point.js"
+import {Point} from "src/math/Point.js"
 
 /**
  * A two dimensional axis-aligned rectangle with defined position and size.
@@ -416,4 +416,4 @@ class Rect {
     }
 }
 
-export default Rect;
+export {Rect}

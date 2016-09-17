@@ -1,5 +1,5 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import { Observable, ObservableValue, ObservableSource } from "src/base/Obs.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Observable, ObservableValue, ObservableSource} from "src/base/Obs.js"
 
 let suite = new Suite("Obs");
 

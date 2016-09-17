@@ -1,8 +1,8 @@
-import Complex from "src/math/Complex.js"
-import DetailedError from "src/base/DetailedError.js"
-import Format from "src/base/Format.js"
+import {Complex} from "src/math/Complex.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format} from "src/base/Format.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * A matrix of complex values.
@@ -1339,4 +1339,4 @@ Matrix.PAULI_Z = Matrix.square(1, 0, 0, -1);
  */
 Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).times(Math.sqrt(0.5));
 
-export default Matrix;
+export {Matrix}

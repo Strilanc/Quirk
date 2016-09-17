@@ -1,38 +1,37 @@
-import ArithmeticGates from "src/gates/ArithmeticGates.js"
-import AmplitudeDisplayFamily from "src/gates/AmplitudeDisplayFamily.js"
-import BlochSphereDisplay from "src/gates/BlochSphereDisplay.js"
-import Controls from "src/gates/Controls.js"
-import CountingGates from "src/gates/CountingGates.js"
-import CycleBitsGates from "src/gates/CycleBitsGates.js"
-import DensityMatrixDisplayFamily from "src/gates/DensityMatrixDisplayFamily.js"
-import ErrorInjectionGate from "src/gates/Debug_ErrorInjectionGate.js"
-import ExponentiatingGates from "src/gates/ExponentiatingGates.js"
-import FourierTransformGates from "src/gates/FourierTransformGates.js"
-import HalfTurnGates from "src/gates/HalfTurnGates.js"
-import InputGates from "src/gates/InputGates.js"
-import MeasurementGate from "src/gates/MeasurementGate.js"
-import MultiplyAccumulateGates from "src/gates/MultiplyAccumulateGates.js"
-import NeGate from "src/gates/Joke_NeGate.js"
-import PhaseGradientGates from "src/gates/PhaseGradientGates.js"
-import PostSelectionGates from "src/gates/PostSelectionGates.js"
-import PoweringGates from "src/gates/PoweringGates.js"
-import ProbabilityDisplayFamily from "src/gates/ProbabilityDisplayFamily.js"
-import QuarterTurnGates from "src/gates/QuarterTurnGates.js"
-import ReverseBitsGateFamily from "src/gates/ReverseBitsGateFamily.js"
-import SampleDisplayFamily from "src/gates/SampleDisplayFamily.js"
-import SpacerGate from "src/gates/SpacerGate.js"
-import SwapGateHalf from "src/gates/SwapGateHalf.js"
-import UniversalNotGate from "src/gates/Impossible_UniversalNotGate.js"
-import VariousXGates from "src/gates/VariousXGates.js"
-import VariousYGates from "src/gates/VariousYGates.js"
-import VariousZGates from "src/gates/VariousZGates.js"
-import ZeroGate from "src/gates/Joke_ZeroGate.js"
+import {ArithmeticGates} from "src/gates/ArithmeticGates.js"
+import {AmplitudeDisplayFamily} from "src/gates/AmplitudeDisplayFamily.js"
+import {BlochSphereDisplay} from "src/gates/BlochSphereDisplay.js"
+import {Controls} from "src/gates/Controls.js"
+import {CountingGates} from "src/gates/CountingGates.js"
+import {CycleBitsGates} from "src/gates/CycleBitsGates.js"
+import {DensityMatrixDisplayFamily} from "src/gates/DensityMatrixDisplayFamily.js"
+import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
+import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
+import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
+import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
+import {InputGates} from "src/gates/InputGates.js"
+import {MeasurementGate} from "src/gates/MeasurementGate.js"
+import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
+import {NeGate} from "src/gates/Joke_NeGate.js"
+import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
+import {PostSelectionGates} from "src/gates/PostSelectionGates.js"
+import {PoweringGates} from "src/gates/PoweringGates.js"
+import {ProbabilityDisplayFamily} from "src/gates/ProbabilityDisplayFamily.js"
+import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js"
+import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGateFamily.js"
+import {SampleDisplayFamily} from "src/gates/SampleDisplayFamily.js"
+import {SpacerGate} from "src/gates/SpacerGate.js"
+import {SwapGateHalf} from "src/gates/SwapGateHalf.js"
+import {UniversalNotGate} from "src/gates/Impossible_UniversalNotGate.js"
+import {VariousXGates} from "src/gates/VariousXGates.js"
+import {VariousYGates} from "src/gates/VariousYGates.js"
+import {VariousZGates} from "src/gates/VariousZGates.js"
+import {ZeroGate} from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
 import {seq, Seq} from "src/base/Seq.js"
 
 let Gates = {};
-export default Gates;
 
 /** Gates that have special behavior requiring custom code / logic to handle. */
 Gates.Special = {
@@ -249,3 +248,5 @@ Gates.BottomToolboxGroups = [
         ]
     }
 ];
+
+export {Gates}

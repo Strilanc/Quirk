@@ -1,5 +1,5 @@
-import { Suite, assertThat, assertThrows } from "test/TestUtil.js"
-import Format from "src/base/Format.js"
+import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {Format} from "src/base/Format.js"
 
 let suite = new Suite("Format");
 

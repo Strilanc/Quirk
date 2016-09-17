@@ -1,11 +1,11 @@
-import describe from "src/base/Describe.js"
+import {describe} from "src/base/Describe.js"
 
 let CONSTRUCTOR_CALLS_NESTING = 0;
 
 /**
  * A generic error with an attached payload of details for context.
  */
-export default class DetailedError extends Error {
+class DetailedError extends Error {
     /**
      * @param {!string} message
      * @param {*} detailsObj
@@ -42,3 +42,5 @@ export default class DetailedError extends Error {
         return `${super.toString()}\nDetails: ${this.details}`;
     }
 }
+
+export {DetailedError}

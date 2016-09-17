@@ -1,4 +1,4 @@
-import { Observable } from "src/base/Obs.js"
+import {Observable} from "src/base/Obs.js"
 
 /**
  * @param {!HTMLInputElement} textBox
@@ -14,4 +14,4 @@ function textEditObservable(textBox) {
     ).flatten().map(e => textBox.value).whenDifferent();
 }
 
-export { textEditObservable };
+export {textEditObservable};

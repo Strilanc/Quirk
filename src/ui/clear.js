@@ -9,4 +9,4 @@ function initClear(revision) {
     clearButton.addEventListener('click', () => revision.commit(EMPTY_STATE));
 }
 
-export { initClear }
+export {initClear}

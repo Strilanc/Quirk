@@ -1,19 +1,19 @@
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import CircuitStats from "src/circuit/CircuitStats.js"
-import Config from "src/Config.js"
-import DetailedError from "src/base/DetailedError.js"
-import equate from "src/base/Equate.js"
-import Format from "src/base/Format.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import GateDrawParams from "src/draw/GateDrawParams.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Gates from "src/gates/AllGates.js"
-import Hand from "src/ui/Hand.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Point from "src/math/Point.js"
-import Matrix from "src/math/Matrix.js"
-import Rect from "src/math/Rect.js"
-import Util from "src/base/Util.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "src/circuit/CircuitStats.js"
+import {Config} from "src/Config.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {equate} from "src/base/Equate.js"
+import {Format} from "src/base/Format.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {GateDrawParams} from "src/draw/GateDrawParams.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Hand} from "src/ui/Hand.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Point} from "src/math/Point.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Rect} from "src/math/Rect.js"
+import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {paintBlochSphereDisplay} from "src/gates/BlochSphereDisplay.js"
 
@@ -1088,5 +1088,4 @@ let GATE_CIRCUIT_DRAWER = args => {
     GatePainting.paintOutline(args);
 };
 
-export default DisplayedCircuit;
-export { DisplayedCircuit, drawCircuitTooltip, GATE_CIRCUIT_DRAWER }
+export {DisplayedCircuit, drawCircuitTooltip, GATE_CIRCUIT_DRAWER}

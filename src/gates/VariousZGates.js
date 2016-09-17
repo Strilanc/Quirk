@@ -1,8 +1,7 @@
-import Gate from "src/circuit/Gate.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let VariousZGates = {};
-export default VariousZGates;
 
 VariousZGates.Z3 = Gate.fromKnownMatrix(
     "Z^⅓",
@@ -74,3 +73,5 @@ VariousZGates.all =[
     VariousZGates.Z8i,
     VariousZGates.Z16i
 ];
+
+export {VariousZGates}

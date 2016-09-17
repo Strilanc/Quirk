@@ -1,4 +1,4 @@
-import Config from "src/Config.js"
+import {Config} from "src/Config.js"
 
 /**
  * Checks if the given code, returned by gl.getError, is an error or not.
@@ -7,7 +7,7 @@ import Config from "src/Config.js"
  * @param {!string} previousOperationDescription
  * @param {!boolean} isOnHotPath
  */
-export function checkGetErrorResult(gl, previousOperationDescription, isOnHotPath = false) {
+function checkGetErrorResult(gl, previousOperationDescription, isOnHotPath = false) {
     if (isOnHotPath && !Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS) {
         return;
     }
@@ -43,7 +43,7 @@ export function checkGetErrorResult(gl, previousOperationDescription, isOnHotPat
  * @param {!WebGLRenderingContext} gl
  * @param {!boolean} isOnHotPath
  */
-export function checkFrameBufferStatusResult(gl, isOnHotPath = false) {
+function checkFrameBufferStatusResult(gl, isOnHotPath = false) {
     if (isOnHotPath && !Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS) {
         return;
     }
@@ -71,3 +71,5 @@ export function checkFrameBufferStatusResult(gl, isOnHotPath = false) {
     let d = msgs[code] !== undefined ? msgs[code] : "?";
     throw new Error(`gl.checkFramebufferStatus() returned 0x${code.toString(16)} (${d}).`);
 }
+
+export {checkGetErrorResult, checkFrameBufferStatusResult}

@@ -1,13 +1,13 @@
-import DetailedError from "src/base/DetailedError.js"
-import Shaders from "src/webgl/Shaders.js"
-import WglArg from "src/webgl/WglArg.js"
-import WglShader from "src/webgl/WglShader.js"
-import { WglConfiguredShader } from "src/webgl/WglShader.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglShader.js"
 
 /**
  * Defines shader-based operations used by display gates.
  */
-export default class DisplayShaders {}
+class DisplayShaders {}
 
 /**
  * @param {!WglTexture} inputTexture
@@ -85,3 +85,5 @@ const AMPLITUDES_TO_DENSITIES_SHADER = new WglShader(`
 
         gl_FragColor = vec4(r, i, 0.0, 0.0);
     }`);
+
+export {DisplayShaders}

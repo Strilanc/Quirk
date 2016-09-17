@@ -1,7 +1,7 @@
-import Point from "src/math/Point.js"
-import Rect from "src/math/Rect.js"
+import {Point} from "src/math/Point.js"
+import {Rect} from "src/math/Rect.js"
 
-export default class TouchScrollBlocker {
+class TouchScrollBlocker {
     /**
      * @param {HTMLElement} parentElement
      */
@@ -46,3 +46,5 @@ export default class TouchScrollBlocker {
         }
     }
 }
+
+export {TouchScrollBlocker}

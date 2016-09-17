@@ -1,7 +1,7 @@
 /**
  * Values used by gate disable reason finder functions.
  */
-export default class GateCheckArgs {
+class GateCheckArgs {
     /**
      * @param {!Gate} gate
      * @param {!GateColumn} innerColumn
@@ -30,3 +30,5 @@ export default class GateCheckArgs {
         this.isNested = isNested;
     }
 }
+
+export {GateCheckArgs}

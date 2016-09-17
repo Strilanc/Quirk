@@ -1,14 +1,14 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 
-import Complex from "src/math/Complex.js"
-import Controls from "src/circuit/Controls.js"
-import Gate from "src/circuit/Gate.js"
-import GateColumn from "src/circuit/GateColumn.js"
-import Gates from "src/gates/AllGates.js"
-import Matrix from "src/math/Matrix.js"
-import Point from "src/math/Point.js"
-import Seq from "src/base/Seq.js"
+import {Complex} from "src/math/Complex.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Matrix} from "src/math/Matrix.js"
+import {Point} from "src/math/Point.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("CircuitDefinition");
 

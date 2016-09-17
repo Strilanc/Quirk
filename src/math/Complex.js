@@ -1,7 +1,7 @@
-import DetailedError from "src/base/DetailedError.js"
-import { Format, UNICODE_FRACTIONS } from "src/base/Format.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Format, UNICODE_FRACTIONS} from "src/base/Format.js"
 import {seq, Seq} from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {Util} from "src/base/Util.js"
 import {parseFormula} from "src/math/FormulaParser.js"
 
 const PARSE_COMPLEX_TOKEN_MAP = new Map();
@@ -423,4 +423,4 @@ PARSE_COMPLEX_TOKEN_MAP.set("+", {
     priority: 1});
 PARSE_COMPLEX_TOKEN_MAP.set("√", PARSE_COMPLEX_TOKEN_MAP.get("sqrt"));
 
-export default Complex;
+export {Complex}

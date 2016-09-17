@@ -1,6 +1,6 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import { shadersForReverseOfSize } from "src/gates/ReverseBitsGateFamily.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {shadersForReverseOfSize} from "src/gates/ReverseBitsGateFamily.js"
 
 let InputGates = {};
 
@@ -65,5 +65,4 @@ InputGates.all = [
     ...InputGates.InputRevBFamily.all
 ];
 
-export default InputGates;
 export {InputGates}

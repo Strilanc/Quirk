@@ -1,13 +1,13 @@
-import DetailedError from "src/base/DetailedError.js"
-import Util from "src/base/Util.js"
-import WglArg from "src/webgl/WglArg.js"
-import { initializedWglContext } from "src/webgl/WglContext.js"
-import { WglConfiguredShader, WglShader } from "src/webgl/WglShader.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Util} from "src/base/Util.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {initializedWglContext} from "src/webgl/WglContext.js"
+import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
 /**
  * Utilities for creating/configuring shaders that render various simple things.
  */
-export default class Shaders {}
+class Shaders {}
 
 /**
  * Returns a configured shader that renders a uniform color over the entire destination texture.
@@ -223,3 +223,5 @@ Shaders.decodeByteBufferToFloatBuffer = bytes => {
     }
     return result;
 };
+
+export {Shaders}

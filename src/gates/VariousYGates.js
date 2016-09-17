@@ -1,8 +1,7 @@
-import Gate from "src/circuit/Gate.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let VariousYGates = {};
-export default VariousYGates;
 
 VariousYGates.Y3 = Gate.fromKnownMatrix(
     "Y^⅓",
@@ -67,3 +66,5 @@ VariousYGates.all =[
     VariousYGates.Y16i,
     VariousYGates.Y32i
 ];
+
+export {VariousYGates}

@@ -1,9 +1,8 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import Matrix from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {Matrix} from "src/math/Matrix.js"
 
 let ExponentiatingGates = {};
-export default ExponentiatingGates;
 
 const τ = Math.PI * 2;
 const XExp = t => {
@@ -74,3 +73,5 @@ ExponentiatingGates.all = [
     ExponentiatingGates.YForward,
     ExponentiatingGates.ZForward
 ];
+
+export {ExponentiatingGates}

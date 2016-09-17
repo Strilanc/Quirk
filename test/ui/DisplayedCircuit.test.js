@@ -1,10 +1,10 @@
-import { Suite, assertThat, assertThrows, fail } from "test/TestUtil.js"
-import DisplayedCircuit from "src/ui/DisplayedCircuit.js"
+import {Suite, assertThat, assertThrows, fail} from "test/TestUtil.js"
+import {DisplayedCircuit} from "src/ui/DisplayedCircuit.js"
 
-import CircuitDefinition from "src/circuit/CircuitDefinition.js"
-import Config from "src/Config.js"
-import Gates from "src/gates/AllGates.js"
-import Point from "src/math/Point.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Config} from "src/Config.js"
+import {Gates} from "src/gates/AllGates.js"
+import {Point} from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 const TEST_GATES = new Map([

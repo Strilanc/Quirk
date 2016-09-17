@@ -1,6 +1,6 @@
-import DetailedError from "src/base/DetailedError.js"
-import Seq from "src/base/Seq.js"
-import Util from "src/base/Util.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {Seq} from "src/base/Seq.js"
+import {Util} from "src/base/Util.js"
 
 /**
  * Stores a set of requirements that a state's bits must meet.
@@ -118,4 +118,4 @@ class Controls {
 /** @type {!Controls} */
 Controls.NONE = new Controls(0, 0);
 
-export default Controls;
+export {Controls}

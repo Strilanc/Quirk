@@ -26,4 +26,4 @@ function saveFile(name, content) {
     }
 }
 
-export { saveFile };
+export {saveFile};

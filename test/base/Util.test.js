@@ -1,8 +1,8 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import Util from "src/base/Util.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Util} from "src/base/Util.js"
 
-import Rect from "src/math/Rect.js"
-import Seq from "src/base/Seq.js"
+import {Rect} from "src/math/Rect.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("Util");
 

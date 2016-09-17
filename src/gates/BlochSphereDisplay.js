@@ -1,8 +1,8 @@
-import Config from "src/Config.js"
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import MathPainter from "src/draw/MathPainter.js"
-import Point from "src/math/Point.js"
+import {Config} from "src/Config.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {MathPainter} from "src/draw/MathPainter.js"
+import {Point} from "src/math/Point.js"
 
 /**
  * @param {!Painter} painter
@@ -134,5 +134,4 @@ let BlochSphereDisplay = Gate.fromIdentity(
         paintBlochSphereDisplay(args.painter, ρ, args.rect, args.focusPoints);
     }));
 
-export default BlochSphereDisplay;
 export {paintBlochSphereDisplay, BlochSphereDisplay};

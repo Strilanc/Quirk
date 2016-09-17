@@ -1,5 +1,5 @@
-import { assertTrue, assertFalse, assertThat, assertThrows, Suite } from "test/TestUtil.js"
-import Controls from "src/circuit/Controls.js"
+import {assertTrue, assertFalse, assertThat, assertThrows, Suite} from "test/TestUtil.js"
+import {Controls} from "src/circuit/Controls.js"
 
 let suite = new Suite("Controls");
 

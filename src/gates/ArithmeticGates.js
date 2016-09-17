@@ -1,9 +1,9 @@
-import Gate from "src/circuit/Gate.js"
-import GatePainting from "src/draw/GatePainting.js"
-import GateShaders from "src/circuit/GateShaders.js"
-import Matrix from "src/math/Matrix.js"
-import WglArg from "src/webgl/WglArg.js"
-import { WglConfiguredShader, WglShader } from "src/webgl/WglShader.js"
+import {Gate} from "src/circuit/Gate.js"
+import {GatePainting} from "src/draw/GatePainting.js"
+import {GateShaders} from "src/circuit/GateShaders.js"
+import {Matrix} from "src/math/Matrix.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
 let ArithmeticGates = {};
 
@@ -260,5 +260,4 @@ ArithmeticGates.all = [
     ...ArithmeticGates.MinusAFamily.all
 ];
 
-export default ArithmeticGates;
 export {ArithmeticGates, makeOffsetMatrix, incrementShaderFunc, additionShaderFunc}

@@ -1,10 +1,10 @@
-import Config from "src/Config.js"
-import DetailedError from "src/base/DetailedError.js"
-import WglArg from "src/webgl/WglArg.js"
+import {Config} from "src/Config.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {WglArg} from "src/webgl/WglArg.js"
 import { initializedWglContext }  from "src/webgl/WglContext.js"
-import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
-import WglTexture from "src/webgl/WglTexture.js"
-import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
+import {WglMortalValueSlot} from "src/webgl/WglMortalValueSlot.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
+import {checkGetErrorResult, checkFrameBufferStatusResult} from "src/webgl/WglUtil.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 /** @type {!WglMortalValueSlot} */
@@ -272,5 +272,4 @@ class WglConfiguredShader {
     }
 }
 
-export default WglShader;
-export { WglShader, WglConfiguredShader };
+export {WglShader, WglConfiguredShader};

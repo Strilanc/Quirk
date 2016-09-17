@@ -1,7 +1,7 @@
-import { Suite, assertThat, assertTrue, assertFalse } from "test/TestUtil.js"
-import Rect from "src/math/Rect.js"
+import {Suite, assertThat, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Rect} from "src/math/Rect.js"
 
-import Point from "src/math/Point.js"
+import {Point} from "src/math/Point.js"
 
 let suite = new Suite("Rect");
 

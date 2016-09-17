@@ -1,11 +1,11 @@
-import { assertThat } from "test/TestUtil.js"
-import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
-import CircuitShaders from "src/circuit/CircuitShaders.js"
-import Complex from "src/math/Complex.js"
-import Controls from "src/circuit/Controls.js"
-import Shaders from "src/webgl/Shaders.js"
-import Matrix from "src/math/Matrix.js"
-import WglTexture from "src/webgl/WglTexture.js"
+import {assertThat} from "test/TestUtil.js"
+import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Complex} from "src/math/Complex.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Shaders} from "src/webgl/Shaders.js"
+import {Matrix} from "src/math/Matrix.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
 
 /**
  * @param {function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc

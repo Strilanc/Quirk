@@ -1,7 +1,7 @@
 /**
  * Values used by the various gate effects.
  */
-export default class CircuitEvalArgs {
+class CircuitEvalArgs {
     /**
      * @param {!number} time
      * @param {undefined|!int} qubitRow
@@ -69,3 +69,5 @@ export default class CircuitEvalArgs {
         return r;
     }
 }
+
+export {CircuitEvalArgs}

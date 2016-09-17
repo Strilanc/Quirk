@@ -1,5 +1,5 @@
-import DetailedError from "src/base/DetailedError.js"
-import CooldownThrottle from "src/base/CooldownThrottle.js"
+import {DetailedError} from "src/base/DetailedError.js"
+import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 
 /**
  * An observable sequence of events.
@@ -253,4 +253,4 @@ class ObservableValue {
     }
 }
 
-export { Observable, ObservableSource, ObservableValue }
+export {Observable, ObservableSource, ObservableValue}

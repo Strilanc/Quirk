@@ -1,4 +1,4 @@
-import DetailedError from "src/base/DetailedError.js"
+import {DetailedError} from "src/base/DetailedError.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 /**
@@ -167,4 +167,4 @@ function parseFormula(text, tokenMap) {
     return vals[0];
 }
 
-export { parseFormula };
+export {parseFormula};

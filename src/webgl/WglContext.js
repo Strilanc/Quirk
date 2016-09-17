@@ -1,6 +1,6 @@
-import Rect from "src/math/Rect.js"
-import WglMortalValueSlot from "src/webgl/WglMortalValueSlot.js"
-import { checkGetErrorResult, checkFrameBufferStatusResult } from "src/webgl/WglUtil.js"
+import {Rect} from "src/math/Rect.js"
+import {WglMortalValueSlot} from "src/webgl/WglMortalValueSlot.js"
+import {checkGetErrorResult, checkFrameBufferStatusResult} from "src/webgl/WglUtil.js"
 
 /**
  * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.
@@ -104,9 +104,11 @@ class WglContext {
 // We really only ever want one instance to exist.
 // Having more of them just causes problems (e.g. eventually tests start failing).
 let __sharedInstance = undefined;
-export function initializedWglContext() {
+function initializedWglContext() {
     if (__sharedInstance === undefined) {
         __sharedInstance = new WglContext();
     }
     return __sharedInstance;
 }
+
+export {initializedWglContext}

@@ -1,10 +1,10 @@
-import { Suite, assertThat, assertThrows, assertTrue, assertFalse } from "test/TestUtil.js"
-import Matrix from "src/math/Matrix.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Matrix} from "src/math/Matrix.js"
 
-import Complex from "src/math/Complex.js"
-import Controls from "src/circuit/Controls.js"
-import Format from "src/base/Format.js"
-import Seq from "src/base/Seq.js"
+import {Complex} from "src/math/Complex.js"
+import {Controls} from "src/circuit/Controls.js"
+import {Format} from "src/base/Format.js"
+import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("Matrix");
 
