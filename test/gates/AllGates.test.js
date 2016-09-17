@@ -3,7 +3,7 @@ import Gates from "src/gates/AllGates.js"
 
 import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
+import KetTextureUtil from "src/circuit/KetTextureUtil.js"
 import Controls from "src/circuit/Controls.js"
 import Matrix from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -23,15 +23,15 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
     let bit = 0;
     let numQubits = gate.height;
     let n = 1 << numQubits;
-    let input = CircuitTextures.allocQubitTexture(numQubits);
-    let control = CircuitTextures.control(numQubits, Controls.NONE);
+    let input = KetTextureUtil.allocQubitTexture(numQubits);
+    let control = KetTextureUtil.control(numQubits, Controls.NONE);
     let cols = [];
     for (let i = 0; i < n; i++) {
         CircuitShaders.classicalState(i).renderTo(input);
-        let output = CircuitTextures.aggregateReusingIntermediates(
+        let output = KetTextureUtil.aggregateReusingIntermediates(
             input,
             gate.customShaders.map(f => (inTex, conTex, t) => f(inTex, conTex, bit, t)),
-            (accTex, shaderFunc) => CircuitTextures.applyCustomShader(shaderFunc, new CircuitEvalArgs(
+            (accTex, shaderFunc) => KetTextureUtil.applyCustomShader(shaderFunc, new CircuitEvalArgs(
                 time,
                 bit,
                 numQubits,
@@ -39,8 +39,8 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
                 control,
                 accTex,
                 new Map())));
-        let col = CircuitTextures.pixelsToAmplitudes(output.readPixels(), 1.0);
-        CircuitTextures.doneWithTexture(output);
+        let col = KetTextureUtil.pixelsToAmplitudes(output.readPixels(), 1.0);
+        KetTextureUtil.doneWithTexture(output);
         cols.push(col);
     }
     let raw = seq(cols).flatMap(e => e.rawBuffer()).toFloat32Array();

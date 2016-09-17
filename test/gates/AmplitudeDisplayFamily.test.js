@@ -11,7 +11,7 @@ import {
 } from "src/gates/AmplitudeDisplayFamily.js"
 
 import CircuitShaders from "src/circuit/CircuitShaders.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
+import KetTextureUtil from "src/circuit/KetTextureUtil.js"
 import Complex from "src/math/Complex.js"
 import Controls from "src/circuit/Controls.js"
 import {seq, Seq} from "src/base/Seq.js"
@@ -56,7 +56,7 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
     ])).toFloatTexture(8, 1);
     let out;
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(1, 3));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(1, 3));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         1, 2,300,0,
         3, 4,300,0,
@@ -67,9 +67,9 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
         13,14,19200,0,
         15,16,19200,0
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(2, 3));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(2, 3));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         1, 2,1500,0,
         3, 4,1500,0,
@@ -80,10 +80,10 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
         13,14,24000,0,
         15,16,24000,0
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(3, 3));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(3, 3));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         1, 2,25500,0,
         3, 4,25500,0,
@@ -94,7 +94,7 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
         13,14,25500,0,
         15,16,25500,0
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 });
 
 suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
@@ -110,11 +110,11 @@ suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
     ])).toFloatTexture(8, 1);
     let out;
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToAggregateRepresentativePolarKet(1, 3));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToAggregateRepresentativePolarKet(1, 3));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         1+5+9+13,14,25500,0,    3+7+11+15,16,25500,0
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 
     let in2 = Shaders.data(new Float32Array([
         1, 2,300,0,
@@ -126,11 +126,11 @@ suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
         13,14,19200,0,
         15,16,19200,0
     ])).toFloatTexture(8, 1);
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(in2, pipelineToAggregateRepresentativePolarKet(1, 3));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(in2, pipelineToAggregateRepresentativePolarKet(1, 3));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         1+55+9+13,6,144300,0,    3+7+11+15,16,25500,0
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 });
 
 suite.webGlTest("convertAwayFromPolar", () => {
@@ -180,7 +180,7 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
     ])).toFloatTexture(8, 2);
     let out;
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(1, 4));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(1, 4));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         2,0,0,0,
         0,0,2,3,
@@ -191,16 +191,16 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
         NaN,NaN,NaN,NaN,
         NaN,NaN,NaN,NaN
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         NaN,NaN,NaN,NaN,
         NaN,NaN,NaN,NaN,
         NaN,NaN,NaN,NaN,
         NaN,NaN,NaN,NaN
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 
     inp = Shaders.data(new Float32Array([
         1,0,0,0,    20,0,0,0,   0,0,0,0,  3,1,0,0,
@@ -208,14 +208,14 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
         0,0,0,0,    0,0,0,0,   0,0,0,0,  0,0,0,0,
         NaN,0,0,0,  0,0,0,0,   0,0,0,0,  0,0,0,0
     ])).toFloatTexture(4, 4);
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         20,0,0,0,
         NaN,NaN,NaN,NaN,
         0,0,0,0,
         NaN,NaN,NaN,NaN
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 });
 
 suite.webGlTest("pipelineToSumAll", () => {
@@ -231,24 +231,24 @@ suite.webGlTest("pipelineToSumAll", () => {
     ])).toFloatTexture(4, 2);
     let out;
 
-    out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(4, 2));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(4, 2));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         10,6,19,16
     ]));
-    CircuitTextures.doneWithTexture(out);
+    KetTextureUtil.doneWithTexture(out);
 });
 
 suite.webGlTest("makeAmplitudeSpanPipeline_00", () => {
     let inp = Shaders.data(new Float32Array([1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0])).
         toFloatTexture(2, 2);
     let pipe = makeAmplitudeSpanPipeline(inp, Controls.NONE, 0, 2);
-    let out = CircuitTextures.evaluatePipelineWithIntermediateCleanup(inp, pipe);
+    let out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipe);
     assertThat(out[0].readPixels()).isEqualTo(
         new Float32Array([1,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]));
     assertThat(out[1].readPixels()).isEqualTo(new Float32Array([1,0,1,0]));
 
-    CircuitTextures.doneWithTexture(out[0]);
-    CircuitTextures.doneWithTexture(out[1]);
+    KetTextureUtil.doneWithTexture(out[0]);
+    KetTextureUtil.doneWithTexture(out[1]);
     inp.ensureDeinitialized();
 });
 

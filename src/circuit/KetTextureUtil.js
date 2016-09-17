@@ -12,7 +12,7 @@ import { seq, Seq } from "src/base/Seq.js"
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.
  */
-export default class CircuitTextures {
+export default class KetTextureUtil {
 }
 
 /** @type {!Map.<!int, !(!WglTexture[])>} */
@@ -66,7 +66,7 @@ const allocQubitTexture = qubitCount => {
     return allocSizedTexture(w, h);
 };
 
-CircuitTextures.allocQubitTexture = allocQubitTexture;
+KetTextureUtil.allocQubitTexture = allocQubitTexture;
 
 /**
  * Puts the texture back into the texture pool.
@@ -74,7 +74,7 @@ CircuitTextures.allocQubitTexture = allocQubitTexture;
  * @param {*=} detailsShownWhenUsedAfterDone
  * @returns {void}
  */
-CircuitTextures.doneWithTexture = (texture, detailsShownWhenUsedAfterDone='?') => {
+KetTextureUtil.doneWithTexture = (texture, detailsShownWhenUsedAfterDone='?') => {
     if (texture.width === 0) {
         return;
     }
@@ -84,11 +84,12 @@ CircuitTextures.doneWithTexture = (texture, detailsShownWhenUsedAfterDone='?') =
 
 /**
  * @param {!int} qubitCount
+ * @param {!int=0} classicalState
  * @returns {!WglTexture}
  */
-CircuitTextures.zero = qubitCount => {
+KetTextureUtil.classicalKet = (qubitCount, classicalState=0) => {
     let tex = allocQubitTexture(qubitCount);
-    CircuitShaders.classicalState(0).renderTo(tex);
+    CircuitShaders.classicalState(classicalState).renderTo(tex);
     return tex;
 };
 
@@ -97,7 +98,7 @@ CircuitTextures.zero = qubitCount => {
  * @param {!Controls} mask
  * @returns {!WglTexture}
  */
-CircuitTextures.control = (qubitCount, mask) => {
+KetTextureUtil.control = (qubitCount, mask) => {
     let tex = allocQubitTexture(qubitCount);
     CircuitShaders.controlMask(mask).renderTo(tex);
     return tex;
@@ -107,20 +108,20 @@ CircuitTextures.control = (qubitCount, mask) => {
  * @param {!Array.<!WglTexture>} textures
  * @returns {!Array.<!Float32Array>}
  */
-CircuitTextures.mergedReadFloats = textures => {
+KetTextureUtil.mergedReadFloats = textures => {
     let pixelCounts = textures.map(e => e.width * e.height);
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
     let lgTotal = Math.round(Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1])));
     let combinedTex = allocQubitTexture(lgTotal);
     Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
-    combinedTex = CircuitTextures.aggregateWithReuse(
+    combinedTex = KetTextureUtil.aggregateWithReuse(
         combinedTex,
         Seq.range(textures.length).filter(i => textures[i].width > 0),
         (accTex, i) => {
             let inputTex = textures[i];
             let nextTex = allocQubitTexture(lgTotal);
             CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
-            CircuitTextures.doneWithTexture(inputTex, "inputTex in mergedReadFloats");
+            KetTextureUtil.doneWithTexture(inputTex, "inputTex in mergedReadFloats");
             return nextTex;
         });
 
@@ -132,11 +133,11 @@ CircuitTextures.mergedReadFloats = textures => {
 
         let combinedBytePixels = combinedTexBytes.readPixels();
         combinedPixels = Shaders.decodeByteBufferToFloatBuffer(combinedBytePixels);
-        CircuitTextures.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
+        KetTextureUtil.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
     } else {
         combinedPixels = combinedTex.readPixels();
     }
-    CircuitTextures.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
+    KetTextureUtil.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
 
 
     return Seq.range(textures.length).map(i => {
@@ -151,7 +152,7 @@ CircuitTextures.mergedReadFloats = textures => {
  * @param {!function(!CircuitEvalArgs):!WglConfiguredShader} customShader
  * @returns {!WglTexture}
  */
-CircuitTextures.applyCustomShader = (customShader, circuitEvalArgs) => {
+KetTextureUtil.applyCustomShader = (customShader, circuitEvalArgs) => {
     let result = allocSameSizedTexture(circuitEvalArgs.stateTexture);
     customShader(circuitEvalArgs).renderTo(result);
     return result;
@@ -164,7 +165,7 @@ CircuitTextures.applyCustomShader = (customShader, circuitEvalArgs) => {
  * @param {!Matrix} matrix
  * @returns {!WglTexture}
  */
-CircuitTextures.matrixOperation = (stateTex, controlTex, qubitIndex, matrix) => {
+KetTextureUtil.matrixOperation = (stateTex, controlTex, qubitIndex, matrix) => {
     let result = allocSameSizedTexture(stateTex);
     GateShaders.matrixOperation(stateTex, matrix, qubitIndex, controlTex).renderTo(result);
     return result;
@@ -177,11 +178,11 @@ CircuitTextures.matrixOperation = (stateTex, controlTex, qubitIndex, matrix) => 
  * @returns {!WglTexture}
  * @template T
  */
-CircuitTextures.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) => {
+KetTextureUtil.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) => {
     let outTex = seq(items).aggregate(seedTex, (prevTex, item) => {
         let nextTex = aggregateFunc(prevTex, item);
         if (prevTex !== seedTex) {
-            CircuitTextures.doneWithTexture(prevTex, "prevTex in aggregateReusingIntermediates");
+            KetTextureUtil.doneWithTexture(prevTex, "prevTex in aggregateReusingIntermediates");
         }
         return nextTex;
     });
@@ -198,10 +199,10 @@ CircuitTextures.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) 
  * @returns {!WglTexture}
  * @template T
  */
-CircuitTextures.aggregateWithReuse = (seedTex, items, aggregateFunc) => {
+KetTextureUtil.aggregateWithReuse = (seedTex, items, aggregateFunc) => {
     return seq(items).aggregate(seedTex, (prevTex, item) => {
         let nextTex = aggregateFunc(prevTex, item);
-        CircuitTextures.doneWithTexture(prevTex, "prevTex in aggregateWithReuse");
+        KetTextureUtil.doneWithTexture(prevTex, "prevTex in aggregateWithReuse");
         return nextTex;
     });
 };
@@ -211,7 +212,7 @@ CircuitTextures.aggregateWithReuse = (seedTex, items, aggregateFunc) => {
  * @param {!number} unity
  * @returns {!Matrix}
  */
-CircuitTextures.pixelsToAmplitudes = (pixels, unity) => {
+KetTextureUtil.pixelsToAmplitudes = (pixels, unity) => {
     // Renormalization factor. For better answers when non-unitary gates are used.
     if (unity < 0.000001) {
         unity = NaN;
@@ -232,7 +233,7 @@ CircuitTextures.pixelsToAmplitudes = (pixels, unity) => {
  * @param {!WglTexture} superpositionTex
  * @returns {!int}
  */
-CircuitTextures.qubitCount = superpositionTex => {
+KetTextureUtil.qubitCount = superpositionTex => {
     return Math.round(Math.log2(superpositionTex.width * superpositionTex.height));
 };
 
@@ -242,14 +243,14 @@ CircuitTextures.qubitCount = superpositionTex => {
  * @param {!int} keptBitMask
  * @returns {!WglTexture}
  */
-CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
+KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
     if (keptBitMask === 0) {
         return new WglTexture(0, 0);
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let reducedTex = stateTex;
     if (hasControls) {
-        reducedTex = allocQubitTexture(CircuitTextures.qubitCount(stateTex) - controls.includedBitCount());
+        reducedTex = allocQubitTexture(KetTextureUtil.qubitCount(stateTex) - controls.includedBitCount());
         CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
     }
     let p = 1;
@@ -260,13 +261,13 @@ CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask
             keptBitMask = (keptBitMask & (p - 1)) | ((keptBitMask & ~(p-1)) >> 1)
         }
     }
-    let unsummedTex = CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex(reducedTex, keptBitMask);
+    let unsummedTex = KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex(reducedTex, keptBitMask);
     if (hasControls) {
-        CircuitTextures.doneWithTexture(reducedTex, "reducedTex in superpositionToQubitDensities");
+        KetTextureUtil.doneWithTexture(reducedTex, "reducedTex in superpositionToQubitDensities");
     }
     let keptQubitCount = Util.numberOfSetBits(keptBitMask);
-    let result = CircuitTextures._sumDown(unsummedTex, keptQubitCount);
-    CircuitTextures.doneWithTexture(unsummedTex, "unsummedTex in superpositionToQubitDensities");
+    let result = KetTextureUtil._sumDown(unsummedTex, keptQubitCount);
+    KetTextureUtil.doneWithTexture(unsummedTex, "unsummedTex in superpositionToQubitDensities");
     return result;
 };
 
@@ -275,11 +276,11 @@ CircuitTextures.superpositionToQubitDensities = (stateTex, controls, keptBitMask
  * @param {!int} keptBitMask
  * @returns {!WglTexture}
  */
-CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex, keptBitMask) => {
+KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex, keptBitMask) => {
     if (keptBitMask === 0) {
         throw new DetailedError("keptBitMask === 0", {superpositionTex, keptBitMask});
     }
-    let startingQubitCount = CircuitTextures.qubitCount(superpositionTex);
+    let startingQubitCount = KetTextureUtil.qubitCount(superpositionTex);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
     let inter = allocQubitTexture(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
     CircuitShaders.qubitDensities(superpositionTex, keptBitMask).renderTo(inter);
@@ -292,11 +293,11 @@ CircuitTextures._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex
  * The output will be a single row containing this many results (but padded up to a power of 2).
  * @returns {!WglTexture}
  */
-CircuitTextures._sumDown = (summandsTex, outCount) => {
+KetTextureUtil._sumDown = (summandsTex, outCount) => {
     let outSize = Util.ceilingPowerOf2(outCount);
     let outWidth = Math.min(summandsTex.width, outSize);
 
-    return CircuitTextures.aggregateReusingIntermediates(
+    return KetTextureUtil.aggregateReusingIntermediates(
         summandsTex,
         Seq.range(Math.round(Math.log2(summandsTex.width * summandsTex.height / outSize))),
         accTex => {
@@ -313,7 +314,7 @@ CircuitTextures._sumDown = (summandsTex, outCount) => {
  * @param {!Float32Array} buffer
  * @returns {!Array.<!Matrix>}
  */
-CircuitTextures.pixelsToQubitDensityMatrices = buffer => {
+KetTextureUtil.pixelsToQubitDensityMatrices = buffer => {
     let qubitCount = buffer.length / 4;
     return Seq.range(qubitCount).map(i => {
         let a = buffer[i*4];
@@ -333,14 +334,14 @@ CircuitTextures.pixelsToQubitDensityMatrices = buffer => {
  * @param {!WglTexture} seedTex
  * @param {!ShaderPipeline} pipeline
  */
-CircuitTextures.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
+KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
     let skipDoneWithTextureFlag = true;
     let keptResults = [];
     let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {w, h, shaderFunc, keepResult}) => {
         let nextTex = allocSizedTexture(w, h);
         shaderFunc(prevTex).renderTo(nextTex);
         if (!skipDoneWithTextureFlag) {
-            CircuitTextures.doneWithTexture(prevTex, "evaluatePipelineWithIntermediateCleanup");
+            KetTextureUtil.doneWithTexture(prevTex, "evaluatePipelineWithIntermediateCleanup");
         }
         skipDoneWithTextureFlag = keepResult;
         if (keepResult) {
@@ -366,7 +367,7 @@ CircuitTextures.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) =>
  * @param {!int} qubitIndex2
  * @returns {!WglTexture}
  */
-CircuitTextures.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
+KetTextureUtil.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
     let result = allocSameSizedTexture(stateTex);
     CircuitShaders.swap(stateTex, qubitIndex1, qubitIndex2, controlTex).renderTo(result);
     return result;

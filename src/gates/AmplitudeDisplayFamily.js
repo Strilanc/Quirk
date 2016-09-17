@@ -1,6 +1,6 @@
 import Config from "src/Config.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
+import KetTextureUtil from "src/circuit/KetTextureUtil.js"
 import DetailedError from "src/base/DetailedError.js"
 import DisplayShaders from "src/circuit/DisplayShaders.js"
 import Gate from "src/circuit/Gate.js"
@@ -36,7 +36,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
 
-    let cycledTex = CircuitTextures.allocQubitTexture(totalQubits);
+    let cycledTex = KetTextureUtil.allocQubitTexture(totalQubits);
     result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
         GateShaders.cycleAllBits(inp, lostHeadQubits-rangeOffset).renderTo(dst);
         Shaders.passthrough(dst).renderTo(cycledTex);
@@ -48,7 +48,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
         toRatiosVsRepresentative(cycledTex)(inp).renderTo(dst);
-        CircuitTextures.doneWithTexture(cycledTex);
+        KetTextureUtil.doneWithTexture(cycledTex);
     }));
     result.addPipelineSteps(pipelineToFoldConsistentRatios(rangeLength, totalQubits));
 

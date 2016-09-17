@@ -1,5 +1,5 @@
 import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
+import KetTextureUtil from "src/circuit/KetTextureUtil.js"
 import Controls from "src/circuit/Controls.js"
 import Gate from "src/circuit/Gate.js"
 import Gates from "src/gates/AllGates.js"
@@ -70,13 +70,13 @@ function advanceStateWithCircuit(
     let colQubitDensities = [];
     let customStats = [];
     let customStatsMap = [];
-    let noControlsTex = CircuitTextures.control(outerNumWires, Controls.NONE);
-    let output = CircuitTextures.aggregateReusingIntermediates(
+    let noControlsTex = KetTextureUtil.control(outerNumWires, Controls.NONE);
+    let output = KetTextureUtil.aggregateReusingIntermediates(
         inputState,
         Seq.range(numCols),
         (inputState, col) => {
             let controls = outerControls.and(circuitDefinition.colControls(col).shift(outerStartingRow));
-            let controlTex = CircuitTextures.control(outerNumWires, controls);
+            let controlTex = KetTextureUtil.control(outerNumWires, controls);
 
             let nextState = _advanceStateWithCircuitDefinitionColumn(
                 outerStartingRow,
@@ -111,16 +111,16 @@ function advanceStateWithCircuit(
                 }
             }
 
-            CircuitTextures.doneWithTexture(controlTex, "controlTex in advanceStateWithCircuit");
+            KetTextureUtil.doneWithTexture(controlTex, "controlTex in advanceStateWithCircuit");
             return nextState;
         });
 
     if (collectStats) {
         const allWiresMask = (1 << circuitDefinition.numWires) - 1;
-        colQubitDensities.push(CircuitTextures.superpositionToQubitDensities(output, Controls.NONE, allWiresMask));
+        colQubitDensities.push(KetTextureUtil.superpositionToQubitDensities(output, Controls.NONE, allWiresMask));
     }
 
-    CircuitTextures.doneWithTexture(noControlsTex, "noControlsTex in advanceStateWithCircuit");
+    KetTextureUtil.doneWithTexture(noControlsTex, "noControlsTex in advanceStateWithCircuit");
     return {output, colQubitDensities, customStats, customStatsMap};
 }
 
@@ -153,12 +153,12 @@ function _extractStateStatsNeededByCircuitColumn(
             state,
             circuitDefinition.colCustomContextFromGates(col));
         let pipeline = circuitDefinition.columns[col].gates[row].customStatPipelineMaker(statArgs);
-        let stat = CircuitTextures.evaluatePipelineWithIntermediateCleanup(state, pipeline);
+        let stat = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(state, pipeline);
         customGateStats.push({row, stat});
     }
 
     // Compute individual qubit densities, where needed.
-    let qubitDensities = CircuitTextures.superpositionToQubitDensities(
+    let qubitDensities = KetTextureUtil.superpositionToQubitDensities(
         state,
         controls,
         circuitDefinition.colHasSingleQubitDisplayMask(col));
@@ -212,26 +212,26 @@ function _advanceStateWithCircuitDefinitionColumn(
         colContext);
 
     // Apply 'before column' setup shaders.
-    let preparedState = CircuitTextures.aggregateReusingIntermediates(
+    let preparedState = KetTextureUtil.aggregateReusingIntermediates(
         inputState,
         circuitDefinition.getSetupShadersInCol(col, true, outerStartingRow),
-        (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withStateTexture(v)));
+        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgs.withStateTexture(v)));
 
     // Apply gates in column.
-    let almostNextState = CircuitTextures.aggregateWithReuse(
+    let almostNextState = KetTextureUtil.aggregateWithReuse(
         preparedState,
         circuitDefinition.operationShadersInColAt(col, outerStartingRow),
-        (v, f) => CircuitTextures.applyCustomShader(f, colArgs.withStateTexture(v)));
-    let almostAlmostNextState = CircuitTextures.aggregateWithReuse(
+        (v, f) => KetTextureUtil.applyCustomShader(f, colArgs.withStateTexture(v)));
+    let almostAlmostNextState = KetTextureUtil.aggregateWithReuse(
         almostNextState,
         circuitDefinition.textureTransformsInColAt(col, outerStartingRow),
         (v, f) => f(colArgs.withStateTexture(v)));
 
     // Apply 'after column' un-setup shaders.
-    let nextState = CircuitTextures.aggregateWithReuse(
+    let nextState = KetTextureUtil.aggregateWithReuse(
         almostAlmostNextState,
         circuitDefinition.getSetupShadersInCol(col, false, outerStartingRow),
-        (v, f) => CircuitTextures.applyCustomShader(f, setupArgs.withStateTexture(v)));
+        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgs.withStateTexture(v)));
 
     return nextState;
 }

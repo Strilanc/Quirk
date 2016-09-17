@@ -1,7 +1,7 @@
 import CircuitDefinition from "src/circuit/CircuitDefinition.js"
 import CircuitEvalArgs from "src/circuit/CircuitEvalArgs.js"
 import CircuitShaders from "src/circuit/CircuitShaders.js"
-import CircuitTextures from "src/circuit/CircuitTextures.js"
+import KetTextureUtil from "src/circuit/KetTextureUtil.js"
 import Config from "src/Config.js"
 import Controls from "src/circuit/Controls.js"
 import DetailedError from "src/base/DetailedError.js"
@@ -223,7 +223,7 @@ export default class CircuitStats {
         const numCols = circuitDefinition.columns.length;
 
         // Advance state while collecting stats into textures.
-        let initialState = CircuitTextures.zero(numWires);
+        let initialState = KetTextureUtil.classicalKet(numWires);
         let {output, colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
             initialState,
             circuitDefinition,
@@ -233,10 +233,10 @@ export default class CircuitStats {
             Controls.NONE,
             new Map(),
             true);
-        CircuitTextures.doneWithTexture(initialState, "initialState in _fromCircuitAtTime_noFallback");
+        KetTextureUtil.doneWithTexture(initialState, "initialState in _fromCircuitAtTime_noFallback");
 
         // Read all texture data.
-        let pixelData = Util.objectifyArrayFunc(CircuitTextures.mergedReadFloats)({
+        let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({
             output,
             colQubitDensities,
             customStats});
@@ -246,11 +246,11 @@ export default class CircuitStats {
         let final = pixelData.colQubitDensities[pixelData.colQubitDensities.length - 1];
         let unity = final[0] + final[3];
         //noinspection JSCheckFunctionSignatures
-        let outputSuperposition = CircuitTextures.pixelsToAmplitudes(pixelData.output, unity);
+        let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(pixelData.output, unity);
 
         let qubitDensities = seq(pixelData.colQubitDensities).mapWithIndex((pixels, col) =>
             CircuitStats.scatterAndDecohereDensities(
-                CircuitTextures.pixelsToQubitDensityMatrices(pixels),
+                KetTextureUtil.pixelsToQubitDensityMatrices(pixels),
                 numWires,
                 1,
                 circuitDefinition.colIsMeasuredMask(col),
