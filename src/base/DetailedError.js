@@ -28,7 +28,7 @@ class DetailedError extends Error {
         try {
             /** @type {!string} */
             this.details = CONSTRUCTOR_CALLS_NESTING === 1 ?
-                describe(detailsObj) :
+                describe(this.detailsObj) :
                 "(failed to describe detailsObj due to possibly re-entrancy)";
         } catch (ex) {
             console.error(ex);

@@ -12,7 +12,10 @@ class EmptyClass2 {
     constructor() { }
 }
 class PropClass {
-    constructor(v) { this.v = v; }
+    constructor(v) {
+        //noinspection JSUnusedGlobalSymbols
+        this.v = v;
+    }
 }
 class SomeIterable {
     constructor() {}

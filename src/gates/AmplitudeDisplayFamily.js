@@ -315,7 +315,6 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = new WglShader(`
  */
 function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
-    let f = r => '[' + seq(r).partitioned(4).map(e => e.join(",")).join("] [") + ']';
     for (let bit = 0; bit < includedQubitCount; bit++) {
         result.addPowerSizedStep(
             totalQubitCount - bit - 1,

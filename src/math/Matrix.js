@@ -211,7 +211,7 @@ class Matrix {
         for (let c = 0; c < size; c++) {
             let r = transitionFunc(c);
             let k = (r*size + c)*2;
-            buf[(r*size + c)*2] = 1;
+            buf[k] = 1;
         }
         return new Matrix(size, size, buf);
     }
@@ -413,7 +413,7 @@ class Matrix {
      * Determines if the matrix contains a NaN.
      * @returns {!boolean}
      */
-    hasNaN(epsilon=0) {
+    hasNaN() {
         for (let i = 0; i < this._buffer.length; i++) {
             if (isNaN(this._buffer[i])) {
                 return true;

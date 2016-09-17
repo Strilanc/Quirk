@@ -75,7 +75,9 @@ let suite = new Suite("DisplayedCircuit");
 suite.test("constructor_vs_isEqualTo", () => {
     let d1 = CircuitDefinition.fromTextDiagram(TEST_GATES, '+H+\nX+Y');
     let d2 = CircuitDefinition.fromTextDiagram(TEST_GATES, '++++\ntHHH');
+    //noinspection JSCheckFunctionSignatures
     assertThrows(() => new DisplayedCircuit(23, "not a circuit", undefined, undefined, undefined));
+    //noinspection JSCheckFunctionSignatures
     assertThrows(() => new DisplayedCircuit("not a number", d1, undefined, undefined, undefined));
 
     let c1 = new DisplayedCircuit(45, d1, undefined, undefined, undefined);

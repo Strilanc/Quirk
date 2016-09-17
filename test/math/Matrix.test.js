@@ -693,7 +693,7 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     assertThrows(() => Matrix.identity(2).qubitDensityMatrixToBlochVector());
     assertThrows(() => Matrix.square(1, 1, -1, 0).qubitDensityMatrixToBlochVector());
     assertThrows(() => Matrix.square(1, 1, 0, 0).qubitDensityMatrixToBlochVector());
-    assertThrows(() => Matrix.square(1, Complex.i, Complex.i, 0).qubitDensityMatrixToBlochVector());
+    assertThrows(() => Matrix.square(1, Complex.I, Complex.I, 0).qubitDensityMatrixToBlochVector());
 
     // Maximally mixed state.
     assertThat(Matrix.identity(2).times(0.5).qubitDensityMatrixToBlochVector()).

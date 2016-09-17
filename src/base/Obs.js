@@ -68,7 +68,7 @@ class Observable {
      * @template T
      */
     peek(action) {
-        return this.map(e => { action(); return e; });
+        return this.map(e => { action(e); return e; });
     }
 
     /**

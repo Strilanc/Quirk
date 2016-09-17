@@ -1,18 +1,18 @@
 // Several browsers (IE, Safari, Samsung) don't implement slice.
-Float32Array.prototype.slice = Float32Array.prototype.slice || function(a, b, c) {
-    return new Float32Array(Array.from(this).slice(a, b, c));
+Float32Array.prototype.slice = Float32Array.prototype.slice || function(a, b) {
+    return new Float32Array(Array.from(this).slice(a, b));
 };
-Float64Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
-    return new Float64Array(Array.from(this).slice(a, b, c));
+Float64Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+    return new Float64Array(Array.from(this).slice(a, b));
 };
-Uint32Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
-    return new Uint32Array(Array.from(this).slice(a, b, c));
+Uint32Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+    return new Uint32Array(Array.from(this).slice(a, b));
 };
-Uint16Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
-    return new Uint16Array(Array.from(this).slice(a, b, c));
+Uint16Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+    return new Uint16Array(Array.from(this).slice(a, b));
 };
-Uint8Array.prototype.slice = Float64Array.prototype.slice || function(a, b, c) {
-    return new Uint8Array(Array.from(this).slice(a, b, c));
+Uint8Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+    return new Uint8Array(Array.from(this).slice(a, b));
 };
 
 const ARRAY_ITER = function() {

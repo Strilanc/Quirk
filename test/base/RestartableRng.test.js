@@ -1,5 +1,5 @@
 import {Suite, assertThat} from "test/TestUtil.js"
-import {Format} from "src/base/RestartableRng.js"
+import {RestartableRng} from "src/base/RestartableRng.js"
 
 let suite = new Suite("RestartableRng");
 
