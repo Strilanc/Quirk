@@ -3,6 +3,9 @@ import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 
 /**
  * An observable sequence of events.
+ *
+ * WARNING: this class is not written to be re-entrant safe! If an observable ends up triggering itself, there may be
+ * unexpected bugs.
  */
 class Observable {
     /**
@@ -60,6 +63,45 @@ class Observable {
      */
     map(transformFunc) {
         return new Observable(observer => this.subscribe(item => observer(transformFunc(item))));
+    }
+
+    /**
+     * @param {!function(T) : !boolean} predicate
+     * @returns {!Observable.<T>} An observable with the same items, but skipping items that don't match the predicate.
+     * @template T
+     */
+    filter(predicate) {
+        return new Observable(observer => this.subscribe(item => { if (predicate(item)) { observer(item); }}));
+    }
+
+    /**
+     * @param {!Observable.<T2>} other
+     * @param {!function(T1, T2): TOut} mergeFunc
+     * @returns {!Observable.<TOut>}
+     * @template T1, T2, TOut
+     */
+    zipLatest(other, mergeFunc) {
+        return new Observable(observer => {
+            let has1 = false;
+            let has2 = false;
+            let last1;
+            let last2;
+            let unreg1 = this.subscribe(e1 => {
+                last1 = e1;
+                has1 = true;
+                if (has2) {
+                    observer(mergeFunc(last1, last2));
+                }
+            });
+            let unreg2 = other.subscribe(e2 => {
+                last2 = e2;
+                has2 = true;
+                if (has1) {
+                    observer(mergeFunc(last1, last2));
+                }
+            });
+            return () => { unreg1(); unreg2(); };
+        });
     }
 
     /**
@@ -181,7 +223,6 @@ class ObservableSource {
          * @template T
          */
         this._observable = new Observable(observer => {
-            // HACK: not re-entrant safe!
             this._observers.push(observer);
             let didRun = false;
             return () => {
@@ -206,7 +247,6 @@ class ObservableSource {
      * @template T
      */
     send(eventValue) {
-        // HACK: not re-entrant safe!
         for (let obs of this._observers) {
             obs(eventValue);
         }
@@ -222,7 +262,6 @@ class ObservableValue {
         this._value = initialValue;
         this._source = new ObservableSource();
         this._observable = new Observable(observer => {
-            // HACK: not re-entrant safe!
             observer(this._value);
             return this._source.observable().subscribe(observer);
         });

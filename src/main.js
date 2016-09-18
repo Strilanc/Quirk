@@ -17,9 +17,9 @@ import {TouchScrollBlocker} from "src/browser/TouchScrollBlocker.js"
 import {Util} from "src/base/Util.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {watchDrags, isMiddleClicking, eventPosRelativeTo} from "src/browser/MouseWatcher.js"
-import {Observable, ObservableValue} from "src/base/Obs.js"
-import {initExports} from "src/ui/exports.js"
-import {initForge} from "src/ui/forge.js"
+import {Observable, ObservableValue, ObservableSource} from "src/base/Obs.js"
+import {initExports, obsExportsIsShowing} from "src/ui/exports.js"
+import {initForge, obsForgeIsShowing} from "src/ui/forge.js"
 import {initUndoRedo} from "src/ui/undo.js"
 import {initClear} from "src/ui/clear.js"
 import {initUrlCircuitSync} from "src/ui/url.js"
@@ -228,12 +228,18 @@ canvasDiv.addEventListener('mouseleave', () => {
     }
 });
 
+let obsIsAnyOverlayShowing = new ObservableSource();
 initUrlCircuitSync(revision);
-initExports(revision);
-initForge(revision);
-initUndoRedo(revision);
-initClear(revision);
+initExports(revision, obsIsAnyOverlayShowing.observable());
+initForge(revision, obsIsAnyOverlayShowing.observable());
+initUndoRedo(revision, obsIsAnyOverlayShowing.observable());
+initClear(revision, obsIsAnyOverlayShowing.observable());
 initTitleSync(revision);
+obsForgeIsShowing.zipLatest(obsExportsIsShowing, (e1, e2) => e1 || e2).whenDifferent().subscribe(e => {
+    obsIsAnyOverlayShowing.send(e);
+    canvasDiv.tabIndex = e ? -1 : 0;
+    document.getElementById('about-link').tabIndex = e ? -1 : undefined;
+});
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;

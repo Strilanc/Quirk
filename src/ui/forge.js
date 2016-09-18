@@ -17,39 +17,38 @@ import {Rect} from "src/math/Rect.js"
 import {Serializer} from "src/circuit/Serializer.js"
 import {Util} from "src/base/Util.js"
 import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
-import {Observable, ObservableSource} from "src/base/Obs.js"
+import {Observable, ObservableValue} from "src/base/Obs.js"
 import {textEditObservable} from "src/browser/EventUtil.js"
+
+const forgeIsVisible = new ObservableValue(false);
+const obsForgeIsShowing = forgeIsVisible.observable().whenDifferent();
 
 /**
  * @param {!Revision} revision
+ * @param {!Observable.<!boolean>} obsIsAnyOverlayShowing
  */
-function initForge(revision) {
-    const obsShow = new ObservableSource();
-    const obsHide = new ObservableSource();
+function initForge(revision, obsIsAnyOverlayShowing) {
+    const obsOnShown = obsForgeIsShowing.filter(e => e === true);
     /** @type {!String} */
     let latestInspectorText;
     revision.latestActiveCommit().subscribe(e => { latestInspectorText = e; });
 
-    // Show/hide exports overlay.
+    // Show/hide forge overlay.
     (() => {
         const forgeButton = /** @type {!HTMLButtonElement} */ document.getElementById('gate-forge-button');
         const forgeOverlay = /** @type {!HTMLDivElement} */ document.getElementById('gate-forge-overlay');
         const forgeDiv = /** @type {HTMLDivElement} */ document.getElementById('gate-forge-div');
-        forgeButton.addEventListener('click', () => {
-            forgeDiv.style.display = 'block';
-            obsShow.send(undefined);
-        });
-        obsHide.observable().subscribe(() => {
-            forgeDiv.style.display = 'none';
-        });
-        forgeOverlay.addEventListener('click', () => {
-            obsHide.send(undefined);
-        });
+        forgeButton.addEventListener('click', () => forgeIsVisible.set(true));
+        forgeOverlay.addEventListener('click', () => forgeIsVisible.set(false));
+        obsIsAnyOverlayShowing.subscribe(e => { forgeButton.disabled = e; });
         document.addEventListener('keydown', e => {
             const ESC_KEY = 27;
             if (e.keyCode === ESC_KEY) {
-                obsHide.send(undefined);
+                forgeIsVisible.set(false)
             }
+        });
+        obsForgeIsShowing.subscribe(showing => {
+            forgeDiv.style.display = showing ? 'block' : 'none';
         });
     })();
 
@@ -93,7 +92,7 @@ function initForge(revision) {
     function createCustomGateAndClose(gate, circuitDef=undefined) {
         let c = circuitDef || Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
         revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(gate)), null, 0));
-        obsHide.send(undefined);
+        forgeIsVisible.set(false);
     }
 
     (() => {
@@ -103,7 +102,7 @@ function initForge(revision) {
         const txtAngle = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-angle');
         const txtPhase = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-phase');
         const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-name');
-        obsShow.observable().subscribe(() => { txtName.value = ""; });
+        obsOnShown.subscribe(() => { txtName.value = ""; });
 
         function parseRotation() {
             let parseAngle = e => {
@@ -138,7 +137,7 @@ function initForge(revision) {
         }
 
         let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation, rotationButton);
-        Observable.of(obsShow.observable(), ...[txtPhase, txtAxis, txtAngle].map(textEditObservable)).
+        Observable.of(obsOnShown, ...[txtPhase, txtAxis, txtAngle].map(textEditObservable)).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
@@ -164,7 +163,7 @@ function initForge(revision) {
         const chkFix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-fix');
         const matrixButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-button');
         const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-name');
-        obsShow.observable().subscribe(() => { txtName.value = ""; });
+        obsOnShown.subscribe(() => { txtName.value = ""; });
 
         function parseMatrix_noCorrection() {
             let s = txtMatrix.value;
@@ -213,7 +212,7 @@ function initForge(revision) {
 
         let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrix, matrixButton);
 
-        Observable.of(obsShow.observable(), textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
+        Observable.of(obsOnShown, textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
@@ -245,7 +244,7 @@ function initForge(revision) {
         const spanWeight = /** @type {!HTMLElement} */ document.getElementById('gate-forge-circuit-weight');
         const circuitButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-button');
         const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-name');
-        obsShow.observable().subscribe(() => { txtName.value = ""; });
+        obsOnShown.subscribe(() => { txtName.value = ""; });
 
         function parseRange(txtBox, maxLen) {
             let txt = txtBox.value === '' ? txtBox.placeholder : txtBox.value;
@@ -331,7 +330,7 @@ function initForge(revision) {
             }
         };
 
-        Observable.of(obsShow.observable(), textEditObservable(txtCols), textEditObservable(txtRows)).
+        Observable.of(obsOnShown, textEditObservable(txtCols), textEditObservable(txtRows)).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
@@ -348,4 +347,4 @@ function initForge(revision) {
     })();
 }
 
-export {initForge}
+export {initForge, obsForgeIsShowing}
