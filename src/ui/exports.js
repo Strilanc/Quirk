@@ -121,7 +121,7 @@ function initExports(revision, obsIsAnyOverlayShowing) {
             let moddedHtml =
                 originalHtml.substring(0, modStart) +
                 startDefaultTag +
-                'document.DEFAULT_CIRCUIT = ' + latest + ';\n' +
+                'document.DEFAULT_CIRCUIT = ' + JSON.stringify(latest) + ';\n' +
                 originalHtml.substring(modStop);
 
             // Strip analytics.
