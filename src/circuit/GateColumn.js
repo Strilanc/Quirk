@@ -99,26 +99,20 @@ class GateColumn {
         }
 
         let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context, isNested);
-        let customDisableReason = g.customDisableReasonFinder(args);
-        if (customDisableReason !== undefined) {
-            return customDisableReason;
-        }
+        let tests = [
+            () => g.customDisableReasonFinder(args),
+            () => this._disabledReason_needInput(args),
+            () => this._disabledReason_controlInside(row),
+            () => this._disabledReason_remixing(row, inputMeasureMask),
+            () => this._disabledReason_overlappingTags(row)
+        ];
 
-        let disabledInside = this._disabledReason_controlInside(row);
-        if (disabledInside !== undefined) {
-            return disabledInside;
+        for (let test of tests) {
+            let reason = test();
+            if (reason !== undefined) {
+                return reason;
+            }
         }
-
-        let disabledRemix = this._disabledReason_remixing(row, inputMeasureMask);
-        if (disabledRemix !== undefined) {
-            return disabledRemix;
-        }
-
-        let disabledCollision = this._disabledReason_overlappingTags(row);
-        if (disabledCollision !== undefined) {
-            return disabledCollision;
-        }
-
         return undefined;
     }
 
@@ -165,6 +159,44 @@ class GateColumn {
                 return "no\nremix\n(sorry)";
             }
         }
+        return undefined;
+    }
+
+    /**
+     * @param {!GateCheckArgs} args
+     * @returns {undefined|!string}
+     * @private
+     */
+    _disabledReason_needInput(args) {
+        let missing = [];
+        for (let key of args.gate.getUnmetContextKeys()) {
+            if (!args.context.has(key) && !args.isNested) {
+                missing.push(key);
+            }
+        }
+        if (missing.length > 0) {
+            return "Need\nInput\n " + missing.map(e => e.replace("Input Range ", "")).join(", ");
+        }
+
+        let row = args.outerRow;
+        let rangeVals = seq(args.gate._requiredContextKeys).
+            filter(e => e.startsWith("Input Range ")).
+            filter(e => args.context.has(e)).
+            map(key => args.context.get(key));
+
+        if (rangeVals.any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
+            return "input\ninside";
+        }
+
+        if (args.gate.effectMightPermutesStates()) {
+            let hasMeasuredOutputs = ((args.measuredMask >> row) & ((1 << args.gate.height) - 1)) !== 0;
+            let hasUnmeasuredInputs =
+                rangeVals.any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
+            if (hasUnmeasuredInputs && hasMeasuredOutputs) {
+                return "no\nremix\n(sorry)";
+            }
+        }
+
         return undefined;
     }
 

@@ -168,7 +168,8 @@ class WidgetPainter {
             12), 0);
 
         let circuitRect = new Rect(pad, nextY(), w, dispSize);
-        let {maxW, maxH} = drawCircuitTooltip(painter, circuit, circuitRect, true, 0, time);
+        let nestedCircuit = circuit.withDisabledReasonsForEmbeddedContext(0, new Map());
+        let {maxW, maxH} = drawCircuitTooltip(painter, nestedCircuit, circuitRect, true, 0, time);
         pushRect(circuitRect.withW(maxW).withH(maxH));
     }
 

@@ -1116,7 +1116,8 @@ let GATE_CIRCUIT_DRAWER = args => {
         Config.GATE_FILL_COLOR :
         Config.TIME_DEPENDENT_HIGHLIGHT_COLOR;
     GatePainting.paintBackground(args, toolboxColor);
-    drawCircuitTooltip(args.painter, circuit, args.rect, false, undefined, args.stats.time);
+    let nestedCircuit = circuit.withDisabledReasonsForEmbeddedContext(0, new Map());
+    drawCircuitTooltip(args.painter, nestedCircuit, args.rect, false, undefined, args.stats.time);
     GatePainting.paintOutline(args);
     if (args.isHighlighted) {
         args.painter.ctx.save();

@@ -158,8 +158,6 @@ MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.generateFamily(1, 16, spa
     markedAsStable().
     withSerializedId("+=AB" + span).
     withHeight(span).
-    withCustomDisableReasonFinder(Gate.disableReasonFinder_needInput('need\ninput\nA, B',
-        'Input Range A', 'Input Range B')).
     withRequiredContextKeys('Input Range A', 'Input Range B').
     withCustomShader(args => {
         let {offset: inputOffsetA, length: inputLengthA} = args.customContextFromGates.get('Input Range A');
@@ -184,8 +182,6 @@ MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.generateFamily(1, 16
     markedAsStable().
     withSerializedId("-=AB" + span).
     withHeight(span).
-    withCustomDisableReasonFinder(Gate.disableReasonFinder_needInput('need\ninput\nA, B',
-        'Input Range A', 'Input Range B')).
     withRequiredContextKeys('Input Range A', 'Input Range B').
     withCustomShader(args => {
         let {offset: inputOffsetA, length: inputLengthA} = args.customContextFromGates.get('Input Range A');

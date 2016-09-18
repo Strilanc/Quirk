@@ -215,7 +215,6 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     markedAsStable().
     withHeight(span).
     withSerializedId("+=A" + span).
-    withCustomDisableReasonFinder(Gate.disableReasonFinder_needInput('need\ninput\nA', 'Input Range A')).
     withRequiredContextKeys("Input Range A").
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
@@ -237,7 +236,6 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     markedAsStable().
     withHeight(span).
     withSerializedId("-=A" + span).
-    withCustomDisableReasonFinder(Gate.disableReasonFinder_needInput('need\ninput\nA', 'Input Range A')).
     withRequiredContextKeys("Input Range A").
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
