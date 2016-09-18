@@ -72,9 +72,20 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 Config.OPERATION_BACK_COLOR,
                 undefined,
                 'transparent');
-            if (op.width() === 2 && op.isUnitary(0.009)) {
-                MathPainter.paintBlochSphereRotation(painter, op, rect2);
+            if (!op.isUnitary(0.009)) {
+                painter.printParagraph('NOT UNITARY', rect2, new Point(0.5, 0.5), 'red', 24);
+            } else  if (op.width() !== 2) {
+                painter.printParagraph('(Not a 1-qubit rotation)', rect2, new Point(0.5, 0.5), '#666', 20);
+            } else {
+                MathPainter.paintBlochSphereRotation(
+                    painter,
+                    op,
+                    rect2,
+                    Config.OPERATION_BACK_COLOR,
+                    Config.OPERATION_FORE_COLOR);
             }
+            let cx = (rect1.right() + rect2.x)/2;
+            painter.strokeLine(new Point(cx, 0), new Point(cx, canvas.height), 'black', 2);
             if (!op.hasNaN()) {
                 button.disabled = false;
             }
@@ -82,7 +93,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             painter.printParagraph(
                 ex+"",
                 new Rect(0, 0, canvas.width, canvas.height),
-                new Point(0, 0),
+                new Point(0.5, 0.5),
                 'red',
                 24);
         }
@@ -343,7 +354,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 painter.printParagraph(
                     ex+"",
                     new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
-                    new Point(0, 0),
+                    new Point(0.5, 0.5),
                     'red',
                     24);
             }
