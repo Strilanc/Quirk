@@ -182,6 +182,16 @@ suite.test("parse_expressions", () => {
 
     assertThat(Complex.parse("0---+--+--1*")).isEqualTo(-1);
     assertThat(Complex.parse("2+3^")).isEqualTo(5);
+    assertThat(Complex.parse("cos(45) + i sin(45)")).isApproximatelyEqualTo(
+        new Complex(Math.sqrt(0.5), Math.sqrt(0.5)));
+    assertThat(Complex.parse("cos(45) + i (sin 45)")).isApproximatelyEqualTo(
+        new Complex(Math.sqrt(0.5), Math.sqrt(0.5)));
+    assertThat(Complex.parse("e^(pi i)")).isApproximatelyEqualTo(-1);
+    assertThat(Complex.parse("exp(ln(2))")).isApproximatelyEqualTo(2);
+    assertThat(Complex.parse("sin(arcsin(0.5))")).isApproximatelyEqualTo(0.5);
+    assertThat(Complex.parse("cos(arccos(0.5))")).isApproximatelyEqualTo(0.5);
+    assertThat(Complex.parse("sin(asin(0.5))")).isApproximatelyEqualTo(0.5);
+    assertThat(Complex.parse("cos(acos(0.5))")).isApproximatelyEqualTo(0.5);
 });
 
 suite.test("norm2", () => {

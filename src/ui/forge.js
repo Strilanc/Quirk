@@ -75,7 +75,9 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             if (op.width() === 2 && op.isUnitary(0.009)) {
                 MathPainter.paintBlochSphereRotation(painter, op, rect2);
             }
-            button.disabled = false;
+            if (!op.hasNaN()) {
+                button.disabled = false;
+            }
         } catch (ex) {
             painter.printParagraph(
                 ex+"",
@@ -179,7 +181,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
 
             // Newlines introduce a break if one isn't already present at that location and we aren't at the end.
             s = s.split(/,?\s*\n\s*(?!$)/).join(',');
-            s = s.split(/\s/).join('');
+            s = s.trim();
             // Ignore trailing comma.
             if (s.endsWith(',')) {
                 s = s.substring(0, s.length - 1);
@@ -204,7 +206,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             if (op.width() !== op.height() || op.width() < 2 || op.width() > 16 || !Util.isPowerOf2(op.width())) {
                 throw Error("Matrix must be 2x2, 4x4, 8x8, or 16x16.")
             }
-            if (chkFix.checked) {
+            if (chkFix.checked && !op.hasNaN()) {
                 op = op.closestUnitary(0.0001);
                 op = Matrix.parse(op.toString(new Format(true, 0.0000001, 7, ",")));
             }
