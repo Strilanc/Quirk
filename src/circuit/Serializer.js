@@ -206,7 +206,7 @@ let fromJson_Gate_Circuit = (props, context) => {
     return circuitDefinitionToGate(circuit, props.symbol, props.name, '').
         withSerializedId(props.id).
         withHeight(circuit.numWires).
-        withCustomDrawer(props.symbol === "" ? circuitDrawer : undefined);
+        withCustomDrawer(circuitDrawer);
 };
 
 /**

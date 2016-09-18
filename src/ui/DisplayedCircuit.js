@@ -345,7 +345,7 @@ class DisplayedCircuit {
         painter.ctx.save();
         for (let row = 0; row < drawnWireCount; row++) {
             if (row === this._extraWireStartIndex) {
-                painter.ctx.globalAlpha = 0.5;
+                painter.ctx.globalAlpha *= 0.5;
             }
             painter.trace(trace => {
                 let wireRect = this.wireRect(row);
@@ -1103,18 +1103,26 @@ function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWi
  */
 let GATE_CIRCUIT_DRAWER = args => {
     let circuit = args.gate.knownCircuit;
-    if (circuit === undefined) {
-        GatePainting.DEFAULT_DRAWER(args);
+    if (circuit === undefined || args.gate.symbol !== '') {
+        if (args.gate.stableDuration() === Infinity) {
+            GatePainting.DEFAULT_DRAWER(args);
+        } else {
+            GatePainting.makeCycleDrawer()(args);
+        }
         return;
     }
 
-    GatePainting.paintBackground(args);
+    let toolboxColor = args.gate.stableDuration() === Infinity ?
+        Config.GATE_FILL_COLOR :
+        Config.TIME_DEPENDENT_HIGHLIGHT_COLOR;
+    GatePainting.paintBackground(args, toolboxColor);
     drawCircuitTooltip(args.painter, circuit, args.rect, false, undefined, args.stats.time);
     GatePainting.paintOutline(args);
     if (args.isHighlighted) {
-        args.painter.ctx.globalAlpha = 0.9;
+        args.painter.ctx.save();
+        args.painter.ctx.globalAlpha *= 0.9;
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
-        args.painter.ctx.globalAlpha = 1;
+        args.painter.ctx.restore();
     }
     GatePainting.paintOutline(args);
 };

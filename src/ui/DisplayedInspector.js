@@ -262,7 +262,7 @@ class DisplayedInspector {
             return;
         }
         painter.ctx.save();
-        painter.ctx.globalAlpha = this.hand.pos === undefined || !this.hand.isBusy() ?
+        painter.ctx.globalAlpha *= this.hand.pos === undefined || !this.hand.isBusy() ?
             1.0 :
             Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
         painter.ctx.save();
