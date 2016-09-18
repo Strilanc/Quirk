@@ -144,7 +144,7 @@ class WidgetPainter {
 
     /**
      * @param {!Painter} painter
-     * @param {undefined|!CircuitDefinition} circuit
+     * @param {undefined|!CircuitDefinition} nestedCircuit
      * @param {!number} pad
      * @param {!number} dispSize
      * @param {!number} w
@@ -153,12 +153,12 @@ class WidgetPainter {
      * @param {!number} time
      * @private
      */
-    static _paintGateTooltip_circuit(painter, circuit, pad, dispSize, w, pushRect, nextY, time) {
-        if (circuit === undefined) {
+    static _paintGateTooltip_circuit(painter, nestedCircuit, pad, dispSize, w, pushRect, nextY, time) {
+        if (nestedCircuit === undefined) {
             return;
         }
 
-        let weight = circuit.gateWeight();
+        let weight = nestedCircuit.gateWeight();
 
         pushRect(painter.printParagraph(
             `As circuit (gate weight = ${weight}):`,
@@ -168,7 +168,6 @@ class WidgetPainter {
             12), 0);
 
         let circuitRect = new Rect(pad, nextY(), w, dispSize);
-        let nestedCircuit = circuit.withDisabledReasonsForEmbeddedContext(0, new Map());
         let {maxW, maxH} = drawCircuitTooltip(painter, nestedCircuit, circuitRect, true, 0, time);
         pushRect(circuitRect.withW(maxW).withH(maxH));
     }
@@ -204,7 +203,7 @@ class WidgetPainter {
         WidgetPainter._paintGateTooltip_matrix(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
         WidgetPainter._paintGateTooltip_rotation(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
         WidgetPainter._paintGateTooltip_circuit(
-            painter, gate.knownCircuit, pad, dispSize, w, pushRect, () => maxY, time);
+            painter, gate.knownCircuitNested, pad, dispSize, w, pushRect, () => maxY, time);
 
         return {maxX, maxY};
     }

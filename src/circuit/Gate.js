@@ -90,6 +90,10 @@ class Gate {
          */
         this.knownCircuit = undefined;
         /**
+         * @type {undefined|!CircuitDefinition}
+         */
+        this.knownCircuitNested = undefined;
+        /**
          * @type {!Array.<!string>}
          */
         this._requiredContextKeys = [];
@@ -105,7 +109,7 @@ class Gate {
         this.postShaders = [];
         /**
          * @param {!int} qubit
-         * @returns {!Array.<!{key: !string, value: *}>}
+         * @returns {!Array.<!{key: !string, val: *}>}
          */
         this.customColumnContextProvider = qubit => [];
         /**
@@ -305,6 +309,7 @@ class Gate {
         }
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
+        g.knownCircuitNested = this.knownCircuitNested;
         g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
@@ -333,17 +338,18 @@ class Gate {
     }
 
     /**
-     * @param {!CircuitDefinition} circuitDefinition
+     * @param {undefined|!CircuitDefinition} circuitDefinition
      * @returns {!Gate}
      */
     withKnownCircuit(circuitDefinition) {
         let g = this._copy();
         g.knownCircuit = circuitDefinition;
+        g.knownCircuitNested = circuitDefinition.withDisabledReasonsForEmbeddedContext(0, new Map());
         return g;
     }
 
     /**
-     * @param {!function(qubit:!int):!Array.<!{key: !string, value: *}>} customColumnContextProvider
+     * @param {!function(qubit:!int):!Array.<!{key: !string, val: *}>} customColumnContextProvider
      * @returns {!Gate}
      */
     withCustomColumnContextProvider(customColumnContextProvider) {

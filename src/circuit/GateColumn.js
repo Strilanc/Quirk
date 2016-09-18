@@ -179,19 +179,20 @@ class GateColumn {
         }
 
         let row = args.outerRow;
-        let rangeVals = seq(args.gate._requiredContextKeys).
-            filter(e => e.startsWith("Input Range ")).
-            filter(e => args.context.has(e)).
-            map(key => args.context.get(key));
+        let rangeVals = seq(args.gate.getUnmetContextKeys()).
+            filter(key => key.startsWith("Input Range ")).
+            filter(key => args.context.has(key)).
+            map(key => args.context.get(key)).
+            toArray();
 
-        if (rangeVals.any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
+        if (seq(rangeVals).any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
             return "input\ninside";
         }
 
         if (args.gate.effectMightPermutesStates()) {
             let hasMeasuredOutputs = ((args.measuredMask >> row) & ((1 << args.gate.height) - 1)) !== 0;
             let hasUnmeasuredInputs =
-                rangeVals.any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
+                seq(rangeVals).any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
             if (hasUnmeasuredInputs && hasMeasuredOutputs) {
                 return "no\nremix\n(sorry)";
             }
@@ -240,16 +241,22 @@ class GateColumn {
      * @returns {!Array.<undefined|!string>}
      */
     disabledReasons(inputMeasureMask, outerRowOffset, outerContext, isNested) {
-        let context = Util.mergeMaps(
-            outerContext,
-            new Map(seq(this.gates).
-                mapWithIndex((g, row) => g === undefined ? [] : g.customColumnContextProvider(row + outerRowOffset)).
-                reverse().
-                flatten().
-                map(({key, val}) => [key, val])));
-        return Seq.range(this.gates.length).
-            map(row => this._disabledReason(inputMeasureMask, row, outerRowOffset, context, isNested)).
-            toArray();
+        let context = new Map(outerContext);
+        for (let row = this.gates.length - 1; row >= 0; row--) {
+            let g = this.gates[row];
+            if (g !== undefined) {
+                for (let {key, val} of g.customColumnContextProvider(row + outerRowOffset)) {
+                    //noinspection JSUnusedAssignment
+                    context.set(key, val);
+                }
+            }
+        }
+
+        let allReasons = [];
+        for (let i = 0; i < this.gates.length; i++) {
+            allReasons.push(this._disabledReason(inputMeasureMask, i, outerRowOffset, context, isNested))
+        }
+        return allReasons;
     }
 
     nextMeasureMask(inputMeasureMask, disabledReasons) {

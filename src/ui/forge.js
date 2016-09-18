@@ -300,18 +300,13 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         }
 
         let latestGate = new ObservableValue(undefined);
-        let drawGate = (painter, gate, extraWires) => {
-            let keys = gate.getUnmetContextKeys();
-            drawCircuitTooltip(
-                painter,
-                gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
-                    0,
-                    new Map([...keys].map(e => [e, {offset: 0, length: 0}]))),
-                new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
-                true,
-                extraWires,
-                getCircuitCycleTime());
-        };
+        let drawGate = (painter, gate, extraWires) => drawCircuitTooltip(
+            painter,
+            gate.knownCircuitNested,
+            new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+            true,
+            extraWires,
+            getCircuitCycleTime());
 
         latestGate.observable().
             map(e => e === undefined || e.gate.stableDuration() === Infinity ?
