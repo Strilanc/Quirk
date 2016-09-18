@@ -394,6 +394,17 @@ class CircuitDefinition {
     /**
      * @returns {!CircuitDefinition}
      */
+    trimEmptyColumnsAtEndIgnoringGateWidths() {
+        for (let n = this.columns.length; ; n--) {
+            if (n === 0 || !this.columns[n-1].isEmpty()) {
+                return this.withColumns(this.columns.slice(0, n));
+            }
+        }
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
     withUncoveredColumnsRemoved() {
         let used = this._usedColumns();
         return new CircuitDefinition(
