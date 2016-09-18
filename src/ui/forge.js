@@ -309,6 +309,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             getCircuitCycleTime());
 
         latestGate.observable().
+            zipLatest(obsForgeIsShowing, (g, s) => s ? g : undefined).
             map(e => e === undefined || e.gate.stableDuration() === Infinity ?
                 Observable.of() :
                 Observable.requestAnimationTicker().map(_ => e)).
