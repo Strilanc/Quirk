@@ -594,7 +594,10 @@ class DisplayedCircuit {
             return this;
         }
 
-        return this.withCircuit(this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount)).
+        let newCircuitDef = this.circuitDefinition.
+            withColumns(newCols).
+            withWireCount(newWireCount);
+        return this.withCircuit(newCircuitDef).
             _withHighlightedSlot({row, col: modificationPoint.col, resizeStyle: false}).
             _withCompressedColumnIndex(isInserting ? i : undefined).
             _withFallbackExtraWireStartIndex(this.circuitDefinition.numWires);
@@ -628,7 +631,9 @@ class DisplayedCircuit {
 
         let newCircuitWithoutHeightFix = this.circuitDefinition.withColumns(newCols).
             withWireCount(newWireCount);
-        let newCircuit = newCircuitWithoutHeightFix.withHeightOverlapsFixed();
+        let newCircuit = newCircuitWithoutHeightFix.
+            withHeightOverlapsFixed().
+            withTrailingSpacersIncluded(1);
         return this.withCircuit(newCircuit).
             _withHighlightedSlot(this._highlightedSlot).
             _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
