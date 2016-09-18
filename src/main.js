@@ -141,7 +141,7 @@ watchDrags(canvasDiv,
     (pt, ev) => {
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
-        let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
+        let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey, ev.ctrlKey);
         if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }
@@ -150,7 +150,7 @@ watchDrags(canvasDiv,
         revision.startedWorkingOnCommit();
         displayed.set(
             syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
-                afterGrabbing(ev.shiftKey));
+                afterGrabbing(ev.shiftKey, ev.ctrlKey));
 
         ev.preventDefault();
     },
@@ -203,7 +203,7 @@ canvasDiv.addEventListener('mousedown', ev => {
     let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
     let newInspector = syncArea(displayed.get()).
         withHand(newHand).
-        afterGrabbing(false). // Grab the gate.
+        afterGrabbing(false, false). // Grab the gate.
         withHand(newHand). // Lose the gate.
         afterTidyingUp().
         withJustEnoughWires(newHand, 0);

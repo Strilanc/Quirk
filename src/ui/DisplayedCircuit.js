@@ -32,7 +32,7 @@ class DisplayedCircuit {
      * @param {!number} top
      * @param {!CircuitDefinition} circuitDefinition
      * @param {undefined|!int} compressedColumnIndex
-     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} highlightedSlot
+     * @param {undefined|!{col: !int, row: undefined|!int, resizeStyle: !boolean}} highlightedSlot
      * @param {undefined|!int} extraWireStartIndex
      * @private
      */
@@ -57,7 +57,7 @@ class DisplayedCircuit {
          */
         this._compressedColumnIndex = compressedColumnIndex;
         /**
-         * @type {undefined|!{col: !int, row: !int, resizeStyle: !boolean}}
+         * @type {undefined|!{col: !int, row: undefined|!int, resizeStyle: !boolean}}
          * @private
          */
         this._highlightedSlot = highlightedSlot;
@@ -471,7 +471,14 @@ class DisplayedCircuit {
     _drawColumn(painter, gateColumn, col, hand, stats) {
         this._drawColumnControlWires(painter, gateColumn, col, stats);
 
-        let focusSlot = this._highlightedSlot;
+        if (this._highlightedSlot !== undefined &&
+            this._highlightedSlot.col === col &&
+            this._highlightedSlot.row === undefined) {
+            let rect = this.gateRect(0, col, 1, this.circuitDefinition.numWires).paddedBy(3);
+            painter.fillRect(rect, 'rgba(255, 196, 112, 0.7)');
+            painter.strokeRect(rect, 'black');
+        }
+
         for (let row = 0; row < this.circuitDefinition.numWires; row++) {
             if (gateColumn.gates[row] === undefined) {
                 continue;
@@ -497,7 +504,7 @@ class DisplayedCircuit {
                 gate,
                 stats,
                 {row, col},
-                focusSlot === undefined ? hand.hoverPoints() : [],
+                this._highlightedSlot === undefined ? hand.hoverPoints() : [],
                 stats.customStatsForSlot(col, row)));
 
             this._drawGate_disabledReason(painter, col, row, gateRect, isHighlighted);
@@ -556,7 +563,38 @@ class DisplayedCircuit {
      * @returns {!DisplayedCircuit}
      */
     previewDrop(hand) {
-        return hand.heldGate !== undefined ? this._previewDropMovedGate(hand) : this._previewResizedGate(hand);
+        return hand.heldColumn !== undefined ? this._previewDropMovedGateColumn(hand) :
+            hand.heldGate !== undefined ? this._previewDropMovedGate(hand) :
+            this._previewResizedGate(hand);
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {!DisplayedCircuit}
+     * @private
+     */
+    _previewDropMovedGateColumn(hand) {
+        let halfCol = this.findOpHalfColumnAt(new Point(hand.pos.x, this.top));
+        let newCols = [...this.circuitDefinition.columns];
+        let mustInsert = halfCol % 1 === 0 && newCols[halfCol] !== undefined && !newCols[halfCol].isEmpty();
+        if (mustInsert) {
+            let isAfter = hand.pos.x > this.opRect(halfCol).center().x;
+            halfCol += isAfter ? 0.5 : -0.5;
+        }
+
+        let col = Math.ceil(halfCol);
+        let isInsert = halfCol % 1 !== 0;
+        while (newCols.length < col) {
+            newCols.push(GateColumn.empty(this.circuitDefinition.numWires));
+        }
+        newCols.splice(col, isInsert ? 0 : 1, hand.heldColumn);
+
+        let newCircuitDef = this.circuitDefinition.
+            withColumns(newCols).
+            withTrailingSpacersIncluded();
+        return this.withCircuit(newCircuitDef).
+            _withHighlightedSlot({row: undefined, col, resizeStyle: false}).
+            _withCompressedColumnIndex(isInsert ? col : undefined);
     }
 
     /**
@@ -678,7 +716,7 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {undefined|!{col: !int, row: !int, resizeStyle: !boolean}} slot
+     * @param {undefined|!{col: !int, row: undefined|!int, resizeStyle: !boolean}} slot
      * @returns {!DisplayedCircuit}
      * @private
      */
@@ -757,10 +795,14 @@ class DisplayedCircuit {
 
     /**
      * @param {!Hand} hand
-     * @param {!boolean=} duplicate
+     * @param {!boolean=false} duplicate
+     * @param {!boolean=false} wholeColumn
      * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
-    tryGrab(hand, duplicate=false) {
+    tryGrab(hand, duplicate=false, wholeColumn=false) {
+        if (wholeColumn) {
+            return this._tryGrabWholeColumn(hand) || {newCircuit: this, newHand: hand};
+        }
         let {newCircuit, newHand} = this._tryGrabResizeTab(hand) || {newCircuit: this, newHand: hand};
         return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
     }
@@ -829,6 +871,29 @@ class DisplayedCircuit {
             }
         }
         return undefined;
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
+     * @private
+     */
+    _tryGrabWholeColumn(hand) {
+        if (hand.isBusy() || hand.pos === undefined) {
+            return undefined;
+        }
+
+        let col = Math.round(this.toColumnSpaceCoordinate(hand.pos.x));
+        if (col < 0 || col >= this.circuitDefinition.columns.length || this.circuitDefinition.columns[col].isEmpty()) {
+            return undefined;
+        }
+
+        let newCols = [...this.circuitDefinition.columns];
+        newCols.splice(col, 1, GateColumn.empty(this.circuitDefinition.numWires));
+        return {
+            newCircuit: this.withCircuit(this.circuitDefinition.withColumns(newCols)),
+            newHand: hand.withHeldGateColumn(this.circuitDefinition.columns[col], new Point(0, 0))
+        };
     }
 
     /**
@@ -1093,7 +1158,7 @@ function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWi
         painter.ctx.translate(0, 0);
         displayed.paint(
             painter,
-            new Hand(undefined, undefined, undefined, undefined),
+            Hand.EMPTY,
             stats,
             true,
             showWires);

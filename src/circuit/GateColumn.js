@@ -44,6 +44,13 @@ class GateColumn {
     }
 
     /**
+     * @returns {Infinity|!number}
+     */
+    stableDuration() {
+        return seq(this.gates).filter(e => e !== undefined).map(e => e.stableDuration()).min(Infinity);
+    }
+
+    /**
      * @returns {!boolean}
      */
     isEmpty() {
