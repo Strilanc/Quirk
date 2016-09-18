@@ -179,6 +179,9 @@ suite.test("parse_expressions", () => {
     assertThat(Complex.parse("---------1")).isEqualTo(-1);
     assertThat(Complex.parse("---+--+--1")).isEqualTo(-1);
     assertThat(Complex.parse("0---+--+--1")).isEqualTo(-1);
+
+    assertThat(Complex.parse("0---+--+--1*")).isEqualTo(-1);
+    assertThat(Complex.parse("2+3^")).isEqualTo(5);
 });
 
 suite.test("norm2", () => {

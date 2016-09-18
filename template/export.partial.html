@@ -1,0 +1,23 @@
+<div id="export-div" style="display:none;">
+    <div id="export-overlay" style="position:fixed; left: 0; top: 0; height: 100vh; width: 100vw; background: rgba(0, 0, 0, 0.5);">
+    </div>
+    <div style="position: absolute; top: 20px; left: 50px; padding: 20px; background-color: white; border: 1px solid black;">
+        <strong>Escaped Link</strong> - Link to current circuit, without special characters that confuse forums.
+        <div style="margin: 10px 0 30px 20px;">
+            <button tabindex="100" id="export-link-copy-button">Copy to Clipboard</button>&nbsp;&nbsp;<span id="export-link-copy-result"></span>
+            <div style="overflow:auto; word-wrap:break-word; max-height:60px; max-width:600px; border: 1px solid black; padding: 10px; margin: 2px;"><a tabindex="101" id="export-escaped-anchor"></a></div>
+        </div>
+
+        <strong>Offline Copy</strong> - Html file containing Quirk and the current circuit.
+        <div style="margin: 10px 0 30px 20px;">
+            <button tabindex="102" id="download-offline-copy-button" style="width:600px; height:60px;">Download ...</button>
+        </div>
+
+        <strong>JSON</strong> - Parsable representation of current circuit.
+        <div style="margin: 10px 0 0 20px;">
+            <button tabindex="103" id="export-json-copy-button">Copy to Clipboard</button>&nbsp;&nbsp;<span id="export-json-copy-result"></span>
+            <br>
+            <pre tabindex="104" id="export-circuit-json-pre" style="overflow:auto; max-width:600px; max-height:60px; border: 1px solid black; padding:5px; margin:2px;"></pre>
+        </div>
+    </div>
+</div>

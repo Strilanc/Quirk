@@ -206,7 +206,7 @@ let fromJson_Gate_Circuit = (props, context) => {
     return circuitDefinitionToGate(circuit, props.symbol, props.name, '').
         withSerializedId(props.id).
         withHeight(circuit.numWires).
-        withCustomDrawer(props.symbol === "" ? circuitDrawer : undefined);
+        withCustomDrawer(circuitDrawer);
 };
 
 /**
@@ -304,7 +304,7 @@ function fromJson_CustomGateSet(json) {
  */
 let toJson_CircuitDefinition = (v, context) => {
     let result = {
-        cols: v.columns.
+        cols: v.trimEmptyColumnsAtEndIgnoringGateWidths().columns.
             map(e => toJson_GateColumn(e, context || v.customGateSet)).
             map(c => seq(c).skipTailWhile(e => e === 1).toArray())
     };
@@ -336,7 +336,8 @@ let fromJson_CircuitDefinition = (json, context=undefined) => {
             toArray().
             slice(0, numWires))); // Silently discard gates off the edge of the circuit.
 
-    return new CircuitDefinition(numWires, gateCols, undefined, undefined, customGateSet);
+    return new CircuitDefinition(numWires, gateCols, undefined, undefined, customGateSet).
+        withTrailingSpacersIncluded();
 };
 
 const BINDINGS = [

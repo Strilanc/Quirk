@@ -17,9 +17,9 @@ import {TouchScrollBlocker} from "src/browser/TouchScrollBlocker.js"
 import {Util} from "src/base/Util.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {watchDrags, isMiddleClicking, eventPosRelativeTo} from "src/browser/MouseWatcher.js"
-import {Observable, ObservableValue} from "src/base/Obs.js"
-import {initExports} from "src/ui/exports.js"
-import {initForge} from "src/ui/forge.js"
+import {Observable, ObservableValue, ObservableSource} from "src/base/Obs.js"
+import {initExports, obsExportsIsShowing} from "src/ui/exports.js"
+import {initForge, obsForgeIsShowing} from "src/ui/forge.js"
 import {initUndoRedo} from "src/ui/undo.js"
 import {initClear} from "src/ui/clear.js"
 import {initUrlCircuitSync} from "src/ui/url.js"
@@ -127,7 +127,8 @@ const redrawNow = () => {
         window.requestAnimationFrame(() => redrawThrottle.trigger());
     }
 };
-redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS);
+
+redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, true);
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 displayed.observable().subscribe(() => redrawThrottle.trigger());
 
@@ -140,7 +141,7 @@ watchDrags(canvasDiv,
     (pt, ev) => {
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
-        let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey);
+        let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey, ev.ctrlKey);
         if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }
@@ -149,7 +150,7 @@ watchDrags(canvasDiv,
         revision.startedWorkingOnCommit();
         displayed.set(
             syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
-                afterGrabbing(ev.shiftKey));
+                afterGrabbing(ev.shiftKey, ev.ctrlKey));
 
         ev.preventDefault();
     },
@@ -202,7 +203,7 @@ canvasDiv.addEventListener('mousedown', ev => {
     let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
     let newInspector = syncArea(displayed.get()).
         withHand(newHand).
-        afterGrabbing(false). // Grab the gate.
+        afterGrabbing(false, false). // Grab the gate.
         withHand(newHand). // Lose the gate.
         afterTidyingUp().
         withJustEnoughWires(newHand, 0);
@@ -228,12 +229,18 @@ canvasDiv.addEventListener('mouseleave', () => {
     }
 });
 
+let obsIsAnyOverlayShowing = new ObservableSource();
 initUrlCircuitSync(revision);
-initExports(revision);
-initForge(revision);
-initUndoRedo(revision);
-initClear(revision);
+initExports(revision, obsIsAnyOverlayShowing.observable());
+initForge(revision, obsIsAnyOverlayShowing.observable());
+initUndoRedo(revision, obsIsAnyOverlayShowing.observable());
+initClear(revision, obsIsAnyOverlayShowing.observable());
 initTitleSync(revision);
+obsForgeIsShowing.zipLatest(obsExportsIsShowing, (e1, e2) => e1 || e2).whenDifferent().subscribe(e => {
+    obsIsAnyOverlayShowing.send(e);
+    canvasDiv.tabIndex = e ? -1 : 0;
+    document.getElementById('about-link').tabIndex = e ? -1 : undefined;
+});
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;

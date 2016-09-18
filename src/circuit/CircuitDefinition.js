@@ -383,12 +383,24 @@ class CircuitDefinition {
     }
 
     /**
+     * @param {!int=0} extra
      * @returns {!CircuitDefinition}
      */
-    withTrailingSpacersIncluded() {
+    withTrailingSpacersIncluded(extra=0) {
         return this.withColumns(seq(this.columns).
-            padded(this.minimumRequiredColCount(), GateColumn.empty(this.numWires)).
+            padded(this.minimumRequiredColCount()+extra, GateColumn.empty(this.numWires)).
             toArray());
+    }
+
+    /**
+     * @returns {!CircuitDefinition}
+     */
+    trimEmptyColumnsAtEndIgnoringGateWidths() {
+        for (let n = this.columns.length; ; n--) {
+            if (n === 0 || !this.columns[n-1].isEmpty()) {
+                return this.withColumns(this.columns.slice(0, n));
+            }
+        }
     }
 
     /**

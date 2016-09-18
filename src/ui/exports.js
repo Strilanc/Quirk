@@ -1,29 +1,34 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {ObservableValue} from "src/base/Obs.js"
 import {selectAndCopyToClipboard} from "src/browser/Clipboard.js"
+import {Serializer} from "src/circuit/Serializer.js"
 import {saveFile} from "src/browser/SaveFile.js"
+
+const exportsIsVisible = new ObservableValue(false);
+const obsExportsIsShowing = exportsIsVisible.observable().whenDifferent();
 
 /**
  * @param {!Revision} revision
+ * @param {!Observable.<!boolean>} obsIsAnyOverlayShowing
  */
-function initExports(revision) {
+function initExports(revision, obsIsAnyOverlayShowing) {
     // Show/hide exports overlay.
     (() => {
         const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
         const exportOverlay = /** @type {!HTMLDivElement} */ document.getElementById('export-overlay');
         const exportDiv = /** @type {HTMLDivElement} */ document.getElementById('export-div');
-        exportButton.addEventListener('click', () => {
-            exportDiv.style.display = 'block';
-        });
-        exportOverlay.addEventListener('click', () => {
-            exportDiv.style.display = 'none';
-        });
+        exportButton.addEventListener('click', () => exportsIsVisible.set(true));
+        obsIsAnyOverlayShowing.subscribe(e => { exportButton.disabled = e; });
+        exportOverlay.addEventListener('click', () => exportsIsVisible.set(false));
         document.addEventListener('keydown', e => {
             const ESC_KEY = 27;
             if (e.keyCode === ESC_KEY) {
-                exportDiv.style.display = 'none';
+                exportsIsVisible.set(false)
             }
+        });
+        obsExportsIsShowing.subscribe(showing => {
+            exportDiv.style.display = showing ? 'block' : 'none';
         });
     })();
 
@@ -116,7 +121,7 @@ function initExports(revision) {
             let moddedHtml =
                 originalHtml.substring(0, modStart) +
                 startDefaultTag +
-                'document.DEFAULT_CIRCUIT = ' + latest + ';\n' +
+                'document.DEFAULT_CIRCUIT = ' + JSON.stringify(latest) + ';\n' +
                 originalHtml.substring(modStop);
 
             // Strip analytics.
@@ -138,4 +143,4 @@ function initExports(revision) {
     })();
 }
 
-export {initExports}
+export {initExports, obsExportsIsShowing}

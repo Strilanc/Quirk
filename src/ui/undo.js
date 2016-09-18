@@ -1,7 +1,8 @@
 /**
  * @param {!Revision} revision
+ * @param {!Observable.<boolean>} obsIsAnyOverlayShowing
  */
-function initUndoRedo(revision) {
+function initUndoRedo(revision, obsIsAnyOverlayShowing) {
     const overlay_divs = [
         document.getElementById('gate-forge-div'),
         document.getElementById('export-div')
@@ -9,9 +10,9 @@ function initUndoRedo(revision) {
 
     const undoButton = /** @type {!HTMLButtonElement} */ document.getElementById('undo-button');
     const redoButton = /** @type {!HTMLButtonElement} */ document.getElementById('redo-button');
-    revision.latestActiveCommit().subscribe(() => {
-        undoButton.disabled = revision.isAtBeginningOfHistory();
-        redoButton.disabled = revision.isAtEndOfHistory();
+    revision.latestActiveCommit().zipLatest(obsIsAnyOverlayShowing, (_, b) => b).subscribe(anyShowing => {
+        undoButton.disabled = revision.isAtBeginningOfHistory() || anyShowing;
+        redoButton.disabled = revision.isAtEndOfHistory() || anyShowing;
     });
 
     undoButton.addEventListener('click', () => revision.undo());

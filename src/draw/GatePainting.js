@@ -250,9 +250,10 @@ GatePainting.MATRIX_DRAWER = args => {
         undefined,
         'transparent');
     if (args.isHighlighted) {
-        args.painter.ctx.globalAlpha = 0.9;
+        args.painter.ctx.save();
+        args.painter.ctx.globalAlpha *= 0.9;
         args.painter.fillRect(args.rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
-        args.painter.ctx.globalAlpha = 1;
+        args.painter.ctx.restore();
     }
     GatePainting.paintOutline(args);
 };
@@ -280,7 +281,7 @@ GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
     args.painter.ctx.scale(xScale, yScale);
     args.painter.ctx.strokeStyle = 'black';
     args.painter.ctx.fillStyle = 'yellow';
-    args.painter.ctx.globalAlpha = 0.4;
+    args.painter.ctx.globalAlpha *= 0.4;
 
     args.painter.ctx.beginPath();
     args.painter.ctx.moveTo(0, 0);

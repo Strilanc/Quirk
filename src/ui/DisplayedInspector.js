@@ -108,18 +108,19 @@ class DisplayedInspector {
     }
 
     /**
-     * @param {!boolean} duplicate
+     * @param {!boolean=false} duplicate
+     * @param {!boolean=false} wholeCol
      * @returns {!DisplayedInspector}
      */
-    afterGrabbing(duplicate=false) {
+    afterGrabbing(duplicate=false, wholeCol=false) {
         let hand = this.hand;
         let circuit = this.displayedCircuit;
 
         hand = this.displayedToolboxTop.tryGrab(hand);
         hand = this.displayedToolboxBottom.tryGrab(hand);
-        let x = circuit.tryGrab(hand, duplicate);
-        hand = x.newHand;
-        circuit = x.newCircuit;
+        let obj = circuit.tryGrab(hand, duplicate, wholeCol);
+        hand = obj.newHand;
+        circuit = obj.newCircuit;
 
         return new DisplayedInspector(
             this.drawArea,
@@ -262,7 +263,7 @@ class DisplayedInspector {
             return;
         }
         painter.ctx.save();
-        painter.ctx.globalAlpha = this.hand.pos === undefined || !this.hand.isBusy() ?
+        painter.ctx.globalAlpha *= this.hand.pos === undefined || !this.hand.isBusy() ?
             1.0 :
             Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
         painter.ctx.save();

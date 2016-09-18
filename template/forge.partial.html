@@ -1,0 +1,94 @@
+<div id="gate-forge-div" style="display:none">
+    <div id="gate-forge-overlay" style="position:fixed; left: 0; top: 0; height: 100vh; width: 100vw; background: rgba(0, 0, 0, 0.5);">
+    </div>
+    <div style="position: absolute; top: 20px; left: 50px; padding: 20px; background-color: white; border: 1px solid black;">
+        <style scoped>
+            th {
+                font-size: 20px;
+            }
+        </style>
+        <table cellspacing="0">
+            <colgroup>
+                <col style="background-color:#EEE;"/>
+                <col/>
+                <col style="background-color:#EEE;"/>
+                <col/>
+                <col style="background-color:#EEE;"/>
+            </colgroup>
+            <tr>
+                <th>From Rotation</th>
+                <th></th>
+                <th>From Matrix</th>
+                <th></th>
+                <th>From Circuit</th>
+            </tr>
+            <tr>
+                <td>
+                    <input tabindex="100" id='gate-forge-rotation-axis' type="text" size="8" placeholder="X+Z"> axis<br/>
+                    <input tabindex="101" id='gate-forge-rotation-angle' type="text" size="8" placeholder="45" style="margin:0.5em 0 0 0;">° angle<br/>
+                    <input tabindex="102" id='gate-forge-rotation-phase' type="text" size="8" placeholder="0" style="margin:0.5em 0 0 0;">° phase
+                </td>
+                <td></td>
+                <td>
+                    <style scoped>
+                        input[type="checkbox"]:not(:checked) + label {
+                            font-weight: bold;
+                            background-color: pink;
+                        }
+                    </style>
+
+                    <textarea tabindex="200" id="gate-forge-matrix" cols="25" rows="5" placeholder="1, i,  i, 1"></textarea><br/>
+
+                    <input tabindex="201" id="gate-forge-matrix-fix" type="checkbox" checked>
+                    <label for="gate-forge-matrix-fix">ensure unitary (by SVD)</label>
+                </td>
+                <td></td>
+                <td>
+                    From part of current circuit:<br/>
+                    <input tabindex="300" id="gate-forge-circuit-cols" type="text" size="4" placeholder="1:∞" style="margin:0.5em 0 0 0;"> column range<br/>
+                    <input tabindex="301" id="gate-forge-circuit-rows" type="text" size="4" placeholder="1:∞" style="margin:0.5em 0 0.5em 0;"> wire range<br/>
+                    Inputs: <span id="gate-forge-circuit-inputs">(none)</span>, Weight: <span id="gate-forge-circuit-weight">0</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <canvas id="gate-forge-rotation-canvas" style="border:1px black solid;width:195px;height:100px;margin:10px 0 0 0;"></canvas>
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>OR</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td>
+                    <canvas id="gate-forge-matrix-canvas" style="border:1px black solid;width:195px;height:100px;margin:10px 0 0 0;"></canvas>
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>OR</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td>
+                    <canvas id="gate-forge-circuit-canvas" style="border:1px black solid;width:195px;height:100px;margin:10px 0 0 0;"></canvas>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <br/><input tabindex="110" id='gate-forge-rotation-name' type="text" placeholder="[the matrix]" style="width:7em;">  circuit symbol<br/><br/>
+                </td>
+                <td></td>
+                <td>
+                    <br/><input tabindex="210" id='gate-forge-matrix-name' type="text" placeholder="[the matrix]" style="width:7em;"> circuit symbol<br/><br/>
+                </td>
+                <td></td>
+                <td>
+                    <br/><input tabindex="310" id='gate-forge-circuit-name' type="text" placeholder="[the circuit]" style="width:7em;"> circuit symbol<br/><br/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button tabindex="120" id="gate-forge-rotation-button" style="width:100%;height:30px;">Create Rotation Gate</button>
+                </td>
+                <td></td>
+                <td>
+                    <button tabindex="220" id="gate-forge-matrix-button" style="width:100%;height:30px;">Create Matrix Gate</button>
+                </td>
+                <td></td>
+                <td>
+                    <button tabindex="320" id="gate-forge-circuit-button" style="width:100%;height:30px;">Create Circuit Gate</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

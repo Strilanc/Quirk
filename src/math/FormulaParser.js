@@ -83,6 +83,11 @@ function _translate_token(token, tokenMap) {
 function parseFormula(text, tokenMap) {
     let tokens = _tokenize(text).map(e => _translate_token(e, tokenMap));
 
+    // Cut off trailing operation, so parse fails less often as users are typing.
+    if (tokens.length > 0 && tokens[tokens.length - 1].priority !== undefined) {
+        tokens = tokens.slice(0, tokens.length - 1);
+    }
+
     let ops = [];
     let vals = [];
 

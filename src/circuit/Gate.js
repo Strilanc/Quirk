@@ -90,6 +90,10 @@ class Gate {
          */
         this.knownCircuit = undefined;
         /**
+         * @type {undefined|!CircuitDefinition}
+         */
+        this.knownCircuitNested = undefined;
+        /**
          * @type {!Array.<!string>}
          */
         this._requiredContextKeys = [];
@@ -105,7 +109,7 @@ class Gate {
         this.postShaders = [];
         /**
          * @param {!int} qubit
-         * @returns {!Array.<!{key: !string, value: *}>}
+         * @returns {!Array.<!{key: !string, val: *}>}
          */
         this.customColumnContextProvider = qubit => [];
         /**
@@ -305,6 +309,7 @@ class Gate {
         }
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
+        g.knownCircuitNested = this.knownCircuitNested;
         g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
@@ -333,17 +338,18 @@ class Gate {
     }
 
     /**
-     * @param {!CircuitDefinition} circuitDefinition
+     * @param {undefined|!CircuitDefinition} circuitDefinition
      * @returns {!Gate}
      */
     withKnownCircuit(circuitDefinition) {
         let g = this._copy();
         g.knownCircuit = circuitDefinition;
+        g.knownCircuitNested = circuitDefinition.withDisabledReasonsForEmbeddedContext(0, new Map());
         return g;
     }
 
     /**
-     * @param {!function(qubit:!int):!Array.<!{key: !string, value: *}>} customColumnContextProvider
+     * @param {!function(qubit:!int):!Array.<!{key: !string, val: *}>} customColumnContextProvider
      * @returns {!Gate}
      */
     withCustomColumnContextProvider(customColumnContextProvider) {
@@ -604,36 +610,6 @@ class Gate {
      */
     toString() {
         return `Gate(${this.symbol})`;
-    }
-
-    /**
-     * @param {!string} missingMsg
-     * @param {...!string} keys
-     * @returns {!function(!GateCheckArgs) : undefined|!string}
-     */
-    static disableReasonFinder_needInput(missingMsg, ...keys) {
-        return args => {
-            let row = args.outerRow;
-            if (seq(keys).any(key => !args.context.has(key))) {
-                return missingMsg;
-            }
-            let vals = seq(keys).map(key => args.context.get(key));
-
-            if (vals.any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
-                return "input\ninside";
-            }
-
-            if (args.gate.effectMightPermutesStates()) {
-                let hasMeasuredOutputs = ((args.measuredMask >> row) & ((1 << args.gate.height) - 1)) !== 0;
-                let hasUnmeasuredInputs =
-                    vals.any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
-                if (hasUnmeasuredInputs && hasMeasuredOutputs) {
-                    return "no\nremix\n(sorry)";
-                }
-            }
-
-            return undefined;
-        };
     }
 }
 

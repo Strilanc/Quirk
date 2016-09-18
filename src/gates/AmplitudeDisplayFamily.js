@@ -494,7 +494,8 @@ function amplitudeDisplayMaker(span) {
             args.row,
             span)).
         withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
-        withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS);
+        withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS).
+        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
 }
 
 let AmplitudeDisplayFamily = Gate.generateFamily(1, 16, amplitudeDisplayMaker);

@@ -1,5 +1,6 @@
 import {Axis} from "src/math/Axis.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Complex} from "src/math/Complex.js"
 import {Config} from "src/Config.js"
@@ -8,50 +9,47 @@ import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
 import {Format} from "src/base/Format.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
+import {getCircuitCycleTime} from "src/ui/sim.js"
 import {Hand} from "src/ui/Hand.js"
 import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
+import {Observable, ObservableValue} from "src/base/Obs.js"
 import {Painter} from "src/draw/Painter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {Serializer} from "src/circuit/Serializer.js"
-import {Util} from "src/base/Util.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
-import {Observable, ObservableSource} from "src/base/Obs.js"
 import {textEditObservable} from "src/browser/EventUtil.js"
+import {Util} from "src/base/Util.js"
+
+const forgeIsVisible = new ObservableValue(false);
+const obsForgeIsShowing = forgeIsVisible.observable().whenDifferent();
 
 /**
  * @param {!Revision} revision
+ * @param {!Observable.<!boolean>} obsIsAnyOverlayShowing
  */
-function initForge(revision) {
-    const obsShow = new ObservableSource();
-    const obsHide = new ObservableSource();
-    const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-name');
+function initForge(revision, obsIsAnyOverlayShowing) {
+    const obsOnShown = obsForgeIsShowing.filter(e => e === true);
     /** @type {!String} */
     let latestInspectorText;
     revision.latestActiveCommit().subscribe(e => { latestInspectorText = e; });
 
-    // Show/hide exports overlay.
+    // Show/hide forge overlay.
     (() => {
         const forgeButton = /** @type {!HTMLButtonElement} */ document.getElementById('gate-forge-button');
         const forgeOverlay = /** @type {!HTMLDivElement} */ document.getElementById('gate-forge-overlay');
         const forgeDiv = /** @type {HTMLDivElement} */ document.getElementById('gate-forge-div');
-        forgeButton.addEventListener('click', () => {
-            forgeDiv.style.display = 'block';
-            txtName.value = '';
-            obsShow.send(undefined);
-        });
-        obsHide.observable().subscribe(() => {
-            forgeDiv.style.display = 'none';
-        });
-        forgeOverlay.addEventListener('click', () => {
-            obsHide.send(undefined);
-        });
+        forgeButton.addEventListener('click', () => forgeIsVisible.set(true));
+        forgeOverlay.addEventListener('click', () => forgeIsVisible.set(false));
+        obsIsAnyOverlayShowing.subscribe(e => { forgeButton.disabled = e; });
         document.addEventListener('keydown', e => {
             const ESC_KEY = 27;
             if (e.keyCode === ESC_KEY) {
-                obsHide.send(undefined);
+                forgeIsVisible.set(false)
             }
+        });
+        obsForgeIsShowing.subscribe(showing => {
+            forgeDiv.style.display = showing ? 'block' : 'none';
         });
     })();
 
@@ -95,7 +93,7 @@ function initForge(revision) {
     function createCustomGateAndClose(gate, circuitDef=undefined) {
         let c = circuitDef || Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
         revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(gate)), null, 0));
-        obsHide.send(undefined);
+        forgeIsVisible.set(false);
     }
 
     (() => {
@@ -104,9 +102,18 @@ function initForge(revision) {
         const txtAxis = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-axis');
         const txtAngle = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-angle');
         const txtPhase = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-phase');
+        const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-name');
+        obsOnShown.subscribe(() => { txtName.value = ""; });
 
         function parseRotation() {
-            let parseAngle = e => parseFloat(e.value === '' ? e.placeholder : e.value) * Math.PI / 180;
+            let parseAngle = e => {
+                let s = e.value === '' ? e.placeholder : e.value;
+                let c = Complex.parse(s);
+                if (c.imag !== 0 || isNaN(c.imag)) {
+                    throw new Error("You just had to make it complicated, didn't you?");
+                }
+                return c.real * Math.PI / 180;
+            };
             let w = parseAngle(txtAngle);
             let phase = parseAngle(txtPhase);
             let {x, y, z} = Axis.parse(txtAxis.value === '' ? txtAxis.placeholder : txtAxis.value);
@@ -131,7 +138,7 @@ function initForge(revision) {
         }
 
         let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation, rotationButton);
-        Observable.of(obsShow.observable(), ...[txtPhase, txtAxis, txtAngle].map(textEditObservable)).
+        Observable.of(obsOnShown, ...[txtPhase, txtAxis, txtAngle].map(textEditObservable)).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
@@ -156,6 +163,8 @@ function initForge(revision) {
         const txtMatrix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix');
         const chkFix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-fix');
         const matrixButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-button');
+        const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-name');
+        obsOnShown.subscribe(() => { txtName.value = ""; });
 
         function parseMatrix_noCorrection() {
             let s = txtMatrix.value;
@@ -204,7 +213,7 @@ function initForge(revision) {
 
         let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrix, matrixButton);
 
-        Observable.of(obsShow.observable(), textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
+        Observable.of(obsOnShown, textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
@@ -233,7 +242,10 @@ function initForge(revision) {
         const txtCols = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-cols');
         const txtRows = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-rows');
         const spanInputs = /** @type {!HTMLElement} */ document.getElementById('gate-forge-circuit-inputs');
+        const spanWeight = /** @type {!HTMLElement} */ document.getElementById('gate-forge-circuit-weight');
         const circuitButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-button');
+        const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-name');
+        obsOnShown.subscribe(() => { txtName.value = ""; });
 
         function parseRange(txtBox, maxLen) {
             let txt = txtBox.value === '' ? txtBox.placeholder : txtBox.value;
@@ -287,6 +299,27 @@ function initForge(revision) {
             return {extraWires, gate, circuit};
         }
 
+        let latestGate = new ObservableValue(undefined);
+        let drawGate = (painter, gate, extraWires) => drawCircuitTooltip(
+            painter,
+            gate.knownCircuitNested,
+            new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+            true,
+            extraWires,
+            getCircuitCycleTime());
+
+        latestGate.observable().
+            zipLatest(obsForgeIsShowing, (g, s) => s ? g : undefined).
+            map(e => e === undefined || e.gate.stableDuration() === Infinity ?
+                Observable.of() :
+                Observable.requestAnimationTicker().map(_ => e)).
+            flattenLatest().
+            subscribe(e => {
+                let painter = new Painter(circuitCanvas);
+                painter.clear();
+                drawGate(painter, e.gate, e.extraWires);
+            });
+
         let redraw = () => {
             circuitButton.disabled = true;
             let painter = new Painter(circuitCanvas);
@@ -297,16 +330,14 @@ function initForge(revision) {
                 spanInputs.innerText = keys.size === 0 ?
                     "(none)" :
                     [...keys].map(e => e.replace("Input Range ", "")).join(", ");
-                drawCircuitTooltip(
-                    painter,
-                    gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
-                        0,
-                        new Map([...keys].map(e => [e, {offset: 0, length: 0}]))),
-                    new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
-                    true,
-                    extraWires);
+                spanWeight.innerText = "" + gate.knownCircuit.gateWeight();
+                drawGate(painter, gate, extraWires);
                 circuitButton.disabled = false;
+                latestGate.set({gate, extraWires});
             } catch (ex) {
+                latestGate.set(undefined);
+                spanInputs.innerText = "(err)";
+                spanWeight.innerText = "(err)";
                 painter.printParagraph(
                     ex+"",
                     new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
@@ -316,7 +347,7 @@ function initForge(revision) {
             }
         };
 
-        Observable.of(obsShow.observable(), textEditObservable(txtCols), textEditObservable(txtRows)).
+        Observable.of(obsOnShown, textEditObservable(txtCols), textEditObservable(txtRows)).
             flatten().
             throttleLatest(100).
             subscribe(redraw);
@@ -333,4 +364,4 @@ function initForge(revision) {
     })();
 }
 
-export {initForge}
+export {initForge, obsForgeIsShowing}

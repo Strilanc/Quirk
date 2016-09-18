@@ -7,13 +7,16 @@ class CooldownThrottle {
     /**
      * @param {!function(void) : void} action
      * @param {!number} cooldownMs
+     * @param {!boolean=false} waitWithRequestAnimationFrame
      * @constructor
      */
-    constructor(action, cooldownMs) {
+    constructor(action, cooldownMs, waitWithRequestAnimationFrame=false) {
         /** @type {!function(void) : void} */
         this.action = action;
         /** @type {!number} */
         this.cooldownDuration = cooldownMs;
+        /** @type {!boolean} */
+        this._waitWithRequestAnimationFrame = waitWithRequestAnimationFrame;
 
         /**
          * @type {!string}
@@ -80,12 +83,31 @@ class CooldownThrottle {
      * @private
      */
     _forceIdleTriggerAfter(duration) {
-        setTimeout(() => {
-            this._state = 'idle';
-            this._lastCompletionTime = -Infinity;
-            this.trigger()
-        }, duration);
+        // setTimeout seems to refuse to run while I'm scrolling with my mouse wheel on chrome in windows.
+        // So, for stuff that really has to come back in that case, we also support requestAnimationFrame looping.
+        if (this._waitWithRequestAnimationFrame) {
+            let iter;
+            let start = performance.now();
+            iter = () => {
+                if (performance.now() < start + duration) {
+                    requestAnimationFrame(iter);
+                    return;
+                }
+                this._state = 'idle';
+                this._lastCompletionTime = -Infinity;
+                this.trigger()
+            };
+            iter();
+        } else {
+            setTimeout(() => {
+                this._state = 'idle';
+                this._lastCompletionTime = -Infinity;
+                this.trigger()
+            }, duration);
+        }
     }
+
+
 }
 
 export {CooldownThrottle}

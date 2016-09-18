@@ -18,6 +18,7 @@ import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 function circuitDefinitionToGate(circuitDefinition, symbol, name, blurb) {
     return Gate.withoutKnownMatrix(symbol, name, blurb).
         withKnownCircuit(circuitDefinition).
+        withStableDuration(circuitDefinition.stableDuration()).
         withCustomTextureTransform(args => advanceStateWithCircuit(
             args.stateTexture,
             circuitDefinition.withDisabledReasonsForEmbeddedContext(args.row, args.customContextFromGates),

@@ -120,7 +120,16 @@ module.exports = function(grunt) {
     grunt.registerTask('inject-js-into-html', function(htmlSrc, jsSrc, dst) {
         var html = grunt.file.read(htmlSrc);
         var js = grunt.file.read(jsSrc);
-        var output = html.split("<!-- include src.js -->").join(js);
+        var errPart = grunt.file.read('template/error.partial.html');
+        var forgePart = grunt.file.read('template/forge.partial.html');
+        var exportPart = grunt.file.read('template/export.partial.html');
+        var loadingPart = grunt.file.read('template/loading.partial.html');
+        var output = html;
+        output = output.split("<!-- INCLUDE SOURCE PART -->").join(js);
+        output = output.split("<!-- INCLUDE LOADING PART -->").join(loadingPart);
+        output = output.split("<!-- INCLUDE ERROR PART -->").join(errPart);
+        output = output.split("<!-- INCLUDE FORGE PART -->").join(forgePart);
+        output = output.split("<!-- INCLUDE EXPORT PART -->").join(exportPart);
         grunt.file.write(dst, output);
     });
 
