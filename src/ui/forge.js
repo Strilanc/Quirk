@@ -106,7 +106,14 @@ function initForge(revision) {
         const txtPhase = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-phase');
 
         function parseRotation() {
-            let parseAngle = e => parseFloat(e.value === '' ? e.placeholder : e.value) * Math.PI / 180;
+            let parseAngle = e => {
+                let s = e.value === '' ? e.placeholder : e.value;
+                let c = Complex.parse(s);
+                if (c.imag !== 0 || isNaN(c.imag)) {
+                    throw new Error("You just had to make it complicated, didn't you?");
+                }
+                return c.real * Math.PI / 180;
+            };
             let w = parseAngle(txtAngle);
             let phase = parseAngle(txtPhase);
             let {x, y, z} = Axis.parse(txtAxis.value === '' ? txtAxis.placeholder : txtAxis.value);

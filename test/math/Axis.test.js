@@ -49,4 +49,10 @@ suite.test("parse", () => {
 
     assertThat(Axis.parse("2z+3y-5x-x")).isEqualTo(new Axis(-6, 3, 2));
     assertThat(Axis.parse("2z*6^2+3y-5x-x")).isEqualTo(new Axis(-6, 3, 72));
+
+    assertThat(Axis.parse("2z+")).isEqualTo(new Axis(0, 0, 2));
+    assertThat(Axis.parse("2z*")).isEqualTo(new Axis(0, 0, 2));
+    assertThat(Axis.parse("(2z)^")).isEqualTo(new Axis(0, 0, 2));
+    assertThat(Axis.parse("2z/")).isEqualTo(new Axis(0, 0, 2));
+    assertThat(Axis.parse("2z-")).isEqualTo(new Axis(0, 0, 2));
 });
