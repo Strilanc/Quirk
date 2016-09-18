@@ -26,7 +26,6 @@ import {textEditObservable} from "src/browser/EventUtil.js"
 function initForge(revision) {
     const obsShow = new ObservableSource();
     const obsHide = new ObservableSource();
-    const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-name');
     /** @type {!String} */
     let latestInspectorText;
     revision.latestActiveCommit().subscribe(e => { latestInspectorText = e; });
@@ -38,7 +37,6 @@ function initForge(revision) {
         const forgeDiv = /** @type {HTMLDivElement} */ document.getElementById('gate-forge-div');
         forgeButton.addEventListener('click', () => {
             forgeDiv.style.display = 'block';
-            txtName.value = '';
             obsShow.send(undefined);
         });
         obsHide.observable().subscribe(() => {
@@ -104,6 +102,8 @@ function initForge(revision) {
         const txtAxis = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-axis');
         const txtAngle = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-angle');
         const txtPhase = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-phase');
+        const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-name');
+        obsShow.observable().subscribe(() => { txtName.value = ""; });
 
         function parseRotation() {
             let parseAngle = e => {
@@ -163,6 +163,8 @@ function initForge(revision) {
         const txtMatrix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix');
         const chkFix = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-fix');
         const matrixButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-button');
+        const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-name');
+        obsShow.observable().subscribe(() => { txtName.value = ""; });
 
         function parseMatrix_noCorrection() {
             let s = txtMatrix.value;
@@ -240,7 +242,10 @@ function initForge(revision) {
         const txtCols = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-cols');
         const txtRows = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-rows');
         const spanInputs = /** @type {!HTMLElement} */ document.getElementById('gate-forge-circuit-inputs');
+        const spanWeight = /** @type {!HTMLElement} */ document.getElementById('gate-forge-circuit-weight');
         const circuitButton = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-button');
+        const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-name');
+        obsShow.observable().subscribe(() => { txtName.value = ""; });
 
         function parseRange(txtBox, maxLen) {
             let txt = txtBox.value === '' ? txtBox.placeholder : txtBox.value;
@@ -304,6 +309,7 @@ function initForge(revision) {
                 spanInputs.innerText = keys.size === 0 ?
                     "(none)" :
                     [...keys].map(e => e.replace("Input Range ", "")).join(", ");
+                spanWeight.innerText = gate.knownCircuit.gateWeight();
                 drawCircuitTooltip(
                     painter,
                     gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
@@ -314,6 +320,8 @@ function initForge(revision) {
                     extraWires);
                 circuitButton.disabled = false;
             } catch (ex) {
+                spanInputs.innerText = "(err)";
+                spanWeight.innerText = "(err)";
                 painter.printParagraph(
                     ex+"",
                     new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),

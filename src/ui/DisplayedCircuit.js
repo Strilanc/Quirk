@@ -434,10 +434,11 @@ class DisplayedCircuit {
      * @param {!Painter} painter
      * @param {!int} col
      * @param {!int} row
+     * @param {!Rect} gateRect
      * @param {!boolean} isHighlighted
      * @private
      */
-    _drawGate_disabledReason(painter, col, row, isHighlighted) {
+    _drawGate_disabledReason(painter, col, row, gateRect, isHighlighted) {
         let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
         if (isDisabledReason === undefined) {
             return;
@@ -499,7 +500,7 @@ class DisplayedCircuit {
                 focusSlot === undefined ? hand.hoverPoints() : [],
                 stats.customStatsForSlot(col, row)));
 
-            this._drawGate_disabledReason(painter, col, row, isHighlighted);
+            this._drawGate_disabledReason(painter, col, row, gateRect, isHighlighted);
         }
     }
 
