@@ -184,9 +184,10 @@ class DisplayedCircuit {
 
     /**
      * @param {!Hand} hand
-     * @returns {?{ col : !number, row : !number, isInsert : !boolean }}
+     * @returns {undefined|!{col: !int, row: !int, halfColIndex: !number}}
+     * @private
      */
-    findModificationIndex(hand) {
+    _findModificationIndex_helperColRow(hand) {
         if (hand.pos === undefined || hand.heldGate === undefined) {
             return undefined;
         }
@@ -197,6 +198,20 @@ class DisplayedCircuit {
             return undefined;
         }
         let col = Math.ceil(halfColIndex);
+        return {col, row, halfColIndex};
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {?{ col : !number, row : !number, isInsert : !boolean }}
+     */
+    findModificationIndex(hand) {
+        let loc = this._findModificationIndex_helperColRow(hand);
+        if (loc === undefined) {
+            return undefined;
+        }
+        let {col, row, halfColIndex} = loc;
+
         let isInsert = Math.abs(halfColIndex % 1) === 0.5;
         if (col >= this.circuitDefinition.columns.length) {
             return {col: col, row: row, isInsert: isInsert};
@@ -417,6 +432,35 @@ class DisplayedCircuit {
 
     /**
      * @param {!Painter} painter
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!boolean} isHighlighted
+     * @private
+     */
+    _drawGate_disabledReason(painter, col, row, isHighlighted) {
+        let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
+        if (isDisabledReason === undefined) {
+            return;
+        }
+
+        painter.ctx.save();
+        if (isHighlighted) {
+            painter.ctx.globalAlpha *= 0.3;
+        }
+        painter.ctx.globalAlpha *= 0.5;
+        painter.fillRect(gateRect.paddedBy(5), 'yellow');
+        painter.ctx.globalAlpha *= 2;
+        painter.strokeLine(gateRect.topLeft(), gateRect.bottomRight(), 'orange', 3);
+        let r = painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
+        painter.ctx.globalAlpha *= 0.5;
+        painter.fillRect(r.paddedBy(2), 'yellow');
+        painter.ctx.globalAlpha *= 2;
+        painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
+        painter.ctx.restore()
+    }
+
+    /**
+     * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
      * @param {!int} col
      * @param {!Hand} hand
@@ -454,23 +498,8 @@ class DisplayedCircuit {
                 {row, col},
                 focusSlot === undefined ? hand.hoverPoints() : [],
                 stats.customStatsForSlot(col, row)));
-            let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
-            if (isDisabledReason !== undefined) {
-                painter.ctx.save();
-                if (isHighlighted) {
-                    painter.ctx.globalAlpha *= 0.3;
-                }
-                painter.ctx.globalAlpha *= 0.5;
-                painter.fillRect(gateRect.paddedBy(5), 'yellow');
-                painter.ctx.globalAlpha *= 2;
-                painter.strokeLine(gateRect.topLeft(), gateRect.bottomRight(), 'orange', 3);
-                let r = painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
-                painter.ctx.globalAlpha *= 0.5;
-                painter.fillRect(r.paddedBy(2), 'yellow');
-                painter.ctx.globalAlpha *= 2;
-                painter.printParagraph(isDisabledReason, gateRect.paddedBy(5), new Point(0.5, 0.5), 'red');
-                painter.ctx.restore()
-            }
+
+            this._drawGate_disabledReason(painter, col, row, isHighlighted);
         }
     }
 
