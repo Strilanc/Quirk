@@ -204,7 +204,8 @@ function multiChanceGateMaker(span) {
         withSerializedId("Chance" + span).
         withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
-        withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay));
+        withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
+        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
 }
 
 let SingleChanceGate = Gate.fromIdentity(
@@ -218,7 +219,8 @@ let SingleChanceGate = Gate.fromIdentity(
             args.stats.controlledWireProbabilityJustAfter(row, col),
             args.rect,
             args.focusPoints);
-    }));
+    })).
+    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
 
 let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
     span === 1 ? SingleChanceGate : multiChanceGateMaker(span));

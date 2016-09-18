@@ -132,6 +132,7 @@ let BlochSphereDisplay = Gate.fromIdentity(
         let {row, col} = args.positionInCircuit;
         let ρ = args.stats.qubitDensityMatrix(row, col);
         paintBlochSphereDisplay(args.painter, ρ, args.rect, args.focusPoints);
-    }));
+    })).
+    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
 
 export {paintBlochSphereDisplay, BlochSphereDisplay};
