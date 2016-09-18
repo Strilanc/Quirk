@@ -150,9 +150,10 @@ class WidgetPainter {
      * @param {!number} w
      * @param {!function(!Rect):void} pushRect
      * @param {!function():!number} nextY
+     * @param {!number} time
      * @private
      */
-    static _paintGateTooltip_circuit(painter, circuit, pad, dispSize, w, pushRect, nextY) {
+    static _paintGateTooltip_circuit(painter, circuit, pad, dispSize, w, pushRect, nextY, time) {
         if (circuit === undefined) {
             return;
         }
@@ -167,7 +168,7 @@ class WidgetPainter {
             12), 0);
 
         let circuitRect = new Rect(pad, nextY(), w, dispSize);
-        let {maxW, maxH} = drawCircuitTooltip(painter, circuit, circuitRect, true, 0);
+        let {maxW, maxH} = drawCircuitTooltip(painter, circuit, circuitRect, true, 0, time);
         pushRect(circuitRect.withW(maxW).withH(maxH));
     }
 
@@ -201,7 +202,8 @@ class WidgetPainter {
 
         WidgetPainter._paintGateTooltip_matrix(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
         WidgetPainter._paintGateTooltip_rotation(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
-        WidgetPainter._paintGateTooltip_circuit(painter, gate.knownCircuit, pad, dispSize, w, pushRect, () => maxY);
+        WidgetPainter._paintGateTooltip_circuit(
+            painter, gate.knownCircuit, pad, dispSize, w, pushRect, () => maxY, time);
 
         return {maxX, maxY};
     }

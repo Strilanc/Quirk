@@ -1061,9 +1061,10 @@ class DisplayedCircuit {
  * @param {!Rect} rect
  * @param {!boolean} showWires
  * @param {undefined|!int} extraWires
+ * @param {!number} time
  * @returns {!{maxW: !number, maxH: !number}}
  */
-function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWires) {
+function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWires, time) {
     let displayed = new DisplayedCircuit(
         0,
         circuitDefinition,
@@ -1079,7 +1080,7 @@ function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWi
         scaleX = s;
         scaleY = s;
     }
-    let stats = CircuitStats.withNanDataFromCircuitAtTime(circuitDefinition, 0);
+    let stats = CircuitStats.withNanDataFromCircuitAtTime(circuitDefinition, time);
     try {
         painter.ctx.save();
         painter.ctx.translate(rect.x, rect.y);
@@ -1108,7 +1109,7 @@ let GATE_CIRCUIT_DRAWER = args => {
     }
 
     GatePainting.paintBackground(args);
-    drawCircuitTooltip(args.painter, circuit, args.rect, false, undefined);
+    drawCircuitTooltip(args.painter, circuit, args.rect, false, undefined, args.stats.time);
     GatePainting.paintOutline(args);
     if (args.isHighlighted) {
         args.painter.ctx.globalAlpha = 0.9;

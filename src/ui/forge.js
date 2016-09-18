@@ -1,5 +1,6 @@
 import {Axis} from "src/math/Axis.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Complex} from "src/math/Complex.js"
 import {Config} from "src/Config.js"
@@ -8,17 +9,17 @@ import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
 import {Format} from "src/base/Format.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
+import {getCircuitCycleTime} from "src/ui/sim.js"
 import {Hand} from "src/ui/Hand.js"
 import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
+import {Observable, ObservableValue} from "src/base/Obs.js"
 import {Painter} from "src/draw/Painter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {Serializer} from "src/circuit/Serializer.js"
-import {Util} from "src/base/Util.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
-import {Observable, ObservableValue} from "src/base/Obs.js"
 import {textEditObservable} from "src/browser/EventUtil.js"
+import {Util} from "src/base/Util.js"
 
 const forgeIsVisible = new ObservableValue(false);
 const obsForgeIsShowing = forgeIsVisible.observable().whenDifferent();
@@ -298,6 +299,31 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             return {extraWires, gate, circuit};
         }
 
+        let latestGate = new ObservableValue(undefined);
+        let drawGate = (painter, gate, extraWires) => {
+            let keys = gate.getUnmetContextKeys();
+            drawCircuitTooltip(
+                painter,
+                gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
+                    0,
+                    new Map([...keys].map(e => [e, {offset: 0, length: 0}]))),
+                new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+                true,
+                extraWires,
+                getCircuitCycleTime());
+        };
+
+        latestGate.observable().
+            map(e => e === undefined || e.gate.stableDuration() === Infinity ?
+                Observable.of() :
+                Observable.requestAnimationTicker().map(_ => e)).
+            flattenLatest().
+            subscribe(e => {
+                let painter = new Painter(circuitCanvas);
+                painter.clear();
+                drawGate(painter, e.gate, e.extraWires);
+            });
+
         let redraw = () => {
             circuitButton.disabled = true;
             let painter = new Painter(circuitCanvas);
@@ -308,17 +334,12 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 spanInputs.innerText = keys.size === 0 ?
                     "(none)" :
                     [...keys].map(e => e.replace("Input Range ", "")).join(", ");
-                spanWeight.innerText = gate.knownCircuit.gateWeight();
-                drawCircuitTooltip(
-                    painter,
-                    gate.knownCircuit.withDisabledReasonsForEmbeddedContext(
-                        0,
-                        new Map([...keys].map(e => [e, {offset: 0, length: 0}]))),
-                    new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
-                    true,
-                    extraWires);
+                spanWeight.innerText = "" + gate.knownCircuit.gateWeight();
+                drawGate(painter, gate, extraWires);
                 circuitButton.disabled = false;
+                latestGate.set({gate, extraWires});
             } catch (ex) {
+                latestGate.set(undefined);
                 spanInputs.innerText = "(err)";
                 spanWeight.innerText = "(err)";
                 painter.printParagraph(

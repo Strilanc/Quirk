@@ -37,4 +37,4 @@ function simulate(circuit) {
     return cache.statsAtApproximateTime(getCircuitCycleTime());
 }
 
-export {simulate}
+export {simulate, getCircuitCycleTime}

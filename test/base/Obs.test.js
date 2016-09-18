@@ -51,6 +51,37 @@ suite.test("Observable.zipLatest", () => {
     assertThat(seen).isEqualTo([12, 13, 14, 24]);
 });
 
+suite.test("Observable.flattenLatest", () => {
+    let c = new ObservableSource();
+    let v1 = new ObservableSource();
+    let v2 = new ObservableSource();
+    let v3 = new ObservableSource();
+    let seen = [];
+    let unreg = c.observable().flattenLatest().subscribe(e => seen.push(e));
+
+    assertThat(seen).isEqualTo([]);
+    c.send(v1.observable());
+    assertThat(seen).isEqualTo([]);
+    v1.send(1);
+    assertThat(seen).isEqualTo([1]);
+    v1.send(2);
+    assertThat(seen).isEqualTo([1, 2]);
+    c.send(v2.observable());
+    assertThat(seen).isEqualTo([1, 2]);
+    v1.send(3);
+    assertThat(seen).isEqualTo([1, 2]);
+    v2.send(4);
+    assertThat(seen).isEqualTo([1, 2, 4]);
+    c.send(v1.observable());
+    c.send(v2.observable());
+    c.send(v3.observable());
+    assertThat(seen).isEqualTo([1, 2, 4]);
+    v1.send(5);
+    v2.send(6);
+    v3.send(7);
+    assertThat(seen).isEqualTo([1, 2, 4, 7]);
+});
+
 suite.test("Observable.whenDifferent", () => {
     assertThat(Observable.of(1, 2, 2, 3).whenDifferent().snapshot()).isEqualTo([1, 2, 3]);
     assertThat(Observable.of(undefined, 2, 2, 3).whenDifferent().snapshot()).isEqualTo([undefined, 2, 3]);
