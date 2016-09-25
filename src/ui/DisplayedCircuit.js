@@ -667,14 +667,12 @@ class DisplayedCircuit {
                     toArray())).
             toArray();
 
-        let newCircuitWithoutHeightFix = this.circuitDefinition.withColumns(newCols).
-            withWireCount(newWireCount);
-        let newCircuit = newCircuitWithoutHeightFix.
-            withHeightOverlapsFixed().
-            withTrailingSpacersIncluded(1);
+        let newCircuitWithoutOverlapFix = this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount);
+        let newCircuitWithOverlapFix = newCircuitWithoutOverlapFix.withHeightOverlapsFixed();
+        let newCircuit = newCircuitWithOverlapFix.withTrailingSpacersIncluded();
         return this.withCircuit(newCircuit).
             _withHighlightedSlot(this._highlightedSlot).
-            _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
+            _withCompressedColumnIndex(newCircuitWithoutOverlapFix.isEqualTo(newCircuitWithOverlapFix) ?
                 undefined :
                 hand.resizingGateSlot.x + 1).
             _withFallbackExtraWireStartIndex(this.circuitDefinition.numWires);
@@ -801,7 +799,7 @@ class DisplayedCircuit {
      */
     tryGrab(hand, duplicate=false, wholeColumn=false) {
         if (wholeColumn) {
-            return this._tryGrabWholeColumn(hand) || {newCircuit: this, newHand: hand};
+            return this._tryGrabWholeColumn(hand, duplicate) || {newCircuit: this, newHand: hand};
         }
         let {newCircuit, newHand} = this._tryGrabResizeTab(hand) || {newCircuit: this, newHand: hand};
         return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
@@ -875,10 +873,11 @@ class DisplayedCircuit {
 
     /**
      * @param {!Hand} hand
+     * @param {!boolean} duplicate
      * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      * @private
      */
-    _tryGrabWholeColumn(hand) {
+    _tryGrabWholeColumn(hand, duplicate) {
         if (hand.isBusy() || hand.pos === undefined) {
             return undefined;
         }
@@ -889,7 +888,9 @@ class DisplayedCircuit {
         }
 
         let newCols = [...this.circuitDefinition.columns];
-        newCols.splice(col, 1, GateColumn.empty(this.circuitDefinition.numWires));
+        if (!duplicate) {
+            newCols.splice(col, 1, GateColumn.empty(this.circuitDefinition.numWires));
+        }
         return {
             newCircuit: this.withCircuit(this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGateColumn(this.circuitDefinition.columns[col], new Point(0, 0))
@@ -1108,14 +1109,21 @@ class DisplayedCircuit {
         }
 
         // Discard rate warning.
-        if (stats.postSelectionSurvivalRate < 0.99) {
-            let rate = Math.round(100 - stats.postSelectionSurvivalRate * 100);
-            let rateDesc = stats.postSelectionSurvivalRate === 0 ? "100" : rate < 100 ? rate : ">99";
+        if (Math.abs(stats.postSelectionSurvivalRate - 1) > 0.01) {
+            let desc;
+            if (stats.postSelectionSurvivalRate < 1) {
+                let rate = Math.round(100 - stats.postSelectionSurvivalRate * 100);
+                let rateDesc = stats.postSelectionSurvivalRate === 0 ? "100" : rate < 100 ? rate : ">99";
+                desc = `Discard rate: ${rateDesc}%`;
+            } else {
+                let factor = Math.round(stats.postSelectionSurvivalRate * 100);
+                desc = `Over-unity: ${factor}%`;
+            }
             painter.print(
-                `(Discard rate: ${rateDesc}%)`,
-                this.opRect(this._clampedCircuitColCount()+2).center().x,
+                desc,
+                this._rectForSuperpositionDisplay().x - 5,
                 gridRect.bottom() + SUPERPOSITION_GRID_LABEL_SPAN,
-                'center',
+                'right',
                 'bottom',
                 'red',
                 '14px sans-serif',
@@ -1130,17 +1138,16 @@ class DisplayedCircuit {
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!Rect} rect
  * @param {!boolean} showWires
- * @param {undefined|!int} extraWires
  * @param {!number} time
  * @returns {!{maxW: !number, maxH: !number}}
  */
-function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWires, time) {
+function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, time) {
     let displayed = new DisplayedCircuit(
         0,
         circuitDefinition,
         undefined,
         undefined,
-        extraWires === undefined ? undefined : circuitDefinition.numWires - extraWires);
+        undefined);
     let neededWidth = displayed.desiredWidth(true);
     let neededHeight = displayed.desiredHeight(true);
     let scaleX = rect.w / neededWidth;
@@ -1186,7 +1193,7 @@ let GATE_CIRCUIT_DRAWER = args => {
         Config.GATE_FILL_COLOR :
         Config.TIME_DEPENDENT_HIGHLIGHT_COLOR;
     GatePainting.paintBackground(args, toolboxColor);
-    drawCircuitTooltip(args.painter, args.gate.knownCircuitNested, args.rect, false, undefined, args.stats.time);
+    drawCircuitTooltip(args.painter, args.gate.knownCircuitNested, args.rect, false, args.stats.time);
     GatePainting.paintOutline(args);
     if (args.isHighlighted) {
         args.painter.ctx.save();

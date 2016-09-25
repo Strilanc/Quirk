@@ -3,6 +3,7 @@ import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {DetailedError} from "src/base/DetailedError.js"
+import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {Gates} from "src/gates/AllGates.js"
@@ -99,7 +100,7 @@ class CircuitDefinition {
         let result = new Set();
         for (let c = 0; c < this.columns.length; c++) {
             let col = this.columns[c];
-            let ctx = this.colCustomContextFromGates(c);
+            let ctx = this.colCustomContextFromGates(c, 0);
             for (let gate of col.gates) {
                 for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
                     if (!ctx.has(key)) {
@@ -212,7 +213,11 @@ class CircuitDefinition {
                     if (!gateMap.has(g)) {
                         throw new DetailedError("Unspecified gate", {char: g});
                     }
-                    return gateMap.get(g);
+                    let gate = gateMap.get(g);
+                    if (gate !== undefined && !(gate instanceof Gate)) {
+                        throw new DetailedError("Not a gate", gate);
+                    }
+                    return gate;
                 }))).
                 toArray());
     }
@@ -493,9 +498,10 @@ class CircuitDefinition {
 
     /**
      * @param {!int} col
+     * @param {!int} outerRowOffset
      * @returns {!Map.<!string, *>}
      */
-    colCustomContextFromGates(col) {
+    colCustomContextFromGates(col, outerRowOffset) {
         let result = new Map();
         if (col < 0 || col >= this.columns.length) {
             return result;
@@ -504,7 +510,7 @@ class CircuitDefinition {
         for (let row = 0; row < c.gates.length; row++) {
             let g = c.gates[row];
             if (g !== undefined && this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined) {
-                for (let {key, val} of g.customColumnContextProvider(row)) {
+                for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row)) {
                     //noinspection JSUnusedAssignment
                     result.set(key, val);
                 }

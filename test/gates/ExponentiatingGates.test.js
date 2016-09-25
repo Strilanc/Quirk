@@ -3,7 +3,7 @@ import {Gates} from "src/gates/AllGates.js"
 import {Complex} from "src/math/Complex.js"
 import {Matrix} from "src/math/Matrix.js"
 
-let suite = new Suite("Gates");
+let suite = new Suite("ExponentiatingGates");
 
 suite.test("timeBased_matchUnoptimized", () => {
     let matches = (gate, func) => {

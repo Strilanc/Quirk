@@ -205,7 +205,7 @@ function multiChanceGateMaker(span) {
         withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
-        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
+        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }
 
 let SingleChanceGate = Gate.fromIdentity(
@@ -220,7 +220,7 @@ let SingleChanceGate = Gate.fromIdentity(
             args.rect,
             args.focusPoints);
     })).
-    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
+    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 
 let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
     span === 1 ? SingleChanceGate : multiChanceGateMaker(span));

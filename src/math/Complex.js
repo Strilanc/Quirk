@@ -369,6 +369,8 @@ Complex.ONE = new Complex(1, 0);
 Complex.I = new Complex(0, 1);
 
 PARSE_COMPLEX_TOKEN_MAP.set("i", Complex.I);
+PARSE_COMPLEX_TOKEN_MAP.set("e", Complex.from(Math.E));
+PARSE_COMPLEX_TOKEN_MAP.set("pi", Complex.from(Math.PI));
 PARSE_COMPLEX_TOKEN_MAP.set("(", "(");
 PARSE_COMPLEX_TOKEN_MAP.set(")", ")");
 for (let {character, value} of UNICODE_FRACTIONS) {
@@ -377,6 +379,40 @@ for (let {character, value} of UNICODE_FRACTIONS) {
 }
 PARSE_COMPLEX_TOKEN_MAP.set("sqrt", {
     unary_action: e => Complex.from(e).raisedTo(0.5),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("exp", {
+    unary_action: e => Complex.from(e).exp(),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("ln", {
+    unary_action: e => Complex.from(e).ln(),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("cos", {
+    unary_action: e => {
+        let z = Complex.from(e).times(new Complex(0, Math.PI/180));
+        return z.exp().plus(z.neg().exp()).times(0.5);
+    },
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("sin", {
+    unary_action: e => {
+        let z = Complex.from(e).times(new Complex(0, Math.PI/180));
+        return z.exp().minus(z.neg().exp()).dividedBy(new Complex(0, 2));
+    },
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("asin", {
+    unary_action: e => {
+        if (Complex.imagPartOf(e) !== 0) {
+            throw new DetailedError("asin input out of range", {e});
+        }
+        return Complex.from(Math.asin(Complex.realPartOf(e))*180/Math.PI);
+    },
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP.set("acos", {
+    unary_action: e => {
+        if (Complex.imagPartOf(e) !== 0) {
+            throw new DetailedError("acos input out of range", {e});
+        }
+        return Complex.from(Math.acos(Complex.realPartOf(e))*180/Math.PI);
+    },
     priority: 4});
 PARSE_COMPLEX_TOKEN_MAP.set("^", {
     binary_action: (a, b) => Complex.from(a).raisedTo(b),
@@ -396,5 +432,7 @@ PARSE_COMPLEX_TOKEN_MAP.set("+", {
     binary_action: (a, b) => Complex.from(a).plus(b),
     priority: 1});
 PARSE_COMPLEX_TOKEN_MAP.set("√", PARSE_COMPLEX_TOKEN_MAP.get("sqrt"));
+PARSE_COMPLEX_TOKEN_MAP.set("arccos", PARSE_COMPLEX_TOKEN_MAP.get("acos"));
+PARSE_COMPLEX_TOKEN_MAP.set("arcsin", PARSE_COMPLEX_TOKEN_MAP.get("asin"));
 
 export {Complex}

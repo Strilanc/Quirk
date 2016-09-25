@@ -37,15 +37,15 @@ function _tokenize(text) {
         flatMap(part => seq(part).
             segmentBy(e => {
                 if (e.trim() === '') {
-                    return " "
+                    return " ";
                 }
                 if (e.match(/[\.0-9]/)) {
-                    return "#"
+                    return "#";
                 }
                 if (e.match(/[_a-z]/)) {
                     return "a";
                 }
-                return NaN;
+                return NaN; // Always split.
             }).
             map(e => e.join(''))).
         filter(e => e.trim() !== '').
@@ -131,20 +131,21 @@ function parseFormula(text, tokenMap) {
     };
 
     let feedOp = (couldBeBinary, token) => {
-        let opToken = couldBeBinary && token.priority === undefined && typeof token !== "string" ?
-            tokenMap.get("*") :
-            token;
-
-        if (opToken.priority !== undefined) {
-            burnOps(opToken.priority);
+        // Implied multiplication?
+        let mul = tokenMap.get("*");
+        if (couldBeBinary && token.binary_action === undefined && token !== ")") {
+            burnOps(mul.priority);
+            ops.push({f: mul.binary_action, w: mul.priority});
         }
 
-        if (couldBeBinary && opToken.binary_action !== undefined) {
-            ops.push({f: opToken.binary_action, w: opToken.priority});
-        } else if (opToken.unary_action !== undefined) {
+        if (couldBeBinary && token.binary_action !== undefined) {
+            burnOps(token.priority);
+            ops.push({f: token.binary_action, w: token.priority});
+        } else if (token.unary_action !== undefined) {
+            burnOps(token.priority);
             vals.push(undefined);
-            ops.push({f: (a, b) => opToken.unary_action(b), w: Infinity});
-        } else if (opToken.binary_action !== undefined) {
+            ops.push({f: (a, b) => token.unary_action(b), w: Infinity});
+        } else if (token.binary_action !== undefined) {
             throw new DetailedError("Bad expression: binary op in bad spot", {text});
         }
     };

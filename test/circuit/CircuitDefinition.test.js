@@ -1097,18 +1097,24 @@ suite.test("colCustomContextFromGates", () => {
     let c = circuit(`-a-b-
                      -a-a-
                      --X--`);
-    assertThat(c.colCustomContextFromGates(-10)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(0)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(1)).isEqualTo(new Map([["Input Range A", {offset: 0, length: 1}]]));
-    assertThat(c.colCustomContextFromGates(2)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(3)).isEqualTo(new Map([
+    assertThat(c.colCustomContextFromGates(-10, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(0, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(1, 0)).isEqualTo(new Map([["Input Range A", {offset: 0, length: 1}]]));
+    assertThat(c.colCustomContextFromGates(2, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(3, 0)).isEqualTo(new Map([
         ["Input Range A", {offset: 1, length: 1}],
         ["Input Range B", {offset: 0, length: 1}]
     ]));
-    assertThat(c.colCustomContextFromGates(4)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(5)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(100)).isEqualTo(new Map());
-    assertThat(c.colCustomContextFromGates(Infinity)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(3, 10)).isEqualTo(new Map([
+        ["Input Range A", {offset: 11, length: 1}],
+        ["Input Range B", {offset: 10, length: 1}]
+    ]));
+    assertThat(c.colCustomContextFromGates(4, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(4, 10)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(5, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(100, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(Infinity, 0)).isEqualTo(new Map());
+    assertThat(c.colCustomContextFromGates(Infinity, 1)).isEqualTo(new Map());
 });
 
 suite.test("operationShadersInColAt", () => {

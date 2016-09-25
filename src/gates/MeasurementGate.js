@@ -32,7 +32,7 @@ let MeasurementGate = Gate.fromIdentity(
     }).
     withCustomDisableReasonFinder(args => {
         if (args.isNested) {
-            return "can't\nnest";
+            return "can't\nnest\nmeasure\n(sorry)";
         }
         let isMeasured = (args.measuredMask & (1<<args.outerRow)) !== 0;
         if (args.innerColumn.hasControl() && !isMeasured) {

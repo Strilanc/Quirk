@@ -224,16 +224,20 @@ class CircuitStats {
 
         // Advance state while collecting stats into textures.
         let initialState = KetTextureUtil.classicalKet(numWires);
+        let controlTex = KetTextureUtil.control(numWires, Controls.NONE);
         let {output, colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
-            initialState,
+            new CircuitEvalArgs(
+                time,
+                0,
+                numWires,
+                Controls.NONE,
+                controlTex,
+                initialState,
+                new Map()),
             circuitDefinition,
-            time,
-            0,
-            numWires,
-            Controls.NONE,
-            new Map(),
             true);
         KetTextureUtil.doneWithTexture(initialState, "initialState in _fromCircuitAtTime_noFallback");
+        KetTextureUtil.doneWithTexture(controlTex, "controlTex in _fromCircuitAtTime_noFallback");
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({
