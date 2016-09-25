@@ -667,14 +667,12 @@ class DisplayedCircuit {
                     toArray())).
             toArray();
 
-        let newCircuitWithoutHeightFix = this.circuitDefinition.withColumns(newCols).
-            withWireCount(newWireCount);
-        let newCircuit = newCircuitWithoutHeightFix.
-            withHeightOverlapsFixed().
-            withTrailingSpacersIncluded(1);
+        let newCircuitWithoutOverlapFix = this.circuitDefinition.withColumns(newCols).withWireCount(newWireCount);
+        let newCircuitWithOverlapFix = newCircuitWithoutOverlapFix.withHeightOverlapsFixed();
+        let newCircuit = newCircuitWithOverlapFix.withTrailingSpacersIncluded();
         return this.withCircuit(newCircuit).
             _withHighlightedSlot(this._highlightedSlot).
-            _withCompressedColumnIndex(newCircuitWithoutHeightFix.isEqualTo(newCircuit) ?
+            _withCompressedColumnIndex(newCircuitWithoutOverlapFix.isEqualTo(newCircuitWithOverlapFix) ?
                 undefined :
                 hand.resizingGateSlot.x + 1).
             _withFallbackExtraWireStartIndex(this.circuitDefinition.numWires);
