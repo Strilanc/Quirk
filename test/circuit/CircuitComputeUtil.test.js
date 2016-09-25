@@ -76,7 +76,7 @@ suite.webGlTest("innerAndOuterInputs", () => {
         notcc_matrix);
 });
 
-suite.test("doublyNestedInputs", () => {
+suite.webGlTest("doublyNestedInputs", () => {
     let plus_a_times = circuitDefinitionToGate(circuit(`-*-
                                                         -a-`));
     let plus_a_times_b = circuitDefinitionToGate(circuit(`-?-
