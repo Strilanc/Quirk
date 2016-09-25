@@ -1048,6 +1048,62 @@ suite.test("hasNaN", () => {
     assertFalse(Matrix.square(0, 0, 0, 0).hasNaN());
 });
 
+suite.test("expandedForQubitInRegister", () => {
+    let _ = 0;
+    assertThat(Matrix.square(2, 3, 5, 7).expandedForQubitInRegister(0, 3, Controls.NONE)).isEqualTo(Matrix.square(
+        2,3,_,_,_,_,_,_,
+        5,7,_,_,_,_,_,_,
+        _,_,2,3,_,_,_,_,
+        _,_,5,7,_,_,_,_,
+        _,_,_,_,2,3,_,_,
+        _,_,_,_,5,7,_,_,
+        _,_,_,_,_,_,2,3,
+        _,_,_,_,_,_,5,7
+    ));
+    assertThat(Matrix.square(2, 3, 5, 7).expandedForQubitInRegister(1, 3, Controls.NONE)).isEqualTo(Matrix.square(
+        2,_,3,_,_,_,_,_,
+        _,2,_,3,_,_,_,_,
+        5,_,7,_,_,_,_,_,
+        _,5,_,7,_,_,_,_,
+        _,_,_,_,2,_,3,_,
+        _,_,_,_,_,2,_,3,
+        _,_,_,_,5,_,7,_,
+        _,_,_,_,_,5,_,7
+    ));
+    assertThat(Matrix.square(2, 3, 5, 7).expandedForQubitInRegister(2, 3, Controls.NONE)).isEqualTo(Matrix.square(
+        2,_,_,_,3,_,_,_,
+        _,2,_,_,_,3,_,_,
+        _,_,2,_,_,_,3,_,
+        _,_,_,2,_,_,_,3,
+        5,_,_,_,7,_,_,_,
+        _,5,_,_,_,7,_,_,
+        _,_,5,_,_,_,7,_,
+        _,_,_,5,_,_,_,7
+    ));
+    assertThat(Matrix.square(2, 3, 5, 7).
+        expandedForQubitInRegister(0, 3, Controls.bit(1, true))).isEqualTo(Matrix.square(
+            1,_,_,_,_,_,_,_,
+            _,1,_,_,_,_,_,_,
+            _,_,2,3,_,_,_,_,
+            _,_,5,7,_,_,_,_,
+            _,_,_,_,1,_,_,_,
+            _,_,_,_,_,1,_,_,
+            _,_,_,_,_,_,2,3,
+            _,_,_,_,_,_,5,7
+        ));
+    assertThat(Matrix.square(2, 3, 5, 7).
+        expandedForQubitInRegister(0, 3, Controls.bit(2, false))).isEqualTo(Matrix.square(
+            2,3,_,_,_,_,_,_,
+            5,7,_,_,_,_,_,_,
+            _,_,2,3,_,_,_,_,
+            _,_,5,7,_,_,_,_,
+            _,_,_,_,1,_,_,_,
+            _,_,_,_,_,1,_,_,
+            _,_,_,_,_,_,1,_,
+            _,_,_,_,_,_,_,1
+        ));
+});
+
 suite.test("applyToStateVectorAtQubitWithControls", () => {
     assertThat(Matrix.square(2, 0, 0, 3).applyToStateVectorAtQubitWithControls(
         Matrix.col(...new Array(8).fill(1)), 0, Controls.NONE)).isEqualTo(Matrix.col(2, 3, 2, 3, 2, 3, 2, 3));

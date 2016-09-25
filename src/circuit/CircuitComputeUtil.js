@@ -10,23 +10,18 @@ import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 
 /**
  * @param {!CircuitDefinition} circuitDefinition
- * @param {!string} symbol
- * @param {!string} name
- * @param {!string} blurb
+ * @param {!string=""} symbol
+ * @param {!string=""} name
+ * @param {!string=""} blurb
  * @returns {!Gate}
  */
-function circuitDefinitionToGate(circuitDefinition, symbol, name, blurb) {
+function circuitDefinitionToGate(circuitDefinition, symbol="", name="", blurb="") {
     return Gate.withoutKnownMatrix(symbol, name, blurb).
         withKnownCircuit(circuitDefinition).
         withStableDuration(circuitDefinition.stableDuration()).
         withCustomTextureTransform(args => advanceStateWithCircuit(
-            args.stateTexture,
+            args,
             circuitDefinition.withDisabledReasonsForEmbeddedContext(args.row, args.customContextFromGates),
-            args.time,
-            args.row,
-            args.wireCount,
-            args.controls,
-            args.customContextFromGates,
             false).output).
         withHeight(circuitDefinition.numWires).
         withCustomDisableReasonFinder(args => {
@@ -47,49 +42,36 @@ function circuitDefinitionToGate(circuitDefinition, symbol, name, blurb) {
 }
 
 /**
- * @param {!WglTexture} inputState
+ * @param {!CircuitEvalArgs} args
  * @param {!CircuitDefinition} circuitDefinition
- * @param {!number} time
  * @param {!boolean} collectStats
- * @param {!int} outerStartingRow
- * @param {!int} outerNumWires
- * @param {!Controls} outerControls
- * @param {!Map.<!string, *>} outerContext
  * @returns {!{output:!WglTexture,colQubitDensities:!Array.<!WglTexture>,customStats:!Array,customStatsMap:!Array}}
  */
-function advanceStateWithCircuit(
-        inputState,
-        circuitDefinition,
-        time,
-        outerStartingRow,
-        outerNumWires,
-        outerControls,
-        outerContext,
-        collectStats) {
+function advanceStateWithCircuit(args, circuitDefinition, collectStats) {
     const numCols = circuitDefinition.columns.length;
 
     let colQubitDensities = [];
     let customStats = [];
     let customStatsMap = [];
-    let noControlsTex = KetTextureUtil.control(outerNumWires, Controls.NONE);
     let output = KetTextureUtil.aggregateReusingIntermediates(
-        inputState,
+        args.stateTexture,
         Seq.range(numCols),
         (inputState, col) => {
-            let controls = outerControls.and(circuitDefinition.colControls(col).shift(outerStartingRow));
-            let controlTex = KetTextureUtil.control(outerNumWires, controls);
+            let controls = args.controls.and(circuitDefinition.colControls(col).shift(args.row));
+            let controlTex = KetTextureUtil.control(args.wireCount, controls);
 
             let nextState = _advanceStateWithCircuitDefinitionColumn(
-                outerStartingRow,
-                outerNumWires,
-                outerContext,
-                inputState,
+                args,
+                new CircuitEvalArgs(
+                    args.time,
+                    args.row,
+                    args.wireCount,
+                    controls,
+                    controlTex,
+                    inputState,
+                    args.customContextFromGates),
                 circuitDefinition,
-                col,
-                noControlsTex,
-                controls,
-                controlTex,
-                time);
+                col);
 
             if (collectStats) {
                 let {qubitDensities, customGateStats} = _extractStateStatsNeededByCircuitColumn(
@@ -98,7 +80,7 @@ function advanceStateWithCircuit(
                     col,
                     controls,
                     controlTex,
-                    time);
+                    args.time);
                 colQubitDensities.push(qubitDensities);
                 for (let {row, stat} of customGateStats) {
                     //noinspection JSUnusedAssignment
@@ -121,7 +103,6 @@ function advanceStateWithCircuit(
         colQubitDensities.push(KetTextureUtil.superpositionToQubitDensities(output, Controls.NONE, allWiresMask));
     }
 
-    KetTextureUtil.doneWithTexture(noControlsTex, "noControlsTex in advanceStateWithCircuit");
     return {output, colQubitDensities, customStats, customStatsMap};
 }
 
@@ -152,7 +133,7 @@ function _extractStateStatsNeededByCircuitColumn(
             controls,
             controlTex,
             state,
-            circuitDefinition.colCustomContextFromGates(col));
+            circuitDefinition.colCustomContextFromGates(col, row));
         let pipeline = circuitDefinition.columns[col].gates[row].customStatPipelineMaker(statArgs);
         let stat = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(state, pipeline);
         customGateStats.push({row, stat});
@@ -168,71 +149,61 @@ function _extractStateStatsNeededByCircuitColumn(
 }
 
 /**
- * @param {!int} outerStartingRow
- * @param {!int} outerWireCount
- * @param {!Map.<!string, *>} outerContext
- * @param {!WglTexture} inputState
+ * @param {!CircuitEvalArgs} outerContextArgs
+ * @param {!CircuitEvalArgs} args
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!int} col
- * @param {!WglTexture} noControlsTex
- * @param {!Controls} controls
- * @param {!WglTexture} controlsTex
- * @param {!number} time
  * @returns {!WglTexture}
  * @private
  */
 function _advanceStateWithCircuitDefinitionColumn(
-        outerStartingRow,
-        outerWireCount,
-        outerContext,
-        inputState,
+        outerContextArgs,
+        args,
         circuitDefinition,
-        col,
-        noControlsTex,
-        controls,
-        controlsTex,
-        time) {
+        col) {
 
-    let colContext = Util.mergeMaps(outerContext, circuitDefinition.colCustomContextFromGates(col));
+    let colContext = Util.mergeMaps(
+        args.customContextFromGates,
+        circuitDefinition.colCustomContextFromGates(col, args.row));
 
-    let setupArgs = new CircuitEvalArgs(
-        time,
-        undefined,
-        outerWireCount,
-        Controls.NONE,
-        noControlsTex,
-        undefined,
+    let setupArgsTemplate = new CircuitEvalArgs(
+        outerContextArgs.time,
+        undefined, // row is set by getSetupShadersInCol
+        outerContextArgs.wireCount,
+        outerContextArgs.controls,
+        outerContextArgs.controlsTexture,
+        undefined, // input texture is set below
         colContext);
-    let colArgs = new CircuitEvalArgs(
-        time,
-        undefined,
-        outerWireCount,
-        controls,
-        controlsTex,
-        undefined,
+    let colArgsTemplate = new CircuitEvalArgs(
+        args.time,
+        undefined, // row is set by operationShadersInColAt
+        args.wireCount,
+        args.controls,
+        args.controlsTexture,
+        undefined, // input texture is set below
         colContext);
 
     // Apply 'before column' setup shaders.
     let preparedState = KetTextureUtil.aggregateReusingIntermediates(
-        inputState,
-        circuitDefinition.getSetupShadersInCol(col, true, outerStartingRow),
-        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgs.withStateTexture(v)));
+        args.stateTexture,
+        circuitDefinition.getSetupShadersInCol(col, true, outerContextArgs.row),
+        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgsTemplate.withStateTexture(v)));
 
     // Apply gates in column.
     let almostNextState = KetTextureUtil.aggregateWithReuse(
         preparedState,
-        circuitDefinition.operationShadersInColAt(col, outerStartingRow),
-        (v, f) => KetTextureUtil.applyCustomShader(f, colArgs.withStateTexture(v)));
+        circuitDefinition.operationShadersInColAt(col, outerContextArgs.row),
+        (v, f) => KetTextureUtil.applyCustomShader(f, colArgsTemplate.withStateTexture(v)));
     let almostAlmostNextState = KetTextureUtil.aggregateWithReuse(
         almostNextState,
-        circuitDefinition.textureTransformsInColAt(col, outerStartingRow),
-        (v, f) => f(colArgs.withStateTexture(v)));
+        circuitDefinition.textureTransformsInColAt(col, outerContextArgs.row),
+        (v, f) => f(colArgsTemplate.withStateTexture(v)));
 
     // Apply 'after column' un-setup shaders.
     let nextState = KetTextureUtil.aggregateWithReuse(
         almostAlmostNextState,
-        circuitDefinition.getSetupShadersInCol(col, false, outerStartingRow),
-        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgs.withStateTexture(v)));
+        circuitDefinition.getSetupShadersInCol(col, false, outerContextArgs.row),
+        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgsTemplate.withStateTexture(v)));
 
     return nextState;
 }

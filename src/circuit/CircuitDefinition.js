@@ -99,7 +99,7 @@ class CircuitDefinition {
         let result = new Set();
         for (let c = 0; c < this.columns.length; c++) {
             let col = this.columns[c];
-            let ctx = this.colCustomContextFromGates(c);
+            let ctx = this.colCustomContextFromGates(c, 0);
             for (let gate of col.gates) {
                 for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
                     if (!ctx.has(key)) {
@@ -493,9 +493,10 @@ class CircuitDefinition {
 
     /**
      * @param {!int} col
+     * @param {!int} outerRowOffset
      * @returns {!Map.<!string, *>}
      */
-    colCustomContextFromGates(col) {
+    colCustomContextFromGates(col, outerRowOffset) {
         let result = new Map();
         if (col < 0 || col >= this.columns.length) {
             return result;
@@ -504,7 +505,7 @@ class CircuitDefinition {
         for (let row = 0; row < c.gates.length; row++) {
             let g = c.gates[row];
             if (g !== undefined && this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined) {
-                for (let {key, val} of g.customColumnContextProvider(row)) {
+                for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row)) {
                     //noinspection JSUnusedAssignment
                     result.set(key, val);
                 }

@@ -596,6 +596,33 @@ class Matrix {
     }
 
     /**
+     * Expands a qubit operation so that it applies to a larger register of qubits, with optional controls.
+     * @param {!int} targetQubitOffset
+     * @param {!int} registerSize
+     * @param {!Controls} controls
+     * @returns {!Matrix}
+     */
+    expandedForQubitInRegister(targetQubitOffset, registerSize, controls) {
+        let used = Math.round(Math.log2(this._width));
+        let result = Matrix.identity(1 << (registerSize - targetQubitOffset - used)).
+            tensorProduct(this).
+            tensorProduct(Matrix.identity(1 << targetQubitOffset)).
+            _clone();
+
+        for (let c = 0; c < result._width; c++) {
+            for (let r = 0; r < result._height; r++) {
+                if (!controls.allowsState(c) || !controls.allowsState(r)) {
+                    let k = 2*(c + r*result._width);
+                    result._buffer[k] = c === r ? 1 : 0;
+                    result._buffer[k+1] = 0;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * @param {!Matrix} stateVector
      * @param {!int} qubitIndex
      * @param {!Controls} controls
@@ -817,6 +844,9 @@ class Matrix {
      * @returns {!Matrix}
      */
     static identity(size) {
+        if (!Number.isInteger(size) || size <= 0) {
+            throw new DetailedError("Bad size", {size});
+        }
         let buf = new Float64Array(size*size*2);
         for (let k = 0; k < size; k++) {
             buf[k*(size + 1)*2] = 1;

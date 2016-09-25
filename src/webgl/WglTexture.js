@@ -51,6 +51,13 @@ class WglTexture {
             e => WglTexture._deinitialize(e));
     }
 
+    toString() {
+        return 'Texture(' + [
+            this.width + 'x' + this.height,
+            this.pixelType,
+            this._hasBeenRenderedTo ? 'rendered' : 'not rendered'].join(', ') + ')';
+    }
+
     markRendered() {
         this._hasBeenRenderedTo = true;
     }

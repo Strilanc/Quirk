@@ -174,6 +174,9 @@ const matrix_operation_shaders = [
  * @returns {!WglConfiguredShader}
  */
 GateShaders.matrixOperation = (inputTexture, mat, qubitIndex, controlTexture) => {
+    if (controlTexture.width !== inputTexture.width || controlTexture.height !== inputTexture.height) {
+        throw new DetailedError("Mismatched sizes.", {inputTexture, controlTexture});
+    }
     if (mat.width() === 2) {
         return singleQubitOperationFunc(inputTexture, mat, qubitIndex, controlTexture);
     }

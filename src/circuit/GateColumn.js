@@ -111,7 +111,7 @@ class GateColumn {
             () => this._disabledReason_needInput(args),
             () => this._disabledReason_controlInside(row),
             () => this._disabledReason_remixing(row, inputMeasureMask),
-            () => this._disabledReason_overlappingTags(row)
+            () => this._disabledReason_overlappingTags(outerRowOffset, row)
         ];
 
         for (let test of tests) {
@@ -124,19 +124,20 @@ class GateColumn {
     }
 
     /**
+     * @param {!int} outerRow
      * @param {!int} row
      * @returns {undefined|!string}
      * @private
      */
-    _disabledReason_overlappingTags(row) {
-        let keys = new Set(this.gates[row].customColumnContextProvider(row).map(e => e.key));
+    _disabledReason_overlappingTags(outerRow, row) {
+        let keys = new Set(this.gates[row].customColumnContextProvider(outerRow + row).map(e => e.key));
         if (keys.length === 0) {
             return undefined;
         }
 
         for (let i = 0; i < row; i++) {
             let g = this.gates[i];
-            for (let {key: otherKey} of g === undefined ? [] : g.customColumnContextProvider(i)) {
+            for (let {key: otherKey} of g === undefined ? [] : g.customColumnContextProvider(outerRow + i)) {
                 //noinspection JSUnusedAssignment
                 if (keys.has(otherKey)) {
                     return "already\ndefined";
