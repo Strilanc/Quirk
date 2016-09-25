@@ -1106,14 +1106,21 @@ class DisplayedCircuit {
         }
 
         // Discard rate warning.
-        if (stats.postSelectionSurvivalRate < 0.99) {
-            let rate = Math.round(100 - stats.postSelectionSurvivalRate * 100);
-            let rateDesc = stats.postSelectionSurvivalRate === 0 ? "100" : rate < 100 ? rate : ">99";
+        if (Math.abs(stats.postSelectionSurvivalRate - 1) > 0.01) {
+            let desc;
+            if (stats.postSelectionSurvivalRate < 1) {
+                let rate = Math.round(100 - stats.postSelectionSurvivalRate * 100);
+                let rateDesc = stats.postSelectionSurvivalRate === 0 ? "100" : rate < 100 ? rate : ">99";
+                desc = `Discard rate: ${rateDesc}%`;
+            } else {
+                let factor = Math.round(stats.postSelectionSurvivalRate * 100);
+                desc = `Over-unity: ${factor}%`;
+            }
             painter.print(
-                `(Discard rate: ${rateDesc}%)`,
-                this.opRect(this._clampedCircuitColCount()+2).center().x,
+                desc,
+                this._rectForSuperpositionDisplay().x - 5,
                 gridRect.bottom() + SUPERPOSITION_GRID_LABEL_SPAN,
-                'center',
+                'right',
                 'bottom',
                 'red',
                 '14px sans-serif',
