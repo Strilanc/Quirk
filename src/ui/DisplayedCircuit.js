@@ -799,7 +799,7 @@ class DisplayedCircuit {
      */
     tryGrab(hand, duplicate=false, wholeColumn=false) {
         if (wholeColumn) {
-            return this._tryGrabWholeColumn(hand) || {newCircuit: this, newHand: hand};
+            return this._tryGrabWholeColumn(hand, duplicate) || {newCircuit: this, newHand: hand};
         }
         let {newCircuit, newHand} = this._tryGrabResizeTab(hand) || {newCircuit: this, newHand: hand};
         return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
@@ -873,10 +873,11 @@ class DisplayedCircuit {
 
     /**
      * @param {!Hand} hand
+     * @param {!boolean} duplicate
      * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      * @private
      */
-    _tryGrabWholeColumn(hand) {
+    _tryGrabWholeColumn(hand, duplicate) {
         if (hand.isBusy() || hand.pos === undefined) {
             return undefined;
         }
@@ -887,7 +888,9 @@ class DisplayedCircuit {
         }
 
         let newCols = [...this.circuitDefinition.columns];
-        newCols.splice(col, 1, GateColumn.empty(this.circuitDefinition.numWires));
+        if (!duplicate) {
+            newCols.splice(col, 1, GateColumn.empty(this.circuitDefinition.numWires));
+        }
         return {
             newCircuit: this.withCircuit(this.circuitDefinition.withColumns(newCols)),
             newHand: hand.withHeldGateColumn(this.circuitDefinition.columns[col], new Point(0, 0))
