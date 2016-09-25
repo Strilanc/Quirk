@@ -123,7 +123,7 @@ function densityMatrixDisplayMaker(span) {
             args.row,
             span)).
         withCustomStatPostProcessor(densityPixelsToMatrix).
-        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
+        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }
 
 const DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args => {
@@ -142,7 +142,7 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
         let ρ = args.stats.qubitDensityMatrix(row, col);
         MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
     })).
-    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest" : undefined);
+    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 
 let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleWireDensityMatrixDisplay :

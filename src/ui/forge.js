@@ -18,6 +18,7 @@ import {Painter} from "src/draw/Painter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {Serializer} from "src/circuit/Serializer.js"
+import {seq, Seq} from "src/base/Seq.js"
 import {textEditObservable} from "src/browser/EventUtil.js"
 import {Util} from "src/base/Util.js"
 
@@ -118,39 +119,14 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-rotation-name');
         obsOnShown.subscribe(() => { txtName.value = ""; });
 
-        function parseRotation() {
-            let parseAngle = e => {
-                let s = e.value === '' ? e.placeholder : e.value;
-                let c = Complex.parse(s);
-                if (c.imag !== 0 || isNaN(c.imag)) {
-                    throw new Error("You just had to make it complicated, didn't you?");
-                }
-                return c.real * Math.PI / 180;
-            };
-            let w = parseAngle(txtAngle);
-            let phase = parseAngle(txtPhase);
-            let {x, y, z} = Axis.parse(txtAxis.value === '' ? txtAxis.placeholder : txtAxis.value);
-
-            let len = Math.sqrt(x*x + y*y + z*z);
-            x /= len;
-            y /= len;
-            z /= len;
-
-            let [I, X, Y, Z] = [Matrix.identity(2), Matrix.PAULI_X, Matrix.PAULI_Y, Matrix.PAULI_Z];
-            let axisMatrix = X.times(x).plus(Y.times(y)).plus(Z.times(z));
-
-            let result = I.times(Math.cos(w/2)).
-                plus(axisMatrix.times(Complex.I.neg()).times(Math.sin(w/2))).
-                times(Complex.polar(1, phase));
-            if (result.hasNaN()) {
-                throw new DetailedError("NaN", {x, y, z, result});
-            }
-
-            result = Matrix.parse(result.toString(new Format(true, 0.0000001, 7, ",")));
-            return result;
+        function parseRotationFromInputs() {
+            return parseUserRotation(
+                valueElsePlaceholder(txtAngle),
+                valueElsePlaceholder(txtPhase),
+                valueElsePlaceholder(txtAxis));
         }
 
-        let redraw = () => computeAndPaintOp(rotationCanvas, parseRotation, rotationButton);
+        let redraw = () => computeAndPaintOp(rotationCanvas, parseRotationFromInputs, rotationButton);
         Observable.of(obsOnShown, ...[txtPhase, txtAxis, txtAngle].map(textEditObservable)).
             flatten().
             throttleLatest(100).
@@ -159,7 +135,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         rotationButton.addEventListener('click', () => {
             let mat;
             try {
-                mat = parseRotation();
+                mat = parseRotationFromInputs();
             } catch (ex) {
                 console.warn(ex);
                 return; // Button is about to be disabled, so no handling required.
@@ -179,52 +155,13 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-matrix-name');
         obsOnShown.subscribe(() => { txtName.value = ""; });
 
-        function parseMatrix_noCorrection() {
-            let s = txtMatrix.value;
-            if (s === '') {
-                s = txtMatrix.placeholder;
-            }
-
-            // If brackets are present, use the normal parse method that enforces grouping.
-            if (s.match(/[\{}\[\]]/)) {
-                return Matrix.parse(s.split(/[\{\[]/).join('{').split(/[}\]]/).join('}'));
-            }
-
-            // Newlines introduce a break if one isn't already present at that location and we aren't at the end.
-            s = s.split(/,?\s*\n\s*(?!$)/).join(',');
-            s = s.trim();
-            // Ignore trailing comma.
-            if (s.endsWith(',')) {
-                s = s.substring(0, s.length - 1);
-            }
-
-            let parts = s.split(',').map(e => e === '' ? 0 : Complex.parse(e));
-
-            // Pad with zeroes up to next size that makes sense.
-            let n = Math.max(4, 1 << (2*Math.max(1, Math.floor(Math.log2(Math.sqrt(parts.length))))));
-            if (n < parts.length) {
-                n <<= 2;
-            }
-            if (n > (1<<8)) {
-                throw Error("Max custom matrix operation size is 4 qubits.")
-            }
-            //noinspection JSCheckFunctionSignatures
-            return Matrix.square(...parts, ...new Array(n - parts.length).fill(0));
+        function parseMatrixFromInputs() {
+            let text = valueElsePlaceholder(txtMatrix);
+            let ensureUnitary = chkFix.checked;
+            return parseUserMatrix(text, ensureUnitary);
         }
 
-        function parseMatrix() {
-            let op = parseMatrix_noCorrection();
-            if (op.width() !== op.height() || op.width() < 2 || op.width() > 16 || !Util.isPowerOf2(op.width())) {
-                throw Error("Matrix must be 2x2, 4x4, 8x8, or 16x16.")
-            }
-            if (chkFix.checked && !op.hasNaN()) {
-                op = op.closestUnitary(0.0001);
-                op = Matrix.parse(op.toString(new Format(true, 0.0000001, 7, ",")));
-            }
-            return op;
-        }
-
-        let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrix, matrixButton);
+        let redraw = () => computeAndPaintOp(matrixCanvas, parseMatrixFromInputs, matrixButton);
 
         Observable.of(obsOnShown, textEditObservable(txtMatrix), Observable.elementEvent(chkFix, 'change')).
             flatten().
@@ -234,7 +171,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         matrixButton.addEventListener('click', () => {
             let mat;
             try {
-                mat = parseMatrix();
+                mat = parseMatrixFromInputs();
             } catch (ex) {
                 console.warn(ex);
                 return; // Button is about to be disabled, so no handling required.
@@ -260,65 +197,23 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         const txtName = /** @type {!HTMLInputElement} */ document.getElementById('gate-forge-circuit-name');
         obsOnShown.subscribe(() => { txtName.value = ""; });
 
-        function parseRange(txtBox, maxLen) {
-            let txt = txtBox.value === '' ? txtBox.placeholder : txtBox.value;
-            let parts = txt.split(":").map(e => e.trim());
-            if (parts.length > 2) {
-                throw new Error("Too many colons.");
-            }
-            let min = parseInt(parts[0] || "1");
-            let max = parts[1] === undefined || parts[1] === "" || parts[1] === "∞" ? Infinity : parseInt(parts[1]);
-            if (isNaN(min)) {
-                throw new Error("Not a number: " + parts[0]);
-            }
-            if (isNaN(max)) {
-                throw new Error("Not a number: " + parts[1]);
-            }
-
-            let start = Math.min(maxLen, Math.max(0, min - 1));
-            let end = Math.min(maxLen, Math.max(start, max));
-            return {start, end};
-        }
-
-        function parseCircuitGate() {
+        /** @returns {{gate: !Gate, circuit: !CircuitDefinition}} */
+        function parseEnteredCircuitGate() {
             let circuit = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
-            let colRange = parseRange(txtCols, circuit.columns.length);
-            let rowRange = parseRange(txtRows, circuit.numWires);
-            if (rowRange.end === rowRange.start) {
-                throw new Error("Empty wire range.")
-            }
-
-            let cols = circuit.columns.
-                slice(colRange.start, colRange.end).
-                map(col => new GateColumn(col.gates.slice(rowRange.start, rowRange.end)));
-            let gateCircuit = new CircuitDefinition(rowRange.end - rowRange.start, cols).withUncoveredColumnsRemoved();
-            if (gateCircuit.columns.length === 0) {
-                throw new Error("No gates in included range.");
-            }
-            let minWired = gateCircuit.withMinimumWireCount();
-            let extraWires = Math.max(0, minWired.numWires - gateCircuit.numWires);
-            gateCircuit = minWired;
-
-            let symbol = txtName.value.trim();
-            let id = '~' + Math.floor(Math.random()*(1 << 20)).toString(32);
-
-            let gate = circuitDefinitionToGate(
-                gateCircuit,
-                symbol,
-                id,
-                'A custom gate.')
-                .withSerializedId(id);
-
-            return {extraWires, gate, circuit};
+            let gate = parseUserGateFromCircuitRange(
+                circuit,
+                valueElsePlaceholder(txtCols),
+                valueElsePlaceholder(txtRows),
+                txtName.value.trim());
+            return {gate, circuit};
         }
 
         let latestGate = new ObservableValue(undefined);
-        let drawGate = (painter, gate, extraWires) => drawCircuitTooltip(
+        let drawGate = (painter, gate) => drawCircuitTooltip(
             painter,
             gate.knownCircuitNested,
             new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
             true,
-            extraWires,
             getCircuitCycleTime());
 
         latestGate.observable().
@@ -330,7 +225,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             subscribe(e => {
                 let painter = new Painter(circuitCanvas);
                 painter.clear();
-                drawGate(painter, e.gate, e.extraWires);
+                drawGate(painter, e.gate);
             });
 
         let redraw = () => {
@@ -338,15 +233,15 @@ function initForge(revision, obsIsAnyOverlayShowing) {
             let painter = new Painter(circuitCanvas);
             painter.clear();
             try {
-                let {gate, extraWires} = parseCircuitGate();
+                let {gate} = parseEnteredCircuitGate();
                 let keys = gate.getUnmetContextKeys();
                 spanInputs.innerText = keys.size === 0 ?
                     "(none)" :
                     [...keys].map(e => e.replace("Input Range ", "")).join(", ");
                 spanWeight.innerText = "" + gate.knownCircuit.gateWeight();
-                drawGate(painter, gate, extraWires);
+                drawGate(painter, gate);
                 circuitButton.disabled = false;
-                latestGate.set({gate, extraWires});
+                latestGate.set({gate});
             } catch (ex) {
                 latestGate.set(undefined);
                 spanInputs.innerText = "(err)";
@@ -367,7 +262,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
 
         circuitButton.addEventListener('click', () => {
             try {
-                let {gate, circuit} = parseCircuitGate();
+                let {gate, circuit} = parseEnteredCircuitGate();
                 createCustomGateAndClose(gate, circuit);
             } catch (ex) {
                 // Button is about to be disabled, so no handling required.
@@ -377,4 +272,186 @@ function initForge(revision, obsIsAnyOverlayShowing) {
     })();
 }
 
-export {initForge, obsForgeIsShowing}
+/**
+ * @param {!HTMLInputElement} textBox
+ * @returns {!string}
+ */
+function valueElsePlaceholder(textBox) {
+    //noinspection JSUnresolvedVariable
+    return textBox.value === '' ? textBox.placeholder : textBox.value;
+}
+
+/**
+ * @param {!string} text
+ * @returns {!number}
+ */
+function parseUserAngle(text) {
+    let c = Complex.parse(text);
+    if (c.imag !== 0 || isNaN(c.imag)) {
+        throw new Error("You just had to make it complicated, didn't you?");
+    }
+    return c.real * Math.PI / 180;
+}
+
+/**
+ * @param {!Matrix} matrix
+ * @returns {!Matrix}
+ */
+function decreasePrecisionAndSerializedSize(matrix) {
+    return Matrix.parse(matrix.toString(new Format(true, 0.0000001, 7, ",")))
+}
+
+/**
+ * @param {!string} angleText
+ * @param {!string} phaseText
+ * @param {!string} axisText
+ * @returns {!Matrix}
+ */
+function parseUserRotation(angleText, phaseText, axisText) {
+    let w = parseUserAngle(angleText);
+    let phase = parseUserAngle(phaseText);
+    let {x, y, z} = Axis.parse(axisText);
+
+    let len = Math.sqrt(x*x + y*y + z*z);
+    x /= len;
+    y /= len;
+    z /= len;
+
+    let [I, X, Y, Z] = [Matrix.identity(2), Matrix.PAULI_X, Matrix.PAULI_Y, Matrix.PAULI_Z];
+    let axisMatrix = X.times(x).plus(Y.times(y)).plus(Z.times(z));
+
+    let result = I.times(Math.cos(w/2)).
+        plus(axisMatrix.times(Complex.I.neg()).times(Math.sin(w/2))).
+        times(Complex.polar(1, phase));
+    if (result.hasNaN()) {
+        throw new DetailedError("NaN", {x, y, z, result});
+    }
+
+    return decreasePrecisionAndSerializedSize(result);
+}
+
+/**
+ * @param {!string} text
+ * @returns {!Matrix}
+ */
+function parseUserGateMatrix_noCorrection(text) {
+    // If brackets are present, use the normal parse method that enforces grouping.
+    if (text.match(/[\{}\[\]]/)) {
+        return Matrix.parse(text.split(/[\{\[]/).join('{').split(/[}\]]/).join('}'));
+    }
+
+    // Newlines introduce a break if one isn't already present at that location and we aren't at the end.
+    text = text.split(/,?\s*\n\s*(?!$)/).join(',');
+    text = text.trim();
+    // Ignore trailing comma.
+    if (text.endsWith(',')) {
+        text = text.substring(0, text.length - 1);
+    }
+
+    let parts = text.split(',').map(e => e === '' ? 0 : Complex.parse(e));
+
+    // Pad with zeroes up to next size that makes sense.
+    let n = Math.max(4, 1 << (2*Math.max(1, Math.floor(Math.log2(Math.sqrt(parts.length))))));
+    if (n < parts.length) {
+        n <<= 2;
+    }
+    if (n > (1<<8)) {
+        throw Error("Max custom matrix operation size is 4 qubits.")
+    }
+    //noinspection JSCheckFunctionSignatures
+    return Matrix.square(...parts, ...new Array(n - parts.length).fill(0));
+}
+
+/**
+ * @param {!string} text
+ * @param {!boolean} ensureUnitary
+ * @returns {!Matrix}
+ */
+function parseUserMatrix(text, ensureUnitary) {
+    let op = parseUserGateMatrix_noCorrection(text);
+    if (op.width() !== op.height() || op.width() < 2 || op.width() > 16 || !Util.isPowerOf2(op.width())) {
+        throw Error("Matrix must be 2x2, 4x4, 8x8, or 16x16.")
+    }
+    if (ensureUnitary && !op.hasNaN()) {
+        op = op.closestUnitary(0.0001);
+        op = decreasePrecisionAndSerializedSize(op);
+    }
+    return op;
+}
+
+/**
+ * @param {!string} text
+ * @param {!int} maxLen
+ * @returns {{start: !int, end: !int}}
+ */
+function parseRange(text, maxLen) {
+    let parts = text.split(":").map(e => e.trim());
+    if (parts.length > 2) {
+        throw new Error("Too many colons.");
+    }
+    let infinities = [undefined, "", "∞"];
+    let min = parseInt(parts[0] || "1");
+    let max = infinities.indexOf(parts[1]) !== -1 ? Infinity : parseInt(parts[1]);
+    if (isNaN(min)) {
+        throw new Error("Not a number: " + parts[0]);
+    }
+    if (isNaN(max)) {
+        throw new Error("Not a number: " + parts[1]);
+    }
+
+    let start = Math.min(maxLen, Math.max(0, min - 1));
+    let end = Math.min(maxLen, Math.max(start, max));
+    return {start, end};
+}
+
+/**
+ * @param {!CircuitDefinition} circuit
+ * @returns {!CircuitDefinition}
+ */
+function removeBrokenGates(circuit) {
+    let w = circuit.columns.length;
+    let h = circuit.numWires;
+    return circuit.withColumns(
+        seq(circuit.columns).mapWithIndex(
+            (col, c) => new GateColumn(seq(col.gates).mapWithIndex(
+                (gate, r) => gate === undefined || c + gate.width > w || r + gate.height > h ? undefined : gate
+            ).toArray())
+        ).toArray());
+}
+
+/**
+ * @param {!CircuitDefinition} circuit
+ * @param {!string} colRangeText
+ * @param {!string} wireRangeText
+ * @param {!string} nameText
+ * @returns {!Gate}
+ */
+function parseUserGateFromCircuitRange(circuit, colRangeText, wireRangeText, nameText) {
+    let colRange = parseRange(colRangeText, circuit.columns.length);
+    let rowRange = parseRange(wireRangeText, circuit.numWires);
+    if (rowRange.end === rowRange.start) {
+        throw new Error("Empty wire range.")
+    }
+
+    let cols = circuit.columns.
+        slice(colRange.start, colRange.end).
+        map(col => new GateColumn(col.gates.slice(rowRange.start, rowRange.end)));
+    let gateCircuit = new CircuitDefinition(rowRange.end - rowRange.start, cols);
+    gateCircuit = removeBrokenGates(gateCircuit);
+    gateCircuit = gateCircuit.withUncoveredColumnsRemoved();
+    if (gateCircuit.columns.length === 0) {
+        throw new Error("No gates in included range.");
+    }
+
+    let symbol = nameText;
+    let id = '~' + Math.floor(Math.random()*(1 << 20)).toString(32);
+
+    return circuitDefinitionToGate(
+        gateCircuit,
+        symbol,
+        id,
+        'A custom gate.')
+        .withSerializedId(id);
+}
+
+export {initForge, obsForgeIsShowing, parseUserRotation, parseUserMatrix, parseUserGateFromCircuitRange}

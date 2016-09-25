@@ -1130,17 +1130,16 @@ class DisplayedCircuit {
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!Rect} rect
  * @param {!boolean} showWires
- * @param {undefined|!int} extraWires
  * @param {!number} time
  * @returns {!{maxW: !number, maxH: !number}}
  */
-function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, extraWires, time) {
+function drawCircuitTooltip(painter, circuitDefinition, rect, showWires, time) {
     let displayed = new DisplayedCircuit(
         0,
         circuitDefinition,
         undefined,
         undefined,
-        extraWires === undefined ? undefined : circuitDefinition.numWires - extraWires);
+        undefined);
     let neededWidth = displayed.desiredWidth(true);
     let neededHeight = displayed.desiredHeight(true);
     let scaleX = rect.w / neededWidth;
@@ -1186,7 +1185,7 @@ let GATE_CIRCUIT_DRAWER = args => {
         Config.GATE_FILL_COLOR :
         Config.TIME_DEPENDENT_HIGHLIGHT_COLOR;
     GatePainting.paintBackground(args, toolboxColor);
-    drawCircuitTooltip(args.painter, args.gate.knownCircuitNested, args.rect, false, undefined, args.stats.time);
+    drawCircuitTooltip(args.painter, args.gate.knownCircuitNested, args.rect, false, args.stats.time);
     GatePainting.paintOutline(args);
     if (args.isHighlighted) {
         args.painter.ctx.save();
