@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)
 [![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)
 
-Quirk is a simple quantum circuit simulator, intended to help people learn about quantum computing.
+Quirk is a toy quantum circuit simulator, intended to help people learn about quantum computing.
 
 If you want to quickly explore the behavior of a small quantum circuit, Quirk is the tool for you.
 There's no installing or configuring or scripting: just go to **[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)**, drag gates onto the circuit, and the output displays will update in real time.
@@ -16,14 +16,15 @@ Quirk assumes you already know background facts like "each wire represents a qub
 - Runs in web browsers.
 - Drag-and-drop circuit editing.
 - Reacts, simulates, and animates in real time.
-- Inline displays for conditional and marginal states.
+- Inline state displays.
 - Bookmarkable circuits.
 - Up to 16 qubits.
 
-**Notable limitations** (a.k.a. future features):
+**Notable limitations**:
 
-- No user-defined custom gates.
-- No recohering of measured qubits.
+- Can't apply operations that create superpositions to measured qubits.
+- Can't embed measurement in custom gates.
+- Doesn't work in the mobile version of firefox.
 
 **Try it out**:
 
