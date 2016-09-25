@@ -33,7 +33,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ...extras
 ]), diagram);
 
-suite.test("nestedControls", () => {
+suite.webGlTest("nestedControls", () => {
     let cnot = circuitDefinitionToGate(circuit(`-•-
                                                 -X-`));
     let ccnot_circuit = circuit(`-•-
@@ -41,11 +41,30 @@ suite.test("nestedControls", () => {
                                  -/-`, ['?', cnot]);
     let ccnot_matrix = Matrix.PAULI_X.expandedForQubitInRegister(2, 3, new Controls(3, 3));
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(args, ccnot_circuit, false).output,
+            args => advanceStateWithCircuit(args, ccnot_circuit, false).output,
         ccnot_matrix);
 });
 
-suite.test("innerAndOuterInputs", () => {
+suite.webGlTest("multiNestedControls", () => {
+    let notc = circuitDefinitionToGate(circuit(`-X-
+                                                -•-`));
+    let i_notcc = circuitDefinitionToGate(circuit(`---
+                                                   -?-
+                                                   -/-
+                                                   -•-`, ['?', notc]));
+    let shifted_notccc_circuit = circuit(`---
+                                          -?-
+                                          -/-
+                                          -/-
+                                          -/-
+                                          -•-`, ['?', i_notcc]);
+    let shifted_notccc_matrix = Matrix.PAULI_X.expandedForQubitInRegister(2, 6, new Controls(7<<3, 7<<3));
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+        args => advanceStateWithCircuit(args, shifted_notccc_circuit, false).output,
+        shifted_notccc_matrix);
+});
+
+suite.webGlTest("innerAndOuterInputs", () => {
     let plus_a_times = circuitDefinitionToGate(circuit(`-*-
                                                         -a-`));
     let notcc_circuit = circuit(`-?-
@@ -55,4 +74,41 @@ suite.test("innerAndOuterInputs", () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
         args => advanceStateWithCircuit(args, notcc_circuit, false).output,
         notcc_matrix);
+});
+
+suite.test("doublyNestedInputs", () => {
+    let plus_a_times = circuitDefinitionToGate(circuit(`-*-
+                                                        -a-`));
+    let plus_a_times_b = circuitDefinitionToGate(circuit(`-?-
+                                                          -/-
+                                                          -b-`, ['?', plus_a_times]));
+    let shifted_notcc_circuit = circuit(`---
+                                         -?-
+                                         -/-
+                                         -/-`, ['?', plus_a_times_b]);
+    let shifted_notcc_matrix = Matrix.PAULI_X.expandedForQubitInRegister(1, 4, new Controls(12, 12));
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+        args => advanceStateWithCircuit(args, shifted_notcc_circuit, false).output,
+        shifted_notcc_matrix);
+});
+
+suite.webGlTest("rawAddition", () => {
+    let adder = circuit(`-+-
+                         -/-
+                         -/-
+                         -/-
+                         -A-
+                         -/-`,
+        ['A', Gates.InputGates.InputAFamily.ofSize(2)],
+        ['+', Gates.Arithmetic.PlusAFamily.ofSize(4)]);
+    let matrix = Matrix.generateTransition(1 << 6, e => {
+        let a = e & 15;
+        let b = (e >> 4) & 3;
+        a += b;
+        a &= 15;
+        return a | (b << 4);
+    });
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+        args => advanceStateWithCircuit(args, adder, false).output,
+        matrix);
 });

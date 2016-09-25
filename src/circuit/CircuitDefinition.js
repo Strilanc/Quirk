@@ -3,6 +3,7 @@ import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {DetailedError} from "src/base/DetailedError.js"
+import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {Gates} from "src/gates/AllGates.js"
@@ -212,7 +213,11 @@ class CircuitDefinition {
                     if (!gateMap.has(g)) {
                         throw new DetailedError("Unspecified gate", {char: g});
                     }
-                    return gateMap.get(g);
+                    let gate = gateMap.get(g);
+                    if (gate !== undefined && !(gate instanceof Gate)) {
+                        throw new DetailedError("Not a gate", gate);
+                    }
+                    return gate;
                 }))).
                 toArray());
     }
