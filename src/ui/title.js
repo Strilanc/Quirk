@@ -1,4 +1,5 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Config} from "src/Config.js"
 import {Serializer} from "src/circuit/Serializer.js"
 
 /**
@@ -14,7 +15,7 @@ function initTitleSync(revision) {
             }
         } catch (_) {
         }
-        return 'Quirk: Toy Quantum Circuit Simulator';
+        return Config.EMPTY_CIRCUIT_TITLE;
     };
 
     revision.latestActiveCommit().subscribe(jsonText => {

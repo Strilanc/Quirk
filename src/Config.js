@@ -3,7 +3,7 @@
  */
 class Config {}
 
-Config.EMPTY_CIRCUIT_TITLE = 'Toy Quantum Circuit Simulator';
+Config.EMPTY_CIRCUIT_TITLE = 'Quantum Circuit Toy - Quirk';
 
 // Each qubit (when actually used) doubles the cost of simulating each gate applied to the circuit.
 // Also each qubit tends to increase the amount of accuracy required.
