@@ -128,7 +128,7 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
     markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : RIGHT_SHIFTING_MATRIX_MAKER(span)).
     withSerializedId(">>t" + span).
-    withCustomDrawer(STAIRCASE_DRAWER(0, span)).
+    withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
     withHeight(span).
     withStableDuration(1.0 / span).
     withCustomShader(args => cycleBits(
@@ -146,7 +146,7 @@ CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.
     markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : LEFT_SHIFTING_MATRIX_MAKER(span)).
     withSerializedId("<<t" + span).
-    withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
+    withCustomDrawer(STAIRCASE_DRAWER(0, span)).
     withHeight(span).
     withStableDuration(1.0 / span).
     withCustomShader(args => cycleBits(

@@ -1049,7 +1049,7 @@ class DisplayedCircuit {
         let buf = stats.finalState.rawBuffer();
         if (stats.circuitDefinition.numWires !== numWire) {
             let r = new Float32Array(2 << numWire);
-            r.set(buf);
+            r.set(buf.slice(0, r.length));
             buf = r;
         }
 
