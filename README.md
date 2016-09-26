@@ -24,7 +24,7 @@ Quirk assumes you already know background facts like "each wire represents a qub
 
 - Can't apply operations that create superpositions to measured qubits.
 - Can't embed measurement in custom gates.
-- Doesn't work in the mobile version of firefox.
+- Can't simulate in mobile Safari or Firefox.
 
 **Try it out**:
 
