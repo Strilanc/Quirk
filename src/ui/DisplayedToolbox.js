@@ -216,6 +216,7 @@ class DisplayedToolbox {
 
             painter.ctx.save();
             painter.ctx.globalAlpha = 0;
+            painter.ctx.translate(-10000, -10000);
             let {maxW, maxH} = WidgetPainter.paintGateTooltip(
                 painter, new Rect(0, 0, 500, 300), f.gate, stats.time, true);
             let mayNeedToScale = maxW >= 500 || maxH >= 300;
