@@ -1013,14 +1013,14 @@ class DisplayedCircuit {
 
         // Column labels.
         painter.ctx.save();
-        painter.ctx.translate(gridRect.x, gridRect.bottom());
+        painter.ctx.translate(gridRect.x + colCount*dw, gridRect.bottom());
         painter.ctx.rotate(Math.PI/2);
         let suffix = rowWires < 4 ? "_".repeat(rowWires) : "_..";
         DisplayedCircuit._drawLabelsReasonablyFast(
             painter,
-            -dw,
+            dw,
             colCount,
-            i => Util.bin(i, rowWires) + suffix,
+            i => Util.bin(colCount-1-i, rowWires) + suffix,
             SUPERPOSITION_GRID_LABEL_SPAN);
         painter.ctx.restore();
     }
@@ -1043,19 +1043,24 @@ class DisplayedCircuit {
             painter.ctx.measureText(labeller(0)).width,
             painter.ctx.measureText(labeller(n-1)).width);
         let h = ctx.measureText("0").width * 2.5;
-        let scale = Math.min(Math.min(boundingWidth / w, Math.abs(dy) / h), 1);
+        let scale = Math.min(Math.min(boundingWidth / w, dy / h), 1);
 
         // Row labels.
         let step = dy/scale;
         let pad = 2/scale;
         ctx.scale(scale, scale);
         ctx.translate(0, dy*0.5/scale - h*0.5);
+        ctx.fillStyle = 'lightgray';
+        if (h < step*0.95) {
+            for (let i = 0; i < n; i++) {
+                ctx.fillRect(0, step * i, w + 2 * pad, h);
+            }
+        } else {
+            ctx.fillRect(0, 0, w + 2 * pad, h*n);
+        }
+        ctx.fillStyle = 'black';
         for (let i = 0; i < n; i++) {
-            ctx.fillStyle = 'lightgray';
-            ctx.fillRect(0, 0, w + 2*pad, h);
-            ctx.fillStyle = 'black';
-            ctx.fillText(labeller(i), pad, h*0.5);
-            ctx.translate(0, step);
+            ctx.fillText(labeller(i), pad, h*0.5 + step*i);
         }
         ctx.restore();
     }
