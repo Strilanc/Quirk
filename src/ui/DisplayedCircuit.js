@@ -1000,43 +1000,64 @@ class DisplayedCircuit {
         let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
 
         // Row labels.
-        for (let i = 0; i < rowCount; i++) {
-            let label = "_".repeat(colWires) + Util.bin(i, rowWires);
-            let x = gridRect.right();
-            let y = gridRect.y + dh*(i+0.5);
-            painter.print(
-                label,
-                x + 2,
-                y,
-                'left',
-                'middle',
-                'black',
-                '12px monospace',
-                SUPERPOSITION_GRID_LABEL_SPAN,
-                dh,
-                (w, h) => painter.fillRect(new Rect(x, y-h/2, w + 4, h), 'lightgray'));
-        }
+        painter.ctx.save();
+        painter.ctx.translate(gridRect.right(), gridRect.y);
+        let prefix = colWires < 4 ? "_".repeat(colWires) : ".._";
+        DisplayedCircuit._drawLabelsReasonablyFast(
+            painter,
+            dh,
+            rowCount,
+            i => prefix + Util.bin(i, rowWires),
+            SUPERPOSITION_GRID_LABEL_SPAN);
+        painter.ctx.restore();
 
         // Column labels.
         painter.ctx.save();
+        painter.ctx.translate(gridRect.x, gridRect.bottom());
         painter.ctx.rotate(Math.PI/2);
-        for (let i = 0; i < colCount; i++) {
-            let label = Util.bin(i, colWires) + "_".repeat(rowWires);
-            let x = gridRect.x + dw*(i+0.5);
-            let y = gridRect.bottom();
-            painter.print(
-                label,
-                y + 2,
-                -x,
-                'left',
-                'middle',
-                'black',
-                '12px monospace',
-                SUPERPOSITION_GRID_LABEL_SPAN,
-                dw,
-                (w, h) => painter.fillRect(new Rect(y, -x-h/2, w + 4, h), 'lightgray'));
-        }
+        let suffix = rowWires < 4 ? "_".repeat(rowWires) : "_..";
+        DisplayedCircuit._drawLabelsReasonablyFast(
+            painter,
+            -dw,
+            colCount,
+            i => Util.bin(i, rowWires) + suffix,
+            SUPERPOSITION_GRID_LABEL_SPAN);
         painter.ctx.restore();
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!number} dy
+     * @param {!int} n
+     * @param {!function(!int) : !String} labeller
+     * @param {!number} boundingWidth
+     * @private
+     */
+    static _drawLabelsReasonablyFast(painter, dy, n, labeller, boundingWidth) {
+        let ctx = painter.ctx;
+        ctx.save();
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        painter.ctx.font = '12px monospace';
+        let w = Math.max(
+            painter.ctx.measureText(labeller(0)).width,
+            painter.ctx.measureText(labeller(n-1)).width);
+        let h = ctx.measureText("0").width * 2.5;
+        let scale = Math.min(Math.min(boundingWidth / w, Math.abs(dy) / h), 1);
+
+        // Row labels.
+        let step = dy/scale;
+        let pad = 2/scale;
+        ctx.scale(scale, scale);
+        ctx.translate(0, dy*0.5/scale - h*0.5);
+        for (let i = 0; i < n; i++) {
+            ctx.fillStyle = 'lightgray';
+            ctx.fillRect(0, 0, w + 2*pad, h);
+            ctx.fillStyle = 'black';
+            ctx.fillText(labeller(i), pad, h*0.5);
+            ctx.translate(0, step);
+        }
+        ctx.restore();
     }
 
     /**
