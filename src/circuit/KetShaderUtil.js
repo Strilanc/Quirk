@@ -12,9 +12,10 @@ const ketShader = (body, head='', span=1) => new WglShader(`
     uniform vec2 _ksu_size;
     uniform float _ksu_step;
     ${span === null ? 'uniform float span;' : ''}
-    ${head}
+    float _ksu_off;
+    float full_out_id;
 
-    float off;
+    ${head}
 
     vec2 cmul(vec2 c1, vec2 c2) {
         return mat2(c1.x, c1.y, -c1.y, c1.x) * c2;
@@ -25,7 +26,7 @@ const ketShader = (body, head='', span=1) => new WglShader(`
     }
 
     vec2 inp(float k) {
-        return texture2D(_ksu_ket, _ksu_toUv(off + _ksu_step*k)).xy;
+        return texture2D(_ksu_ket, _ksu_toUv(_ksu_off + _ksu_step*k)).xy;
     }
 
     vec2 _ksu_output_for(float out_id, vec2 amp) {
@@ -34,9 +35,9 @@ const ketShader = (body, head='', span=1) => new WglShader(`
 
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float full_out_id = xy.y * _ksu_size.x + xy.x;
+        full_out_id = xy.y * _ksu_size.x + xy.x;
         float relevant_out_id = mod(floor(full_out_id / _ksu_step), ${span === null ? 'span' : (1<<span)+'.0'});
-        off = full_out_id - relevant_out_id*_ksu_step;
+        _ksu_off = full_out_id - relevant_out_id*_ksu_step;
 
         float c = texture2D(_ksu_control, _ksu_toUv(full_out_id)).x;
         vec2 vc = texture2D(_ksu_ket, _ksu_toUv(full_out_id)).xy;
