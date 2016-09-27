@@ -12,13 +12,14 @@ import {initializedWglContext} from "src/webgl/WglContext.js"
 /**
  * @param {!String} body
  * @param {!String=""} head
- * @param {!int=1} span
+ * @param {null|!int=1} span
  */
 const ketShader = (body, head='', span=1) => new WglShader(`
     uniform sampler2D _ksu_ket;
     uniform sampler2D _ksu_control;
     uniform vec2 _ksu_size;
     uniform float _ksu_step;
+    ${span === null ? 'uniform float span;' : ''}
     ${head}
 
     float off;
@@ -42,7 +43,7 @@ const ketShader = (body, head='', span=1) => new WglShader(`
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
         float full_out_id = xy.y * _ksu_size.x + xy.x;
-        float relevant_out_id = mod(floor(full_out_id / _ksu_step), ${1<<span}.0);
+        float relevant_out_id = mod(floor(full_out_id / _ksu_step), ${span === null ? 'span' : (1<<span)+'.0'});
         off = full_out_id - relevant_out_id*_ksu_step;
 
         float c = texture2D(_ksu_control, _ksu_toUv(full_out_id)).x;
@@ -56,7 +57,7 @@ const ketShader = (body, head='', span=1) => new WglShader(`
 /**
  * @param {!String} body
  * @param {!String=""} head
- * @param {!int=1} span
+ * @param {null|!int=1} span
  */
 const ketShaderPermute = (body, head='', span=1) => ketShader(
     'return inp(_ksu_input_for(out_id));',
@@ -66,7 +67,7 @@ const ketShaderPermute = (body, head='', span=1) => ketShader(
 /**
  * @param {!String} body
  * @param {!String=""} head
- * @param {!int=1} span
+ * @param {null|!int=1} span
  */
 const ketShaderPhase = (body, head='', span=1) => ketShader(
     'return cmul(amp, _ksu_phase_for(out_id));',
@@ -75,12 +76,20 @@ const ketShaderPhase = (body, head='', span=1) => ketShader(
 
 /**
  * @param {!CircuitEvalArgs} args
+ * @param {undefined|!int=undefined} span
  * @returns {!Array.<!WglArg>}
  */
-const ketArgs = (args) => [
-    WglArg.texture("_ksu_ket", args.stateTexture, 0),
-    WglArg.texture("_ksu_control", args.controlsTexture, 1),
-    WglArg.vec2("_ksu_size", args.stateTexture.width, args.stateTexture.height),
-    WglArg.float("_ksu_step", 1 << args.row)];
+function ketArgs(args, span=undefined) {
+    let result = [
+        WglArg.texture("_ksu_ket", args.stateTexture, 0),
+        WglArg.texture("_ksu_control", args.controlsTexture, 1),
+        WglArg.vec2("_ksu_size", args.stateTexture.width, args.stateTexture.height),
+        WglArg.float("_ksu_step", 1 << args.row)
+    ];
+    if (span !== undefined) {
+        result.push(WglArg.float('span', 1 << span));
+    }
+    return result;
+}
 
 export {ketArgs, ketShader, ketShaderPermute, ketShaderPhase}
