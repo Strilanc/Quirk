@@ -36,10 +36,12 @@ let singleQubitOperationFunc = (args, matrix) => new WglConfiguredShader(destina
         ).renderTo(destinationTexture);
     });
 const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = ketShader(
+    'uniform vec2 a, b, c, d;',
     'return cmul(inp(0.0), a+(c-a)*out_id) + cmul(inp(1.0), b+(d-b)*out_id);',
-    'uniform vec2 a, b, c, d;');
+    1);
 
 const multiQubitOperationMaker = qubitCount => ketShader(
+    `uniform float coefs[${2<<(2*qubitCount)}];`,
     `
         int row = int(out_id);
         vec2 t = vec2(0.0, 0.0);
@@ -56,7 +58,6 @@ const multiQubitOperationMaker = qubitCount => ketShader(
         }
         return t;
     `,
-    `uniform float coefs[${2<<(2*qubitCount)}];`,
     qubitCount);
 const matrix_operation_shaders = [
     multiQubitOperationMaker(2),

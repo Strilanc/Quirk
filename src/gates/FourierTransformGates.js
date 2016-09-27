@@ -22,14 +22,13 @@ function controlledPhaseGradient(args, qubitSpan, factor=1) {
         WglArg.float("factor", factor));
 }
 const CONTROLLED_PHASE_GRADIENT_SHADER = ketShaderPhase(
+    'uniform float factor;',
     `
         float hold = floor(out_id * 2.0 / span);
         float step = mod(out_id, span / 2.0);
         float angle = hold * step * factor * 6.2831853071795864769 / span;
         return vec2(cos(angle), sin(angle));
-    `,
-    'uniform float factor;',
-    null);
+    `);
 
 const τ = Math.PI * 2;
 const FOURIER_TRANSFORM_MATRIX_MAKER = span =>

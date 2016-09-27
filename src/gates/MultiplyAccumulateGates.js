@@ -51,14 +51,12 @@ function multiplyAccumulate(
         WglArg.float("factor", scaleFactor));
 }
 const MULTIPLY_ACCUMULATE_SHADER = ketShaderPermute(
+    'uniform float srcOffset1, srcSpan1, srcOffset2, srcSpan2, factor;',
     `
         float d1 = mod(floor(full_out_id / srcOffset1), srcSpan1);
         float d2 = mod(floor(full_out_id / srcOffset2), srcSpan2);
         float d = mod(d1*d2*factor, span);
-        return mod(out_id + span - d, span);
-    `,
-    'uniform float srcOffset1, srcSpan1, srcOffset2, srcSpan2, factor;',
-    null);
+        return mod(out_id + span - d, span);`);
 
 MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(3, 16, span => Gate.withoutKnownMatrix(
     "c+=ab",

@@ -16,6 +16,7 @@ let reverseBits = (val, len) => {
 
 let reverseBitsMatrix = span => Matrix.generateTransition(1<<span, e => reverseBits(e, span));
 let reverseShaderForSize = span => ketShaderPermute(
+    '',
     `
         float rev = 0.0;
         for (int k = 0; k < ${span}; k++) {
@@ -25,7 +26,6 @@ let reverseShaderForSize = span => ketShaderPermute(
         }
         return rev;
     `,
-    '',
     span);
 
 let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {

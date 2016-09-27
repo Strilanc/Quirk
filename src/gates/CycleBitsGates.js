@@ -18,9 +18,8 @@ let cycleBits = (args, qubitSpan, shiftAmount) =>
         ...ketArgs(args, qubitSpan),
         WglArg.float("amount", 1 << Util.properMod(-shiftAmount, qubitSpan)));
 const CYCLE_SHADER = ketShaderPermute(
-    'out_id *= amount; return mod(out_id, span) + floor(out_id / span);',
     'uniform float amount;',
-    null);
+    'out_id *= amount; return mod(out_id, span) + floor(out_id / span);');
 
 const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, e => {
     shift = Util.properMod(shift, span);

@@ -43,9 +43,8 @@ const incrementShaderFunc = (args, qubitSpan, incrementAmount) =>
         ...ketArgs(args, qubitSpan),
         WglArg.float("amount", incrementAmount));
 const incrementShader = ketShaderPermute(
-    'return mod(out_id - amount + span, span);',
     'uniform float amount;',
-    null);
+    'return mod(out_id - amount + span, span);');
 
 /**
  * @param {!CircuitEvalArgs} args
@@ -63,14 +62,12 @@ function additionShaderFunc(args, span, srcOffset, srcSpan, scaleFactor) {
         WglArg.float("factor", scaleFactor));
 }
 const ADDITION_SHADER = ketShaderPermute(
+    'uniform float srcOffset, srcSpan, factor;',
     `
         float d = mod(floor(full_out_id / srcOffset), srcSpan);
         d *= factor;
         d = mod(d, span);
-        return mod(out_id + span - d, span);
-    `,
-    'uniform float srcOffset, srcSpan, factor;',
-    null);
+        return mod(out_id + span - d, span);`);
 
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "++",

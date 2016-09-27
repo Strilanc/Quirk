@@ -22,9 +22,8 @@ function phaseGradient(args, qubitSpan, factor=1) {
         WglArg.float("factor", factor));
 }
 const PHASE_GRADIENT_SHADER = ketShaderPhase(
-    'float angle = out_id * factor * 3.141592653589793 / span; return vec2(cos(angle), sin(angle));',
     'uniform float factor;',
-    null);
+    'float angle = out_id * factor * 3.141592653589793 / span; return vec2(cos(angle), sin(angle));');
 
 let PhaseGradientGates = {};
 

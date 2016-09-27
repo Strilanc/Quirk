@@ -10,7 +10,9 @@ import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
  */
 let universalNot = args => UNIVERSAL_NOT_SHADER.withArgs(...ketArgs(args));
 const UNIVERSAL_NOT_SHADER = ketShader(
-    'vec2 other = inp(1.0 - out_id); return vec2(other.x, -other.y) * (1.0 - 2.0 * out_id);');
+    '',
+    'vec2 other = inp(1.0 - out_id); return vec2(other.x, -other.y) * (1.0 - 2.0 * out_id);',
+    1);
 
 let UniversalNotGate = Gate.withoutKnownMatrix(
     "UniNot",

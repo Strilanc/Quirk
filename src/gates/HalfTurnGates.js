@@ -45,7 +45,7 @@ function NOT_DRAWER(args) {
     }
 }
 
-let xShader = ketShaderPermute('return 1.0-out_id;');
+let xShader = ketShaderPermute('', 'return 1.0-out_id;', 1);
 HalfTurnGates.X = Gate.fromKnownMatrix(
     "X",
     Matrix.PAULI_X,
@@ -54,7 +54,7 @@ HalfTurnGates.X = Gate.fromKnownMatrix(
     withCustomDrawer(NOT_DRAWER).
     withCustomShader(args => xShader.withArgs(...ketArgs(args)));
 
-let yShader = ketShader('vec2 v = inp(1.0-out_id); return (out_id*2.0 - 1.0)*vec2(-v.y, v.x);');
+let yShader = ketShader('', 'vec2 v = inp(1.0-out_id); return (out_id*2.0 - 1.0)*vec2(-v.y, v.x);', 1);
 HalfTurnGates.Y = Gate.fromKnownMatrix(
     "Y",
     Matrix.PAULI_Y,
@@ -62,7 +62,7 @@ HalfTurnGates.Y = Gate.fromKnownMatrix(
     "A combination of the X and Z gates.").
     withCustomShader(args => yShader.withArgs(...ketArgs(args)));
 
-let zShader = ketShader('return amp*(1.0 - out_id*2.0);');
+let zShader = ketShader('', 'return amp*(1.0 - out_id*2.0);', 1);
 HalfTurnGates.Z = Gate.fromKnownMatrix(
     "Z",
     Matrix.PAULI_Z,
@@ -70,7 +70,7 @@ HalfTurnGates.Z = Gate.fromKnownMatrix(
     "The phase flip gate.\nNegates phases when the qubit is ON.").
     withCustomShader(args => zShader.withArgs(...ketArgs(args)));
 
-let hShader = ketShader('return 0.7071067811865476*(amp*(1.0-2.0*out_id) + inp(1.0-out_id));');
+let hShader = ketShader('', 'return 0.7071067811865476*(amp*(1.0-2.0*out_id) + inp(1.0-out_id));', 1);
 HalfTurnGates.H = Gate.fromKnownMatrix(
     "H",
     Matrix.HADAMARD,
