@@ -754,10 +754,7 @@ class CircuitDefinition {
             }).
             flatten();
         let swaps = col.swapPairs().
-            map(([i1, i2]) => args => CircuitShaders.swap(args.stateTexture,
-                                                          i1 + rowOffset,
-                                                          i2 + rowOffset,
-                                                          args.controlsTexture));
+            map(([i1, i2]) => args => CircuitShaders.swap(args.withRow(i1 + rowOffset), i2 + rowOffset));
         return nonSwaps.concat(swaps).toArray();
     }
 

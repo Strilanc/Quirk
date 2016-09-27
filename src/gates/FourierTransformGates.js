@@ -5,8 +5,9 @@ import {Gate} from "src/circuit/Gate.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
-import {WglArg} from "src/webgl/WglArg.js"
+import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGateFamily.js"
 import {seq, Seq} from "src/base/Seq.js"
+import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 
 /**
@@ -38,11 +39,6 @@ const INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER = span =>
 
 let FourierTransformGates = {};
 
-let swapShaders = n => Seq.range(Math.floor(n/2)).map(i => args => CircuitShaders.swap(
-    args.stateTexture,
-    args.row + i,
-    args.row + n - i - 1,
-    args.controlsTexture));
 let gradShaders = (n, factor) => Seq.range(n).
     flatMap(i => [
         args => controlledPhaseGradient(args, i+1, factor),
@@ -60,7 +56,10 @@ FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span =
     withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT" + span).
     withHeight(span).
-    withCustomShaders(swapShaders(span).concat(gradShaders(span, 1)).toArray()));
+    withCustomShaders([
+        ...(span > 1 ? ReverseBitsGateFamily.ofSize(span).customShaders : []),
+        ...gradShaders(span, 1)
+    ]));
 
 FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "QFT^†",
@@ -70,7 +69,10 @@ FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16,
     withKnownMatrix(span >= 4 ? undefined : INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT†" + span).
     withHeight(span).
-    withCustomShaders(swapShaders(span).concat(gradShaders(span, -1)).reverse().toArray()));
+    withCustomShaders([
+        ...gradShaders(span, -1).reverse(),
+        ...(span > 1 ? ReverseBitsGateFamily.ofSize(span).customShaders : [])
+    ]));
 
 FourierTransformGates.all = [
     ...FourierTransformGates.FourierTransformFamily.all,

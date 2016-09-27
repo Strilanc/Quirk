@@ -357,17 +357,4 @@ KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => 
     return keptResults;
 };
 
-/**
- * @param {!WglTexture} stateTex
- * @param {!WglTexture} controlTex
- * @param {!int} qubitIndex1
- * @param {!int} qubitIndex2
- * @returns {!WglTexture}
- */
-KetTextureUtil.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
-    let result = allocSameSizedTexture(stateTex);
-    CircuitShaders.swap(stateTex, qubitIndex1, qubitIndex2, controlTex).renderTo(result);
-    return result;
-};
-
 export {KetTextureUtil}
