@@ -2,6 +2,7 @@ import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
+import {ketArgs, ketShader, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 
 /**
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.
@@ -44,32 +45,40 @@ function NOT_DRAWER(args) {
     }
 }
 
+let xShader = ketShaderPermute('return 1.0-out_id;');
 HalfTurnGates.X = Gate.fromKnownMatrix(
     "X",
     Matrix.PAULI_X,
     "Pauli X Gate",
     "The NOT gate.\nToggles between ON and OFF.").
-    withCustomDrawer(NOT_DRAWER);
+    withCustomDrawer(NOT_DRAWER).
+    withCustomShader(args => xShader.withArgs(...ketArgs(args)));
 
+let yShader = ketShader('vec2 v = inp(1.0-out_id); return (out_id*2.0 - 1.0)*vec2(-v.y, v.x);');
 HalfTurnGates.Y = Gate.fromKnownMatrix(
     "Y",
     Matrix.PAULI_Y,
     "Pauli Y Gate",
-    "A combination of the X and Z gates.");
+    "A combination of the X and Z gates.").
+    withCustomShader(args => yShader.withArgs(...ketArgs(args)));
 
+let zShader = ketShader('return amp*(1.0 - out_id*2.0);');
 HalfTurnGates.Z = Gate.fromKnownMatrix(
     "Z",
     Matrix.PAULI_Z,
     "Pauli Z Gate",
-    "The phase flip gate.\nNegates phases when the qubit is ON.");
+    "The phase flip gate.\nNegates phases when the qubit is ON.").
+    withCustomShader(args => zShader.withArgs(...ketArgs(args)));
 
+let hShader = ketShader('return 0.7071067811865476*(amp*(1.0-2.0*out_id) + inp(1.0-out_id));');
 HalfTurnGates.H = Gate.fromKnownMatrix(
     "H",
     Matrix.HADAMARD,
     "Hadamard Gate",
     "Creates simple superpositions.\n" +
     "Maps ON to ON + OFF.\n" +
-    "Maps OFF to ON - OFF.");
+    "Maps OFF to ON - OFF.").
+    withCustomShader(args => hShader.withArgs(...ketArgs(args)));
 
 HalfTurnGates.all = [
     HalfTurnGates.X,

@@ -12,7 +12,7 @@ import {WglTexture} from "src/webgl/WglTexture.js"
  * @param {!Matrix} matrix
  * @param {!int=1} repeats
  */
-function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, matrix, repeats=1) {
+function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, matrix, repeats=10) {
     for (let i = 0; i < repeats; i++) {
         assertThatRandomTestOfCircuitOperationActsLikeMatrix(args => {
             let r = new WglTexture(args.stateTexture.width, args.stateTexture.height);
@@ -66,7 +66,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix)
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
-    assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.001);
+    assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.005);
     textureOut.ensureDeinitialized();
     textureIn.ensureDeinitialized();
     controlsTexture.ensureDeinitialized();

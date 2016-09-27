@@ -749,10 +749,8 @@ class CircuitDefinition {
                 }
 
                 return [args => GateShaders.matrixOperation(
-                    args.stateTexture,
-                    gate.knownMatrixAt(args.time),
-                    row + rowOffset,
-                    args.controlsTexture)];
+                    args.withRow(row + rowOffset),
+                    gate.knownMatrixAt(args.time))];
             }).
             flatten();
         let swaps = col.swapPairs().

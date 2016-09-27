@@ -2,6 +2,7 @@ import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {Matrix} from "src/math/Matrix.js"
+import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 
 let Controls = {};
 
@@ -45,8 +46,8 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [args => GateShaders.matrixOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)],
-        [args => GateShaders.matrixOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)]).
+        HalfTurnGates.H.customShaders,
+        HalfTurnGates.H.customShaders).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -69,8 +70,8 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
     markedAsControl(true).
     markedAsStable().
     withSetupShaders(
-        [args => GateShaders.matrixOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)],
-        [args => GateShaders.matrixOperation(args.stateTexture, Matrix.HADAMARD, args.row, args.controlsTexture)]).
+        HalfTurnGates.H.customShaders,
+        HalfTurnGates.H.customShaders).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -94,8 +95,8 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [args => GateShaders.matrixOperation(args.stateTexture, x2, args.row, args.controlsTexture)],
-        [args => GateShaders.matrixOperation(args.stateTexture, x1, args.row, args.controlsTexture)]).
+        [args => GateShaders.matrixOperation(args, x2)],
+        [args => GateShaders.matrixOperation(args, x1)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -121,8 +122,8 @@ Controls.AntiCrossControl = Gate.withoutKnownMatrix(
     withCustomShaders([]).
     markedAsStable().
     withSetupShaders(
-        [args => GateShaders.matrixOperation(args.stateTexture, x1, args.row, args.controlsTexture)],
-        [args => GateShaders.matrixOperation(args.stateTexture, x2, args.row, args.controlsTexture)]).
+        [args => GateShaders.matrixOperation(args, x1)],
+        [args => GateShaders.matrixOperation(args, x2)]).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);

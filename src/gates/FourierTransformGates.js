@@ -81,10 +81,8 @@ let gradShaders = (n, factor) => Seq.range(n).
             i + 1,
             factor),
         args => GateShaders.matrixOperation(
-            args.stateTexture,
-            Matrix.HADAMARD,
-            args.row + i,
-            args.controlsTexture)
+            args.withRow(args.row + i),
+            Matrix.HADAMARD)
     ]).
     skip(1);
 

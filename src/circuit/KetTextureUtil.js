@@ -158,15 +158,13 @@ KetTextureUtil.applyCustomShader = (customShader, circuitEvalArgs) => {
 };
 
 /**
- * @param {!WglTexture} stateTex
- * @param {!WglTexture} controlTex
- * @param {!int} qubitIndex
+ * @param {!CircuitEvalArgs} args
  * @param {!Matrix} matrix
  * @returns {!WglTexture}
  */
-KetTextureUtil.matrixOperation = (stateTex, controlTex, qubitIndex, matrix) => {
-    let result = allocSameSizedTexture(stateTex);
-    GateShaders.matrixOperation(stateTex, matrix, qubitIndex, controlTex).renderTo(result);
+KetTextureUtil.matrixOperation = (args, matrix) => {
+    let result = allocSameSizedTexture(args.stateTexture);
+    GateShaders.matrixOperation(args, matrix).renderTo(result);
     return result;
 };
 
