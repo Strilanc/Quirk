@@ -222,7 +222,7 @@ class DisplayedToolbox {
             let mayNeedToScale = maxW >= 500 || maxH >= 300;
             painter.ctx.restore();
 
-            let cx = gateRect.center().x < maxW ? gateRect.right() + 1 : gateRect.x - maxW + 1;
+            let cx = gateRect.right() + 1;
             let hintRect = new Rect(cx, gateRect.center().y, maxW, maxH).
                 snapInside(painter.paintableArea().skipRight(10).skipBottom(20));
             painter.defer(() => WidgetPainter.paintGateTooltip(painter, hintRect, f.gate, stats.time, mayNeedToScale));

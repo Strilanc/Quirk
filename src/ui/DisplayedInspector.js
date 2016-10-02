@@ -254,41 +254,39 @@ class DisplayedInspector {
         return JSON.stringify(Serializer.toJson(this.displayedCircuit.circuitDefinition), null, 0);
     }
 
+    _drawHint(painter) {
+        this._drawHint_dragGatesOntoCircuit(painter);
+        this._drawHint_watchOutputsChange(painter);
+        this._drawHint_dragControlsOntoCircuit(painter);
+    }
     /**
      * @param {!Painter} painter
      * @private
      */
-    _drawHint(painter) {
-        if (this.displayedCircuit.circuitDefinition.columns.length !== 0) {
+    _drawHint_watchOutputsChange(painter) {
+        let g = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
+        if (g >= 2) {
             return;
         }
-        painter.ctx.save();
-        painter.ctx.globalAlpha *= this.hand.pos === undefined || !this.hand.isBusy() ?
-            1.0 :
-            Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
-        painter.ctx.save();
-        painter.ctx.translate(70, 190);
-        painter.ctx.rotate(Math.PI * 0.05);
-        painter.ctx.fillStyle = 'red';
-        painter.ctx.font = '16px sans-serif';
-        painter.ctx.fillText("drag gates onto circuit", 0, 0);
-        painter.ctx.restore();
 
         painter.ctx.save();
-        painter.ctx.translate(50, 240);
+        painter.ctx.globalAlpha *=
+            !this.hand.isBusy() && !this.displayedCircuit.circuitDefinition.hasNonControlGates() ? 0.0 :
+            g === 1 && this.hand.isBusy() ? Math.min(1, Math.max(0, (150-this.hand.pos.y)/50)) :
+            g === 1 ? 1.0 :
+            Math.min(1, Math.max(0, 1.0 - (150-this.hand.pos.y)/50));
+
+        painter.ctx.save();
+        painter.ctx.translate(228, 250);
         painter.ctx.rotate(Math.PI * 0.02);
         painter.ctx.fillStyle = 'red';
+        painter.ctx.textAlign = 'right';
         painter.ctx.font = '16px sans-serif';
-        painter.ctx.fillText("watch outputs change", 0, 0);
+        painter.ctx.fillText("output changes", 0, 0);
         painter.ctx.restore();
 
         painter.ctx.beginPath();
-        painter.ctx.moveTo(268, 132);
-        painter.ctx.bezierCurveTo(
-            260, 170,
-            235, 175,
-            210, 190);
-        painter.ctx.moveTo(210, 245);
+        painter.ctx.moveTo(230, 245);
         painter.ctx.bezierCurveTo(
             275, 245,
             315, 215,
@@ -298,9 +296,96 @@ class DisplayedInspector {
         painter.ctx.stroke();
 
         painter.trace(tracer => {
-            tracer.arrowHead(210, 190, 10, Math.PI*0.84, 1.3);
             tracer.arrowHead(330, 200, 10, Math.PI*-0.23, 1.3);
         }).thenFill('red');
+
+        painter.ctx.restore();
+    }
+
+
+    /**
+     * @param {!Painter} painter
+     * @private
+     */
+    _drawHint_dragGatesOntoCircuit(painter) {
+        if (this.displayedCircuit.circuitDefinition.hasNonControlGates()) {
+            return;
+        }
+
+        painter.ctx.save();
+        painter.ctx.globalAlpha *=
+            this.hand.pos === undefined || !this.hand.isBusy() ? 1.0 :
+            this.hand.heldGate !== undefined && this.hand.heldGate.isControl() ? 1.0 :
+            Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
+
+        painter.ctx.save();
+        painter.ctx.translate(70, 190);
+        painter.ctx.rotate(Math.PI * 0.05);
+        painter.ctx.fillStyle = 'red';
+        painter.ctx.font = '16px sans-serif';
+        painter.ctx.fillText("drag gates onto circuit", 0, 0);
+        painter.ctx.restore();
+
+        painter.ctx.beginPath();
+        painter.ctx.moveTo(268, 132);
+        painter.ctx.bezierCurveTo(
+            260, 170,
+            235, 175,
+            210, 190);
+        painter.ctx.strokeStyle = 'red';
+        painter.ctx.lineWidth = 3;
+        painter.ctx.stroke();
+
+        painter.trace(tracer => {
+            tracer.arrowHead(210, 190, 10, Math.PI*0.84, 1.3);
+        }).thenFill('red');
+
+        painter.ctx.restore();
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @private
+     */
+    _drawHint_dragControlsOntoCircuit(painter) {
+        let circ = this.displayedCircuit.circuitDefinition;
+        let gate = circ.gateInSlot(0, 0);
+        if (circ.hasControls() ||
+                !circ.hasNonControlGates() ||
+                circ.countGatesUpTo(2) !== 1 ||
+                (gate !== undefined && gate.height > 1)) {
+            return;
+        }
+
+        painter.ctx.save();
+        painter.ctx.globalAlpha *=
+            !this.displayedCircuit.isBeingEdited() ? 1.0 :
+            this.hand.pos === undefined ? 1.0 :
+            Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
+
+        let fy = gate === undefined ? 173 : 223;
+
+        painter.ctx.save();
+        painter.ctx.translate(64, fy-6);
+        painter.ctx.rotate(Math.PI * -0.01);
+        painter.ctx.fillStyle = 'red';
+        painter.ctx.font = '16px sans-serif';
+        painter.ctx.fillText("use controls", 0, 0);
+        painter.ctx.restore();
+
+        painter.ctx.beginPath();
+        painter.ctx.moveTo(90, 125);
+        painter.ctx.bezierCurveTo(
+            60, 140,
+            48, 160,
+            55, fy);
+        painter.ctx.strokeStyle = 'red';
+        painter.ctx.lineWidth = 3;
+        painter.ctx.stroke();
+        painter.ctx.beginPath();
+        painter.ctx.arc(55, fy, 5, 0, 2 * Math.PI);
+        painter.ctx.fillStyle = 'red';
+        painter.ctx.fill();
 
         painter.ctx.restore();
     }

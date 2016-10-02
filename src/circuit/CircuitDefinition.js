@@ -94,6 +94,40 @@ class CircuitDefinition {
     }
 
     /**
+     * @returns {!boolean}
+     */
+    hasControls() {
+        return !this.columns.every(e => !e.hasControl(-1));
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    hasNonControlGates() {
+        let colHasNonControl = col => !col.gates.every(e => e === undefined || e.isControl());
+        return !this.columns.every(e => !colHasNonControl(e));
+    }
+
+    /**
+     * @param {!int} max
+     * @returns {!int}
+     */
+    countGatesUpTo(max) {
+        let n = 0;
+        for (let c of this.columns) {
+            for (let g of c.gates) {
+                if (g !== undefined) {
+                    n++;
+                    if (n >= max) {
+                        return n;
+                    }
+                }
+            }
+        }
+        return n;
+    }
+
+    /**
      * @returns {!Set.<!String>}
      */
     getUnmetContextKeys() {
