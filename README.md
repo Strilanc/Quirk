@@ -22,7 +22,7 @@ Quirk assumes you already know background facts like "each wire represents a qub
 
 **Notable problems**:
 
-- Measurement is hack based on the [deferred measurement principle](https://en.wikipedia.org/wiki/Deferred_Measurement_Principle), instead of tracking expensive density matrices.
+- Measurement is a hack based on the [deferred measurement principle](https://en.wikipedia.org/wiki/Deferred_Measurement_Principle).
     - Can't do operations that would recohere measured qubits.
     - Can't do conditional measurement.
     - Can't make custom measurement gates.
