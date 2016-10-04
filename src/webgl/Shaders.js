@@ -157,7 +157,7 @@ const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
 
         val = abs(val);
         float exponent = floor(log2(val));
-        if (pow(2.0, exponent) > val) {
+        if (exp2(exponent) > val) {
             // On my machine this happens for val=0.2499999850988388
             exponent = floor(exponent - 0.5);
         }

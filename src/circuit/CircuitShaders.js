@@ -307,7 +307,7 @@ const QUBIT_DENSITIES_SHADER = new WglShader(`
 
         float bitIndex = mod(outIndex, keptCount);
         float otherBits = floor(outIndex / keptCount);
-        float bit = scatter(pow(2.0, bitIndex), keptBitMask);
+        float bit = scatter(exp2(bitIndex), keptBitMask);
 
         // Indices of the two complex values making up the current conditional ket.
         float srcIndex0 = mod(otherBits, bit) + floor(otherBits / bit) * bit * 2.0;
