@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)
 [![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)
 
-Quirk is a toy quantum circuit simulator, intended to help people learn about quantum computing.
+Quirk is a toy quantum circuit simulator, intended to help people learning about quantum computing.
 
 If you want to quickly explore the behavior of a small quantum circuit, Quirk is the tool for you.
 There's no installing or configuring or scripting: just go to **[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)**, drag gates onto the circuit, and the output displays will update in real time.
@@ -17,14 +17,19 @@ Quirk assumes you already know background facts like "each wire represents a qub
 - Drag-and-drop circuit editing.
 - Reacts, simulates, and animates in real time.
 - Inline state displays.
-- Bookmarkable circuits.
+- Bookmarkable / linkable circuits.
 - Up to 16 qubits.
 
-**Notable limitations**:
+**Notable problems**:
 
-- Can't apply operations that create superpositions to measured qubits.
-- Can't embed measurement in custom gates.
-- Can't simulate in mobile Safari or Firefox.
+- Measurement is a hack based on the [deferred measurement principle](https://en.wikipedia.org/wiki/Deferred_Measurement_Principle).
+    - Can't do operations that would recohere measured qubits.
+    - Can't do conditional measurement.
+    - Can't make custom measurement gates.
+- Poor support for mobile browsers.
+    - Can't simulate in Safari on iPhones (displays default to NaN).
+    - Can't simulate in Firefox on Android (displays default to NaN).
+    - Can't consistently drag gates in Firefox on Android (keeps scrolling instead).
 
 **Try it out**:
 
@@ -44,9 +49,9 @@ Quirk assumes you already know background facts like "each wire represents a qub
 
 ![Quantum teleportation](/doc/README_Teleportation.gif)
 
-# Building the Code
+# Building
 
-If you want to make changes to Quirk's code, this is how you get the code and turn your changes into working html/javascript.
+If you want to modify Quirk, this is how you get the code and turn your changes into working html/javascript.
 
 1. Have [git](https://git-scm.com/) and [Node.js](https://nodejs.org/en/download/) installed.
 
@@ -66,7 +71,7 @@ If you want to make changes to Quirk's code, this is how you get the code and tu
     
     `npm install`
 
-4. (*Optional*) Run the tests.
+4. (*Optional*) Make your changes. Run the tests.
 
     `npm run test-firefox`
 
