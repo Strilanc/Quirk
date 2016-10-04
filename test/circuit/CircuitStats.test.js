@@ -58,3 +58,11 @@ suite.webGlTest("nested-addition-gate", () => {
     assertThat(stats.qubitDensityMatrix(1, Infinity)).isEqualTo(on);
     assertThat(stats.qubitDensityMatrix(2, Infinity)).isEqualTo(off);
 });
+
+suite.webGlTest('controlled-displays', () => {
+    let c = circuit(`-H-•-@@-
+                     ---X-⊕•-`);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(0, 5)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.qubitDensityMatrix(0, 6)).isApproximatelyEqualTo(Matrix.square(0, 0, 0, 1));
+});

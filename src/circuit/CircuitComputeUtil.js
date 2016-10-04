@@ -60,6 +60,24 @@ function advanceStateWithCircuit(args, circuitDefinition, collectStats) {
             let controls = args.controls.and(circuitDefinition.colControls(col).shift(args.row));
             let controlTex = KetTextureUtil.control(args.wireCount, controls);
 
+            let statsCallback = statArgs => {
+                if (!collectStats) {
+                    return;
+                }
+
+                let {qubitDensities, customGateStats} = _extractStateStatsNeededByCircuitColumn(
+                    statArgs,
+                    circuitDefinition,
+                    col);
+                colQubitDensities.push(qubitDensities);
+                for (let {row, stat} of customGateStats) {
+                    //noinspection JSUnusedAssignment
+                    customStatsMap.push({col, row, out: customStats.length});
+                    //noinspection JSUnusedAssignment
+                    customStats.push(stat);
+                }
+            };
+
             let nextState = _advanceStateWithCircuitDefinitionColumn(
                 args,
                 new CircuitEvalArgs(
@@ -71,28 +89,8 @@ function advanceStateWithCircuit(args, circuitDefinition, collectStats) {
                     inputState,
                     args.customContextFromGates),
                 circuitDefinition,
-                col);
-
-            if (collectStats) {
-                let {qubitDensities, customGateStats} = _extractStateStatsNeededByCircuitColumn(
-                    nextState, // We want to show stats after post-selection, so we use 'next' instead of 'input'.
-                    circuitDefinition,
-                    col,
-                    controls,
-                    controlTex,
-                    args.time);
-                colQubitDensities.push(qubitDensities);
-                for (let {row, stat} of customGateStats) {
-                    //noinspection JSUnusedAssignment
-                    customStatsMap.push({
-                        col,
-                        row,
-                        out: customStats.length
-                    });
-                    //noinspection JSUnusedAssignment
-                    customStats.push(stat);
-                }
-            }
+                col,
+                statsCallback);
 
             KetTextureUtil.doneWithTexture(controlTex, "controlTex in advanceStateWithCircuit");
             return nextState;
@@ -107,42 +105,36 @@ function advanceStateWithCircuit(args, circuitDefinition, collectStats) {
 }
 
 /**
- * @param {!WglTexture} state
+ * @param {!CircuitEvalArgs} args
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!int} col
- * @param {!Controls} controls
- * @param {!WglTexture} controlTex
- * @param {!number} time
  * @private
  * @returns {!{qubitDensities:!WglTexture, customGateStats:!Array.<!{row:!int,stat:!WglTexture}>}}
  */
 function _extractStateStatsNeededByCircuitColumn(
-        state,
+        args,
         circuitDefinition,
-        col,
-        controls,
-        controlTex,
-        time) {
+        col) {
     // Compute custom stats used by display gates.
     let customGateStats = [];
     for (let row of circuitDefinition.customStatRowsInCol(col)) {
         let statArgs = new CircuitEvalArgs(
-            time,
+            args.time,
             row,
             circuitDefinition.numWires,
-            controls,
-            controlTex,
-            state,
+            args.controls,
+            args.controlsTexture,
+            args.stateTexture,
             circuitDefinition.colCustomContextFromGates(col, row));
         let pipeline = circuitDefinition.columns[col].gates[row].customStatPipelineMaker(statArgs);
-        let stat = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(state, pipeline);
+        let stat = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(args.stateTexture, pipeline);
         customGateStats.push({row, stat});
     }
 
     // Compute individual qubit densities, where needed.
     let qubitDensities = KetTextureUtil.superpositionToQubitDensities(
-        state,
-        controls,
+        args.stateTexture,
+        args.controls,
         circuitDefinition.colHasSingleQubitDisplayMask(col));
 
     return {qubitDensities, customGateStats};
@@ -153,6 +145,7 @@ function _extractStateStatsNeededByCircuitColumn(
  * @param {!CircuitEvalArgs} args
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!int} col
+ * @param {!function(!CircuitEvalArgs)} statsCallback
  * @returns {!WglTexture}
  * @private
  */
@@ -160,7 +153,8 @@ function _advanceStateWithCircuitDefinitionColumn(
         outerContextArgs,
         args,
         circuitDefinition,
-        col) {
+        col,
+        statsCallback) {
 
     let colContext = Util.mergeMaps(
         args.customContextFromGates,
@@ -198,6 +192,8 @@ function _advanceStateWithCircuitDefinitionColumn(
         almostNextState,
         circuitDefinition.textureTransformsInColAt(col, outerContextArgs.row),
         (v, f) => f(colArgsTemplate.withStateTexture(v)));
+
+    statsCallback(colArgsTemplate.withStateTexture(almostAlmostNextState));
 
     // Apply 'after column' un-setup shaders.
     let nextState = KetTextureUtil.aggregateWithReuse(
