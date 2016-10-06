@@ -90,8 +90,8 @@ const SET_SINGLE_PIXEL_SHADER = new WglShader(`
 CircuitShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
     WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
     WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-    WglArg.texture("backgroundTexture", backgroundTexture, 0),
-    WglArg.texture("foregroundTexture", foregroundTexture, 1),
+    WglArg.texture("backgroundTexture", backgroundTexture),
+    WglArg.texture("foregroundTexture", foregroundTexture),
     WglArg.int("offset", offset));
 const LINEAR_OVERLAY_SHADER = new WglShader(`
     uniform vec2 backgroundTextureSize;
@@ -189,7 +189,7 @@ CircuitShaders.controlSelect = (controlMask, dataTexture) => {
             throw new Error("CircuitShaders.controlSelect needs to be updated to allow more qubits.");
         }
         CONTROL_SELECT_SHADER.withArgs(
-            WglArg.texture('inputTexture', dataTexture, 0),
+            WglArg.texture('inputTexture', dataTexture),
             WglArg.vec2('inputSize', dataTexture.width, dataTexture.height),
             WglArg.float('outputWidth', destinationTexture.width),
             WglArg.float('used', controlMask.inclusionMask),
@@ -269,7 +269,7 @@ CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
             throw new DetailedError("Wrong destination size.", {inputTexture, keptBitMask, destinationTexture});
         }
         QUBIT_DENSITIES_SHADER.withArgs(
-            WglArg.texture('inputTexture', inputTexture, 0),
+            WglArg.texture('inputTexture', inputTexture),
             WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
             WglArg.float('outputWidth', destinationTexture.width),
             WglArg.float('keptCount', keptCount),

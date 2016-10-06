@@ -162,12 +162,13 @@ class WglCompiledShader {
         let gl = ctx.gl;
         gl.useProgram(this.program);
 
+        let coop = {coopTextureUnit: 0};
         for (let arg of uniformArgs) {
             let location = this.uniformLocations.get(arg.name);
             if (location === undefined) {
                 throw new DetailedError("Unexpected uniform argument", {arg, uniformArgs});
             }
-            WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value);
+            WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value, coop);
         }
 
         gl.enableVertexAttribArray(this.positionAttributeLocation);

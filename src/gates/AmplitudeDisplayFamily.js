@@ -137,7 +137,7 @@ function amplitudesToPolarKets(input) {
     return new WglConfiguredShader(dst => AMPLITUDES_TO_POLAR_KETS_SHADER.withArgs(
         WglArg.vec2('inputSize', input.width, input.height),
         WglArg.float('outputWidth', dst.width),
-        WglArg.texture('inputTexture', input, 0)
+        WglArg.texture('inputTexture', input)
     ).renderTo(dst));
 }
 const AMPLITUDES_TO_POLAR_KETS_SHADER = new WglShader(`
@@ -171,7 +171,7 @@ function pipelineToSpreadLengthAcrossPolarKets(includedQubitCount, totalQubitCou
             inp => new WglConfiguredShader(dst => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER.withArgs(
                 WglArg.vec2('inputSize', inp.width, inp.height),
                 WglArg.float('outputWidth', dst.width),
-                WglArg.texture('inputTexture', inp, 0),
+                WglArg.texture('inputTexture', inp),
                 WglArg.float('bit', 1 << bit)
             ).renderTo(dst)));
     }
@@ -214,7 +214,7 @@ function pipelineToAggregateRepresentativePolarKet(includedQubitCount, totalQubi
             inp => new WglConfiguredShader(dst => FOLD_REPRESENTATIVE_POLAR_KET_SHADER.withArgs(
                 WglArg.vec2('inputSize', inp.width, inp.height),
                 WglArg.float('outputWidth', dst.width),
-                WglArg.texture('inputTexture', inp, 0),
+                WglArg.texture('inputTexture', inp),
                 WglArg.float('offset', 1 << (totalQubitCount - bit - 1))
             ).renderTo(dst)));
     }
@@ -251,7 +251,7 @@ function convertAwayFromPolar(input) {
     return new WglConfiguredShader(dst => CONVERT_AWAY_FROM_POLAR_SHADER.withArgs(
         WglArg.vec2('inputSize', input.width, input.height),
         WglArg.float('outputWidth', dst.width),
-        WglArg.texture('inputTexture', input, 0)
+        WglArg.texture('inputTexture', input)
     ).renderTo(dst));
 }
 const CONVERT_AWAY_FROM_POLAR_SHADER = new WglShader(`
@@ -280,8 +280,8 @@ function toRatiosVsRepresentative(superposition) {
         WglArg.vec2('inputSize', superposition.width, superposition.height),
         WglArg.vec2('repSize', rep.width, rep.height),
         WglArg.float('outputWidth', dst.width),
-        WglArg.texture('inputTexture', superposition, 0),
-        WglArg.texture('repTexture', rep, 1)
+        WglArg.texture('inputTexture', superposition),
+        WglArg.texture('repTexture', rep)
     ).renderTo(dst));
 }
 const TO_RATIOS_VS_REPRESENTATIVE_SHADER = new WglShader(`
@@ -320,7 +320,7 @@ function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
             inp => new WglConfiguredShader(dst => FOLD_CONSISTENT_RATIOS_SHADER.withArgs(
                 WglArg.vec2('inputSize', inp.width, inp.height),
                 WglArg.float('outputWidth', dst.width),
-                WglArg.texture('inputTexture', inp, 0),
+                WglArg.texture('inputTexture', inp),
                 WglArg.float('bit', 1 << (includedQubitCount - bit - 1)),
                 WglArg.float('u_NaN', NaN)
             ).renderTo(dst)));

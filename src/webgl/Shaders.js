@@ -31,7 +31,7 @@ const COLOR_SHADER = new WglShader(`
  */
 Shaders.passthrough = inputTexture => PASSTHROUGH_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("dataTexture", inputTexture, 0));
+    WglArg.texture("dataTexture", inputTexture));
 const PASSTHROUGH_SHADER = new WglShader(`
     uniform vec2 textureSize;
     uniform sampler2D dataTexture;
@@ -69,7 +69,7 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
         gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, w, h, 0, GL.RGBA, GL.FLOAT, rgbaData);
         PASSTHROUGH_SHADER.withArgs(
             WglArg.vec2("textureSize", w, h),
-            WglArg.webGlTexture("dataTexture", dataTexture, 0)
+            WglArg.webGlTexture("dataTexture", dataTexture)
         ).renderTo(destinationTexture);
     } finally {
         gl.deleteTexture(dataTexture);
@@ -84,7 +84,7 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
  */
 Shaders.scale = (inputTexture, factor) => SCALE_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("inputTexture", inputTexture, 0),
+    WglArg.texture("inputTexture", inputTexture),
     WglArg.float("factor", factor));
 const SCALE_SHADER = new WglShader(`
     uniform vec2 textureSize;
@@ -105,7 +105,7 @@ const SCALE_SHADER = new WglShader(`
 Shaders.sumFold = (inputTexture, dx, dy) => SUM_FOLD_SHADER.withArgs(
     WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
     WglArg.vec2("offset", dx, dy),
-    WglArg.texture("inputTexture", inputTexture, 0));
+    WglArg.texture("inputTexture", inputTexture));
 const SUM_FOLD_SHADER = new WglShader(`
     uniform vec2 inputSize;
     uniform sampler2D inputTexture;
@@ -130,7 +130,7 @@ Shaders.encodeFloatsIntoBytes = inputTexture => new WglConfiguredShader(destinat
         "output tex should be double the width and height of the input");
 
     FLOATS_TO_ENCODED_BYTES_SHADER.withArgs(
-        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.texture("inputTexture", inputTexture),
         WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
         WglArg.float("outputWidth", destinationTexture.width)
     ).renderTo(destinationTexture);

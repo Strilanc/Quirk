@@ -49,8 +49,8 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
  */
 let amplitudesToProbabilities = (inputTexture, controlTex) => new WglConfiguredShader(destinationTexture =>
     AMPLITUDES_TO_PROBABILITIES_SHADER.withArgs(
-        WglArg.texture('inputTexture', inputTexture, 0),
-        WglArg.texture('controlTexture', controlTex, 1),
+        WglArg.texture('inputTexture', inputTexture),
+        WglArg.texture('controlTexture', controlTex),
         WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
         WglArg.float('outputWidth', destinationTexture.width)
     ).renderTo(destinationTexture));

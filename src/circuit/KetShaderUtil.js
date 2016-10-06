@@ -71,8 +71,8 @@ const ketShaderPhase = (head, body, span=null) => ketShader(
  */
 function ketArgs(args, span=undefined) {
     let result = [
-        WglArg.texture("_k_ket", args.stateTexture, 0),
-        WglArg.texture("_k_control", args.controlsTexture, 1),
+        WglArg.texture("_k_ket", args.stateTexture),
+        WglArg.texture("_k_control", args.controlsTexture),
         WglArg.vec2("_k_size", args.stateTexture.width, args.stateTexture.height),
         WglArg.float("_k_step", 1 << args.row)
     ];

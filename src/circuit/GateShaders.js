@@ -98,7 +98,7 @@ GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
     let size = Math.floor(Math.log2(inputTexture.width * inputTexture.height));
     return new WglConfiguredShader(destinationTexture => {
         CYCLE_ALL_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
+            WglArg.texture("inputTexture", inputTexture),
             WglArg.float("outputWidth", destinationTexture.width),
             WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
             WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size))

@@ -68,7 +68,7 @@ let amplitudesToDensities = (inputTexture, qubitSpan) => new WglConfiguredShader
         throw new DetailedError("Wrong destination size.", {inputTexture, qubitSpan, destinationTexture});
     }
     AMPLITUDES_TO_DENSITIES_SHADER.withArgs(
-        WglArg.texture('inputTexture', inputTexture, 0),
+        WglArg.texture('inputTexture', inputTexture),
         WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
         WglArg.float('outputWidth', destinationTexture.width),
         WglArg.float('qubitSpan', 1 << qubitSpan)
