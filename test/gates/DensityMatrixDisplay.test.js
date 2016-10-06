@@ -1,5 +1,4 @@
 import {Suite, assertThat} from "test/TestUtil.js"
-import {DisplayShaders} from "src/circuit/DisplayShaders.js"
 import {amplitudesToDensities} from "src/gates/DensityMatrixDisplayFamily.js"
 import {Shaders} from "src/webgl/Shaders.js"
 

@@ -1,11 +1,11 @@
 import {Suite, assertThat} from "test/TestUtil.js"
-import {DisplayShaders} from "src/circuit/DisplayShaders.js"
+import {amplitudesToProbabilities} from "src/gates/ProbabilityDisplayFamily.js"
 
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
 
-let suite = new Suite("DisplayShaders");
+let suite = new Suite("ProbabilityDisplay");
 
 suite.webGlTest("amplitudesToProbabilities", () => {
     let inp = Shaders.data(new Float32Array([
@@ -20,7 +20,7 @@ suite.webGlTest("amplitudesToProbabilities", () => {
     ])).toFloatTexture(4, 2);
 
     let con = CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 4);
-    assertThat(DisplayShaders.amplitudesToProbabilities(inp, con).readFloatOutputs(8, 1)).isEqualTo(new Float32Array([
+    assertThat(amplitudesToProbabilities(inp, con).readFloatOutputs(8, 1)).isEqualTo(new Float32Array([
         4+9, 0, 0, 0,
         16+25, 0, 0, 0,
         36+49, 0, 0, 0,

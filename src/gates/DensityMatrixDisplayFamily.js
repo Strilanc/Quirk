@@ -1,7 +1,6 @@
 import {Config} from "src/Config.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {DetailedError} from "src/base/DetailedError.js"
-import {DisplayShaders} from "src/circuit/DisplayShaders.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"

@@ -1,5 +1,4 @@
 import {Config} from "src/Config.js"
-import {DisplayShaders} from "src/circuit/DisplayShaders.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
@@ -11,6 +10,9 @@ import {seq, Seq} from "src/base/Seq.js"
 import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
+import {WglArg} from "src/webgl/WglArg.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglShader.js"
 
 /**
  * @param {!WglTexture} controlTexture
@@ -22,7 +24,7 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
     let [w, h] = [controlTexture.width, controlTexture.height];
     let result = new ShaderPipeline();
 
-    result.addSizedStep(w, h, t => DisplayShaders.amplitudesToProbabilities(t, controlTexture));
+    result.addSizedStep(w, h, t => amplitudesToProbabilities(t, controlTexture));
     result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
 
     let remainingQubitCount = Math.round(Math.log2(w*h));
@@ -39,6 +41,36 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
 
     return result;
 }
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @param {!WglTexture} controlTex
+ * @returns {!WglConfiguredShader}
+ */
+let amplitudesToProbabilities = (inputTexture, controlTex) => new WglConfiguredShader(destinationTexture =>
+    AMPLITUDES_TO_PROBABILITIES_SHADER.withArgs(
+        WglArg.texture('inputTexture', inputTexture, 0),
+        WglArg.texture('controlTexture', controlTex, 1),
+        WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
+        WglArg.float('outputWidth', destinationTexture.width)
+    ).renderTo(destinationTexture));
+const AMPLITUDES_TO_PROBABILITIES_SHADER = new WglShader(`
+    uniform float outputWidth;
+    uniform vec2 inputSize;
+    uniform sampler2D inputTexture;
+    uniform sampler2D controlTexture;
+    vec2 toUv(float state) {
+        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
+    }
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float state = xy.y * outputWidth + xy.x;
+        vec2 uv = toUv(state);
+        vec4 amp = texture2D(inputTexture, uv);
+        float con = texture2D(controlTexture, uv).x;
+        float p = con * dot(amp, amp);
+        gl_FragColor = vec4(p, 0.0, 0.0, 0.0);
+    }`);
 
 /**
  * Post-processes the pixels that come out of makeProbabilitySpanPipeline into a vector of normalized probabilities.
@@ -225,4 +257,9 @@ let SingleChanceGate = Gate.fromIdentity(
 let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
     span === 1 ? SingleChanceGate : multiChanceGateMaker(span));
 
-export {ProbabilityDisplayFamily, makeProbabilitySpanPipeline, probabilityPixelsToColumnVector};
+export {
+    ProbabilityDisplayFamily,
+    makeProbabilitySpanPipeline,
+    probabilityPixelsToColumnVector,
+    amplitudesToProbabilities
+};
