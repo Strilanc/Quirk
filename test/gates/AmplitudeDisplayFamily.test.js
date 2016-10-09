@@ -46,11 +46,11 @@ suite.webGlTest("amplitudesToPolarKets_zero", () => {
 
 suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
     let inp = Shaders.vec4Data(new Float32Array([
-        1, 2,100,0,
-        3, 4,200,0,
-        5, 6,400,0,
-        7, 8,800,0,
-        9,10,1600,0,
+         1, 2,100,0,
+         3, 4,200,0,
+         5, 6,400,0,
+         7, 8,800,0,
+         9,10,1600,0,
         11,12,3200,0,
         13,14,6400,0,
         15,16,12800,0

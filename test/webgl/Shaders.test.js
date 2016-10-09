@@ -1,6 +1,10 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
 import {Shaders} from "src/webgl/Shaders.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    workingShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode,
+    decodeBytesIntoFloats
+} from "src/webgl/ShaderCoders.js"
 
 import {Seq} from "src/base/Seq.js"
 
@@ -110,14 +114,14 @@ suite.webGlTest("sumFold", () => {
 
 suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_cornerCases", () => {
     let data = new Float32Array([
-        0, NaN, Infinity, -Infinity,
+        NaN, NaN, NaN, NaN,
         Math.PI, Math.E, Math.sqrt(2), 0.1,
         1, 0.5, -1, -2,
         Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
     ]);
     let dataTex = Shaders.data(data).toFloatTexture(2, 2);
     let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(4, 4);
-    let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels);
+    let decodedPixels = decodeBytesIntoFloats(encodedPixels);
     assertThat(decodedPixels).isEqualTo(data);
 });
 
@@ -127,7 +131,7 @@ suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_randomiz
         let data = new Float32Array(Seq.range(diam*diam*4).map(i => Math.random()*10-5).toFloat32Array());
         let dataTex = Shaders.data(data).toFloatTexture(diam, diam);
         let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(diam*2, diam*2);
-        let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels);
+        let decodedPixels = decodeBytesIntoFloats(encodedPixels);
         assertThat(decodedPixels).isEqualTo(data);
     }
 });
@@ -138,6 +142,6 @@ suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_caught",
     ]);
     let dataTex = Shaders.data(data).toFloatTexture(1, 1);
     let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(2, 2);
-    let decodedPixels = Shaders.decodeByteBufferToFloatBuffer(encodedPixels);
+    let decodedPixels = decodeBytesIntoFloats(encodedPixels);
     assertThat(decodedPixels).isEqualTo(data);
 });

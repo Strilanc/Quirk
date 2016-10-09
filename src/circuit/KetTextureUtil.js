@@ -158,15 +158,9 @@ KetTextureUtil.mergedReadFloats = textures => {
 
     let combinedPixels;
     if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS) {
-        let combinedTexBytes = allocSizedTexture(combinedTex.width*2, combinedTex.height*2,
-            WebGLRenderingContext.UNSIGNED_BYTE);
-        Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(combinedTexBytes);
-
-        let combinedBytePixels = combinedTexBytes.readPixels();
-        combinedPixels = Shaders.decodeByteBufferToFloatBuffer(combinedBytePixels);
-        KetTextureUtil.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
+        combinedPixels = SHADER_CODER_BYTES.readVec4Data(Shaders.encodeFloatsIntoBytes(combinedTex), lgTotal);
     } else {
-        combinedPixels = combinedTex.readPixels();
+        combinedPixels = workingShaderCoder.readVec4Data(combinedTex.readPixels(), lgTotal);
     }
     KetTextureUtil.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
 

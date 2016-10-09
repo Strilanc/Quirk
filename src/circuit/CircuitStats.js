@@ -16,6 +16,7 @@ import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
+import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 class CircuitStats {
     /**
@@ -225,7 +226,7 @@ class CircuitStats {
         // Advance state while collecting stats into textures.
         let initialState = KetTextureUtil.classicalKet(numWires);
         let controlTex = KetTextureUtil.control(numWires, Controls.NONE);
-        let {output, colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
+        let {output: pre_output, colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
             new CircuitEvalArgs(
                 time,
                 0,
@@ -238,6 +239,9 @@ class CircuitStats {
             true);
         KetTextureUtil.doneWithTexture(initialState, "initialState in _fromCircuitAtTime_noFallback");
         KetTextureUtil.doneWithTexture(controlTex, "controlTex in _fromCircuitAtTime_noFallback");
+        let output = KetTextureUtil.allocVec4Tex(workingShaderCoder.vec2Order(pre_output));
+        Shaders.vec2AsVec4(pre_output).renderTo(output);
+        KetTextureUtil.doneWithTexture(pre_output, "pre_output in _fromCircuitAtTime_noFallback");
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({
