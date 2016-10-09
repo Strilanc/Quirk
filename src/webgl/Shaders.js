@@ -31,7 +31,7 @@ const COLOR_SHADER = new WglShader(`
  */
 Shaders.passthrough = inputTexture => PASSTHROUGH_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("dataTexture", inputTexture, 0));
+    WglArg.texture("dataTexture", inputTexture));
 const PASSTHROUGH_SHADER = new WglShader(`
     uniform vec2 textureSize;
     uniform sampler2D dataTexture;
@@ -50,7 +50,7 @@ Shaders.coords = new WglShader(`
 
 /**
  * Returns a configured shader that overlays the destination texture with the given data.
- * @param {!Float32Array} rgbaData
+ * @param {!Float32Array|!Uint8Array} rgbaData
  * @returns {!WglConfiguredShader}
  */
 Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
@@ -66,10 +66,19 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
         gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, dataTexture);
         gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
         gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
-        gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, w, h, 0, GL.RGBA, GL.FLOAT, rgbaData);
+        gl.texImage2D(
+            GL.TEXTURE_2D,
+            0,
+            GL.RGBA,
+            w,
+            h,
+            0,
+            GL.RGBA,
+            rgbaData instanceof Uint8Array ? GL.UNSIGNED_BYTE : GL.FLOAT,
+            rgbaData);
         PASSTHROUGH_SHADER.withArgs(
             WglArg.vec2("textureSize", w, h),
-            WglArg.webGlTexture("dataTexture", dataTexture, 0)
+            WglArg.webGlTexture("dataTexture", dataTexture)
         ).renderTo(destinationTexture);
     } finally {
         gl.deleteTexture(dataTexture);
@@ -84,7 +93,7 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
  */
 Shaders.scale = (inputTexture, factor) => SCALE_SHADER.withArgs(
     WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("inputTexture", inputTexture, 0),
+    WglArg.texture("inputTexture", inputTexture),
     WglArg.float("factor", factor));
 const SCALE_SHADER = new WglShader(`
     uniform vec2 textureSize;
@@ -105,7 +114,7 @@ const SCALE_SHADER = new WglShader(`
 Shaders.sumFold = (inputTexture, dx, dy) => SUM_FOLD_SHADER.withArgs(
     WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
     WglArg.vec2("offset", dx, dy),
-    WglArg.texture("inputTexture", inputTexture, 0));
+    WglArg.texture("inputTexture", inputTexture));
 const SUM_FOLD_SHADER = new WglShader(`
     uniform vec2 inputSize;
     uniform sampler2D inputTexture;
@@ -130,7 +139,7 @@ Shaders.encodeFloatsIntoBytes = inputTexture => new WglConfiguredShader(destinat
         "output tex should be double the width and height of the input");
 
     FLOATS_TO_ENCODED_BYTES_SHADER.withArgs(
-        WglArg.texture("inputTexture", inputTexture, 0),
+        WglArg.texture("inputTexture", inputTexture),
         WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
         WglArg.float("outputWidth", destinationTexture.width)
     ).renderTo(destinationTexture);
@@ -157,7 +166,7 @@ const FLOATS_TO_ENCODED_BYTES_SHADER = new WglShader(`
 
         val = abs(val);
         float exponent = floor(log2(val));
-        if (pow(2.0, exponent) > val) {
+        if (exp2(exponent) > val) {
             // On my machine this happens for val=0.2499999850988388
             exponent = floor(exponent - 0.5);
         }

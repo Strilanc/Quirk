@@ -89,21 +89,19 @@ class WglArg {
     /**
      * @param {!string} name
      * @param {!WglTexture} wglTexture
-     * @param {!int} unit
      * @returns {!WglArg}
      */
-    static texture(name, wglTexture, unit) {
-        return new WglArg(WglArg.WGL_TEXTURE_TYPE, name, {texture: wglTexture, unit});
+    static texture(name, wglTexture) {
+        return new WglArg(WglArg.WGL_TEXTURE_TYPE, name, wglTexture);
     }
 
     /**
      * @param {!string} name
      * @param {!WebGLTexture} webGlTexture
-     * @param {!int} unit
      * @returns {!WglArg}
      */
-    static webGlTexture(name, webGlTexture, unit) {
-        return new WglArg(WglArg.WEB_GL_TEXTURE_TYPE, name, {texture: webGlTexture, unit});
+    static webGlTexture(name, webGlTexture) {
+        return new WglArg(WglArg.WEB_GL_TEXTURE_TYPE, name, webGlTexture);
     }
 
     toString() {
@@ -123,7 +121,7 @@ WglArg.WEB_GL_TEXTURE_TYPE = "web_gl_texture";
 
 /**
  * A map from an argument's type to the action used to give it to a shader.
- * @type {!Map.<!string, !function(!WglContext, !WebGLUniformLocation, *) : void>}
+ * @type {!Map.<!string, !function(!WglContext, !WebGLUniformLocation, *. {coopTextureUnit: !int) : void>}
  */
 WglArg.INPUT_ACTION_MAP = new Map([
     [WglArg.BOOL_TYPE, (ctx, loc, val) => ctx.gl.uniform1f(loc, val ? 1 : 0)],
@@ -133,7 +131,8 @@ WglArg.INPUT_ACTION_MAP = new Map([
     [WglArg.FLOAT_ARRAY_TYPE, (ctx, loc, buf) => ctx.gl.uniform1fv(loc, buf)],
     [WglArg.VEC4_TYPE, (ctx, loc, [r,g,b,a]) => ctx.gl.uniform4f(loc, r, g, b, a)],
     [WglArg.MAT4_TYPE, (ctx, loc, val) => ctx.gl.uniformMatrix4fv(loc, false, val)],
-    [WglArg.WGL_TEXTURE_TYPE, (ctx, loc, {unit, texture}) => {
+    [WglArg.WGL_TEXTURE_TYPE, (ctx, loc, texture, coop) => {
+        let unit = coop.coopTextureUnit++;
         if (unit >= ctx.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${unit} but max ` +
                 `is ${ctx.maxTextureUnits}.`);
@@ -147,7 +146,8 @@ WglArg.INPUT_ACTION_MAP = new Map([
         gl.activeTexture(WebGLRenderingContext.TEXTURE0 + unit);
         gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, texture.initializedTexture());
     }],
-    [WglArg.WEB_GL_TEXTURE_TYPE, (ctx, loc, {unit, texture}) => {
+    [WglArg.WEB_GL_TEXTURE_TYPE, (ctx, loc, texture, coop) => {
+        let unit = coop.coopTextureUnit++;
         if (unit >= ctx.maxTextureUnits) {
             throw new Error(`Uniform texture argument uses texture unit ${unit} but max ` +
                 `is ${ctx.maxTextureUnits}.`);

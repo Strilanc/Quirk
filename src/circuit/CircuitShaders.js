@@ -1,5 +1,6 @@
 import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
+import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
@@ -89,8 +90,8 @@ const SET_SINGLE_PIXEL_SHADER = new WglShader(`
 CircuitShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
     WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
     WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-    WglArg.texture("backgroundTexture", backgroundTexture, 0),
-    WglArg.texture("foregroundTexture", foregroundTexture, 1),
+    WglArg.texture("backgroundTexture", backgroundTexture),
+    WglArg.texture("foregroundTexture", foregroundTexture),
     WglArg.int("offset", offset));
 const LINEAR_OVERLAY_SHADER = new WglShader(`
     uniform vec2 backgroundTextureSize;
@@ -188,7 +189,7 @@ CircuitShaders.controlSelect = (controlMask, dataTexture) => {
             throw new Error("CircuitShaders.controlSelect needs to be updated to allow more qubits.");
         }
         CONTROL_SELECT_SHADER.withArgs(
-            WglArg.texture('inputTexture', dataTexture, 0),
+            WglArg.texture('inputTexture', dataTexture),
             WglArg.vec2('inputSize', dataTexture.width, dataTexture.height),
             WglArg.float('outputWidth', destinationTexture.width),
             WglArg.float('used', controlMask.inclusionMask),
@@ -236,80 +237,16 @@ const CONTROL_SELECT_SHADER = new WglShader(`
 /**
  * Renders the result of applying a controlled swap operation to a superposition.
  *
- * @param {!WglTexture} inputTexture
- * @param {!int} qubitIndex1
- * @param {!int} qubitIndex2
- * @param {!WglTexture} controlTexture
+ * @param {!CircuitEvalArgs} args
+ * @param {!int} otherRow
  */
-CircuitShaders.swap = (inputTexture, qubitIndex1, qubitIndex2, controlTexture) =>
-    new WglConfiguredShader(destinationTexture => {
-        if (destinationTexture.width !== inputTexture.width || destinationTexture.height !== inputTexture.height) {
-            throw new Error("Texture sizes must match.");
-        }
-        SWAP_QUBITS_SHADER.withArgs(
-            WglArg.vec2("inputSize", destinationTexture.width, destinationTexture.height),
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.float("qubitIndexMask1", 1 << qubitIndex1),
-            WglArg.float("qubitIndexMask2", 1 << qubitIndex2),
-            WglArg.texture("controlTexture", controlTexture, 1)
-        ).renderTo(destinationTexture)
-    });
-const SWAP_QUBITS_SHADER = new WglShader(`
-    /**
-     * A texture holding the complex coefficients of the superposition to operate on.
-     * The real components are in the red component, and the imaginary components are in the green component.
-     */
-    uniform sampler2D inputTexture;
-
-    /**
-     * A texture with flags that determine which states get affected by the operation.
-     * The red component is 1 for states that should participate, and 0 otherwise.
-     */
-    uniform sampler2D controlTexture;
-
-    /**
-     * The width and height of the textures being operated on.
-     */
-    uniform vec2 inputSize;
-
-    /**
-     * A power of two (2^n) with the exponent n determined by the index of one of the qubits to swap.
-     */
-    uniform float qubitIndexMask1;
-
-    /**
-     * A power of two (2^n) with the exponent n determined by the index of the other qubit to swap.
-     */
-    uniform float qubitIndexMask2;
-
-    ${snippets.filterBit}
-    ${snippets.toggleBit}
-
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = pixelXy.y * inputSize.x + pixelXy.x;
-        vec2 pixelUv = gl_FragCoord.xy / inputSize;
-
-        float opposingState1 = toggleBit(state, qubitIndexMask1);
-        float opposingState2 = toggleBit(state, qubitIndexMask2);
-        bool qubitIsOn1 = state >= opposingState1;
-        bool qubitIsOn2 = state >= opposingState2;
-        bool blockedByControls = texture2D(controlTexture, pixelUv).x == 0.0;
-
-        vec2 srcPixelUv;
-        if (!blockedByControls && qubitIsOn1 != qubitIsOn2) {
-            float swapState = opposingState1 + opposingState2 - state;
-            vec2 swapPixelUv = toUv(swapState);
-            srcPixelUv = swapPixelUv;
-        } else {
-            srcPixelUv = pixelUv;
-        }
-        gl_FragColor = texture2D(inputTexture, srcPixelUv);
-    }`);
+CircuitShaders.swap = (args, otherRow) =>
+    SWAP_QUBITS_SHADER.withArgs(...ketArgs(args, otherRow - args.row + 1));
+const SWAP_QUBITS_SHADER = ketShaderPermute('', `
+    float low_bit = mod(out_id, 2.0);
+    float mid_bits = floor(mod(out_id, span*0.5)*0.5);
+    float high_bit = floor(out_id*2.0/span);
+    return high_bit + mid_bits*2.0 + low_bit*span*0.5;`);
 
 /**
  * Returns a configured shader that renders the marginal states of each qubit, for each possible values of the other
@@ -332,7 +269,7 @@ CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
             throw new DetailedError("Wrong destination size.", {inputTexture, keptBitMask, destinationTexture});
         }
         QUBIT_DENSITIES_SHADER.withArgs(
-            WglArg.texture('inputTexture', inputTexture, 0),
+            WglArg.texture('inputTexture', inputTexture),
             WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
             WglArg.float('outputWidth', destinationTexture.width),
             WglArg.float('keptCount', keptCount),
@@ -370,7 +307,7 @@ const QUBIT_DENSITIES_SHADER = new WglShader(`
 
         float bitIndex = mod(outIndex, keptCount);
         float otherBits = floor(outIndex / keptCount);
-        float bit = scatter(pow(2.0, bitIndex), keptBitMask);
+        float bit = scatter(exp2(bitIndex), keptBitMask);
 
         // Indices of the two complex values making up the current conditional ket.
         float srcIndex0 = mod(otherBits, bit) + floor(otherBits / bit) * bit * 2.0;

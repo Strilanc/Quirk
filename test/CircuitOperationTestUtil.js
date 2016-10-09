@@ -10,15 +10,24 @@ import {WglTexture} from "src/webgl/WglTexture.js"
 /**
  * @param {function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
  * @param {!Matrix} matrix
- * @param {!int=1} repeats
+ * @param {!int=} repeats
  */
-function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, matrix, repeats=1) {
+function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(args => {
+        let r = new WglTexture(args.stateTexture.width, args.stateTexture.height);
+        shaderFunc(args).renderTo(r);
+        return r;
+    }, matrix, repeats);
+}
+
+/**
+ * @param {function(!CircuitEvalArgs) : !WglTexture} operation
+ * @param {!Matrix} matrix
+ * @param {!int=} repeats
+ */
+function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix, repeats=5) {
     for (let i = 0; i < repeats; i++) {
-        assertThatRandomTestOfCircuitOperationActsLikeMatrix(args => {
-            let r = new WglTexture(args.stateTexture.width, args.stateTexture.height);
-            shaderFunc(args).renderTo(r);
-            return r;
-        }, matrix);
+        assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix);
     }
 }
 
@@ -26,7 +35,7 @@ function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, 
  * @param {function(!CircuitEvalArgs) : !WglTexture} operation
  * @param {!Matrix} matrix
  */
-function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix) {
+function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix) {
     let qubitSpan = Math.round(Math.log2(matrix.height()));
     let extraWires = Math.floor(Math.random()*5);
     let time = Math.random();
@@ -66,7 +75,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix)
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
-    assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.001);
+    assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.005);
     textureOut.ensureDeinitialized();
     textureIn.ensureDeinitialized();
     controlsTexture.ensureDeinitialized();

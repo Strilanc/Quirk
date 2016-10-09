@@ -131,7 +131,7 @@ suite.webGlTest("texture", () => {
             gl_FragColor = texture2D(arg, vec2(0.5, 0.5));
         }`);
 
-    shader.withArgs(WglArg.texture("arg", srcTexture, 0)).renderTo(texture);
+    shader.withArgs(WglArg.texture("arg", srcTexture)).renderTo(texture);
     assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         1, 2, 3, 5
     ]));

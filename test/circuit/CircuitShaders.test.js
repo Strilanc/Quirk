@@ -1,4 +1,5 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 
 import {Complex} from "src/math/Complex.js"
@@ -273,75 +274,25 @@ suite.webGlTest("controlSelect_multiple", () => {
 });
 
 suite.webGlTest("swap", () => {
-    let inp = Shaders.data(new Float32Array([
-        11, 12, 13, 14, //000
-        21, 22, 23, 24, //001
-        31, 32, 33, 34, //010
-        41, 42, 43, 44, //011
-        51, 52, 53, 54, //100
-        61, 62, 63, 64, //101
-        71, 72, 73, 74, //110
-        81, 82, 83, 84  //111
-    ])).toFloatTexture(4, 2);
-    let cnt = Shaders.color(1, 0, 0, 0).toFloatTexture(4, 2);
-    assertThat(CircuitShaders.swap(inp, 0, 1, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
-        11, 12, 13, 14, //000
-        31, 32, 33, 34, //010
-        21, 22, 23, 24, //001
-        41, 42, 43, 44, //011
-        51, 52, 53, 54, //100
-        71, 72, 73, 74, //110
-        61, 62, 63, 64, //101
-        81, 82, 83, 84  //111
-    ]));
+    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
+        args => CircuitShaders.swap(args, args.row + 1),
+        Matrix.square(
+            1,0,0,0,
+            0,0,1,0,
+            0,1,0,0,
+            0,0,0,1));
 
-    CircuitShaders.controlMask(Controls.bit(2, false)).renderTo(cnt);
-    assertThat(CircuitShaders.swap(inp, 0, 1, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
-        11, 12, 13, 14, //000
-        31, 32, 33, 34, //010
-        21, 22, 23, 24, //001
-        41, 42, 43, 44, //011
-        51, 52, 53, 54, //100
-        61, 62, 63, 64, //101
-        71, 72, 73, 74, //110
-        81, 82, 83, 84  //111
-    ]));
-
-    Shaders.color(1, 0, 0, 0).renderTo(cnt);
-    assertThat(CircuitShaders.swap(inp, 0, 2, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
-        11, 12, 13, 14, //000
-        51, 52, 53, 54, //100
-        31, 32, 33, 34, //010
-        71, 72, 73, 74, //110
-        21, 22, 23, 24, //001
-        61, 62, 63, 64, //101
-        41, 42, 43, 44, //011
-        81, 82, 83, 84  //111
-    ]));
-
-    CircuitShaders.controlMask(Controls.bit(1, false)).renderTo(cnt);
-    assertThat(CircuitShaders.swap(inp, 0, 2, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
-        11, 12, 13, 14, //000
-        51, 52, 53, 54, //100
-        31, 32, 33, 34, //010
-        41, 42, 43, 44, //011
-        21, 22, 23, 24, //001
-        61, 62, 63, 64, //101
-        71, 72, 73, 74, //110
-        81, 82, 83, 84  //111
-    ]));
-
-    CircuitShaders.controlMask(Controls.bit(1, true)).renderTo(cnt);
-    assertThat(CircuitShaders.swap(inp, 0, 2, cnt).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
-        11, 12, 13, 14, //000
-        21, 22, 23, 24, //001
-        31, 32, 33, 34, //010
-        71, 72, 73, 74, //110
-        51, 52, 53, 54, //100
-        61, 62, 63, 64, //101
-        41, 42, 43, 44, //011
-        81, 82, 83, 84  //111
-    ]));
+    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
+        args => CircuitShaders.swap(args, args.row + 2),
+        Matrix.square(
+            1,0,0,0,0,0,0,0,
+            0,0,0,0,1,0,0,0,
+            0,0,1,0,0,0,0,0,
+            0,0,0,0,0,0,1,0,
+            0,1,0,0,0,0,0,0,
+            0,0,0,0,0,1,0,0,
+            0,0,0,1,0,0,0,0,
+            0,0,0,0,0,0,0,1));
 });
 
 suite.webGlTest("qubitDensities", () => {

@@ -1,6 +1,7 @@
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
+import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
@@ -32,110 +33,41 @@ const SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e =>
 });
 
 /**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} qubitIndex
+ * @param {!CircuitEvalArgs} args
  * @param {!int} qubitSpan
  * @param {!int} incrementAmount
  * @returns {!WglConfiguredShader}
  */
-const incrementShaderFunc = (inputTexture, controlTexture, qubitIndex, qubitSpan, incrementAmount) =>
-    new WglConfiguredShader(destinationTexture => {
-        INCREMENT_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitIndex", 1 << qubitIndex),
-            WglArg.float("qubitSpan", 1 << qubitSpan),
-            WglArg.float("incrementAmount", incrementAmount)
-        ).renderTo(destinationTexture);
-    });
-const INCREMENT_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float incrementAmount;
-    uniform float qubitIndex;
-    uniform float qubitSpan;
-
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float oldState = xy.y * outputWidth + xy.x;
-        float oldStateTarget = mod(floor(oldState / qubitIndex), qubitSpan);
-        float newStateTarget = mod(oldStateTarget - incrementAmount + qubitSpan, qubitSpan);
-        float newState = oldState + (newStateTarget - oldStateTarget) * qubitIndex;
-
-        vec2 oldUv = uvFor(oldState);
-        float control = texture2D(controlTexture, oldUv).x;
-
-        vec2 newUv = uvFor(newState);
-        vec2 usedUv = control*newUv + (1.0-control)*oldUv;
-
-        gl_FragColor = texture2D(inputTexture, usedUv);
-    }`);
+const incrementShaderFunc = (args, qubitSpan, incrementAmount) =>
+    incrementShader.withArgs(
+        ...ketArgs(args, qubitSpan),
+        WglArg.float("amount", incrementAmount));
+const incrementShader = ketShaderPermute(
+    'uniform float amount;',
+    'return mod(out_id - amount + span, span);');
 
 /**
- * @param {!WglTexture} inputTexture
- * @param {!WglTexture} controlTexture
+ * @param {!CircuitEvalArgs} args
+ * @param {!int} span
  * @param {!int} srcOffset
  * @param {!int} srcSpan
- * @param {!int} dstOffset
- * @param {!int} dstSpan
  * @param {!int} scaleFactor
  * @returns {!WglConfiguredShader}
  */
-function additionShaderFunc(inputTexture, controlTexture, srcOffset, srcSpan, dstOffset, dstSpan, scaleFactor) {
-    return new WglConfiguredShader(destinationTexture => {
-        ADDITION_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture, 0),
-            WglArg.texture("controlTexture", controlTexture, 1),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("qubitSrcIndex", 1 << srcOffset),
-            WglArg.float("qubitSrcSpan", 1 << srcSpan),
-            WglArg.float("qubitDstIndex", 1 << dstOffset),
-            WglArg.float("qubitDstSpan", 1 << dstSpan),
-            WglArg.float("scaleFactor", scaleFactor)
-        ).renderTo(destinationTexture);
-    });
+function additionShaderFunc(args, span, srcOffset, srcSpan, scaleFactor) {
+    return ADDITION_SHADER.withArgs(
+        ...ketArgs(args, span),
+        WglArg.float("srcOffset", 1 << srcOffset),
+        WglArg.float("srcSpan", 1 << srcSpan),
+        WglArg.float("factor", scaleFactor));
 }
-const ADDITION_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform sampler2D controlTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform float scaleFactor;
-    uniform float qubitSrcIndex;
-    uniform float qubitSrcSpan;
-    uniform float qubitDstIndex;
-    uniform float qubitDstSpan;
-
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float stateSrc = mod(floor(state / qubitSrcIndex), qubitSrcSpan);
-        float stateDst = mod(floor(state / qubitDstIndex), qubitDstSpan);
-        float newDst = mod(stateDst + (qubitDstSpan - stateSrc) * scaleFactor, qubitDstSpan);
-        float newState = state + (newDst - stateDst) * qubitDstIndex;
-
-        vec2 oldUv = uvFor(state);
-        float control = texture2D(controlTexture, oldUv).x;
-
-        vec2 newUv = uvFor(newState);
-        vec2 usedUv = control*newUv + (1.0-control)*oldUv;
-
-        gl_FragColor = texture2D(inputTexture, usedUv);
-    }`);
+const ADDITION_SHADER = ketShaderPermute(
+    'uniform float srcOffset, srcSpan, factor;',
+    `
+        float d = mod(floor(full_out_id / srcOffset), srcSpan);
+        d *= factor;
+        d = mod(d, span);
+        return mod(out_id + span - d, span);`);
 
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "++",
@@ -146,12 +78,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
     withSerializedId("inc" + span).
     withHeight(span).
-    withCustomShader(args => incrementShaderFunc(
-        args.stateTexture,
-        args.controlsTexture,
-        args.row,
-        span,
-        +1)));
+    withCustomShader(args => incrementShaderFunc(args, span, +1)));
 
 ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "- -",
@@ -162,12 +89,7 @@ ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
     withSerializedId("dec" + span).
     withHeight(span).
-    withCustomShader(args => incrementShaderFunc(
-        args.stateTexture,
-        args.controlsTexture,
-        args.row,
-        span,
-        -1)));
+    withCustomShader(args => incrementShaderFunc(args, span, -1)));
 
 ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b+=a",
@@ -180,12 +102,10 @@ ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.without
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
     withHeight(span).
     withCustomShader(args => additionShaderFunc(
-        args.stateTexture,
-        args.controlsTexture,
+        args.withRow(args.row + Math.floor(span/2)),
+        Math.ceil(span/2),
         args.row,
         Math.floor(span/2),
-        args.row + Math.floor(span/2),
-        Math.ceil(span/2),
         +1)));
 
 ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
@@ -199,12 +119,10 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
     withCustomShader(args => additionShaderFunc(
-        args.stateTexture,
-        args.controlsTexture,
+        args.withRow(args.row + Math.floor(span/2)),
+        Math.ceil(span/2),
         args.row,
         Math.floor(span/2),
-        args.row + Math.floor(span/2),
-        Math.ceil(span/2),
         -1)));
 
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
@@ -218,14 +136,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     withRequiredContextKeys("Input Range A").
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
-        return additionShaderFunc(
-            args.stateTexture,
-            args.controlsTexture,
-            inputOffset,
-            inputLength,
-            args.row,
-            span,
-            +1);
+        return additionShaderFunc(args, span, inputOffset, inputLength, +1);
     }));
 
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
@@ -239,14 +150,7 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     withRequiredContextKeys("Input Range A").
     withCustomShader(args => {
         let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
-        return additionShaderFunc(
-            args.stateTexture,
-            args.controlsTexture,
-            inputOffset,
-            inputLength,
-            args.row,
-            span,
-            -1);
+        return additionShaderFunc(args, span, inputOffset, inputLength, -1);
     }));
 
 ArithmeticGates.all = [

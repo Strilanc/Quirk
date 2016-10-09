@@ -158,15 +158,13 @@ KetTextureUtil.applyCustomShader = (customShader, circuitEvalArgs) => {
 };
 
 /**
- * @param {!WglTexture} stateTex
- * @param {!WglTexture} controlTex
- * @param {!int} qubitIndex
+ * @param {!CircuitEvalArgs} args
  * @param {!Matrix} matrix
  * @returns {!WglTexture}
  */
-KetTextureUtil.matrixOperation = (stateTex, controlTex, qubitIndex, matrix) => {
-    let result = allocSameSizedTexture(stateTex);
-    GateShaders.matrixOperation(stateTex, matrix, qubitIndex, controlTex).renderTo(result);
+KetTextureUtil.matrixOperation = (args, matrix) => {
+    let result = allocSameSizedTexture(args.stateTexture);
+    GateShaders.matrixOperation(args, matrix).renderTo(result);
     return result;
 };
 
@@ -357,19 +355,6 @@ KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => 
     }
     keptResults.push(outTex);
     return keptResults;
-};
-
-/**
- * @param {!WglTexture} stateTex
- * @param {!WglTexture} controlTex
- * @param {!int} qubitIndex1
- * @param {!int} qubitIndex2
- * @returns {!WglTexture}
- */
-KetTextureUtil.swap = (stateTex, controlTex, qubitIndex1, qubitIndex2) => {
-    let result = allocSameSizedTexture(stateTex);
-    CircuitShaders.swap(stateTex, qubitIndex1, qubitIndex2, controlTex).renderTo(result);
-    return result;
 };
 
 export {KetTextureUtil}

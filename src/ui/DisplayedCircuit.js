@@ -82,6 +82,13 @@ class DisplayedCircuit {
     }
 
     /**
+     * @returns {!boolean}
+     */
+    isBeingEdited() {
+        return this._extraWireStartIndex !== undefined;
+    }
+
+    /**
      * @param {!bool=true} forTooltip
      * @returns {!number}
      */

@@ -162,12 +162,13 @@ class WglCompiledShader {
         let gl = ctx.gl;
         gl.useProgram(this.program);
 
+        let coop = {coopTextureUnit: 0};
         for (let arg of uniformArgs) {
             let location = this.uniformLocations.get(arg.name);
             if (location === undefined) {
                 throw new DetailedError("Unexpected uniform argument", {arg, uniformArgs});
             }
-            WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value);
+            WglArg.INPUT_ACTION_MAP.get(arg.type)(ctx, location, arg.value, coop);
         }
 
         gl.enableVertexAttribArray(this.positionAttributeLocation);
@@ -225,6 +226,18 @@ class WglConfiguredShader {
         if (shouldBeUndefined instanceof WglConfiguredShader) {
             throw new Error("Returned a WglConfiguredShader instead of calling renderTo on it.");
         }
+    }
+
+    /**
+     * Renders into a new byte texture of the given size, and returns the texture.
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!WglTexture}
+     */
+    toByteTexture(width, height) {
+        let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
+        this.renderTo(texture);
+        return texture;
     }
 
     /**
