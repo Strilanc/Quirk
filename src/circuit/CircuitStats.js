@@ -71,18 +71,18 @@ class CircuitStats {
      *
      * Note: only available if there was a corresponding display gate at that position. Otherwise result is NaN.
      *
-     * @param {!int} wireIndex
      * @param {!int} colIndex
+     * @param {!int} wireIndex
      * @returns {!Matrix}
      */
-    qubitDensityMatrix(wireIndex, colIndex) {
+    qubitDensityMatrix(colIndex, wireIndex) {
         if (wireIndex < 0) {
             throw new DetailedError("Bad wireIndex", {wireIndex, colIndex});
         }
 
         // The initial state is all-qubits-off.
         if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
-            if (this.qubitDensityMatrix(0, colIndex).hasNaN()) {
+            if (this.qubitDensityMatrix(colIndex, 0).hasNaN()) {
                 return Matrix.zero(2, 2).times(NaN);
             }
             let buf = new Float32Array(2*2*2);
@@ -117,7 +117,7 @@ class CircuitStats {
      * @returns {!number}
      */
     controlledWireProbabilityJustAfter(wireIndex, colIndex) {
-        return this.qubitDensityMatrix(wireIndex, colIndex).rawBuffer()[6];
+        return this.qubitDensityMatrix(colIndex, wireIndex).rawBuffer()[6];
     }
 
     /**

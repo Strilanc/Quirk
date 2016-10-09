@@ -938,7 +938,7 @@ class DisplayedCircuit {
         for (let i = 0; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, chanceCol), hand.hoverPoints());
-            let m = stats.qubitDensityMatrix(i, Infinity);
+            let m = stats.qubitDensityMatrix(Infinity, i);
             if (m !== undefined) {
                 paintBlochSphereDisplay(painter, m, this.gateRect(i, blochCol), hand.hoverPoints());
             }
