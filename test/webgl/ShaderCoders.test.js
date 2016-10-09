@@ -328,3 +328,35 @@ suite.webGlTest("bytes_passthrough_vec4", () => {
 
     assertThat(outFloats).isEqualTo(floats);
 });
+
+suite.webGlTest("bytes_zip_through", () => {
+    let inputA = SHADER_CODER_BYTES.vec4Input('a');
+    let inputB = SHADER_CODER_BYTES.vec4Input('b');
+    let output = SHADER_CODER_BYTES.vec4Output;
+    let shader = combinedShaderPartsWithCode(
+        [inputA, inputB, output], `
+        vec4 outputFor(float k) {
+            return read_a(k) + read_b(15.0 - k);
+        }`);
+
+    let floatsA = randomFloat32Array(64);
+    let floatsB = randomFloat32Array(64);
+    let bytesA = encodeFloatsIntoBytes(floatsA);
+    let bytesB = encodeFloatsIntoBytes(floatsB);
+
+    let texA = Shaders.data(bytesA).toByteTexture(8, 8);
+    let texB = Shaders.data(bytesB).toByteTexture(8, 8);
+    let configuredShader = shaderWithOutputPartAndArgs(
+        shader, output, [...inputA.argsFor(texA), ...inputB.argsFor(texB)]);
+    let outFloats = decodeBytesIntoFloats(configuredShader.readByteOutputs(8, 8));
+    texA.ensureDeinitialized();
+    texB.ensureDeinitialized();
+
+    let expectedFloats = new Float32Array(floatsA.length);
+    for (let i = 0; i < expectedFloats.length; i++) {
+        let r = i % 4;
+        let q = i >> 2;
+        expectedFloats[i] = floatsA[i] + floatsB[(15 - q)*4 + r];
+    }
+    assertThat(outFloats).isEqualTo(expectedFloats);
+});
