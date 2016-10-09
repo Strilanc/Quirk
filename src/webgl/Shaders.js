@@ -2,9 +2,13 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {
+    workingShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode,
+    SHADER_CODER_BYTES
+} from "src/webgl/ShaderCoders.js"
 
 /**
  * Utilities for creating/configuring shaders that render various simple things.
@@ -58,7 +62,7 @@ Shaders.coords = new WglShader(`
 Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
     let [w, h] = [destinationTexture.width, destinationTexture.height];
     if (rgbaData.length !== w * h * 4) {
-        throw new DetailedError("rgbaData.length isn't w * h * 4", {w, h, rgbaData});
+        throw new DetailedError("rgbaData.length isn't w * h * 4", {w, h, len: rgbaData.length, rgbaData});
     }
 
     let GL = WebGLRenderingContext;
@@ -88,6 +92,20 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
 });
 
 /**
+ * Returns a configured shader that overlays the destination texture with the given vec2 data.
+ * @param {!Float32Array} floats
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.vec2Data = floats => Shaders.data(workingShaderCoder.prepVec2Data(floats));
+
+/**
+ * Returns a configured shader that overlays the destination texture with the given vec4 data.
+ * @param {!Float32Array} floats
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.vec4Data = floats => Shaders.data(workingShaderCoder.prepVec4Data(floats));
+
+/**
  * Adds the second half of its input into the first half.
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
@@ -112,6 +130,12 @@ const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
     `vec2 outputFor(float k) {
          return read_input(k) + read_input(k + len_output());
      }`);
+
+Shaders.vec2AsVec4 = inputTexture => VEC2_AS_VEC4_SHADER(inputTexture);
+const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec4Output,
+    'vec4 outputFor(float k) { return vec4(read_input(k), vec2(0.0, 0.0)); }');
 
 /**
  * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar
