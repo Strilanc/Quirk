@@ -242,7 +242,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
     ],
     workingShaderCoder.vec4Output,
     `vec4 outputFor(float k) {
-        return vec4(read_ket(k), read_rep(k).xy);
+        return vec4(read_ket(k), read_rep(mod(k, len_rep())).xy);
     }`);
 
 /**
