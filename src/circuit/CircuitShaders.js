@@ -53,8 +53,8 @@ const LINEAR_OVERLAY_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     `
     uniform float offset;
     vec4 outputFor(float k) {
-        float p = float(k >= offset && k < offset + len_fore());
-        return (1.0 - p) * read_back(k) + p * read_fore(k - offset);
+        // Note: can't use multiplication to combine because it spreads NaNs from the background into the foreground.
+        return k >= offset && k < offset + len_fore() ? read_fore(k - offset) : read_back(k);
     }`);
 
 /**
