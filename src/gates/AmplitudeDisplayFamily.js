@@ -27,11 +27,10 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
  * @returns {!ShaderPipeline}
  */
 function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLength) {
-    let [w, h] = [valueTexture.width, valueTexture.height];
     let result = new ShaderPipeline();
 
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
-    let totalQubits = Math.round(Math.log2(w * h)) - lostQubits;
+    let totalQubits = workingShaderCoder.vec2Order(valueTexture) - lostQubits;
     result.addPowerSizedStepVec2(totalQubits, t => CircuitShaders.controlSelect(controls, t));
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
@@ -235,9 +234,7 @@ const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCod
  * @param {!WglTexture} rep
  * @returns {!WglConfiguredShader}
  */
-function toRatiosVsRepresentative(ket, rep) {
-    return TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
-}
+let toRatiosVsRepresentative = (ket, rep) => TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
 const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
         workingShaderCoder.vec2Input('ket'),
