@@ -173,6 +173,15 @@ export class AssertionSubject {
     /**
      * @param {*} other
      */
+    is(other) {
+        if (!Object.is(this.subject, other)) {
+            this._failExpected('to be the same object reference as', other);
+        }
+    }
+
+    /**
+     * @param {*} other
+     */
     isEqualTo(other) {
         if (!equate(this.subject, other)) {
             this._failExpected('to equal', other);

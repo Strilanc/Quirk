@@ -78,3 +78,16 @@ suite.webGlTest('incoherent-amplitude-display', () => {
         phaseLockIndex: undefined
     });
 });
+
+suite.webGlTest('shifted-density-display', () => {
+    let c = circuit(`----
+                     -d/-
+                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.customStatsForSlot(1, 1)).isApproximatelyEqualTo(
+        Matrix.square(
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0));
+});

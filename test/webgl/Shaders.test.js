@@ -83,30 +83,6 @@ suite.webGlTest("data", () => {
     assertThrows(() => Shaders.data(data2x4).readFloatOutputs(2, 2));
 });
 
-suite.webGlTest("scale", () => {
-    let amps = Shaders.data(new Float32Array([
-        2, 3, 0, 0,
-        0.5, 0.5, 0, 0,
-        1, 2, 3, 4,
-        0.25, 0.5, 0, 0,
-        Math.sqrt(1/2), 0, 0, 0,
-        0, Math.sqrt(1/3), 0, 0,
-        3/5, 4/5, 0, 0,
-        1, 0, 0, 0
-    ])).toFloatTexture(4, 2);
-
-    assertThat(Shaders.scale(amps, 3).readFloatOutputs(4, 2)).isApproximatelyEqualTo(new Float32Array([
-        6, 9, 0, 0,
-        1.5, 1.5, 0, 0,
-        3, 6, 9, 12,
-        0.75, 1.5, 0, 0,
-        Math.sqrt(9/2), 0, 0, 0,
-        0, Math.sqrt(3), 0, 0,
-        9/5, 12/5, 0, 0,
-        3, 0, 0, 0
-    ]));
-});
-
 suite.webGlTest("sumFold", () => {
     let coords = Shaders.coords.toFloatTexture(8, 4);
     assertThat(Shaders.sumFold(coords, 4, 0).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([

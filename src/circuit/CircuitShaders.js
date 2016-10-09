@@ -72,11 +72,11 @@ CircuitShaders.controlMask = controlMask => {
         WglArg.float('used', controlMask.inclusionMask),
         WglArg.float('desired', controlMask.desiredValueMask));
 };
-const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.boolOutput, `
     uniform float used;
     uniform float desired;
 
-    vec2 outputFor(float k) {
+    float outputFor(float k) {
         float pass = 1.0;
         float bit = 1.0;
         for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
@@ -86,7 +86,7 @@ const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], worki
             pass *= 1.0 - abs(v-d)*u;
             bit *= 2.0;
         }
-        return vec2(pass, 0.0);
+        return pass;
     }`);
 
 /**

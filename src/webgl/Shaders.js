@@ -86,24 +86,6 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
 });
 
 /**
- * Returns a configured shader that renders the input texture to destination texture, but scaled by a constant.
- * @param {!WglTexture} inputTexture
- * @param {!number} factor
- * @returns {!WglConfiguredShader}
- */
-Shaders.scale = (inputTexture, factor) => SCALE_SHADER.withArgs(
-    WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("inputTexture", inputTexture),
-    WglArg.float("factor", factor));
-const SCALE_SHADER = new WglShader(`
-    uniform vec2 textureSize;
-    uniform sampler2D inputTexture;
-    uniform float factor;
-    void main() {
-        gl_FragColor = texture2D(inputTexture, gl_FragCoord.xy / textureSize.xy) * factor;
-    }`);
-
-/**
  * Returns a configured shader that renders teh result of adding each source pixel to the source pixel a fixed offset
  * away.
  * @param {!WglTexture} inputTexture

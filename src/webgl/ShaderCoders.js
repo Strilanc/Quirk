@@ -1,5 +1,4 @@
 import {DetailedError} from "src/base/DetailedError.js"
-import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader, WglConfiguredShader} from "src/webgl/WglShader.js"
 
@@ -81,18 +80,24 @@ class ShaderValueCoder {
     /**
      * @param {!function(name: !string) : !ShaderPart} vec2Input
      * @param {!function(name: !string) : !ShaderPart} vec4Input
+     * @param {!function(name: !string) : !ShaderPart} boolInput
      * @param {!ShaderPart} vec2Output
      * @param {!ShaderPart} vec4Output
+     * @param {!ShaderPart} boolOutput
      */
-    constructor(vec2Input, vec4Input, vec2Output, vec4Output) {
+    constructor(vec2Input, vec4Input, boolInput, vec2Output, vec4Output, boolOutput) {
         /** @type {!function(name: !string) : !ShaderPart} */
         this.vec2Input = vec2Input;
         /** @type {!function(name: !string) : !ShaderPart} */
         this.vec4Input = vec4Input;
+        /** @type {!function(name: !string) : !ShaderPart} */
+        this.boolInput = boolInput;
         /** @type {!ShaderPart} */
         this.vec2Output = vec2Output;
         /** @type {!ShaderPart} */
         this.vec4Output = vec4Output;
+        /** @type {!ShaderPart} */
+        this.boolOutput = boolOutput;
     }
 }
 
@@ -316,49 +321,106 @@ function vec4Input_Byte(name) {
     )
 }
 
+/**
+ * @param {!string} name
+ * @returns {!ShaderPart}
+ */
+function boolInput(name) {
+    let pre = `_gen_${name}`;
+    return new ShaderPart(`
+        ///////////// boolInput(${name}) ////////////
+        uniform sampler2D ${pre}_tex;
+        uniform vec2 ${pre}_size;
+
+        float read_${name}(float k) {
+            vec2 uv = vec2(mod(k, ${pre}_size.x) + 0.5,
+                           floor(k / ${pre}_size.x) + 0.5) / ${pre}_size;
+            return float(texture2D(${pre}_tex, uv).x == 1.0);
+        }
+
+        float len_${name}() {
+            return ${pre}_size.x * ${pre}_size.y * 4.0;
+        }`,
+        [],
+        texture => [
+            WglArg.texture(`${pre}_tex`, texture),
+            WglArg.vec2(`${pre}_size`, texture.width, texture.height)
+        ]);
+}
+
+const BOOL_OUTPUT = new ShaderPart(`
+    ///////////// VEC2_OUTPUT_AS_FLOAT ////////////
+    float outputFor(float k);
+
+    uniform vec2 _gen_output_size;
+
+    float len_output() {
+        return _gen_output_size.x * _gen_output_size.y;
+    }
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        float k = xy.y * _gen_output_size.x + xy.x;
+        gl_FragColor = vec4(float(outputFor(k) == 1.0), 0.0, 0.0, 0.0);
+    }`,
+    [],
+    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+
 const VEC2_OUTPUT_AS_FLOAT = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_FLOAT ////////////
     vec2 outputFor(float k);
 
-    uniform float _gen_output_width;
+    uniform vec2 _gen_output_size;
+
+    float len_output() {
+        return _gen_output_size.x * _gen_output_size.y;
+    }
 
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float k = xy.y * _gen_output_width + xy.x;
+        float k = xy.y * _gen_output_size.x + xy.x;
 
         vec2 v = outputFor(k);
 
         gl_FragColor = vec4(v.x, v.y, 0.0, 0.0);
     }`,
     [],
-    texture => [WglArg.float('_gen_output_width', texture.width)]);
+    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
 const VEC4_OUTPUT_AS_FLOAT = new ShaderPart(`
     ///////////// VEC4_OUTPUT_AS_FLOAT ////////////
     vec4 outputFor(float k);
 
-    uniform float _gen_output_width;
+    uniform vec2 _gen_output_size;
+
+    float len_output() {
+        return _gen_output_size.x * _gen_output_size.y;
+    }
 
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float k = xy.y * _gen_output_width + xy.x;
+        float k = xy.y * _gen_output_size.x + xy.x;
 
         vec4 v = outputFor(k);
 
         gl_FragColor = v;
     }`,
     [],
-    texture => [WglArg.float('_gen_output_width', texture.width)]);
+    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
 const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_BYTE ////////////
     vec2 outputFor(float k);
 
-    uniform float _gen_output_width;
+    uniform vec2 _gen_output_size;
+
+    float len_output() {
+        return _gen_output_size.x * _gen_output_size.y / 2.0;
+    }
 
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float k = xy.y * _gen_output_width + xy.x;
+        float k = xy.y * _gen_output_size.x + xy.x;
         float r = mod(k, 2.0);
 
         vec2 result = outputFor(floor(k / 2.0));
@@ -367,17 +429,21 @@ const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
     [PACK_FLOAT_INTO_BYTES],
-    texture => [WglArg.float('_gen_output_width', texture.width)]);
+    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
 const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
     ///////////// VEC4_OUTPUT_AS_BYTE ////////////
     vec4 outputFor(float k);
 
-    uniform float _gen_output_width;
+    uniform vec2 _gen_output_size;
+
+    float len_output() {
+        return _gen_output_size.x * _gen_output_size.y / 4.0;
+    }
 
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float k = xy.y * _gen_output_width + xy.x;
+        float k = xy.y * _gen_output_size.x + xy.x;
         float r = mod(k, 4.0);
 
         vec4 result = outputFor(floor(k / 4.0));
@@ -390,21 +456,25 @@ const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
     [PACK_FLOAT_INTO_BYTES],
-    texture => [WglArg.float('_gen_output_width', texture.width)]);
+    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_FLOATS = new ShaderValueCoder(
     name => vecInput_Float(name, 2),
     name => vecInput_Float(name, 4),
+    boolInput,
     VEC2_OUTPUT_AS_FLOAT,
-    VEC4_OUTPUT_AS_FLOAT);
+    VEC4_OUTPUT_AS_FLOAT,
+    BOOL_OUTPUT);
 
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_BYTES = new ShaderValueCoder(
     vec2Input_Byte,
     vec4Input_Byte,
+    boolInput,
     VEC2_OUTPUT_AS_BYTE,
-    VEC4_OUTPUT_AS_BYTE);
+    VEC4_OUTPUT_AS_BYTE,
+    BOOL_OUTPUT);
 
 /** @type {!ShaderValueCoder} */
 let workingShaderCoder = SHADER_CODER_FLOATS;
