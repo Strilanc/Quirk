@@ -190,17 +190,17 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
         2,0,6,0,
         1,0,0,1,
         1,2,3,4,
-        NaN,NaN,NaN,NaN,
-        NaN,NaN,NaN,NaN
+        -666,-666,-666,-666,
+        -666,-666,-666,-666
     ]));
     KetTextureUtil.doneWithTexture(out);
 
     out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
-        NaN,NaN,NaN,NaN,
-        NaN,NaN,NaN,NaN,
-        NaN,NaN,NaN,NaN,
-        NaN,NaN,NaN,NaN
+        -666,-666,-666,-666,
+        -666,-666,-666,-666,
+        -666,-666,-666,-666,
+        -666,-666,-666,-666
     ]));
     KetTextureUtil.doneWithTexture(out);
 
@@ -208,14 +208,14 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
         1,0,0,0,    20,0,0,0,   0,0,0,0,  3,1,0,0,
         1,0,0,0,    0,0,2,0,   0,0,0,0,  1,0,0,0,
         0,0,0,0,    0,0,0,0,   0,0,0,0,  0,0,0,0,
-        NaN,0,0,0,  0,0,0,0,   0,0,0,0,  0,0,0,0
+        -666,0,0,0,  0,0,0,0,   0,0,0,0,  0,0,0,0
     ])).toVec4Texture(4);
     out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         20,0,0,0,
-        NaN,NaN,NaN,NaN,
+        -666,-666,-666,-666,
         0,0,0,0,
-        NaN,NaN,NaN,NaN
+        -666,-666,-666,-666
     ]));
     KetTextureUtil.doneWithTexture(out);
 });
@@ -236,6 +236,26 @@ suite.webGlTest("pipelineToSumAll", () => {
     out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(3));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         10,6,19,16
+    ]));
+    KetTextureUtil.doneWithTexture(out);
+});
+
+suite.webGlTest("pipelineToSumAll_signal", () => {
+    let inp = Shaders.vec4Data(new Float32Array([
+        2,0,0,0,
+        0,0,2,3,
+        2,0,2,0,
+        -666.0,-666.0,-666.0,-666.0,
+        -666.0,-666.0,-666.0,-666.0,
+        1,2,3,4,
+        1,2,3,4,
+        1,2,3,4
+    ])).toVec4Texture(3);
+    let out;
+
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(3));
+    assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+        -666.0,-666.0,-666.0,-666.0
     ]));
     KetTextureUtil.doneWithTexture(out);
 });

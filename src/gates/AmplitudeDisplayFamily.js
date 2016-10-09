@@ -66,7 +66,7 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
     let n = ketPixels.length >> 2;
     let w = n === 2 ? 2 : 1 << Math.floor(Math.round(Math.log2(n))/2);
     let h = n/w;
-    let isPure = !isNaN(consistentPixel[0]);
+    let isPure = !isNaN(consistentPixel[0]) && consistentPixel[0] !== -666.0;
     let unity = ketPixels[2];
 
     if (!isPure) {
@@ -257,8 +257,7 @@ function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
             totalQubitCount - bit - 1,
             inp => FOLD_CONSISTENT_RATIOS_SHADER(
                 inp,
-                WglArg.float('bit', 1 << (includedQubitCount - bit - 1)),
-                WglArg.float('u_NaN', NaN)));
+                WglArg.float('bit', 1 << (includedQubitCount - bit - 1))));
     }
     return result;
 }
@@ -267,11 +266,7 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
     workingShaderCoder.vec4Output,
     `
     uniform float bit;
-    uniform float u_NaN;
 
-    bool isNaN(float val) {
-        return val < 0.0 || 0.0 < val || val == 0.0 ? false : true;
-    }
     vec2 mul(vec2 c1, vec2 c2) {
         return vec2(c1.x*c2.x - c1.y*c2.y, c1.x*c2.y + c1.y*c2.x);
     }
@@ -284,7 +279,7 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
         err /= max(0.00000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
         float m1 = dot(a, a);
         float m2 = dot(b, b);
-        return isNaN(err) || err > 0.001 ? vec4(u_NaN, u_NaN, u_NaN, u_NaN)
+        return a.x == -666.0 || b.x == -666.0 || err > 0.001 ? vec4(-666.0, -666.0, -666.0, -666.0)
             : m1 >= m2 ? a
             : b;
     }
@@ -306,10 +301,18 @@ function pipelineToSumAll(qubitCount) {
     let result = new ShaderPipeline();
     while (qubitCount > 0) {
         qubitCount -= 1;
-        result.addPowerSizedStepVec4(qubitCount, t => Shaders.sumFoldVec4(t));
+        result.addPowerSizedStepVec4(qubitCount, t => SIGNALLING_SUM_SHADER_VEC4(t));
     }
     return result;
 }
+const SIGNALLING_SUM_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec4Input('input')],
+    workingShaderCoder.vec4Output,
+    `vec4 outputFor(float k) {
+        vec4 a = read_input(k);
+        vec4 b = read_input(k + len_output());
+        return a.x == -666.0 || b.x == -666.0 ? vec4(-666.0, -666.0, -666.0, -666.0) : a + b;
+    }`);
 
 /**
  * @type {!function(!GateDrawParams)}

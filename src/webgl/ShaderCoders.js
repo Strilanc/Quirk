@@ -176,13 +176,6 @@ function encodeFloatsIntoBytes(floats) {
         let c = Math.floor((mantissa * 65536) & 0xFF);
         let d = sign | (Math.floor((mantissa * 8388608) & 0x7F) << 1);
 
-        if (isNaN(val)) {
-            a = 255;
-            b = 255;
-            c = 255;
-            d = 255;
-        }
-
         let k = i << 2;
         result[k] = a;
         result[k+1] = b;
@@ -195,15 +188,8 @@ function encodeFloatsIntoBytes(floats) {
 
 const PACK_FLOAT_INTO_BYTES = `
     //////////// PACK_FLOAT_INTO_BYTES /////////////
-    bool _gen_isNan(float val) {
-        return val < 0.0 || 0.0 < val || val == 0.0 ? false : true;
-    }
     vec4 _gen_packFloatIntoBytes(float val) {
         float sign = float(val < 0.0);
-        if (_gen_isNan(val)) {
-            return vec4(255.0, 255.0, 255.0, 255.0);
-        }
-
         float mag = abs(val);
         float exponent = mag == 0.0 ? -127.0 : floor(0.1 + log2(mag));
         exponent -= float(mag != 0.0 && exp2(exponent) > mag);
@@ -217,10 +203,6 @@ const PACK_FLOAT_INTO_BYTES = `
     }`;
 
 function _decodeBytesIntoFloat(a, b, c, d) {
-    if (a === 255) {
-        return NaN;
-    }
-
     let exponent = a - 127;
     let sign = 1 - ((d & 1) << 1);
     let mantissa = (a > 0 ? 1 : 0)
@@ -256,15 +238,11 @@ function decodeBytesIntoFloats(bytes) {
 
 const UNPACK_BYTES_INTO_FLOAT_CODE = `
     //////////// UNPACK_BYTES_INTO_FLOAT_CODE /////////////
-    uniform float _gen_nan;
     float _gen_unpackBytesIntoFloat(vec4 v) {
         float a = floor(v.r * 255.0 + 0.5);
         float b = floor(v.g * 255.0 + 0.5);
         float c = floor(v.b * 255.0 + 0.5);
         float d = floor(v.a * 255.0 + 0.5);
-        if (a == 255.0) {
-            return _gen_nan;
-        }
 
         float exponent = a - 127.0;
         float sign = 1.0 - mod(d, 2.0)*2.0;
@@ -342,11 +320,9 @@ function vec2Input_Byte(name) {
             }
             return [
                 WglArg.texture(`${pre}_tex`, texture),
-                WglArg.vec2(`${pre}_size`, texture.width, texture.height),
-                WglArg.float('_gen_nan', NaN)
+                WglArg.vec2(`${pre}_size`, texture.width, texture.height)
             ];
-        }
-    )
+        });
 }
 
 /**
@@ -394,8 +370,7 @@ function vec4Input_Byte(name) {
                 WglArg.texture(`${pre}_tex`, texture),
                 WglArg.vec2(`${pre}_size`, texture.width, texture.height)
             ]
-        }
-    )
+        });
 }
 
 /**
@@ -501,7 +476,7 @@ const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
         float r = mod(k, 2.0);
 
         vec2 result = outputFor(floor(k / 2.0));
-        float component = result.x * (1.0 - r) + result.y * r;
+        float component = dot(result, vec2(1.0 - r, r));
 
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
@@ -529,7 +504,6 @@ const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
                            float(r == 2.0),
                            float(r == 3.0));
         float component = dot(result, picker);
-
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
     [PACK_FLOAT_INTO_BYTES],
