@@ -59,11 +59,11 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
 
     out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(1, 3));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
-        1, 2,300,0,
-        3, 4,300,0,
-        5, 6,1200,0,
-        7, 8,1200,0,
-        9,10,4800,0,
+         1, 2,300,0,
+         3, 4,300,0,
+         5, 6,1200,0,
+         7, 8,1200,0,
+         9,10,4800,0,
         11,12,4800,0,
         13,14,19200,0,
         15,16,19200,0
