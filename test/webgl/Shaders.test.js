@@ -77,6 +77,9 @@ suite.webGlTest("data", () => {
     let data2x4 = new Float32Array(Seq.range(2*4*4).map(e => e*e + (e - Math.sqrt(2)) / 3).toArray());
     assertThat(Shaders.data(data2x4).readFloatOutputs(2, 4)).isEqualTo(data2x4);
 
+    let bytes4x4 = new Uint8Array(Seq.range(4*4*4).map(e => Math.floor(Math.random() * 256)).toArray());
+    assertThat(Shaders.data(bytes4x4).readByteOutputs(4, 4)).isEqualTo(bytes4x4);
+
     assertThrows(() => Shaders.data(data2x4).readFloatOutputs(2, 2));
 });
 

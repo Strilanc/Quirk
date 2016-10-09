@@ -229,6 +229,18 @@ class WglConfiguredShader {
     }
 
     /**
+     * Renders into a new byte texture of the given size, and returns the texture.
+     * @param {!int} width
+     * @param {!int} height
+     * @returns {!WglTexture}
+     */
+    toByteTexture(width, height) {
+        let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
+        this.renderTo(texture);
+        return texture;
+    }
+
+    /**
      * Renders into a new float texture of the given size, and returns the texture.
      * @param {!int} width
      * @param {!int} height

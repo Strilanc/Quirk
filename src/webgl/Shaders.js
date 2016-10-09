@@ -50,7 +50,7 @@ Shaders.coords = new WglShader(`
 
 /**
  * Returns a configured shader that overlays the destination texture with the given data.
- * @param {!Float32Array} rgbaData
+ * @param {!Float32Array|!Uint8Array} rgbaData
  * @returns {!WglConfiguredShader}
  */
 Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
@@ -66,7 +66,16 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
         gl.bindTexture(WebGLRenderingContext.TEXTURE_2D, dataTexture);
         gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
         gl.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
-        gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, w, h, 0, GL.RGBA, GL.FLOAT, rgbaData);
+        gl.texImage2D(
+            GL.TEXTURE_2D,
+            0,
+            GL.RGBA,
+            w,
+            h,
+            0,
+            GL.RGBA,
+            rgbaData instanceof Uint8Array ? GL.UNSIGNED_BYTE : GL.FLOAT,
+            rgbaData);
         PASSTHROUGH_SHADER.withArgs(
             WglArg.vec2("textureSize", w, h),
             WglArg.webGlTexture("dataTexture", dataTexture)
