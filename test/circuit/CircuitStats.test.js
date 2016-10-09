@@ -72,6 +72,7 @@ suite.webGlTest('incoherent-amplitude-display', () => {
                      ---X---`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(1)]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
         probabilities: Matrix.row(1, 1).times(Math.sqrt(0.5)),
         superposition: undefined,
