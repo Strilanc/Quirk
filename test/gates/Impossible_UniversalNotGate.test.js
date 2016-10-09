@@ -9,29 +9,28 @@ import {Shaders} from "src/webgl/Shaders.js"
 let suite = new Suite("GateShaders");
 
 suite.webGlTest('universalNot', () => {
-    let _ = 0;
-    let input = Shaders.data(new Float32Array([
-        1,2,_,_, 3,4,_,_,
-        5,6,_,_, 7,8,_,_
-    ])).toFloatTexture(2, 2);
+    let input = Shaders.vec2Data(new Float32Array([
+        1,2, 3,4,
+        5,6, 7,8
+    ])).toVec2Texture(2);
     let assertAbout = (index, control) => assertThat(universalNot(new CircuitEvalArgs(
-            0,
-            index,
-            2,
-            control,
-            CircuitShaders.controlMask(control).toFloatTexture(2, 2),
-            input,
-            new Map())).readFloatOutputs(2, 2));
+        0,
+        index,
+        2,
+        control,
+        CircuitShaders.controlMask(control).toBoolTexture(2),
+        input,
+        new Map())).readVec2Outputs(2));
     assertAbout(0, Controls.NONE).isEqualTo(new Float32Array([
-        3,-4,_,_, -1,2,_,_,
-        7,-8,_,_, -5,6,_,_
+        3,-4, -1,2,
+        7,-8, -5,6
     ]));
     assertAbout(1, Controls.NONE).isEqualTo(new Float32Array([
-        5,-6,_,_, 7,-8,_,_,
-        -1,2,_,_, -3,4,_,_
+        5,-6, 7,-8,
+        -1,2, -3,4
     ]));
     assertAbout(0, Controls.bit(1, true)).isEqualTo(new Float32Array([
-        1,2,_,_, 3,4,_,_,
-        7,-8,_,_, -5,6,_,_
+        1,2,  3,4,
+        7,-8, -5,6
     ]));
 });

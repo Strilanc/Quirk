@@ -1,5 +1,6 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
 import {Shaders} from "src/webgl/Shaders.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 import {Seq} from "src/base/Seq.js"
 
@@ -84,16 +85,24 @@ suite.webGlTest("data", () => {
 });
 
 suite.webGlTest("sumFold", () => {
-    let coords = Shaders.coords.toFloatTexture(2, 4);
-    assertThat(Shaders.sumFoldVec2(coords).readFloatOutputs(1, 4)).isEqualTo(new Float32Array([
-        0,2,0,0,
-        2,2,0,0,
-        0,4,0,0,
-        2,4,0,0
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+        vec2 outputFor(float k) {
+            return vec2(mod(k, 2.0), floor(k/2.0));
+        }
+    `)().toVec2Texture(3);
+    assertThat(Shaders.sumFoldVec2(coords).readVec2Outputs(2)).isEqualTo(new Float32Array([
+        0,2,
+        2,2,
+        0,4,
+        2,4
     ]));
 
-    let solid = Shaders.color(2, 3, 5, 7).toFloatTexture(2, 2);
-    assertThat(Shaders.sumFoldVec4(solid).readFloatOutputs(1, 2)).isEqualTo(new Float32Array([
+    let solid = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec4Output, `
+        vec4 outputFor(float k) {
+            return vec4(2.0, 3.0, 5.0, 7.0);
+        }
+    `)().toVec4Texture(2);
+    assertThat(Shaders.sumFoldVec4(solid).readVec4Outputs(1)).isEqualTo(new Float32Array([
         4,6,10,14,
         4,6,10,14
     ]));

@@ -15,13 +15,13 @@ let suite = new Suite("GateShaders");
 
 suite.webGlTest('cycleAllBits', () => {
     let actual = GateShaders.cycleAllBits(
-        Shaders.data(Seq.range(4*16+1).skip(1).toFloat32Array()).toFloatTexture(4, 4),
-        -1).readFloatOutputs(4, 4);
+        Shaders.vec2Data(Seq.range(16).flatMap(e => [e*4 + 1, e*4 + 2]).toFloat32Array()).toVec2Texture(4),
+        -1).readVec2Outputs(4);
     assertThat(actual).isEqualTo(new Float32Array([
-        1, 2, 0, 0,  9,10, 0, 0, 17,18, 0, 0, 25,26, 0, 0,
-        33,34,0, 0, 41,42, 0, 0, 49,50, 0, 0, 57,58, 0, 0,
-        5, 6, 0, 0, 13,14, 0, 0, 21,22, 0, 0, 29,30, 0, 0,
-        37,38,0, 0, 45,46, 0, 0, 53,54, 0, 0, 61,62, 0, 0
+        1, 2,    9,10,  17,18,  25,26,
+        33,34,  41,42,  49,50,  57,58,
+        5, 6,   13,14,  21,22,  29,30,
+        37,38,  45,46,  53,54,  61,62
     ]));
 });
 
