@@ -251,4 +251,3 @@ suite.webGlTest("makeAmplitudeSpanPipeline_00", () => {
     KetTextureUtil.doneWithTexture(out[1]);
     inp.ensureDeinitialized();
 });
-

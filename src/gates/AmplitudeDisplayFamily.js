@@ -17,6 +17,7 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
  * @param {!WglTexture} valueTexture
@@ -134,28 +135,16 @@ function _processOutputs_probabilities(w, h, n, unity, ketPixels) {
  * @returns {!WglConfiguredShader}
  */
 function amplitudesToPolarKets(input) {
-    return new WglConfiguredShader(dst => AMPLITUDES_TO_POLAR_KETS_SHADER.withArgs(
-        WglArg.vec2('inputSize', input.width, input.height),
-        WglArg.float('outputWidth', dst.width),
-        WglArg.texture('inputTexture', input)
-    ).renderTo(dst));
+    return AMPLITUDES_TO_POLAR_KETS_SHADER(input);
 }
-const AMPLITUDES_TO_POLAR_KETS_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
-
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        vec2 ri = texture2D(inputTexture, toUv(state)).xy;
+const AMPLITUDES_TO_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec4Output,
+    `vec4 outputFor(float k) {
+        vec2 ri = read_input(k);
         float mag = dot(ri, ri);
         float phase = mag == 0.0 ? 0.0 : atan(ri.y, ri.x);
-        gl_FragColor = vec4(mag, phase, mag, 0.0);
+        return vec4(mag, phase, mag, 0.0);
     }`);
 
 /**
@@ -168,37 +157,29 @@ function pipelineToSpreadLengthAcrossPolarKets(includedQubitCount, totalQubitCou
     for (let bit = 0; bit < includedQubitCount; bit++) {
         result.addPowerSizedStep(
             totalQubitCount,
-            inp => new WglConfiguredShader(dst => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER.withArgs(
-                WglArg.vec2('inputSize', inp.width, inp.height),
-                WglArg.float('outputWidth', dst.width),
-                WglArg.texture('inputTexture', inp),
-                WglArg.float('bit', 1 << bit)
-            ).renderTo(dst)));
+            inp => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER(
+                inp,
+                WglArg.float('bit', 1 << bit)));
     }
     return result;
 }
-const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
+const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec4Input('input')],
+    workingShaderCoder.vec4Output,
+    `
     uniform float bit;
 
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
     float xorBit(float v) {
         float b = mod(floor(v/bit), 2.0);
         float d = 1.0 - 2.0*b;
         return v + bit*d;
     }
 
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float partner = xorBit(state);
-        vec4 v = texture2D(inputTexture, toUv(state));
-        vec4 p = texture2D(inputTexture, toUv(partner));
-        gl_FragColor = vec4(v.x, v.y, v.z + p.z, 0.0);
+    vec4 outputFor(float k) {
+        float partner = xorBit(k);
+        vec4 v = read_input(k);
+        vec4 p = read_input(partner);
+        return vec4(v.x, v.y, v.z + p.z, 0.0);
     }`);
 
 /**
@@ -211,35 +192,26 @@ function pipelineToAggregateRepresentativePolarKet(includedQubitCount, totalQubi
     for (let bit = 0; bit < totalQubitCount - includedQubitCount; bit++) {
         result.addPowerSizedStep(
             totalQubitCount - bit - 1,
-            inp => new WglConfiguredShader(dst => FOLD_REPRESENTATIVE_POLAR_KET_SHADER.withArgs(
-                WglArg.vec2('inputSize', inp.width, inp.height),
-                WglArg.float('outputWidth', dst.width),
-                WglArg.texture('inputTexture', inp),
-                WglArg.float('offset', 1 << (totalQubitCount - bit - 1))
-            ).renderTo(dst)));
+            inp => FOLD_REPRESENTATIVE_POLAR_KET_SHADER(
+                inp,
+                WglArg.float('offset', 1 << (totalQubitCount - bit - 1))));
     }
     return result;
 }
-const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
+const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec4Input('input')],
+    workingShaderCoder.vec4Output,
+    `
     uniform float offset;
 
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        vec4 p1 = texture2D(inputTexture, toUv(state));
-        vec4 p2 = texture2D(inputTexture, toUv(state + offset));
-        gl_FragColor = vec4(
-            p1.x + p2.x,
+    vec4 outputFor(float k) {
+        vec4 p = read_input(k);
+        vec4 q = read_input(k + offset);
+        return vec4(
+            p.x + q.x,
             // Bias towards p1 is to keep the choice stable in the face of uniform superpositions and noise.
-            p1.z*1.001 >= p2.z ? p1.y : p2.y,
-            p1.z + p2.z,
+            p.z*1.001 >= q.z ? p.y : q.y,
+            p.z + q.z,
             0.0);
     }`);
 
@@ -248,63 +220,33 @@ const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = new WglShader(`
  * @returns {!WglConfiguredShader}
  */
 function convertAwayFromPolar(input) {
-    return new WglConfiguredShader(dst => CONVERT_AWAY_FROM_POLAR_SHADER.withArgs(
-        WglArg.vec2('inputSize', input.width, input.height),
-        WglArg.float('outputWidth', dst.width),
-        WglArg.texture('inputTexture', input)
-    ).renderTo(dst));
+    return CONVERT_AWAY_FROM_POLAR_SHADER(input);
 }
-const CONVERT_AWAY_FROM_POLAR_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
-
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        vec4 polar = texture2D(inputTexture, toUv(state));
+const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec4Input('input')],
+    workingShaderCoder.vec4Output,
+    `
+    vec4 outputFor(float k) {
+        vec4 polar = read_input(k);
         float mag = sqrt(polar.x);
-        gl_FragColor = vec4(mag * cos(polar.y), mag * sin(polar.y), polar.z, 0.0);
+        return vec4(mag * cos(polar.y), mag * sin(polar.y), polar.z, 0.0);
     }`);
 
 /**
- * @param {!WglTexture} superposition
+ * @param {!WglTexture} ket
  * @returns {!function(!WglTexture) : !WglConfiguredShader}
  */
-function toRatiosVsRepresentative(superposition) {
-    return rep => new WglConfiguredShader(dst => TO_RATIOS_VS_REPRESENTATIVE_SHADER.withArgs(
-        WglArg.vec2('inputSize', superposition.width, superposition.height),
-        WglArg.vec2('repSize', rep.width, rep.height),
-        WglArg.float('outputWidth', dst.width),
-        WglArg.texture('inputTexture', superposition),
-        WglArg.texture('repTexture', rep)
-    ).renderTo(dst));
+function toRatiosVsRepresentative(ket) {
+    return rep => TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
 }
-const TO_RATIOS_VS_REPRESENTATIVE_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform vec2 repSize;
-    uniform sampler2D inputTexture;
-    uniform sampler2D repTexture;
-
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-    vec2 toUvRep(float state) {
-        state = mod(state, repSize.x*repSize.y);
-        return vec2(mod(state, repSize.x) + 0.5, floor(state / repSize.x) + 0.5) / repSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        vec2 val = texture2D(inputTexture, toUv(state)).xy;
-        vec2 rep = texture2D(repTexture, toUvRep(state)).xy;
-        gl_FragColor = vec4(val.x, val.y, rep.x, rep.y);
+const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [
+        workingShaderCoder.vec2Input('ket'),
+        workingShaderCoder.vec4Input('rep')
+    ],
+    workingShaderCoder.vec4Output,
+    `vec4 outputFor(float k) {
+        return vec4(read_ket(k), read_rep(k).xy);
     }`);
 
 /**
@@ -317,28 +259,22 @@ function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
     for (let bit = 0; bit < includedQubitCount; bit++) {
         result.addPowerSizedStep(
             totalQubitCount - bit - 1,
-            inp => new WglConfiguredShader(dst => FOLD_CONSISTENT_RATIOS_SHADER.withArgs(
-                WglArg.vec2('inputSize', inp.width, inp.height),
-                WglArg.float('outputWidth', dst.width),
-                WglArg.texture('inputTexture', inp),
+            inp => FOLD_CONSISTENT_RATIOS_SHADER(
+                inp,
                 WglArg.float('bit', 1 << (includedQubitCount - bit - 1)),
-                WglArg.float('u_NaN', NaN)
-            ).renderTo(dst)));
+                WglArg.float('u_NaN', NaN)));
     }
     return result;
 }
-const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
+const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec4Input('input')],
+    workingShaderCoder.vec4Output,
+    `
     uniform float bit;
     uniform float u_NaN;
 
     bool isNaN(float val) {
         return val < 0.0 || 0.0 < val || val == 0.0 ? false : true;
-    }
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
     }
     vec2 mul(vec2 c1, vec2 c2) {
         return vec2(c1.x*c2.x - c1.y*c2.y, c1.x*c2.y + c1.y*c2.x);
@@ -357,15 +293,13 @@ const FOLD_CONSISTENT_RATIOS_SHADER = new WglShader(`
             : b;
     }
 
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float s1 = mod(state, bit) + floor(state/bit)*2.0*bit;
+    vec4 outputFor(float k) {
+        float s1 = mod(k, bit) + floor(k/bit)*2.0*bit;
         float s2 = s1 + bit;
-        vec4 v1 = texture2D(inputTexture, toUv(s1));
-        vec4 v2 = texture2D(inputTexture, toUv(s2));
+        vec4 v1 = read_input(s1);
+        vec4 v2 = read_input(s2);
 
-        gl_FragColor = mergeRatios(v1, v2);
+        return mergeRatios(v1, v2);
     }`);
 
 /**

@@ -9,6 +9,7 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
  * Defines operations used by gates to operate on textures representing superpositions.
@@ -22,19 +23,19 @@ class GateShaders {}
  * @param {!Matrix} matrix
  * @returns {!WglConfiguredShader}
  */
-let singleQubitOperationFunc = (args, matrix) => new WglConfiguredShader(destinationTexture => {
-        if (matrix.width() !== 2 || matrix.height() !== 2) {
-            throw new DetailedError("Not a single-qubit operation.", {matrix});
-        }
-        let [ar, ai, br, bi, cr, ci, dr, di] = matrix.rawBuffer();
-        CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
-            ...ketArgs(args),
-            WglArg.vec2("a", ar, ai),
-            WglArg.vec2("b", br, bi),
-            WglArg.vec2("c", cr, ci),
-            WglArg.vec2("d", dr, di)
-        ).renderTo(destinationTexture);
-    });
+let singleQubitOperationFunc = (args, matrix) => {
+    if (matrix.width() !== 2 || matrix.height() !== 2) {
+        throw new DetailedError("Not a single-qubit operation.", {matrix});
+    }
+    let [ar, ai, br, bi, cr, ci, dr, di] = matrix.rawBuffer();
+    return CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
+        ...ketArgs(args),
+        WglArg.vec2("a", ar, ai),
+        WglArg.vec2("b", br, bi),
+        WglArg.vec2("c", cr, ci),
+        WglArg.vec2("d", dr, di));
+};
+
 const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = ketShader(
     'uniform vec2 a, b, c, d;',
     'return cmul(inp(0.0), a+(c-a)*out_id) + cmul(inp(1.0), b+(d-b)*out_id);',
@@ -81,12 +82,9 @@ GateShaders.matrixOperation = (args, matrix) => {
         throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {args, matrix});
     }
     let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
-    return new WglConfiguredShader(destinationTexture => {
-        shader.withArgs(
-            ...ketArgs(args),
-            WglArg.float_array("coefs", matrix.rawBuffer())
-        ).renderTo(destinationTexture);
-    });
+    return shader.withArgs(
+        ...ketArgs(args),
+        WglArg.float_array("coefs", matrix.rawBuffer()));
 };
 
 /**
@@ -96,33 +94,21 @@ GateShaders.matrixOperation = (args, matrix) => {
  */
 GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
     let size = Math.floor(Math.log2(inputTexture.width * inputTexture.height));
-    return new WglConfiguredShader(destinationTexture => {
-        CYCLE_ALL_SHADER.withArgs(
-            WglArg.texture("inputTexture", inputTexture),
-            WglArg.float("outputWidth", destinationTexture.width),
-            WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-            WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size))
-        ).renderTo(destinationTexture);
-    });
+    return CYCLE_ALL_SHADER(
+        inputTexture,
+        WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));
 };
-const CYCLE_ALL_SHADER = new WglShader(`
-    uniform sampler2D inputTexture;
-    uniform float outputWidth;
-    uniform vec2 inputSize;
+const CYCLE_ALL_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec2Output,
+    `
     uniform float shiftAmount;
 
-    vec2 uvFor(float state) {
-        return (vec2(mod(state, inputSize.x), floor(state / inputSize.x)) + vec2(0.5, 0.5)) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float span = inputSize.x * inputSize.y;
-        float state = xy.y * outputWidth + xy.x;
-        float shiftedState = state * shiftAmount;
+    vec2 outputFor(float k) {
+        float span = len_input();
+        float shiftedState = k * shiftAmount;
         float cycledState = mod(shiftedState, span) + floor(shiftedState / span);
-        vec2 uv = uvFor(cycledState);
-        gl_FragColor = texture2D(inputTexture, uv);
+        return read_input(cycledState);
     }`);
 
 export {GateShaders}
