@@ -2,7 +2,6 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-
 /**
  * A piece of a shader.
  *
@@ -624,5 +623,4 @@ export {
     workingShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode
 }
-
 provideWorkingShaderCoderToWglConfiguredShader(workingShaderCoder);
