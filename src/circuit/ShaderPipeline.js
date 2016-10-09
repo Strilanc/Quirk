@@ -35,7 +35,8 @@ class ShaderPipeline {
      * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
      * @param {!boolean=} keepResult
      */
-    addPowerSizedStep(qubitCount, nearlyConfiguredShader, keepResult=false) {
+    addPowerSizedStepVec2(qubitCount, nearlyConfiguredShader, keepResult=false) {
+        qubitCount += workingShaderCoder.vec2Overhead;
         this.addSizedStep(
             1 << Math.ceil(qubitCount/2),
             1 << Math.floor(qubitCount/2),
@@ -48,17 +49,13 @@ class ShaderPipeline {
      * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
      * @param {!boolean=} keepResult
      */
-    addPowerSizedStepVec2(qubitCount, nearlyConfiguredShader, keepResult=false) {
-        this.addPowerSizedStep(qubitCount + workingShaderCoder.vec2Overhead, nearlyConfiguredShader, keepResult);
-    }
-
-    /**
-     * @param {!int} qubitCount
-     * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
-     * @param {!boolean=} keepResult
-     */
     addPowerSizedStepVec4(qubitCount, nearlyConfiguredShader, keepResult=false) {
-        this.addPowerSizedStep(qubitCount + workingShaderCoder.vec4Overhead, nearlyConfiguredShader, keepResult);
+        qubitCount += workingShaderCoder.vec4Overhead;
+        this.addSizedStep(
+            1 << Math.ceil(qubitCount/2),
+            1 << Math.floor(qubitCount/2),
+            nearlyConfiguredShader,
+            keepResult);
     }
 
     /**

@@ -80,6 +80,21 @@ suite.webGlTest('incoherent-amplitude-display', () => {
     });
 });
 
+suite.webGlTest('coherent-amplitude-display', () => {
+    let c = circuit(`-H-•-a/--
+                     ---X-//--
+                     -H-------`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
+        probabilities: undefined,
+        superposition: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
+        phaseLockIndex: 0
+    });
+});
+
 suite.webGlTest('probability-display', () => {
     let c = circuit(`-H-•-%-
                      ---X-/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);

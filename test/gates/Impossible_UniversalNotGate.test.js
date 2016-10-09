@@ -14,13 +14,13 @@ suite.webGlTest('universalNot', () => {
         5,6, 7,8
     ])).toVec2Texture(2);
     let assertAbout = (index, control) => assertThat(universalNot(new CircuitEvalArgs(
-        0,
-        index,
-        2,
-        control,
-        CircuitShaders.controlMask(control).toBoolTexture(2),
-        input,
-        new Map())).readVec2Outputs(2));
+            0,
+            index,
+            2,
+            control,
+            CircuitShaders.controlMask(control).toBoolTexture(2),
+            input,
+            new Map())).readVec2Outputs(2));
     assertAbout(0, Controls.NONE).isEqualTo(new Float32Array([
         3,-4, -1,2,
         7,-8, -5,6
