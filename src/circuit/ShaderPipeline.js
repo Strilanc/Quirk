@@ -2,7 +2,8 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 /**
  * Stores a sequence of transformations to apply to textures, with output sizes known ahead of time.
@@ -34,7 +35,22 @@ class ShaderPipeline {
      * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
      * @param {!boolean=} keepResult
      */
-    addPowerSizedStep(qubitCount, nearlyConfiguredShader, keepResult=false) {
+    addPowerSizedStepVec2(qubitCount, nearlyConfiguredShader, keepResult=false) {
+        qubitCount += workingShaderCoder.vec2Overhead;
+        this.addSizedStep(
+            1 << Math.ceil(qubitCount/2),
+            1 << Math.floor(qubitCount/2),
+            nearlyConfiguredShader,
+            keepResult);
+    }
+
+    /**
+     * @param {!int} qubitCount
+     * @param {!function(!WglTexture): !WglConfiguredShader} nearlyConfiguredShader
+     * @param {!boolean=} keepResult
+     */
+    addPowerSizedStepVec4(qubitCount, nearlyConfiguredShader, keepResult=false) {
+        qubitCount += workingShaderCoder.vec4Overhead;
         this.addSizedStep(
             1 << Math.ceil(qubitCount/2),
             1 << Math.floor(qubitCount/2),

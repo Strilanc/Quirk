@@ -8,7 +8,8 @@ import {Matrix} from "src/math/Matrix.js"
 import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGateFamily.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
  * @param {!CircuitEvalArgs} args

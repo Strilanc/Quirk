@@ -16,7 +16,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
@@ -32,22 +32,22 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let totalQubits = Math.round(Math.log2(w * h)) - lostQubits;
-    result.addPowerSizedStep(totalQubits, t => CircuitShaders.controlSelect(controls, t));
+    result.addPowerSizedStepVec2(totalQubits, t => CircuitShaders.controlSelect(controls, t));
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
 
-    let cycledTex = KetTextureUtil.allocQubitTexture(totalQubits);
-    result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
+    let cycledTex = KetTextureUtil.allocVec2Tex(totalQubits);
+    result.addPowerSizedStepVec2(totalQubits, inp => new WglConfiguredShader(dst => {
         GateShaders.cycleAllBits(inp, lostHeadQubits-rangeOffset).renderTo(dst);
         Shaders.passthrough(dst).renderTo(cycledTex);
     }));
-    result.addPowerSizedStep(totalQubits, amplitudesToPolarKets);
+    result.addPowerSizedStepVec4(totalQubits, amplitudesToPolarKets);
     result.addPipelineSteps(pipelineToSpreadLengthAcrossPolarKets(rangeLength, totalQubits));
     result.addPipelineSteps(pipelineToAggregateRepresentativePolarKet(rangeLength, totalQubits));
-    result.addPowerSizedStep(rangeLength, convertAwayFromPolar, true);
+    result.addPowerSizedStepVec4(rangeLength, convertAwayFromPolar, true);
 
-    result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
-        toRatiosVsRepresentative(cycledTex)(inp).renderTo(dst);
+    result.addPowerSizedStepVec4(totalQubits, inp => new WglConfiguredShader(dst => {
+        toRatiosVsRepresentative(cycledTex, inp).renderTo(dst);
         KetTextureUtil.doneWithTexture(cycledTex);
     }));
     result.addPipelineSteps(pipelineToFoldConsistentRatios(rangeLength, totalQubits));
@@ -153,7 +153,7 @@ const AMPLITUDES_TO_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCo
 function pipelineToSpreadLengthAcrossPolarKets(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
     for (let bit = 0; bit < includedQubitCount; bit++) {
-        result.addPowerSizedStep(
+        result.addPowerSizedStepVec4(
             totalQubitCount,
             inp => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER(
                 inp,
@@ -188,7 +188,7 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
 function pipelineToAggregateRepresentativePolarKet(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
     for (let bit = 0; bit < totalQubitCount - includedQubitCount; bit++) {
-        result.addPowerSizedStep(
+        result.addPowerSizedStepVec4(
             totalQubitCount - bit - 1,
             inp => FOLD_REPRESENTATIVE_POLAR_KET_SHADER(
                 inp,
@@ -232,10 +232,11 @@ const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCod
 
 /**
  * @param {!WglTexture} ket
- * @returns {!function(!WglTexture) : !WglConfiguredShader}
+ * @param {!WglTexture} rep
+ * @returns {!WglConfiguredShader}
  */
-function toRatiosVsRepresentative(ket) {
-    return rep => TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
+function toRatiosVsRepresentative(ket, rep) {
+    return TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
 }
 const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
@@ -255,7 +256,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
 function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
     for (let bit = 0; bit < includedQubitCount; bit++) {
-        result.addPowerSizedStep(
+        result.addPowerSizedStepVec4(
             totalQubitCount - bit - 1,
             inp => FOLD_CONSISTENT_RATIOS_SHADER(
                 inp,
@@ -308,7 +309,7 @@ function pipelineToSumAll(qubitCount) {
     let result = new ShaderPipeline();
     while (qubitCount > 0) {
         qubitCount -= 1;
-        result.addPowerSizedStep(qubitCount, t => Shaders.sumFoldVec4(t));
+        result.addPowerSizedStepVec4(qubitCount, t => Shaders.sumFoldVec4(t));
     }
     return result;
 }

@@ -8,7 +8,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
@@ -160,7 +160,7 @@ const SWAP_QUBITS_SHADER = ketShaderPermute('', `
  */
 CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
     if (keptBitMask === undefined) {
-        keptBitMask = inputTexture.width * inputTexture.height - 1;
+        keptBitMask = (1 << workingShaderCoder.vec2Order(inputTexture)) - 1;
     }
     let keptCount = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
 

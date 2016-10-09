@@ -9,7 +9,8 @@ import {
 } from "src/webgl/ShaderCoders.js"
 
 import {Shaders} from "src/webgl/Shaders.js"
-import {WglShader, WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 
 let suite = new Suite("ShaderCoders");
@@ -23,6 +24,8 @@ suite.test("encodeFloatsIntoBytes", () => {
         [128, 0, 0, 0]));
     assertThat(encodeFloatsIntoBytes(new Float32Array([-1]))).isEqualTo(new Uint8Array(
         [127, 0, 0, 1]));
+    assertThat(encodeFloatsIntoBytes(new Float32Array([NaN]))).isEqualTo(new Uint8Array(
+        [255, 255, 255, 255]));
 
     assertThat(encodeFloatsIntoBytes(new Float32Array([1.1]))).isEqualTo(new Uint8Array(
         [0b01111111, 0b00011001, 0b10011001, 0b10011010]));
@@ -39,6 +42,7 @@ suite.test("decodeBytesIntoFloats", () => {
         [2]));
     assertThat(decodeBytesIntoFloats([127, 0, 0, 1])).isEqualTo(new Float32Array(
         [-1]));
+    assertThat(isNaN(decodeBytesIntoFloats([255, 255, 255, 255])[0])).isEqualTo(true);
 
     assertThat(decodeBytesIntoFloats([0b01111111, 0b00011001, 0b10011001, 0b10011010])).isEqualTo(new Float32Array(
         [1.1]));
@@ -356,6 +360,9 @@ suite.webGlTest("bytes_passthrough_vec2", () => {
     floats[2] = 1.1;
     floats[3] = -1;
     floats[4] = 2;
+    floats[5] = 529;
+    floats[6] = NaN;
+    floats[7] = NaN; // (because we're going through a vec2, NaNs spread to their neighbor)
     let bytes = encodeFloatsIntoBytes(floats);
 
     let tex = Shaders.data(bytes).toByteTexture(8, 8);

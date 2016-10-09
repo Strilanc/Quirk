@@ -13,7 +13,8 @@ import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
@@ -31,16 +32,18 @@ function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
     let result = new ShaderPipeline();
 
     let n = qubitCount - forcedQubits;
-    result.addPowerSizedStep(n, t => CircuitShaders.controlSelect(controls, t));
-    result.addPowerSizedStep(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
+    result.addPowerSizedStepVec2(n, t => CircuitShaders.controlSelect(controls, t));
+    result.addPowerSizedStepVec2(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
 
     n += rangeLength;
-    result.addPowerSizedStep(n, t => amplitudesToDensities(t, rangeLength));
+    result.addPowerSizedStepVec2(n, t => amplitudesToCouplings(t, rangeLength));
 
     while (n > 2*rangeLength) {
         n--;
-        result.addPowerSizedStep(n, t => Shaders.sumFoldVec2(t));
+        result.addPowerSizedStepVec2(n, t => Shaders.sumFoldVec2(t));
     }
+
+    result.addPowerSizedStepVec4(2*rangeLength, Shaders.vec2AsVec4);
 
     return result;
 }
@@ -50,7 +53,7 @@ function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
  * @param {!int} qubitSpan
  * @returns {!WglConfiguredShader}
  */
-let amplitudesToDensities = (inputTexture, qubitSpan) => AMPLITUDES_TO_DENSITIES_SHADER(
+let amplitudesToCouplings = (inputTexture, qubitSpan) => AMPLITUDES_TO_DENSITIES_SHADER(
     inputTexture,
     WglArg.float('qubitSpan', 1 << qubitSpan));
 const AMPLITUDES_TO_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
@@ -165,4 +168,4 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
 let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleWireDensityMatrixDisplay :
     densityMatrixDisplayMaker(span));
-export {DensityMatrixDisplayFamily, amplitudesToDensities}
+export {DensityMatrixDisplayFamily, amplitudesToCouplings}

@@ -8,6 +8,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
+import {workingShaderCoder, decodeBytesIntoFloats, SHADER_CODER_BYTES} from "src/webgl/ShaderCoders.js"
 
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.
@@ -25,7 +26,7 @@ let allocNewTextureCount = 0;
  * @param {!int} pixelType
  * @returns {!WglTexture}
  */
-const allocSizedTexture = (width, height, pixelType = WebGLRenderingContext.FLOAT) => {
+const allocSizedTexture = (width, height, pixelType) => {
     if (width === 0 || height === 0) {
         return new WglTexture(0, 0, pixelType);
     }
@@ -52,20 +53,48 @@ const allocSizedTexture = (width, height, pixelType = WebGLRenderingContext.FLOA
  * @returns {!WglTexture}
  */
 const allocSameSizedTexture = tex => {
-    return allocSizedTexture(tex.width, tex.height);
+    return allocSizedTexture(tex.width, tex.height, tex.pixelType);
 };
 
 /**
- * @param {!int} qubitCount
+ * @param {!int} power
  * @returns {!WglTexture}
  */
-const allocQubitTexture = qubitCount => {
-    let w = 1 << Math.ceil(qubitCount / 2);
-    let h = 1 << Math.floor(qubitCount / 2);
-    return allocSizedTexture(w, h);
+const allocBoolTex = power => {
+    let w = 1 << Math.ceil(power / 2);
+    let h = 1 << Math.floor(power / 2);
+    return allocSizedTexture(w, h, WebGLRenderingContext.UNSIGNED_BYTE);
 };
 
-KetTextureUtil.allocQubitTexture = allocQubitTexture;
+/**
+ * @param {!int} power
+ * @returns {!WglTexture}
+ */
+const allocVec2Tex = power => {
+    power += workingShaderCoder.vec2Overhead;
+    let w = 1 << Math.ceil(power / 2);
+    let h = 1 << Math.floor(power / 2);
+    return allocSizedTexture(w, h, workingShaderCoder.vecPixelType);
+};
+
+/**
+ * @param {!int} power
+ * @returns {!WglTexture}
+ */
+const allocVec4Tex = power => {
+    power += workingShaderCoder.vec4Overhead;
+    let w = 1 << Math.ceil(power / 2);
+    let h = 1 << Math.floor(power / 2);
+    if (w < 4 && h > 1) {
+        w <<= 1;
+        h >>= 1;
+    }
+    return allocSizedTexture(w, h, workingShaderCoder.vecPixelType);
+};
+
+KetTextureUtil.allocVec2Tex = allocVec2Tex;
+KetTextureUtil.allocVec4Tex = allocVec4Tex;
+KetTextureUtil.allocSameSizedTexture = allocSameSizedTexture;
 
 /**
  * Puts the texture back into the texture pool.
@@ -74,6 +103,9 @@ KetTextureUtil.allocQubitTexture = allocQubitTexture;
  * @returns {void}
  */
 KetTextureUtil.doneWithTexture = (texture, detailsShownWhenUsedAfterDone='?') => {
+    if (!(texture instanceof WglTexture)) {
+        throw new DetailedError("Not a texture", {texture, detailsShownWhenUsedAfterDone});
+    }
     if (texture.width === 0) {
         return;
     }
@@ -87,7 +119,7 @@ KetTextureUtil.doneWithTexture = (texture, detailsShownWhenUsedAfterDone='?') =>
  * @returns {!WglTexture}
  */
 KetTextureUtil.classicalKet = (qubitCount, classicalState=0) => {
-    let tex = allocQubitTexture(qubitCount);
+    let tex = allocVec2Tex(qubitCount);
     CircuitShaders.classicalState(classicalState).renderTo(tex);
     return tex;
 };
@@ -98,7 +130,7 @@ KetTextureUtil.classicalKet = (qubitCount, classicalState=0) => {
  * @returns {!WglTexture}
  */
 KetTextureUtil.control = (qubitCount, mask) => {
-    let tex = allocQubitTexture(qubitCount);
+    let tex = allocBoolTex(qubitCount);
     CircuitShaders.controlMask(mask).renderTo(tex);
     return tex;
 };
@@ -108,17 +140,17 @@ KetTextureUtil.control = (qubitCount, mask) => {
  * @returns {!Array.<!Float32Array>}
  */
 KetTextureUtil.mergedReadFloats = textures => {
-    let pixelCounts = textures.map(e => e.width * e.height);
+    let pixelCounts = textures.map(e => e.width === 0 ? 0 : 1 << workingShaderCoder.vec4Order(e));
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
     let lgTotal = Math.round(Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1])));
-    let combinedTex = allocQubitTexture(lgTotal);
+    let combinedTex = allocVec4Tex(lgTotal);
     Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
     combinedTex = KetTextureUtil.aggregateWithReuse(
         combinedTex,
         Seq.range(textures.length).filter(i => textures[i].width > 0),
         (accTex, i) => {
             let inputTex = textures[i];
-            let nextTex = allocQubitTexture(lgTotal);
+            let nextTex = allocVec4Tex(lgTotal);
             CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
             KetTextureUtil.doneWithTexture(inputTex, "inputTex in mergedReadFloats");
             return nextTex;
@@ -126,18 +158,11 @@ KetTextureUtil.mergedReadFloats = textures => {
 
     let combinedPixels;
     if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS) {
-        let combinedTexBytes = allocSizedTexture(combinedTex.width*2, combinedTex.height*2,
-            WebGLRenderingContext.UNSIGNED_BYTE);
-        Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(combinedTexBytes);
-
-        let combinedBytePixels = combinedTexBytes.readPixels();
-        combinedPixels = Shaders.decodeByteBufferToFloatBuffer(combinedBytePixels);
-        KetTextureUtil.doneWithTexture(combinedTexBytes, "combinedTexBytes in mergedReadFloats");
+        combinedPixels = SHADER_CODER_BYTES.readVec4Data(Shaders.encodeFloatsIntoBytes(combinedTex), lgTotal);
     } else {
-        combinedPixels = combinedTex.readPixels();
+        combinedPixels = workingShaderCoder.readVec4Data(combinedTex.readPixels(), lgTotal);
     }
     KetTextureUtil.doneWithTexture(combinedTex, "combinedTex in mergedReadFloats");
-
 
     return Seq.range(textures.length).map(i => {
         let offset = pixelOffsets[i] * 4;
@@ -226,15 +251,6 @@ KetTextureUtil.pixelsToAmplitudes = (pixels, unity) => {
 };
 
 /**
- * Counts the number of qubits in the superposition stored by the given texture, based on its size.
- * @param {!WglTexture} superpositionTex
- * @returns {!int}
- */
-KetTextureUtil.qubitCount = superpositionTex => {
-    return Math.round(Math.log2(superpositionTex.width * superpositionTex.height));
-};
-
-/**
  * @param {!WglTexture} stateTex
  * @param {!Controls} controls
  * @param {!int} keptBitMask
@@ -242,12 +258,12 @@ KetTextureUtil.qubitCount = superpositionTex => {
  */
 KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
     if (keptBitMask === 0) {
-        return new WglTexture(0, 0);
+        return new WglTexture(0, 0, workingShaderCoder.vecPixelType);
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let reducedTex = stateTex;
     if (hasControls) {
-        reducedTex = allocQubitTexture(KetTextureUtil.qubitCount(stateTex) - controls.includedBitCount());
+        reducedTex = allocVec2Tex(workingShaderCoder.vec2Order(stateTex) - controls.includedBitCount());
         CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
     }
     let p = 1;
@@ -277,9 +293,9 @@ KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex,
     if (keptBitMask === 0) {
         throw new DetailedError("keptBitMask === 0", {superpositionTex, keptBitMask});
     }
-    let startingQubitCount = KetTextureUtil.qubitCount(superpositionTex);
+    let startingQubitCount = workingShaderCoder.vec2Order(superpositionTex);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
-    let inter = allocQubitTexture(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
+    let inter = allocVec4Tex(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
     CircuitShaders.qubitDensities(superpositionTex, keptBitMask).renderTo(inter);
     return inter;
 };
@@ -291,7 +307,7 @@ KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex,
  * @returns {!WglTexture}
  */
 KetTextureUtil._sumDownVec4 = (summandsTex, outCount) => {
-    let outSize = Util.ceilingPowerOf2(outCount);
+    let outSize = Util.ceilingPowerOf2(outCount) << workingShaderCoder.vec4Overhead;
     let outWidth = Math.min(summandsTex.width, outSize);
 
     return KetTextureUtil.aggregateReusingIntermediates(
@@ -301,7 +317,7 @@ KetTextureUtil._sumDownVec4 = (summandsTex, outCount) => {
             let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
                 [accTex.width / 2, 0] :
                 [0, accTex.height / 2];
-            let halfTex = allocSizedTexture(accTex.width - w, accTex.height - h);
+            let halfTex = allocSizedTexture(accTex.width - w, accTex.height - h, accTex.pixelType);
             Shaders.sumFoldVec4(accTex).renderTo(halfTex);
             return halfTex;
         });
@@ -330,12 +346,13 @@ KetTextureUtil.pixelsToQubitDensityMatrices = buffer => {
 /**
  * @param {!WglTexture} seedTex
  * @param {!ShaderPipeline} pipeline
+ * @returns {!Array.<!WglTexture>}
  */
 KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
     let skipDoneWithTextureFlag = true;
     let keptResults = [];
     let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {w, h, shaderFunc, keepResult}) => {
-        let nextTex = allocSizedTexture(w, h);
+        let nextTex = allocSizedTexture(w, h, workingShaderCoder.vecPixelType);
         shaderFunc(prevTex).renderTo(nextTex);
         if (!skipDoneWithTextureFlag) {
             KetTextureUtil.doneWithTexture(prevTex, "evaluatePipelineWithIntermediateCleanup");
