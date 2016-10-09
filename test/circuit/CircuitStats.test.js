@@ -79,6 +79,27 @@ suite.webGlTest('incoherent-amplitude-display', () => {
     });
 });
 
+suite.webGlTest('probability-display', () => {
+    let c = circuit(`-H-•-%-
+                     ---X-/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo(
+        Matrix.col(0.5, 0, 0, 0.5));
+});
+
+suite.webGlTest('density-display', () => {
+    let c = circuit(`-d/-
+                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.customStatsForSlot(1, 0)).isApproximatelyEqualTo(
+        Matrix.square(
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0));
+});
+
 suite.webGlTest('shifted-density-display', () => {
     let c = circuit(`----
                      -d/-

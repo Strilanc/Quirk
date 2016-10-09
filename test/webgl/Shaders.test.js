@@ -84,20 +84,16 @@ suite.webGlTest("data", () => {
 });
 
 suite.webGlTest("sumFold", () => {
-    let coords = Shaders.coords.toFloatTexture(8, 4);
-    assertThat(Shaders.sumFold(coords, 4, 0).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
-        4,0,0,0, 6,0,0,0, 8,0,0,0, 10,0,0,0,
-        4,2,0,0, 6,2,0,0, 8,2,0,0, 10,2,0,0,
-        4,4,0,0, 6,4,0,0, 8,4,0,0, 10,4,0,0,
-        4,6,0,0, 6,6,0,0, 8,6,0,0, 10,6,0,0
-    ]));
-    assertThat(Shaders.sumFold(coords, 1, 2).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        1,2,0,0, 3,2,0,0,
-        1,4,0,0, 3,4,0,0
+    let coords = Shaders.coords.toFloatTexture(2, 4);
+    assertThat(Shaders.sumFoldVec2(coords).readFloatOutputs(1, 4)).isEqualTo(new Float32Array([
+        0,2,0,0,
+        2,2,0,0,
+        0,4,0,0,
+        2,4,0,0
     ]));
 
     let solid = Shaders.color(2, 3, 5, 7).toFloatTexture(2, 2);
-    assertThat(Shaders.sumFold(solid, 1, 0).readFloatOutputs(1, 2)).isEqualTo(new Float32Array([
+    assertThat(Shaders.sumFoldVec4(solid).readFloatOutputs(1, 2)).isEqualTo(new Float32Array([
         4,6,10,14,
         4,6,10,14
     ]));

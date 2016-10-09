@@ -17,41 +17,29 @@ import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
- * @param {!number} w
- * @param {!number} h
  * @param {!Controls} controls
+ * @param {!int} qubitCount
  * @param {!int} rangeOffset
  * @param {!int} rangeLength
  * @returns {!ShaderPipeline} Computes the marginal probabilities for a range of qubits from a superposition texture.
  */
-function makeDensityPipeline(w, h, controls, rangeOffset, rangeLength) {
+function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
+
+    let forcedQubits = Util.numberOfSetBits(controls.inclusionMask);
+    let forcedQubitsAbove = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+
     let result = new ShaderPipeline();
 
-    let areaReduction = Util.numberOfSetBits(controls.inclusionMask);
-    let offsetReduction = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
-    w >>= Math.floor(areaReduction/2);
-    h >>= Math.ceil(areaReduction/2);
-    result.addSizedStep(w, h, t => CircuitShaders.controlSelect(controls, t));
-    result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, offsetReduction-rangeOffset));
+    let n = qubitCount - forcedQubits;
+    result.addPowerSizedStep(n, t => CircuitShaders.controlSelect(controls, t));
+    result.addPowerSizedStep(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
 
-    w <<= Math.floor(rangeLength/2);
-    h <<= Math.ceil(rangeLength/2);
-    if (h > w) {
-        w <<= 1;
-        h >>= 1;
-    }
-    result.addSizedStep(w, h, t => amplitudesToDensities(t, rangeLength));
+    n += rangeLength;
+    result.addPowerSizedStep(n, t => amplitudesToDensities(t, rangeLength));
 
-    let remainingQubitCount = Math.round(Math.log2(w*h));
-    for (let i = Math.round(Math.log2(w*h)); i > 2*rangeLength; i--) {
-        if (h > 1) {
-            h >>= 1;
-            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
-        } else {
-            w >>= 1;
-            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
-        }
-        remainingQubitCount -= 1;
+    while (n > 2*rangeLength) {
+        n--;
+        result.addPowerSizedStep(n, t => Shaders.sumFoldVec2(t));
     }
 
     return result;
@@ -148,8 +136,7 @@ function densityMatrixDisplayMaker(span) {
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
         withCustomStatPipelineMaker(args => makeDensityPipeline(
-            args.controlsTexture.width,
-            args.controlsTexture.height,
+            args.wireCount,
             args.controls,
             args.row,
             span)).

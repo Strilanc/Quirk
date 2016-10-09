@@ -3,6 +3,7 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
  * Utilities for creating/configuring shaders that render various simple things.
@@ -86,26 +87,30 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
 });
 
 /**
- * Returns a configured shader that renders teh result of adding each source pixel to the source pixel a fixed offset
- * away.
- * @param {!WglTexture} inputTexture
- * @param {!int} dx
- * @param {!int} dy
+ * Adds the second half of its input into the first half.
+ * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
  */
-Shaders.sumFold = (inputTexture, dx, dy) => SUM_FOLD_SHADER.withArgs(
-    WglArg.vec2("inputSize", inputTexture.width, inputTexture.height),
-    WglArg.vec2("offset", dx, dy),
-    WglArg.texture("inputTexture", inputTexture));
-const SUM_FOLD_SHADER = new WglShader(`
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
-    uniform vec2 offset;
-    void main() {
-        vec2 uv0 = gl_FragCoord.xy / inputSize;
-        vec2 uv1 = uv0 + offset / inputSize;
-        gl_FragColor = texture2D(inputTexture, uv0) + texture2D(inputTexture, uv1);
+Shaders.sumFoldVec4 = inp => SUM_FOLD_SHADER_VEC4(inp);
+const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec4Input('input')],
+    workingShaderCoder.vec4Output,
+    `vec4 outputFor(float k) {
+        return read_input(k) + read_input(k + len_output());
     }`);
+
+/**
+ * Adds the second half of its input into the first half.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldVec2 = inp => SUM_FOLD_SHADER_VEC2(inp);
+const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec2Output,
+    `vec2 outputFor(float k) {
+         return read_input(k) + read_input(k + len_output());
+     }`);
 
 /**
  * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar

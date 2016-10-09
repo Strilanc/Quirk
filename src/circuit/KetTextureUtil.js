@@ -263,7 +263,7 @@ KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask)
         KetTextureUtil.doneWithTexture(reducedTex, "reducedTex in superpositionToQubitDensities");
     }
     let keptQubitCount = Util.numberOfSetBits(keptBitMask);
-    let result = KetTextureUtil._sumDown(unsummedTex, keptQubitCount);
+    let result = KetTextureUtil._sumDownVec4(unsummedTex, keptQubitCount);
     KetTextureUtil.doneWithTexture(unsummedTex, "unsummedTex in superpositionToQubitDensities");
     return result;
 };
@@ -290,7 +290,7 @@ KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex,
  * The output will be a single row containing this many results (but padded up to a power of 2).
  * @returns {!WglTexture}
  */
-KetTextureUtil._sumDown = (summandsTex, outCount) => {
+KetTextureUtil._sumDownVec4 = (summandsTex, outCount) => {
     let outSize = Util.ceilingPowerOf2(outCount);
     let outWidth = Math.min(summandsTex.width, outSize);
 
@@ -302,7 +302,7 @@ KetTextureUtil._sumDown = (summandsTex, outCount) => {
                 [accTex.width / 2, 0] :
                 [0, accTex.height / 2];
             let halfTex = allocSizedTexture(accTex.width - w, accTex.height - h);
-            Shaders.sumFold(accTex, w, h).renderTo(halfTex);
+            Shaders.sumFoldVec4(accTex).renderTo(halfTex);
             return halfTex;
         });
 };

@@ -231,7 +231,7 @@ suite.webGlTest("pipelineToSumAll", () => {
     ])).toFloatTexture(4, 2);
     let out;
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(4, 2));
+    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(3));
     assertThat(out.readPixels()).isEqualTo(new Float32Array([
         10,6,19,16
     ]));

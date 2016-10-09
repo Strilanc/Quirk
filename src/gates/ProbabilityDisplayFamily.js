@@ -22,22 +22,15 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
  * @returns {!ShaderPipeline} Computes the marginal probabilities for a range of qubits from a superposition texture.
  */
 function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
-    let [w, h] = [controlTexture.width, controlTexture.height];
     let result = new ShaderPipeline();
+    let n = Math.round(Math.log2(controlTexture.width * controlTexture.height));
 
-    result.addSizedStep(w, h, t => amplitudesToProbabilities(t, controlTexture));
-    result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, -rangeOffset));
+    result.addPowerSizedStep(n, t => amplitudesToProbabilities(t, controlTexture));
+    result.addPowerSizedStep(n, t => GateShaders.cycleAllBits(t, -rangeOffset));
 
-    let remainingQubitCount = Math.round(Math.log2(w * h));
-    while (remainingQubitCount > rangeLength) {
-        if (h > 1) {
-            h >>= 1;
-            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
-        } else {
-            w >>= 1;
-            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
-        }
-        remainingQubitCount -= 1;
+    while (n > rangeLength) {
+        n -= 1;
+        result.addPowerSizedStep(n, t => Shaders.sumFoldVec2(t));
     }
 
     return result;

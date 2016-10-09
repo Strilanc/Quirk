@@ -51,9 +51,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
         KetTextureUtil.doneWithTexture(cycledTex);
     }));
     result.addPipelineSteps(pipelineToFoldConsistentRatios(rangeLength, totalQubits));
-
-    let r = totalQubits - rangeLength;
-    result.addPipelineSteps(pipelineToSumAll(1 << Math.ceil(r/2), 1 << Math.floor(r/2)));
+    result.addPipelineSteps(pipelineToSumAll(totalQubits - rangeLength));
 
     return result;
 }
@@ -303,20 +301,14 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
     }`);
 
 /**
- * @param {!int} w
- * @param {!int} h
+ * @param {!int} qubitCount
  * @returns {!ShaderPipeline}
  */
-function pipelineToSumAll(w, h) {
+function pipelineToSumAll(qubitCount) {
     let result = new ShaderPipeline();
-    while (w > 1 || h > 1) {
-        if (w > h) {
-            w >>= 1;
-            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
-        } else {
-            h >>= 1;
-            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
-        }
+    while (qubitCount > 0) {
+        qubitCount -= 1;
+        result.addPowerSizedStep(qubitCount, t => Shaders.sumFoldVec4(t));
     }
     return result;
 }
