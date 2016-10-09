@@ -11,7 +11,7 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
 const ketShader = (head, body, span=null) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
     [
         workingShaderCoder.vec2Input('ketgen_ket'),
-        workingShaderCoder.vec2Input('ketgen_control')
+        workingShaderCoder.boolInput('ketgen_control')
     ],
     workingShaderCoder.vec2Output,
     `
@@ -35,7 +35,7 @@ const ketShader = (head, body, span=null) => ({withArgs: makePseudoShaderWithInp
         float relevant_out_id = mod(floor(full_out_id / _ketgen_step), ${span === null ? 'span' : (1<<span)+'.0'});
         _ketgen_off = full_out_id - relevant_out_id*_ketgen_step;
 
-        float c = read_ketgen_control(full_out_id).x;
+        float c = read_ketgen_control(full_out_id);
         vec2 vc = read_ketgen_ket(full_out_id);
         vec2 vt = _ketgen_output_for(relevant_out_id, vc);
         return (1.0-c)*vc + c*vt;

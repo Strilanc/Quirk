@@ -107,8 +107,8 @@ CircuitShaders.controlSelect = (controlMask, dataTexture) => {
         WglArg.float('desired', controlMask.desiredValueMask));
 };
 const CONTROL_SELECT_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec2Output,
     `
     uniform float used;
     uniform float desired;
@@ -131,7 +131,7 @@ const CONTROL_SELECT_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
         return result;
     }
 
-    vec4 outputFor(float k) {
+    vec2 outputFor(float k) {
         return read_input(scatter(k));
     }`);
 

@@ -46,12 +46,12 @@ let amplitudesToProbabilities = (inputTexture, controlTex) =>
 const AMPLITUDES_TO_PROBABILITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
         workingShaderCoder.vec2Input('input'),
-        workingShaderCoder.vec2Input('control')
+        workingShaderCoder.boolInput('control')
     ],
     workingShaderCoder.vec2Output,
     `vec2 outputFor(float k) {
         vec2 amp = read_input(k);
-        return vec2(dot(amp, amp) * read_control(k).x, 0.0);
+        return vec2(dot(amp, amp) * read_control(k), 0.0);
     }`);
 
 /**
