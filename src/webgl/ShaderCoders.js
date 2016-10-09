@@ -1,4 +1,5 @@
 import {DetailedError} from "src/base/DetailedError.js"
+import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader, WglConfiguredShader} from "src/webgl/WglShader.js"
 
@@ -40,6 +41,24 @@ function combinedShaderPartsWithCode(shaderParts, tailCode) {
     let libCode = [...libs, ...shaderParts.map(e => e.code)].join('');
 
     return new WglShader(libCode + '\n//////// tail ////////\n' + tailCode);
+}
+
+/**
+ * @param {!Array.<ShaderPart>} inputs
+ * @param {!ShaderPart} output
+ * @param {!string} tailCode
+ * @returns {!function(args: ...!WglArg) : !WglConfiguredShader}
+ */
+function makePseudoShaderWithInputsAndOutputAndCode(inputs, output, tailCode) {
+    let shader = combinedShaderPartsWithCode([...inputs, output], tailCode);
+    return (...inputsAndArgs) => {
+        let args = [];
+        for (let i = 0; i < inputs.length; i++) {
+            args.push(...inputs[i].argsFor(inputsAndArgs[i]));
+        }
+        args.push(...inputsAndArgs.slice(inputs.length));
+        return shaderWithOutputPartAndArgs(shader, output, args)
+    };
 }
 
 /**
@@ -191,6 +210,10 @@ function vecInput_Float(name, vecSize) {
             vec2 uv = vec2(mod(k, ${pre}_size.x) + 0.5,
                            floor(k / ${pre}_size.x) + 0.5) / ${pre}_size;
             return texture2D(${pre}_tex, uv).${'xyzw'.substring(0, vecSize)};
+        }
+
+        float len_${name}() {
+            return ${pre}_size.x * ${pre}_size.y;
         }`,
         [],
         texture => {
@@ -226,6 +249,10 @@ function vec2Input_Byte(name) {
 
             return vec2(_gen_unpackBytesIntoFloat(bytes1),
                         _gen_unpackBytesIntoFloat(bytes2));
+        }
+
+        float len_${name}() {
+            return ${pre}_size.x * ${pre}_size.y / 2.0;
         }`,
         [UNPACK_BYTES_INTO_FLOAT_CODE],
         texture => {
@@ -268,6 +295,10 @@ function vec4Input_Byte(name) {
                         _gen_unpackBytesIntoFloat(bytes2),
                         _gen_unpackBytesIntoFloat(bytes3),
                         _gen_unpackBytesIntoFloat(bytes4));
+        }
+
+        float len_${name}() {
+            return ${pre}_size.x * ${pre}_size.y / 4.0;
         }`,
         [UNPACK_BYTES_INTO_FLOAT_CODE],
         texture => {
@@ -375,11 +406,16 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     VEC2_OUTPUT_AS_BYTE,
     VEC4_OUTPUT_AS_BYTE);
 
+/** @type {!ShaderValueCoder} */
+let workingShaderCoder = SHADER_CODER_FLOATS;
+
 export {
     SHADER_CODER_BYTES,
     SHADER_CODER_FLOATS,
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
     combinedShaderPartsWithCode,
-    shaderWithOutputPartAndArgs
+    shaderWithOutputPartAndArgs,
+    workingShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
 }
