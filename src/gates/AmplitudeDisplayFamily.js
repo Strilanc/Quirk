@@ -286,8 +286,8 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
         float err = dot(d, d);
         // The max up-scaling controls a tricky tradeoff between noisy false positives and blurry false negatives.
         err /= max(0.00000000001, min(abs(dot(c1, c1)), abs(dot(c2,c2))));
-        float m1 = dot(a,a);
-        float m2 = dot(b,b);
+        float m1 = dot(a, a);
+        float m2 = dot(b, b);
         return isNaN(err) || err > 0.001 ? vec4(u_NaN, u_NaN, u_NaN, u_NaN)
             : m1 >= m2 ? a
             : b;
@@ -328,7 +328,8 @@ const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args =
     let n = args.gate.height;
     let {probabilities, superposition, phaseLockIndex} = args.customStats || {
         probabilities: undefined,
-        superposition: Matrix.zero(1 << n, 1 << n).times(NaN),
+        superposition: (n === 1 ? Matrix.zero(2, 1) : Matrix.zero(1 << Math.floor(n / 2), 1 << Math.ceil(n / 2))).
+            times(NaN),
         phaseLockIndex: undefined
     };
     let matrix = probabilities || superposition;
