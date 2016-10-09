@@ -2,7 +2,7 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
  * Stores a sequence of transformations to apply to textures, with output sizes known ahead of time.

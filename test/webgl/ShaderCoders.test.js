@@ -9,7 +9,8 @@ import {
 } from "src/webgl/ShaderCoders.js"
 
 import {Shaders} from "src/webgl/Shaders.js"
-import {WglShader, WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 
 let suite = new Suite("ShaderCoders");

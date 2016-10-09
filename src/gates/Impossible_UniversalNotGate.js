@@ -2,7 +2,8 @@ import {Gate} from "src/circuit/Gate.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {ketArgs, ketShader} from "src/circuit/KetShaderUtil.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
  * @param {!CircuitEvalArgs} args
