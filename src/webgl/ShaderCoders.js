@@ -85,8 +85,35 @@ class ShaderValueCoder {
      * @param {!ShaderPart} vec2Output
      * @param {!ShaderPart} vec4Output
      * @param {!ShaderPart} boolOutput
+     * @param {!int} vec2Overhead
+     * @param {!int} vec4Overhead
+     * @param {!int} vecPixelType
+     * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec2Data
+     * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec2Data
+     * @param {!function(!WglConfiguredShader, !int) : !Float32Array} readVec2Data
+     * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec4Data
+     * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec4Data
+     * @param {!function(!WglConfiguredShader, !int) : !Float32Array} readVec4Data
+     * @param {!function(!WglTexture) : !int} vec2Order
+     * @param {!function(!WglTexture) : !int} vec4Order
      */
-    constructor(vec2Input, vec4Input, boolInput, vec2Output, vec4Output, boolOutput) {
+    constructor(vec2Input,
+                vec4Input,
+                boolInput,
+                vec2Output,
+                vec4Output,
+                boolOutput,
+                vec2Overhead,
+                vec4Overhead,
+                vecPixelType,
+                prepVec2Data,
+                unpackVec2Data,
+                readVec2Data,
+                prepVec4Data,
+                unpackVec4Data,
+                readVec4Data,
+                vec2Order,
+                vec4Order) {
         /** @type {!function(name: !string) : !ShaderPart} */
         this.vec2Input = vec2Input;
         /** @type {!function(name: !string) : !ShaderPart} */
@@ -99,6 +126,28 @@ class ShaderValueCoder {
         this.vec4Output = vec4Output;
         /** @type {!ShaderPart} */
         this.boolOutput = boolOutput;
+        /** @type {!int} */
+        this.vec2Overhead = vec2Overhead;
+        /** @type {!int} */
+        this.vec4Overhead = vec4Overhead;
+        /** @type {!int} */
+        this.vecPixelType = vecPixelType;
+        /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
+        this.prepVec2Data = prepVec2Data;
+        /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
+        this.unpackVec2Data = unpackVec2Data;
+        /** {!function(configuredShader: !WglConfiguredShader, powerSize: !int) : !Float32Array} */
+        this.readVec2Data = readVec2Data;
+        /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
+        this.prepVec4Data = prepVec4Data;
+        /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
+        this.unpackVec4Data = unpackVec4Data;
+        /** {!function(configuredShader: !WglConfiguredShader, powerSize: !int) : !Float32Array} */
+        this.readVec4Data = readVec4Data;
+        /** @type {!function(!WglTexture) : !int} */
+        this.vec2Order = vec2Order;
+        /** @type {!function(!WglTexture) : !int} */
+        this.vec4Order = vec4Order;
     }
 }
 
@@ -127,6 +176,13 @@ function encodeFloatsIntoBytes(floats) {
         let c = Math.floor((mantissa * 65536) & 0xFF);
         let d = sign | (Math.floor((mantissa * 8388608) & 0x7F) << 1);
 
+        if (isNaN(val)) {
+            a = 255;
+            b = 255;
+            c = 255;
+            d = 255;
+        }
+
         let k = i << 2;
         result[k] = a;
         result[k+1] = b;
@@ -139,8 +195,15 @@ function encodeFloatsIntoBytes(floats) {
 
 const PACK_FLOAT_INTO_BYTES = `
     //////////// PACK_FLOAT_INTO_BYTES /////////////
+    bool _gen_isNan(float val) {
+        return val < 0.0 || 0.0 < val || val == 0.0 ? false : true;
+    }
     vec4 _gen_packFloatIntoBytes(float val) {
         float sign = float(val < 0.0);
+        if (_gen_isNan(val)) {
+            return vec4(255.0, 255.0, 255.0, 255.0);
+        }
+
         float mag = abs(val);
         float exponent = mag == 0.0 ? -127.0 : floor(0.1 + log2(mag));
         exponent -= float(mag != 0.0 && exp2(exponent) > mag);
@@ -152,6 +215,21 @@ const PACK_FLOAT_INTO_BYTES = `
         float d = floor(mod(mantissa * 8388608.0, 128.0)) * 2.0 + sign;
         return vec4(a, b, c, d) / 255.0;
     }`;
+
+function _decodeBytesIntoFloat(a, b, c, d) {
+    if (a === 255) {
+        return NaN;
+    }
+
+    let exponent = a - 127;
+    let sign = 1 - ((d & 1) << 1);
+    let mantissa = (a > 0 ? 1 : 0)
+        + b / 256
+        + c / 65536
+        + (d & 0xFE) / 16777216;
+
+    return sign * mantissa * Math.pow(2, exponent);
+}
 
 /**
  * Recovers an array of single-precision floats from an array of bytes.
@@ -170,15 +248,7 @@ function decodeBytesIntoFloats(bytes) {
         let b = bytes[k+1];
         let c = bytes[k+2];
         let d = bytes[k+3];
-
-        let exponent = a - 127;
-        let sign = 1 - ((d & 1) << 1);
-        let mantissa = (a > 0 ? 1 : 0)
-            + b / 256
-            + c / 65536
-            + (d & 0xFE) / 16777216;
-
-        result[i] = sign * mantissa * Math.pow(2, exponent);
+        result[i] = _decodeBytesIntoFloat(a, b, c, d);
     }
 
     return result;
@@ -186,11 +256,16 @@ function decodeBytesIntoFloats(bytes) {
 
 const UNPACK_BYTES_INTO_FLOAT_CODE = `
     //////////// UNPACK_BYTES_INTO_FLOAT_CODE /////////////
+    uniform float _gen_nan;
     float _gen_unpackBytesIntoFloat(vec4 v) {
         float a = floor(v.r * 255.0 + 0.5);
         float b = floor(v.g * 255.0 + 0.5);
         float c = floor(v.b * 255.0 + 0.5);
         float d = floor(v.a * 255.0 + 0.5);
+        if (a == 255.0) {
+            return _gen_nan;
+        }
+
         float exponent = a - 127.0;
         float sign = 1.0 - mod(d, 2.0)*2.0;
         float mantissa = float(a > 0.0)
@@ -267,7 +342,8 @@ function vec2Input_Byte(name) {
             }
             return [
                 WglArg.texture(`${pre}_tex`, texture),
-                WglArg.vec2(`${pre}_size`, texture.width, texture.height)
+                WglArg.vec2(`${pre}_size`, texture.width, texture.height),
+                WglArg.float('_gen_nan', NaN)
             ];
         }
     )
@@ -459,6 +535,24 @@ const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
     [PACK_FLOAT_INTO_BYTES],
     texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
+function spreadFloatVec2(vec2Data) {
+    let result = new Float32Array(vec2Data.length << 1);
+    for (let i = 0; i*2 < vec2Data.length; i++) {
+        result[4*i] = vec2Data[2*i];
+        result[4*i+1] = vec2Data[2*i+1];
+    }
+    return result;
+}
+
+function unspreadFloatVec2(pixelData) {
+    let result = new Float32Array(pixelData.length >> 1);
+    for (let i = 0; i*2 < result.length; i++) {
+        result[2*i] = pixelData[4*i];
+        result[2*i+1] = pixelData[4*i+1];
+    }
+    return result;
+}
+
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_FLOATS = new ShaderValueCoder(
     name => vecInput_Float(name, 2),
@@ -466,7 +560,26 @@ const SHADER_CODER_FLOATS = new ShaderValueCoder(
     boolInput,
     VEC2_OUTPUT_AS_FLOAT,
     VEC4_OUTPUT_AS_FLOAT,
-    BOOL_OUTPUT);
+    BOOL_OUTPUT,
+    0,
+    0,
+    WebGLRenderingContext.FLOAT,
+    spreadFloatVec2,
+    unspreadFloatVec2,
+    (configuredShader, powerSize) => {
+        let width = 1 << Math.ceil(powerSize / 2);
+        let height = 1 << Math.floor(powerSize / 2);
+        return unspreadFloatVec2(configuredShader.readFloatOutputs(width, height));
+    },
+    e => e,
+    e => e,
+    (configuredShader, powerSize) => {
+        let width = 1 << Math.ceil(powerSize / 2);
+        let height = 1 << Math.floor(powerSize / 2);
+        return configuredShader.readFloatOutputs(width, height);
+    },
+    t => Math.round(Math.log2(t.width * t.height)),
+    t => Math.round(Math.log2(t.width * t.height)));
 
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_BYTES = new ShaderValueCoder(
@@ -475,7 +588,28 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     boolInput,
     VEC2_OUTPUT_AS_BYTE,
     VEC4_OUTPUT_AS_BYTE,
-    BOOL_OUTPUT);
+    BOOL_OUTPUT,
+    1,
+    2,
+    WebGLRenderingContext.UNSIGNED_BYTE,
+    encodeFloatsIntoBytes,
+    decodeBytesIntoFloats,
+    (configuredShader, powerSize) => {
+        powerSize += 1;
+        let width = 1 << Math.ceil(powerSize / 2);
+        let height = 1 << Math.floor(powerSize / 2);
+        return decodeBytesIntoFloats(configuredShader.readByteOutputs(width, height));
+    },
+    encodeFloatsIntoBytes,
+    decodeBytesIntoFloats,
+    (configuredShader, powerSize) => {
+        powerSize += 2;
+        let width = 1 << Math.ceil(powerSize / 2);
+        let height = 1 << Math.floor(powerSize / 2);
+        return decodeBytesIntoFloats(configuredShader.readByteOutputs(width, height));
+    },
+    t => Math.round(Math.log2(t.width * t.height)) - 1,
+    t => Math.round(Math.log2(t.width * t.height)) - 2);
 
 /** @type {!ShaderValueCoder} */
 let workingShaderCoder = SHADER_CODER_FLOATS;
