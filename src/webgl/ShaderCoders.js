@@ -1,6 +1,7 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
 import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 /**
  * A piece of a shader.
@@ -566,16 +567,14 @@ const SHADER_CODER_FLOATS = new ShaderValueCoder(
     spreadFloatVec2,
     unspreadFloatVec2,
     (configuredShader, powerSize) => {
-        let width = 1 << Math.ceil(powerSize / 2);
-        let height = 1 << Math.floor(powerSize / 2);
-        return unspreadFloatVec2(configuredShader.readFloatOutputs(width, height));
+        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
+        return unspreadFloatVec2(configuredShader.readFloatOutputs(w, h));
     },
     e => e,
     e => e,
     (configuredShader, powerSize) => {
-        let width = 1 << Math.ceil(powerSize / 2);
-        let height = 1 << Math.floor(powerSize / 2);
-        return configuredShader.readFloatOutputs(width, height);
+        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
+        return configuredShader.readFloatOutputs(w, h);
     },
     t => Math.round(Math.log2(t.width * t.height)),
     t => Math.round(Math.log2(t.width * t.height)));
@@ -595,17 +594,15 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     decodeBytesIntoFloats,
     (configuredShader, powerSize) => {
         powerSize += 1;
-        let width = 1 << Math.ceil(powerSize / 2);
-        let height = 1 << Math.floor(powerSize / 2);
-        return decodeBytesIntoFloats(configuredShader.readByteOutputs(width, height));
+        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
+        return decodeBytesIntoFloats(configuredShader.readByteOutputs(w, h));
     },
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
     (configuredShader, powerSize) => {
         powerSize += 2;
-        let width = 1 << Math.ceil(powerSize / 2);
-        let height = 1 << Math.floor(powerSize / 2);
-        return decodeBytesIntoFloats(configuredShader.readByteOutputs(width, height));
+        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
+        return decodeBytesIntoFloats(configuredShader.readByteOutputs(w, h));
     },
     t => Math.round(Math.log2(t.width * t.height)) - 1,
     t => Math.round(Math.log2(t.width * t.height)) - 2);

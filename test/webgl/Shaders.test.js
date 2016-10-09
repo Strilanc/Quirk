@@ -111,37 +111,3 @@ suite.webGlTest("sumFold", () => {
         4,6,10,14
     ]));
 });
-
-suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_cornerCases", () => {
-    let data = new Float32Array([
-        NaN, NaN, NaN, NaN,
-        Math.PI, Math.E, Math.sqrt(2), 0.1,
-        1, 0.5, -1, -2,
-        Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
-    ]);
-    let dataTex = Shaders.data(data).toFloatTexture(2, 2);
-    let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(4, 4);
-    let decodedPixels = decodeBytesIntoFloats(encodedPixels);
-    assertThat(decodedPixels).isEqualTo(data);
-});
-
-suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_randomized", () => {
-    for (let i = 0; i < 10; i++) {
-        let diam = 8;
-        let data = new Float32Array(Seq.range(diam*diam*4).map(i => Math.random()*10-5).toFloat32Array());
-        let dataTex = Shaders.data(data).toFloatTexture(diam, diam);
-        let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(diam*2, diam*2);
-        let decodedPixels = decodeBytesIntoFloats(encodedPixels);
-        assertThat(decodedPixels).isEqualTo(data);
-    }
-});
-
-suite.webGlTest("encodeFloatsIntoBytes_vs_decodeByteBufferToFloatBuffer_caught", () => {
-    let data = new Float32Array([
-        -0.2509765326976776, 0.2499999850988388, 0, 0
-    ]);
-    let dataTex = Shaders.data(data).toFloatTexture(1, 1);
-    let encodedPixels = Shaders.encodeFloatsIntoBytes(dataTex).readByteOutputs(2, 2);
-    let decodedPixels = decodeBytesIntoFloats(encodedPixels);
-    assertThat(decodedPixels).isEqualTo(data);
-});

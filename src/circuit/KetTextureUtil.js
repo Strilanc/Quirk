@@ -61,8 +61,7 @@ const allocSameSizedTexture = tex => {
  * @returns {!WglTexture}
  */
 const allocBoolTex = power => {
-    let w = 1 << Math.ceil(power / 2);
-    let h = 1 << Math.floor(power / 2);
+    let {w, h} = WglTexture.preferredSizeForOrder(power);
     return allocSizedTexture(w, h, WebGLRenderingContext.UNSIGNED_BYTE);
 };
 
@@ -72,8 +71,7 @@ const allocBoolTex = power => {
  */
 const allocVec2Tex = power => {
     power += workingShaderCoder.vec2Overhead;
-    let w = 1 << Math.ceil(power / 2);
-    let h = 1 << Math.floor(power / 2);
+    let {w, h} = WglTexture.preferredSizeForOrder(power);
     return allocSizedTexture(w, h, workingShaderCoder.vecPixelType);
 };
 
@@ -83,12 +81,7 @@ const allocVec2Tex = power => {
  */
 const allocVec4Tex = power => {
     power += workingShaderCoder.vec4Overhead;
-    let w = 1 << Math.ceil(power / 2);
-    let h = 1 << Math.floor(power / 2);
-    if (w < 4 && h > 1) {
-        w <<= 1;
-        h >>= 1;
-    }
+    let {w, h} = WglTexture.preferredSizeForOrder(power);
     return allocSizedTexture(w, h, workingShaderCoder.vecPixelType);
 };
 
@@ -307,17 +300,15 @@ KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex,
  * @returns {!WglTexture}
  */
 KetTextureUtil._sumDownVec4 = (summandsTex, outCount) => {
-    let outSize = Util.ceilingPowerOf2(outCount) << workingShaderCoder.vec4Overhead;
-    let outWidth = Math.min(summandsTex.width, outSize);
+    // When the number of kept qubits isn't a power of 2, we have some extra junk results interleaved to ignore.
+    let outputOrder = Math.ceil(Math.log2(Math.max(1, outCount)));
+    let inputOrder = workingShaderCoder.vec4Order(summandsTex);
 
     return KetTextureUtil.aggregateReusingIntermediates(
         summandsTex,
-        Seq.range(Math.round(Math.log2(summandsTex.width * summandsTex.height / outSize))),
+        Seq.range(inputOrder - outputOrder),
         accTex => {
-            let [w, h] = accTex.width > Math.max(outWidth, accTex.height) ?
-                [accTex.width / 2, 0] :
-                [0, accTex.height / 2];
-            let halfTex = allocSizedTexture(accTex.width - w, accTex.height - h, accTex.pixelType);
+            let halfTex = allocVec4Tex(workingShaderCoder.vec4Order(accTex) - 1);
             Shaders.sumFoldVec4(accTex).renderTo(halfTex);
             return halfTex;
         });

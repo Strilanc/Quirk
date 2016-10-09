@@ -82,8 +82,9 @@ class WglConfiguredShader {
      * @returns {!Uint8Array}
      */
     readByteOutputs(width, height) {
-        let texture = this.toByteTexture(width, height);
+        let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
         try {
+            this.renderTo(texture);
             let result = texture.readPixels();
             return result;
         } finally {
@@ -138,10 +139,8 @@ class WglConfiguredShader {
      */
     toVec2Texture(order) {
         order += workingShaderCoder.vec2Overhead;
-        let width = 1 << Math.ceil(order / 2);
-        let height = 1 << Math.floor(order / 2);
-
-        let texture = new WglTexture(width, height, workingShaderCoder.vecPixelType);
+        let {w, h} = WglTexture.preferredSizeForOrder(order);
+        let texture = new WglTexture(w, h, workingShaderCoder.vecPixelType);
         this.renderTo(texture);
         return texture;
     }
@@ -152,14 +151,8 @@ class WglConfiguredShader {
      */
     toVec4Texture(order) {
         order += workingShaderCoder.vec4Overhead;
-        let width = 1 << Math.ceil(order / 2);
-        let height = 1 << Math.floor(order / 2);
-        if (width < 4 ) {
-            width <<= 1;
-            height >>= 1;
-        }
-
-        let texture = new WglTexture(width, height, workingShaderCoder.vecPixelType);
+        let {w, h} = WglTexture.preferredSizeForOrder(order);
+        let texture = new WglTexture(w, h, workingShaderCoder.vecPixelType);
         this.renderTo(texture);
         return texture;
     }
@@ -169,10 +162,8 @@ class WglConfiguredShader {
      * @returns {!WglTexture}
      */
     toBoolTexture(order) {
-        let width = 1 << Math.ceil(order / 2);
-        let height = 1 << Math.floor(order / 2);
-
-        let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
+        let {w, h} = WglTexture.preferredSizeForOrder(order);
+        let texture = new WglTexture(w, h, WebGLRenderingContext.UNSIGNED_BYTE);
         this.renderTo(texture);
         return texture;
     }

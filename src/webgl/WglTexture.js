@@ -51,6 +51,20 @@ class WglTexture {
             e => WglTexture._deinitialize(e));
     }
 
+    /**
+     * @param {!int} order
+     * @returns {{w: !int, h: !int}}
+     */
+    static preferredSizeForOrder(order) {
+        let w = 1 << Math.ceil(order / 2);
+        let h = 1 << Math.floor(order / 2);
+        if (w === 2 && h === 2) {
+            w = 4;
+            h = 1;
+        }
+        return {w, h};
+    }
+
     toString() {
         return 'Texture(' + [
             this.width + 'x' + this.height,

@@ -54,7 +54,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
         qubitIndex = 0;
     }
     let wireCount = qubitSpan + extraWires;
-    let [w, h] = [1 << Math.ceil(wireCount/2), 1 << Math.floor(wireCount/2)];
+    let {w, h} = WglTexture.preferredSizeForOrder(wireCount);
     let controls = Controls.NONE;
     for (let i = 0; i < extraWires; i++) {
         if (Math.random() < 0.5) {

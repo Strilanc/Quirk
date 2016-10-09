@@ -3,6 +3,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 /**
@@ -36,11 +37,8 @@ class ShaderPipeline {
      * @param {!boolean=} keepResult
      */
     addPowerSizedStep(qubitCount, nearlyConfiguredShader, keepResult=false) {
-        this.addSizedStep(
-            1 << Math.ceil(qubitCount/2),
-            1 << Math.floor(qubitCount/2),
-            nearlyConfiguredShader,
-            keepResult);
+        let {w, h} = WglTexture.preferredSizeForOrder(qubitCount);
+        this.addSizedStep(w, h, nearlyConfiguredShader, keepResult);
     }
 
     /**

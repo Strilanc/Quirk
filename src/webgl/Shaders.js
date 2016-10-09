@@ -32,12 +32,17 @@ const COLOR_SHADER = new WglShader(`
 
 /**
  * Returns a configured shader that just draws the input texture's contents.
- * @param {!WglTexture} inputTexture
+ * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
  */
-Shaders.passthrough = inputTexture => PASSTHROUGH_SHADER.withArgs(
-    WglArg.vec2("textureSize", inputTexture.width, inputTexture.height),
-    WglArg.texture("dataTexture", inputTexture));
+Shaders.passthrough = inp => new WglConfiguredShader(dst => {
+    if (dst.width !== inp.width || dst.height !== inp.height || dst.pixelType !== inp.pixelType) {
+        throw new DetailedError("Expected same-shaped textures.", {inp, dst});
+    }
+    PASSTHROUGH_SHADER.withArgs(
+        WglArg.vec2("textureSize", inp.width, inp.height),
+        WglArg.texture("dataTexture", inp)).renderTo(dst);
+});
 const PASSTHROUGH_SHADER = new WglShader(`
     uniform vec2 textureSize;
     uniform sampler2D dataTexture;
