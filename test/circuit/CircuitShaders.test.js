@@ -9,101 +9,65 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
+import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("CircuitShaders");
 
+function readAmps(bitCount, shader) {
+    return new Matrix(1, 1 << bitCount, workingShaderCoder.readVec2Data(shader, bitCount));
+}
+
 suite.webGlTest("classicalState", () => {
-    assertThat(CircuitShaders.classicalState(0).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(readAmps(2, CircuitShaders.classicalState(0))).isEqualTo(Matrix.col(1, 0, 0, 0));
+    assertThat(readAmps(2, CircuitShaders.classicalState(1))).isEqualTo(Matrix.col(0, 1, 0, 0));
+    assertThat(readAmps(2, CircuitShaders.classicalState(2))).isEqualTo(Matrix.col(0, 0, 1, 0));
+    assertThat(readAmps(2, CircuitShaders.classicalState(3))).isEqualTo(Matrix.col(0, 0, 0, 1));
 
-    assertThat(CircuitShaders.classicalState(1).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
-
-    assertThat(CircuitShaders.classicalState(2).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
-
-    assertThat(CircuitShaders.classicalState(3).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0
-    ]));
-
-    assertThat(CircuitShaders.classicalState(0).readFloatOutputs(2, 4)).isEqualTo(new Float32Array([
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
-
-    assertThat(CircuitShaders.classicalState(5).readFloatOutputs(2, 4)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
+    assertThat(readAmps(3, CircuitShaders.classicalState(0))).isEqualTo(Matrix.col(1, 0, 0, 0, 0, 0, 0, 0));
+    assertThat(readAmps(3, CircuitShaders.classicalState(5))).isEqualTo(Matrix.col(0, 0, 0, 0, 0, 1, 0, 0));
 });
 
 suite.webGlTest("linearOverlay", () => {
-    let fore = Shaders.data(new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray())).toFloatTexture(2, 2);
-    let back = Shaders.data(new Float32Array(Seq.range(4*4*4).map(e => -e).toArray())).toFloatTexture(4, 4);
+    let fore = Shaders.vec4Data(new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray())).toVec4Texture(2);
+    let back = Shaders.vec4Data(new Float32Array(Seq.range(4*4*4).map(e => -e).toArray())).toVec4Texture(4);
 
-    assertThat(CircuitShaders.linearOverlay(0, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.linearOverlay(0, fore, back).readVec4Outputs(4)).isEqualTo(new Float32Array([
         900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    assertThat(CircuitShaders.linearOverlay(1, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.linearOverlay(1, fore, back).readVec4Outputs(4)).isEqualTo(new Float32Array([
         -0,  -1,  -2,  -3,  900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911,
         912, 913, 914, 915, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    assertThat(CircuitShaders.linearOverlay(2, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.linearOverlay(2, fore, back).readVec4Outputs(4)).isEqualTo(new Float32Array([
         -0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,  900, 901, 902, 903, 904, 905, 906, 907,
         908, 909, 910, 911, 912, 913, 914, 915, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    assertThat(CircuitShaders.linearOverlay(4, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.linearOverlay(4, fore, back).readVec4Outputs(4)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911, 912, 913, 914, 915,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59, -60, -61, -62, -63
     ]));
 
-    assertThat(CircuitShaders.linearOverlay(12, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.linearOverlay(12, fore, back).readVec4Outputs(4)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911, 912, 913, 914, 915
     ]));
 
-    assertThat(CircuitShaders.linearOverlay(13, fore, back).readFloatOutputs(4, 4)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.linearOverlay(13, fore, back).readVec4Outputs(4)).isEqualTo(new Float32Array([
         -0,   -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -12, -13, -14, -15,
         -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
@@ -171,128 +135,101 @@ suite.webGlTest("controlMask_largeReference", () => {
 });
 
 suite.webGlTest("controlSelect_simple", () => {
-    let coords = Shaders.coords.toFloatTexture(4, 4);
-    assertThat(CircuitShaders.controlSelect(Controls.NONE, coords).readFloatOutputs(4, 4)).
-        isEqualTo(new Float32Array([
-            0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
-            0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,
-            0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0,
-            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(0, false), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            0,0,0,0, 2,0,0,0,
-            0,1,0,0, 2,1,0,0,
-            0,2,0,0, 2,2,0,0,
-            0,3,0,0, 2,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(0, true), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            1,0,0,0, 3,0,0,0,
-            1,1,0,0, 3,1,0,0,
-            1,2,0,0, 3,2,0,0,
-            1,3,0,0, 3,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(1, false), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            0,0,0,0, 1,0,0,0,
-            0,1,0,0, 1,1,0,0,
-            0,2,0,0, 1,2,0,0,
-            0,3,0,0, 1,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(1, true), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            2,0,0,0, 3,0,0,0,
-            2,1,0,0, 3,1,0,0,
-            2,2,0,0, 3,2,0,0,
-            2,3,0,0, 3,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(2, false), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
-            0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(2, true), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0,
-            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(3, false), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0,
-            0,1,0,0, 1,1,0,0, 2,1,0,0, 3,1,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(Controls.bit(3, true), coords).readFloatOutputs(4, 2)).
-        isEqualTo(new Float32Array([
-            0,2,0,0, 1,2,0,0, 2,2,0,0, 3,2,0,0,
-            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
-        ]));
-});
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+        vec2 outputFor(float k) {
+            return vec2(mod(k, 4.0), floor(k/4.0));
+        }
+    `)().toVec2Texture(4);
 
-suite.webGlTest("controlSelect_skewed", () => {
-    let coords = Shaders.coords.toFloatTexture(2, 8);
-    let shader = CircuitShaders.controlSelect(Controls.bit(1, true), coords);
-    let r1 = shader.readFloatOutputs(8, 1);
-    let r2 = shader.readFloatOutputs(4, 2);
-    let r3 = shader.readFloatOutputs(2, 4);
-    let r4 = shader.readFloatOutputs(1, 8);
-    assertThat(r1).isEqualTo(new Float32Array([
-        0,1,0,0, 1,1,0,0,
-        0,3,0,0, 1,3,0,0,
-        0,5,0,0, 1,5,0,0,
-        0,7,0,0, 1,7,0,0
-    ]));
-    assertThat(r2).isEqualTo(r1);
-    assertThat(r3).isEqualTo(r1);
-    assertThat(r4).isEqualTo(r1);
+    assertThat(CircuitShaders.controlSelect(Controls.NONE, coords).readVec2Outputs(4)).
+        isEqualTo(new Float32Array([
+            0,0, 1,0, 2,0, 3,0,
+            0,1, 1,1, 2,1, 3,1,
+            0,2, 1,2, 2,2, 3,2,
+            0,3, 1,3, 2,3, 3,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(0, false), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            0,0, 2,0,
+            0,1, 2,1,
+            0,2, 2,2,
+            0,3, 2,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(0, true), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            1,0, 3,0,
+            1,1, 3,1,
+            1,2, 3,2,
+            1,3, 3,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(1, false), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            0,0, 1,0,
+            0,1, 1,1,
+            0,2, 1,2,
+            0,3, 1,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(1, true), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            2,0, 3,0,
+            2,1, 3,1,
+            2,2, 3,2,
+            2,3, 3,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(2, false), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            0,0, 1,0, 2,0, 3,0,
+            0,2, 1,2, 2,2, 3,2
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(2, true), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            0,1, 1,1, 2,1, 3,1,
+            0,3, 1,3, 2,3, 3,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(3, false), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            0,0, 1,0, 2,0, 3,0,
+            0,1, 1,1, 2,1, 3,1
+        ]));
+    assertThat(CircuitShaders.controlSelect(Controls.bit(3, true), coords).readVec2Outputs(3)).
+        isEqualTo(new Float32Array([
+            0,2, 1,2, 2,2, 3,2,
+            0,3, 1,3, 2,3, 3,3
+        ]));
 });
 
 suite.webGlTest("controlSelect_multiple", () => {
-    let coords = Shaders.coords.toFloatTexture(4, 4);
-    assertThat(CircuitShaders.controlSelect(new Controls(0x3, 0x3), coords).readFloatOutputs(2, 2)).
-        isEqualTo(new Float32Array([
-            3,0,0,0,
-            3,1,0,0,
-            3,2,0,0,
-            3,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(new Controls(0x3, 0x2), coords).readFloatOutputs(2, 2)).
-        isEqualTo(new Float32Array([
-            2,0,0,0,
-            2,1,0,0,
-            2,2,0,0,
-            2,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(new Controls(0xC, 0xC), coords).readFloatOutputs(2, 2)).
-        isEqualTo(new Float32Array([
-            0,3,0,0, 1,3,0,0, 2,3,0,0, 3,3,0,0
-        ]));
-    assertThat(CircuitShaders.controlSelect(new Controls(0xF, 0x3), coords).readFloatOutputs(1, 1)).
-        isEqualTo(new Float32Array([
-            3,0,0,0
-        ]));
-});
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+        vec2 outputFor(float k) {
+            return vec2(mod(k, 4.0), floor(k/4.0));
+        }
+    `)().toVec2Texture(4);
 
-suite.webGlTest("swap", () => {
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
-        args => CircuitShaders.swap(args, args.row + 1),
-        Matrix.square(
-            1,0,0,0,
-            0,0,1,0,
-            0,1,0,0,
-            0,0,0,1));
-
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
-        args => CircuitShaders.swap(args, args.row + 2),
-        Matrix.square(
-            1,0,0,0,0,0,0,0,
-            0,0,0,0,1,0,0,0,
-            0,0,1,0,0,0,0,0,
-            0,0,0,0,0,0,1,0,
-            0,1,0,0,0,0,0,0,
-            0,0,0,0,0,1,0,0,
-            0,0,0,1,0,0,0,0,
-            0,0,0,0,0,0,0,1));
+    assertThat(CircuitShaders.controlSelect(new Controls(0x3, 0x3), coords).readVec2Outputs(2)).
+        isEqualTo(new Float32Array([
+            3,0,
+            3,1,
+            3,2,
+            3,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(new Controls(0x3, 0x2), coords).readVec2Outputs(2)).
+        isEqualTo(new Float32Array([
+            2,0,
+            2,1,
+            2,2,
+            2,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(new Controls(0xC, 0xC), coords).readVec2Outputs(2)).
+        isEqualTo(new Float32Array([
+            0,3,
+            1,3,
+            2,3,
+            3,3
+        ]));
+    assertThat(CircuitShaders.controlSelect(new Controls(0xF, 0x3), coords).readVec2Outputs(0)).
+        isEqualTo(new Float32Array([
+            3,0
+        ]));
 });
 
 suite.webGlTest("qubitDensities", () => {
@@ -302,46 +239,46 @@ suite.webGlTest("qubitDensities", () => {
     let _ = 0;
 
     let assertAmpsToDensities = (amps, dens) => {
-        let tex = Shaders.data(new Float32Array(amps)).toFloatTexture(2, 1);
-        assertThat(CircuitShaders.qubitDensities(tex).readFloatOutputs(1, 1)).
+        let tex = Shaders.vec2Data(new Float32Array(amps)).toVec2Texture(1);
+        assertThat(CircuitShaders.qubitDensities(tex).readVec4Outputs(0)).
             isApproximatelyEqualTo(new Float32Array(dens));
         tex.ensureDeinitialized();
     };
     assertAmpsToDensities(
-        [1,_,_,_, _,_,_,_],
+        [1,_, _,_],
         [1,0,0,0]);
     assertAmpsToDensities(
-        [_,1,_,_, _,_,_,_],
+        [_,1, _,_],
         [1,0,0,0]);
     assertAmpsToDensities(
-        [_,_,_,_, 1,_,_,_],
+        [_,_, 1,_],
         [0,0,0,1]);
     assertAmpsToDensities(
-        [_,_,_,_, _,1,_,_],
+        [_,_, _,1],
         [0,0,0,1]);
     assertAmpsToDensities(
-        [s,_,_,_, s,_,_,_],
+        [s,_, s,_],
         [h,h,0,h]);
     assertAmpsToDensities(
-        [s,_,_,_, _,s,_,_],
+        [s,_, _,s],
         [h,0,h,h]);
     assertAmpsToDensities(
-        [_,s,_,_, s,_,_,_],
+        [_,s, s,_],
         [h,0,-h,h]);
     assertAmpsToDensities(
-        [_,s,_,_, -s,_,_,_],
+        [_,s, -s,_],
         [h,0,h,h]);
     assertAmpsToDensities(
-        [0.4,_,_,_, _,0.6,_,_],
+        [0.4,_, _,0.6],
         [0.16,0,0.24,0.36]);
 
-    let allQubitsZero = Shaders.data(new Float32Array([
-        1,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
-    ])).toFloatTexture(4, 4);
-    assertThat(CircuitShaders.qubitDensities(allQubitsZero).readFloatOutputs(32, 1)).isEqualTo(new Float32Array([
+    let allQubitsZero = Shaders.vec2Data(new Float32Array([
+        1,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, _,_
+    ])).toVec2Texture(4);
+    assertThat(CircuitShaders.qubitDensities(allQubitsZero).readVec4Outputs(5)).isEqualTo(new Float32Array([
         1,_,_,_, 1,_,_,_, 1,_,_,_, 1,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
@@ -352,13 +289,13 @@ suite.webGlTest("qubitDensities", () => {
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
 
-    let ent = Shaders.data(new Float32Array([
-        s,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, s,_,_,_
-    ])).toFloatTexture(4, 4);
-    assertThat(CircuitShaders.qubitDensities(ent).readFloatOutputs(32, 1)).isApproximatelyEqualTo(new Float32Array([
+    let ent = Shaders.vec2Data(new Float32Array([
+        s,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, s,_
+    ])).toVec2Texture(4);
+    assertThat(CircuitShaders.qubitDensities(ent).readVec4Outputs(5)).isApproximatelyEqualTo(new Float32Array([
         h,_,_,_, h,_,_,_, h,_,_,_, h,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
@@ -368,7 +305,7 @@ suite.webGlTest("qubitDensities", () => {
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,h, _,_,_,h, _,_,_,h, _,_,_,h
     ]));
-    assertThat(CircuitShaders.qubitDensities(ent, 3).readFloatOutputs(16, 1)).isApproximatelyEqualTo(new Float32Array([
+    assertThat(CircuitShaders.qubitDensities(ent, 3).readVec4Outputs(4)).isApproximatelyEqualTo(new Float32Array([
         h,_,_,_, h,_,_,_,
         _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_,
@@ -380,13 +317,13 @@ suite.webGlTest("qubitDensities", () => {
     ]));
 
     // 0, 0+1, 0+i1, 1
-    let mix = Shaders.data(new Float32Array([
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
-        h,_,_,_, _,_,_,_, h,_,_,_, _,_,_,_,
-        _,h,_,_, _,_,_,_, _,h,_,_, _,_,_,_
-    ])).toFloatTexture(4, 4);
-    assertThat(CircuitShaders.qubitDensities(mix).readFloatOutputs(32, 1)).isApproximatelyEqualTo(new Float32Array([
+    let mix = Shaders.vec2Data(new Float32Array([
+        _,_, _,_, _,_, _,_,
+        _,_, _,_, _,_, _,_,
+        h,_, _,_, h,_, _,_,
+        _,h, _,_, _,h, _,_
+    ])).toVec2Texture(4);
+    assertThat(CircuitShaders.qubitDensities(mix).readVec4Outputs(5)).isApproximatelyEqualTo(new Float32Array([
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,q,
@@ -396,7 +333,7 @@ suite.webGlTest("qubitDensities", () => {
         q,_,_,_, q,q,_,q, q,_,q,q, _,_,_,q,
         q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
-    assertThat(CircuitShaders.qubitDensities(mix, 12).readFloatOutputs(16, 1)).isApproximatelyEqualTo(new Float32Array([
+    assertThat(CircuitShaders.qubitDensities(mix, 12).readVec4Outputs(4)).isApproximatelyEqualTo(new Float32Array([
         _,_,_,_, _,_,_,q,
         _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,q,
@@ -406,7 +343,7 @@ suite.webGlTest("qubitDensities", () => {
         q,_,q,q, _,_,_,q,
         _,_,_,_, _,_,_,_
     ]));
-    assertThat(CircuitShaders.qubitDensities(mix, 13).readFloatOutputs(32, 1)).isApproximatelyEqualTo(new Float32Array([
+    assertThat(CircuitShaders.qubitDensities(mix, 13).readVec4Outputs(5)).isApproximatelyEqualTo(new Float32Array([
         _,_,_,_, _,_,_,_, _,_,_,q, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,q, _,_,_,_,
@@ -416,4 +353,26 @@ suite.webGlTest("qubitDensities", () => {
         q,_,_,_, q,_,q,q, _,_,_,q, _,_,_,_,
         q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
+});
+
+suite.webGlTest("swap", () => {
+    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
+            args => CircuitShaders.swap(args, args.row + 1),
+        Matrix.square(
+            1,0,0,0,
+            0,0,1,0,
+            0,1,0,0,
+            0,0,0,1));
+
+    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
+            args => CircuitShaders.swap(args, args.row + 2),
+        Matrix.square(
+            1,0,0,0,0,0,0,0,
+            0,0,0,0,1,0,0,0,
+            0,0,1,0,0,0,0,0,
+            0,0,0,0,0,0,1,0,
+            0,1,0,0,0,0,0,0,
+            0,0,0,0,0,1,0,0,
+            0,0,0,1,0,0,0,0,
+            0,0,0,0,0,0,0,1));
 });
