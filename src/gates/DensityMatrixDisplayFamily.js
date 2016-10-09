@@ -14,6 +14,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
  * @param {!number} w
@@ -61,46 +62,27 @@ function makeDensityPipeline(w, h, controls, rangeOffset, rangeLength) {
  * @param {!int} qubitSpan
  * @returns {!WglConfiguredShader}
  */
-let amplitudesToDensities = (inputTexture, qubitSpan) => new WglConfiguredShader(destinationTexture => {
-    let outArea = destinationTexture.width*destinationTexture.height;
-    let inArea = inputTexture.width*inputTexture.height;
-    if (outArea !== inArea << qubitSpan) {
-        throw new DetailedError("Wrong destination size.", {inputTexture, qubitSpan, destinationTexture});
-    }
-    AMPLITUDES_TO_DENSITIES_SHADER.withArgs(
-        WglArg.texture('inputTexture', inputTexture),
-        WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
-        WglArg.float('outputWidth', destinationTexture.width),
-        WglArg.float('qubitSpan', 1 << qubitSpan)
-    ).renderTo(destinationTexture)
-});
-const AMPLITUDES_TO_DENSITIES_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
+let amplitudesToDensities = (inputTexture, qubitSpan) => AMPLITUDES_TO_DENSITIES_SHADER(
+    inputTexture,
+    WglArg.float('qubitSpan', 1 << qubitSpan));
+const AMPLITUDES_TO_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec2Output,
+    `
     uniform float qubitSpan;
 
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
+    vec2 outputFor(float k) {
+        float k_ket = mod(k, qubitSpan);
+        float k_bra = mod(floor(k / qubitSpan), qubitSpan);
+        float k_rest = floor(k / qubitSpan / qubitSpan);
+        float offset = k_rest*qubitSpan;
 
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-
-        float stateKet = mod(state, qubitSpan);
-        float stateBra = mod(floor(state / qubitSpan), qubitSpan);
-        float stateOther = floor(state / qubitSpan / qubitSpan);
-
-        vec2 uvKet = toUv(stateKet + stateOther*qubitSpan);
-        vec2 uvBra = toUv(stateBra + stateOther*qubitSpan);
-
-        vec2 ampKet = texture2D(inputTexture, uvKet).xy;
-        vec2 ampBra = texture2D(inputTexture, uvBra).xy;
+        vec2 ampKet = read_input(k_ket + offset);
+        vec2 ampBra = read_input(k_bra + offset);
         float r = dot(ampKet, ampBra);
         float i = dot(ampKet, vec2(-ampBra.y, ampBra.x));
 
-        gl_FragColor = vec4(r, i, 0.0, 0.0);
+        return vec2(r, i);
     }`);
 
 /**

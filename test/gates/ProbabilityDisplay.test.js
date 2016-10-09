@@ -15,11 +15,11 @@ suite.webGlTest("amplitudesToProbabilities", () => {
         8, 9, 0, 0,
         1/2, 0, 0, 0,
         0, 1/4, 0, 0,
-        0, 0, 1/8, 0,
-        0, 0, 0, 1/16
+        0, 1/8, 0, 0,
+        1/16, 0, 0, 0
     ])).toFloatTexture(4, 2);
 
-    let con = CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 4);
+    let con = CircuitShaders.controlMask(Controls.NONE).toFloatTexture(4, 2);
     assertThat(amplitudesToProbabilities(inp, con).readFloatOutputs(8, 1)).isEqualTo(new Float32Array([
         4+9, 0, 0, 0,
         16+25, 0, 0, 0,
