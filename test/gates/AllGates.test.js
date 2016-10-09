@@ -23,7 +23,7 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
     let bit = 0;
     let numQubits = gate.height;
     let n = 1 << numQubits;
-    let input = KetTextureUtil.allocQubitTexture(numQubits);
+    let input = KetTextureUtil.allocVec2Tex(numQubits);
     let control = KetTextureUtil.control(numQubits, Controls.NONE);
     let cols = [];
     for (let i = 0; i < n; i++) {

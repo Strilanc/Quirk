@@ -36,7 +36,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
 
-    let cycledTex = KetTextureUtil.allocQubitTexture(totalQubits);
+    let cycledTex = KetTextureUtil.allocVec2Tex(totalQubits);
     result.addPowerSizedStep(totalQubits, inp => new WglConfiguredShader(dst => {
         GateShaders.cycleAllBits(inp, lostHeadQubits-rangeOffset).renderTo(dst);
         Shaders.passthrough(dst).renderTo(cycledTex);
