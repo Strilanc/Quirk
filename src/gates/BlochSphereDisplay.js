@@ -130,7 +130,7 @@ let BlochSphereDisplay = Gate.fromIdentity(
     "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.").
     withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
         let {row, col} = args.positionInCircuit;
-        let ρ = args.stats.qubitDensityMatrix(row, col);
+        let ρ = args.stats.qubitDensityMatrix(col, row);
         paintBlochSphereDisplay(args.painter, ρ, args.rect, args.focusPoints);
     })).
     withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

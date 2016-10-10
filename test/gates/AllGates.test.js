@@ -7,6 +7,7 @@ import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
+import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AllGates");
 
@@ -23,7 +24,7 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
     let bit = 0;
     let numQubits = gate.height;
     let n = 1 << numQubits;
-    let input = KetTextureUtil.allocQubitTexture(numQubits);
+    let input = KetTextureUtil.allocVec2Tex(numQubits);
     let control = KetTextureUtil.control(numQubits, Controls.NONE);
     let cols = [];
     for (let i = 0; i < n; i++) {
@@ -39,7 +40,8 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
                 control,
                 accTex,
                 new Map())));
-        let col = KetTextureUtil.pixelsToAmplitudes(output.readPixels(), 1.0);
+        let buf = workingShaderCoder.unpackVec2Data(output.readPixels());
+        let col = new Matrix(1, 1 << numQubits, buf);
         KetTextureUtil.doneWithTexture(output);
         cols.push(col);
     }

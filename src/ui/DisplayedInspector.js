@@ -277,26 +277,26 @@ class DisplayedInspector {
             Math.min(1, Math.max(0, 1.0 - (150-this.hand.pos.y)/50));
 
         painter.ctx.save();
-        painter.ctx.translate(228, 250);
+        painter.ctx.translate(268, 250);
         painter.ctx.rotate(Math.PI * 0.02);
         painter.ctx.fillStyle = 'red';
         painter.ctx.textAlign = 'right';
         painter.ctx.font = '16px sans-serif';
-        painter.ctx.fillText("output changes", 0, 0);
+        painter.ctx.fillText("outputs change", 0, 0);
         painter.ctx.restore();
 
         painter.ctx.beginPath();
-        painter.ctx.moveTo(230, 245);
+        painter.ctx.moveTo(270, 245);
         painter.ctx.bezierCurveTo(
-            275, 245,
-            315, 215,
-            330, 200);
+            300, 245,
+            315, 235,
+            328, 222);
         painter.ctx.strokeStyle = 'red';
         painter.ctx.lineWidth = 3;
         painter.ctx.stroke();
 
         painter.trace(tracer => {
-            tracer.arrowHead(330, 200, 10, Math.PI*-0.23, 1.3);
+            tracer.arrowHead(330, 219, 10, Math.PI*-0.265, 1.3);
         }).thenFill('red');
 
         painter.ctx.restore();

@@ -13,45 +13,37 @@ import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader, WglShader} from "src/webgl/WglShader.js"
+import {WglShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
- * @param {!number} w
- * @param {!number} h
  * @param {!Controls} controls
+ * @param {!int} qubitCount
  * @param {!int} rangeOffset
  * @param {!int} rangeLength
  * @returns {!ShaderPipeline} Computes the marginal probabilities for a range of qubits from a superposition texture.
  */
-function makeDensityPipeline(w, h, controls, rangeOffset, rangeLength) {
+function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
+
+    let forcedQubits = Util.numberOfSetBits(controls.inclusionMask);
+    let forcedQubitsAbove = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+
     let result = new ShaderPipeline();
 
-    let areaReduction = Util.numberOfSetBits(controls.inclusionMask);
-    let offsetReduction = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
-    w >>= Math.floor(areaReduction/2);
-    h >>= Math.ceil(areaReduction/2);
-    result.addSizedStep(w, h, t => CircuitShaders.controlSelect(controls, t));
-    result.addSizedStep(w, h, t => GateShaders.cycleAllBits(t, offsetReduction-rangeOffset));
+    let n = qubitCount - forcedQubits;
+    result.addPowerSizedStepVec2(n, t => CircuitShaders.controlSelect(controls, t));
+    result.addPowerSizedStepVec2(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
 
-    w <<= Math.floor(rangeLength/2);
-    h <<= Math.ceil(rangeLength/2);
-    if (h > w) {
-        w <<= 1;
-        h >>= 1;
-    }
-    result.addSizedStep(w, h, t => amplitudesToDensities(t, rangeLength));
+    n += rangeLength;
+    result.addPowerSizedStepVec2(n, t => amplitudesToCouplings(t, rangeLength));
 
-    let remainingQubitCount = Math.round(Math.log2(w*h));
-    for (let i = Math.round(Math.log2(w*h)); i > 2*rangeLength; i--) {
-        if (h > 1) {
-            h >>= 1;
-            result.addSizedStep(w, h, (h=>t=>Shaders.sumFold(t, 0, h))(h));
-        } else {
-            w >>= 1;
-            result.addSizedStep(w, h, (w=>t=>Shaders.sumFold(t, w, 0))(w));
-        }
-        remainingQubitCount -= 1;
+    while (n > 2*rangeLength) {
+        n--;
+        result.addPowerSizedStepVec2(n, t => Shaders.sumFoldVec2(t));
     }
+
+    result.addPowerSizedStepVec4(2*rangeLength, Shaders.vec2AsVec4);
 
     return result;
 }
@@ -61,46 +53,27 @@ function makeDensityPipeline(w, h, controls, rangeOffset, rangeLength) {
  * @param {!int} qubitSpan
  * @returns {!WglConfiguredShader}
  */
-let amplitudesToDensities = (inputTexture, qubitSpan) => new WglConfiguredShader(destinationTexture => {
-    let outArea = destinationTexture.width*destinationTexture.height;
-    let inArea = inputTexture.width*inputTexture.height;
-    if (outArea !== inArea << qubitSpan) {
-        throw new DetailedError("Wrong destination size.", {inputTexture, qubitSpan, destinationTexture});
-    }
-    AMPLITUDES_TO_DENSITIES_SHADER.withArgs(
-        WglArg.texture('inputTexture', inputTexture),
-        WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
-        WglArg.float('outputWidth', destinationTexture.width),
-        WglArg.float('qubitSpan', 1 << qubitSpan)
-    ).renderTo(destinationTexture)
-});
-const AMPLITUDES_TO_DENSITIES_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
+let amplitudesToCouplings = (inputTexture, qubitSpan) => AMPLITUDES_TO_DENSITIES_SHADER(
+    inputTexture,
+    WglArg.float('qubitSpan', 1 << qubitSpan));
+const AMPLITUDES_TO_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec2Output,
+    `
     uniform float qubitSpan;
 
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
+    vec2 outputFor(float k) {
+        float k_ket = mod(k, qubitSpan);
+        float k_bra = mod(floor(k / qubitSpan), qubitSpan);
+        float k_rest = floor(k / qubitSpan / qubitSpan);
+        float offset = k_rest*qubitSpan;
 
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-
-        float stateKet = mod(state, qubitSpan);
-        float stateBra = mod(floor(state / qubitSpan), qubitSpan);
-        float stateOther = floor(state / qubitSpan / qubitSpan);
-
-        vec2 uvKet = toUv(stateKet + stateOther*qubitSpan);
-        vec2 uvBra = toUv(stateBra + stateOther*qubitSpan);
-
-        vec2 ampKet = texture2D(inputTexture, uvKet).xy;
-        vec2 ampBra = texture2D(inputTexture, uvBra).xy;
+        vec2 ampKet = read_input(k_ket + offset);
+        vec2 ampBra = read_input(k_bra + offset);
         float r = dot(ampKet, ampBra);
         float i = dot(ampKet, vec2(-ampBra.y, ampBra.x));
 
-        gl_FragColor = vec4(r, i, 0.0, 0.0);
+        return vec2(r, i);
     }`);
 
 /**
@@ -166,8 +139,7 @@ function densityMatrixDisplayMaker(span) {
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
         withCustomStatPipelineMaker(args => makeDensityPipeline(
-            args.controlsTexture.width,
-            args.controlsTexture.height,
+            args.wireCount,
             args.controls,
             args.row,
             span)).
@@ -187,8 +159,8 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
     "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
     withSerializedId("Density").
     withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-        let {row, col} = args.positionInCircuit;
-        let ρ = args.stats.qubitDensityMatrix(row, col);
+        let {col, row} = args.positionInCircuit;
+        let ρ = args.stats.qubitDensityMatrix(col, row);
         MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
     })).
     withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
@@ -196,4 +168,4 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
 let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
     span === 1 ? SingleWireDensityMatrixDisplay :
     densityMatrixDisplayMaker(span));
-export {DensityMatrixDisplayFamily, amplitudesToDensities}
+export {DensityMatrixDisplayFamily, amplitudesToCouplings}

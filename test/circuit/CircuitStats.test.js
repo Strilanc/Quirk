@@ -11,7 +11,8 @@ import {Serializer} from "src/circuit/Serializer.js"
 
 let suite = new Suite("CircuitStats");
 
-const TEST_GATES = new Map([
+const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Map([
+    ...extras,
     ['X', Gates.HalfTurns.X],
     ['Y', Gates.HalfTurns.Y],
     ['Z', Gates.HalfTurns.Z],
@@ -26,8 +27,7 @@ const TEST_GATES = new Map([
     ['+', undefined],
     ['|', undefined],
     ['/', undefined]
-]);
-const circuit = diagram => CircuitDefinition.fromTextDiagram(TEST_GATES, diagram);
+]), diagram);
 
 suite.webGlTest("smoke", () => {
     let c = circuit(`--X-H---•⊕-
@@ -35,7 +35,7 @@ suite.webGlTest("smoke", () => {
                      -H--M--@---`);
     let stats = CircuitStats.fromCircuitAtTime(c, 0.1);
     assertTrue(stats.circuitDefinition.colHasControls(2));
-    assertThat(stats.qubitDensityMatrix(2, 7)).isEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(7, 2)).isEqualTo(Matrix.square(0.5, 0, 0, 0.5));
 });
 
 suite.webGlTest("all-gates-in-sequence", () => {
@@ -54,15 +54,87 @@ suite.webGlTest("nested-addition-gate", () => {
     let stats = CircuitStats.fromCircuitAtTime(circuitDef, 0);
     let off = Matrix.square(1, 0, 0, 0);
     let on = Matrix.square(0, 0, 0, 1);
-    assertThat(stats.qubitDensityMatrix(0, Infinity)).isEqualTo(off);
-    assertThat(stats.qubitDensityMatrix(1, Infinity)).isEqualTo(on);
-    assertThat(stats.qubitDensityMatrix(2, Infinity)).isEqualTo(off);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(off);
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(on);
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(off);
 });
 
 suite.webGlTest('controlled-displays', () => {
     let c = circuit(`-H-•-@@-
                      ---X-⊕•-`);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
-    assertThat(stats.qubitDensityMatrix(0, 5)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
-    assertThat(stats.qubitDensityMatrix(0, 6)).isApproximatelyEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(5, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.qubitDensityMatrix(6, 0)).isApproximatelyEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.webGlTest('incoherent-amplitude-display', () => {
+    let c = circuit(`-H-•-a-
+                     ---X---`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(1)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
+        probabilities: Matrix.row(1, 1).times(Math.sqrt(0.5)),
+        superposition: undefined,
+        phaseLockIndex: undefined
+    });
+});
+
+suite.webGlTest('coherent-amplitude-display', () => {
+    let c = circuit(`-H-•-a/--
+                     ---X-//--
+                     -H-------`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
+        probabilities: undefined,
+        superposition: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
+        phaseLockIndex: 0
+    });
+});
+
+suite.webGlTest('conditional-bloch-display', () => {
+    let c = circuit(`-H-@-
+                     -H-•-`);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.qubitDensityMatrix(3, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
+    assertThat(stats.customStatsForSlot(3, 0)).isEqualTo(undefined);
+});
+
+suite.webGlTest('probability-display', () => {
+    let c = circuit(`-H-•-%-
+                     ---X-/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
+    assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo(
+        Matrix.col(0.5, 0, 0, 0.5));
+});
+
+suite.webGlTest('density-display', () => {
+    let c = circuit(`-d/-
+                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.customStatsForSlot(1, 0)).isApproximatelyEqualTo(
+        Matrix.square(
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0));
+});
+
+suite.webGlTest('shifted-density-display', () => {
+    let c = circuit(`----
+                     -d/-
+                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.customStatsForSlot(1, 1)).isApproximatelyEqualTo(
+        Matrix.square(
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0));
 });

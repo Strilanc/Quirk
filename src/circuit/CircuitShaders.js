@@ -1,3 +1,4 @@
+import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
@@ -7,53 +8,14 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglShader.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
-
-/**
- * Some shaders do work for each qubit. They iterate this many times (horizontally and vertically).
- * @type {!int}
- */
-const HALF_QUBIT_LIMIT = 10;
+import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 /**
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
  */
 class CircuitShaders {}
-
-const snippets = {
-    /**
-     * Does a bitwise-and of the given integer value against a single-bit bit mask.
-     * @param value The (approximate) integer to extract a bit from.
-     * @param singleBitMask A power of two corresponding to the bit to retain (all others get masked out).
-     */
-    filterBit: `
-        float filterBit(float value, float bit) {
-            value += 0.5;
-            return mod(value, bit * 2.0) - mod(value, bit);
-        }`,
-
-    /**
-     * Does a bitwise-xor of the given integer value against a single-bit bit mask.
-     * @param value The (approximate) integer to toggle a bit in.
-     * @param singleBitMask A power of two corresponding to the bit to toggle (all others get left alone).
-     */
-    toggleBit: `
-        float toggleBit(float value, float bit) {
-            float hasBit = filterBit(value, bit);
-            return value + bit - 2.0 * hasBit;
-        }`,
-
-    /**
-     * Returns the uv difference between a bit's off and on states.
-     */
-    bitMaskToPixelDeltaUv: `
-        vec2 bitMaskToPixelDeltaUv(float bitMask) {
-            float r = mod(bitMask, inputSize.x);
-            float d = floor(bitMask / inputSize.x);
-            return vec2(r, d) / inputSize.xy;
-        }`
-};
 
 /**
  * Returns a configured shader that renders the superposition corresponding to a classical state.
@@ -61,21 +23,12 @@ const snippets = {
  * @param {!int} stateBitMask
  * @returns {!WglConfiguredShader}
  */
-CircuitShaders.classicalState = stateBitMask => new WglConfiguredShader(destinationTexture => {
-        let x = stateBitMask % destinationTexture.width;
-        let y = (stateBitMask - x) / destinationTexture.width;
-        SET_SINGLE_PIXEL_SHADER.
-            withArgs(WglArg.vec2("pixel", x, y)).
-            renderTo(destinationTexture);
-    });
-const SET_SINGLE_PIXEL_SHADER = new WglShader(`
-    /** The location of the single pixel to set. */
-    uniform vec2 pixel;
-
-    void main() {
-        vec2 d = gl_FragCoord.xy - vec2(0.5, 0.5) - pixel;
-        float f = float(d == vec2(0.0, 0.0));
-        gl_FragColor = vec4(f, 0.0, 0.0, 0.0);
+CircuitShaders.classicalState = stateBitMask => SET_SINGLE_PIXEL_SHADER(
+    WglArg.float("state", stateBitMask));
+const SET_SINGLE_PIXEL_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+    uniform float state;
+    vec2 outputFor(float k) {
+        return vec2(float(k == state), 0.0);
     }`);
 
 /**
@@ -87,34 +40,21 @@ const SET_SINGLE_PIXEL_SHADER = new WglShader(`
  * @param {!WglTexture} backgroundTexture
  * @returns {!WglConfiguredShader}
  */
-CircuitShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER.withArgs(
-    WglArg.vec2("backgroundTextureSize", backgroundTexture.width, backgroundTexture.height),
-    WglArg.vec2("foregroundTextureSize", foregroundTexture.width, foregroundTexture.height),
-    WglArg.texture("backgroundTexture", backgroundTexture),
-    WglArg.texture("foregroundTexture", foregroundTexture),
-    WglArg.int("offset", offset));
-const LINEAR_OVERLAY_SHADER = new WglShader(`
-    uniform vec2 backgroundTextureSize;
-    uniform vec2 foregroundTextureSize;
-
-    uniform sampler2D backgroundTexture;
-    uniform sampler2D foregroundTexture;
-
-    /** The starting index of the range where the foreground data should be copied. */
-    uniform int offset;
-
-    void main() {
-        vec2 pixelXy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float i = pixelXy.x + pixelXy.y * backgroundTextureSize.x - float(offset);
-        if (i >= 0.0 && i < foregroundTextureSize.x * foregroundTextureSize.y) {
-            float x = mod(i, foregroundTextureSize.x);
-            float y = (i - x) / foregroundTextureSize.x;
-            vec2 fore_uv = vec2(x + 0.5, y + 0.5) / foregroundTextureSize.xy;
-            gl_FragColor = texture2D(foregroundTexture, fore_uv);
-        } else {
-            vec2 back_uv = gl_FragCoord.xy / backgroundTextureSize;
-            gl_FragColor = texture2D(backgroundTexture, back_uv);
-        }
+CircuitShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) => LINEAR_OVERLAY_SHADER(
+    backgroundTexture,
+    foregroundTexture,
+    WglArg.float("offset", offset));
+const LINEAR_OVERLAY_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [
+        workingShaderCoder.vec4Input('back'),
+        workingShaderCoder.vec4Input('fore')
+    ],
+    workingShaderCoder.vec4Output,
+    `
+    uniform float offset;
+    vec4 outputFor(float k) {
+        // Note: can't use multiplication to combine because it spreads NaNs from the background into the foreground.
+        return k >= offset && k < offset + len_fore() ? read_fore(k - offset) : read_back(k);
     }`);
 
 /**
@@ -128,48 +68,25 @@ CircuitShaders.controlMask = controlMask => {
         return Shaders.color(1, 0, 0, 0);
     }
 
-    return new WglConfiguredShader(destinationTexture => {
-        if (destinationTexture.width * destinationTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
-            throw new Error("CircuitShaders.controlMask needs to be updated to allow more qubits.");
-        }
-        let xMask = destinationTexture.width - 1;
-        let xLen = Math.floor(Math.log2(destinationTexture.width));
-        CONTROL_MASK_SHADER.withArgs(
-            WglArg.float('usedX', controlMask.inclusionMask & xMask),
-            WglArg.float('desiredX', controlMask.desiredValueMask & xMask),
-            WglArg.float('usedY', controlMask.inclusionMask >> xLen),
-            WglArg.float('desiredY', controlMask.desiredValueMask >> xLen)
-        ).renderTo(destinationTexture);
-    })
+    return CONTROL_MASK_SHADER(
+        WglArg.float('used', controlMask.inclusionMask),
+        WglArg.float('desired', controlMask.desiredValueMask));
 };
-const CONTROL_MASK_SHADER = new WglShader(`
-    uniform float usedX;
-    uniform float desiredX;
+const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.boolOutput, `
+    uniform float used;
+    uniform float desired;
 
-    uniform float usedY;
-    uniform float desiredY;
-
-    /**
-     * Returns 1 if (val & used == desired & used), else returns 0.
-     * Note: ignores bits past the first 10.
-     */
-    float check(float val, float used, float desired) {
+    float outputFor(float k) {
         float pass = 1.0;
         float bit = 1.0;
-        for (int i = 0; i < ${HALF_QUBIT_LIMIT}; i++) {
-            float v = mod(floor(val/bit), 2.0);
+        for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
+            float v = mod(floor(k/bit), 2.0);
             float u = mod(floor(used/bit), 2.0);
             float d = mod(floor(desired/bit), 2.0);
             pass *= 1.0 - abs(v-d)*u;
             bit *= 2.0;
         }
         return pass;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float pass = check(xy.x, usedX, desiredX) * check(xy.y, usedY, desiredY);
-        gl_FragColor = vec4(pass, 0.0, 0.0, 0.0);
     }`);
 
 /**
@@ -184,36 +101,27 @@ CircuitShaders.controlSelect = (controlMask, dataTexture) => {
         return Shaders.passthrough(dataTexture);
     }
 
-    return new WglConfiguredShader(destinationTexture => {
-        if (dataTexture.width * dataTexture.height > (1 << (HALF_QUBIT_LIMIT*2))) {
-            throw new Error("CircuitShaders.controlSelect needs to be updated to allow more qubits.");
-        }
-        CONTROL_SELECT_SHADER.withArgs(
-            WglArg.texture('inputTexture', dataTexture),
-            WglArg.vec2('inputSize', dataTexture.width, dataTexture.height),
-            WglArg.float('outputWidth', destinationTexture.width),
-            WglArg.float('used', controlMask.inclusionMask),
-            WglArg.float('desired', controlMask.desiredValueMask)
-        ).renderTo(destinationTexture);
-    });
+    return CONTROL_SELECT_SHADER(
+        dataTexture,
+        WglArg.float('used', controlMask.inclusionMask),
+        WglArg.float('desired', controlMask.desiredValueMask));
 };
-const CONTROL_SELECT_SHADER = new WglShader(`
-    uniform float outputWidth;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
-
+const CONTROL_SELECT_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec2Output,
+    `
     uniform float used;
     uniform float desired;
 
     /**
      * Inserts bits from the given value into the holes between used bits in the desired mask.
      */
-    float scatter(float val, float used, float desired) {
+    float scatter(float k) {
         float maskPos = 1.0;
         float coordPos = 1.0;
         float result = 0.0;
-        for (int i = 0; i < ${HALF_QUBIT_LIMIT*2}; i++) {
-            float v = mod(floor(val/coordPos), 2.0);
+        for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
+            float v = mod(floor(k/coordPos), 2.0);
             float u = mod(floor(used/maskPos), 2.0);
             float d = mod(floor(desired/maskPos), 2.0);
             result += (v + u*(d-v)) * maskPos;
@@ -223,15 +131,8 @@ const CONTROL_SELECT_SHADER = new WglShader(`
         return result;
     }
 
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-
-    void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-        float state = xy.y * outputWidth + xy.x;
-        float scatteredInputState = scatter(state, used, desired);
-        gl_FragColor = texture2D(inputTexture, toUv(scatteredInputState));
+    vec2 outputFor(float k) {
+        return read_input(scatter(k));
     }`);
 
 /**
@@ -259,36 +160,27 @@ const SWAP_QUBITS_SHADER = ketShaderPermute('', `
  */
 CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
     if (keptBitMask === undefined) {
-        keptBitMask = inputTexture.width * inputTexture.height - 1;
+        keptBitMask = (1 << workingShaderCoder.vec2Order(inputTexture)) - 1;
     }
     let keptCount = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
 
-    return new WglConfiguredShader(destinationTexture => {
-        let expectedOutputSize = keptCount * inputTexture.width * inputTexture.height / 2;
-        if (destinationTexture.width * destinationTexture.height !== expectedOutputSize) {
-            throw new DetailedError("Wrong destination size.", {inputTexture, keptBitMask, destinationTexture});
-        }
-        QUBIT_DENSITIES_SHADER.withArgs(
-            WglArg.texture('inputTexture', inputTexture),
-            WglArg.vec2('inputSize', inputTexture.width, inputTexture.height),
-            WglArg.float('outputWidth', destinationTexture.width),
-            WglArg.float('keptCount', keptCount),
-            WglArg.float('keptBitMask', keptBitMask)
-        ).renderTo(destinationTexture)
-    });
+    return QUBIT_DENSITIES_SHADER(
+        inputTexture,
+        WglArg.float('keptCount', keptCount),
+        WglArg.float('keptBitMask', keptBitMask));
 };
-const QUBIT_DENSITIES_SHADER = new WglShader(`
+const QUBIT_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [workingShaderCoder.vec2Input('input')],
+    workingShaderCoder.vec4Output,
+    `
     uniform float keptCount;
-    uniform float outputWidth;
     uniform float keptBitMask;
-    uniform vec2 inputSize;
-    uniform sampler2D inputTexture;
 
     float scatter(float val, float used) {
         float result = 0.0;
         float posUsed = 1.0;
         float posVal = 1.0;
-        for (int i = 0; i < ${HALF_QUBIT_LIMIT*2}; i++) {
+        for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
             float u = mod(floor(used/posUsed), 2.0);
             float v = mod(floor(val/posVal), 2.0);
             result += u * v * posUsed;
@@ -298,15 +190,9 @@ const QUBIT_DENSITIES_SHADER = new WglShader(`
         return result;
     }
 
-    vec2 toUv(float state) {
-        return vec2(mod(state, inputSize.x) + 0.5, floor(state / inputSize.x) + 0.5) / inputSize;
-    }
-
-    void main() {
-        float outIndex = (gl_FragCoord.y - 0.5) * outputWidth + (gl_FragCoord.x - 0.5);
-
-        float bitIndex = mod(outIndex, keptCount);
-        float otherBits = floor(outIndex / keptCount);
+    vec4 outputFor(float k) {
+        float bitIndex = mod(k, keptCount);
+        float otherBits = floor(k / keptCount);
         float bit = scatter(exp2(bitIndex), keptBitMask);
 
         // Indices of the two complex values making up the current conditional ket.
@@ -314,8 +200,8 @@ const QUBIT_DENSITIES_SHADER = new WglShader(`
         float srcIndex1 = srcIndex0 + bit;
 
         // Grab the two complex values.
-        vec2 w1 = texture2D(inputTexture, toUv(srcIndex0)).xy;
-        vec2 w2 = texture2D(inputTexture, toUv(srcIndex1)).xy;
+        vec2 w1 = read_input(srcIndex0);
+        vec2 w2 = read_input(srcIndex1);
 
         // Compute density matrix components.
         float a = dot(w1, w1);
@@ -323,7 +209,7 @@ const QUBIT_DENSITIES_SHADER = new WglShader(`
         float bi = dot(vec2(-w1.y, w1.x), w2);
         float d = dot(w2, w2);
 
-        gl_FragColor = vec4(a, br, bi, d);
+        return vec4(a, br, bi, d);
     }`);
 
 export {CircuitShaders}
