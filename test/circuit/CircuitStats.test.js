@@ -8,6 +8,7 @@ import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Serializer} from "src/circuit/Serializer.js"
+import {seq, Seq} from "src/base/Seq.js"
 
 let suite = new Suite("CircuitStats");
 
@@ -38,14 +39,27 @@ suite.webGlTest("smoke", () => {
     assertThat(stats.qubitDensityMatrix(7, 2)).isEqualTo(Matrix.square(0.5, 0, 0, 0.5));
 });
 
-suite.webGlTest("all-gates-in-sequence", () => {
-    let cols = Gates.KnownToSerializer.
-        filter(e => e !== Gates.Special.Measurement && e !== Gates.ErrorInjection && e.height <= 6).
-        map(e => new GateColumn([e, undefined, undefined, undefined, undefined, undefined]));
-    let c = new CircuitDefinition(6, cols);
+function tryGateSequence(gates, maxHeight) {
+    let pad = new Array(maxHeight - 1).fill(undefined);
+    let cols = gates.
+        filter(e => e !== Gates.Special.Measurement && e !== Gates.ErrorInjection && e.height <= maxHeight).
+        map(e => new GateColumn([e, ...pad]));
+    let c = new CircuitDefinition(maxHeight, cols);
     let stats = CircuitStats.fromCircuitAtTime(c, 0.1);
     assertThat(stats).isNotEqualTo(undefined);
-});
+}
+
+// Try known gates, but in separate tests to avoid blowing the per-test time limit warning.
+let knownGateStripes = 8;
+for (let knownGateOffset of Seq.range(knownGateStripes)) {
+    suite.webGlTest(`try-known-gates-in-sequence-${knownGateOffset+1}-of-${knownGateStripes}`, () => {
+        let stripe = seq(Gates.KnownToSerializer).
+            skip(knownGateOffset).
+            stride(knownGateStripes).
+            toArray();
+        tryGateSequence(stripe, 5);
+    });
+}
 
 suite.webGlTest("nested-addition-gate", () => {
     let circuitDef = Serializer.fromJson(
