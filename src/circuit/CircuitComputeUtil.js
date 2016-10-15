@@ -7,6 +7,7 @@ import {Point} from "src/math/Point.js"
 import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 /**
  * @param {!CircuitDefinition} circuitDefinition
@@ -92,7 +93,7 @@ function advanceStateWithCircuit(args, circuitDefinition, collectStats) {
                 col,
                 statsCallback);
 
-            KetTextureUtil.doneWithTexture(controlTex, "controlTex in advanceStateWithCircuit");
+            controlTex.deallocByDepositingInPool("controlTex in advanceStateWithCircuit");
             return nextState;
         });
 

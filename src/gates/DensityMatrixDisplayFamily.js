@@ -32,18 +32,18 @@ function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
     let result = new ShaderPipeline();
 
     let n = qubitCount - forcedQubits;
-    result.addPowerSizedStepVec2(n, t => CircuitShaders.controlSelect(controls, t));
-    result.addPowerSizedStepVec2(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
+    result.addStepVec2(n, t => CircuitShaders.controlSelect(controls, t));
+    result.addStepVec2(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
 
     n += rangeLength;
-    result.addPowerSizedStepVec2(n, t => amplitudesToCouplings(t, rangeLength));
+    result.addStepVec2(n, t => amplitudesToCouplings(t, rangeLength));
 
     while (n > 2*rangeLength) {
         n--;
-        result.addPowerSizedStepVec2(n, t => Shaders.sumFoldVec2(t));
+        result.addStepVec2(n, t => Shaders.sumFoldVec2(t));
     }
 
-    result.addPowerSizedStepVec4(2*rangeLength, Shaders.vec2AsVec4);
+    result.addStepVec4(2*rangeLength, Shaders.vec2AsVec4);
 
     return result;
 }

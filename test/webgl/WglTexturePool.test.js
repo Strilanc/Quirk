@@ -25,28 +25,7 @@ suite.webGlTest("takeBoolTex", () => {
         255, 0, 0, 0,
         0, 0, 0, 0
     ]));
-    WglTexturePool.deposit(t);
-});
-
-suite.webGlTest("borrowBoolTex", () => {
-    WglTexturePool.borrowBoolTex(3, t => {
-        makePseudoShaderWithInputsAndOutputAndCode(
-            [],
-            workingShaderCoder.boolOutput,
-            `bool outputFor(float k) {
-                return k == 3.0;
-            }`)().renderTo(t);
-        assertThat(t.readPixels()).isEqualTo(new Uint8Array([
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            255, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0
-        ]));
-    });
+    t.deallocByDepositingInPool();
 });
 
 suite.webGlTest("takeVec2Tex", () => {
@@ -63,22 +42,7 @@ suite.webGlTest("takeVec2Tex", () => {
         0.5, 4,
         0.75, 9
     ]));
-    WglTexturePool.deposit(t);
-});
-
-suite.webGlTest("borrowVec2Tex", () => {
-    WglTexturePool.borrowVec2Tex(1, t => {
-        makePseudoShaderWithInputsAndOutputAndCode(
-            [],
-            workingShaderCoder.vec2Output,
-            `vec2 outputFor(float k) {
-                return vec2(k / 8.0, k * (k + 1.0));
-            }`)().renderTo(t);
-        assertThat(workingShaderCoder.unpackVec2Data(t.readPixels())).isEqualTo(new Float32Array([
-            0, 0,
-            0.125, 2
-        ]));
-    });
+    t.deallocByDepositingInPool();
 });
 
 suite.webGlTest("takeVec4Tex", () => {
@@ -95,20 +59,5 @@ suite.webGlTest("takeVec4Tex", () => {
         2, 0.5, 4, 5,
         3, 0.75, 9, 5
     ]));
-    WglTexturePool.deposit(t);
-});
-
-suite.webGlTest("borrowVec4Tex", () => {
-    WglTexturePool.borrowVec4Tex(1, t => {
-        makePseudoShaderWithInputsAndOutputAndCode(
-            [],
-            workingShaderCoder.vec4Output,
-            `vec4 outputFor(float k) {
-                return vec4(k + 1.0, k / 8.0, k * (k + 1.0), 6.0);
-            }`)().renderTo(t);
-        assertThat(workingShaderCoder.unpackVec4Data(t.readPixels())).isEqualTo(new Float32Array([
-            1, 0, 0, 6,
-            2, 0.125, 2, 6
-        ]));
-    });
+    t.deallocByDepositingInPool();
 });

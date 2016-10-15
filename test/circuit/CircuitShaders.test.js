@@ -73,38 +73,41 @@ suite.webGlTest("linearOverlay", () => {
         -32, -33, -34, -35, -36, -37, -38, -39, -40, -41, -42, -43, -44, -45, -46, -47,
         -48, -49, -50, -51, 900, 901, 902, 903, 904, 905, 906, 907,  908, 909, 910, 911
     ]));
+
+    fore.deallocByDepositingInPool();
+    back.deallocByDepositingInPool();
 });
 
 suite.webGlTest("controlMask", () => {
-    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x0)).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x0)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 0, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x5, 0x4)).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
+    assertThat(CircuitShaders.controlMask(new Controls(0x5, 0x4)).readSizedFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
@@ -115,7 +118,7 @@ suite.webGlTest("controlMask", () => {
         0, 0, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readByteOutputs(2, 2)).isEqualTo(new Uint8Array([
+    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readSizedByteOutputs(2, 2)).isEqualTo(new Uint8Array([
         255, 0, 0, 0,
         0, 0, 0, 0,
         255, 0, 0, 0,
@@ -131,7 +134,7 @@ suite.webGlTest("controlMask_largeReference", () => {
         map(i => mask.allowsState(i) ? 1 : 0).
         flatMap(e => [e, 0, 0, 0]).
         toArray());
-    assertThat(CircuitShaders.controlMask(mask).readFloatOutputs(w, h)).isEqualTo(expected);
+    assertThat(CircuitShaders.controlMask(mask).readSizedFloatOutputs(w, h)).isEqualTo(expected);
 });
 
 suite.webGlTest("controlSelect_simple", () => {
@@ -196,6 +199,8 @@ suite.webGlTest("controlSelect_simple", () => {
             0,2, 1,2, 2,2, 3,2,
             0,3, 1,3, 2,3, 3,3
         ]));
+
+    coords.deallocByDepositingInPool();
 });
 
 suite.webGlTest("controlSelect_multiple", () => {
@@ -230,6 +235,8 @@ suite.webGlTest("controlSelect_multiple", () => {
         isEqualTo(new Float32Array([
             3,0
         ]));
+
+    coords.deallocByDepositingInPool();
 });
 
 suite.webGlTest("qubitDensities", () => {
@@ -242,7 +249,7 @@ suite.webGlTest("qubitDensities", () => {
         let tex = Shaders.vec2Data(new Float32Array(amps)).toVec2Texture(1);
         assertThat(CircuitShaders.qubitDensities(tex).readVec4Outputs(0)).
             isApproximatelyEqualTo(new Float32Array(dens));
-        tex.ensureDeinitialized();
+        tex.deallocByDepositingInPool();
     };
     assertAmpsToDensities(
         [1,_, _,_],
@@ -288,6 +295,7 @@ suite.webGlTest("qubitDensities", () => {
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_,
         _,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
+    allQubitsZero.deallocByDepositingInPool();
 
     let ent = Shaders.vec2Data(new Float32Array([
         s,_, _,_, _,_, _,_,
@@ -315,6 +323,7 @@ suite.webGlTest("qubitDensities", () => {
         _,_,_,_, _,_,_,_,
         _,_,_,h, _,_,_,h
     ]));
+    ent.deallocByDepositingInPool();
 
     // 0, 0+1, 0+i1, 1
     let mix = Shaders.vec2Data(new Float32Array([
@@ -353,6 +362,7 @@ suite.webGlTest("qubitDensities", () => {
         q,_,_,_, q,_,q,q, _,_,_,q, _,_,_,_,
         q,_,_,_, _,_,_,_, _,_,_,_, _,_,_,_
     ]));
+    mix.deallocByDepositingInPool();
 });
 
 suite.webGlTest("swap", () => {

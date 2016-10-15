@@ -26,4 +26,6 @@ suite.webGlTest("amplitudesToCouplings", () => {
         0,0,   0,0, 0,0, 0,0,
         0.5,0, 0,0, 0,0, 0.5,0
     ]));
+
+    inp.deallocByDepositingInPool();
 });

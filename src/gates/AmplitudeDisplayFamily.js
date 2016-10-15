@@ -18,6 +18,7 @@ import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 /**
  * @param {!WglTexture} valueTexture
@@ -31,23 +32,23 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
 
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let totalQubits = workingShaderCoder.vec2Order(valueTexture) - lostQubits;
-    result.addPowerSizedStepVec2(totalQubits, t => CircuitShaders.controlSelect(controls, t));
+    result.addStepVec2(totalQubits, t => CircuitShaders.controlSelect(controls, t));
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
 
-    let cycledTex = KetTextureUtil.allocVec2Tex(totalQubits);
-    result.addPowerSizedStepVec2(totalQubits, inp => new WglConfiguredShader(dst => {
+    let cycledTex = WglTexturePool.takeVec2Tex(totalQubits);
+    result.addStepVec2(totalQubits, inp => new WglConfiguredShader(dst => {
         GateShaders.cycleAllBits(inp, lostHeadQubits-rangeOffset).renderTo(dst);
         Shaders.passthrough(dst).renderTo(cycledTex);
     }));
-    result.addPowerSizedStepVec4(totalQubits, amplitudesToPolarKets);
+    result.addStepVec4(totalQubits, amplitudesToPolarKets);
     result.addPipelineSteps(pipelineToSpreadLengthAcrossPolarKets(rangeLength, totalQubits));
     result.addPipelineSteps(pipelineToAggregateRepresentativePolarKet(rangeLength, totalQubits));
-    result.addPowerSizedStepVec4(rangeLength, convertAwayFromPolar, true);
+    result.addStepVec4(rangeLength, convertAwayFromPolar, true);
 
-    result.addPowerSizedStepVec4(totalQubits, inp => new WglConfiguredShader(dst => {
+    result.addStepVec4(totalQubits, inp => new WglConfiguredShader(dst => {
         toRatiosVsRepresentative(cycledTex, inp).renderTo(dst);
-        KetTextureUtil.doneWithTexture(cycledTex);
+        cycledTex.deallocByDepositingInPool("cycledTex in makeAmplitudeSpanPipeline");
     }));
     result.addPipelineSteps(pipelineToFoldConsistentRatios(rangeLength, totalQubits));
     result.addPipelineSteps(pipelineToSumAll(totalQubits - rangeLength));
@@ -152,7 +153,7 @@ const AMPLITUDES_TO_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCo
 function pipelineToSpreadLengthAcrossPolarKets(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
     for (let bit = 0; bit < includedQubitCount; bit++) {
-        result.addPowerSizedStepVec4(
+        result.addStepVec4(
             totalQubitCount,
             inp => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER(
                 inp,
@@ -187,7 +188,7 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
 function pipelineToAggregateRepresentativePolarKet(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
     for (let bit = 0; bit < totalQubitCount - includedQubitCount; bit++) {
-        result.addPowerSizedStepVec4(
+        result.addStepVec4(
             totalQubitCount - bit - 1,
             inp => FOLD_REPRESENTATIVE_POLAR_KET_SHADER(
                 inp,
@@ -253,7 +254,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
 function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
     let result = new ShaderPipeline();
     for (let bit = 0; bit < includedQubitCount; bit++) {
-        result.addPowerSizedStepVec4(
+        result.addStepVec4(
             totalQubitCount - bit - 1,
             inp => FOLD_CONSISTENT_RATIOS_SHADER(
                 inp,
@@ -301,7 +302,7 @@ function pipelineToSumAll(qubitCount) {
     let result = new ShaderPipeline();
     while (qubitCount > 0) {
         qubitCount -= 1;
-        result.addPowerSizedStepVec4(qubitCount, t => SIGNALLING_SUM_SHADER_VEC4(t));
+        result.addStepVec4(qubitCount, t => SIGNALLING_SUM_SHADER_VEC4(t));
     }
     return result;
 }

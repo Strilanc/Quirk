@@ -361,9 +361,12 @@ export class Suite {
 
             let preTexCount = WglTexturePool.getUnReturnedTextureCount();
             method(status);
-            let gain = preTexCount - WglTexturePool.getUnReturnedTextureCount();
-            if (gain !== 0) {
-                throw new DetailedError("Unreturned textures.", {gain});
+            let gain = WglTexturePool.getUnReturnedTextureCount() - preTexCount;
+            if (gain > 0) {
+                throw new DetailedError("Unreturned textures.", {unreturned_increase: gain});
+            }
+            if (gain < 0) {
+                throw new DetailedError("Extra returned textures.", {extra_returns: -gain});
             }
         };
 

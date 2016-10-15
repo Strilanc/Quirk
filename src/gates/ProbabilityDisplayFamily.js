@@ -25,15 +25,15 @@ function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
     let result = new ShaderPipeline();
     let n = Math.round(Math.log2(controlTexture.width * controlTexture.height));
 
-    result.addPowerSizedStepVec2(n, t => amplitudesToProbabilities(t, controlTexture));
-    result.addPowerSizedStepVec2(n, t => GateShaders.cycleAllBits(t, -rangeOffset));
+    result.addStepVec2(n, t => amplitudesToProbabilities(t, controlTexture));
+    result.addStepVec2(n, t => GateShaders.cycleAllBits(t, -rangeOffset));
 
     while (n > rangeLength) {
         n -= 1;
-        result.addPowerSizedStepVec2(n, t => Shaders.sumFoldVec2(t));
+        result.addStepVec2(n, t => Shaders.sumFoldVec2(t));
     }
 
-    result.addPowerSizedStepVec4(rangeLength, Shaders.vec2AsVec4);
+    result.addStepVec4(rangeLength, Shaders.vec2AsVec4);
 
     return result;
 }

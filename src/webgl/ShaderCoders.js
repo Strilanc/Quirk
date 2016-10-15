@@ -543,13 +543,13 @@ const SHADER_CODER_FLOATS = new ShaderValueCoder(
     unspreadFloatVec2,
     (configuredShader, powerSize) => {
         let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return unspreadFloatVec2(configuredShader.readFloatOutputs(w, h));
+        return unspreadFloatVec2(configuredShader.readSizedFloatOutputs(w, h));
     },
     e => e,
     e => e,
     (configuredShader, powerSize) => {
         let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return configuredShader.readFloatOutputs(w, h);
+        return configuredShader.readSizedFloatOutputs(w, h);
     },
     t => Math.round(Math.log2(t.width * t.height)),
     t => Math.round(Math.log2(t.width * t.height)));
@@ -570,14 +570,14 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     (configuredShader, powerSize) => {
         powerSize += 1;
         let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return decodeBytesIntoFloats(configuredShader.readByteOutputs(w, h));
+        return decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(w, h));
     },
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
     (configuredShader, powerSize) => {
         powerSize += 2;
         let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return decodeBytesIntoFloats(configuredShader.readByteOutputs(w, h));
+        return decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(w, h));
     },
     t => Math.round(Math.log2(t.width * t.height)) - 1,
     t => Math.round(Math.log2(t.width * t.height)) - 2);

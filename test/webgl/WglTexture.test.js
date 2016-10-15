@@ -50,7 +50,7 @@ suite.webGlTest("readPixels_bytes_all", () => {
                 (s+3.0)/255.0);
         }`).withArgs();
 
-    assertThat(shader.readByteOutputs(w, h)).isEqualTo(new Uint8Array(
+    assertThat(shader.readSizedByteOutputs(w, h)).isEqualTo(new Uint8Array(
         Seq.range(256).toArray()
     ));
 });

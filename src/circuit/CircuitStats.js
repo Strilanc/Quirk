@@ -17,6 +17,7 @@ import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 class CircuitStats {
     /**
@@ -237,11 +238,11 @@ class CircuitStats {
                 new Map()),
             circuitDefinition,
             true);
-        KetTextureUtil.doneWithTexture(initialState, "initialState in _fromCircuitAtTime_noFallback");
-        KetTextureUtil.doneWithTexture(controlTex, "controlTex in _fromCircuitAtTime_noFallback");
-        let output = KetTextureUtil.allocVec4Tex(workingShaderCoder.vec2Order(pre_output));
+        initialState.deallocByDepositingInPool("initialState in _fromCircuitAtTime_noFallback");
+        controlTex.deallocByDepositingInPool("controlTex in _fromCircuitAtTime_noFallback");
+        let output = WglTexturePool.takeVec4Tex(workingShaderCoder.vec2Order(pre_output));
         Shaders.vec2AsVec4(pre_output).renderTo(output);
-        KetTextureUtil.doneWithTexture(pre_output, "pre_output in _fromCircuitAtTime_noFallback");
+        pre_output.deallocByDepositingInPool("pre_output in _fromCircuitAtTime_noFallback");
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({

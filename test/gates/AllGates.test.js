@@ -7,6 +7,7 @@ import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AllGates");
@@ -24,7 +25,7 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
     let bit = 0;
     let numQubits = gate.height;
     let n = 1 << numQubits;
-    let input = KetTextureUtil.allocVec2Tex(numQubits);
+    let input = WglTexturePool.takeVec2Tex(numQubits);
     let control = KetTextureUtil.control(numQubits, Controls.NONE);
     let cols = [];
     for (let i = 0; i < n; i++) {
@@ -42,9 +43,12 @@ let reconstructMatrixFromGateShaders = (gate, time) => {
                 new Map())));
         let buf = workingShaderCoder.unpackVec2Data(output.readPixels());
         let col = new Matrix(1, 1 << numQubits, buf);
-        KetTextureUtil.doneWithTexture(output);
+        output.deallocByDepositingInPool();
         cols.push(col);
     }
+    input.deallocByDepositingInPool();
+    control.deallocByDepositingInPool();
+
     let raw = seq(cols).flatMap(e => e.rawBuffer()).toFloat32Array();
     let flipped = new Matrix(n, n, raw);
     return flipped.transpose();

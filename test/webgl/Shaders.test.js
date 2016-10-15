@@ -11,13 +11,13 @@ import {Seq} from "src/base/Seq.js"
 let suite = new Suite("Shaders");
 
 suite.webGlTest("color", () => {
-    assertThat(Shaders.color(2, 3, -5, 7.5).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(Shaders.color(2, 3, -5, 7.5).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         2, 3, -5, 7.5,
         2, 3, -5, 7.5,
         2, 3, -5, 7.5,
         2, 3, -5, 7.5
     ]));
-    assertThat(Shaders.color(1.5, 2, 0, 121).readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
+    assertThat(Shaders.color(1.5, 2, 0, 121).readSizedFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         1.5, 2, 0, 121,
         1.5, 2, 0, 121,
         1.5, 2, 0, 121,
@@ -30,14 +30,14 @@ suite.webGlTest("color", () => {
 });
 
 suite.webGlTest("coords", () => {
-    assertThat(Shaders.coords.readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(Shaders.coords.readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         0,0,0,0,
         1,0,0,0,
         0,1,0,0,
         1,1,0,0
     ]));
 
-    assertThat(Shaders.coords.readFloatOutputs(4, 2)).isEqualTo(new Float32Array([
+    assertThat(Shaders.coords.readSizedFloatOutputs(4, 2)).isEqualTo(new Float32Array([
         0,0,0,0,
         1,0,0,0,
         2,0,0,0,
@@ -48,7 +48,7 @@ suite.webGlTest("coords", () => {
         3,1,0,0
     ]));
 
-    assertThat(Shaders.coords.readFloatOutputs(2, 4)).isEqualTo(new Float32Array([
+    assertThat(Shaders.coords.readSizedFloatOutputs(2, 4)).isEqualTo(new Float32Array([
         0,0,0,0,
         1,0,0,0,
         0,1,0,0,
@@ -61,8 +61,8 @@ suite.webGlTest("coords", () => {
 });
 
 suite.webGlTest("passthrough", () => {
-    let input = Shaders.coords.toFloatTexture(2, 2);
-    assertThat(Shaders.passthrough(input).readFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    let input = Shaders.coords.toSizedFloatTexture(2, 2);
+    assertThat(Shaders.passthrough(input).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
         0, 0, 0, 0,
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -77,15 +77,15 @@ suite.webGlTest("data", () => {
         1, 0.5, -1, -2,
         Math.log(3), Math.sin(5), Math.cos(7), Math.exp(11)
     ]);
-    assertThat(Shaders.data(data2x2).readFloatOutputs(2, 2)).isEqualTo(data2x2);
+    assertThat(Shaders.data(data2x2).readSizedFloatOutputs(2, 2)).isEqualTo(data2x2);
 
     let data2x4 = new Float32Array(Seq.range(2*4*4).map(e => e*e + (e - Math.sqrt(2)) / 3).toArray());
-    assertThat(Shaders.data(data2x4).readFloatOutputs(2, 4)).isEqualTo(data2x4);
+    assertThat(Shaders.data(data2x4).readSizedFloatOutputs(2, 4)).isEqualTo(data2x4);
 
     let bytes4x4 = new Uint8Array(Seq.range(4*4*4).map(e => Math.floor(Math.random() * 256)).toArray());
-    assertThat(Shaders.data(bytes4x4).readByteOutputs(4, 4)).isEqualTo(bytes4x4);
+    assertThat(Shaders.data(bytes4x4).readSizedByteOutputs(4, 4)).isEqualTo(bytes4x4);
 
-    assertThrows(() => Shaders.data(data2x4).readFloatOutputs(2, 2));
+    assertThrows(() => Shaders.data(data2x4).readSizedFloatOutputs(2, 2));
 });
 
 suite.webGlTest("sumFold", () => {
@@ -100,6 +100,7 @@ suite.webGlTest("sumFold", () => {
         0,4,
         2,4
     ]));
+    coords.deallocByDepositingInPool();
 
     let solid = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec4Output, `
         vec4 outputFor(float k) {
@@ -110,4 +111,5 @@ suite.webGlTest("sumFold", () => {
         4,6,10,14,
         4,6,10,14
     ]));
+    solid.deallocByDepositingInPool();
 });

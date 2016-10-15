@@ -3,11 +3,18 @@ import {WglTexture} from "src/webgl/WglTexture.js"
 
 /** @type {undefined|!ShaderValueCoder} */
 let workingShaderCoder = undefined;
+let WglTexturePool;
 /**
  * @param {!ShaderValueCoder} futureWorkingShaderCoder
  */
 function provideWorkingShaderCoderToWglConfiguredShader(futureWorkingShaderCoder) {
     workingShaderCoder = futureWorkingShaderCoder;
+}
+/**
+ * @param {!WglTexturePool} pool
+ */
+function provideWglTexturePoolToWglConfiguredShader(pool) {
+    WglTexturePool = pool;
 }
 
 /**
@@ -39,7 +46,7 @@ class WglConfiguredShader {
      * @param {!int} height
      * @returns {!WglTexture}
      */
-    toByteTexture(width, height) {
+    toSizedByteTexture(width, height) {
         let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
         this.renderTo(texture);
         return texture;
@@ -51,7 +58,7 @@ class WglConfiguredShader {
      * @param {!int} height
      * @returns {!WglTexture}
      */
-    toFloatTexture(width, height) {
+    toSizedFloatTexture(width, height) {
         let texture = new WglTexture(width, height);
         this.renderTo(texture);
         return texture;
@@ -64,7 +71,7 @@ class WglConfiguredShader {
      * @param {!int} height
      * @returns {!Float32Array}
      */
-    readFloatOutputs(width, height) {
+    readSizedFloatOutputs(width, height) {
         let texture = new WglTexture(width, height);
         try {
             this.renderTo(texture);
@@ -81,7 +88,7 @@ class WglConfiguredShader {
      * @param {!int} height
      * @returns {!Uint8Array}
      */
-    readByteOutputs(width, height) {
+    readSizedByteOutputs(width, height) {
         let texture = new WglTexture(width, height, WebGLRenderingContext.UNSIGNED_BYTE);
         try {
             this.renderTo(texture);
@@ -138,9 +145,7 @@ class WglConfiguredShader {
      * @returns {!WglTexture}
      */
     toVec2Texture(order) {
-        order += workingShaderCoder.vec2Overhead;
-        let {w, h} = WglTexture.preferredSizeForOrder(order);
-        let texture = new WglTexture(w, h, workingShaderCoder.vecPixelType);
+        let texture = WglTexturePool.takeVec2Tex(order);
         this.renderTo(texture);
         return texture;
     }
@@ -150,9 +155,7 @@ class WglConfiguredShader {
      * @returns {!WglTexture}
      */
     toVec4Texture(order) {
-        order += workingShaderCoder.vec4Overhead;
-        let {w, h} = WglTexture.preferredSizeForOrder(order);
-        let texture = new WglTexture(w, h, workingShaderCoder.vecPixelType);
+        let texture = WglTexturePool.takeVec4Tex(order);
         this.renderTo(texture);
         return texture;
     }
@@ -162,11 +165,14 @@ class WglConfiguredShader {
      * @returns {!WglTexture}
      */
     toBoolTexture(order) {
-        let {w, h} = WglTexture.preferredSizeForOrder(order);
-        let texture = new WglTexture(w, h, WebGLRenderingContext.UNSIGNED_BYTE);
+        let texture = WglTexturePool.takeBoolTex(order);
         this.renderTo(texture);
         return texture;
     }
 }
 
-export {WglConfiguredShader, provideWorkingShaderCoderToWglConfiguredShader}
+export {
+    WglConfiguredShader,
+    provideWorkingShaderCoderToWglConfiguredShader,
+    provideWglTexturePoolToWglConfiguredShader
+}

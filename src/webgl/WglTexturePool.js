@@ -1,5 +1,6 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
+import {provideWglTexturePoolToWglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 /** @type {!Array.<!Array.<!WglTexture>>} */
@@ -14,27 +15,39 @@ class WglTexturePool {
     /**
      * @param {!int} order
      * @param {!int} pixelType
-     * @returns {!WglTexture}
+     * @returns {!Array.<!WglTexture>}
      * @private
      */
-    static _take(order, pixelType) {
-        if (order === -Infinity) {
-            return new WglTexture(0, 0, pixelType);
+    static _bucketFor(order, pixelType) {
+        if (!Number.isInteger(order) || order < 0 || order > 50) {
+            throw new DetailedError("Bad order", {order, pixelType});
         }
 
         let pool = pixelType === WebGLRenderingContext.FLOAT ? FLOAT_POOL : BYTE_POOL;
         while (pool.length <= order) {
             pool.push([])
         }
+        return pool[order];
+    }
 
-        unreturnedTextureCount++;
-        let bucket = pool[order];
-        if (bucket.length > 0) {
-            return bucket.pop();
+    /**
+     * @param {!int} order
+     * @param {!int} pixelType
+     * @returns {!WglTexture}
+     */
+    static take(order, pixelType) {
+        if (order === -Infinity) {
+            return new WglTexture(0, 0, pixelType);
         }
 
+        let bucket = WglTexturePool._bucketFor(order, pixelType);
+        unreturnedTextureCount++;
         if (unreturnedTextureCount > 1000) {
             console.warn(`High borrowed texture count: ${unreturnedTextureCount}. (Maybe a leak?)`);
+        }
+
+        if (bucket.length > 0) {
+            return bucket.pop();
         }
         let {w, h} = WglTexture.preferredSizeForOrder(order);
         return new WglTexture(w, h, pixelType);
@@ -46,7 +59,7 @@ class WglTexturePool {
      * @param {*=} detailsShownWhenUsedAfterDone
      * @returns {void}
      */
-    static deposit(texture, detailsShownWhenUsedAfterDone='?') {
+    static deposit(texture, detailsShownWhenUsedAfterDone='[no dealloc details]') {
         if (!(texture instanceof WglTexture)) {
             throw new DetailedError("Not a texture", {texture, detailsShownWhenUsedAfterDone});
         }
@@ -54,14 +67,17 @@ class WglTexturePool {
             return;
         }
 
-        let order = texture.order();
-        let pool = texture.pixelType === WebGLRenderingContext.FLOAT ? FLOAT_POOL : BYTE_POOL;
-        while (pool.length <= order) {
-            pool.push([])
-        }
-        let bucket = pool[order];
+        let bucket = WglTexturePool._bucketFor(texture.order(), texture.pixelType);
         unreturnedTextureCount--;
         bucket.push(texture.invalidateButMoveToNewInstance(detailsShownWhenUsedAfterDone));
+    }
+
+    /**
+     * @param {!WglTexture} texture
+     * @returns {!WglTexture}
+     */
+    static takeSame(texture) {
+        return WglTexturePool.take(texture.order(), texture.pixelType);
     }
 
     /**
@@ -76,7 +92,7 @@ class WglTexturePool {
      * @returns {!WglTexture}
      */
     static takeBoolTex(power) {
-        return WglTexturePool._take(
+        return WglTexturePool.take(
             power,
             WebGLRenderingContext.UNSIGNED_BYTE);
     }
@@ -86,7 +102,7 @@ class WglTexturePool {
      * @returns {!WglTexture}
      */
     static takeVec2Tex(power) {
-        return WglTexturePool._take(
+        return WglTexturePool.take(
             power + workingShaderCoder.vec2Overhead,
             workingShaderCoder.vecPixelType);
     }
@@ -96,52 +112,15 @@ class WglTexturePool {
      * @returns {!WglTexture}
      */
     static takeVec4Tex(power) {
-        return WglTexturePool._take(
+        return WglTexturePool.take(
             power + workingShaderCoder.vec4Overhead,
             workingShaderCoder.vecPixelType);
     }
-
-    /**
-     * @param {!int} power
-     * @param {!function(!WglTexture) : void} borrowFunction
-     * @returns {void}
-     */
-    static borrowBoolTex(power, borrowFunction) {
-        let tex = WglTexturePool.takeBoolTex(power);
-        try {
-            borrowFunction(tex);
-        } finally {
-            WglTexturePool.deposit(tex, 'WglTexturePool.borrowBoolTex');
-        }
-    }
-
-    /**
-     * @param {!int} power
-     * @param {!function(!WglTexture) : void} borrowFunction
-     * @returns {void}
-     */
-    static borrowVec2Tex(power, borrowFunction) {
-        let tex = WglTexturePool.takeVec2Tex(power);
-        try {
-            borrowFunction(tex);
-        } finally {
-            WglTexturePool.deposit(tex, 'WglTexturePool.borrowVec2Tex');
-        }
-    }
-
-    /**
-     * @param {!int} power
-     * @param {!function(!WglTexture) : void} borrowFunction
-     * @returns {void}
-     */
-    static borrowVec4Tex(power, borrowFunction) {
-        let tex = WglTexturePool.takeVec4Tex(power);
-        try {
-            borrowFunction(tex);
-        } finally {
-            WglTexturePool.deposit(tex, 'WglTexturePool.borrowVec4Tex');
-        }
-    }
 }
 
+WglTexture.prototype.deallocByDepositingInPool = function(detailsShownWhenUsedAfterDone=undefined) {
+    WglTexturePool.deposit(this, detailsShownWhenUsedAfterDone);
+};
+
+provideWglTexturePoolToWglConfiguredShader(WglTexturePool);
 export {WglTexturePool}

@@ -30,4 +30,7 @@ suite.webGlTest("amplitudesToProbabilities", () => {
         1/64, 0,
         1/256, 0
     ]));
+
+    inp.deallocByDepositingInPool();
+    con.deallocByDepositingInPool();
 });

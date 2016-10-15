@@ -5,6 +5,7 @@ import {universalNot} from "src/gates/Impossible_UniversalNotGate.js"
 
 import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
+import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 
 let suite = new Suite("GateShaders");
 
@@ -13,14 +14,22 @@ suite.webGlTest('universalNot', () => {
         1,2, 3,4,
         5,6, 7,8
     ])).toVec2Texture(2);
-    let assertAbout = (index, control) => assertThat(universalNot(new CircuitEvalArgs(
-        0,
-        index,
-        2,
-        control,
-        CircuitShaders.controlMask(control).toBoolTexture(2),
-        input,
-        new Map())).readVec2Outputs(2));
+    let assertAbout = (index, control) => {
+        let controlTex = KetTextureUtil.control(2, control);
+        let args = new CircuitEvalArgs(
+            0,
+            index,
+            2,
+            control,
+            controlTex,
+            input,
+            new Map());
+        try {
+            return assertThat(universalNot(args).readVec2Outputs(2));
+        } finally {
+            controlTex.deallocByDepositingInPool();
+        }
+    };
     assertAbout(0, Controls.NONE).isEqualTo(new Float32Array([
         3,-4, -1,2,
         7,-8, -5,6
@@ -33,4 +42,6 @@ suite.webGlTest('universalNot', () => {
         1,2,  3,4,
         7,-8, -5,6
     ]));
+
+    input.deallocByDepositingInPool();
 });
