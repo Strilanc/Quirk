@@ -403,7 +403,7 @@ function boolInput(name) {
 
 const BOOL_OUTPUT = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_FLOAT ////////////
-    float outputFor(float k);
+    bool outputFor(float k);
 
     uniform vec2 _gen_output_size;
 
@@ -414,7 +414,7 @@ const BOOL_OUTPUT = new ShaderPart(`
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
         float k = xy.y * _gen_output_size.x + xy.x;
-        gl_FragColor = vec4(float(outputFor(k) == 1.0), 0.0, 0.0, 0.0);
+        gl_FragColor = vec4(float(outputFor(k)), 0.0, 0.0, 0.0);
     }`,
     [],
     texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);

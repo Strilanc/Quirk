@@ -6,6 +6,15 @@ import {seq, Seq} from "src/base/Seq.js"
 
 let suite = new Suite("WglTexture");
 
+suite.test("properties", () => {
+    let t = new WglTexture(8, 16, WebGLRenderingContext.UNSIGNED_BYTE);
+    assertThat(t.width).isEqualTo(8);
+    assertThat(t.height).isEqualTo(16);
+    assertThat(t.pixelType).isEqualTo(WebGLRenderingContext.UNSIGNED_BYTE);
+    assertThat(t.order()).isEqualTo(7);
+    assertThat(t.toString()).isNotEqualTo(undefined);
+});
+
 suite.webGlTest("readPixels_bytes", () => {
     let w = 2;
     let h = 2;

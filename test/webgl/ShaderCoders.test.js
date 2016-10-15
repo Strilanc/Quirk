@@ -190,8 +190,8 @@ suite.webGlTest("boolOutputs", () => {
 
     let output = SHADER_CODER_FLOATS.boolOutput;
     let shader = combinedShaderPartsWithCode([output], `
-        float outputFor(float k) {
-            return float(mod(k, 3.0) == 1.0);
+        bool outputFor(float k) {
+            return mod(k, 3.0) == 1.0;
         }`);
 
     assertThat(shaderWithOutputPartAndArgs(shader, output, []).readFloatOutputs(2, 4)).isEqualTo(new Float32Array([

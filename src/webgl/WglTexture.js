@@ -65,6 +65,20 @@ class WglTexture {
         return {w, h};
     }
 
+    /**
+     * Returns the base-2 logarithm of the texture's area.
+     * @returns {!int}
+     */
+    order() {
+        if (this.width === 0) {
+            return -Infinity;
+        }
+        return Math.round(Math.log2(this.width * this.height));
+    }
+
+    /**
+     * @returns {!string}
+     */
     toString() {
         return 'Texture(' + [
             this.width + 'x' + this.height,
