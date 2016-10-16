@@ -257,24 +257,30 @@ class DisplayedInspector {
     _drawHint(painter) {
         this._drawHint_dragGatesOntoCircuit(painter);
         this._drawHint_watchOutputsChange(painter);
-        this._drawHint_dragControlsOntoCircuit(painter);
+        this._drawHint_useControls(painter);
     }
     /**
      * @param {!Painter} painter
      * @private
      */
     _drawHint_watchOutputsChange(painter) {
-        let g = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
-        if (g >= 2) {
+        let gatesInCircuit = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
+        let gatesInPlay = gatesInCircuit + (this.hand.isBusy() ? 1 : 0);
+        if (gatesInCircuit >= 2 || gatesInPlay === 0) {
+            return;
+        }
+
+        let handPosY = this.hand.pos === undefined ? Infinity : this.hand.pos.y;
+        let visibilityFactor =
+            gatesInCircuit === 0 ? (handPosY - 125)/25 :
+            gatesInPlay === 2 ? (150 - handPosY)/25 :
+            1.0;
+        if (visibilityFactor <= 0) {
             return;
         }
 
         painter.ctx.save();
-        painter.ctx.globalAlpha *=
-            !this.hand.isBusy() && !this.displayedCircuit.circuitDefinition.hasNonControlGates() ? 0.0 :
-            g === 1 && this.hand.isBusy() ? Math.min(1, Math.max(0, (150-this.hand.pos.y)/50)) :
-            g === 1 ? 1.0 :
-            Math.min(1, Math.max(0, 1.0 - (150-this.hand.pos.y)/50));
+        painter.ctx.globalAlpha *= Math.min(1, visibilityFactor);
 
         painter.ctx.save();
         painter.ctx.translate(268, 250);
@@ -312,11 +318,16 @@ class DisplayedInspector {
             return;
         }
 
-        painter.ctx.save();
-        painter.ctx.globalAlpha *=
+        let visibilityFactor =
             this.hand.pos === undefined || !this.hand.isBusy() ? 1.0 :
             this.hand.heldGate !== undefined && this.hand.heldGate.isControl() ? 1.0 :
-            Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
+            (150-this.hand.pos.y)/50;
+        if (visibilityFactor <= 0) {
+            return;
+        }
+
+        painter.ctx.save();
+        painter.ctx.globalAlpha *= Math.min(1, visibilityFactor);
 
         painter.ctx.save();
         painter.ctx.translate(70, 190);
@@ -343,27 +354,40 @@ class DisplayedInspector {
         painter.ctx.restore();
     }
 
+    _useControlsHintVisibility() {
+        let circ = this.displayedCircuit.circuitDefinition;
+        let gatesInCircuit = circ.countGatesUpTo(2);
+        let gatesInPlay = gatesInCircuit + (this.hand.heldGate !== undefined ? 1 : 0);
+
+        let gate = circ.gateInSlot(0, 0);
+        if (circ.hasControls() || !circ.hasNonControlGates() || (gate !== undefined && gate.height > 1)) {
+            return 0;
+        }
+
+        if (gatesInCircuit === 1 && gatesInPlay === 1 && !this.displayedCircuit.isBeingEdited()) {
+            return 1;
+        }
+
+        if (gatesInCircuit === 1 && gatesInPlay === 2 && this.displayedCircuit.isBeingEdited()) {
+            return (150-this.hand.pos.y)/50;
+        }
+
+        return 0;
+    }
+
     /**
      * @param {!Painter} painter
      * @private
      */
-    _drawHint_dragControlsOntoCircuit(painter) {
-        let circ = this.displayedCircuit.circuitDefinition;
-        let gate = circ.gateInSlot(0, 0);
-        if (circ.hasControls() ||
-                !circ.hasNonControlGates() ||
-                circ.countGatesUpTo(2) !== 1 ||
-                (gate !== undefined && gate.height > 1)) {
+    _drawHint_useControls(painter) {
+        let visibilityFactor = this._useControlsHintVisibility();
+        if (visibilityFactor <= 0) {
             return;
         }
-
         painter.ctx.save();
-        painter.ctx.globalAlpha *=
-            !this.displayedCircuit.isBeingEdited() ? 1.0 :
-            this.hand.pos === undefined ? 1.0 :
-            Math.min(1, Math.max(0, (150-this.hand.pos.y)/50));
+        painter.ctx.globalAlpha *= Math.min(1, visibilityFactor);
 
-        let fy = gate === undefined ? 173 : 223;
+        let fy = this.displayedCircuit.circuitDefinition.gateInSlot(0, 0) === undefined ? 173 : 223;
 
         painter.ctx.save();
         painter.ctx.translate(64, fy-6);
