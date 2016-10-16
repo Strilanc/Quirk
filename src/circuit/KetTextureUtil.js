@@ -37,7 +37,12 @@ KetTextureUtil.mergedReadFloats = textures => {
 
     let combinedPixels;
     if (outputShaderCoder() !== currentShaderCoder()) {
-        trader.shadeAndTrade(Shaders.convertVec4CodingForOutput, WglTexturePool.takeRawByteTex(totalPowerSize + 2));
+        let sizePower = currentShaderCoder().vec4ArrayPowerSizeOfTexture(trader.currentTexture);
+        let adjustedSizePower = sizePower + outputShaderCoder().vec4PowerSizeOverhead;
+
+        trader.shadeAndTrade(
+            Shaders.convertVec4CodingForOutput,
+            WglTexturePool.take(adjustedSizePower, outputShaderCoder().vecPixelType));
         combinedPixels = outputShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
     } else {
         combinedPixels = currentShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());

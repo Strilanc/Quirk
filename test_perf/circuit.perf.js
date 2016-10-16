@@ -71,7 +71,7 @@ perfGoal(
 
 perfGoal(
     "16-Qubit QFT gate with manual de-QFT",
-    millis(200),
+    millis(85),
     circuit => CircuitStats.fromCircuitAtTime(circuit, 0),
     CircuitDefinition.fromTextDiagram(
         new Map([
