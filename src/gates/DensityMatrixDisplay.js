@@ -14,7 +14,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -62,8 +67,8 @@ let amplitudesToCouplings = (inputTexture, qubitSpan) => AMPLITUDES_TO_DENSITIES
     inputTexture,
     WglArg.float('qubitSpan', 1 << qubitSpan));
 const AMPLITUDES_TO_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec2Output,
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
     `
     uniform float qubitSpan;
 

@@ -5,6 +5,103 @@ import {WglTexture} from "src/webgl/WglTexture.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
+class ShaderPartDescription {
+    /**
+     * @param {!function(!ShaderValueCoder) : !ShaderPart} partMaker
+     * @param {!string} description
+     */
+    constructor(partMaker, description) {
+        /**
+         * @type {!(function(!ShaderValueCoder): !ShaderPart)}
+         * @private
+         */
+        this._partMaker = partMaker;
+        /**
+         * @type {!string}
+         */
+        this.description = description;
+    }
+
+    /**
+     * @param {!ShaderValueCoder} coder
+     * @returns {!ShaderPart}
+     */
+    toConcretePart(coder=undefined) {
+        return this._partMaker(coder || currentShaderCoder());
+    }
+
+    toString() {
+        return `ShaderPartDescription(${this.description})`;
+    }
+}
+
+class Inputs {
+    /**
+     * @param {!string} name
+     * @returns {!ShaderPartDescription}
+     */
+    static vec2(name) {
+        return new ShaderPartDescription(
+            coder => coder.vec2Input(name),
+            `Inputs.vec2(${name})`);
+    }
+    /**
+     * @param {!string} name
+     * @returns {!ShaderPartDescription}
+     */
+    static vec4(name) {
+        return new ShaderPartDescription(
+            coder => coder.vec4Input(name),
+            `Inputs.vec4(${name})`);
+    }
+    /**
+     * @param {!string} name
+     * @returns {!ShaderPartDescription}
+     */
+    static bool(name) {
+        return new ShaderPartDescription(
+            coder => coder.boolInput(name),
+            `Inputs.bool(${name})`);
+    }
+}
+
+class Outputs {
+    /**
+     * @returns {!ShaderPartDescription}
+     */
+    static vec2() {
+        return new ShaderPartDescription(
+            coder => coder.vec2Output,
+            `Outputs.vec2()`);
+    }
+    /**
+     * @returns {!ShaderPartDescription}
+     */
+    static vec4() {
+        return new ShaderPartDescription(
+            coder => coder.vec4Output,
+            `Outputs.vec4()`);
+    }
+
+    /**
+     * @returns {!ShaderPartDescription}
+     */
+    static vec4WithForcedByteCoding() {
+        return new ShaderPartDescription(
+            _ => SHADER_CODER_BYTES.vec4Output,
+            `Outputs.vec4()`);
+    }
+
+    /**
+     * @returns {!ShaderPartDescription}
+     */
+    static bool() {
+        return new ShaderPartDescription(
+            coder => coder.boolOutput,
+            `Outputs.bool()`);
+    }
+}
+
 /**
  * A piece of a shader.
  *
@@ -30,24 +127,30 @@ class ShaderPart {
 
 /**
  * @param {!string} tailCode
- * @param {!Array.<!ShaderPart>} shaderParts
+ * @param {!Array.<!ShaderPartDescription|!ShaderPart>} shaderPartsOrDescs
  * @returns {!WglShader}
  */
-function combinedShaderPartsWithCode(shaderParts, tailCode) {
-    let libs = new Set();
-    for (let part of shaderParts) {
-        for (let lib of part.libs) {
-            libs.add(lib);
+function combinedShaderPartsWithCode(shaderPartsOrDescs, tailCode) {
+    let shaderPartDescs = shaderPartsOrDescs.map(partOrDesc => partOrDesc instanceof ShaderPart ?
+        new ShaderPartDescription(_ => partOrDesc, 'fixed') :
+        partOrDesc);
+    let sourceMaker = () => {
+        let libs = new Set();
+        for (let part of shaderPartDescs) {
+            for (let lib of part.toConcretePart().libs) {
+                libs.add(lib);
+            }
         }
-    }
-    let libCode = [...libs, ...shaderParts.map(e => e.code)].join('');
+        let libCode = [...libs, ...shaderPartDescs.map(e => e.toConcretePart().code)].join('');
+        return libCode + '\n//////// tail ////////\n' + tailCode;
+    };
 
-    return new WglShader(libCode + '\n//////// tail ////////\n' + tailCode);
+    return new WglShader(sourceMaker);
 }
 
 /**
- * @param {!Array.<ShaderPart>} inputs
- * @param {!ShaderPart} output
+ * @param {!Array.<ShaderPartDescription>} inputs
+ * @param {!ShaderPartDescription} output
  * @param {!string} tailCode
  * @returns {!function(args: ...(!!WglTexture|!WglArg)) : !WglConfiguredShader}
  */
@@ -56,10 +159,10 @@ function makePseudoShaderWithInputsAndOutputAndCode(inputs, output, tailCode) {
     return (...inputsAndArgs) => {
         let args = [];
         for (let i = 0; i < inputs.length; i++) {
-            args.push(...inputs[i].argsFor(inputsAndArgs[i]));
+            args.push(...inputs[i].toConcretePart().argsFor(inputsAndArgs[i]));
         }
         args.push(...inputsAndArgs.slice(inputs.length));
-        return shaderWithOutputPartAndArgs(shader, output, args)
+        return shaderWithOutputPartAndArgs(shader, output.toConcretePart(), args)
     };
 }
 
@@ -578,6 +681,8 @@ export {
     shaderWithOutputPartAndArgs,
     currentShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode,
-    changeShaderCoder
+    changeShaderCoder,
+    Inputs,
+    Outputs
 }
 provideWorkingShaderCoderToWglConfiguredShader(currentShaderCoder);

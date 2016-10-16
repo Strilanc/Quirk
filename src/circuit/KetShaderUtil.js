@@ -1,6 +1,6 @@
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "src/webgl/ShaderCoders.js"
 
 /**
  * @param {!String} head
@@ -10,10 +10,10 @@ import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
  */
 const ketShader = (head, body, span=null) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
     [
-        currentShaderCoder().vec2Input('ketgen_ket'),
-        currentShaderCoder().boolInput('ketgen_control')
+        Inputs.vec2('ketgen_ket'),
+        Inputs.bool('ketgen_control')
     ],
-    currentShaderCoder().vec2Output,
+    Outputs.vec2(),
     `
     uniform float _ketgen_step;
     ${span === null ? 'uniform float span;' : ''}

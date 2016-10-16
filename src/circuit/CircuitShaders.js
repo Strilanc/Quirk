@@ -10,7 +10,12 @@ import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
-import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode,
+    Inputs,
+    Outputs
+} from "src/webgl/ShaderCoders.js"
 
 /**
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.
@@ -25,7 +30,7 @@ class CircuitShaders {}
  */
 CircuitShaders.classicalState = stateBitMask => SET_SINGLE_PIXEL_SHADER(
     WglArg.float("state", stateBitMask));
-const SET_SINGLE_PIXEL_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], currentShaderCoder().vec2Output, `
+const SET_SINGLE_PIXEL_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
     uniform float state;
     vec2 outputFor(float k) {
         return vec2(float(k == state), 0.0);
@@ -46,10 +51,10 @@ CircuitShaders.linearOverlay = (offset, foregroundTexture, backgroundTexture) =>
     WglArg.float("offset", offset));
 const LINEAR_OVERLAY_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
-        currentShaderCoder().vec4Input('back'),
-        currentShaderCoder().vec4Input('fore')
+        Inputs.vec4('back'),
+        Inputs.vec4('fore')
     ],
-    currentShaderCoder().vec4Output,
+    Outputs.vec4(),
     `
     uniform float offset;
     vec4 outputFor(float k) {
@@ -72,7 +77,7 @@ CircuitShaders.controlMask = controlMask => {
         WglArg.float('used', controlMask.inclusionMask),
         WglArg.float('desired', controlMask.desiredValueMask));
 };
-const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], currentShaderCoder().boolOutput, `
+const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.bool(), `
     uniform float used;
     uniform float desired;
 
@@ -107,8 +112,8 @@ CircuitShaders.controlSelect = (controlMask, dataTexture) => {
         WglArg.float('desired', controlMask.desiredValueMask));
 };
 const CONTROL_SELECT_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec2Output,
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
     `
     uniform float used;
     uniform float desired;
@@ -171,8 +176,8 @@ CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
         WglArg.float('keptBitMask', keptBitMask));
 };
 const QUBIT_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
     `
     uniform float keptCount;
     uniform float keptBitMask;

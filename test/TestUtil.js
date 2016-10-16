@@ -2,6 +2,7 @@
 import {describe} from "src/base/Describe.js"
 import {equate} from "src/base/Equate.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {changeShaderCoder, SHADER_CODER_BYTES, SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {Config} from "src/Config.js"
 Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = true;
@@ -309,6 +310,9 @@ let meanSquaredError = (data1, data2) => {
     return err / data1.length;
 };
 
+let isFirstByteCoderWebGlTest = true;
+let isFirstFloatCoderWebGlTest = true;
+
 /**
  * A named collection of tests.
  */
@@ -320,6 +324,8 @@ export class Suite {
         Suite.suites.push(this);
         /** @type {!(!function(!{ warn_only: !boolean|!string })[])} */
         this.tests = [];
+        /** @type {!(!function(!{ warn_only: !boolean|!string })[])} */
+        this.later_tests = [];
          /** @type {!string} */
         this.name = name;
     }
@@ -327,9 +333,10 @@ export class Suite {
     /**
      * @param {!string} name
      * @param {!function(!{ warn_only: !boolean|!string })} method
+     * @param {!boolean=false} later
      */
-    test(name, method) {
-        this.tests.push([name, status => {
+    test(name, method, later=false) {
+        (later ? this.later_tests : this.tests).push([name, status => {
             assertionSubjectIndexForNextTest = 1;
             let result = method(status);
             if (result === undefined && assertionSubjectIndexForNextTest === 1) {
@@ -370,9 +377,25 @@ export class Suite {
             if (gain < 0) {
                 throw new DetailedError("Extra returned textures.", {extra_returns: -gain});
             }
+
+            status.wasWebGLTest = true;
         };
 
-        this.test(name, wrappedMethod);
+        this.test(name + '[byte-coder]', (...args) => {
+            if (isFirstByteCoderWebGlTest) {
+                changeShaderCoder(SHADER_CODER_BYTES);
+                isFirstByteCoderWebGlTest = false;
+            }
+            return wrappedMethod(...args)
+        }, false);
+
+        this.test(name + '[float-coder]', (...args) => {
+            if (isFirstFloatCoderWebGlTest) {
+                changeShaderCoder(SHADER_CODER_FLOATS);
+                isFirstFloatCoderWebGlTest = false;
+            }
+            return wrappedMethod(...args);
+        }, true);
     }
 
     /**

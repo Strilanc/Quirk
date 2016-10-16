@@ -2,6 +2,7 @@ import {Suite, assertThat} from "test/TestUtil.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {Seq} from "src/base/Seq.js"
+import {initializedWglContext} from "src/webgl/WglContext.js"
 
 let suite = new Suite("WglShader");
 
@@ -36,4 +37,21 @@ suite.webGlTest("readPixels_bytes_all", () => {
         Seq.range(256).toArray()
     ));
     tex.ensureDeinitialized();
+});
+
+suite.webGlTest("changeSourceAfterInvalidate", () => {
+    let tex = new WglTexture(1, 1);
+    let flag = true;
+    let shader = new WglShader(() => flag ?
+        "void main(){gl_FragColor=vec4(-5.0,-6.0,7.0,8.0);}" :
+        "void main(){gl_FragColor=vec4(1.0,2.0,3.0,4.0);}");
+
+    shader.withArgs().renderTo(tex);
+    assertThat(tex.readPixels()).isEqualTo(new Float32Array([-5, -6, 7, 8]));
+
+    flag = false;
+    initializedWglContext().invalidateExistingResources();
+
+    shader.withArgs().renderTo(tex);
+    assertThat(tex.readPixels()).isEqualTo(new Float32Array([1, 2, 3, 4]));
 });

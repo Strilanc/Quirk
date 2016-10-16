@@ -16,7 +16,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -140,8 +145,8 @@ function amplitudesToPolarKets(input) {
     return AMPLITUDES_TO_POLAR_KETS_SHADER(input);
 }
 const AMPLITUDES_TO_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         vec2 ri = read_input(k);
         float mag = dot(ri, ri);
@@ -163,8 +168,8 @@ function spreadLengthAcrossPolarKets(textureTrader, includedQubitCount) {
     }
 }
 const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     uniform float bit;
 
@@ -198,8 +203,8 @@ function reduceToLongestPolarKet(textureTrader, includedQubitCount) {
     }
 }
 const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     uniform float offset;
 
@@ -222,8 +227,8 @@ function convertAwayFromPolar(input) {
     return CONVERT_AWAY_FROM_POLAR_SHADER(input);
 }
 const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     vec4 outputFor(float k) {
         vec4 polar = read_input(k);
@@ -239,10 +244,10 @@ const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCod
 let toRatiosVsRepresentative = (ket, rep) => TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
 const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
-        currentShaderCoder().vec2Input('ket'),
-        currentShaderCoder().vec4Input('rep')
+        Inputs.vec2('ket'),
+        Inputs.vec4('rep')
     ],
-    currentShaderCoder().vec4Output,
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         return vec4(read_ket(k), read_rep(mod(k, len_rep())).xy);
     }`);
@@ -265,8 +270,8 @@ function foldConsistentRatios(textureTrader, includedQubitCount) {
     }
 }
 const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     uniform float bit;
 
@@ -307,8 +312,8 @@ function signallingSumAll(textureTrader) {
     }
 }
 const SIGNALLING_SUM_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         vec4 a = read_input(k);
         vec4 b = read_input(k + len_output());

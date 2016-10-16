@@ -60,18 +60,24 @@ let promiseRunTest = (suite, name, method) => {
 __karma__.start = () => {
     let total = 0;
     for (let suite of Suite.suites) {
-        total += suite.tests.length;
+        total += suite.tests.length + suite.later_tests.length;
+        if (suite.tests.length + suite.later_tests.length === 0) {
+            console.warn(`Empty test suite: ${suite.name}`);
+        }
     }
     __karma__.info({ total: total });
 
-    let all = Promise.all(Suite.suites.map(suite => {
-        if (suite.tests.length === 0) {
-            console.warn(`Empty test suite: ${suite.name}`);
-        }
+    let early = Promise.all(Suite.suites.map(suite => {
         let suiteResult = Promise.all(suite.tests.map(e => promiseRunTest(suite, e[0], e[1])));
         suiteResult.catch(() => console.error(`${suite.name} suite failed`));
         return suiteResult;
     }));
 
-    all.then(() => __karma__.complete());
+    let late = early.then(() => Promise.all(Suite.suites.map(suite => {
+        let suiteResult = Promise.all(suite.later_tests.map(e => promiseRunTest(suite, e[0], e[1])));
+        suiteResult.catch(() => console.error(`${suite.name} suite failed`));
+        return suiteResult;
+    })));
+
+    return late.then(() => __karma__.complete());
 };

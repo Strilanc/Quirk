@@ -12,7 +12,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -49,10 +54,10 @@ let amplitudesToProbabilities = (inputTexture, controlTex) =>
     AMPLITUDES_TO_PROBABILITIES_SHADER(inputTexture, controlTex);
 const AMPLITUDES_TO_PROBABILITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
-        currentShaderCoder().vec2Input('input'),
-        currentShaderCoder().boolInput('control')
+        Inputs.vec2('input'),
+        Inputs.bool('control')
     ],
-    currentShaderCoder().vec2Output,
+    Outputs.vec2(),
     `vec2 outputFor(float k) {
         vec2 amp = read_input(k);
         return vec2(dot(amp, amp) * read_control(k), 0.0);

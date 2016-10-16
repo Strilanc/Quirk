@@ -6,6 +6,8 @@ import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
     currentShaderCoder,
+    Inputs,
+    Outputs,
     makePseudoShaderWithInputsAndOutputAndCode,
     SHADER_CODER_BYTES
 } from "src/webgl/ShaderCoders.js"
@@ -108,8 +110,8 @@ Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().prepVec4Data(floa
  */
 Shaders.sumFoldVec4 = inp => SUM_FOLD_SHADER_VEC4(inp);
 const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         return read_input(k) + read_input(k + len_output());
     }`);
@@ -121,16 +123,16 @@ const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
  */
 Shaders.sumFoldVec2 = inp => SUM_FOLD_SHADER_VEC2(inp);
 const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec2Output,
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
     `vec2 outputFor(float k) {
          return read_input(k) + read_input(k + len_output());
      }`);
 
 Shaders.vec2AsVec4 = inputTexture => VEC2_AS_VEC4_SHADER(inputTexture);
 const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec4Output,
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
     'vec4 outputFor(float k) { return vec4(read_input(k), vec2(0.0, 0.0)); }');
 
 /**
@@ -141,8 +143,8 @@ const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
  */
 Shaders.encodeFloatsIntoBytes = inputTexture => FLOATS_TO_ENCODED_BYTES_SHADER(inputTexture);
 const FLOATS_TO_ENCODED_BYTES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec4Input('input')],
-    SHADER_CODER_BYTES.vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4WithForcedByteCoding(),
     'vec4 outputFor(float k) { return read_input(k); }');
 
 export {Shaders}

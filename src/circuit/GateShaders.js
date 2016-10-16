@@ -9,7 +9,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 
 /**
  * Defines operations used by gates to operate on textures representing superpositions.
@@ -99,8 +104,8 @@ GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));
 };
 const CYCLE_ALL_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [currentShaderCoder().vec2Input('input')],
-    currentShaderCoder().vec2Output,
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
     `
     uniform float shiftAmount;
 
