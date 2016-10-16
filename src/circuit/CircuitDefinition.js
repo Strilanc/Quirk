@@ -756,15 +756,15 @@ class CircuitDefinition {
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
+     * @param {!CircuitEvalContext} ctx
      * @return {void}
      */
-    applyMainOperationsInCol(colIndex, args) {
+    applyMainOperationsInCol(colIndex, ctx) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return;
         }
 
-        this._applyOpsInCol(colIndex, args, gate => {
+        this._applyOpsInCol(colIndex, ctx, gate => {
             if (gate.definitelyHasNoEffect() || gate === Gates.Special.SwapHalf) {
                 return undefined;
             }
@@ -773,41 +773,41 @@ class CircuitDefinition {
                 return gate.customOperation;
             }
 
-            return args => GateShaders.applyMatrixOperation(args, gate.knownMatrixAt(args.time));
+            return ctx => GateShaders.applyMatrixOperation(ctx, gate.knownMatrixAt(ctx.time));
         });
 
         for (let [i, j] of this.columns[colIndex].swapPairs()) {
             //noinspection JSUnusedAssignment
-            args.stateTrader.shadeAndTrade(
-                CircuitShaders.swap(args.withRow(i + args.row), j + args.row));
+            ctx.stateTrader.shadeAndTrade(
+                CircuitShaders.swap(ctx.withRow(i + ctx.row), j + ctx.row));
         }
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
+     * @param {!CircuitEvalContext} ctx
      * @return {void}
      */
-    applyBeforeOperationsInCol(colIndex, args) {
-        this._applyOpsInCol(colIndex, args, g => g.customBeforeOperation);
+    applyBeforeOperationsInCol(colIndex, ctx) {
+        this._applyOpsInCol(colIndex, ctx, g => g.customBeforeOperation);
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
+     * @param {!CircuitEvalContext} ctx
      * @return {void}
      */
-    applyAfterOperationsInCol(colIndex, args) {
-        this._applyOpsInCol(colIndex, args, g => g.customAfterOperation);
+    applyAfterOperationsInCol(colIndex, ctx) {
+        this._applyOpsInCol(colIndex, ctx, g => g.customAfterOperation);
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
-     * @param {!function(!Gate) : !function(!CircuitEvalArgs)} opGetter
+     * @param {!CircuitEvalContext} ctx
+     * @param {!function(!Gate) : !function(!CircuitEvalContext)} opGetter
      * @private
      */
-    _applyOpsInCol(colIndex, args, opGetter) {
+    _applyOpsInCol(colIndex, ctx, opGetter) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return;
         }
@@ -821,7 +821,7 @@ class CircuitDefinition {
 
             let op = opGetter(gate);
             if (op !== undefined) {
-                op(args.withRow(args.row + row));
+                op(ctx.withRow(ctx.row + row));
             }
         }
     }

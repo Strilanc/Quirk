@@ -52,7 +52,7 @@ HalfTurnGates.X = Gate.fromKnownMatrix(
     "Pauli X Gate",
     "The NOT gate.\nToggles between ON and OFF.").
     withCustomDrawer(NOT_DRAWER).
-    withCustomShader(args => xShader.withArgs(...ketArgs(args)));
+    withCustomShader(ctx => xShader.withArgs(...ketArgs(ctx)));
 
 let yShader = ketShader('', 'vec2 v = inp(1.0-out_id); return (out_id*2.0 - 1.0)*vec2(-v.y, v.x);', 1);
 HalfTurnGates.Y = Gate.fromKnownMatrix(
@@ -60,7 +60,7 @@ HalfTurnGates.Y = Gate.fromKnownMatrix(
     Matrix.PAULI_Y,
     "Pauli Y Gate",
     "A combination of the X and Z gates.").
-    withCustomShader(args => yShader.withArgs(...ketArgs(args)));
+    withCustomShader(ctx => yShader.withArgs(...ketArgs(ctx)));
 
 let zShader = ketShader('', 'return amp*(1.0 - out_id*2.0);', 1);
 HalfTurnGates.Z = Gate.fromKnownMatrix(
@@ -68,7 +68,7 @@ HalfTurnGates.Z = Gate.fromKnownMatrix(
     Matrix.PAULI_Z,
     "Pauli Z Gate",
     "The phase flip gate.\nNegates phases when the qubit is ON.").
-    withCustomShader(args => zShader.withArgs(...ketArgs(args)));
+    withCustomShader(ctx => zShader.withArgs(...ketArgs(ctx)));
 
 let hShader = ketShader('', 'return 0.7071067811865476*(amp*(1.0-2.0*out_id) + inp(1.0-out_id));', 1);
 HalfTurnGates.H = Gate.fromKnownMatrix(
@@ -78,7 +78,7 @@ HalfTurnGates.H = Gate.fromKnownMatrix(
     "Creates simple superpositions.\n" +
     "Maps ON to ON + OFF.\n" +
     "Maps OFF to ON - OFF.").
-    withCustomShader(args => hShader.withArgs(...ketArgs(args)));
+    withCustomShader(ctx => hShader.withArgs(...ketArgs(ctx)));
 
 HalfTurnGates.all = [
     HalfTurnGates.X,

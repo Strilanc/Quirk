@@ -13,13 +13,13 @@ import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} qubitSpan Size of the gate.
  * @param {!number=} factor Scaling factor for the applied phases.
  */
-function applyControlledPhaseGradient(args, qubitSpan, factor=1) {
-    args.stateTrader.shadeAndTrade(_ => CONTROLLED_PHASE_GRADIENT_SHADER.withArgs(
-        ...ketArgs(args, qubitSpan),
+function applyControlledPhaseGradient(ctx, qubitSpan, factor=1) {
+    ctx.stateTrader.shadeAndTrade(_ => CONTROLLED_PHASE_GRADIENT_SHADER.withArgs(
+        ...ketArgs(ctx, qubitSpan),
         WglArg.float("factor", factor)));
 }
 const CONTROLLED_PHASE_GRADIENT_SHADER = ketShaderPhase(
@@ -40,34 +40,34 @@ const INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER = span =>
 let FourierTransformGates = {};
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} span
  */
-function applyForwardGradientShaders(args, span) {
+function applyForwardGradientShaders(ctx, span) {
     if (span > 1) {
-        args.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(args));
+        ctx.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(ctx));
     }
     for (let i = 0; i < span; i++) {
         if (i > 0) {
-            applyControlledPhaseGradient(args, i + 1, +1);
+            applyControlledPhaseGradient(ctx, i + 1, +1);
         }
-        HalfTurnGates.H.customOperation(args.withRow(args.row + i));
+        HalfTurnGates.H.customOperation(ctx.withRow(ctx.row + i));
     }
 }
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} span
  */
-function applyBackwardGradientShaders(args, span) {
+function applyBackwardGradientShaders(ctx, span) {
     for (let i = span - 1; i >= 0; i--) {
-        HalfTurnGates.H.customOperation(args.withRow(args.row + i));
+        HalfTurnGates.H.customOperation(ctx.withRow(ctx.row + i));
         if (i > 0) {
-            applyControlledPhaseGradient(args, i + 1, -1);
+            applyControlledPhaseGradient(ctx, i + 1, -1);
         }
     }
     if (span > 1) {
-        args.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(args));
+        ctx.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(ctx));
     }
 }
 
@@ -79,7 +79,7 @@ FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span =
     withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT" + span).
     withHeight(span).
-    withCustomOperation(args => applyForwardGradientShaders(args, span)));
+    withCustomOperation(ctx => applyForwardGradientShaders(ctx, span)));
 
 FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "QFT^†",
@@ -89,7 +89,7 @@ FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16,
     withKnownMatrix(span >= 4 ? undefined : INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT†" + span).
     withHeight(span).
-    withCustomOperation(args => applyBackwardGradientShaders(args, span)));
+    withCustomOperation(ctx => applyBackwardGradientShaders(ctx, span)));
 
 FourierTransformGates.all = [
     ...FourierTransformGates.FourierTransformFamily.all,

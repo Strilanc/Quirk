@@ -6,10 +6,10 @@ import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @returns {!WglConfiguredShader}
  */
-let universalNot = args => UNIVERSAL_NOT_SHADER.withArgs(...ketArgs(args));
+let universalNot = ctx => UNIVERSAL_NOT_SHADER.withArgs(...ketArgs(ctx));
 const UNIVERSAL_NOT_SHADER = ketShader(
     '',
     'vec2 other = inp(1.0 - out_id); return vec2(other.x, -other.y) * (1.0 - 2.0 * out_id);',

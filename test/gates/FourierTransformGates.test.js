@@ -12,26 +12,26 @@ let suite = new Suite("FourierTransformGates");
 
 suite.webGlTest('controlledPhaseGradient', () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => applyControlledPhaseGradient(args, 3, 1),
+        ctx => applyControlledPhaseGradient(ctx, 3, 1),
         Matrix.generateDiagonal(8, i => i < 4 ? 1 : Complex.polar(1, (i-4)*Math.PI/4)));
 
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => applyControlledPhaseGradient(args, 4, -1),
+        ctx => applyControlledPhaseGradient(ctx, 4, -1),
         Matrix.generateDiagonal(16, i => i < 8 ? 1 : Complex.polar(1, -(i-8)*Math.PI/8)));
 });
 
 suite.webGlTest('fourierTransform', () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(2, [new GateColumn([
                 FourierTransformGates.FourierTransformFamily.ofSize(2), undefined])]),
             false).output,
         Matrix.generate(4, 4, (i, j) => Complex.polar(0.5, i*j*Math.PI/2)));
 
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(3, [new GateColumn([
                 FourierTransformGates.InverseFourierTransformFamily.ofSize(3), undefined, undefined])]),
             false).output,

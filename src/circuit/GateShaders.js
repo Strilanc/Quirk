@@ -19,17 +19,17 @@ class GateShaders {}
 /**
  * Renders the result of applying a custom controlled single-qubit operation to a superposition.
  *
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!Matrix} matrix
  * @returns {!WglConfiguredShader}
  */
-let singleQubitOperationFunc = (args, matrix) => {
+let singleQubitOperationFunc = (ctx, matrix) => {
     if (matrix.width() !== 2 || matrix.height() !== 2) {
         throw new DetailedError("Not a single-qubit operation.", {matrix});
     }
     let [ar, ai, br, bi, cr, ci, dr, di] = matrix.rawBuffer();
     return CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
-        ...ketArgs(args),
+        ...ketArgs(ctx),
         WglArg.vec2("a", ar, ai),
         WglArg.vec2("b", br, bi),
         WglArg.vec2("c", cr, ci),
@@ -67,24 +67,24 @@ const matrix_operation_shaders = [
 ];
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!Matrix} matrix
  * @returns {void}
  */
-GateShaders.applyMatrixOperation = (args, matrix) => {
+GateShaders.applyMatrixOperation = (ctx, matrix) => {
     if (matrix.width() === 2) {
-        args.stateTrader.shadeAndTrade(_ => singleQubitOperationFunc(args, matrix));
+        ctx.stateTrader.shadeAndTrade(_ => singleQubitOperationFunc(ctx, matrix));
         return;
     }
     if (!Util.isPowerOf2(matrix.width())) {
-        throw new DetailedError("Matrix size isn't a power of 2.", {args, matrix});
+        throw new DetailedError("Matrix size isn't a power of 2.", {ctx, matrix});
     }
     if (matrix.width() > 1 << 4) {
-        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {args, matrix});
+        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {ctx, matrix});
     }
     let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
-    args.stateTrader.shadeAndTrade(_ => shader.withArgs(
-        ...ketArgs(args),
+    ctx.stateTrader.shadeAndTrade(_ => shader.withArgs(
+        ...ketArgs(ctx),
         WglArg.float_array("coefs", matrix.rawBuffer())));
 };
 

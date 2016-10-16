@@ -1,5 +1,5 @@
 import {assertThat} from "test/TestUtil.js"
-import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
@@ -18,19 +18,19 @@ if (USE_SIMPLE_VALUES) {
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
+ * @param {function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
 function assertThatRandomTestOfCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => args.stateTrader.shadeAndTrade(_ => shaderFunc(args)),
+        ctx => ctx.stateTrader.shadeAndTrade(_ => shaderFunc(ctx)),
         matrix,
         repeats);
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : void} operation
+ * @param {function(!CircuitEvalContext) : void} operation
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
@@ -41,7 +41,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix,
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : void} operation
+ * @param {function(!CircuitEvalContext) : void} operation
  * @param {!Matrix} matrix
  */
 function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix) {
@@ -70,7 +70,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
     let tex = Shaders.vec2Data(inVec.rawBuffer()).toVec2Texture(wireCount);
     let trader = new WglTextureTrader(tex);
     let controlsTexture = CircuitShaders.controlMask(controls).toBoolTexture(wireCount);
-    let args = new CircuitEvalArgs(
+    let ctx = new CircuitEvalContext(
         time,
         qubitIndex,
         wireCount,
@@ -78,14 +78,14 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
         controlsTexture,
         trader,
         new Map());
-    operation(args);
+    operation(ctx);
 
     let outData = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
     let outVec = new Matrix(1, ampCount, outData);
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
-    assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.005);
+    assertThat(outVec).withInfo({matrix, inVec, ctx}).isApproximatelyEqualTo(expectedOutVec, 0.005);
     trader.currentTexture.deallocByDepositingInPool();
     controlsTexture.deallocByDepositingInPool();
 }

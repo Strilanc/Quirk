@@ -31,7 +31,7 @@ suite.webGlTest("matrixOperation", () => {
         let d = 1<<size;
         let matrix = Matrix.generate(d, d, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
         assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-            args => GateShaders.applyMatrixOperation(args, matrix),
+            ctx => GateShaders.applyMatrixOperation(ctx, matrix),
             matrix,
             repeats);
     }

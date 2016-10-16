@@ -30,7 +30,12 @@ let _generateReverseShaderForSize = span => span < 2 ? undefined : ketShaderPerm
     span);
 
 let reverseShaders = Seq.range(Config.MAX_WIRE_COUNT).map(_generateReverseShaderForSize).toArray();
-let reverseShaderForSize = span => args => reverseShaders[span].withArgs(...ketArgs(args, span));
+
+/**
+ * @param {!int} span
+ * @returns {!function(!CircuitEvalContext) : void}
+ */
+let reverseShaderForSize = span => ctx => reverseShaders[span].withArgs(...ketArgs(ctx, span));
 
 let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
     return Gate.withoutKnownMatrix(

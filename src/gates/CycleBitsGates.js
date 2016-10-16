@@ -9,14 +9,14 @@ import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 let CycleBitsGates = {};
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} qubitSpan
  * @param {!int} shiftAmount
  * @returns {!WglConfiguredShader}
  */
-let cycleBits = (args, qubitSpan, shiftAmount) =>
+let cycleBits = (ctx, qubitSpan, shiftAmount) =>
     CYCLE_SHADER.withArgs(
-        ...ketArgs(args, qubitSpan),
+        ...ketArgs(ctx, qubitSpan),
         WglArg.float("amount", 1 << Util.properMod(-shiftAmount, qubitSpan)));
 const CYCLE_SHADER = ketShaderPermute(
     'uniform float amount;',
@@ -36,7 +36,7 @@ CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.without
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
     withSerializedId("<<" + span).
     withHeight(span).
-    withCustomShader(args => cycleBits(args, span, +1)));
+    withCustomShader(ctx => cycleBits(ctx, span, +1)));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↟",
@@ -47,7 +47,7 @@ CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
     withSerializedId(">>" + span).
     withHeight(span).
-    withCustomShader(args => cycleBits(args, span, -1)));
+    withCustomShader(ctx => cycleBits(ctx, span, -1)));
 
 CycleBitsGates.all = [
     ...CycleBitsGates.CycleBitsFamily.all,

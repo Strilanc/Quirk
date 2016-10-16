@@ -1,5 +1,5 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Config} from "src/Config.js"
@@ -229,7 +229,7 @@ class CircuitStats {
         let stateTrader = new WglTextureTrader(CircuitShaders.classicalState(0).toVec2Texture(numWires));
         let controlTex = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(numWires);
         let {colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
-            new CircuitEvalArgs(
+            new CircuitEvalContext(
                 time,
                 0,
                 numWires,

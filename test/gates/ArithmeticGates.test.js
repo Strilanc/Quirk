@@ -15,18 +15,18 @@ let suite = new Suite("ArithmeticGates");
 
 suite.webGlTest('increment', () => {
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => incrementShaderFunc(args, 3, 5),
+        ctx => incrementShaderFunc(ctx, 3, 5),
         Matrix.generateTransition(8, e => (e+5)&7));
 
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-            args => incrementShaderFunc(args, 2, -3),
+        ctx => incrementShaderFunc(ctx, 2, -3),
         Matrix.generateTransition(4, e => (e-3)&3));
 });
 
 suite.webGlTest('plus_A', () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(4, [new GateColumn([
                 ArithmeticGates.PlusAFamily.ofSize(2), undefined, InputGates.InputAFamily.ofSize(2), undefined])]),
             false).output,
@@ -39,8 +39,8 @@ suite.webGlTest('plus_A', () => {
 
 suite.webGlTest('minus_A', () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(4, [new GateColumn([
                 InputGates.InputAFamily.ofSize(2), undefined, ArithmeticGates.MinusAFamily.ofSize(2), undefined])]),
             false).output,

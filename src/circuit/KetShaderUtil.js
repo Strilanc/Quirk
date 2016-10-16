@@ -62,15 +62,15 @@ const ketShaderPhase = (head, body, span=null) => ketShader(
     span);
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {undefined|!int=undefined} span
  * @returns {!Array.<!WglArg>}
  */
-function ketArgs(args, span=undefined) {
+function ketArgs(ctx, span=undefined) {
     let result = [
-        args.stateTrader.currentTexture,
-        args.controlsTexture,
-        WglArg.float("_ketgen_step", 1 << args.row)
+        ctx.stateTrader.currentTexture,
+        ctx.controlsTexture,
+        WglArg.float("_ketgen_step", 1 << ctx.row)
     ];
     if (span !== undefined) {
         result.push(WglArg.float('span', 1 << span));

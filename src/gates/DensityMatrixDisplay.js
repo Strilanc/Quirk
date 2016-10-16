@@ -143,12 +143,15 @@ function densityMatrixDisplayMaker(span) {
         withWidth(span).
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
-        withCustomStatTexturesMaker(args => densityDisplayStatTexture(
-            args.stateTrader.currentTexture, args.wireCount, args.controls, args.row, span)).
+        withCustomStatTexturesMaker(ctx => densityDisplayStatTexture(
+            ctx.stateTrader.currentTexture, ctx.wireCount, ctx.controls, ctx.row, span)).
         withCustomStatPostProcessor(densityPixelsToMatrix).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }
 
+/**
+ * @param {!GateDrawParams} args
+ */
 const DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args => {
     let n = args.gate.height;
     let ρ = args.customStats || Matrix.zero(1<<n, 1<<n).times(NaN);

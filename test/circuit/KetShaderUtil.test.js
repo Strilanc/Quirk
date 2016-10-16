@@ -13,8 +13,8 @@ suite.webGlTest("ketShader", () => {
         'return cmul(inp(0.0), a+(c-a)*out_id) + cmul(inp(1.0), b+(d-b)*out_id);',
         1);
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => shader.withArgs(
-            ...ketArgs(args),
+        ctx => shader.withArgs(
+            ...ketArgs(ctx),
             WglArg.vec2("a", 2, 3),
             WglArg.vec2("b", 5, 7),
             WglArg.vec2("c", 11, 13),
@@ -28,7 +28,7 @@ suite.webGlTest("ketShaderPermute", () => {
         'return mod(out_id + 1.0, 4.0);',
         2);
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => shader.withArgs(...ketArgs(args)),
+        ctx => shader.withArgs(...ketArgs(ctx)),
         Matrix.generateTransition(4, i => (i - 1) & 3));
 });
 
@@ -38,6 +38,6 @@ suite.webGlTest("ketShaderPhase", () => {
         'return vec2(cos(out_id/10.0), sin(out_id/10.0));',
         3);
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => shader.withArgs(...ketArgs(args)),
+        ctx => shader.withArgs(...ketArgs(ctx)),
         Matrix.generateDiagonal(8, i => Complex.polar(1, i/10)));
 });

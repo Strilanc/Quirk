@@ -1,7 +1,7 @@
 import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
 import {Gates} from "src/gates/AllGates.js"
 
-import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
@@ -30,7 +30,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
     let cols = [];
     for (let i = 0; i < n; i++) {
         let trader = new WglTextureTrader(CircuitShaders.classicalState(i).toVec2Texture(numQubits));
-        let args = new CircuitEvalArgs(
+        let ctx = new CircuitEvalContext(
             time,
             bit,
             numQubits,
@@ -38,7 +38,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
             control,
             trader,
             new Map());
-        gate.customOperation(args);
+        gate.customOperation(ctx);
         let buf = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
         let col = new Matrix(1, 1 << numQubits, buf);
         trader.currentTexture.deallocByDepositingInPool();

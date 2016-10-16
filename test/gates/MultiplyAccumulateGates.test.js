@@ -12,8 +12,8 @@ let suite = new Suite("MultiplyAccumulateGates");
 
 suite.webGlTest('plus_AB', () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(5, [new GateColumn([
                 MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
                 undefined,
@@ -31,8 +31,8 @@ suite.webGlTest('plus_AB', () => {
 
 suite.webGlTest('minus_AB', () => {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(5, [new GateColumn([
                 InputGates.InputAFamily.ofSize(2),
                 undefined,

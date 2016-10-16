@@ -220,8 +220,8 @@ function multiChanceGateMaker(span) {
         "Shows chances of outcomes if a measurement was performed.\nUse controls to see conditional probabilities.").
         withHeight(span).
         withSerializedId("Chance" + span).
-        withCustomStatTexturesMaker(args =>
-            probabilityStatTexture(args.stateTrader.currentTexture, args.controlsTexture, args.row, span)).
+        withCustomStatTexturesMaker(ctx =>
+            probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

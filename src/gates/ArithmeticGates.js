@@ -34,30 +34,30 @@ const SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e =>
 });
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} qubitSpan
  * @param {!int} incrementAmount
  * @returns {!WglConfiguredShader}
  */
-const incrementShaderFunc = (args, qubitSpan, incrementAmount) =>
+const incrementShaderFunc = (ctx, qubitSpan, incrementAmount) =>
     incrementShader.withArgs(
-        ...ketArgs(args, qubitSpan),
+        ...ketArgs(ctx, qubitSpan),
         WglArg.float("amount", incrementAmount));
 const incrementShader = ketShaderPermute(
     'uniform float amount;',
     'return mod(out_id - amount + span, span);');
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} span
  * @param {!int} srcOffset
  * @param {!int} srcSpan
  * @param {!int} scaleFactor
  * @returns {!WglConfiguredShader}
  */
-function additionShaderFunc(args, span, srcOffset, srcSpan, scaleFactor) {
+function additionShaderFunc(ctx, span, srcOffset, srcSpan, scaleFactor) {
     return ADDITION_SHADER.withArgs(
-        ...ketArgs(args, span),
+        ...ketArgs(ctx, span),
         WglArg.float("srcOffset", 1 << srcOffset),
         WglArg.float("srcSpan", 1 << srcSpan),
         WglArg.float("factor", scaleFactor));
@@ -79,7 +79,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
     withSerializedId("inc" + span).
     withHeight(span).
-    withCustomShader(args => incrementShaderFunc(args, span, +1)));
+    withCustomShader(ctx => incrementShaderFunc(ctx, span, +1)));
 
 ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "- -",
@@ -90,7 +90,7 @@ ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
     withSerializedId("dec" + span).
     withHeight(span).
-    withCustomShader(args => incrementShaderFunc(args, span, -1)));
+    withCustomShader(ctx => incrementShaderFunc(ctx, span, -1)));
 
 ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b+=a",
@@ -102,10 +102,10 @@ ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.without
     withSerializedId("add" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
     withHeight(span).
-    withCustomShader(args => additionShaderFunc(
-        args.withRow(args.row + Math.floor(span/2)),
+    withCustomShader(ctx => additionShaderFunc(
+        ctx.withRow(ctx.row + Math.floor(span/2)),
         Math.ceil(span/2),
-        args.row,
+        ctx.row,
         Math.floor(span/2),
         +1)));
 
@@ -119,10 +119,10 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
-    withCustomShader(args => additionShaderFunc(
-        args.withRow(args.row + Math.floor(span/2)),
+    withCustomShader(ctx => additionShaderFunc(
+        ctx.withRow(ctx.row + Math.floor(span/2)),
         Math.ceil(span/2),
-        args.row,
+        ctx.row,
         Math.floor(span/2),
         -1)));
 
@@ -135,9 +135,9 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     withHeight(span).
     withSerializedId("+=A" + span).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(args => {
-        let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
-        return additionShaderFunc(args, span, inputOffset, inputLength, +1);
+    withCustomShader(ctx => {
+        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
+        return additionShaderFunc(ctx, span, inputOffset, inputLength, +1);
     }));
 
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
@@ -149,9 +149,9 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     withHeight(span).
     withSerializedId("-=A" + span).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(args => {
-        let {offset: inputOffset, length: inputLength} = args.customContextFromGates.get('Input Range A');
-        return additionShaderFunc(args, span, inputOffset, inputLength, -1);
+    withCustomShader(ctx => {
+        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
+        return additionShaderFunc(ctx, span, inputOffset, inputLength, -1);
     }));
 
 ArithmeticGates.all = [

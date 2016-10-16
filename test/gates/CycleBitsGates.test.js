@@ -12,9 +12,9 @@ let suite = new Suite("CycleBitsGates");
 
 suite.webGlTest('cycleBits', () => {
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => cycleBits(args, 3, 2),
+        ctx => cycleBits(ctx, 3, 2),
         Matrix.generateTransition(8, i => ((i&1)<<2) | ((i>>1)&3)));
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => cycleBits(args, 4, -2),
+        ctx => cycleBits(ctx, 4, -2),
         Matrix.generateTransition(16, i => ((i&3)<<2) | ((i>>2)&3)));
 });

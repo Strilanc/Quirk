@@ -334,7 +334,7 @@ suite.webGlTest("qubitDensities", () => {
 
 suite.webGlTest("swap", () => {
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => CircuitShaders.swap(args, args.row + 1),
+        ctx => CircuitShaders.swap(ctx, ctx.row + 1),
         Matrix.square(
             1,0,0,0,
             0,0,1,0,
@@ -342,7 +342,7 @@ suite.webGlTest("swap", () => {
             0,0,0,1));
 
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => CircuitShaders.swap(args, args.row + 2),
+        ctx => CircuitShaders.swap(ctx, ctx.row + 2),
         Matrix.square(
             1,0,0,0,0,0,0,0,
             0,0,0,0,1,0,0,0,

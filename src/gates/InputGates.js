@@ -18,8 +18,8 @@ let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fr
             length: span
         }
     }]).
-    withCustomBeforeOperation(args => span > 1 ? reverseShaderForSize(span) : undefined).
-    withCustomAfterOperation(args => span > 1 ? reverseShaderForSize(span) : undefined).
+    withCustomBeforeOperation(ctx => span > 1 ? reverseShaderForSize(span) : undefined).
+    withCustomAfterOperation(ctx => span > 1 ? reverseShaderForSize(span) : undefined).
     withCustomDrawer(args => {
         GatePainting.paintBackground(args);
         if (args.isInToolbox) {

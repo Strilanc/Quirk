@@ -416,8 +416,8 @@ function amplitudeDisplayMaker(span) {
         withHeight(span).
         withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
         withSerializedId("Amps" + span).
-        withCustomStatTexturesMaker(args =>
-            amplitudeDisplayStatTextures(args.stateTrader.currentTexture, args.controls, args.row, span)).
+        withCustomStatTexturesMaker(ctx =>
+            amplitudeDisplayStatTextures(ctx.stateTrader.currentTexture, ctx.controls, ctx.row, span)).
         withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

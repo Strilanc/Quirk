@@ -138,11 +138,11 @@ const CONTROL_SELECT_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
 /**
  * Renders the result of applying a controlled swap operation to a superposition.
  *
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} otherRow
  */
-CircuitShaders.swap = (args, otherRow) =>
-    SWAP_QUBITS_SHADER.withArgs(...ketArgs(args, otherRow - args.row + 1));
+CircuitShaders.swap = (ctx, otherRow) =>
+    SWAP_QUBITS_SHADER.withArgs(...ketArgs(ctx, otherRow - ctx.row + 1));
 const SWAP_QUBITS_SHADER = ketShaderPermute('', `
     float low_bit = mod(out_id, 2.0);
     float mid_bits = floor(mod(out_id, span*0.5)*0.5);

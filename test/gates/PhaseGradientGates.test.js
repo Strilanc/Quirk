@@ -9,10 +9,10 @@ let suite = new Suite("PhaseGradientGates");
 
 suite.webGlTest('phaseGradient', () => {
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => phaseGradient(args, 3, 1),
+        ctx => phaseGradient(ctx, 3, 1),
         Matrix.generateDiagonal(8, i => Complex.polar(1, i*Math.PI/8)));
 
     assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => phaseGradient(args, 4, -1),
+        ctx => phaseGradient(ctx, 4, -1),
         Matrix.generateDiagonal(16, i => Complex.polar(1, -i*Math.PI/16)));
 });
