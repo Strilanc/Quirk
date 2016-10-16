@@ -21,20 +21,19 @@ class GateShaders {}
  *
  * @param {!CircuitEvalContext} ctx
  * @param {!Matrix} matrix
- * @returns {!WglConfiguredShader}
  */
-let singleQubitOperationFunc = (ctx, matrix) => {
+function _applySingleQubitOperationFunc(ctx, matrix) {
     if (matrix.width() !== 2 || matrix.height() !== 2) {
         throw new DetailedError("Not a single-qubit operation.", {matrix});
     }
     let [ar, ai, br, bi, cr, ci, dr, di] = matrix.rawBuffer();
-    return CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
+    ctx.applyOperation(CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
         ...ketArgs(ctx),
         WglArg.vec2("a", ar, ai),
         WglArg.vec2("b", br, bi),
         WglArg.vec2("c", cr, ci),
-        WglArg.vec2("d", dr, di));
-};
+        WglArg.vec2("d", dr, di)));
+}
 
 const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = ketShader(
     'uniform vec2 a, b, c, d;',
@@ -73,7 +72,7 @@ const matrix_operation_shaders = [
  */
 GateShaders.applyMatrixOperation = (ctx, matrix) => {
     if (matrix.width() === 2) {
-        ctx.stateTrader.shadeAndTrade(_ => singleQubitOperationFunc(ctx, matrix));
+        _applySingleQubitOperationFunc(ctx, matrix);
         return;
     }
     if (!Util.isPowerOf2(matrix.width())) {
@@ -83,7 +82,7 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
         throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {ctx, matrix});
     }
     let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
-    ctx.stateTrader.shadeAndTrade(_ => shader.withArgs(
+    ctx.applyOperation(shader.withArgs(
         ...ketArgs(ctx),
         WglArg.float_array("coefs", matrix.rawBuffer())));
 };

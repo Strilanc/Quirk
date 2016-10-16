@@ -22,29 +22,29 @@ if (USE_SIMPLE_VALUES) {
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
-function assertThatRandomTestOfCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        ctx => ctx.stateTrader.shadeAndTrade(_ => shaderFunc(ctx)),
+function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => ctx.applyOperation(shaderFunc),
         matrix,
         repeats);
 }
 
 /**
- * @param {function(!CircuitEvalContext) : void} operation
+ * @param {function(!CircuitEvalContext) : void} updateAction
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
-function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix, repeats=5) {
+function assertThatCircuitUpdateActsLikeMatrix(updateAction, matrix, repeats=5) {
     for (let i = 0; i < repeats; i++) {
-        assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix);
+        assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix);
     }
 }
 
 /**
- * @param {function(!CircuitEvalContext) : void} operation
+ * @param {function(!CircuitEvalContext) : void} updateAction
  * @param {!Matrix} matrix
  */
-function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix) {
+function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
     let qubitSpan = Math.round(Math.log2(matrix.height()));
     let extraWires = Math.floor(Math.random()*5);
     let time = Math.random();
@@ -78,7 +78,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
         controlsTexture,
         trader,
         new Map());
-    operation(ctx);
+    updateAction(ctx);
 
     let outData = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
     let outVec = new Matrix(1, ampCount, outData);
@@ -91,6 +91,6 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
 }
 
 export {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix,
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix
+    assertThatCircuitUpdateActsLikeMatrix,
+    assertThatCircuitShaderActsLikeMatrix
 }

@@ -140,6 +140,7 @@ const CONTROL_SELECT_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
  *
  * @param {!CircuitEvalContext} ctx
  * @param {!int} otherRow
+ * @returns {!WglConfiguredShader}
  */
 CircuitShaders.swap = (ctx, otherRow) =>
     SWAP_QUBITS_SHADER.withArgs(...ketArgs(ctx, otherRow - ctx.row + 1));

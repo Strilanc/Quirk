@@ -1,5 +1,5 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {assertThatRandomTestOfCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {assertThatCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 
 import {Complex} from "src/math/Complex.js"
@@ -333,7 +333,7 @@ suite.webGlTest("qubitDensities", () => {
 });
 
 suite.webGlTest("swap", () => {
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix(
+    assertThatCircuitShaderActsLikeMatrix(
         ctx => CircuitShaders.swap(ctx, ctx.row + 1),
         Matrix.square(
             1,0,0,0,
@@ -341,7 +341,7 @@ suite.webGlTest("swap", () => {
             0,1,0,0,
             0,0,0,1));
 
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix(
+    assertThatCircuitShaderActsLikeMatrix(
         ctx => CircuitShaders.swap(ctx, ctx.row + 2),
         Matrix.square(
             1,0,0,0,0,0,0,0,

@@ -778,8 +778,7 @@ class CircuitDefinition {
 
         for (let [i, j] of this.columns[colIndex].swapPairs()) {
             //noinspection JSUnusedAssignment
-            ctx.stateTrader.shadeAndTrade(
-                CircuitShaders.swap(ctx.withRow(i + ctx.row), j + ctx.row));
+            ctx.applyOperation(CircuitShaders.swap(ctx.withRow(i + ctx.row), j + ctx.row));
         }
     }
 

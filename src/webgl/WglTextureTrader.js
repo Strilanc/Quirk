@@ -1,5 +1,6 @@
-import {WglTexture} from "src/webgl/WglTexture.js"
 import {Shaders} from "src/webgl/Shaders.js"
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {WglTexture} from "src/webgl/WglTexture.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 /**
@@ -34,7 +35,7 @@ class WglTextureTrader {
      * Applies the given shader function to the trader's old texture, renders it onto a new texture, deallocs the old
      * texture, and finally holds on to the new texture.
      *
-     * @param {!function(!WglTexture) : !WglConfiguredShader} shaderFunc
+     * @param {!WglConfiguredShader|!function(!WglTexture) : !WglConfiguredShader} shaderFunc
      * @param {undefined|!WglTexture} newTexture The texture to take and shade. If undefined, a texture matching the old
      * texture is taken from the texture pool.
      * @returns {void}
@@ -44,7 +45,8 @@ class WglTextureTrader {
         let deallocSrc = !this._dontDeallocFlag;
         let dst = newTexture || WglTexturePool.takeSame(src);
 
-        shaderFunc(src).renderTo(dst);
+        let configuredShader = shaderFunc instanceof WglConfiguredShader ? shaderFunc : shaderFunc(src);
+        configuredShader.renderTo(dst);
 
         this.currentTexture = dst;
         this._dontDeallocFlag = false;

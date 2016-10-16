@@ -1,3 +1,5 @@
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+
 /**
  * Values used by the various gate effects.
  *
@@ -37,6 +39,15 @@ class CircuitEvalContext {
         this.stateTrader = stateTrader;
         /** @type {!Map.<!string, *>} */
         this.customContextFromGates = customContextFromGates;
+    }
+
+    /**
+     * @param {!WglConfiguredShader|!function(!CircuitEvalContext) : !WglConfiguredShader} operation
+     * @return {void}
+     */
+    applyOperation(operation) {
+        let configuredShader = operation instanceof WglConfiguredShader ? operation : operation(this);
+        this.stateTrader.shadeAndTrade(configuredShader);
     }
 
     /**

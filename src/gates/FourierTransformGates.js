@@ -18,7 +18,7 @@ import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
  * @param {!number=} factor Scaling factor for the applied phases.
  */
 function applyControlledPhaseGradient(ctx, qubitSpan, factor=1) {
-    ctx.stateTrader.shadeAndTrade(_ => CONTROLLED_PHASE_GRADIENT_SHADER.withArgs(
+    ctx.applyOperation(CONTROLLED_PHASE_GRADIENT_SHADER.withArgs(
         ...ketArgs(ctx, qubitSpan),
         WglArg.float("factor", factor)));
 }
@@ -45,7 +45,7 @@ let FourierTransformGates = {};
  */
 function applyForwardGradientShaders(ctx, span) {
     if (span > 1) {
-        ctx.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(ctx));
+        ctx.applyOperation(reverseShaderForSize(span));
     }
     for (let i = 0; i < span; i++) {
         if (i > 0) {
@@ -67,7 +67,7 @@ function applyBackwardGradientShaders(ctx, span) {
         }
     }
     if (span > 1) {
-        ctx.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(ctx));
+        ctx.applyOperation(reverseShaderForSize(span));
     }
 }
 

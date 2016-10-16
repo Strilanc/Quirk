@@ -33,7 +33,7 @@ let reverseShaders = Seq.range(Config.MAX_WIRE_COUNT).map(_generateReverseShader
 
 /**
  * @param {!int} span
- * @returns {!function(!CircuitEvalContext) : void}
+ * @returns {!function(!CircuitEvalContext) : !WglConfiguredShader}
  */
 let reverseShaderForSize = span => ctx => reverseShaders[span].withArgs(...ketArgs(ctx, span));
 

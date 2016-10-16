@@ -2,8 +2,8 @@ import {Suite} from "test/TestUtil.js"
 import {incrementShaderFunc, ArithmeticGates} from "src/gates/ArithmeticGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix,
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix
+    assertThatCircuitShaderActsLikeMatrix,
+    assertThatCircuitUpdateActsLikeMatrix
 } from "test/CircuitOperationTestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
@@ -14,17 +14,17 @@ import {Matrix} from "src/math/Matrix.js"
 let suite = new Suite("ArithmeticGates");
 
 suite.webGlTest('increment', () => {
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix(
+    assertThatCircuitShaderActsLikeMatrix(
         ctx => incrementShaderFunc(ctx, 3, 5),
         Matrix.generateTransition(8, e => (e+5)&7));
 
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix(
+    assertThatCircuitShaderActsLikeMatrix(
         ctx => incrementShaderFunc(ctx, 2, -3),
         Matrix.generateTransition(4, e => (e-3)&3));
 });
 
 suite.webGlTest('plus_A', () => {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+    assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,
             new CircuitDefinition(4, [new GateColumn([
@@ -38,7 +38,7 @@ suite.webGlTest('plus_A', () => {
 });
 
 suite.webGlTest('minus_A', () => {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+    assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,
             new CircuitDefinition(4, [new GateColumn([

@@ -446,7 +446,7 @@ class Gate {
     withCustomShaders(shaderFuncs) {
         return this.withCustomOperation(ctx => {
             for (let shaderFunc of shaderFuncs) {
-                ctx.stateTrader.shadeAndTrade(_ => shaderFunc(ctx));
+                ctx.applyOperation(shaderFunc);
             }
         });
     }
