@@ -8,7 +8,7 @@ import {
     spreadLengthAcrossPolarKets,
     signallingSumAll,
     toRatiosVsRepresentative
-} from "src/gates/AmplitudeDisplayFamily.js"
+} from "src/gates/AmplitudeDisplay.js"
 
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
@@ -19,7 +19,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
-let suite = new Suite("AmplitudeDisplayFamily");
+let suite = new Suite("AmplitudeDisplay");
 
 suite.webGlTest("amplitudesToPolarKets", () => {
     let input = Shaders.vec2Data(new Float32Array([

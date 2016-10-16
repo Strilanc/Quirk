@@ -1,6 +1,6 @@
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
-import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGateFamily.js"
+import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGate.js"
 
 let InputGates = {};
 

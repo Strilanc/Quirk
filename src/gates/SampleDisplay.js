@@ -10,7 +10,7 @@ import {seq, Seq} from "src/base/Seq.js"
 import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
-import {makeProbabilitySpanPipeline, probabilityPixelsToColumnVector} from "src/gates/ProbabilityDisplayFamily.js"
+import {makeProbabilitySpanPipeline, probabilityPixelsToColumnVector} from "src/gates/ProbabilityDisplay.js"
 
 /**
  * @param {!GateDrawParams} args
