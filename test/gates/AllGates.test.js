@@ -7,7 +7,8 @@ import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AllGates");

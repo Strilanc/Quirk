@@ -9,7 +9,8 @@ import {Util} from "src/base/Util.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {workingShaderCoder, decodeBytesIntoFloats, SHADER_CODER_BYTES} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.

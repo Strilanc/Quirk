@@ -6,7 +6,7 @@ import {universalNot} from "src/gates/Impossible_UniversalNotGate.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {WglTextureTrader} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 let suite = new Suite("GateShaders");
 

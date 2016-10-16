@@ -2,7 +2,6 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {provideWglTexturePoolToWglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
-import {Shaders} from "src/webgl/Shaders.js"
 
 /** @type {!Array.<!Array.<!WglTexture>>} */
 const FLOAT_POOL = [];
@@ -140,100 +139,6 @@ class WglTexturePool {
 }
 
 /**
- * A mechanism, for applying a series of shaders to textures, that handles tedious deallocation for you.
- */
-class WglTextureTrader {
-
-    /**
-     * @param {!WglTexture} texture
-     */
-    constructor(texture) {
-        /** @type {!WglTexture} */
-        this.currentTexture = texture;
-        /**
-         * @type {!boolean}
-         * @private
-         */
-        this._dontDeallocFlag = false;
-    }
-
-    /**
-     * @returns {!WglTexture}
-     */
-    copyOfCurrentTexture() {
-        let result = WglTexturePool.takeSame(this.currentTexture);
-        let didFinish = false;
-        try {
-            Shaders.passthrough(this.currentTexture).renderTo(result);
-            didFinish = true;
-            return result;
-        } finally {
-            if (!didFinish) {
-                result.deallocByDepositingInPool();
-            }
-        }
-    }
-
-    /**
-     * Tells the texture trader that when it trades away the current texture it shouldn't dealloc it.
-     *
-     * @returns {!WglTexture} The current texture. You're responsible for it now, caller.
-     */
-    dontDeallocCurrentTexture() {
-        this._dontDeallocFlag = true;
-        return this.currentTexture;
-    }
-
-    /**
-     * Applies the given shader function to the trader's old texture, renders it onto a new texture, deallocs the old
-     * texture, and finally holds on to the new texture.
-     *
-     * @param {!function(!WglTexture) : !WglConfiguredShader} shaderFunc
-     * @param {undefined|!WglTexture} newTexture The texture to take and shade. If undefined, a texture matching the old
-     * texture is taken from the texture pool.
-     * @returns {void}
-     */
-    shadeAndTrade(shaderFunc, newTexture=undefined) {
-        let src = this.currentTexture;
-        let deallocSrc = !this._dontDeallocFlag;
-        let dst = newTexture || WglTexturePool.takeSame(src);
-
-        shaderFunc(src).renderTo(dst);
-
-        this.currentTexture = dst;
-        this._dontDeallocFlag = false;
-        if (deallocSrc) {
-            src.deallocByDepositingInPool('WglTexturePool shadeAndTrade');
-        }
-    }
-
-    /**
-     * @param {!function(!WglTexture) : !WglTexture} textureFunc
-     * @returns {void}
-     */
-    tradeThrough(textureFunc) {
-        let input = this.currentTexture;
-        let deallocInput = !this._dontDeallocFlag;
-        let output = textureFunc(input);
-
-        this.currentTexture = output;
-        this._dontDeallocFlag = false;
-        if (deallocInput) {
-            input.deallocByDepositingInPool('WglTexturePool tradeThrough');
-        }
-    }
-
-    /**
-     * @param {!function(!WglTexture) : !WglConfiguredShader} reducingShaderFunc
-     */
-    shadeHalveAndTrade(reducingShaderFunc) {
-        this.shadeAndTrade(
-            reducingShaderFunc,
-            WglTexturePool.take(this.currentTexture.sizePower() - 1, this.currentTexture.pixelType))
-    }
-}
-
-/**
  * @param {undefined|!string=undefined} detailsShownWhenUsedAfterDone
  * @returns {void}
  */
@@ -241,19 +146,5 @@ WglTexture.prototype.deallocByDepositingInPool = function(detailsShownWhenUsedAf
     WglTexturePool.deposit(this, detailsShownWhenUsedAfterDone);
 };
 
-/**
- * @param {!function(!WglTextureTrader) : void} traderFunc
- * @param {!boolean=false} keepInput Determines if the receiving texture is deallocated by the trading process.
- * @returns {!WglTexture}
- */
-WglTexture.prototype.tradeThrough = function(traderFunc, keepInput=false) {
-    let t = new WglTextureTrader(this);
-    if (keepInput) {
-        t.dontDeallocCurrentTexture();
-    }
-    traderFunc(t);
-    return t.currentTexture;
-};
-
 provideWglTexturePoolToWglConfiguredShader(WglTexturePool);
-export {WglTexturePool, WglTextureTrader}
+export {WglTexturePool}

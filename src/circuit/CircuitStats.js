@@ -17,7 +17,8 @@ import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 class CircuitStats {
     /**

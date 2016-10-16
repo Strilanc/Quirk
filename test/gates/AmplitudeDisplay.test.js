@@ -17,7 +17,8 @@ import {Controls} from "src/circuit/Controls.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 let suite = new Suite("AmplitudeDisplay");
 

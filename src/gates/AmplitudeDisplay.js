@@ -17,7 +17,8 @@ import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 /**
  * @param {!WglTexture} stateKet
@@ -34,14 +35,15 @@ function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLeng
     let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateKet);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+    let involvedQubits = startingQubits - lostQubits;
     trader.shadeAndTrade(
         tex => CircuitShaders.controlSelect(controls, tex),
-        WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
+        WglTexturePool.takeVec2Tex(involvedQubits));
     trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, lostHeadQubits-rangeOffset));
     let ketJustAfterCycle = trader.dontDeallocCurrentTexture();
 
     // Look over all superposed values of the target qubits and pick the one with the most amplitude.
-    trader.shadeAndTrade(amplitudesToPolarKets);
+    trader.shadeAndTrade(amplitudesToPolarKets, WglTexturePool.takeVec4Tex(involvedQubits));
     spreadLengthAcrossPolarKets(trader, rangeLength);
     reduceToLongestPolarKet(trader, rangeLength);
     trader.shadeAndTrade(convertAwayFromPolar);
@@ -50,7 +52,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLeng
     // Compare the chosen case against other cases. If they aren't multiples, we're not separable (i.e. incoherent).
     trader.shadeAndTrade(
         winningVectorKet => toRatiosVsRepresentative(ketJustAfterCycle, winningVectorKet),
-        WglTexturePool.takeSame(ketJustAfterCycle));
+        WglTexturePool.takeVec4Tex(involvedQubits));
     ketJustAfterCycle.deallocByDepositingInPool("ketJustAfterCycle in makeAmplitudeSpanPipeline");
     foldConsistentRatios(trader, rangeLength);
     signallingSumAll(trader);
