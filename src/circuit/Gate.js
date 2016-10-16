@@ -124,7 +124,7 @@ class Gate {
      * @param {!string} blurb
      * @returns {!Gate}
      */
-    static fromKnownMatrix(symbol, matrix, name, blurb) {
+    static fromKnownMatrix(symbol, matrix, name='', blurb='') {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }

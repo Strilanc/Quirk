@@ -33,23 +33,41 @@ module.exports = function(grunt) {
                     src: ['**/*.js'],
                     dest: 'out/tmp/traceur/test/'
                 }]
+            },
+            'translate-test-perf': {
+                options: {
+                    experimental: true,
+                    moduleNaming: {
+                        stripPrefix: 'out/tmp/traceur'
+                    }
+                },
+                files: [{
+                    expand: true,
+                    cwd: 'test_perf/',
+                    src: ['**/*.js'],
+                    dest: 'out/tmp/traceur/test_perf/'
+                }]
             }
         },
         karma: {
             unit: {
-                configFile: 'karma.conf.js'
+                configFile: 'karma.test.conf.js'
             },
             'unit-chrome': {
-                configFile: 'karma.conf.js',
+                configFile: 'karma.test.conf.js',
                 browsers: ['Chrome']
             },
             'unit-firefox': {
-                configFile: 'karma.conf.js',
+                configFile: 'karma.test.conf.js',
                 browsers: ['Firefox']
             },
             'unit-travis': {
-                configFile: 'karma.conf.js',
+                configFile: 'karma.test.conf.js',
                 browsers: ['Firefox']
+            },
+            'perf-chrome': {
+                configFile: 'karma.test_perf.conf.js',
+                browsers: ['Chrome']
             }
         },
         concat: {
@@ -76,6 +94,19 @@ module.exports = function(grunt) {
                     'out/tmp/traceur/bootstrap_post_test/**/*.js'
                 ],
                 dest: 'out/test.js'
+            },
+            'concat-traceur-test-perf': {
+                options: {
+                    separator: ';'
+                },
+                src: [
+                    'out/tmp/traceur/bootstrap_pre_src/**/*.js',
+                    'out/tmp/traceur/bootstrap_pre_test/**/*.js',
+                    'out/tmp/traceur/src/**/*.js',
+                    'out/tmp/traceur/test_perf/**/*.js',
+                    'out/tmp/traceur/bootstrap_post_test/**/*.js'
+                ],
+                dest: 'out/test_perf.js'
             }
         },
         uglify: {
@@ -165,7 +196,16 @@ module.exports = function(grunt) {
         'concat:concat-traceur-test',
         'clean:clean-tmp'
     ]);
+    grunt.registerTask('build-test-perf', [
+        'clean:clean-tmp',
+        'traceur:translate-src',
+        'traceur:translate-test-perf',
+        'bootstrap-get-packages:test_perf/**/*.perf.js:out/tmp/traceur/bootstrap_post_test/run_tests.js',
+        'concat:concat-traceur-test-perf',
+        'clean:clean-tmp'
+    ]);
 
+    grunt.registerTask('test-perf-chrome', ['build-test-perf', 'karma:perf-chrome']);
     grunt.registerTask('test-chrome', ['build-test', 'karma:unit-chrome']);
     grunt.registerTask('test-firefox', ['build-test', 'karma:unit-firefox']);
     grunt.registerTask('test-travis', ['build-test', 'karma:unit-travis']);

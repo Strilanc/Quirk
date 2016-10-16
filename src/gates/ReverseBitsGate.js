@@ -29,7 +29,7 @@ let _generateReverseShaderForSize = span => span < 2 ? undefined : ketShaderPerm
     `,
     span);
 
-let reverseShaders = Seq.range(Config.MAX_WIRE_COUNT).map(_generateReverseShaderForSize).toArray();
+let reverseShaders = Seq.range(Config.MAX_WIRE_COUNT + 1).map(_generateReverseShaderForSize).toArray();
 
 /**
  * @param {!int} span
