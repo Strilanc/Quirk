@@ -3,10 +3,10 @@ import {
     amplitudesToPolarKets,
     convertAwayFromPolar,
     makeAmplitudeSpanPipeline,
-    pipelineToAggregateRepresentativePolarKet,
-    pipelineToFoldConsistentRatios,
-    pipelineToSpreadLengthAcrossPolarKets,
-    pipelineToSumAll,
+    reduceToLongestPolarKet,
+    foldConsistentRatios,
+    spreadLengthAcrossPolarKets,
+    signallingSumAll,
     toRatiosVsRepresentative
 } from "src/gates/AmplitudeDisplayFamily.js"
 
@@ -17,7 +17,7 @@ import {Controls} from "src/circuit/Controls.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 let suite = new Suite("AmplitudeDisplayFamily");
 
@@ -47,7 +47,7 @@ suite.webGlTest("amplitudesToPolarKets_zero", () => {
     input.deallocByDepositingInPool();
 });
 
-suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
+suite.webGlTest("spreadLengthAcrossPolarKets", () => {
     let inp = Shaders.vec4Data(new Float32Array([
          1, 2,100,0,
          3, 4,200,0,
@@ -58,9 +58,7 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
         13,14,6400,0,
         15,16,12800,0
     ])).toVec4Texture(3);
-    let out;
-
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(1, 3));
+    let out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 1), true);
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
          1, 2,300,0,
          3, 4,300,0,
@@ -73,7 +71,7 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
     ]));
     out.deallocByDepositingInPool();
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(2, 3));
+    out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 2), true);
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         1, 2,1500,0,
         3, 4,1500,0,
@@ -87,7 +85,7 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
     out.deallocByDepositingInPool();
 
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSpreadLengthAcrossPolarKets(3, 3));
+    out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 3));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         1, 2,25500,0,
         3, 4,25500,0,
@@ -98,12 +96,10 @@ suite.webGlTest("pipelineToSpreadLengthAcrossPolarKets", () => {
         13,14,25500,0,
         15,16,25500,0
     ]));
-
-    inp.deallocByDepositingInPool();
     out.deallocByDepositingInPool();
 });
 
-suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
+suite.webGlTest("reduceToLongestPolarKet", () => {
     let inp = Shaders.vec4Data(new Float32Array([
         1, 2,300,0,
         3, 4,300,0,
@@ -116,14 +112,13 @@ suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
     ])).toVec4Texture(3);
     let out;
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToAggregateRepresentativePolarKet(1, 3));
+    out = inp.tradeThrough(t => reduceToLongestPolarKet(t, 1));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         1+5+9+13,14,25500,0,    3+7+11+15,16,25500,0
     ]));
     out.deallocByDepositingInPool();
-    inp.deallocByDepositingInPool();
 
-    let in2 = Shaders.vec4Data(new Float32Array([
+    inp = Shaders.vec4Data(new Float32Array([
         1, 2,300,0,
         3, 4,300,0,
         55,6,120000,0,
@@ -133,12 +128,11 @@ suite.webGlTest("pipelineToAggregateRepresentativePolarKet", () => {
         13,14,19200,0,
         15,16,19200,0
     ])).toVec4Texture(3);
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(in2, pipelineToAggregateRepresentativePolarKet(1, 3));
+    out = inp.tradeThrough(t => reduceToLongestPolarKet(t, 1));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         1+55+9+13,6,144300,0,
         3+7+11+15,16,25500,0
     ]));
-    in2.deallocByDepositingInPool();
     out.deallocByDepositingInPool();
 });
 
@@ -181,7 +175,7 @@ suite.webGlTest("toRatiosVsRepresentative", () => {
     rep.deallocByDepositingInPool();
 });
 
-suite.webGlTest("pipelineToFoldConsistentRatios", () => {
+suite.webGlTest("foldConsistentRatios", () => {
     let inp = Shaders.vec4Data(new Float32Array([
         1,0,0,0,    2,0,0,0,
         0,0,1,0,    0,0,2,3,
@@ -194,7 +188,7 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
     ])).toVec4Texture(4);
     let out;
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(1, 4));
+    out = inp.tradeThrough(t => foldConsistentRatios(t, 1), true);
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         2,0,0,0,
         0,0,2,3,
@@ -207,7 +201,7 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
     ]));
     out.deallocByDepositingInPool();
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
+    out = inp.tradeThrough(t => foldConsistentRatios(t, 2));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         -666,-666,-666,-666,
         -666,-666,-666,-666,
@@ -216,22 +210,19 @@ suite.webGlTest("pipelineToFoldConsistentRatios", () => {
     ]));
     out.deallocByDepositingInPool();
 
-    inp.deallocByDepositingInPool();
     inp = Shaders.vec4Data(new Float32Array([
         1,0,0,0,    20,0,0,0,   0,0,0,0,  3,1,0,0,
         1,0,0,0,    0,0,2,0,   0,0,0,0,  1,0,0,0,
         0,0,0,0,    0,0,0,0,   0,0,0,0,  0,0,0,0,
         -666,0,0,0,  0,0,0,0,   0,0,0,0,  0,0,0,0
     ])).toVec4Texture(4);
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToFoldConsistentRatios(2, 4));
+    out = inp.tradeThrough(t => foldConsistentRatios(t, 2));
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         20,0,0,0,
         -666,-666,-666,-666,
         0,0,0,0,
         -666,-666,-666,-666
     ]));
-
-    inp.deallocByDepositingInPool();
     out.deallocByDepositingInPool();
 });
 
@@ -248,12 +239,10 @@ suite.webGlTest("pipelineToSumAll", () => {
     ])).toVec4Texture(3);
     let out;
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(3));
+    out = inp.tradeThrough(signallingSumAll);
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         10,6,19,16
     ]));
-
-    inp.deallocByDepositingInPool();
     out.deallocByDepositingInPool();
 });
 
@@ -270,19 +259,17 @@ suite.webGlTest("pipelineToSumAll_signal", () => {
     ])).toVec4Texture(3);
     let out;
 
-    out = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipelineToSumAll(3));
+    out = inp.tradeThrough(signallingSumAll);
     assertThat(workingShaderCoder.unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
         -666.0,-666.0,-666.0,-666.0
     ]));
-
-    inp.deallocByDepositingInPool();
     out.deallocByDepositingInPool();
 });
 
 suite.webGlTest("makeAmplitudeSpanPipeline_OffOff", () => {
     let inp = Shaders.vec2Data(new Float32Array([1,0, 0,0, 0,0, 0,0])).
         toVec2Texture(2);
-    let pipe = makeAmplitudeSpanPipeline(inp, Controls.NONE, 0, 2);
+    let pipe = makeAmplitudeSpanPipeline(Controls.NONE, 0, 2);
     let [afterPolar, final] = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipe);
     assertThat(workingShaderCoder.unpackVec4Data(afterPolar.readPixels())).isEqualTo(
         new Float32Array([1,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]));

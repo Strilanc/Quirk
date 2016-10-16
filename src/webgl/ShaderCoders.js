@@ -48,7 +48,7 @@ function combinedShaderPartsWithCode(shaderParts, tailCode) {
  * @param {!Array.<ShaderPart>} inputs
  * @param {!ShaderPart} output
  * @param {!string} tailCode
- * @returns {!function(args: ...!WglArg) : !WglConfiguredShader}
+ * @returns {!function(args: ...(!!WglTexture|!WglArg)) : !WglConfiguredShader}
  */
 function makePseudoShaderWithInputsAndOutputAndCode(inputs, output, tailCode) {
     let shader = combinedShaderPartsWithCode([...inputs, output], tailCode);

@@ -263,7 +263,12 @@ KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => 
     let keptResults = [];
     let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {outSizePower, shaderFunc, keepResult}) => {
         let nextTex = WglTexturePool.take(outSizePower, workingShaderCoder.vecPixelType);
-        shaderFunc(prevTex).renderTo(nextTex);
+        let r = shaderFunc(prevTex);
+        if (r.hasOwnProperty('keep')) {
+            keptResults.push(r.keep);
+            r = r.func;
+        }
+        r.renderTo(nextTex);
         if (!skipDoneWithTextureFlag) {
             prevTex.deallocByDepositingInPool("evaluatePipelineWithIntermediateCleanup");
         }
