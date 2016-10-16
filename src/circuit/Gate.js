@@ -579,31 +579,6 @@ class Gate {
     }
 
     /**
-     * @param {*|!Gate} other
-     * @returns {!boolean}
-     */
-    isEqualTo(other) {
-        if (this === other) {
-            return true;
-        }
-        return other instanceof Gate &&
-            this.symbol === other.symbol &&
-            this.serializedId === other.serializedId &&
-            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this._knownMatrix, other._knownMatrix) &&
-            this._knownMatrixFunc === other._knownMatrixFunc &&
-            this._effectCreatesSuperpositions === other._effectCreatesSuperpositions &&
-            this._effectPermutesStates === other._effectPermutesStates &&
-            this._hasNoEffect === other._hasNoEffect &&
-            this.name === other.name &&
-            this.blurb === other.blurb &&
-            this.symbol === other.symbol &&
-            this.tag === other.tag &&
-            this._stableDuration === other._stableDuration &&
-            this.customShaders === other.customShaders &&
-            this.customDrawer === other.customDrawer;
-    }
-
-    /**
      * @returns {!string}
      */
     toString() {
