@@ -7,7 +7,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -80,7 +80,7 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
         new Map());
     updateAction(ctx);
 
-    let outData = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
+    let outData = currentShaderCoder().unpackVec2Data(trader.currentTexture.readPixels());
     let outVec = new Matrix(1, ampCount, outData);
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);

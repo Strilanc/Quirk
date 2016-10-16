@@ -12,7 +12,7 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -30,7 +30,7 @@ function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLe
     trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture));
     trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, -rangeOffset));
 
-    let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(ketTexture);
+    let n = currentShaderCoder().vec2ArrayPowerSizeOfTexture(ketTexture);
     while (n > rangeLength) {
         n -= 1;
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
@@ -49,10 +49,10 @@ let amplitudesToProbabilities = (inputTexture, controlTex) =>
     AMPLITUDES_TO_PROBABILITIES_SHADER(inputTexture, controlTex);
 const AMPLITUDES_TO_PROBABILITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
-        workingShaderCoder.vec2Input('input'),
-        workingShaderCoder.boolInput('control')
+        currentShaderCoder().vec2Input('input'),
+        currentShaderCoder().boolInput('control')
     ],
-    workingShaderCoder.vec2Output,
+    currentShaderCoder().vec2Output,
     `vec2 outputFor(float k) {
         vec2 amp = read_input(k);
         return vec2(dot(amp, amp) * read_control(k), 0.0);

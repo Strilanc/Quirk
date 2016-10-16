@@ -69,7 +69,6 @@ perfGoal(
          -/-----------------------•-H-1---
          -/---------------------------•-H-`));
 
-
 perfGoal(
     "16-Qubit QFT gate with manual de-QFT",
     millis(200),

@@ -60,6 +60,10 @@ class WglContext {
         this.recomputeProperties();
     }
 
+    invalidateExistingResources() {
+        this.lifetimeCounter++;
+    }
+
     /**
      * @private
      */

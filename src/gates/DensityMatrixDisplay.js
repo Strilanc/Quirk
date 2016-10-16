@@ -14,7 +14,7 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -31,7 +31,7 @@ function densityDisplayStatTexture(inp, qubitCount, controls, rangeOffset, range
     trader.dontDeallocCurrentTexture();
 
     // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-    let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
+    let startingQubits = currentShaderCoder().vec2ArrayPowerSizeOfTexture(inp);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     trader.shadeAndTrade(
@@ -62,8 +62,8 @@ let amplitudesToCouplings = (inputTexture, qubitSpan) => AMPLITUDES_TO_DENSITIES
     inputTexture,
     WglArg.float('qubitSpan', 1 << qubitSpan));
 const AMPLITUDES_TO_DENSITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec2Input('input')],
-    workingShaderCoder.vec2Output,
+    [currentShaderCoder().vec2Input('input')],
+    currentShaderCoder().vec2Output,
     `
     uniform float qubitSpan;
 

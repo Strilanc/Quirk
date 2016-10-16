@@ -10,7 +10,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("CircuitShaders");
 
@@ -105,7 +105,7 @@ suite.webGlTest("controlMask_largeReference", () => {
 });
 
 suite.webGlTest("controlSelect_simple", () => {
-    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], currentShaderCoder().vec2Output, `
         vec2 outputFor(float k) {
             return vec2(mod(k, 4.0), floor(k/4.0));
         }
@@ -171,7 +171,7 @@ suite.webGlTest("controlSelect_simple", () => {
 });
 
 suite.webGlTest("controlSelect_multiple", () => {
-    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], currentShaderCoder().vec2Output, `
         vec2 outputFor(float k) {
             return vec2(mod(k, 4.0), floor(k/4.0));
         }

@@ -1,7 +1,7 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {provideWglTexturePoolToWglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 
 /** @type {!Array.<!Array.<!WglTexture>>} */
 const FLOAT_POOL = [];
@@ -123,8 +123,8 @@ class WglTexturePool {
      */
     static takeVec2Tex(sizePower) {
         return WglTexturePool.take(
-            sizePower + workingShaderCoder.vec2PowerSizeOverhead,
-            workingShaderCoder.vecPixelType);
+            sizePower + currentShaderCoder().vec2PowerSizeOverhead,
+            currentShaderCoder().vecPixelType);
     }
 
     /**
@@ -133,8 +133,8 @@ class WglTexturePool {
      */
     static takeVec4Tex(sizePower) {
         return WglTexturePool.take(
-            sizePower + workingShaderCoder.vec4PowerSizeOverhead,
-            workingShaderCoder.vecPixelType);
+            sizePower + currentShaderCoder().vec4PowerSizeOverhead,
+            currentShaderCoder().vecPixelType);
     }
 }
 

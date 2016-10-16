@@ -5,7 +5,7 @@ import {initializedWglContext} from "src/webgl/WglContext.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
-    workingShaderCoder,
+    currentShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode,
     SHADER_CODER_BYTES
 } from "src/webgl/ShaderCoders.js"
@@ -92,14 +92,14 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
  */
-Shaders.vec2Data = floats => Shaders.data(workingShaderCoder.prepVec2Data(floats));
+Shaders.vec2Data = floats => Shaders.data(currentShaderCoder().prepVec2Data(floats));
 
 /**
  * Returns a configured shader that overlays the destination texture with the given vec4 data.
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
  */
-Shaders.vec4Data = floats => Shaders.data(workingShaderCoder.prepVec4Data(floats));
+Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().prepVec4Data(floats));
 
 /**
  * Adds the second half of its input into the first half.
@@ -108,8 +108,8 @@ Shaders.vec4Data = floats => Shaders.data(workingShaderCoder.prepVec4Data(floats
  */
 Shaders.sumFoldVec4 = inp => SUM_FOLD_SHADER_VEC4(inp);
 const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [currentShaderCoder().vec4Input('input')],
+    currentShaderCoder().vec4Output,
     `vec4 outputFor(float k) {
         return read_input(k) + read_input(k + len_output());
     }`);
@@ -121,16 +121,16 @@ const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
  */
 Shaders.sumFoldVec2 = inp => SUM_FOLD_SHADER_VEC2(inp);
 const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec2Input('input')],
-    workingShaderCoder.vec2Output,
+    [currentShaderCoder().vec2Input('input')],
+    currentShaderCoder().vec2Output,
     `vec2 outputFor(float k) {
          return read_input(k) + read_input(k + len_output());
      }`);
 
 Shaders.vec2AsVec4 = inputTexture => VEC2_AS_VEC4_SHADER(inputTexture);
 const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec2Input('input')],
-    workingShaderCoder.vec4Output,
+    [currentShaderCoder().vec2Input('input')],
+    currentShaderCoder().vec4Output,
     'vec4 outputFor(float k) { return vec4(read_input(k), vec2(0.0, 0.0)); }');
 
 /**
@@ -141,7 +141,7 @@ const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
  */
 Shaders.encodeFloatsIntoBytes = inputTexture => FLOATS_TO_ENCODED_BYTES_SHADER(inputTexture);
 const FLOATS_TO_ENCODED_BYTES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
+    [currentShaderCoder().vec4Input('input')],
     SHADER_CODER_BYTES.vec4Output,
     'vec4 outputFor(float k) { return read_input(k); }');
 

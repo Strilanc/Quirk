@@ -16,7 +16,7 @@ import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
-import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -242,7 +242,7 @@ class CircuitStats {
         controlTex.deallocByDepositingInPool("controlTex in _fromCircuitAtTime_noFallback");
         stateTrader.shadeAndTrade(
             tex => Shaders.vec2AsVec4(tex),
-            WglTexturePool.takeVec4Tex(workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateTrader.currentTexture)));
+            WglTexturePool.takeVec4Tex(currentShaderCoder().vec2ArrayPowerSizeOfTexture(stateTrader.currentTexture)));
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({

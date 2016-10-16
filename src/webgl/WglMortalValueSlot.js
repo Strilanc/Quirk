@@ -39,6 +39,7 @@ class WglMortalValueSlot {
      */
     initializedValue(lifetimeCounter) {
         if (this.lifetimeId !== lifetimeCounter) {
+            this.ensureDeinitialized();
             this.lifetimeId = lifetimeCounter;
             this.mortalValue = this.initializer();
         }

@@ -2,6 +2,7 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
+import {initializedWglContext} from "src/webgl/WglContext.js"
 import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
@@ -557,7 +558,16 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     t => Math.round(Math.log2(t.width * t.height)) - 2);
 
 /** @type {!ShaderValueCoder} */
-let workingShaderCoder = SHADER_CODER_FLOATS;
+let _curShaderCoder = SHADER_CODER_FLOATS;
+
+function currentShaderCoder() {
+    return _curShaderCoder;
+}
+
+function changeShaderCoder(newCoder) {
+    initializedWglContext().invalidateExistingResources();
+    _curShaderCoder = newCoder;
+}
 
 export {
     SHADER_CODER_BYTES,
@@ -566,7 +576,8 @@ export {
     decodeBytesIntoFloats,
     combinedShaderPartsWithCode,
     shaderWithOutputPartAndArgs,
-    workingShaderCoder,
-    makePseudoShaderWithInputsAndOutputAndCode
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode,
+    changeShaderCoder
 }
-provideWorkingShaderCoderToWglConfiguredShader(workingShaderCoder);
+provideWorkingShaderCoderToWglConfiguredShader(currentShaderCoder);

@@ -9,7 +9,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
-import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AllGates");
 
@@ -39,7 +39,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
             trader,
             new Map());
         gate.customOperation(ctx);
-        let buf = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
+        let buf = currentShaderCoder().unpackVec2Data(trader.currentTexture.readPixels());
         let col = new Matrix(1, 1 << numQubits, buf);
         trader.currentTexture.deallocByDepositingInPool();
         cols.push(col);
