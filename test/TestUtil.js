@@ -1,6 +1,8 @@
 // Cheat a little bit on the testing library being independent from what it tests
 import {describe} from "src/base/Describe.js"
 import {equate} from "src/base/Equate.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {DetailedError} from "src/base/DetailedError.js"
 
 /** @type {!int} */
 let assertionSubjectIndexForNextTest = 1;
@@ -357,7 +359,15 @@ export class Suite {
                 return;
             }
 
+            let preTexCount = WglTexturePool.getUnReturnedTextureCount();
             method(status);
+            let gain = WglTexturePool.getUnReturnedTextureCount() - preTexCount;
+            if (gain > 0) {
+                throw new DetailedError("Unreturned textures.", {unreturned_increase: gain});
+            }
+            if (gain < 0) {
+                throw new DetailedError("Extra returned textures.", {extra_returns: -gain});
+            }
         };
 
         this.test(name, wrappedMethod);

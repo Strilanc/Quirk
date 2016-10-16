@@ -17,3 +17,23 @@ suite.webGlTest("renderTo_empty", () => {
     new WglShader("void main(){gl_FragColor=vec4(0.0,0.0,0.0,0.0);}").withArgs().renderTo(tex);
     assertThat(tex.readPixels()).isEqualTo(new Float32Array([]));
 });
+
+suite.webGlTest("readPixels_bytes_all", () => {
+    let shader = new WglShader(`
+        void main() {
+            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+            float s = (xy.y*8.0 + xy.x)*4.0;
+            gl_FragColor = vec4(
+                (s+0.0)/255.0,
+                (s+1.0)/255.0,
+                (s+2.0)/255.0,
+                (s+3.0)/255.0);
+        }`).withArgs();
+
+    let tex = new WglTexture(8, 8, WebGLRenderingContext.UNSIGNED_BYTE);
+    shader.renderTo(tex);
+    assertThat(tex.readPixels()).isEqualTo(new Uint8Array(
+        Seq.range(256).toArray()
+    ));
+    tex.ensureDeinitialized();
+});

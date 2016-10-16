@@ -51,15 +51,6 @@ const PASSTHROUGH_SHADER = new WglShader(`
     }`);
 
 /**
- * Returns a configured shader that sets each pixel's components to its position in the texture.
- * @type {!WglConfiguredShader}
- */
-Shaders.coords = new WglShader(`
-    void main() {
-        gl_FragColor = vec4(gl_FragCoord.x-0.5, gl_FragCoord.y-0.5, 0.0, 0.0);
-    }`).withArgs();
-
-/**
  * Returns a configured shader that overlays the destination texture with the given data.
  * @param {!Float32Array|!Uint8Array} rgbaData
  * @returns {!WglConfiguredShader}

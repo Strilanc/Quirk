@@ -6,6 +6,15 @@ import {seq, Seq} from "src/base/Seq.js"
 
 let suite = new Suite("WglTexture");
 
+suite.test("properties", () => {
+    let t = new WglTexture(8, 16, WebGLRenderingContext.UNSIGNED_BYTE);
+    assertThat(t.width).isEqualTo(8);
+    assertThat(t.height).isEqualTo(16);
+    assertThat(t.pixelType).isEqualTo(WebGLRenderingContext.UNSIGNED_BYTE);
+    assertThat(t.sizePower()).isEqualTo(7);
+    assertThat(t.toString()).isNotEqualTo(undefined);
+});
+
 suite.webGlTest("readPixels_bytes", () => {
     let w = 2;
     let h = 2;
@@ -25,25 +34,6 @@ suite.webGlTest("readPixels_bytes", () => {
         0, 1, 10, 128,
         1, 1, 10, 128
     ]));
-});
-
-suite.webGlTest("readPixels_bytes_all", () => {
-    let w = 1<<3;
-    let h = 1<<3;
-    let shader = new WglShader(`
-        void main() {
-            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-            float s = (xy.y*8.0 + xy.x)*4.0;
-            gl_FragColor = vec4(
-                (s+0.0)/255.0,
-                (s+1.0)/255.0,
-                (s+2.0)/255.0,
-                (s+3.0)/255.0);
-        }`).withArgs();
-
-    assertThat(shader.readByteOutputs(w, h)).isEqualTo(new Uint8Array(
-        Seq.range(256).toArray()
-    ));
 });
 
 suite.webGlTest("readPixels_floats", () => {

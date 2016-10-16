@@ -76,18 +76,26 @@ class GateColumn {
     }
 
     hasCoherentControl(inputMeasureMask) {
-        return Seq.range(this.gates.length).any(i =>
-            (inputMeasureMask & (1 << i)) === 0 &&
-            this.gates[i] !== undefined &&
-            this.gates[i].isControl());
+        for (let i = 0; i < this.gates.length; i++) {
+            if ((inputMeasureMask & (1 << i)) === 0 &&
+                    this.gates[i] !== undefined &&
+                    this.gates[i].isControl()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     hasMeasuredControl(inputMeasureMask) {
-        return Seq.range(this.gates.length).any(i =>
-            (inputMeasureMask & (1 << i)) !== 0 &&
-            this.gates[i] !== undefined &&
-            this.gates[i].definitelyHasNoEffect() &&
-            this.gates[i].isControl());
+        for (let i = 0; i < this.gates.length; i++) {
+            if ((inputMeasureMask & (1 << i)) !== 0 &&
+                    this.gates[i] !== undefined &&
+                    this.gates[i].definitelyHasNoEffect() &&
+                    this.gates[i].isControl()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

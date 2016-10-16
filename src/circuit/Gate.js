@@ -35,12 +35,14 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
-        /** @type {undefined|!function(!!CircuitEvalArgs) : !WglTexture} */
-        this.customTextureTransform = undefined;
-        /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
-        this.customShaders = undefined;
-        /** @type {undefined|!function(!CircuitEvalArgs) : !ShaderPipeline} */
-        this.customStatPipelineMaker = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        this.customBeforeOperation = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        this.customOperation = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        this.customAfterOperation = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} */
+        this.customStatTexturesMaker = undefined;
         /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
         this.customStatPostProcesser = undefined;
         /** @type {!Array.<!Gate>} */
@@ -103,10 +105,6 @@ class Gate {
          * @private
          */
         this._controlBit = undefined;
-        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
-        this.preShaders = [];
-        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
-        this.postShaders = [];
         /**
          * @param {!int} qubit
          * @returns {!Array.<!{key: !string, val: *}>}
@@ -166,17 +164,6 @@ class Gate {
     withKnownMatrixFunc(matrixFunc) {
         let g = this._copy();
         g._knownMatrixFunc = matrixFunc;
-        return g;
-    }
-
-    /**
-     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} before
-     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} after
-     */
-    withSetupShaders(before, after) {
-        let g = this._copy();
-        g.preShaders = before;
-        g.postShaders = after;
         return g;
     }
 
@@ -298,8 +285,10 @@ class Gate {
         g.serializedId = this.serializedId;
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
-        g.customShaders = this.customShaders;
-        g.customStatPipelineMaker = this.customStatPipelineMaker;
+        g.customBeforeOperation = this.customBeforeOperation;
+        g.customOperation = this.customOperation;
+        g.customAfterOperation = this.customAfterOperation;
+        g.customStatTexturesMaker = this.customStatTexturesMaker;
         g.customStatPostProcesser = this.customStatPostProcesser;
         g.width = this.width;
         g.height = this.height;
@@ -319,9 +308,6 @@ class Gate {
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
         g.isControlWireSource = this.isControlWireSource;
-        g.preShaders = this.preShaders;
-        g.postShaders = this.postShaders;
-        g.customTextureTransform = this.customTextureTransform;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
@@ -409,32 +395,69 @@ class Gate {
     }
 
     /**
+     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     */
+    withCustomBeforeOperation(customOperation) {
+        if (customOperation !== undefined && typeof customOperation !== "function") {
+            throw new DetailedError("Bad customOperation", {customOperation});
+        }
+        let g = this._copy();
+        g.customBeforeOperation = customOperation;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     */
+    withCustomAfterOperation(customOperation) {
+        if (customOperation !== undefined && typeof customOperation !== "function") {
+            throw new DetailedError("Bad customOperation", {customOperation});
+        }
+        let g = this._copy();
+        g.customAfterOperation = customOperation;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     * @returns {!Gate}
+     */
+    withCustomOperation(customOperation) {
+        if (customOperation !== undefined && typeof customOperation !== "function") {
+            throw new DetailedError("Bad customOperation", {customOperation});
+        }
+        let g = this._copy();
+        g.customOperation = customOperation;
+        return g;
+    }
+
+    /**
+     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
+     * @returns {!Gate}
+     */
+    withCustomShader(shaderFunc) {
+        return this.withCustomShaders([shaderFunc]);
+    }
+
+    /**
      * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} shaderFuncs
      * @returns {!Gate}
      */
     withCustomShaders(shaderFuncs) {
-        let g = this._copy();
-        g.customShaders = shaderFuncs;
-        return g;
+        return this.withCustomOperation(args => {
+            for (let shaderFunc of shaderFuncs) {
+                args.stateTrader.shadeAndTrade(_ => shaderFunc(args));
+            }
+        });
     }
 
     /**
-     * @param {!function(!CircuitEvalArgs) : !WglTexture} func
+     * @param {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} customStatTexturesMaker
      * @returns {!Gate}
      */
-    withCustomTextureTransform(func) {
+    withCustomStatTexturesMaker(customStatTexturesMaker) {
         let g = this._copy();
-        g.customTextureTransform = func;
-        return g;
-    }
-
-    /**
-     * @param {undefined|!function(!CircuitEvalArgs) : !ShaderPipeline} customStatePipelineMaker
-     * @returns {!Gate}
-     */
-    withCustomStatPipelineMaker(customStatePipelineMaker) {
-        let g = this._copy();
-        g.customStatPipelineMaker = customStatePipelineMaker;
+        g.customStatTexturesMaker = customStatTexturesMaker;
         return g;
     }
 
@@ -452,14 +475,6 @@ class Gate {
         let g = this._copy();
         g._requiredContextKeys = keys;
         return g;
-    }
-
-    /**
-     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
-     * @returns {!Gate}
-     */
-    withCustomShader(shaderFunc) {
-        return this.withCustomShaders([shaderFunc]);
     }
 
     /**
@@ -576,33 +591,6 @@ class Gate {
         return this._stableDuration !== undefined ? this._stableDuration :
             this._knownMatrix !== undefined || this._hasNoEffect ? Infinity :
             0;
-    }
-
-    /**
-     * @param {*|!Gate} other
-     * @returns {!boolean}
-     */
-    isEqualTo(other) {
-        if (this === other) {
-            return true;
-        }
-        return other instanceof Gate &&
-            this.symbol === other.symbol &&
-            this.serializedId === other.serializedId &&
-            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this._knownMatrix, other._knownMatrix) &&
-            this._knownMatrixFunc === other._knownMatrixFunc &&
-            this._effectCreatesSuperpositions === other._effectCreatesSuperpositions &&
-            this._effectPermutesStates === other._effectPermutesStates &&
-            this._hasNoEffect === other._hasNoEffect &&
-            this.name === other.name &&
-            this.blurb === other.blurb &&
-            this.symbol === other.symbol &&
-            this.tag === other.tag &&
-            this._stableDuration === other._stableDuration &&
-            this.customShaders === other.customShaders &&
-            this.customStatPipelineMaker === other.customStatPipelineMaker &&
-            this.customStatPostProcesser === other.customStatPostProcesser &&
-            this.customDrawer === other.customDrawer;
     }
 
     /**

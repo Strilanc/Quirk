@@ -7,6 +7,8 @@ import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AllGates");
@@ -16,35 +18,34 @@ let suite = new Suite("AllGates");
  * @param {!number} time
  * @returns {undefined|!Matrix}
  */
-let reconstructMatrixFromGateShaders = (gate, time) => {
-    if (gate.customShaders === undefined) {
+let reconstructMatrixFromGateCustomOperation = (gate, time) => {
+    if (gate.customOperation === undefined) {
         return undefined;
     }
 
     let bit = 0;
     let numQubits = gate.height;
     let n = 1 << numQubits;
-    let input = KetTextureUtil.allocVec2Tex(numQubits);
-    let control = KetTextureUtil.control(numQubits, Controls.NONE);
+    let control = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(numQubits);
     let cols = [];
     for (let i = 0; i < n; i++) {
-        CircuitShaders.classicalState(i).renderTo(input);
-        let output = KetTextureUtil.aggregateReusingIntermediates(
-            input,
-            gate.customShaders.map(f => (inTex, conTex, t) => f(inTex, conTex, bit, t)),
-            (accTex, shaderFunc) => KetTextureUtil.applyCustomShader(shaderFunc, new CircuitEvalArgs(
-                time,
-                bit,
-                numQubits,
-                Controls.NONE,
-                control,
-                accTex,
-                new Map())));
-        let buf = workingShaderCoder.unpackVec2Data(output.readPixels());
+        let trader = new WglTextureTrader(CircuitShaders.classicalState(i).toVec2Texture(numQubits));
+        let args = new CircuitEvalArgs(
+            time,
+            bit,
+            numQubits,
+            Controls.NONE,
+            control,
+            trader,
+            new Map());
+        gate.customOperation(args);
+        let buf = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
         let col = new Matrix(1, 1 << numQubits, buf);
-        KetTextureUtil.doneWithTexture(output);
+        trader.currentTexture.deallocByDepositingInPool();
         cols.push(col);
     }
+    control.deallocByDepositingInPool();
+
     let raw = seq(cols).flatMap(e => e.rawBuffer()).toFloat32Array();
     let flipped = new Matrix(n, n, raw);
     return flipped.transpose();
@@ -62,7 +63,7 @@ suite.webGlTest("shaderMatchesMatrix", () => {
             continue;
         }
 
-        let reconstructed = reconstructMatrixFromGateShaders(gate, time);
+        let reconstructed = reconstructMatrixFromGateCustomOperation(gate, time);
         if (reconstructed === undefined) {
             continue;
         }

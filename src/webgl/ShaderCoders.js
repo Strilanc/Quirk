@@ -3,6 +3,7 @@ import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+
 /**
  * A piece of a shader.
  *
@@ -47,7 +48,7 @@ function combinedShaderPartsWithCode(shaderParts, tailCode) {
  * @param {!Array.<ShaderPart>} inputs
  * @param {!ShaderPart} output
  * @param {!string} tailCode
- * @returns {!function(args: ...!WglArg) : !WglConfiguredShader}
+ * @returns {!function(args: ...(!!WglTexture|!WglArg)) : !WglConfiguredShader}
  */
 function makePseudoShaderWithInputsAndOutputAndCode(inputs, output, tailCode) {
     let shader = combinedShaderPartsWithCode([...inputs, output], tailCode);
@@ -90,12 +91,10 @@ class ShaderValueCoder {
      * @param {!int} vecPixelType
      * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec2Data
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec2Data
-     * @param {!function(!WglConfiguredShader, !int) : !Float32Array} readVec2Data
      * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec4Data
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec4Data
-     * @param {!function(!WglConfiguredShader, !int) : !Float32Array} readVec4Data
-     * @param {!function(!WglTexture) : !int} vec2Order
-     * @param {!function(!WglTexture) : !int} vec4Order
+     * @param {!function(!WglTexture) : !int} vec2ArrayPowerSizeOfTexture
+     * @param {!function(!WglTexture) : !int} vec4ArrayPowerSizeOfTexture
      */
     constructor(vec2Input,
                 vec4Input,
@@ -108,12 +107,10 @@ class ShaderValueCoder {
                 vecPixelType,
                 prepVec2Data,
                 unpackVec2Data,
-                readVec2Data,
                 prepVec4Data,
                 unpackVec4Data,
-                readVec4Data,
-                vec2Order,
-                vec4Order) {
+                vec2ArrayPowerSizeOfTexture,
+                vec4ArrayPowerSizeOfTexture) {
         /** @type {!function(name: !string) : !ShaderPart} */
         this.vec2Input = vec2Input;
         /** @type {!function(name: !string) : !ShaderPart} */
@@ -127,27 +124,23 @@ class ShaderValueCoder {
         /** @type {!ShaderPart} */
         this.boolOutput = boolOutput;
         /** @type {!int} */
-        this.vec2Overhead = vec2Overhead;
+        this.vec2PowerSizeOverhead = vec2Overhead;
         /** @type {!int} */
-        this.vec4Overhead = vec4Overhead;
+        this.vec4PowerSizeOverhead = vec4Overhead;
         /** @type {!int} */
         this.vecPixelType = vecPixelType;
         /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
         this.prepVec2Data = prepVec2Data;
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
         this.unpackVec2Data = unpackVec2Data;
-        /** {!function(configuredShader: !WglConfiguredShader, powerSize: !int) : !Float32Array} */
-        this.readVec2Data = readVec2Data;
         /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
         this.prepVec4Data = prepVec4Data;
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
         this.unpackVec4Data = unpackVec4Data;
-        /** {!function(configuredShader: !WglConfiguredShader, powerSize: !int) : !Float32Array} */
-        this.readVec4Data = readVec4Data;
         /** @type {!function(!WglTexture) : !int} */
-        this.vec2Order = vec2Order;
+        this.vec2ArrayPowerSizeOfTexture = vec2ArrayPowerSizeOfTexture;
         /** @type {!function(!WglTexture) : !int} */
-        this.vec4Order = vec4Order;
+        this.vec4ArrayPowerSizeOfTexture = vec4ArrayPowerSizeOfTexture;
     }
 }
 
@@ -402,7 +395,7 @@ function boolInput(name) {
 
 const BOOL_OUTPUT = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_FLOAT ////////////
-    float outputFor(float k);
+    bool outputFor(float k);
 
     uniform vec2 _gen_output_size;
 
@@ -413,7 +406,7 @@ const BOOL_OUTPUT = new ShaderPart(`
     void main() {
         vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
         float k = xy.y * _gen_output_size.x + xy.x;
-        gl_FragColor = vec4(float(outputFor(k) == 1.0), 0.0, 0.0, 0.0);
+        gl_FragColor = vec4(float(outputFor(k)), 0.0, 0.0, 0.0);
     }`,
     [],
     texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
@@ -540,16 +533,8 @@ const SHADER_CODER_FLOATS = new ShaderValueCoder(
     WebGLRenderingContext.FLOAT,
     spreadFloatVec2,
     unspreadFloatVec2,
-    (configuredShader, powerSize) => {
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return unspreadFloatVec2(configuredShader.readFloatOutputs(w, h));
-    },
     e => e,
     e => e,
-    (configuredShader, powerSize) => {
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return configuredShader.readFloatOutputs(w, h);
-    },
     t => Math.round(Math.log2(t.width * t.height)),
     t => Math.round(Math.log2(t.width * t.height)));
 
@@ -566,18 +551,8 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     WebGLRenderingContext.UNSIGNED_BYTE,
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
-    (configuredShader, powerSize) => {
-        powerSize += 1;
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return decodeBytesIntoFloats(configuredShader.readByteOutputs(w, h));
-    },
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
-    (configuredShader, powerSize) => {
-        powerSize += 2;
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return decodeBytesIntoFloats(configuredShader.readByteOutputs(w, h));
-    },
     t => Math.round(Math.log2(t.width * t.height)) - 1,
     t => Math.round(Math.log2(t.width * t.height)) - 2);
 

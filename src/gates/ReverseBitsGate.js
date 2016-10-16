@@ -1,4 +1,5 @@
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -15,7 +16,7 @@ let reverseBits = (val, len) => {
 };
 
 let reverseBitsMatrix = span => Matrix.generateTransition(1<<span, e => reverseBits(e, span));
-let reverseShaderForSize = span => ketShaderPermute(
+let _generateReverseShaderForSize = span => span < 2 ? undefined : ketShaderPermute(
     '',
     `
         float rev = 0.0;
@@ -28,8 +29,10 @@ let reverseShaderForSize = span => ketShaderPermute(
     `,
     span);
 
+let reverseShaders = Seq.range(Config.MAX_WIRE_COUNT).map(_generateReverseShaderForSize).toArray();
+let reverseShaderForSize = span => args => reverseShaders[span].withArgs(...ketArgs(args, span));
+
 let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
-    let shader = reverseShaderForSize(span);
     return Gate.withoutKnownMatrix(
         "Reverse",
         "Reverse Bits Gate",
@@ -39,7 +42,7 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
         withSerializedId("rev" + span).
         withHeight(span).
         withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
-        withCustomShader(args => shader.withArgs(...ketArgs(args, span)));
+        withCustomShader(reverseShaderForSize(span));
 });
 
-export {ReverseBitsGateFamily}
+export {ReverseBitsGateFamily, reverseShaderForSize}

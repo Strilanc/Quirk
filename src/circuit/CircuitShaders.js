@@ -76,7 +76,7 @@ const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], worki
     uniform float used;
     uniform float desired;
 
-    float outputFor(float k) {
+    bool outputFor(float k) {
         float pass = 1.0;
         float bit = 1.0;
         for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
@@ -86,7 +86,7 @@ const CONTROL_MASK_SHADER = makePseudoShaderWithInputsAndOutputAndCode([], worki
             pass *= 1.0 - abs(v-d)*u;
             bit *= 2.0;
         }
-        return pass;
+        return pass == 1.0;
     }`);
 
 /**
@@ -160,7 +160,7 @@ const SWAP_QUBITS_SHADER = ketShaderPermute('', `
  */
 CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
     if (keptBitMask === undefined) {
-        keptBitMask = (1 << workingShaderCoder.vec2Order(inputTexture)) - 1;
+        keptBitMask = (1 << workingShaderCoder.vec2ArrayPowerSizeOfTexture(inputTexture)) - 1;
     }
     let keptCount = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
 

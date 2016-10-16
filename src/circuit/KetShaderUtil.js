@@ -68,7 +68,7 @@ const ketShaderPhase = (head, body, span=null) => ketShader(
  */
 function ketArgs(args, span=undefined) {
     let result = [
-        args.stateTexture,
+        args.stateTrader.currentTexture,
         args.controlsTexture,
         WglArg.float("_ketgen_step", 1 << args.row)
     ];

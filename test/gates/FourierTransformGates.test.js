@@ -1,9 +1,6 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix,
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix
-} from "test/CircuitOperationTestUtil.js"
-import {controlledPhaseGradient, FourierTransformGates} from "src/gates/FourierTransformGates.js"
+import {assertThatRandomTestOfCircuitOperationActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {applyControlledPhaseGradient, FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
@@ -14,12 +11,12 @@ import {Matrix} from "src/math/Matrix.js"
 let suite = new Suite("FourierTransformGates");
 
 suite.webGlTest('controlledPhaseGradient', () => {
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
-        args => controlledPhaseGradient(args, 3, 1),
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+        args => applyControlledPhaseGradient(args, 3, 1),
         Matrix.generateDiagonal(8, i => i < 4 ? 1 : Complex.polar(1, (i-4)*Math.PI/4)));
 
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(
-        args => controlledPhaseGradient(args, 4, -1),
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+        args => applyControlledPhaseGradient(args, 4, -1),
         Matrix.generateDiagonal(16, i => i < 8 ? 1 : Complex.polar(1, -(i-8)*Math.PI/8)));
 });
 

@@ -1,5 +1,5 @@
 import {Suite, assertThat} from "test/TestUtil.js"
-import {amplitudesToCouplings} from "src/gates/DensityMatrixDisplayFamily.js"
+import {amplitudesToCouplings} from "src/gates/DensityMatrixDisplay.js"
 import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("DensityMatrixDisplay");
@@ -26,4 +26,6 @@ suite.webGlTest("amplitudesToCouplings", () => {
         0,0,   0,0, 0,0, 0,0,
         0.5,0, 0,0, 0,0, 0.5,0
     ]));
+
+    inp.deallocByDepositingInPool();
 });

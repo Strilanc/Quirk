@@ -69,11 +69,12 @@ const matrix_operation_shaders = [
 /**
  * @param {!CircuitEvalArgs} args
  * @param {!Matrix} matrix
- * @returns {!WglConfiguredShader}
+ * @returns {void}
  */
-GateShaders.matrixOperation = (args, matrix) => {
+GateShaders.applyMatrixOperation = (args, matrix) => {
     if (matrix.width() === 2) {
-        return singleQubitOperationFunc(args, matrix);
+        args.stateTrader.shadeAndTrade(_ => singleQubitOperationFunc(args, matrix));
+        return;
     }
     if (!Util.isPowerOf2(matrix.width())) {
         throw new DetailedError("Matrix size isn't a power of 2.", {args, matrix});
@@ -82,9 +83,9 @@ GateShaders.matrixOperation = (args, matrix) => {
         throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {args, matrix});
     }
     let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
-    return shader.withArgs(
+    args.stateTrader.shadeAndTrade(_ => shader.withArgs(
         ...ketArgs(args),
-        WglArg.float_array("coefs", matrix.rawBuffer()));
+        WglArg.float_array("coefs", matrix.rawBuffer())));
 };
 
 /**
@@ -93,7 +94,7 @@ GateShaders.matrixOperation = (args, matrix) => {
  * @returns {!WglConfiguredShader}
  */
 GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
-    let size = Math.floor(Math.log2(inputTexture.width * inputTexture.height));
+    let size = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inputTexture);
     return CYCLE_ALL_SHADER(
         inputTexture,
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));

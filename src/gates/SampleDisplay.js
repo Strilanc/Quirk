@@ -7,10 +7,9 @@ import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
-import {makeProbabilitySpanPipeline, probabilityPixelsToColumnVector} from "src/gates/ProbabilityDisplayFamily.js"
+import {probabilityStatTexture, probabilityPixelsToColumnVector} from "src/gates/ProbabilityDisplay.js"
 
 /**
  * @param {!GateDrawParams} args
@@ -95,7 +94,8 @@ function sampleGateMaker(span) {
         "Shows a random sample of possible measurement outcomes.\nUse controls to see conditional samples.").
         withHeight(span).
         withSerializedId("Sample" + span).
-        withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
+        withCustomStatTexturesMaker(args =>
+            probabilityStatTexture(args.stateTrader.currentTexture, args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
         withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS).

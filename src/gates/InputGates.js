@@ -1,6 +1,6 @@
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
-import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGateFamily.js"
+import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
 
 let InputGates = {};
 
@@ -18,9 +18,8 @@ let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fr
             length: span
         }
     }]).
-    withSetupShaders(
-        reverse && span > 1 ? ReverseBitsGateFamily.ofSize(span).customShaders : [],
-        reverse && span > 1 ? ReverseBitsGateFamily.ofSize(span).customShaders : []).
+    withCustomBeforeOperation(args => span > 1 ? reverseShaderForSize(span) : undefined).
+    withCustomAfterOperation(args => span > 1 ? reverseShaderForSize(span) : undefined).
     withCustomDrawer(args => {
         GatePainting.paintBackground(args);
         if (args.isInToolbox) {

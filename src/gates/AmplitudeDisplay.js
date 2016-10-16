@@ -11,48 +11,53 @@ import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 /**
- * @param {!WglTexture} valueTexture
+ * @param {!WglTexture} stateKet
  * @param {!Controls} controls
  * @param {!int} rangeOffset
  * @param {!int} rangeLength
- * @returns {!ShaderPipeline}
+ * @returns {!Array.<!WglTexture>}
  */
-function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLength) {
-    let result = new ShaderPipeline();
+function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLength) {
+    let trader = new WglTextureTrader(stateKet);
+    trader.dontDeallocCurrentTexture();
 
+    // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
+    let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateKet);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
-    let totalQubits = workingShaderCoder.vec2Order(valueTexture) - lostQubits;
-    result.addPowerSizedStepVec2(totalQubits, t => CircuitShaders.controlSelect(controls, t));
-
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+    let involvedQubits = startingQubits - lostQubits;
+    trader.shadeAndTrade(
+        tex => CircuitShaders.controlSelect(controls, tex),
+        WglTexturePool.takeVec2Tex(involvedQubits));
+    trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, lostHeadQubits-rangeOffset));
+    let ketJustAfterCycle = trader.dontDeallocCurrentTexture();
 
-    let cycledTex = KetTextureUtil.allocVec2Tex(totalQubits);
-    result.addPowerSizedStepVec2(totalQubits, inp => new WglConfiguredShader(dst => {
-        GateShaders.cycleAllBits(inp, lostHeadQubits-rangeOffset).renderTo(dst);
-        Shaders.passthrough(dst).renderTo(cycledTex);
-    }));
-    result.addPowerSizedStepVec4(totalQubits, amplitudesToPolarKets);
-    result.addPipelineSteps(pipelineToSpreadLengthAcrossPolarKets(rangeLength, totalQubits));
-    result.addPipelineSteps(pipelineToAggregateRepresentativePolarKet(rangeLength, totalQubits));
-    result.addPowerSizedStepVec4(rangeLength, convertAwayFromPolar, true);
+    // Look over all superposed values of the target qubits and pick the one with the most amplitude.
+    trader.shadeAndTrade(amplitudesToPolarKets, WglTexturePool.takeVec4Tex(involvedQubits));
+    spreadLengthAcrossPolarKets(trader, rangeLength);
+    reduceToLongestPolarKet(trader, rangeLength);
+    trader.shadeAndTrade(convertAwayFromPolar);
+    let amps = trader.dontDeallocCurrentTexture();
 
-    result.addPowerSizedStepVec4(totalQubits, inp => new WglConfiguredShader(dst => {
-        toRatiosVsRepresentative(cycledTex, inp).renderTo(dst);
-        KetTextureUtil.doneWithTexture(cycledTex);
-    }));
-    result.addPipelineSteps(pipelineToFoldConsistentRatios(rangeLength, totalQubits));
-    result.addPipelineSteps(pipelineToSumAll(totalQubits - rangeLength));
+    // Compare the chosen case against other cases. If they aren't multiples, we're not separable (i.e. incoherent).
+    trader.shadeAndTrade(
+        winningVectorKet => toRatiosVsRepresentative(ketJustAfterCycle, winningVectorKet),
+        WglTexturePool.takeVec4Tex(involvedQubits));
+    ketJustAfterCycle.deallocByDepositingInPool("ketJustAfterCycle in makeAmplitudeSpanPipeline");
+    foldConsistentRatios(trader, rangeLength);
+    signallingSumAll(trader);
 
-    return result;
+    return [amps, trader.currentTexture];
 }
 
 /**
@@ -145,20 +150,17 @@ const AMPLITUDES_TO_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCo
     }`);
 
 /**
+ * Goes from (mag, angle, mag, 0) form to (mag, angle, total_vector_mag, 0) form.
+ * @param {!WglTextureTrader} textureTrader
  * @param {!int} includedQubitCount
- * @param {!int} totalQubitCount
- * @returns {!ShaderPipeline}
+ * @returns {void}
  */
-function pipelineToSpreadLengthAcrossPolarKets(includedQubitCount, totalQubitCount) {
-    let result = new ShaderPipeline();
+function spreadLengthAcrossPolarKets(textureTrader, includedQubitCount) {
     for (let bit = 0; bit < includedQubitCount; bit++) {
-        result.addPowerSizedStepVec4(
-            totalQubitCount,
-            inp => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER(
-                inp,
-                WglArg.float('bit', 1 << bit)));
+        textureTrader.shadeAndTrade(inp => SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER(
+            inp,
+            WglArg.float('bit', 1 << bit)));
     }
-    return result;
 }
 const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [workingShaderCoder.vec4Input('input')],
@@ -180,20 +182,20 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
     }`);
 
 /**
+ * Reduces a list of vectors in (mag, angle, total_mag_of_vector, 0) form to the single highest-total-magnitude vector.
+ * @param {!WglTextureTrader} textureTrader
  * @param {!int} includedQubitCount
- * @param {!int} totalQubitCount
- * @returns {!ShaderPipeline}
+ * @returns {void}
  */
-function pipelineToAggregateRepresentativePolarKet(includedQubitCount, totalQubitCount) {
-    let result = new ShaderPipeline();
-    for (let bit = 0; bit < totalQubitCount - includedQubitCount; bit++) {
-        result.addPowerSizedStepVec4(
-            totalQubitCount - bit - 1,
+function reduceToLongestPolarKet(textureTrader, includedQubitCount) {
+    let curQubitCount = workingShaderCoder.vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    while (curQubitCount > includedQubitCount) {
+        curQubitCount -= 1;
+        textureTrader.shadeHalveAndTrade(
             inp => FOLD_REPRESENTATIVE_POLAR_KET_SHADER(
                 inp,
-                WglArg.float('offset', 1 << (totalQubitCount - bit - 1))));
+                WglArg.float('offset', 1 << curQubitCount)));
     }
-    return result;
 }
 const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [workingShaderCoder.vec4Input('input')],
@@ -246,20 +248,21 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
     }`);
 
 /**
+ * @param {!WglTextureTrader} textureTrader
  * @param {!int} includedQubitCount
- * @param {!int} totalQubitCount
- * @returns {!ShaderPipeline}
+ * @returns {void}
  */
-function pipelineToFoldConsistentRatios(includedQubitCount, totalQubitCount) {
-    let result = new ShaderPipeline();
-    for (let bit = 0; bit < includedQubitCount; bit++) {
-        result.addPowerSizedStepVec4(
-            totalQubitCount - bit - 1,
+function foldConsistentRatios(textureTrader, includedQubitCount) {
+    let curQubitCount = workingShaderCoder.vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let remainingIncludedQubitCount = includedQubitCount;
+    while (remainingIncludedQubitCount > 0) {
+        remainingIncludedQubitCount -= 1;
+        curQubitCount -= 1;
+        textureTrader.shadeHalveAndTrade(
             inp => FOLD_CONSISTENT_RATIOS_SHADER(
                 inp,
-                WglArg.float('bit', 1 << (includedQubitCount - bit - 1))));
+                WglArg.float('bit', 1 << remainingIncludedQubitCount)));
     }
-    return result;
 }
 const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [workingShaderCoder.vec4Input('input')],
@@ -294,16 +297,14 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
     }`);
 
 /**
- * @param {!int} qubitCount
- * @returns {!ShaderPipeline}
+ * @param {!WglTextureTrader} textureTrader
  */
-function pipelineToSumAll(qubitCount) {
-    let result = new ShaderPipeline();
-    while (qubitCount > 0) {
-        qubitCount -= 1;
-        result.addPowerSizedStepVec4(qubitCount, t => SIGNALLING_SUM_SHADER_VEC4(t));
+function signallingSumAll(textureTrader) {
+    let curQubitCount = workingShaderCoder.vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    while (curQubitCount > 0) {
+        curQubitCount -= 1;
+        textureTrader.shadeHalveAndTrade(SIGNALLING_SUM_SHADER_VEC4);
     }
-    return result;
 }
 const SIGNALLING_SUM_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
     [workingShaderCoder.vec4Input('input')],
@@ -415,11 +416,8 @@ function amplitudeDisplayMaker(span) {
         withHeight(span).
         withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
         withSerializedId("Amps" + span).
-        withCustomStatPipelineMaker(args => makeAmplitudeSpanPipeline(
-            args.stateTexture,
-            args.controls,
-            args.row,
-            span)).
+        withCustomStatTexturesMaker(args =>
+            amplitudeDisplayStatTextures(args.stateTrader.currentTexture, args.controls, args.row, span)).
         withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
@@ -431,10 +429,10 @@ export {
     AmplitudeDisplayFamily,
     amplitudesToPolarKets,
     convertAwayFromPolar,
-    makeAmplitudeSpanPipeline,
-    pipelineToAggregateRepresentativePolarKet,
-    pipelineToFoldConsistentRatios,
-    pipelineToSpreadLengthAcrossPolarKets,
-    pipelineToSumAll,
+    amplitudeDisplayStatTextures,
+    reduceToLongestPolarKet,
+    foldConsistentRatios,
+    spreadLengthAcrossPolarKets,
+    signallingSumAll,
     toRatiosVsRepresentative
 };

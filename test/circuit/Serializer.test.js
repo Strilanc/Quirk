@@ -15,13 +15,21 @@ import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 import {Seq, seq} from "src/base/Seq.js"
+import {Util} from "src/base/Util.js"
 
 let suite = new Suite("Serializer");
 
-let assertRoundTrip = (t, v, s) => {
+let assertRoundTrip = (t, v, s, equater=undefined) => {
     try {
-        assertThat(Serializer.fromJson(t, s)).isEqualTo(v);
-        assertThat(Serializer.toJson(v)).isEqualTo(s);
+        let from = Serializer.fromJson(t, s);
+        let to = Serializer.toJson(v);
+        if (equater === undefined) {
+            assertThat(from).isEqualTo(v);
+            assertThat(to).isEqualTo(s);
+        } else {
+            assertThat(equater(from, v)).isEqualTo(true);
+            assertThat(equater(to, s)).isEqualTo(true);
+        }
     } catch (failure) {
         console.error(`Failed to round-trip: ${describe(s)} <--> ${describe(v)}`);
         throw failure;
@@ -45,13 +53,17 @@ suite.test("roundTrip_Matrix", () => {
 });
 
 suite.test("roundTrip_Gate", () => {
-    assertRoundTrip(Gate, Gates.HalfTurns.X, "X");
+    assertRoundTrip(Gate, Gates.HalfTurns.X, "X", Util.STRICT_EQUALITY);
     for (let g of Gates.KnownToSerializer) {
-        assertRoundTrip(Gate, g, g.serializedId);
+        assertRoundTrip(Gate, g, g.serializedId, Util.STRICT_EQUALITY);
     }
 
     let f = MysteryGateMaker();
-    assertThat(Serializer.fromJson(Gate, Serializer.toJson(f))).isEqualTo(f);
+    let f2 = Serializer.fromJson(Gate, Serializer.toJson(f));
+    assertThat(f.name).isEqualTo(f2.name);
+    assertThat(f.blurb).isEqualTo(f2.blurb);
+    assertThat(f.knownMatrixAt(0)).isEqualTo(f2.knownMatrixAt(0));
+    assertThat(f.serializedId).isEqualTo(f2.serializedId);
 
     let g = Gate.fromKnownMatrix(
         "custom_id",

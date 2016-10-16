@@ -1,5 +1,5 @@
 import {Suite, assertThat} from "test/TestUtil.js"
-import {amplitudesToProbabilities} from "src/gates/ProbabilityDisplayFamily.js"
+import {amplitudesToProbabilities} from "src/gates/ProbabilityDisplay.js"
 
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Controls} from "src/circuit/Controls.js"
@@ -30,4 +30,7 @@ suite.webGlTest("amplitudesToProbabilities", () => {
         1/64, 0,
         1/256, 0
     ]));
+
+    inp.deallocByDepositingInPool();
+    con.deallocByDepositingInPool();
 });
