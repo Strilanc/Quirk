@@ -94,6 +94,12 @@ class WglShader {
         });
     }
 
+    ensureDeinitialized() {
+        if (this._compiledShaderSlot !== undefined) {
+            this._compiledShaderSlot.ensureDeinitialized();
+        }
+    }
+
     toString() {
         return `WglShader(fragmentShaderSource: ${this.fragmentShaderSourceGenerator()})`;
     }

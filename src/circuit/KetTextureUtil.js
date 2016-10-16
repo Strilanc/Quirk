@@ -8,7 +8,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {currentShaderCoder, decodeBytesIntoFloats, SHADER_CODER_BYTES} from "src/webgl/ShaderCoders.js"
+import {outputShaderCoder, currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -36,9 +36,9 @@ KetTextureUtil.mergedReadFloats = textures => {
     }
 
     let combinedPixels;
-    if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS && currentShaderCoder() !== SHADER_CODER_BYTES) {
-        trader.shadeAndTrade(Shaders.encodeFloatsIntoBytes, WglTexturePool.takeRawByteTex(totalPowerSize + 2));
-        combinedPixels = SHADER_CODER_BYTES.unpackVec4Data(trader.currentTexture.readPixels(), totalPowerSize);
+    if (outputShaderCoder() !== currentShaderCoder()) {
+        trader.shadeAndTrade(Shaders.convertVec4CodingForOutput, WglTexturePool.takeRawByteTex(totalPowerSize + 2));
+        combinedPixels = outputShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
     } else {
         combinedPixels = currentShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
     }

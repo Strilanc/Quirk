@@ -86,9 +86,9 @@ class Outputs {
     /**
      * @returns {!ShaderPartDescription}
      */
-    static vec4WithForcedByteCoding() {
+    static vec4WithOutputCoder() {
         return new ShaderPartDescription(
-            _ => SHADER_CODER_BYTES.vec4Output,
+            _ => outputShaderCoder().vec4Output,
             `Outputs.vec4()`);
     }
 
@@ -662,15 +662,94 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
 
 /** @type {!ShaderValueCoder} */
 let _curShaderCoder = SHADER_CODER_FLOATS;
+/** @type {!ShaderValueCoder} */
+let _outShaderCoder = SHADER_CODER_BYTES;
 
+/**
+ * @returns {!ShaderValueCoder}
+ */
 function currentShaderCoder() {
     return _curShaderCoder;
+}
+
+/**
+ * @returns {!ShaderValueCoder}
+ */
+function outputShaderCoder() {
+    return _outShaderCoder;
 }
 
 function changeShaderCoder(newCoder) {
     initializedWglContext().invalidateExistingResources();
     _curShaderCoder = newCoder;
 }
+
+function _tryReadAndWriteFloatingPointTexture() {
+    let texture = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
+    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.5, 7.0, -1113.0); }`);
+    //noinspection UnusedCatchParameterJS
+    try {
+        shader.withArgs().renderTo(texture);
+        let result = texture.readPixels();
+        return result instanceof Float32Array &&
+            result.length === 4 &&
+            result[0] === 2 &&
+            result[1] === 3.5 &&
+            result[2] === 7 &&
+            result[3] === -1113;
+    } catch (ex) {
+        console.warn(ex);
+        return false;
+    } finally {
+        texture.ensureDeinitialized();
+        shader.ensureDeinitialized()
+    }
+}
+
+function _tryWriteFloatingPointWithByteReadTexture() {
+    let textureFloat = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
+    let textureByte = new WglTexture(1, 1, WebGLRenderingContext.UNSIGNED_BYTE);
+    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.0, 5.0, 7.0)/255.0; }`);
+    let passer = new WglShader(`uniform sampler2D t; void main() { gl_FragColor = texture2D(t, gl_FragCoord.xy); }`);
+    //noinspection UnusedCatchParameterJS
+    try {
+        shader.withArgs().renderTo(textureFloat);
+        passer.withArgs(WglArg.texture('t', textureFloat)).renderTo(textureByte);
+        let result = textureByte.readPixels();
+        return result instanceof Uint8Array &&
+            result.length === 4 &&
+            result[0] === 2 &&
+            result[1] === 3 &&
+            result[2] === 5 &&
+            result[3] === 7;
+    } catch (ex) {
+        console.warn(ex);
+        return false;
+    } finally {
+        textureFloat.ensureDeinitialized();
+        textureByte.ensureDeinitialized();
+        shader.ensureDeinitialized();
+        passer.ensureDeinitialized();
+    }
+}
+
+function _chooseShaderCoders() {
+    if (_tryWriteFloatingPointWithByteReadTexture()) {
+        // Floats work. Hurray!
+        _curShaderCoder = SHADER_CODER_FLOATS;
+        _outShaderCoder = SHADER_CODER_FLOATS;
+    } else if (_tryReadAndWriteFloatingPointTexture()) {
+        console.warn("Wrote but failed to read a floating point texture. Falling back to float-as-byte output coding.");
+        _curShaderCoder = SHADER_CODER_FLOATS;
+        _outShaderCoder = SHADER_CODER_BYTES;
+    } else {
+        console.warn("Failed to write a floating point texture. Falling back to float-as-byte coding everywhere.");
+        _curShaderCoder = SHADER_CODER_BYTES;
+        _outShaderCoder = SHADER_CODER_BYTES;
+    }
+}
+
+_chooseShaderCoders();
 
 export {
     SHADER_CODER_BYTES,
@@ -683,6 +762,7 @@ export {
     makePseudoShaderWithInputsAndOutputAndCode,
     changeShaderCoder,
     Inputs,
-    Outputs
+    Outputs,
+    outputShaderCoder
 }
 provideWorkingShaderCoderToWglConfiguredShader(currentShaderCoder);

@@ -141,10 +141,10 @@ const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
  * @param {!WglTexture} inputTexture
  * @returns {!WglConfiguredShader}
  */
-Shaders.encodeFloatsIntoBytes = inputTexture => FLOATS_TO_ENCODED_BYTES_SHADER(inputTexture);
+Shaders.convertVec4CodingForOutput = inputTexture => FLOATS_TO_ENCODED_BYTES_SHADER(inputTexture);
 const FLOATS_TO_ENCODED_BYTES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec4('input')],
-    Outputs.vec4WithForcedByteCoding(),
+    Outputs.vec4WithOutputCoder(),
     'vec4 outputFor(float k) { return read_input(k); }');
 
 export {Shaders}
