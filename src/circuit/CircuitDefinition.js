@@ -832,7 +832,7 @@ class CircuitDefinition {
                     return [];
                 }
                 let shaders = beforeNotAfter ? gate.preShaders : gate.postShaders;
-                return shaders.map(f => e => f(e.withRow(i + rowOffset)));
+                return shaders.map(shaderFunc => args => shaderFunc(args.withRow(i + rowOffset, true)));
             }).
             flatten().
             toArray();

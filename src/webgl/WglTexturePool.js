@@ -191,6 +191,7 @@ class WglTextureTrader {
      * @param {!function(!WglTexture) : !WglConfiguredShader} shaderFunc
      * @param {undefined|!WglTexture} newTexture The texture to take and shade. If undefined, a texture matching the old
      * texture is taken from the texture pool.
+     * @returns {void}
      */
     shadeAndTrade(shaderFunc, newTexture=undefined) {
         let input = this.currentTexture;
@@ -204,6 +205,23 @@ class WglTextureTrader {
         } finally {
             if (deallocInput) {
                 input.deallocByDepositingInPool('WglTexturePool shadeAndTrade');
+            }
+        }
+    }
+
+    /**
+     * @param {!function(!WglTexture) : !WglTexture} textureFunc
+     * @returns {void}
+     */
+    tradeThrough(textureFunc) {
+        let input = this.currentTexture;
+        let deallocInput = !this._dontDeallocFlag;
+
+        try {
+            this.currentTexture = textureFunc(input);
+        } finally {
+            if (deallocInput) {
+                input.deallocByDepositingInPool('WglTexturePool tradeThrough');
             }
         }
     }

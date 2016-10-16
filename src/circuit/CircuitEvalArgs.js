@@ -51,20 +51,22 @@ class CircuitEvalArgs {
 
     /**
      * @param {!WglTexture} newStateTexture
+     * @param {!boolean} mutateInline
      * @returns {!CircuitEvalArgs}
      */
-    withStateTexture(newStateTexture) {
-        let r = this._clone();
+    withStateTexture(newStateTexture, mutateInline=false) {
+        let r = mutateInline ? this : this._clone();
         r.stateTexture = newStateTexture;
         return r;
     }
 
     /**
      * @param {!int} row
+     * @param {!boolean} mutateInline
      * @returns {!CircuitEvalArgs}
      */
-    withRow(row) {
-        let r = this._clone();
+    withRow(row, mutateInline=false) {
+        let r = mutateInline ? this : this._clone();
         r.row = row;
         return r;
     }

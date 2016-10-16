@@ -7,7 +7,7 @@ import {Point} from "src/math/Point.js"
 import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 /**
  * @param {!CircuitDefinition} circuitDefinition
@@ -177,31 +177,26 @@ function _advanceStateWithCircuitDefinitionColumn(
         undefined, // input texture is set below
         colContext);
 
-    // Apply 'before column' setup shaders.
-    let preparedState = KetTextureUtil.aggregateReusingIntermediates(
-        args.stateTexture,
-        circuitDefinition.getSetupShadersInCol(col, true, outerContextArgs.row),
-        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgsTemplate.withStateTexture(v)));
+    let setupOps = circuitDefinition.getSetupShadersInCol(col, true, outerContextArgs.row);
+    let gateOps = circuitDefinition.operationShadersInColAt(col, outerContextArgs.row);
+    let gateTexOps = circuitDefinition.textureTransformsInColAt(col, outerContextArgs.row);
+    let unsetupOps = circuitDefinition.getSetupShadersInCol(col, false, outerContextArgs.row);
+    let applyOps = (ops, template, trade) => {
+        for (let op of ops) {
+            trade(tex => op(template.withStateTexture(tex, true)));
+        }
+    };
 
-    // Apply gates in column.
-    let almostNextState = KetTextureUtil.aggregateWithReuse(
-        preparedState,
-        circuitDefinition.operationShadersInColAt(col, outerContextArgs.row),
-        (v, f) => KetTextureUtil.applyCustomShader(f, colArgsTemplate.withStateTexture(v)));
-    let almostAlmostNextState = KetTextureUtil.aggregateWithReuse(
-        almostNextState,
-        circuitDefinition.textureTransformsInColAt(col, outerContextArgs.row),
-        (v, f) => f(colArgsTemplate.withStateTexture(v)));
+    let trader = new WglTextureTrader(args.stateTexture);
+    trader.currentTexture = trader.copyOfCurrentTexture();
 
-    statsCallback(colArgsTemplate.withStateTexture(almostAlmostNextState));
+    applyOps(setupOps, setupArgsTemplate, trader.shadeAndTrade.bind(trader));
+    applyOps(gateOps, colArgsTemplate, trader.shadeAndTrade.bind(trader));
+    applyOps(gateTexOps, colArgsTemplate, trader.tradeThrough.bind(trader));
+    statsCallback(colArgsTemplate.withStateTexture(trader.currentTexture));
+    applyOps(unsetupOps, setupArgsTemplate, trader.shadeAndTrade.bind(trader));
 
-    // Apply 'after column' un-setup shaders.
-    let nextState = KetTextureUtil.aggregateWithReuse(
-        almostAlmostNextState,
-        circuitDefinition.getSetupShadersInCol(col, false, outerContextArgs.row),
-        (v, f) => KetTextureUtil.applyCustomShader(f, setupArgsTemplate.withStateTexture(v)));
-
-    return nextState;
+    return trader.currentTexture;
 }
 
 export {circuitDefinitionToGate, advanceStateWithCircuit}
