@@ -14,18 +14,14 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
 
 let suite = new Suite("CircuitShaders");
 
-function readAmps(bitCount, shader) {
-    return new Matrix(1, 1 << bitCount, workingShaderCoder.readVec2Data(shader, bitCount));
-}
-
 suite.webGlTest("classicalState", () => {
-    assertThat(readAmps(2, CircuitShaders.classicalState(0))).isEqualTo(Matrix.col(1, 0, 0, 0));
-    assertThat(readAmps(2, CircuitShaders.classicalState(1))).isEqualTo(Matrix.col(0, 1, 0, 0));
-    assertThat(readAmps(2, CircuitShaders.classicalState(2))).isEqualTo(Matrix.col(0, 0, 1, 0));
-    assertThat(readAmps(2, CircuitShaders.classicalState(3))).isEqualTo(Matrix.col(0, 0, 0, 1));
+    assertThat(CircuitShaders.classicalState(0).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(1, 0, 0, 0));
+    assertThat(CircuitShaders.classicalState(1).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(0, 1, 0, 0));
+    assertThat(CircuitShaders.classicalState(2).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(0, 0, 1, 0));
+    assertThat(CircuitShaders.classicalState(3).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(0, 0, 0, 1));
 
-    assertThat(readAmps(3, CircuitShaders.classicalState(0))).isEqualTo(Matrix.col(1, 0, 0, 0, 0, 0, 0, 0));
-    assertThat(readAmps(3, CircuitShaders.classicalState(5))).isEqualTo(Matrix.col(0, 0, 0, 0, 0, 1, 0, 0));
+    assertThat(CircuitShaders.classicalState(0).readVec2OutputsAsKet(3)).isEqualTo(Matrix.col(1, 0, 0, 0, 0, 0, 0, 0));
+    assertThat(CircuitShaders.classicalState(5).readVec2OutputsAsKet(3)).isEqualTo(Matrix.col(0, 0, 0, 0, 0, 1, 0, 0));
 });
 
 suite.webGlTest("linearOverlay", () => {
@@ -79,62 +75,33 @@ suite.webGlTest("linearOverlay", () => {
 });
 
 suite.webGlTest("controlMask", () => {
-    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
+    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readBoolOutputs(2)).isEqualTo(new Uint8Array([
+        0, 1, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
+    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readBoolOutputs(2)).isEqualTo(new Uint8Array([
+        0, 1, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x0)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
+    assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x0)).readBoolOutputs(2)).isEqualTo(new Uint8Array([
+        1, 0, 0, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0
+    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readBoolOutputs(2)).isEqualTo(new Uint8Array([
+        1, 0, 1, 0
     ]));
 
-    assertThat(CircuitShaders.controlMask(new Controls(0x5, 0x4)).readSizedFloatOutputs(4, 2)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0
-    ]));
-
-    assertThat(CircuitShaders.controlMask(new Controls(0x1, 0x0)).readSizedByteOutputs(2, 2)).isEqualTo(new Uint8Array([
-        255, 0, 0, 0,
-        0, 0, 0, 0,
-        255, 0, 0, 0,
-        0, 0, 0, 0
+    assertThat(CircuitShaders.controlMask(new Controls(0x5, 0x4)).readBoolOutputs(3)).isEqualTo(new Uint8Array([
+        0, 0, 0, 0, 1, 0, 1, 0
     ]));
 });
 
 suite.webGlTest("controlMask_largeReference", () => {
-    let w = 1 << 5;
-    let h = 1 << 8;
     let mask = new Controls(0b10111010101010111, 0b10011000001010001);
-    let expected = new Float32Array(Seq.range(w * h).
+    let expected = new Uint8Array(Seq.range(1 << 13).
         map(i => mask.allowsState(i) ? 1 : 0).
-        flatMap(e => [e, 0, 0, 0]).
         toArray());
-    assertThat(CircuitShaders.controlMask(mask).readSizedFloatOutputs(w, h)).isEqualTo(expected);
+    assertThat(CircuitShaders.controlMask(mask).readBoolOutputs(13)).isEqualTo(expected);
 });
 
 suite.webGlTest("controlSelect_simple", () => {

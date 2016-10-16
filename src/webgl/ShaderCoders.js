@@ -91,10 +91,8 @@ class ShaderValueCoder {
      * @param {!int} vecPixelType
      * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec2Data
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec2Data
-     * @param {!function(!WglConfiguredShader, !int) : !Float32Array} readVec2Data
      * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec4Data
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec4Data
-     * @param {!function(!WglConfiguredShader, !int) : !Float32Array} readVec4Data
      * @param {!function(!WglTexture) : !int} vec2Order
      * @param {!function(!WglTexture) : !int} vec4Order
      */
@@ -109,10 +107,8 @@ class ShaderValueCoder {
                 vecPixelType,
                 prepVec2Data,
                 unpackVec2Data,
-                readVec2Data,
                 prepVec4Data,
                 unpackVec4Data,
-                readVec4Data,
                 vec2Order,
                 vec4Order) {
         /** @type {!function(name: !string) : !ShaderPart} */
@@ -137,14 +133,10 @@ class ShaderValueCoder {
         this.prepVec2Data = prepVec2Data;
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
         this.unpackVec2Data = unpackVec2Data;
-        /** {!function(configuredShader: !WglConfiguredShader, powerSize: !int) : !Float32Array} */
-        this.readVec2Data = readVec2Data;
         /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
         this.prepVec4Data = prepVec4Data;
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
         this.unpackVec4Data = unpackVec4Data;
-        /** {!function(configuredShader: !WglConfiguredShader, powerSize: !int) : !Float32Array} */
-        this.readVec4Data = readVec4Data;
         /** @type {!function(!WglTexture) : !int} */
         this.vec2Order = vec2Order;
         /** @type {!function(!WglTexture) : !int} */
@@ -541,16 +533,8 @@ const SHADER_CODER_FLOATS = new ShaderValueCoder(
     WebGLRenderingContext.FLOAT,
     spreadFloatVec2,
     unspreadFloatVec2,
-    (configuredShader, powerSize) => {
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return unspreadFloatVec2(configuredShader.readSizedFloatOutputs(w, h));
-    },
     e => e,
     e => e,
-    (configuredShader, powerSize) => {
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return configuredShader.readSizedFloatOutputs(w, h);
-    },
     t => Math.round(Math.log2(t.width * t.height)),
     t => Math.round(Math.log2(t.width * t.height)));
 
@@ -567,18 +551,8 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     WebGLRenderingContext.UNSIGNED_BYTE,
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
-    (configuredShader, powerSize) => {
-        powerSize += 1;
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(w, h));
-    },
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
-    (configuredShader, powerSize) => {
-        powerSize += 2;
-        let {w, h} = WglTexture.preferredSizeForOrder(powerSize);
-        return decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(w, h));
-    },
     t => Math.round(Math.log2(t.width * t.height)) - 1,
     t => Math.round(Math.log2(t.width * t.height)) - 2);
 

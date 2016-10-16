@@ -65,10 +65,13 @@ KetTextureUtil.mergedReadFloats = textures => {
         });
 
     let combinedPixels;
-    if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS) {
-        combinedPixels = SHADER_CODER_BYTES.readVec4Data(Shaders.encodeFloatsIntoBytes(combinedTex), lgTotal);
+    if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS && workingShaderCoder !== SHADER_CODER_BYTES) {
+        let tex = WglTexturePool.takeRawByteTex(lgTotal + 2);
+        Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(tex);
+        combinedPixels = SHADER_CODER_BYTES.unpackVec4Data(tex.readPixels(), lgTotal);
+        tex.deallocByDepositingInPool();
     } else {
-        combinedPixels = workingShaderCoder.readVec4Data(combinedTex.readPixels(), lgTotal);
+        combinedPixels = workingShaderCoder.unpackVec4Data(combinedTex.readPixels());
     }
     combinedTex.deallocByDepositingInPool("combinedTex in mergedReadFloats");
 

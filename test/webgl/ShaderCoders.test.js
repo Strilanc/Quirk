@@ -77,13 +77,14 @@ suite.webGlTest("boolInputs", () => {
             gl_FragColor = vec4(read_a(k), k, 0.0, 0.0);
         }`);
 
-    let tex = Shaders.data(new Uint8Array([255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0])).toSizedByteTexture(2, 2);
-    assertThat(shader.withArgs(...inp.argsFor(tex)).readSizedFloatOutputs(4, 1)).isEqualTo(new Float32Array([
+    let tex = Shaders.data(new Uint8Array([255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0])).toRawByteTexture(2);
+    assertThat(shader.withArgs(...inp.argsFor(tex)).readRawFloatOutputs(2)).isEqualTo(new Float32Array([
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 2, 0, 0,
         1, 3, 0, 0
     ]));
+    tex.deallocByDepositingInPool();
 });
 
 suite.webGlTest("vec2Input_bytes", () => {
@@ -100,15 +101,19 @@ suite.webGlTest("vec2Input_bytes", () => {
     let floats = randomFloat32Array(64);
     let bytes = encodeFloatsIntoBytes(floats);
 
-    let texSquare = Shaders.data(bytes).toSizedByteTexture(8, 8);
-    assertThat(shader.withArgs(...param.argsFor(texSquare)).readSizedFloatOutputs(4, 4)).isEqualTo(floats);
-    texSquare.ensureDeinitialized();
+    let texSquare = Shaders.data(bytes).toRawByteTexture(6);
+    assertThat(shader.withArgs(...param.argsFor(texSquare)).readRawFloatOutputs(4)).isEqualTo(floats);
+    texSquare.deallocByDepositingInPool();
 
-    let texLopsided = Shaders.data(bytes).toSizedByteTexture(2, 32);
-    assertThat(shader.withArgs(...param.argsFor(texLopsided)).readSizedFloatOutputs(4, 4)).isEqualTo(floats);
-    texLopsided.ensureDeinitialized();
-
-    assertThrows(() => param.argsFor(Shaders.data(new Float32Array([0, 0, 0, 0])).toSizedFloatTexture(1, 1)));
+    // Wrong type.
+    assertThrows(() => {
+        let tex = Shaders.data(new Float32Array([0, 0, 0, 0])).toRawFloatTexture(0);
+        try {
+            param.argsFor(tex);
+        } finally {
+            tex.deallocByDepositingInPool();
+        }
+    });
 });
 
 suite.webGlTest("vec4Input_bytes", () => {
@@ -116,22 +121,26 @@ suite.webGlTest("vec4Input_bytes", () => {
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-            float k = xy.y * 2.0 + xy.x;
+            float k = xy.y * 4.0 + xy.x;
             gl_FragColor = read_test_input(k);
         }`);
 
     let floats = randomFloat32Array(64);
     let bytes = encodeFloatsIntoBytes(floats);
 
-    let texSquare = Shaders.data(bytes).toSizedByteTexture(8, 8);
-    assertThat(shader.withArgs(...param.argsFor(texSquare)).readSizedFloatOutputs(2, 8)).isEqualTo(floats);
-    texSquare.ensureDeinitialized();
+    let texSquare = Shaders.data(bytes).toRawByteTexture(4 + 2);
+    assertThat(shader.withArgs(...param.argsFor(texSquare)).readRawFloatOutputs(4)).isEqualTo(floats);
+    texSquare.deallocByDepositingInPool();
 
-    let texLopsided = Shaders.data(bytes).toSizedByteTexture(4, 16);
-    assertThat(shader.withArgs(...param.argsFor(texLopsided)).readSizedFloatOutputs(2, 8)).isEqualTo(floats);
-    texLopsided.ensureDeinitialized();
-
-    assertThrows(() => param.argsFor(Shaders.data(new Float32Array([0, 0, 0, 0])).toSizedFloatTexture(1, 1)));
+    // Wrong type.
+    assertThrows(() => {
+        let tex = Shaders.data(new Float32Array([0, 0, 0, 0])).toRawFloatTexture(0);
+        try {
+            param.argsFor(tex);
+        } finally {
+            tex.deallocByDepositingInPool();
+        }
+    });
 });
 
 suite.webGlTest("vec4Input_floats", () => {
@@ -145,15 +154,19 @@ suite.webGlTest("vec4Input_floats", () => {
 
     let floats = randomFloat32Array(64);
 
-    let texSquare = Shaders.data(floats).toSizedFloatTexture(4, 4);
-    assertThat(shader.withArgs(...param.argsFor(texSquare)).readSizedFloatOutputs(4, 4)).isEqualTo(floats);
-    texSquare.ensureDeinitialized();
+    let texSquare = Shaders.data(floats).toRawFloatTexture(4);
+    assertThat(shader.withArgs(...param.argsFor(texSquare)).readRawFloatOutputs(4)).isEqualTo(floats);
+    texSquare.deallocByDepositingInPool();
 
-    let texLopsided = Shaders.data(floats).toSizedFloatTexture(2, 8);
-    assertThat(shader.withArgs(...param.argsFor(texLopsided)).readSizedFloatOutputs(4, 4)).isEqualTo(floats);
-    texLopsided.ensureDeinitialized();
-
-    assertThrows(() => param.argsFor(Shaders.data(new Uint8Array([0, 0, 0, 0])).toSizedByteTexture(1, 1)));
+    // Wrong type.
+    assertThrows(() => {
+        let tex = Shaders.data(new Uint8Array([0, 0, 0, 0])).toRawByteTexture(0);
+        try {
+            param.argsFor(tex);
+        } finally {
+            tex.deallocByDepositingInPool();
+        }
+    });
 });
 
 suite.webGlTest("vec2Input_floats", () => {
@@ -174,15 +187,19 @@ suite.webGlTest("vec2Input_floats", () => {
         spread[4*i+1] = floats[2*i+1];
     }
 
-    let texSquare = Shaders.data(spread).toSizedFloatTexture(8, 4);
-    assertThat(shader.withArgs(...param.argsFor(texSquare)).readSizedFloatOutputs(4, 4)).isEqualTo(floats);
-    texSquare.ensureDeinitialized();
+    let texSquare = Shaders.data(spread).toRawFloatTexture(5);
+    assertThat(shader.withArgs(...param.argsFor(texSquare)).readRawFloatOutputs(4)).isEqualTo(floats);
+    texSquare.deallocByDepositingInPool();
 
-    let texLopsided = Shaders.data(spread).toSizedFloatTexture(2, 16);
-    assertThat(shader.withArgs(...param.argsFor(texLopsided)).readSizedFloatOutputs(4, 4)).isEqualTo(floats);
-    texLopsided.ensureDeinitialized();
-
-    assertThrows(() => param.argsFor(Shaders.data(new Uint8Array([0, 0, 0, 0])).toSizedByteTexture(1, 1)));
+    // Wrong type.
+    assertThrows(() => {
+        let tex = Shaders.data(new Uint8Array([0, 0, 0, 0])).toRawByteTexture(0);
+        try {
+            param.argsFor(tex);
+        } finally {
+            tex.deallocByDepositingInPool();
+        }
+    });
 });
 
 suite.webGlTest("boolOutputs", () => {
@@ -194,37 +211,8 @@ suite.webGlTest("boolOutputs", () => {
             return mod(k, 3.0) == 1.0;
         }`);
 
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(2, 4)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0
-    ]));
-
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(8, 1)).isEqualTo(new Float32Array([
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0, 0, 0
-    ]));
-
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(2, 4)).isEqualTo(new Uint8Array([
-        0, 0, 0, 0,
-        255, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        255, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        255, 0, 0, 0
+    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readBoolOutputs(3)).isEqualTo(new Uint8Array([
+        0, 1, 0, 0, 1, 0, 0, 1
     ]));
 });
 
@@ -235,19 +223,12 @@ suite.webGlTest("vec2Output_floats", () => {
             return vec2(k, k + 0.5);
         }`);
 
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(2, 1)).isEqualTo(new Float32Array([
+    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readRawFloatOutputs(1)).isEqualTo(new Float32Array([
         0, 0.5, 0, 0,
         1, 1.5, 0, 0
     ]));
 
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(4, 1)).isEqualTo(new Float32Array([
-        0, 0.5, 0, 0,
-        1, 1.5, 0, 0,
-        2, 2.5, 0, 0,
-        3, 3.5, 0, 0
-    ]));
-
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readRawFloatOutputs(2)).isEqualTo(new Float32Array([
         0, 0.5, 0, 0,
         1, 1.5, 0, 0,
         2, 2.5, 0, 0,
@@ -262,19 +243,12 @@ suite.webGlTest("vec4Output_floats", () => {
             return vec4(k, k + 0.25, k + 0.5, k + 0.75);
         }`);
 
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(2, 1)).isEqualTo(new Float32Array([
+    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readRawFloatOutputs(1)).isEqualTo(new Float32Array([
         0, 0.25, 0.5, 0.75,
         1, 1.25, 1.5, 1.75
     ]));
 
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(4, 1)).isEqualTo(new Float32Array([
-        0, 0.25, 0.5, 0.75,
-        1, 1.25, 1.5, 1.75,
-        2, 2.25, 2.5, 2.75,
-        3, 3.25, 3.5, 3.75
-    ]));
-
-    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readSizedFloatOutputs(2, 2)).isEqualTo(new Float32Array([
+    assertThat(shaderWithOutputPartAndArgs(shader, output, []).readRawFloatOutputs(2)).isEqualTo(new Float32Array([
         0, 0.25, 0.5, 0.75,
         1, 1.25, 1.5, 1.75,
         2, 2.25, 2.5, 2.75,
@@ -289,21 +263,13 @@ suite.webGlTest("vec2Output_bytes", () => {
             return vec2(k, k + 0.5);
         }`);
 
-    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(4, 1))).
+    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(2))).
         isEqualTo(new Float32Array([
             0, 0.5,
             1, 1.5
         ]));
 
-    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(8, 1))).
-        isEqualTo(new Float32Array([
-            0, 0.5,
-            1, 1.5,
-            2, 2.5,
-            3, 3.5
-        ]));
-
-    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(2, 4))).
+    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(3))).
         isEqualTo(new Float32Array([
             0, 0.5,
             1, 1.5,
@@ -319,21 +285,13 @@ suite.webGlTest("vec4Output_bytes", () => {
             return vec4(k, k + 0.25, k + 0.5, k + 0.75);
         }`);
 
-    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(8, 1))).
+    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(3))).
         isEqualTo(new Float32Array([
             0, 0.25, 0.5, 0.75,
             1, 1.25, 1.5, 1.75
         ]));
 
-    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(16, 1))).
-        isEqualTo(new Float32Array([
-            0, 0.25, 0.5, 0.75,
-            1, 1.25, 1.5, 1.75,
-            2, 2.25, 2.5, 2.75,
-            3, 3.25, 3.5, 3.75
-        ]));
-
-    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readSizedByteOutputs(4, 4))).
+    assertThat(decodeBytesIntoFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(4))).
         isEqualTo(new Float32Array([
             0, 0.25, 0.5, 0.75,
             1, 1.25, 1.5, 1.75,
@@ -360,10 +318,10 @@ suite.webGlTest("bytes_passthrough_vec2", () => {
     floats[5] = 529;
     let bytes = encodeFloatsIntoBytes(floats);
 
-    let tex = Shaders.data(bytes).toSizedByteTexture(8, 8);
+    let tex = Shaders.data(bytes).toRawByteTexture(6);
     let configuredShader = shaderWithOutputPartAndArgs(shader, output, input.argsFor(tex));
-    let outFloats = decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(8, 8));
-    tex.ensureDeinitialized();
+    let outFloats = decodeBytesIntoFloats(configuredShader.readRawByteOutputs(6));
+    tex.deallocByDepositingInPool();
 
     assertThat(outFloats).isEqualTo(floats);
 });
@@ -385,10 +343,10 @@ suite.webGlTest("bytes_passthrough_vec4", () => {
     floats[4] = 2;
     let bytes = encodeFloatsIntoBytes(floats);
 
-    let tex = Shaders.data(bytes).toSizedByteTexture(8, 8);
+    let tex = Shaders.data(bytes).toRawByteTexture(6);
     let configuredShader = shaderWithOutputPartAndArgs(shader, output, input.argsFor(tex));
-    let outFloats = decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(8, 8));
-    tex.ensureDeinitialized();
+    let outFloats = decodeBytesIntoFloats(configuredShader.readRawByteOutputs(6));
+    tex.deallocByDepositingInPool();
 
     assertThat(outFloats).isEqualTo(floats);
 });
@@ -408,13 +366,13 @@ suite.webGlTest("bytes_zip_through", () => {
     let bytesA = encodeFloatsIntoBytes(floatsA);
     let bytesB = encodeFloatsIntoBytes(floatsB);
 
-    let texA = Shaders.data(bytesA).toSizedByteTexture(8, 8);
-    let texB = Shaders.data(bytesB).toSizedByteTexture(8, 8);
+    let texA = Shaders.data(bytesA).toRawByteTexture(6);
+    let texB = Shaders.data(bytesB).toRawByteTexture(6);
     let configuredShader = shaderWithOutputPartAndArgs(
         shader, output, [...inputA.argsFor(texA), ...inputB.argsFor(texB)]);
-    let outFloats = decodeBytesIntoFloats(configuredShader.readSizedByteOutputs(8, 8));
-    texA.ensureDeinitialized();
-    texB.ensureDeinitialized();
+    let outFloats = decodeBytesIntoFloats(configuredShader.readRawByteOutputs(6));
+    texA.deallocByDepositingInPool();
+    texB.deallocByDepositingInPool();
 
     let expectedFloats = new Float32Array(floatsA.length);
     for (let i = 0; i < expectedFloats.length; i++) {
