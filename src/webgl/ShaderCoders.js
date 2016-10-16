@@ -93,8 +93,8 @@ class ShaderValueCoder {
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec2Data
      * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec4Data
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec4Data
-     * @param {!function(!WglTexture) : !int} vec2Order
-     * @param {!function(!WglTexture) : !int} vec4Order
+     * @param {!function(!WglTexture) : !int} vec2ArrayPowerSizeOfTexture
+     * @param {!function(!WglTexture) : !int} vec4ArrayPowerSizeOfTexture
      */
     constructor(vec2Input,
                 vec4Input,
@@ -109,8 +109,8 @@ class ShaderValueCoder {
                 unpackVec2Data,
                 prepVec4Data,
                 unpackVec4Data,
-                vec2Order,
-                vec4Order) {
+                vec2ArrayPowerSizeOfTexture,
+                vec4ArrayPowerSizeOfTexture) {
         /** @type {!function(name: !string) : !ShaderPart} */
         this.vec2Input = vec2Input;
         /** @type {!function(name: !string) : !ShaderPart} */
@@ -124,9 +124,9 @@ class ShaderValueCoder {
         /** @type {!ShaderPart} */
         this.boolOutput = boolOutput;
         /** @type {!int} */
-        this.vec2Overhead = vec2Overhead;
+        this.vec2PowerSizeOverhead = vec2Overhead;
         /** @type {!int} */
-        this.vec4Overhead = vec4Overhead;
+        this.vec4PowerSizeOverhead = vec4Overhead;
         /** @type {!int} */
         this.vecPixelType = vecPixelType;
         /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
@@ -138,9 +138,9 @@ class ShaderValueCoder {
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
         this.unpackVec4Data = unpackVec4Data;
         /** @type {!function(!WglTexture) : !int} */
-        this.vec2Order = vec2Order;
+        this.vec2ArrayPowerSizeOfTexture = vec2ArrayPowerSizeOfTexture;
         /** @type {!function(!WglTexture) : !int} */
-        this.vec4Order = vec4Order;
+        this.vec4ArrayPowerSizeOfTexture = vec4ArrayPowerSizeOfTexture;
     }
 }
 

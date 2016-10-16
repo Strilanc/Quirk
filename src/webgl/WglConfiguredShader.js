@@ -71,22 +71,22 @@ class WglConfiguredShader {
 
     /**
      * Renders into a new byte texture of the given size, and returns the texture.
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    toRawByteTexture(sizeOrder) {
-        let texture = WglTexturePool.takeRawByteTex(sizeOrder);
+    toRawByteTexture(sizePower) {
+        let texture = WglTexturePool.takeRawByteTex(sizePower);
         this._renderToElseDealloc(texture);
         return texture;
     }
 
     /**
      * Renders into a new float texture of the given size, and returns the texture.
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    toRawFloatTexture(sizeOrder) {
-        let texture = WglTexturePool.takeRawFloatTex(sizeOrder);
+    toRawFloatTexture(sizePower) {
+        let texture = WglTexturePool.takeRawFloatTex(sizePower);
         this._renderToElseDealloc(texture);
         return texture;
     }
@@ -94,29 +94,29 @@ class WglConfiguredShader {
     /**
      * Renders the result into a float texture, reads the pixels, and returns the result.
      * This method is slow (because it uses readPixels) and mainly exists for easy testing.
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!Float32Array}
      */
-    readRawFloatOutputs(sizeOrder) {
-        return this._renderReadDealloc(WglTexturePool.takeRawFloatTex(sizeOrder));
+    readRawFloatOutputs(sizePower) {
+        return this._renderReadDealloc(WglTexturePool.takeRawFloatTex(sizePower));
     }
 
     /**
      * Renders the result into a float texture, reads the pixels, and returns the result.
      * This method is slow (because it uses readPixels) and mainly exists for easy testing.
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!Uint8Array}
      */
-    readRawByteOutputs(sizeOrder) {
-        return this._renderReadDealloc(WglTexturePool.takeRawByteTex(sizeOrder));
+    readRawByteOutputs(sizePower) {
+        return this._renderReadDealloc(WglTexturePool.takeRawByteTex(sizePower));
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!Uint8Array} Each entry represents one of the booleans: 1 for true, 0 for false.
      */
-    readBoolOutputs(sizeOrder) {
-        let pixels = this._renderReadDealloc(WglTexturePool.takeBoolTex(sizeOrder));
+    readBoolOutputs(sizePower) {
+        let pixels = this._renderReadDealloc(WglTexturePool.takeBoolTex(sizePower));
         let result = new Uint8Array(pixels.length >> 2);
         for (let i = 0; i < result.length; i++) {
             result[i] = pixels[i << 2] & 1;
@@ -125,57 +125,57 @@ class WglConfiguredShader {
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!Float32Array}
      */
-    readVec2Outputs(sizeOrder) {
+    readVec2Outputs(sizePower) {
         return workingShaderCoder.unpackVec2Data(
-            this._renderReadDealloc(WglTexturePool.takeVec2Tex(sizeOrder)))
+            this._renderReadDealloc(WglTexturePool.takeVec2Tex(sizePower)))
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!Matrix}
      */
-    readVec2OutputsAsKet(sizeOrder) {
-        return new Matrix(1, 1 << sizeOrder, this.readVec2Outputs(sizeOrder));
+    readVec2OutputsAsKet(sizePower) {
+        return new Matrix(1, 1 << sizePower, this.readVec2Outputs(sizePower));
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!Float32Array}
      */
-    readVec4Outputs(sizeOrder) {
+    readVec4Outputs(sizePower) {
         return workingShaderCoder.unpackVec4Data(
-            this._renderReadDealloc(WglTexturePool.takeVec4Tex(sizeOrder)))
+            this._renderReadDealloc(WglTexturePool.takeVec4Tex(sizePower)))
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    toVec2Texture(sizeOrder) {
-        let texture = WglTexturePool.takeVec2Tex(sizeOrder);
+    toVec2Texture(sizePower) {
+        let texture = WglTexturePool.takeVec2Tex(sizePower);
         this._renderToElseDealloc(texture);
         return texture;
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    toVec4Texture(sizeOrder) {
-        let texture = WglTexturePool.takeVec4Tex(sizeOrder);
+    toVec4Texture(sizePower) {
+        let texture = WglTexturePool.takeVec4Tex(sizePower);
         this._renderToElseDealloc(texture);
         return texture;
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    toBoolTexture(sizeOrder) {
-        let texture = WglTexturePool.takeBoolTex(sizeOrder);
+    toBoolTexture(sizePower) {
+        let texture = WglTexturePool.takeBoolTex(sizePower);
         this._renderToElseDealloc(texture);
         return texture;
     }

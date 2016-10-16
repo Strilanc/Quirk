@@ -48,7 +48,7 @@ KetTextureUtil.control = (qubitCount, mask) => {
  * @returns {!Array.<!Float32Array>}
  */
 KetTextureUtil.mergedReadFloats = textures => {
-    let pixelCounts = textures.map(e => e.width === 0 ? 0 : 1 << workingShaderCoder.vec4Order(e));
+    let pixelCounts = textures.map(e => e.width === 0 ? 0 : 1 << workingShaderCoder.vec4ArrayPowerSizeOfTexture(e));
     let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
     let lgTotal = Math.round(Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1])));
     let combinedTex = WglTexturePool.takeVec4Tex(lgTotal);
@@ -174,7 +174,8 @@ KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask)
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let reducedTex = stateTex;
     if (hasControls) {
-        reducedTex = WglTexturePool.takeVec2Tex(workingShaderCoder.vec2Order(stateTex) - controls.includedBitCount());
+        reducedTex = WglTexturePool.takeVec2Tex(
+            workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateTex) - controls.includedBitCount());
         CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
     }
     let p = 1;
@@ -204,7 +205,7 @@ KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex,
     if (keptBitMask === 0) {
         throw new DetailedError("keptBitMask === 0", {superpositionTex, keptBitMask});
     }
-    let startingQubitCount = workingShaderCoder.vec2Order(superpositionTex);
+    let startingQubitCount = workingShaderCoder.vec2ArrayPowerSizeOfTexture(superpositionTex);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
     let inter = WglTexturePool.takeVec4Tex(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
     CircuitShaders.qubitDensities(superpositionTex, keptBitMask).renderTo(inter);
@@ -219,14 +220,14 @@ KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex,
  */
 KetTextureUtil._sumDownVec4 = (summandsTex, outCount) => {
     // When the number of kept qubits isn't a power of 2, we have some extra junk results interleaved to ignore.
-    let outputOrder = Math.ceil(Math.log2(Math.max(1, outCount)));
-    let inputOrder = workingShaderCoder.vec4Order(summandsTex);
+    let outputSizePower = Math.ceil(Math.log2(Math.max(1, outCount)));
+    let inputSizePower = workingShaderCoder.vec4ArrayPowerSizeOfTexture(summandsTex);
 
     return KetTextureUtil.aggregateReusingIntermediates(
         summandsTex,
-        Seq.range(inputOrder - outputOrder),
+        Seq.range(inputSizePower - outputSizePower),
         accTex => {
-            let halfTex = WglTexturePool.takeVec4Tex(workingShaderCoder.vec4Order(accTex) - 1);
+            let halfTex = WglTexturePool.takeVec4Tex(workingShaderCoder.vec4ArrayPowerSizeOfTexture(accTex) - 1);
             Shaders.sumFoldVec4(accTex).renderTo(halfTex);
             return halfTex;
         });
@@ -260,8 +261,8 @@ KetTextureUtil.pixelsToQubitDensityMatrices = buffer => {
 KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
     let skipDoneWithTextureFlag = true;
     let keptResults = [];
-    let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {outOrder, shaderFunc, keepResult}) => {
-        let nextTex = WglTexturePool.take(outOrder, workingShaderCoder.vecPixelType);
+    let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {outSizePower, shaderFunc, keepResult}) => {
+        let nextTex = WglTexturePool.take(outSizePower, workingShaderCoder.vecPixelType);
         shaderFunc(prevTex).renderTo(nextTex);
         if (!skipDoneWithTextureFlag) {
             prevTex.deallocByDepositingInPool("evaluatePipelineWithIntermediateCleanup");

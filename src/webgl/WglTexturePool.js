@@ -13,34 +13,34 @@ let unreturnedTextureCount = 0;
  */
 class WglTexturePool {
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @param {!int} pixelType
      * @returns {!Array.<!WglTexture>}
      * @private
      */
-    static _bucketFor(sizeOrder, pixelType) {
-        if (!Number.isInteger(sizeOrder) || sizeOrder < 0 || sizeOrder > 50) {
-            throw new DetailedError("Bad sizeOrder", {sizeOrder, pixelType});
+    static _bucketFor(sizePower, pixelType) {
+        if (!Number.isInteger(sizePower) || sizePower < 0 || sizePower > 50) {
+            throw new DetailedError("Bad sizePower", {sizePower, pixelType});
         }
 
         let pool = pixelType === WebGLRenderingContext.FLOAT ? FLOAT_POOL : BYTE_POOL;
-        while (pool.length <= sizeOrder) {
+        while (pool.length <= sizePower) {
             pool.push([])
         }
-        return pool[sizeOrder];
+        return pool[sizePower];
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @param {!int} pixelType
      * @returns {!WglTexture}
      */
-    static take(sizeOrder, pixelType) {
-        if (sizeOrder === -Infinity) {
+    static take(sizePower, pixelType) {
+        if (sizePower === -Infinity) {
             return new WglTexture(0, 0, pixelType);
         }
 
-        let bucket = WglTexturePool._bucketFor(sizeOrder, pixelType);
+        let bucket = WglTexturePool._bucketFor(sizePower, pixelType);
         unreturnedTextureCount++;
         if (unreturnedTextureCount > 1000) {
             console.warn(`High borrowed texture count: ${unreturnedTextureCount}. (Maybe a leak?)`);
@@ -49,7 +49,7 @@ class WglTexturePool {
         if (bucket.length > 0) {
             return bucket.pop();
         }
-        let {w, h} = WglTexture.preferredSizeForOrder(sizeOrder);
+        let {w, h} = WglTexture.preferredWidthHeightForSizePower(sizePower);
         return new WglTexture(w, h, pixelType);
     }
 
@@ -67,7 +67,7 @@ class WglTexturePool {
             return;
         }
 
-        let bucket = WglTexturePool._bucketFor(texture.order(), texture.pixelType);
+        let bucket = WglTexturePool._bucketFor(texture.sizePower(), texture.pixelType);
         unreturnedTextureCount--;
         bucket.push(texture.invalidateButMoveToNewInstance(detailsShownWhenUsedAfterDone));
     }
@@ -77,7 +77,7 @@ class WglTexturePool {
      * @returns {!WglTexture}
      */
     static takeSame(texture) {
-        return WglTexturePool.take(texture.order(), texture.pixelType);
+        return WglTexturePool.take(texture.sizePower(), texture.pixelType);
     }
 
     /**
@@ -88,52 +88,52 @@ class WglTexturePool {
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    static takeRawFloatTex(sizeOrder) {
+    static takeRawFloatTex(sizePower) {
         return WglTexturePool.take(
-            sizeOrder,
+            sizePower,
             WebGLRenderingContext.FLOAT);
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    static takeRawByteTex(sizeOrder) {
+    static takeRawByteTex(sizePower) {
         return WglTexturePool.take(
-            sizeOrder,
+            sizePower,
             WebGLRenderingContext.UNSIGNED_BYTE);
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    static takeBoolTex(sizeOrder) {
+    static takeBoolTex(sizePower) {
         return WglTexturePool.take(
-            sizeOrder,
+            sizePower,
             WebGLRenderingContext.UNSIGNED_BYTE);
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    static takeVec2Tex(sizeOrder) {
+    static takeVec2Tex(sizePower) {
         return WglTexturePool.take(
-            sizeOrder + workingShaderCoder.vec2Overhead,
+            sizePower + workingShaderCoder.vec2PowerSizeOverhead,
             workingShaderCoder.vecPixelType);
     }
 
     /**
-     * @param {!int} sizeOrder
+     * @param {!int} sizePower
      * @returns {!WglTexture}
      */
-    static takeVec4Tex(sizeOrder) {
+    static takeVec4Tex(sizePower) {
         return WglTexturePool.take(
-            sizeOrder + workingShaderCoder.vec4Overhead,
+            sizePower + workingShaderCoder.vec4PowerSizeOverhead,
             workingShaderCoder.vecPixelType);
     }
 }

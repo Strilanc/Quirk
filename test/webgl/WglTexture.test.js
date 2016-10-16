@@ -11,7 +11,7 @@ suite.test("properties", () => {
     assertThat(t.width).isEqualTo(8);
     assertThat(t.height).isEqualTo(16);
     assertThat(t.pixelType).isEqualTo(WebGLRenderingContext.UNSIGNED_BYTE);
-    assertThat(t.order()).isEqualTo(7);
+    assertThat(t.sizePower()).isEqualTo(7);
     assertThat(t.toString()).isNotEqualTo(undefined);
 });
 

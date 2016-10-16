@@ -52,12 +52,12 @@ class WglTexture {
     }
 
     /**
-     * @param {!int} order
+     * @param {!int} sizePower
      * @returns {{w: !int, h: !int}}
      */
-    static preferredSizeForOrder(order) {
-        let w = 1 << Math.ceil(order / 2);
-        let h = 1 << Math.floor(order / 2);
+    static preferredWidthHeightForSizePower(sizePower) {
+        let w = 1 << Math.ceil(sizePower / 2);
+        let h = 1 << Math.floor(sizePower / 2);
         if (w === 2 && h === 2) {
             w = 4;
             h = 1;
@@ -69,7 +69,7 @@ class WglTexture {
      * Returns the base-2 logarithm of the texture's area.
      * @returns {!int}
      */
-    order() {
+    sizePower() {
         if (this.width === 0) {
             return -Infinity;
         }

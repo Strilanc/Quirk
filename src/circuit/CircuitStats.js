@@ -240,7 +240,7 @@ class CircuitStats {
             true);
         initialState.deallocByDepositingInPool("initialState in _fromCircuitAtTime_noFallback");
         controlTex.deallocByDepositingInPool("controlTex in _fromCircuitAtTime_noFallback");
-        let output = WglTexturePool.takeVec4Tex(workingShaderCoder.vec2Order(pre_output));
+        let output = WglTexturePool.takeVec4Tex(workingShaderCoder.vec2ArrayPowerSizeOfTexture(pre_output));
         Shaders.vec2AsVec4(pre_output).renderTo(output);
         pre_output.deallocByDepositingInPool("pre_output in _fromCircuitAtTime_noFallback");
 

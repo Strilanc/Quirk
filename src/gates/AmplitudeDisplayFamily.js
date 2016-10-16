@@ -31,7 +31,7 @@ function makeAmplitudeSpanPipeline(valueTexture, controls, rangeOffset, rangeLen
     let result = new ShaderPipeline();
 
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
-    let totalQubits = workingShaderCoder.vec2Order(valueTexture) - lostQubits;
+    let totalQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(valueTexture) - lostQubits;
     result.addStepVec2(totalQubits, t => CircuitShaders.controlSelect(controls, t));
 
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
