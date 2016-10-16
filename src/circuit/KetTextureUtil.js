@@ -9,135 +9,49 @@ import {Util} from "src/base/Util.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {workingShaderCoder, decodeBytesIntoFloats, SHADER_CODER_BYTES} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.
  */
 class KetTextureUtil {}
 
-/** @type {!Map.<!int, !(!WglTexture[])>} */
-const TEXTURE_POOL = new Map();
-
-let allocNewTextureCount = 0;
-
 /**
- * @param {!int} qubitCount
- * @param {!int=0} classicalState
- * @returns {!WglTexture}
- */
-KetTextureUtil.classicalKet = (qubitCount, classicalState=0) => {
-    let tex = WglTexturePool.takeVec2Tex(qubitCount);
-    CircuitShaders.classicalState(classicalState).renderTo(tex);
-    return tex;
-};
-
-/**
- * @param {!int} qubitCount
- * @param {!Controls} mask
- * @returns {!WglTexture}
- */
-KetTextureUtil.control = (qubitCount, mask) => {
-    let tex = WglTexturePool.takeBoolTex(qubitCount);
-    CircuitShaders.controlMask(mask).renderTo(tex);
-    return tex;
-};
-
-/**
- * @param {!Array.<!WglTexture>} textures
+ * @param {!Array.<!WglTexture>} textures The textures to read and deallocate as a group.
  * @returns {!Array.<!Float32Array>}
  */
 KetTextureUtil.mergedReadFloats = textures => {
-    let pixelCounts = textures.map(e => e.width === 0 ? 0 : 1 << workingShaderCoder.vec4ArrayPowerSizeOfTexture(e));
-    let pixelOffsets = seq(pixelCounts).scan(0, (a, e) => a + e).toArray();
-    let lgTotal = Math.round(Math.log2(Util.ceilingPowerOf2(pixelOffsets[pixelOffsets.length - 1])));
-    let combinedTex = WglTexturePool.takeVec4Tex(lgTotal);
-    Shaders.color(0, 0, 0, 0).renderTo(combinedTex);
-    combinedTex = KetTextureUtil.aggregateWithReuse(
-        combinedTex,
-        Seq.range(textures.length).filter(i => textures[i].width > 0),
-        (accTex, i) => {
-            let inputTex = textures[i];
-            let nextTex = WglTexturePool.takeVec4Tex(lgTotal);
-            CircuitShaders.linearOverlay(pixelOffsets[i], inputTex, accTex).renderTo(nextTex);
-            inputTex.deallocByDepositingInPool("inputTex in mergedReadFloats");
-            return nextTex;
-        });
+    let len = tex => tex.width === 0 ? 0 : 1 << workingShaderCoder.vec4ArrayPowerSizeOfTexture(tex);
+    let totalPowerSize = Math.round(Math.log2(Util.ceilingPowerOf2(
+        seq(textures).map(len).sum())));
+
+    let trader = new WglTextureTrader(Shaders.color(0, 0, 0, 0).toVec4Texture(totalPowerSize));
+    let offset = 0;
+    for (let tex of textures) {
+        if (tex.width > 0) {
+            trader.shadeAndTrade(acc => CircuitShaders.linearOverlay(offset, tex, acc));
+        }
+        offset += len(tex);
+    }
 
     let combinedPixels;
     if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS && workingShaderCoder !== SHADER_CODER_BYTES) {
-        let tex = WglTexturePool.takeRawByteTex(lgTotal + 2);
-        Shaders.encodeFloatsIntoBytes(combinedTex).renderTo(tex);
-        combinedPixels = SHADER_CODER_BYTES.unpackVec4Data(tex.readPixels(), lgTotal);
-        tex.deallocByDepositingInPool();
+        trader.shadeAndTrade(Shaders.encodeFloatsIntoBytes, WglTexturePool.takeRawByteTex(totalPowerSize + 2));
+        combinedPixels = SHADER_CODER_BYTES.unpackVec4Data(trader.currentTexture.readPixels(), totalPowerSize);
     } else {
-        combinedPixels = workingShaderCoder.unpackVec4Data(combinedTex.readPixels());
+        combinedPixels = workingShaderCoder.unpackVec4Data(trader.currentTexture.readPixels());
     }
-    combinedTex.deallocByDepositingInPool("combinedTex in mergedReadFloats");
+    trader.currentTexture.deallocByDepositingInPool("trader.currentTexture in mergedReadFloats");
 
-    return Seq.range(textures.length).map(i => {
-        let offset = pixelOffsets[i] * 4;
-        let length = pixelCounts[i] * 4;
-        return combinedPixels.subarray(offset, offset + length);
-    }).toArray();
-};
-
-/**
- * @param {!CircuitEvalArgs} circuitEvalArgs
- * @param {!function(!CircuitEvalArgs):!WglConfiguredShader} customShader
- * @returns {!WglTexture}
- */
-KetTextureUtil.applyCustomShader = (customShader, circuitEvalArgs) => {
-    let result = WglTexturePool.takeSame(circuitEvalArgs.stateTexture);
-    customShader(circuitEvalArgs).renderTo(result);
-    return result;
-};
-
-/**
- * @param {!CircuitEvalArgs} args
- * @param {!Matrix} matrix
- * @returns {!WglTexture}
- */
-KetTextureUtil.matrixOperation = (args, matrix) => {
-    let result = WglTexturePool.takeSame(args.stateTexture);
-    GateShaders.matrixOperation(args, matrix).renderTo(result);
-    return result;
-};
-
-/**
- * @param {!WglTexture} seedTex
- * @param {!Array.<T>|!Seq.<T>} items
- * @param {!function(!WglTexture, T) : !WglTexture} aggregateFunc
- * @returns {!WglTexture}
- * @template T
- */
-KetTextureUtil.aggregateReusingIntermediates = (seedTex, items, aggregateFunc) => {
-    let outTex = seq(items).aggregate(seedTex, (prevTex, item) => {
-        let nextTex = aggregateFunc(prevTex, item);
-        if (prevTex !== seedTex) {
-            prevTex.deallocByDepositingInPool("prevTex in aggregateReusingIntermediates");
-        }
-        return nextTex;
-    });
-    if (outTex === seedTex) {
-        outTex = WglTexturePool.takeSame(seedTex);
-        Shaders.passthrough(seedTex).renderTo(outTex);
+    let result = [];
+    let pixelOffset = 0;
+    for (let tex of textures) {
+        let pixelLen = len(tex) << 2;
+        result.push(combinedPixels.subarray(pixelOffset, pixelOffset + pixelLen));
+        pixelOffset += pixelLen;
+        tex.deallocByDepositingInPool();
     }
-    return outTex;
-};
-/**
- * @param {!WglTexture} seedTex
- * @param {!Array.<T>|!Seq.<T>} items
- * @param {!function(!WglTexture, T) : !WglTexture} aggregateFunc
- * @returns {!WglTexture}
- * @template T
- */
-KetTextureUtil.aggregateWithReuse = (seedTex, items, aggregateFunc) => {
-    return seq(items).aggregate(seedTex, (prevTex, item) => {
-        let nextTex = aggregateFunc(prevTex, item);
-        prevTex.deallocByDepositingInPool("prevTex in aggregateWithReuse");
-        return nextTex;
-    });
+    return result;
 };
 
 /**
@@ -172,12 +86,13 @@ KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask)
         return new WglTexture(0, 0, workingShaderCoder.vecPixelType);
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
-    let reducedTex = stateTex;
+    let trader = new WglTextureTrader(stateTex);
+    trader.dontDeallocCurrentTexture();
     if (hasControls) {
-        reducedTex = WglTexturePool.takeVec2Tex(
-            workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateTex) - controls.includedBitCount());
-        CircuitShaders.controlSelect(controls, stateTex).renderTo(reducedTex);
+        let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateTex) - controls.includedBitCount();
+        trader.shadeAndTrade(t => CircuitShaders.controlSelect(controls, t), WglTexturePool.takeVec2Tex(n));
     }
+
     let p = 1;
     for (let i = 1; i <= controls.inclusionMask; i <<= 1) {
         if ((controls.inclusionMask & i) === 0) {
@@ -186,52 +101,44 @@ KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask)
             keptBitMask = (keptBitMask & (p - 1)) | ((keptBitMask & ~(p-1)) >> 1)
         }
     }
-    let unsummedTex = KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex(reducedTex, keptBitMask);
-    if (hasControls) {
-        reducedTex.deallocByDepositingInPool("reducedTex in superpositionToQubitDensities");
-    }
+
+    _superpositionTexToUnsummedQubitDensitiesTex(trader, keptBitMask);
     let keptQubitCount = Util.numberOfSetBits(keptBitMask);
-    let result = KetTextureUtil._sumDownVec4(unsummedTex, keptQubitCount);
-    unsummedTex.deallocByDepositingInPool("unsummedTex in superpositionToQubitDensities");
-    return result;
+    _sumDownVec4(trader, keptQubitCount);
+
+    return trader.currentTexture;
 };
 
 /**
- * @param {!WglTexture} superpositionTex
+ * @param {!WglTextureTrader} trader
  * @param {!int} keptBitMask
- * @returns {!WglTexture}
  */
-KetTextureUtil._superpositionTexToUnsummedQubitDensitiesTex = (superpositionTex, keptBitMask) => {
+function _superpositionTexToUnsummedQubitDensitiesTex(trader, keptBitMask) {
     if (keptBitMask === 0) {
-        throw new DetailedError("keptBitMask === 0", {superpositionTex, keptBitMask});
+        throw new DetailedError("keptBitMask === 0", {trader, keptBitMask});
     }
-    let startingQubitCount = workingShaderCoder.vec2ArrayPowerSizeOfTexture(superpositionTex);
+    let startingQubitCount = workingShaderCoder.vec2ArrayPowerSizeOfTexture(trader.currentTexture);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
-    let inter = WglTexturePool.takeVec4Tex(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount)));
-    CircuitShaders.qubitDensities(superpositionTex, keptBitMask).renderTo(inter);
-    return inter;
-};
+    trader.shadeAndTrade(
+        tex => CircuitShaders.qubitDensities(tex, keptBitMask),
+        WglTexturePool.takeVec4Tex(startingQubitCount - 1 + Math.ceil(Math.log2(remainingQubitCount))));
+}
 
 /**
- * @param {!WglTexture} summandsTex
+ * @param {!WglTextureTrader} trader
  * @param {!int} outCount The number of interleaved slices being summed.
  * The output will be a single row containing this many results (but padded up to a power of 2).
- * @returns {!WglTexture}
  */
-KetTextureUtil._sumDownVec4 = (summandsTex, outCount) => {
+function _sumDownVec4(trader, outCount) {
     // When the number of kept qubits isn't a power of 2, we have some extra junk results interleaved to ignore.
     let outputSizePower = Math.ceil(Math.log2(Math.max(1, outCount)));
-    let inputSizePower = workingShaderCoder.vec4ArrayPowerSizeOfTexture(summandsTex);
+    let curSizePower = workingShaderCoder.vec4ArrayPowerSizeOfTexture(trader.currentTexture);
 
-    return KetTextureUtil.aggregateReusingIntermediates(
-        summandsTex,
-        Seq.range(inputSizePower - outputSizePower),
-        accTex => {
-            let halfTex = WglTexturePool.takeVec4Tex(workingShaderCoder.vec4ArrayPowerSizeOfTexture(accTex) - 1);
-            Shaders.sumFoldVec4(accTex).renderTo(halfTex);
-            return halfTex;
-        });
-};
+    while (curSizePower > outputSizePower) {
+        trader.shadeHalveAndTrade(Shaders.sumFoldVec4);
+        curSizePower -= 1;
+    }
+}
 
 /**
  * @param {!Float32Array} buffer

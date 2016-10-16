@@ -143,7 +143,7 @@ function densityMatrixDisplayMaker(span) {
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
         withCustomStatTexturesMaker(args => densityDisplayStatTexture(
-            args.stateTexture, args.wireCount, args.controls, args.row, span)).
+            args.stateTrader.currentTexture, args.wireCount, args.controls, args.row, span)).
         withCustomStatPostProcessor(densityPixelsToMatrix).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }

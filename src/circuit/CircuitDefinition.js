@@ -526,7 +526,7 @@ class CircuitDefinition {
             filter(row => c.gates[row] === Gates.Displays.ChanceDisplay ||
                 c.gates[row] === Gates.Displays.BlochSphereDisplay ||
                 c.gates[row] === Gates.Displays.DensityMatrixDisplay).
-            filter(row => this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined).
+            filter(row => this.gateAtLocIsDisabledReason(col, row) === undefined).
             aggregate(0, (a, i) => a | (1 << i));
     }
 
@@ -543,7 +543,7 @@ class CircuitDefinition {
         let c = this.columns[col];
         for (let row = 0; row < c.gates.length; row++) {
             let g = c.gates[row];
-            if (g !== undefined && this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined) {
+            if (g !== undefined && this.gateAtLocIsDisabledReason(col, row) === undefined) {
                 for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row)) {
                     //noinspection JSUnusedAssignment
                     result.set(key, val);
@@ -564,7 +564,7 @@ class CircuitDefinition {
         let c = this.columns[col];
         return Seq.range(c.gates.length).
             filter(row => c.gates[row] === Gates.Displays.DensityMatrixDisplay2).
-            filter(row => this.gateAtLocIsDisabledReason(new Point(col, row)) === undefined).
+            filter(row => this.gateAtLocIsDisabledReason(col, row) === undefined).
             aggregate(0, (a, i) => a | (1 << i));
     }
 
@@ -640,7 +640,7 @@ class CircuitDefinition {
     locStartsSingleControlWire(pt) {
         return this.locIsControlWireStarter(pt) &&
             this.locClassifyMeasuredIncludingGateExtension(pt) !== true &&
-            this.gateAtLocIsDisabledReason(pt) === undefined;
+            this.gateAtLocIsDisabledReason(pt.x, pt.y) === undefined;
     }
 
     /**
@@ -650,7 +650,7 @@ class CircuitDefinition {
     locStartsDoubleControlWire(pt) {
         return this.locIsControlWireStarter(pt) &&
             this.locClassifyMeasuredIncludingGateExtension(pt) !== false &&
-            this.gateAtLocIsDisabledReason(pt) === undefined;
+            this.gateAtLocIsDisabledReason(pt.x, pt.y) === undefined;
     }
 
     /**
@@ -661,7 +661,7 @@ class CircuitDefinition {
         let pts = Seq.range(this.numWires).
             map(row => new Point(col, row)).
             filter(pt => this.gateInSlot(pt.x, pt.y) === Gates.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt) !== undefined) && pts.count() === 2;
+        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt.x, pt.y) !== undefined) && pts.count() === 2;
     }
 
     /**
@@ -733,7 +733,7 @@ class CircuitDefinition {
             range(this.columns[col].gates.length).
             map(i => {
                 let g = this.columns[col].gates[i];
-                let isEnabled = this.gateAtLocIsDisabledReason(new Point(col, i)) === undefined;
+                let isEnabled = this.gateAtLocIsDisabledReason(col, i) === undefined;
                 let b = g !== undefined && isEnabled ? g.controlBit() : undefined;
                 return b === undefined ? Controls.NONE :
                     b === false ? Controls.bit(i, false) :
@@ -743,99 +743,87 @@ class CircuitDefinition {
     }
 
     /**
-     * @param {!Point} pt
+     * @param {!int} col
+     * @param {!int} row
      * @returns {undefined|!string}
      */
-    gateAtLocIsDisabledReason(pt) {
-        if (pt.x < 0 || pt.y < 0 || pt.x >= this._disabledReasons.length || pt.y >= this.numWires) {
+    gateAtLocIsDisabledReason(col, row) {
+        if (col < 0 || row < 0 || col >= this._disabledReasons.length || row >= this.numWires) {
             return undefined;
         }
-        return this._disabledReasons[pt.x][pt.y];
+        return this._disabledReasons[col][row];
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!int} rowOffset
-     * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
+     * @param {!CircuitEvalArgs} args
+     * @return {void}
      */
-    operationShadersInColAt(colIndex, rowOffset=0) {
+    applyMainOperationsInCol(colIndex, args) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
-            return [];
+            return;
         }
 
-        let col = this.columns[colIndex];
-        let nonSwaps = seq(col.gates).
-            mapWithIndex((gate, row) => {
-                let pt = new Point(colIndex, row);
-                if (gate === undefined ||
-                        gate.definitelyHasNoEffect() ||
-                        gate === Gates.Special.SwapHalf ||
-                        this.gateAtLocIsDisabledReason(pt) !== undefined) {
-                    return [];
-                }
+        this._applyOpsInCol(colIndex, args, gate => {
+            if (gate.definitelyHasNoEffect() || gate === Gates.Special.SwapHalf) {
+                return undefined;
+            }
 
-                if (gate.customShaders !== undefined) {
-                    return gate.customShaders.map(f => e => f(e.withRow(row + rowOffset)));
-                }
+            if (gate.customOperation !== undefined) {
+                return gate.customOperation;
+            }
 
-                if (gate.customTextureTransform !== undefined) {
-                    return [];
-                }
+            return args => GateShaders.applyMatrixOperation(args, gate.knownMatrixAt(args.time));
+        });
 
-                return [args => GateShaders.matrixOperation(
-                    args.withRow(row + rowOffset),
-                    gate.knownMatrixAt(args.time))];
-            }).
-            flatten();
-        let swaps = col.swapPairs().
-            map(([i1, i2]) => args => CircuitShaders.swap(args.withRow(i1 + rowOffset), i2 + rowOffset));
-        return nonSwaps.concat(swaps).toArray();
-    }
-
-    /**
-     * @param {!int} colIndex
-     * @param {!int} rowOffset
-     * @returns {!Array.<!function(!CircuitEvalArgs):!WglTexture>}
-     */
-    textureTransformsInColAt(colIndex, rowOffset=0) {
-        if (colIndex < 0 || colIndex >= this.columns.length) {
-            return [];
+        for (let [i, j] of this.columns[colIndex].swapPairs()) {
+            //noinspection JSUnusedAssignment
+            args.stateTrader.shadeAndTrade(
+                CircuitShaders.swap(args.withRow(i + args.row), j + args.row));
         }
-        return seq(this.columns[colIndex].gates).
-            mapWithIndex((gate, row) => {
-                if (gate === undefined ||
-                        gate.customTextureTransform === undefined ||
-                        this.gateAtLocIsDisabledReason(new Point(colIndex, row)) !== undefined) {
-                    return undefined;
-                }
-                return args => gate.customTextureTransform(args.withRow(row + rowOffset));
-            }).
-            filter(e => e !== undefined).
-            toArray();
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!boolean} beforeNotAfter
-     * @param {!int} rowOffset
-     * @returns {!Array.<!function(!CircuitEvalArgs):!WglConfiguredShader>}
+     * @param {!CircuitEvalArgs} args
+     * @return {void}
      */
-    getSetupShadersInCol(colIndex, beforeNotAfter, rowOffset) {
+    applyBeforeOperationsInCol(colIndex, args) {
+        this._applyOpsInCol(colIndex, args, g => g.customBeforeOperation);
+    }
+
+    /**
+     * @param {!int} colIndex
+     * @param {!CircuitEvalArgs} args
+     * @return {void}
+     */
+    applyAfterOperationsInCol(colIndex, args) {
+        this._applyOpsInCol(colIndex, args, g => g.customAfterOperation);
+    }
+
+    /**
+     * @param {!int} colIndex
+     * @param {!CircuitEvalArgs} args
+     * @param {!function(!Gate) : !function(!CircuitEvalArgs)} opGetter
+     * @private
+     */
+    _applyOpsInCol(colIndex, args, opGetter) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
-            return [];
+            return;
         }
         let col = this.columns[colIndex];
-        return seq(col.gates).
-            mapWithIndex((gate, i) => {
-                let pt = new Point(colIndex, i);
-                if (gate === undefined || this.gateAtLocIsDisabledReason(pt) !== undefined) {
-                    return [];
-                }
-                let shaders = beforeNotAfter ? gate.preShaders : gate.postShaders;
-                return shaders.map(shaderFunc => args => shaderFunc(args.withRow(i + rowOffset, true)));
-            }).
-            flatten().
-            toArray();
+
+        for (let row = 0; row < this.numWires; row++) {
+            let gate = col.gates[row];
+            if (gate === undefined || this.gateAtLocIsDisabledReason(colIndex, row) !== undefined) {
+                continue;
+            }
+
+            let op = opGetter(gate);
+            if (op !== undefined) {
+                op(args.withRow(args.row + row));
+            }
+        }
     }
 
     /**
@@ -852,7 +840,7 @@ class CircuitDefinition {
             filter(row =>
                 col.gates[row] !== undefined &&
                 col.gates[row].customStatPostProcesser !== undefined &&
-                this.gateAtLocIsDisabledReason(new Point(colIndex, row)) === undefined).
+                this.gateAtLocIsDisabledReason(colIndex, row) === undefined).
             toArray();
     }
 

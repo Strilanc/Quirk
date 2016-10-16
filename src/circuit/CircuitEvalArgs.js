@@ -8,7 +8,7 @@ class CircuitEvalArgs {
      * @param {!int} wireCount
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
-     * @param {undefined|!WglTexture} stateTexture
+     * @param {undefined|!WglTextureTrader} stateTrader
      * @param {!Map.<!string, *>} customContextFromGates
      */
     constructor(time,
@@ -16,11 +16,14 @@ class CircuitEvalArgs {
                 wireCount,
                 controls,
                 controlsTexture,
-                stateTexture,
+                stateTrader,
                 customContextFromGates) {
         /** @type {!number} */
         this.time = time;
-        /** @type {undefined|!int} */
+        /**
+         * The top-level row that we're working relative to.
+         * @type {undefined|!int}
+         */
         this.row = qubitRow;
         /** @type {!int} */
         this.wireCount = wireCount;
@@ -28,8 +31,8 @@ class CircuitEvalArgs {
         this.controls = controls;
         /** @type {!WglTexture} */
         this.controlsTexture = controlsTexture;
-        /** @type {undefined|!WglTexture} */
-        this.stateTexture = stateTexture;
+        /** @type {undefined|!WglTextureTrader} */
+        this.stateTrader = stateTrader;
         /** @type {!Map.<!string, *>} */
         this.customContextFromGates = customContextFromGates;
     }
@@ -45,28 +48,16 @@ class CircuitEvalArgs {
             this.wireCount,
             this.controls,
             this.controlsTexture,
-            this.stateTexture,
+            this.stateTrader,
             this.customContextFromGates);
     }
 
     /**
-     * @param {!WglTexture} newStateTexture
-     * @param {!boolean} mutateInline
-     * @returns {!CircuitEvalArgs}
-     */
-    withStateTexture(newStateTexture, mutateInline=false) {
-        let r = mutateInline ? this : this._clone();
-        r.stateTexture = newStateTexture;
-        return r;
-    }
-
-    /**
      * @param {!int} row
-     * @param {!boolean} mutateInline
      * @returns {!CircuitEvalArgs}
      */
-    withRow(row, mutateInline=false) {
-        let r = mutateInline ? this : this._clone();
+    withRow(row) {
+        let r = this._clone();
         r.row = row;
         return r;
     }

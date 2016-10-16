@@ -5,7 +5,8 @@ import {Gate} from "src/circuit/Gate.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
-import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGate.js"
+import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
+import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
@@ -15,12 +16,11 @@ import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
  * @param {!CircuitEvalArgs} args
  * @param {!int} qubitSpan Size of the gate.
  * @param {!number=} factor Scaling factor for the applied phases.
- * @returns {!WglConfiguredShader} A configured shader that renders the output superposition (as a grid of amplitudes).
  */
-function controlledPhaseGradient(args, qubitSpan, factor=1) {
-    return CONTROLLED_PHASE_GRADIENT_SHADER.withArgs(
+function applyControlledPhaseGradient(args, qubitSpan, factor=1) {
+    args.stateTrader.shadeAndTrade(_ => CONTROLLED_PHASE_GRADIENT_SHADER.withArgs(
         ...ketArgs(args, qubitSpan),
-        WglArg.float("factor", factor));
+        WglArg.float("factor", factor)));
 }
 const CONTROLLED_PHASE_GRADIENT_SHADER = ketShaderPhase(
     'uniform float factor;',
@@ -39,14 +39,37 @@ const INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER = span =>
 
 let FourierTransformGates = {};
 
-let gradShaders = (n, factor) => Seq.range(n).
-    flatMap(i => [
-        args => controlledPhaseGradient(args, i+1, factor),
-        args => GateShaders.matrixOperation(
-            args.withRow(args.row + i),
-            Matrix.HADAMARD)
-    ]).
-    skip(1);
+/**
+ * @param {!CircuitEvalArgs} args
+ * @param {!int} span
+ */
+function applyForwardGradientShaders(args, span) {
+    if (span > 1) {
+        args.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(args));
+    }
+    for (let i = 0; i < span; i++) {
+        if (i > 0) {
+            applyControlledPhaseGradient(args, i + 1, +1);
+        }
+        HalfTurnGates.H.customOperation(args.withRow(args.row + i));
+    }
+}
+
+/**
+ * @param {!CircuitEvalArgs} args
+ * @param {!int} span
+ */
+function applyBackwardGradientShaders(args, span) {
+    for (let i = span - 1; i >= 0; i--) {
+        HalfTurnGates.H.customOperation(args.withRow(args.row + i));
+        if (i > 0) {
+            applyControlledPhaseGradient(args, i + 1, -1);
+        }
+    }
+    if (span > 1) {
+        args.stateTrader.shadeAndTrade(_ => reverseShaderForSize(span)(args));
+    }
+}
 
 FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "QFT",
@@ -56,10 +79,7 @@ FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span =
     withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT" + span).
     withHeight(span).
-    withCustomShaders([
-        ...(span > 1 ? ReverseBitsGateFamily.ofSize(span).customShaders : []),
-        ...gradShaders(span, 1)
-    ]));
+    withCustomOperation(args => applyForwardGradientShaders(args, span)));
 
 FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "QFT^†",
@@ -69,14 +89,11 @@ FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16,
     withKnownMatrix(span >= 4 ? undefined : INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT†" + span).
     withHeight(span).
-    withCustomShaders([
-        ...gradShaders(span, -1).reverse(),
-        ...(span > 1 ? ReverseBitsGateFamily.ofSize(span).customShaders : [])
-    ]));
+    withCustomOperation(args => applyBackwardGradientShaders(args, span)));
 
 FourierTransformGates.all = [
     ...FourierTransformGates.FourierTransformFamily.all,
     ...FourierTransformGates.InverseFourierTransformFamily.all
 ];
 
-export {controlledPhaseGradient, FourierTransformGates}
+export {applyControlledPhaseGradient, FourierTransformGates}

@@ -35,10 +35,12 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
-        /** @type {undefined|!function(!!CircuitEvalArgs) : !WglTexture} */
-        this.customTextureTransform = undefined;
-        /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
-        this.customShaders = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        this.customBeforeOperation = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        this.customOperation = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        this.customAfterOperation = undefined;
         /** @type {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} */
         this.customStatTexturesMaker = undefined;
         /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
@@ -103,10 +105,6 @@ class Gate {
          * @private
          */
         this._controlBit = undefined;
-        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
-        this.preShaders = [];
-        /** @type {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
-        this.postShaders = [];
         /**
          * @param {!int} qubit
          * @returns {!Array.<!{key: !string, val: *}>}
@@ -166,17 +164,6 @@ class Gate {
     withKnownMatrixFunc(matrixFunc) {
         let g = this._copy();
         g._knownMatrixFunc = matrixFunc;
-        return g;
-    }
-
-    /**
-     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} before
-     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} after
-     */
-    withSetupShaders(before, after) {
-        let g = this._copy();
-        g.preShaders = before;
-        g.postShaders = after;
         return g;
     }
 
@@ -298,7 +285,9 @@ class Gate {
         g.serializedId = this.serializedId;
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
-        g.customShaders = this.customShaders;
+        g.customBeforeOperation = this.customBeforeOperation;
+        g.customOperation = this.customOperation;
+        g.customAfterOperation = this.customAfterOperation;
         g.customStatTexturesMaker = this.customStatTexturesMaker;
         g.customStatPostProcesser = this.customStatPostProcesser;
         g.width = this.width;
@@ -319,9 +308,6 @@ class Gate {
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
         g.isControlWireSource = this.isControlWireSource;
-        g.preShaders = this.preShaders;
-        g.postShaders = this.postShaders;
-        g.customTextureTransform = this.customTextureTransform;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
@@ -409,23 +395,60 @@ class Gate {
     }
 
     /**
-     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} shaderFuncs
-     * @returns {!Gate}
+     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
      */
-    withCustomShaders(shaderFuncs) {
+    withCustomBeforeOperation(customOperation) {
+        if (customOperation !== undefined && typeof customOperation !== "function") {
+            throw new DetailedError("Bad customOperation", {customOperation});
+        }
         let g = this._copy();
-        g.customShaders = shaderFuncs;
+        g.customBeforeOperation = customOperation;
         return g;
     }
 
     /**
-     * @param {!function(!CircuitEvalArgs) : !WglTexture} func
+     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     */
+    withCustomAfterOperation(customOperation) {
+        if (customOperation !== undefined && typeof customOperation !== "function") {
+            throw new DetailedError("Bad customOperation", {customOperation});
+        }
+        let g = this._copy();
+        g.customAfterOperation = customOperation;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
      * @returns {!Gate}
      */
-    withCustomTextureTransform(func) {
+    withCustomOperation(customOperation) {
+        if (customOperation !== undefined && typeof customOperation !== "function") {
+            throw new DetailedError("Bad customOperation", {customOperation});
+        }
         let g = this._copy();
-        g.customTextureTransform = func;
+        g.customOperation = customOperation;
         return g;
+    }
+
+    /**
+     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
+     * @returns {!Gate}
+     */
+    withCustomShader(shaderFunc) {
+        return this.withCustomShaders([shaderFunc]);
+    }
+
+    /**
+     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} shaderFuncs
+     * @returns {!Gate}
+     */
+    withCustomShaders(shaderFuncs) {
+        return this.withCustomOperation(args => {
+            for (let shaderFunc of shaderFuncs) {
+                args.stateTrader.shadeAndTrade(_ => shaderFunc(args));
+            }
+        });
     }
 
     /**
@@ -452,14 +475,6 @@ class Gate {
         let g = this._copy();
         g._requiredContextKeys = keys;
         return g;
-    }
-
-    /**
-     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
-     * @returns {!Gate}
-     */
-    withCustomShader(shaderFunc) {
-        return this.withCustomShaders([shaderFunc]);
     }
 
     /**

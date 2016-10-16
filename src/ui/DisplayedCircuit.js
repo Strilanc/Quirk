@@ -446,7 +446,7 @@ class DisplayedCircuit {
      * @private
      */
     _drawGate_disabledReason(painter, col, row, gateRect, isHighlighted) {
-        let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(new Point(col, row));
+        let isDisabledReason = this.circuitDefinition.gateAtLocIsDisabledReason(col, row);
         if (isDisabledReason === undefined) {
             return;
         }

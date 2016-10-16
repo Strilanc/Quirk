@@ -194,18 +194,16 @@ class WglTextureTrader {
      * @returns {void}
      */
     shadeAndTrade(shaderFunc, newTexture=undefined) {
-        let input = this.currentTexture;
-        let deallocInput = !this._dontDeallocFlag;
+        let src = this.currentTexture;
+        let deallocSrc = !this._dontDeallocFlag;
+        let dst = newTexture || WglTexturePool.takeSame(src);
 
+        shaderFunc(src).renderTo(dst);
+
+        this.currentTexture = dst;
         this._dontDeallocFlag = false;
-        this.currentTexture = newTexture || WglTexturePool.takeSame(input);
-
-        try {
-            shaderFunc(input).renderTo(this.currentTexture);
-        } finally {
-            if (deallocInput) {
-                input.deallocByDepositingInPool('WglTexturePool shadeAndTrade');
-            }
+        if (deallocSrc) {
+            src.deallocByDepositingInPool('WglTexturePool shadeAndTrade');
         }
     }
 
@@ -216,13 +214,12 @@ class WglTextureTrader {
     tradeThrough(textureFunc) {
         let input = this.currentTexture;
         let deallocInput = !this._dontDeallocFlag;
+        let output = textureFunc(input);
 
-        try {
-            this.currentTexture = textureFunc(input);
-        } finally {
-            if (deallocInput) {
-                input.deallocByDepositingInPool('WglTexturePool tradeThrough');
-            }
+        this.currentTexture = output;
+        this._dontDeallocFlag = false;
+        if (deallocInput) {
+            input.deallocByDepositingInPool('WglTexturePool tradeThrough');
         }
     }
 

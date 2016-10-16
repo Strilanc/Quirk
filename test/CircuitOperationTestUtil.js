@@ -8,7 +8,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 // Turn this on to make it easier to debug why a randomized test is failing.
 const USE_SIMPLE_VALUES = false;
@@ -21,16 +21,15 @@ if (USE_SIMPLE_VALUES) {
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
-function assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(args => {
-        let r = WglTexturePool.takeSame(args.stateTexture);
-        shaderFunc(args).renderTo(r);
-        return r;
-    }, matrix, repeats);
+function assertThatRandomTestOfCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
+    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
+        args => args.stateTrader.shadeAndTrade(_ => shaderFunc(args)),
+        matrix,
+        repeats);
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : !WglTexture} operation
+ * @param {function(!CircuitEvalArgs) : void} operation
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
@@ -41,7 +40,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix,
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : !WglTexture} operation
+ * @param {function(!CircuitEvalArgs) : void} operation
  * @param {!Matrix} matrix
  */
 function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix) {
@@ -67,30 +66,30 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
         (Math.random() < 0.5 ? 1 : 0) :
         new Complex(Math.random()*10 - 5, Math.random()*10 - 5));
 
-    let textureIn = Shaders.vec2Data(inVec.rawBuffer()).toVec2Texture(wireCount);
-    let controlsTexture = KetTextureUtil.control(wireCount, controls);
+    let tex = Shaders.vec2Data(inVec.rawBuffer()).toVec2Texture(wireCount);
+    let trader = new WglTextureTrader(tex);
+    let controlsTexture = CircuitShaders.controlMask(controls).toBoolTexture(wireCount);
     let args = new CircuitEvalArgs(
         time,
         qubitIndex,
         wireCount,
         controls,
         controlsTexture,
-        textureIn,
+        trader,
         new Map());
-    let textureOut = operation(args);
+    operation(args);
 
-    let outData = workingShaderCoder.unpackVec2Data(textureOut.readPixels());
+    let outData = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
     let outVec = new Matrix(1, ampCount, outData);
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
     assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.005);
-    textureIn.deallocByDepositingInPool();
-    textureOut.deallocByDepositingInPool();
+    trader.currentTexture.deallocByDepositingInPool();
     controlsTexture.deallocByDepositingInPool();
 }
 
 export {
     assertThatRandomTestOfCircuitOperationActsLikeMatrix,
-    assertThatRandomTestOfCircuitOperationShaderActsLikeMatrix
+    assertThatRandomTestOfCircuitShaderActsLikeMatrix
 }

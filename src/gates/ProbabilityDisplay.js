@@ -220,7 +220,7 @@ function multiChanceGateMaker(span) {
         withHeight(span).
         withSerializedId("Chance" + span).
         withCustomStatTexturesMaker(args =>
-            probabilityStatTexture(args.stateTexture, args.controlsTexture, args.row, span)).
+            probabilityStatTexture(args.stateTrader.currentTexture, args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

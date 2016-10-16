@@ -95,7 +95,7 @@ function sampleGateMaker(span) {
         withHeight(span).
         withSerializedId("Sample" + span).
         withCustomStatTexturesMaker(args =>
-            probabilityStatTexture(args.stateTexture, args.controlsTexture, args.row, span)).
+            probabilityStatTexture(args.stateTrader.currentTexture, args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
         withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS).

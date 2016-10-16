@@ -6,6 +6,7 @@ import {universalNot} from "src/gates/Impossible_UniversalNotGate.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 let suite = new Suite("GateShaders");
 
@@ -15,14 +16,16 @@ suite.webGlTest('universalNot', () => {
         5,6, 7,8
     ])).toVec2Texture(2);
     let assertAbout = (index, control) => {
-        let controlTex = KetTextureUtil.control(2, control);
+        let controlTex = CircuitShaders.controlMask(control).toBoolTexture(2);
+        let trader = new WglTextureTrader(input);
+        trader.dontDeallocCurrentTexture();
         let args = new CircuitEvalArgs(
             0,
             index,
             2,
             control,
             controlTex,
-            input,
+            trader,
             new Map());
         try {
             return assertThat(universalNot(args).readVec2Outputs(2));
