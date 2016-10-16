@@ -9,7 +9,6 @@ import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
@@ -19,42 +18,38 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
 import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 /**
+ * @param {!WglTexture} inp
  * @param {!Controls} controls
  * @param {!int} qubitCount
  * @param {!int} rangeOffset
  * @param {!int} rangeLength
- * @returns {!ShaderPipeline} Computes the marginal probabilities for a range of qubits from a superposition texture.
+ * @returns {!WglTexture}
  */
-function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
-    let result = new ShaderPipeline();
+function densityDisplayStatTexture(inp, qubitCount, controls, rangeOffset, rangeLength) {
+    let trader = new WglTextureTrader(inp);
+    trader.dontDeallocCurrentTexture();
 
-    result.addStepVec4(2*rangeLength, inp => {
-        let t = new WglTextureTrader(inp);
-        t.dontDeallocCurrentTexture();
+    // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
+    let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
+    let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
+    let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+    trader.shadeAndTrade(
+            ket => CircuitShaders.controlSelect(controls, ket),
+        WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
+    trader.shadeAndTrade(ket => GateShaders.cycleAllBits(ket, lostHeadQubits-rangeOffset));
 
-        // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-        let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
-        let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
-        let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
-        t.shadeAndTrade(
-                ket => CircuitShaders.controlSelect(controls, ket),
-            WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
-        t.shadeAndTrade(ket => GateShaders.cycleAllBits(ket, lostHeadQubits-rangeOffset));
+    // Expand amplitudes into couplings.
+    let n = qubitCount - lostQubits + rangeLength;
+    trader.shadeAndTrade(e => amplitudesToCouplings(e, rangeLength), WglTexturePool.takeVec2Tex(n));
 
-        // Expand amplitudes into couplings.
-        let n = qubitCount - lostQubits + rangeLength;
-        t.shadeAndTrade(e => amplitudesToCouplings(e, rangeLength), WglTexturePool.takeVec2Tex(n));
+    // Sum up the density matrices from all combinations of the unincluded qubits' values.
+    while (n > 2*rangeLength) {
+        n--;
+        trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
+    }
 
-        // Sum up the density matrices from all combinations of the unincluded qubits' values.
-        while (n > 2*rangeLength) {
-            n--;
-            t.shadeHalveAndTrade(Shaders.sumFoldVec2);
-        }
-
-        return new WglConfiguredShader(dst => t.shadeAndTrade(Shaders.vec2AsVec4, dst));
-    });
-
-    return result;
+    trader.shadeAndTrade(Shaders.vec2AsVec4, WglTexturePool.takeVec4Tex(rangeLength * 2));
+    return trader.currentTexture;
 }
 
 /**
@@ -147,11 +142,8 @@ function densityMatrixDisplayMaker(span) {
         withWidth(span).
         withHeight(span).
         withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
-        withCustomStatPipelineMaker(args => makeDensityPipeline(
-            args.wireCount,
-            args.controls,
-            args.row,
-            span)).
+        withCustomStatTexturesMaker(args => densityDisplayStatTexture(
+            args.stateTexture, args.wireCount, args.controls, args.row, span)).
         withCustomStatPostProcessor(densityPixelsToMatrix).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }

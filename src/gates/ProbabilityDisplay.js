@@ -7,7 +7,6 @@ import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
@@ -17,31 +16,27 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
 import {WglTextureTrader, WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 /**
+ * @param {!WglTexture} ketTexture
  * @param {!WglTexture} controlTexture
  * @param {!int} rangeOffset
  * @param {!int} rangeLength
- * @returns {!ShaderPipeline} Computes the marginal probabilities for a range of qubits from a superposition texture.
+ * @returns {!WglTexture}
  */
-function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
-    let result = new ShaderPipeline();
+function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLength) {
+    let trader = new WglTextureTrader(ketTexture);
+    trader.dontDeallocCurrentTexture();
 
-    result.addStepVec4(rangeLength, inp => {
-        let t = new WglTextureTrader(inp);
-        t.dontDeallocCurrentTexture();
+    trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture));
+    trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, -rangeOffset));
 
-        t.shadeAndTrade(e => amplitudesToProbabilities(e, controlTexture));
-        t.shadeAndTrade(e => GateShaders.cycleAllBits(e, -rangeOffset));
+    let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(ketTexture);
+    while (n > rangeLength) {
+        n -= 1;
+        trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
+    }
 
-        let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
-        while (n > rangeLength) {
-            n -= 1;
-            t.shadeHalveAndTrade(Shaders.sumFoldVec2);
-        }
-
-        return new WglConfiguredShader(dst => t.shadeAndTrade(Shaders.vec2AsVec4, dst));
-    });
-
-    return result;
+    trader.shadeAndTrade(Shaders.vec2AsVec4, WglTexturePool.takeVec4Tex(rangeLength));
+    return trader.currentTexture;
 }
 
 /**
@@ -224,7 +219,8 @@ function multiChanceGateMaker(span) {
         "Shows chances of outcomes if a measurement was performed.\nUse controls to see conditional probabilities.").
         withHeight(span).
         withSerializedId("Chance" + span).
-        withCustomStatPipelineMaker(args => makeProbabilitySpanPipeline(args.controlsTexture, args.row, span)).
+        withCustomStatTexturesMaker(args =>
+            probabilityStatTexture(args.stateTexture, args.controlsTexture, args.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
@@ -249,7 +245,7 @@ let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
 
 export {
     ProbabilityDisplayFamily,
-    makeProbabilitySpanPipeline,
+    probabilityStatTexture,
     probabilityPixelsToColumnVector,
     amplitudesToProbabilities
 };

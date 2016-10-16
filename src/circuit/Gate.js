@@ -39,8 +39,8 @@ class Gate {
         this.customTextureTransform = undefined;
         /** @type {undefined|!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} */
         this.customShaders = undefined;
-        /** @type {undefined|!function(!CircuitEvalArgs) : !ShaderPipeline} */
-        this.customStatPipelineMaker = undefined;
+        /** @type {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} */
+        this.customStatTexturesMaker = undefined;
         /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
         this.customStatPostProcesser = undefined;
         /** @type {!Array.<!Gate>} */
@@ -299,7 +299,7 @@ class Gate {
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
         g.customShaders = this.customShaders;
-        g.customStatPipelineMaker = this.customStatPipelineMaker;
+        g.customStatTexturesMaker = this.customStatTexturesMaker;
         g.customStatPostProcesser = this.customStatPostProcesser;
         g.width = this.width;
         g.height = this.height;
@@ -429,12 +429,12 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalArgs) : !ShaderPipeline} customStatePipelineMaker
+     * @param {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} customStatTexturesMaker
      * @returns {!Gate}
      */
-    withCustomStatPipelineMaker(customStatePipelineMaker) {
+    withCustomStatTexturesMaker(customStatTexturesMaker) {
         let g = this._copy();
-        g.customStatPipelineMaker = customStatePipelineMaker;
+        g.customStatTexturesMaker = customStatTexturesMaker;
         return g;
     }
 
@@ -600,8 +600,6 @@ class Gate {
             this.tag === other.tag &&
             this._stableDuration === other._stableDuration &&
             this.customShaders === other.customShaders &&
-            this.customStatPipelineMaker === other.customStatPipelineMaker &&
-            this.customStatPostProcesser === other.customStatPostProcesser &&
             this.customDrawer === other.customDrawer;
     }
 

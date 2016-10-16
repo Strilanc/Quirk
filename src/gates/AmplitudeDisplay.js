@@ -11,7 +11,6 @@ import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {ShaderPipeline} from "src/circuit/ShaderPipeline.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
@@ -21,47 +20,42 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
 import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 /**
+ * @param {!WglTexture} stateKet
  * @param {!Controls} controls
  * @param {!int} rangeOffset
  * @param {!int} rangeLength
- * @returns {!ShaderPipeline}
+ * @returns {!Array.<!WglTexture>}
  */
-function makeAmplitudeSpanPipeline(controls, rangeOffset, rangeLength) {
-    let result = new ShaderPipeline();
+function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLength) {
+    let trader = new WglTextureTrader(stateKet);
+    trader.dontDeallocCurrentTexture();
 
-    result.addStepVec4(0, inp => {
-        let t = new WglTextureTrader(inp);
-        t.dontDeallocCurrentTexture();
+    // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
+    let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateKet);
+    let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
+    let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+    trader.shadeAndTrade(
+        tex => CircuitShaders.controlSelect(controls, tex),
+        WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
+    trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, lostHeadQubits-rangeOffset));
+    let ketJustAfterCycle = trader.dontDeallocCurrentTexture();
 
-        // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-        let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
-        let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
-        let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
-        t.shadeAndTrade(
-            ket => CircuitShaders.controlSelect(controls, ket),
-            WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
-        t.shadeAndTrade(ket => GateShaders.cycleAllBits(ket, lostHeadQubits-rangeOffset));
-        let ketJustAfterCycle = t.dontDeallocCurrentTexture();
+    // Look over all superposed values of the target qubits and pick the one with the most amplitude.
+    trader.shadeAndTrade(amplitudesToPolarKets);
+    spreadLengthAcrossPolarKets(trader, rangeLength);
+    reduceToLongestPolarKet(trader, rangeLength);
+    trader.shadeAndTrade(convertAwayFromPolar);
+    let amps = trader.dontDeallocCurrentTexture();
 
-        // Look over all superposed values of the target qubits and pick the one with the most amplitude.
-        t.shadeAndTrade(amplitudesToPolarKets);
-        spreadLengthAcrossPolarKets(t, rangeLength);
-        reduceToLongestPolarKet(t, rangeLength);
-        t.shadeAndTrade(convertAwayFromPolar);
-        let amps = t.dontDeallocCurrentTexture();
+    // Compare the chosen case against other cases. If they aren't multiples, we're not separable (i.e. incoherent).
+    trader.shadeAndTrade(
+        winningVectorKet => toRatiosVsRepresentative(ketJustAfterCycle, winningVectorKet),
+        WglTexturePool.takeSame(ketJustAfterCycle));
+    ketJustAfterCycle.deallocByDepositingInPool("ketJustAfterCycle in makeAmplitudeSpanPipeline");
+    foldConsistentRatios(trader, rangeLength);
+    signallingSumAll(trader);
 
-        // Compare the chosen case against other cases. If they aren't multiples, we're not separable (i.e. incoherent).
-        t.shadeAndTrade(
-            winningVectorKet => toRatiosVsRepresentative(ketJustAfterCycle, winningVectorKet),
-            WglTexturePool.takeSame(ketJustAfterCycle));
-        ketJustAfterCycle.deallocByDepositingInPool("ketJustAfterCycle in makeAmplitudeSpanPipeline");
-        foldConsistentRatios(t, rangeLength);
-        signallingSumAll(t);
-
-        return {keep: amps, func: new WglConfiguredShader(dst => t.shadeAndTrade(Shaders.passthrough, dst))};
-    });
-
-    return result;
+    return [amps, trader.currentTexture];
 }
 
 /**
@@ -420,7 +414,8 @@ function amplitudeDisplayMaker(span) {
         withHeight(span).
         withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
         withSerializedId("Amps" + span).
-        withCustomStatPipelineMaker(args => makeAmplitudeSpanPipeline(args.controls, args.row, span)).
+        withCustomStatTexturesMaker(args =>
+            amplitudeDisplayStatTextures(args.stateTexture, args.controls, args.row, span)).
         withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
@@ -432,7 +427,7 @@ export {
     AmplitudeDisplayFamily,
     amplitudesToPolarKets,
     convertAwayFromPolar,
-    makeAmplitudeSpanPipeline,
+    amplitudeDisplayStatTextures,
     reduceToLongestPolarKet,
     foldConsistentRatios,
     spreadLengthAcrossPolarKets,

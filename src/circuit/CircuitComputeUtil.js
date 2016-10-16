@@ -127,8 +127,7 @@ function _extractStateStatsNeededByCircuitColumn(
             args.controlsTexture,
             args.stateTexture,
             circuitDefinition.colCustomContextFromGates(col, row));
-        let pipeline = circuitDefinition.columns[col].gates[row].customStatPipelineMaker(statArgs);
-        let stat = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(args.stateTexture, pipeline);
+        let stat = circuitDefinition.columns[col].gates[row].customStatTexturesMaker(statArgs);
         customGateStats.push({row, stat});
     }
 

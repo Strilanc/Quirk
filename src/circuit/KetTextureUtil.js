@@ -253,40 +253,4 @@ KetTextureUtil.pixelsToQubitDensityMatrices = buffer => {
     }).toArray();
 };
 
-/**
- * @param {!WglTexture} seedTex
- * @param {!ShaderPipeline} pipeline
- * @returns {!WglTexture|!Array.<!WglTexture>}
- */
-KetTextureUtil.evaluatePipelineWithIntermediateCleanup = (seedTex, pipeline) => {
-    let skipDoneWithTextureFlag = true;
-    let keptResults = [];
-    let outTex = seq(pipeline.steps).aggregate(seedTex, (prevTex, {outSizePower, shaderFunc, keepResult}) => {
-        let nextTex = WglTexturePool.take(outSizePower, workingShaderCoder.vecPixelType);
-        let r = shaderFunc(prevTex);
-        if (r.hasOwnProperty('keep')) {
-            keptResults.push(r.keep);
-            r = r.func;
-        }
-        r.renderTo(nextTex);
-        if (!skipDoneWithTextureFlag) {
-            prevTex.deallocByDepositingInPool("evaluatePipelineWithIntermediateCleanup");
-        }
-        skipDoneWithTextureFlag = keepResult;
-        if (keepResult) {
-            keptResults.push(nextTex);
-        }
-        return nextTex;
-    });
-    if (outTex === seedTex) {
-        outTex = WglTexturePool.takeSame(seedTex);
-        Shaders.passthrough(seedTex).renderTo(outTex);
-    }
-    if (keptResults.length === 0) {
-        return outTex;
-    }
-    keptResults.push(outTex);
-    return keptResults;
-};
-
 export {KetTextureUtil}

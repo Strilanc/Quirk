@@ -2,7 +2,7 @@ import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/Tes
 import {
     amplitudesToPolarKets,
     convertAwayFromPolar,
-    makeAmplitudeSpanPipeline,
+    amplitudeDisplayStatTextures,
     reduceToLongestPolarKet,
     foldConsistentRatios,
     spreadLengthAcrossPolarKets,
@@ -269,8 +269,7 @@ suite.webGlTest("pipelineToSumAll_signal", () => {
 suite.webGlTest("makeAmplitudeSpanPipeline_OffOff", () => {
     let inp = Shaders.vec2Data(new Float32Array([1,0, 0,0, 0,0, 0,0])).
         toVec2Texture(2);
-    let pipe = makeAmplitudeSpanPipeline(Controls.NONE, 0, 2);
-    let [afterPolar, final] = KetTextureUtil.evaluatePipelineWithIntermediateCleanup(inp, pipe);
+    let [afterPolar, final] = amplitudeDisplayStatTextures(inp, Controls.NONE, 0, 2);
     assertThat(workingShaderCoder.unpackVec4Data(afterPolar.readPixels())).isEqualTo(
         new Float32Array([1,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]));
     assertThat(workingShaderCoder.unpackVec4Data(final.readPixels())).isEqualTo(new Float32Array([1,0,1,0]));
