@@ -16,6 +16,7 @@ import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {WglTexturePool, WglTextureTrader} from "src/webgl/WglTexturePool.js"
 
 /**
  * @param {!Controls} controls
@@ -25,25 +26,33 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
  * @returns {!ShaderPipeline} Computes the marginal probabilities for a range of qubits from a superposition texture.
  */
 function makeDensityPipeline(qubitCount, controls, rangeOffset, rangeLength) {
-
-    let forcedQubits = Util.numberOfSetBits(controls.inclusionMask);
-    let forcedQubitsAbove = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
-
     let result = new ShaderPipeline();
 
-    let n = qubitCount - forcedQubits;
-    result.addStepVec2(n, t => CircuitShaders.controlSelect(controls, t));
-    result.addStepVec2(n, t => GateShaders.cycleAllBits(t, forcedQubitsAbove-rangeOffset));
+    result.addStepVec4(2*rangeLength, inp => {
+        let t = new WglTextureTrader(inp);
+        t.dontDeallocCurrentTexture();
 
-    n += rangeLength;
-    result.addStepVec2(n, t => amplitudesToCouplings(t, rangeLength));
+        // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
+        let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
+        let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
+        let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+        t.shadeAndTrade(
+                ket => CircuitShaders.controlSelect(controls, ket),
+            WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
+        t.shadeAndTrade(ket => GateShaders.cycleAllBits(ket, lostHeadQubits-rangeOffset));
 
-    while (n > 2*rangeLength) {
-        n--;
-        result.addStepVec2(n, t => Shaders.sumFoldVec2(t));
-    }
+        // Expand amplitudes into couplings.
+        let n = qubitCount - lostQubits + rangeLength;
+        t.shadeAndTrade(e => amplitudesToCouplings(e, rangeLength), WglTexturePool.takeVec2Tex(n));
 
-    result.addStepVec4(2*rangeLength, Shaders.vec2AsVec4);
+        // Sum up the density matrices from all combinations of the unincluded qubits' values.
+        while (n > 2*rangeLength) {
+            n--;
+            t.shadeHalveAndTrade(Shaders.sumFoldVec2);
+        }
+
+        return new WglConfiguredShader(dst => t.shadeAndTrade(Shaders.vec2AsVec4, dst));
+    });
 
     return result;
 }

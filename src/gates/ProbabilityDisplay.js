@@ -14,6 +14,7 @@ import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {WglTextureTrader, WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 /**
  * @param {!WglTexture} controlTexture
@@ -23,17 +24,22 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
  */
 function makeProbabilitySpanPipeline(controlTexture, rangeOffset, rangeLength) {
     let result = new ShaderPipeline();
-    let n = Math.round(Math.log2(controlTexture.width * controlTexture.height));
 
-    result.addStepVec2(n, t => amplitudesToProbabilities(t, controlTexture));
-    result.addStepVec2(n, t => GateShaders.cycleAllBits(t, -rangeOffset));
+    result.addStepVec4(rangeLength, inp => {
+        let t = new WglTextureTrader(inp);
+        t.dontDeallocCurrentTexture();
 
-    while (n > rangeLength) {
-        n -= 1;
-        result.addStepVec2(n, t => Shaders.sumFoldVec2(t));
-    }
+        t.shadeAndTrade(e => amplitudesToProbabilities(e, controlTexture));
+        t.shadeAndTrade(e => GateShaders.cycleAllBits(e, -rangeOffset));
 
-    result.addStepVec4(rangeLength, Shaders.vec2AsVec4);
+        let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
+        while (n > rangeLength) {
+            n -= 1;
+            t.shadeHalveAndTrade(Shaders.sumFoldVec2);
+        }
+
+        return new WglConfiguredShader(dst => t.shadeAndTrade(Shaders.vec2AsVec4, dst));
+    });
 
     return result;
 }

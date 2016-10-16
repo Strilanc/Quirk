@@ -34,8 +34,12 @@ function makeAmplitudeSpanPipeline(controls, rangeOffset, rangeLength) {
         t.dontDeallocCurrentTexture();
 
         // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-        t.shadeAndTrade(ket => CircuitShaders.controlSelect(controls, ket));
+        let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inp);
+        let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
         let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
+        t.shadeAndTrade(
+            ket => CircuitShaders.controlSelect(controls, ket),
+            WglTexturePool.takeVec2Tex(startingQubits - lostQubits));
         t.shadeAndTrade(ket => GateShaders.cycleAllBits(ket, lostHeadQubits-rangeOffset));
         let ketJustAfterCycle = t.dontDeallocCurrentTexture();
 
