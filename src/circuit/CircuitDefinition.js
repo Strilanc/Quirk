@@ -658,10 +658,19 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     colHasEnabledSwapGate(col) {
-        let pts = Seq.range(this.numWires).
-            map(row => new Point(col, row)).
-            filter(pt => this.gateInSlot(pt.x, pt.y) === Gates.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt.x, pt.y) !== undefined) && pts.count() === 2;
+        if (col < 0 || col >= this.columns.length) {
+            return false;
+        }
+        let count = 0;
+        for (let row = 0; row < this.numWires; row++) {
+            if (this.gateInSlot(col, row) === Gates.Special.SwapHalf) {
+                if (this.gateAtLocIsDisabledReason(col, row) !== undefined) {
+                    return false;
+                }
+                count++;
+            }
+        }
+        return count === 2;
     }
 
     /**
@@ -672,7 +681,12 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return false;
         }
-        return seq(this.columns[col].gates).any(e => e !== undefined && e.affectsOtherWires());
+        for (let gate of this.columns[col].gates) {
+            if (gate !== undefined && gate.affectsOtherWires()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -835,12 +849,15 @@ class CircuitDefinition {
         }
 
         let col = this.columns[colIndex];
-        return Seq.range(col.gates.length).
-            filter(row =>
-                col.gates[row] !== undefined &&
-                col.gates[row].customStatPostProcesser !== undefined &&
-                this.gateAtLocIsDisabledReason(colIndex, row) === undefined).
-            toArray();
+        let result = [];
+        for (let row = 0; row < col.gates.length; row++) {
+            if (col.gates[row] !== undefined &&
+                    col.gates[row].customStatPostProcesser !== undefined &&
+                    this.gateAtLocIsDisabledReason(colIndex, row) === undefined) {
+                result.push(row);
+            }
+        }
+        return result;
     }
 
     /**

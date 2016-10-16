@@ -196,8 +196,7 @@ class GateColumn {
 
         let row = args.outerRow;
         let rangeVals = seq(args.gate.getUnmetContextKeys()).
-            filter(key => key.startsWith("Input Range ")).
-            filter(key => args.context.has(key)).
+            filter(key => key.startsWith("Input Range ") && args.context.has(key)).
             map(key => args.context.get(key)).
             toArray();
 

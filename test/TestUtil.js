@@ -3,6 +3,8 @@ import {describe} from "src/base/Describe.js"
 import {equate} from "src/base/Equate.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {DetailedError} from "src/base/DetailedError.js"
+import {Config} from "src/Config.js"
+Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = true;
 
 /** @type {!int} */
 let assertionSubjectIndexForNextTest = 1;

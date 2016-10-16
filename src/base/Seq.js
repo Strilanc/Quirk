@@ -510,7 +510,13 @@ class Seq {
      * @template T
      */
     sum() {
-        return this.fold((a, e) => a + e, 0);
+        let total = 0;
+        let first = true;
+        for (let e of this._iterable) {
+            total = first ? e : total + e;
+            first = false;
+        }
+        return total;
     }
 
     /**
