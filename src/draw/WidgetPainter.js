@@ -62,6 +62,7 @@ class WidgetPainter {
             return;
         }
 
+        pushRect(new Rect(0, nextY(), 1, 0), pad*2);
         pushRect(painter.printParagraph('As matrix:', new Rect(pad, nextY(), w, 18), new Point(0, 0), 'black', 12), 0);
         let matrixRect = new Rect(pad, nextY(), dispSize, dispSize);
         let matrixDescRect = new Rect(0, matrixRect.y, w - pad, dispSize).skipLeft(matrixRect.right() + pad);
@@ -108,6 +109,7 @@ class WidgetPainter {
             return;
         }
 
+        pushRect(new Rect(0, nextY(), 1, 0), pad*2);
         pushRect(painter.printParagraph(
             'As rotation:',
             new Rect(pad, nextY(), w, 18),
@@ -160,6 +162,7 @@ class WidgetPainter {
 
         let weight = nestedCircuit.gateWeight();
 
+        pushRect(new Rect(0, nextY(), 1, 0), pad*2);
         pushRect(painter.printParagraph(
             `As circuit (gate weight = ${weight}):`,
             new Rect(pad, nextY(), w, 18),
@@ -197,8 +200,6 @@ class WidgetPainter {
         if (gate.definitelyHasNoEffect()) {
             return {maxX, maxY};
         }
-
-        pushRect(new Rect(0, maxY, 1, 0), pad*3);
 
         WidgetPainter._paintGateTooltip_matrix(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
         WidgetPainter._paintGateTooltip_rotation(painter, gate, matrix, pad, dispSize, w, pushRect, () => maxY);
