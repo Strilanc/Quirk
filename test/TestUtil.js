@@ -364,9 +364,9 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     webGlTest(name, method) {
-        let wrappedMethod = status => {
+        let wrappedMethod = (caseName, status) => {
             if (!isWebGLSupportPresent()) {
-                console.warn(`Skipping ${this.name}.${name} due to lack of WebGL support.`);
+                console.warn(`Skipping ${this.name}.${caseName} due to lack of WebGL support.`);
                 assertThat(undefined); // Cancel 'no assertion' warning.
                 return;
             }
@@ -389,7 +389,7 @@ export class Suite {
                 changeShaderCoder(SHADER_CODER_BYTES);
                 isFirstByteCoderWebGlTest = false;
             }
-            return wrappedMethod(...args)
+            return wrappedMethod(name + '[byte-coder]', ...args)
         }, false);
 
         this.test(name + '[float-coder]', (...args) => {
@@ -397,7 +397,7 @@ export class Suite {
                 changeShaderCoder(SHADER_CODER_FLOATS);
                 isFirstFloatCoderWebGlTest = false;
             }
-            return wrappedMethod(...args);
+            return wrappedMethod(name + '[float-coder]', ...args);
         }, true);
     }
 
