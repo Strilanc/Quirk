@@ -1,5 +1,5 @@
 import {assertThat} from "test/TestUtil.js"
-import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
@@ -7,7 +7,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -18,33 +18,33 @@ if (USE_SIMPLE_VALUES) {
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
+ * @param {function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
-function assertThatRandomTestOfCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => args.stateTrader.shadeAndTrade(_ => shaderFunc(args)),
+function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => ctx.applyOperation(shaderFunc),
         matrix,
         repeats);
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : void} operation
+ * @param {function(!CircuitEvalContext) : void} updateAction
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */
-function assertThatRandomTestOfCircuitOperationActsLikeMatrix(operation, matrix, repeats=5) {
+function assertThatCircuitUpdateActsLikeMatrix(updateAction, matrix, repeats=5) {
     for (let i = 0; i < repeats; i++) {
-        assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix);
+        assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix);
     }
 }
 
 /**
- * @param {function(!CircuitEvalArgs) : void} operation
+ * @param {function(!CircuitEvalContext) : void} updateAction
  * @param {!Matrix} matrix
  */
-function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, matrix) {
+function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
     let qubitSpan = Math.round(Math.log2(matrix.height()));
     let extraWires = Math.floor(Math.random()*5);
     let time = Math.random();
@@ -70,7 +70,7 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
     let tex = Shaders.vec2Data(inVec.rawBuffer()).toVec2Texture(wireCount);
     let trader = new WglTextureTrader(tex);
     let controlsTexture = CircuitShaders.controlMask(controls).toBoolTexture(wireCount);
-    let args = new CircuitEvalArgs(
+    let ctx = new CircuitEvalContext(
         time,
         qubitIndex,
         wireCount,
@@ -78,19 +78,19 @@ function assertThatRandomTestOfCircuitOperationActsLikeMatrix_single(operation, 
         controlsTexture,
         trader,
         new Map());
-    operation(args);
+    updateAction(ctx);
 
-    let outData = workingShaderCoder.unpackVec2Data(trader.currentTexture.readPixels());
+    let outData = currentShaderCoder().unpackVec2Data(trader.currentTexture.readPixels());
     let outVec = new Matrix(1, ampCount, outData);
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
-    assertThat(outVec).withInfo({matrix, inVec, args}).isApproximatelyEqualTo(expectedOutVec, 0.005);
+    assertThat(outVec).withInfo({matrix, inVec, ctx}).isApproximatelyEqualTo(expectedOutVec, 0.005);
     trader.currentTexture.deallocByDepositingInPool();
     controlsTexture.deallocByDepositingInPool();
 }
 
 export {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix,
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix
+    assertThatCircuitUpdateActsLikeMatrix,
+    assertThatCircuitShaderActsLikeMatrix
 }

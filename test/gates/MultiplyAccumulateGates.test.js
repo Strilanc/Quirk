@@ -1,7 +1,7 @@
 import {Suite} from "test/TestUtil.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {InputGates} from "src/gates/InputGates.js"
-import {assertThatRandomTestOfCircuitOperationActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
@@ -11,9 +11,9 @@ import {Matrix} from "src/math/Matrix.js"
 let suite = new Suite("MultiplyAccumulateGates");
 
 suite.webGlTest('plus_AB', () => {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(5, [new GateColumn([
                 MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
                 undefined,
@@ -30,9 +30,9 @@ suite.webGlTest('plus_AB', () => {
 });
 
 suite.webGlTest('minus_AB', () => {
-    assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-        args => advanceStateWithCircuit(
-            args,
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => advanceStateWithCircuit(
+            ctx,
             new CircuitDefinition(5, [new GateColumn([
                 InputGates.InputAFamily.ofSize(2),
                 undefined,

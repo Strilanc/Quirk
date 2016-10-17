@@ -8,7 +8,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {workingShaderCoder, decodeBytesIntoFloats, SHADER_CODER_BYTES} from "src/webgl/ShaderCoders.js"
+import {outputShaderCoder, currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -22,7 +22,7 @@ class KetTextureUtil {}
  * @returns {!Array.<!Float32Array>}
  */
 KetTextureUtil.mergedReadFloats = textures => {
-    let len = tex => tex.width === 0 ? 0 : 1 << workingShaderCoder.vec4ArrayPowerSizeOfTexture(tex);
+    let len = tex => tex.width === 0 ? 0 : 1 << currentShaderCoder().vec4ArrayPowerSizeOfTexture(tex);
     let totalPowerSize = Math.round(Math.log2(Util.ceilingPowerOf2(
         seq(textures).map(len).sum())));
 
@@ -36,11 +36,16 @@ KetTextureUtil.mergedReadFloats = textures => {
     }
 
     let combinedPixels;
-    if (Config.ENCODE_FLOATS_AS_BYTES_WHEN_READING_PIXELS && workingShaderCoder !== SHADER_CODER_BYTES) {
-        trader.shadeAndTrade(Shaders.encodeFloatsIntoBytes, WglTexturePool.takeRawByteTex(totalPowerSize + 2));
-        combinedPixels = SHADER_CODER_BYTES.unpackVec4Data(trader.currentTexture.readPixels(), totalPowerSize);
+    if (outputShaderCoder() !== currentShaderCoder()) {
+        let sizePower = currentShaderCoder().vec4ArrayPowerSizeOfTexture(trader.currentTexture);
+        let adjustedSizePower = sizePower + outputShaderCoder().vec4PowerSizeOverhead;
+
+        trader.shadeAndTrade(
+            Shaders.convertVec4CodingForOutput,
+            WglTexturePool.take(adjustedSizePower, outputShaderCoder().vecPixelType));
+        combinedPixels = outputShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
     } else {
-        combinedPixels = workingShaderCoder.unpackVec4Data(trader.currentTexture.readPixels());
+        combinedPixels = currentShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
     }
     trader.currentTexture.deallocByDepositingInPool("trader.currentTexture in mergedReadFloats");
 
@@ -84,13 +89,13 @@ KetTextureUtil.pixelsToAmplitudes = (pixels, unity) => {
  */
 KetTextureUtil.superpositionToQubitDensities = (stateTex, controls, keptBitMask) => {
     if (keptBitMask === 0) {
-        return new WglTexture(0, 0, workingShaderCoder.vecPixelType);
+        return new WglTexture(0, 0, currentShaderCoder().vecPixelType);
     }
     let hasControls = !controls.isEqualTo(Controls.NONE);
     let trader = new WglTextureTrader(stateTex);
     trader.dontDeallocCurrentTexture();
     if (hasControls) {
-        let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateTex) - controls.includedBitCount();
+        let n = currentShaderCoder().vec2ArrayPowerSizeOfTexture(stateTex) - controls.includedBitCount();
         trader.shadeAndTrade(t => CircuitShaders.controlSelect(controls, t), WglTexturePool.takeVec2Tex(n));
     }
 
@@ -118,7 +123,7 @@ function _superpositionTexToUnsummedQubitDensitiesTex(trader, keptBitMask) {
     if (keptBitMask === 0) {
         throw new DetailedError("keptBitMask === 0", {trader, keptBitMask});
     }
-    let startingQubitCount = workingShaderCoder.vec2ArrayPowerSizeOfTexture(trader.currentTexture);
+    let startingQubitCount = currentShaderCoder().vec2ArrayPowerSizeOfTexture(trader.currentTexture);
     let remainingQubitCount = Util.numberOfSetBits(keptBitMask);
     trader.shadeAndTrade(
         tex => CircuitShaders.qubitDensities(tex, keptBitMask),
@@ -133,7 +138,7 @@ function _superpositionTexToUnsummedQubitDensitiesTex(trader, keptBitMask) {
 function _sumDownVec4(trader, outCount) {
     // When the number of kept qubits isn't a power of 2, we have some extra junk results interleaved to ignore.
     let outputSizePower = Math.ceil(Math.log2(Math.max(1, outCount)));
-    let curSizePower = workingShaderCoder.vec4ArrayPowerSizeOfTexture(trader.currentTexture);
+    let curSizePower = currentShaderCoder().vec4ArrayPowerSizeOfTexture(trader.currentTexture);
 
     while (curSizePower > outputSizePower) {
         trader.shadeHalveAndTrade(Shaders.sumFoldVec4);

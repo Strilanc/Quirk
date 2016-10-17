@@ -95,7 +95,7 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKno
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader(args => incrementShaderFunc(args, span, Math.floor(args.time*(1<<span)))));
+    withCustomShader(ctx => incrementShaderFunc(ctx, span, Math.floor(ctx.time*(1<<span)))));
 
 CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "-⌈t⌉",
@@ -108,7 +108,7 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutK
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader(args => incrementShaderFunc(args, span, -Math.floor(args.time*(1<<span)))));
+    withCustomShader(ctx => incrementShaderFunc(ctx, span, -Math.floor(ctx.time*(1<<span)))));
 
 CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↟⌈t⌉",
@@ -121,7 +121,7 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
     withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader(args => cycleBits(args, span, -Math.floor(args.time*span))));
+    withCustomShader(ctx => cycleBits(ctx, span, -Math.floor(ctx.time*span))));
 
 CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↡⌈t⌉",
@@ -134,7 +134,7 @@ CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.
     withCustomDrawer(STAIRCASE_DRAWER(0, span)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader(args => cycleBits(args, span, Math.floor(args.time*span))));
+    withCustomShader(ctx => cycleBits(ctx, span, Math.floor(ctx.time*span))));
 
 CountingGates.all = [
     CountingGates.ClockPulseGate,

@@ -9,7 +9,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 
 /**
  * Defines operations used by gates to operate on textures representing superpositions.
@@ -19,22 +24,21 @@ class GateShaders {}
 /**
  * Renders the result of applying a custom controlled single-qubit operation to a superposition.
  *
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!Matrix} matrix
- * @returns {!WglConfiguredShader}
  */
-let singleQubitOperationFunc = (args, matrix) => {
+function _applySingleQubitOperationFunc(ctx, matrix) {
     if (matrix.width() !== 2 || matrix.height() !== 2) {
         throw new DetailedError("Not a single-qubit operation.", {matrix});
     }
     let [ar, ai, br, bi, cr, ci, dr, di] = matrix.rawBuffer();
-    return CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
-        ...ketArgs(args),
+    ctx.applyOperation(CUSTOM_SINGLE_QUBIT_OPERATION_SHADER.withArgs(
+        ...ketArgs(ctx),
         WglArg.vec2("a", ar, ai),
         WglArg.vec2("b", br, bi),
         WglArg.vec2("c", cr, ci),
-        WglArg.vec2("d", dr, di));
-};
+        WglArg.vec2("d", dr, di)));
+}
 
 const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = ketShader(
     'uniform vec2 a, b, c, d;',
@@ -67,24 +71,24 @@ const matrix_operation_shaders = [
 ];
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!Matrix} matrix
  * @returns {void}
  */
-GateShaders.applyMatrixOperation = (args, matrix) => {
+GateShaders.applyMatrixOperation = (ctx, matrix) => {
     if (matrix.width() === 2) {
-        args.stateTrader.shadeAndTrade(_ => singleQubitOperationFunc(args, matrix));
+        _applySingleQubitOperationFunc(ctx, matrix);
         return;
     }
     if (!Util.isPowerOf2(matrix.width())) {
-        throw new DetailedError("Matrix size isn't a power of 2.", {args, matrix});
+        throw new DetailedError("Matrix size isn't a power of 2.", {ctx, matrix});
     }
     if (matrix.width() > 1 << 4) {
-        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {args, matrix});
+        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {ctx, matrix});
     }
     let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
-    args.stateTrader.shadeAndTrade(_ => shader.withArgs(
-        ...ketArgs(args),
+    ctx.applyOperation(shader.withArgs(
+        ...ketArgs(ctx),
         WglArg.float_array("coefs", matrix.rawBuffer())));
 };
 
@@ -94,14 +98,14 @@ GateShaders.applyMatrixOperation = (args, matrix) => {
  * @returns {!WglConfiguredShader}
  */
 GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
-    let size = workingShaderCoder.vec2ArrayPowerSizeOfTexture(inputTexture);
+    let size = currentShaderCoder().vec2ArrayPowerSizeOfTexture(inputTexture);
     return CYCLE_ALL_SHADER(
         inputTexture,
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));
 };
 const CYCLE_ALL_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec2Input('input')],
-    workingShaderCoder.vec2Output,
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
     `
     uniform float shiftAmount;
 

@@ -12,7 +12,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -30,13 +35,13 @@ function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLe
     trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture));
     trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, -rangeOffset));
 
-    let n = workingShaderCoder.vec2ArrayPowerSizeOfTexture(ketTexture);
+    let n = currentShaderCoder().vec2ArrayPowerSizeOfTexture(ketTexture);
     while (n > rangeLength) {
         n -= 1;
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
     }
 
-    trader.shadeAndTrade(Shaders.vec2AsVec4, WglTexturePool.takeVec4Tex(rangeLength));
+    currentShaderCoder().vec2TradePack(trader);
     return trader.currentTexture;
 }
 
@@ -49,10 +54,10 @@ let amplitudesToProbabilities = (inputTexture, controlTex) =>
     AMPLITUDES_TO_PROBABILITIES_SHADER(inputTexture, controlTex);
 const AMPLITUDES_TO_PROBABILITIES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
-        workingShaderCoder.vec2Input('input'),
-        workingShaderCoder.boolInput('control')
+        Inputs.vec2('input'),
+        Inputs.bool('control')
     ],
-    workingShaderCoder.vec2Output,
+    Outputs.vec2(),
     `vec2 outputFor(float k) {
         vec2 amp = read_input(k);
         return vec2(dot(amp, amp) * read_control(k), 0.0);
@@ -69,13 +74,13 @@ function probabilityPixelsToColumnVector(pixels) {
         unity += e;
     }
     if (isNaN(unity) || unity < 0.000001) {
-        return Matrix.zero(1, pixels.length >> 2).times(NaN);
+        return Matrix.zero(1, pixels.length >> 1).times(NaN);
     }
-    let ps = new Float32Array(pixels.length >> 1);
-    for (let i = 0; i < ps.length; i++) {
-        ps[i * 2] = pixels[i * 4] / unity;
+    let ps = new Float32Array(pixels.length);
+    for (let i = 0; i < ps.length; i += 2) {
+        ps[i] = pixels[i] / unity;
     }
-    return new Matrix(1, pixels.length >> 2, ps);
+    return new Matrix(1, pixels.length >> 1, ps);
 }
 
 function _paintMultiProbabilityDisplay_grid(args) {
@@ -220,8 +225,8 @@ function multiChanceGateMaker(span) {
         "Shows chances of outcomes if a measurement was performed.\nUse controls to see conditional probabilities.").
         withHeight(span).
         withSerializedId("Chance" + span).
-        withCustomStatTexturesMaker(args =>
-            probabilityStatTexture(args.stateTrader.currentTexture, args.controlsTexture, args.row, span)).
+        withCustomStatTexturesMaker(ctx =>
+            probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
         withCustomStatPostProcessor(probabilityPixelsToColumnVector).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

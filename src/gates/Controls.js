@@ -91,22 +91,22 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     markedAsControl(true).
     withSerializedId("⊗").
     markedAsStable().
-    withCustomBeforeOperation(args => GateShaders.applyMatrixOperation(args, x2)).
+    withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
     withCustomOperation(() => {}).
-    withCustomAfterOperation(args => GateShaders.applyMatrixOperation(args, x1)).
-    withCustomDrawer(args => {
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintBackground(args);
-            GatePainting.paintOutline(args);
+    withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
+    withCustomDrawer(ctx => {
+        if (ctx.isInToolbox || ctx.isHighlighted) {
+            GatePainting.paintBackground(ctx);
+            GatePainting.paintOutline(ctx);
         }
-        let p = args.rect.center();
-        args.painter.fillCircle(p, 5);
-        args.painter.strokeCircle(p, 5);
+        let p = ctx.rect.center();
+        ctx.painter.fillCircle(p, 5);
+        ctx.painter.strokeCircle(p, 5);
         let r = 5*Math.sqrt(0.5);
-        args.painter.strokeLine(p.offsetBy(+r, +r), p.offsetBy(-r, -r));
-        args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
+        ctx.painter.strokeLine(p.offsetBy(+r, +r), p.offsetBy(-r, -r));
+        ctx.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
+        if (ctx.isInToolbox || ctx.isHighlighted) {
+            GatePainting.paintOutline(ctx);
         }
     });
 Controls.AntiCrossControl = Gate.withoutKnownMatrix(
@@ -117,9 +117,9 @@ Controls.AntiCrossControl = Gate.withoutKnownMatrix(
     markedAsControl(true).
     withSerializedId("(/)").
     markedAsStable().
-    withCustomBeforeOperation(args => GateShaders.applyMatrixOperation(args, x1)).
+    withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
     withCustomOperation(() => {}).
-    withCustomAfterOperation(args => GateShaders.applyMatrixOperation(args, x2)).
+    withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
     withCustomDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);

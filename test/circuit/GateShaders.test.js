@@ -1,7 +1,7 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
-import {assertThatRandomTestOfCircuitOperationActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
@@ -30,8 +30,8 @@ suite.webGlTest("matrixOperation", () => {
     for (let size = 1; size < 5; size++) {
         let d = 1<<size;
         let matrix = Matrix.generate(d, d, () => new Complex(Math.random() - 0.5, Math.random() - 0.5));
-        assertThatRandomTestOfCircuitOperationActsLikeMatrix(
-            args => GateShaders.applyMatrixOperation(args, matrix),
+        assertThatCircuitUpdateActsLikeMatrix(
+            ctx => GateShaders.applyMatrixOperation(ctx, matrix),
             matrix,
             repeats);
     }

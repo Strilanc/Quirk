@@ -1,14 +1,14 @@
 import {Matrix} from "src/math/Matrix.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 
-/** @type {undefined|!ShaderValueCoder} */
-let workingShaderCoder = undefined;
+/** @returns {undefined|!ShaderValueCoder} */
+let currentShaderCoder = undefined;
 let WglTexturePool;
 /**
- * @param {!ShaderValueCoder} futureWorkingShaderCoder
+ * @param {!ShaderValueCoder} newCurrentShaderCoder
  */
-function provideWorkingShaderCoderToWglConfiguredShader(futureWorkingShaderCoder) {
-    workingShaderCoder = futureWorkingShaderCoder;
+function provideWorkingShaderCoderToWglConfiguredShader(newCurrentShaderCoder) {
+    currentShaderCoder = newCurrentShaderCoder;
 }
 /**
  * @param {!WglTexturePool} pool
@@ -129,7 +129,7 @@ class WglConfiguredShader {
      * @returns {!Float32Array}
      */
     readVec2Outputs(sizePower) {
-        return workingShaderCoder.unpackVec2Data(
+        return currentShaderCoder().unpackVec2Data(
             this._renderReadDealloc(WglTexturePool.takeVec2Tex(sizePower)))
     }
 
@@ -146,7 +146,7 @@ class WglConfiguredShader {
      * @returns {!Float32Array}
      */
     readVec4Outputs(sizePower) {
-        return workingShaderCoder.unpackVec4Data(
+        return currentShaderCoder().unpackVec4Data(
             this._renderReadDealloc(WglTexturePool.takeVec4Tex(sizePower)))
     }
 

@@ -16,7 +16,12 @@ import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {
+    Inputs,
+    Outputs,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode
+} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -32,7 +37,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLeng
     trader.dontDeallocCurrentTexture();
 
     // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-    let startingQubits = workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateKet);
+    let startingQubits = currentShaderCoder().vec2ArrayPowerSizeOfTexture(stateKet);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     let involvedQubits = startingQubits - lostQubits;
@@ -140,8 +145,8 @@ function amplitudesToPolarKets(input) {
     return AMPLITUDES_TO_POLAR_KETS_SHADER(input);
 }
 const AMPLITUDES_TO_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec2Input('input')],
-    workingShaderCoder.vec4Output,
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         vec2 ri = read_input(k);
         float mag = dot(ri, ri);
@@ -163,8 +168,8 @@ function spreadLengthAcrossPolarKets(textureTrader, includedQubitCount) {
     }
 }
 const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     uniform float bit;
 
@@ -188,7 +193,7 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
  * @returns {void}
  */
 function reduceToLongestPolarKet(textureTrader, includedQubitCount) {
-    let curQubitCount = workingShaderCoder.vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
     while (curQubitCount > includedQubitCount) {
         curQubitCount -= 1;
         textureTrader.shadeHalveAndTrade(
@@ -198,8 +203,8 @@ function reduceToLongestPolarKet(textureTrader, includedQubitCount) {
     }
 }
 const FOLD_REPRESENTATIVE_POLAR_KET_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     uniform float offset;
 
@@ -222,8 +227,8 @@ function convertAwayFromPolar(input) {
     return CONVERT_AWAY_FROM_POLAR_SHADER(input);
 }
 const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     vec4 outputFor(float k) {
         vec4 polar = read_input(k);
@@ -239,10 +244,10 @@ const CONVERT_AWAY_FROM_POLAR_SHADER = makePseudoShaderWithInputsAndOutputAndCod
 let toRatiosVsRepresentative = (ket, rep) => TO_RATIOS_VS_REPRESENTATIVE_SHADER(ket, rep);
 const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [
-        workingShaderCoder.vec2Input('ket'),
-        workingShaderCoder.vec4Input('rep')
+        Inputs.vec2('ket'),
+        Inputs.vec4('rep')
     ],
-    workingShaderCoder.vec4Output,
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         return vec4(read_ket(k), read_rep(mod(k, len_rep())).xy);
     }`);
@@ -253,7 +258,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
  * @returns {void}
  */
 function foldConsistentRatios(textureTrader, includedQubitCount) {
-    let curQubitCount = workingShaderCoder.vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
     let remainingIncludedQubitCount = includedQubitCount;
     while (remainingIncludedQubitCount > 0) {
         remainingIncludedQubitCount -= 1;
@@ -265,8 +270,8 @@ function foldConsistentRatios(textureTrader, includedQubitCount) {
     }
 }
 const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `
     uniform float bit;
 
@@ -300,15 +305,15 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
  * @param {!WglTextureTrader} textureTrader
  */
 function signallingSumAll(textureTrader) {
-    let curQubitCount = workingShaderCoder.vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
     while (curQubitCount > 0) {
         curQubitCount -= 1;
         textureTrader.shadeHalveAndTrade(SIGNALLING_SUM_SHADER_VEC4);
     }
 }
 const SIGNALLING_SUM_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [workingShaderCoder.vec4Input('input')],
-    workingShaderCoder.vec4Output,
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
     `vec4 outputFor(float k) {
         vec4 a = read_input(k);
         vec4 b = read_input(k + len_output());
@@ -416,8 +421,8 @@ function amplitudeDisplayMaker(span) {
         withHeight(span).
         withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
         withSerializedId("Amps" + span).
-        withCustomStatTexturesMaker(args =>
-            amplitudeDisplayStatTextures(args.stateTrader.currentTexture, args.controls, args.row, span)).
+        withCustomStatTexturesMaker(ctx =>
+            amplitudeDisplayStatTextures(ctx.stateTrader.currentTexture, ctx.controls, ctx.row, span)).
         withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
         withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

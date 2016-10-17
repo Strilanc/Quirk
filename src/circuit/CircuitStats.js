@@ -1,5 +1,5 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Config} from "src/Config.js"
@@ -16,7 +16,7 @@ import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
-import {workingShaderCoder} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -229,7 +229,7 @@ class CircuitStats {
         let stateTrader = new WglTextureTrader(CircuitShaders.classicalState(0).toVec2Texture(numWires));
         let controlTex = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(numWires);
         let {colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
-            new CircuitEvalArgs(
+            new CircuitEvalContext(
                 time,
                 0,
                 numWires,
@@ -240,9 +240,7 @@ class CircuitStats {
             circuitDefinition,
             true);
         controlTex.deallocByDepositingInPool("controlTex in _fromCircuitAtTime_noFallback");
-        stateTrader.shadeAndTrade(
-            tex => Shaders.vec2AsVec4(tex),
-            WglTexturePool.takeVec4Tex(workingShaderCoder.vec2ArrayPowerSizeOfTexture(stateTrader.currentTexture)));
+        currentShaderCoder().vec2TradePack(stateTrader);
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({

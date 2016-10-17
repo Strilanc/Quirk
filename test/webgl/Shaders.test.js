@@ -1,7 +1,8 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {
-    workingShaderCoder,
+    Outputs,
+    Inputs,
     makePseudoShaderWithInputsAndOutputAndCode,
     decodeBytesIntoFloats
 } from "src/webgl/ShaderCoders.js"
@@ -75,7 +76,7 @@ suite.webGlTest("data", () => {
 });
 
 suite.webGlTest("sumFold", () => {
-    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 2.0), floor(k/2.0));
         }
@@ -88,7 +89,7 @@ suite.webGlTest("sumFold", () => {
     ]));
     coords.deallocByDepositingInPool();
 
-    let solid = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec4Output, `
+    let solid = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec4(), `
         vec4 outputFor(float k) {
             return vec4(2.0, 3.0, 5.0, 7.0);
         }

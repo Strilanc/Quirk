@@ -1,5 +1,5 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {assertThatRandomTestOfCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {assertThatCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 
 import {Complex} from "src/math/Complex.js"
@@ -10,7 +10,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {Outputs, Inputs, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("CircuitShaders");
 
@@ -105,7 +105,7 @@ suite.webGlTest("controlMask_largeReference", () => {
 });
 
 suite.webGlTest("controlSelect_simple", () => {
-    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 4.0), floor(k/4.0));
         }
@@ -171,7 +171,7 @@ suite.webGlTest("controlSelect_simple", () => {
 });
 
 suite.webGlTest("controlSelect_multiple", () => {
-    let coords = makePseudoShaderWithInputsAndOutputAndCode([], workingShaderCoder.vec2Output, `
+    let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 4.0), floor(k/4.0));
         }
@@ -333,16 +333,16 @@ suite.webGlTest("qubitDensities", () => {
 });
 
 suite.webGlTest("swap", () => {
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => CircuitShaders.swap(args, args.row + 1),
+    assertThatCircuitShaderActsLikeMatrix(
+        ctx => CircuitShaders.swap(ctx, ctx.row + 1),
         Matrix.square(
             1,0,0,0,
             0,0,1,0,
             0,1,0,0,
             0,0,0,1));
 
-    assertThatRandomTestOfCircuitShaderActsLikeMatrix(
-        args => CircuitShaders.swap(args, args.row + 2),
+    assertThatCircuitShaderActsLikeMatrix(
+        ctx => CircuitShaders.swap(ctx, ctx.row + 2),
         Matrix.square(
             1,0,0,0,0,0,0,0,
             0,0,0,0,1,0,0,0,

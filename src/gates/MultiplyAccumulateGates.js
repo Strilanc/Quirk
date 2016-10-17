@@ -26,7 +26,7 @@ const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransi
 });
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} span
  * @param {!int} srcIndex1
  * @param {!int} srcSpan1
@@ -36,7 +36,7 @@ const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransi
  * @returns {!WglConfiguredShader}
  */
 function multiplyAccumulate(
-        args,
+        ctx,
         span,
         srcIndex1,
         srcSpan1,
@@ -44,7 +44,7 @@ function multiplyAccumulate(
         srcSpan2,
         scaleFactor) {
     return MULTIPLY_ACCUMULATE_SHADER.withArgs(
-        ...ketArgs(args, span),
+        ...ketArgs(ctx, span),
         WglArg.float("srcOffset1", 1 << srcIndex1),
         WglArg.float("srcSpan1", 1 << srcSpan1),
         WglArg.float("srcOffset2", 1 << srcIndex2),
@@ -71,14 +71,14 @@ MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(3, 16, span => G
         ["a", "b", "c+=ab"],
         sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader(args => {
+    withCustomShader(ctx => {
         let [a, b, c] = sectionSizes(span);
         return multiplyAccumulate(
-            args.withRow(args.row + a + b),
+            ctx.withRow(ctx.row + a + b),
             c,
-            args.row,
+            ctx.row,
             a,
-            args.row + a,
+            ctx.row + a,
             b,
             +1)
     }));
@@ -95,14 +95,14 @@ MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(3, 16, span
         ["a", "b", "c-=ab"],
         sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader(args => {
+    withCustomShader(ctx => {
         let [a, b, c] = sectionSizes(span);
         return multiplyAccumulate(
-            args.withRow(args.row + a + b),
+            ctx.withRow(ctx.row + a + b),
             c,
-            args.row,
+            ctx.row,
             a,
-            args.row + a,
+            ctx.row + a,
             b,
             -1)
     }));
@@ -116,11 +116,11 @@ MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.generateFamily(1, 16, spa
     withSerializedId("+=AB" + span).
     withHeight(span).
     withRequiredContextKeys('Input Range A', 'Input Range B').
-    withCustomShader(args => {
-        let {offset: inputOffsetA, length: inputLengthA} = args.customContextFromGates.get('Input Range A');
-        let {offset: inputOffsetB, length: inputLengthB} = args.customContextFromGates.get('Input Range B');
+    withCustomShader(ctx => {
+        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
+        let {offset: inputOffsetB, length: inputLengthB} = ctx.customContextFromGates.get('Input Range B');
         return multiplyAccumulate(
-            args,
+            ctx,
             span,
             inputOffsetA,
             inputLengthA,
@@ -138,11 +138,11 @@ MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.generateFamily(1, 16
     withSerializedId("-=AB" + span).
     withHeight(span).
     withRequiredContextKeys('Input Range A', 'Input Range B').
-    withCustomShader(args => {
-        let {offset: inputOffsetA, length: inputLengthA} = args.customContextFromGates.get('Input Range A');
-        let {offset: inputOffsetB, length: inputLengthB} = args.customContextFromGates.get('Input Range B');
+    withCustomShader(ctx => {
+        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
+        let {offset: inputOffsetB, length: inputLengthB} = ctx.customContextFromGates.get('Input Range B');
         return multiplyAccumulate(
-            args,
+            ctx,
             span,
             inputOffsetA,
             inputLengthA,

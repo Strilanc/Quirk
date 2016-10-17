@@ -119,6 +119,24 @@ suite.test("fromTextDiagram", () => {
         -|
         -Z
         `)).isEqualTo(new CircuitDefinition(3, [new GateColumn([_, _, _]), new GateColumn([C, _, Z])]));
+
+    let qftFamily = Gates.FourierTransformGates.FourierTransformFamily;
+    let qftMap = new Map([['Q', qftFamily], ['-', undefined], ['/', null]]);
+    assertThat(CircuitDefinition.fromTextDiagram(qftMap, `Q`)).
+        isEqualTo(new CircuitDefinition(1, [new GateColumn([qftFamily.ofSize(1)])]));
+    assertThat(CircuitDefinition.fromTextDiagram(qftMap, `Q
+                                                          -`)).
+        isEqualTo(new CircuitDefinition(2, [new GateColumn([qftFamily.ofSize(1), _])]));
+    assertThat(CircuitDefinition.fromTextDiagram(qftMap, `Q
+                                                          /`)).
+        isEqualTo(new CircuitDefinition(2, [new GateColumn([qftFamily.ofSize(2), _])]));
+    assertThat(CircuitDefinition.fromTextDiagram(qftMap, `QQQ
+                                                          //-
+                                                          /--`)).
+        isEqualTo(new CircuitDefinition(3, [
+            new GateColumn([qftFamily.ofSize(3), _, _]),
+            new GateColumn([qftFamily.ofSize(2), _, _]),
+            new GateColumn([qftFamily.ofSize(1), _, _])]));
 });
 
 suite.test("stableDuration", () => {

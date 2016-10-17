@@ -35,13 +35,13 @@ class Gate {
         this.customDrawer = undefined;
         /** @type {undefined|*} */
         this.tag = undefined;
-        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        /** @type {undefined|!function(!CircuitEvalContext) : void} */
         this.customBeforeOperation = undefined;
-        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        /** @type {undefined|!function(!CircuitEvalContext) : void} */
         this.customOperation = undefined;
-        /** @type {undefined|!function(!CircuitEvalArgs) : void} */
+        /** @type {undefined|!function(!CircuitEvalContext) : void} */
         this.customAfterOperation = undefined;
-        /** @type {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} */
+        /** @type {undefined|!function(!CircuitEvalContext) : !WglTexture|!Array.<!WglTexture>} */
         this.customStatTexturesMaker = undefined;
         /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
         this.customStatPostProcesser = undefined;
@@ -124,7 +124,7 @@ class Gate {
      * @param {!string} blurb
      * @returns {!Gate}
      */
-    static fromKnownMatrix(symbol, matrix, name, blurb) {
+    static fromKnownMatrix(symbol, matrix, name='', blurb='') {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
@@ -395,7 +395,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      */
     withCustomBeforeOperation(customOperation) {
         if (customOperation !== undefined && typeof customOperation !== "function") {
@@ -407,7 +407,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      */
     withCustomAfterOperation(customOperation) {
         if (customOperation !== undefined && typeof customOperation !== "function") {
@@ -419,7 +419,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalArgs) : void} customOperation
+     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      * @returns {!Gate}
      */
     withCustomOperation(customOperation) {
@@ -432,7 +432,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(!CircuitEvalArgs) : !WglConfiguredShader} shaderFunc
+     * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
      * @returns {!Gate}
      */
     withCustomShader(shaderFunc) {
@@ -440,19 +440,19 @@ class Gate {
     }
 
     /**
-     * @param {!Array.<!function(!CircuitEvalArgs) : !WglConfiguredShader>} shaderFuncs
+     * @param {!Array.<!function(!CircuitEvalContext) : !WglConfiguredShader>} shaderFuncs
      * @returns {!Gate}
      */
     withCustomShaders(shaderFuncs) {
-        return this.withCustomOperation(args => {
+        return this.withCustomOperation(ctx => {
             for (let shaderFunc of shaderFuncs) {
-                args.stateTrader.shadeAndTrade(_ => shaderFunc(args));
+                ctx.applyOperation(shaderFunc);
             }
         });
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalArgs) : !WglTexture|!Array.<!WglTexture>} customStatTexturesMaker
+     * @param {undefined|!function(!CircuitEvalContext) : !WglTexture|!Array.<!WglTexture>} customStatTexturesMaker
      * @returns {!Gate}
      */
     withCustomStatTexturesMaker(customStatTexturesMaker) {

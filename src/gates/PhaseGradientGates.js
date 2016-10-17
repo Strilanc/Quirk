@@ -12,14 +12,14 @@ const GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Comp
 const DE_GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Complex.polar(1, -τ*k/(2<<span)));
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {!int} qubitSpan Size of the gate.
  * @param {!number=} factor Scaling factor for the applied phases.
  * @returns {!WglConfiguredShader} A configured shader that renders the output superposition (as a grid of amplitudes).
  */
-function phaseGradient(args, qubitSpan, factor=1) {
+function phaseGradient(ctx, qubitSpan, factor=1) {
     return PHASE_GRADIENT_SHADER.withArgs(
-        ...ketArgs(args, qubitSpan),
+        ...ketArgs(ctx, qubitSpan),
         WglArg.float("factor", factor));
 }
 const PHASE_GRADIENT_SHADER = ketShaderPhase(
@@ -37,7 +37,7 @@ PhaseGradientGates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate
     withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseGradient" + span).
     withHeight(span).
-    withCustomShader(args => phaseGradient(args, span)));
+    withCustomShader(ctx => phaseGradient(ctx, span)));
 
 PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "Z^-#",
@@ -48,7 +48,7 @@ PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Ga
     withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).
     withSerializedId("PhaseUngradient" + span).
     withHeight(span).
-    withCustomShader(args => phaseGradient(args, span, -1)));
+    withCustomShader(ctx => phaseGradient(ctx, span, -1)));
 
 PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseGradientFamily.all,

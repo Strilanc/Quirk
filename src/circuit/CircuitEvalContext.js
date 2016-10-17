@@ -1,14 +1,18 @@
+import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+
 /**
  * Values used by the various gate effects.
+ *
+ * The current state is stored *and updated* via the stateTrader field.
  */
-class CircuitEvalArgs {
+class CircuitEvalContext {
     /**
      * @param {!number} time
      * @param {undefined|!int} qubitRow
      * @param {!int} wireCount
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
-     * @param {undefined|!WglTextureTrader} stateTrader
+     * @param {!WglTextureTrader} stateTrader
      * @param {!Map.<!string, *>} customContextFromGates
      */
     constructor(time,
@@ -31,18 +35,27 @@ class CircuitEvalArgs {
         this.controls = controls;
         /** @type {!WglTexture} */
         this.controlsTexture = controlsTexture;
-        /** @type {undefined|!WglTextureTrader} */
+        /** @type {!WglTextureTrader} */
         this.stateTrader = stateTrader;
         /** @type {!Map.<!string, *>} */
         this.customContextFromGates = customContextFromGates;
     }
 
     /**
-     * @returns {!CircuitEvalArgs}
+     * @param {!WglConfiguredShader|!function(!CircuitEvalContext) : !WglConfiguredShader} operation
+     * @return {void}
+     */
+    applyOperation(operation) {
+        let configuredShader = operation instanceof WglConfiguredShader ? operation : operation(this);
+        this.stateTrader.shadeAndTrade(configuredShader);
+    }
+
+    /**
+     * @returns {!CircuitEvalContext}
      * @private
      */
     _clone() {
-        return new CircuitEvalArgs(
+        return new CircuitEvalContext(
             this.time,
             this.row,
             this.wireCount,
@@ -54,7 +67,7 @@ class CircuitEvalArgs {
 
     /**
      * @param {!int} row
-     * @returns {!CircuitEvalArgs}
+     * @returns {!CircuitEvalContext}
      */
     withRow(row) {
         let r = this._clone();
@@ -63,4 +76,4 @@ class CircuitEvalArgs {
     }
 }
 
-export {CircuitEvalArgs}
+export {CircuitEvalContext}

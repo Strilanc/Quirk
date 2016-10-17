@@ -50,7 +50,7 @@ function tryGateSequence(gates, maxHeight) {
 }
 
 // Try known gates, but in separate tests to avoid blowing the per-test time limit warning.
-let knownGateStripes = 8;
+let knownGateStripes = 16;
 for (let knownGateOffset of Seq.range(knownGateStripes)) {
     suite.webGlTest(`try-known-gates-in-sequence-${knownGateOffset+1}-of-${knownGateStripes}`, () => {
         let stripe = seq(Gates.KnownToSerializer).

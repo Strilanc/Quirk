@@ -39,11 +39,16 @@ const ENSURE_ATTRIBUTES_BOUND_SLOT = new WglMortalValueSlot(() => {
  */
 class WglShader {
     /**
-     * @param {!string} fragmentShaderSource
+     * @param {!string|!function() : !string} fragmentShaderSourceGenerator
      */
-    constructor(fragmentShaderSource) {
-        /** @type {!string} */
-        this.fragmentShaderSource = fragmentShaderSource;
+    constructor(fragmentShaderSourceGenerator) {
+        if (typeof fragmentShaderSourceGenerator === 'string') {
+            let fixedSource = fragmentShaderSourceGenerator;
+            fragmentShaderSourceGenerator = () => fixedSource;
+        }
+
+        /** @type {!function() : !string} */
+        this.fragmentShaderSourceGenerator = fragmentShaderSourceGenerator;
         /** @type {undefined|!WglMortalValueSlot.<!WglCompiledShader>} */
         this._compiledShaderSlot = undefined; // Wait for someone to tell us the parameter names.
     }
@@ -59,7 +64,7 @@ class WglShader {
         if (this._compiledShaderSlot === undefined) {
             let parameterNames = uniformArguments.map(e => e.name);
             this._compiledShaderSlot = new WglMortalValueSlot(
-                () => new WglCompiledShader(this.fragmentShaderSource, parameterNames),
+                () => new WglCompiledShader(this.fragmentShaderSourceGenerator(), parameterNames),
                 compiledShader => compiledShader.free());
         }
 
@@ -89,8 +94,14 @@ class WglShader {
         });
     }
 
+    ensureDeinitialized() {
+        if (this._compiledShaderSlot !== undefined) {
+            this._compiledShaderSlot.ensureDeinitialized();
+        }
+    }
+
     toString() {
-        return `WglShader(fragmentShaderSource: ${this.fragmentShaderSource})`;
+        return `WglShader(fragmentShaderSource: ${this.fragmentShaderSourceGenerator()})`;
     }
 }
 /**

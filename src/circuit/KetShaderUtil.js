@@ -1,6 +1,6 @@
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
-import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "src/webgl/ShaderCoders.js"
 
 /**
  * @param {!String} head
@@ -10,10 +10,10 @@ import {workingShaderCoder, makePseudoShaderWithInputsAndOutputAndCode} from "sr
  */
 const ketShader = (head, body, span=null) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
     [
-        workingShaderCoder.vec2Input('ketgen_ket'),
-        workingShaderCoder.boolInput('ketgen_control')
+        Inputs.vec2('ketgen_ket'),
+        Inputs.bool('ketgen_control')
     ],
-    workingShaderCoder.vec2Output,
+    Outputs.vec2(),
     `
     uniform float _ketgen_step;
     ${span === null ? 'uniform float span;' : ''}
@@ -62,15 +62,15 @@ const ketShaderPhase = (head, body, span=null) => ketShader(
     span);
 
 /**
- * @param {!CircuitEvalArgs} args
+ * @param {!CircuitEvalContext} ctx
  * @param {undefined|!int=undefined} span
  * @returns {!Array.<!WglArg>}
  */
-function ketArgs(args, span=undefined) {
+function ketArgs(ctx, span=undefined) {
     let result = [
-        args.stateTrader.currentTexture,
-        args.controlsTexture,
-        WglArg.float("_ketgen_step", 1 << args.row)
+        ctx.stateTrader.currentTexture,
+        ctx.controlsTexture,
+        WglArg.float("_ketgen_step", 1 << ctx.row)
     ];
     if (span !== undefined) {
         result.push(WglArg.float('span', 1 << span));

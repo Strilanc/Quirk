@@ -1,5 +1,5 @@
 import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {CircuitEvalArgs} from "src/circuit/CircuitEvalArgs.js"
+import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {universalNot} from "src/gates/Impossible_UniversalNotGate.js"
 
@@ -19,7 +19,7 @@ suite.webGlTest('universalNot', () => {
         let controlTex = CircuitShaders.controlMask(control).toBoolTexture(2);
         let trader = new WglTextureTrader(input);
         trader.dontDeallocCurrentTexture();
-        let args = new CircuitEvalArgs(
+        let ctx = new CircuitEvalContext(
             0,
             index,
             2,
@@ -28,7 +28,7 @@ suite.webGlTest('universalNot', () => {
             trader,
             new Map());
         try {
-            return assertThat(universalNot(args).readVec2Outputs(2));
+            return assertThat(universalNot(ctx).readVec2Outputs(2));
         } finally {
             controlTex.deallocByDepositingInPool();
         }

@@ -7,8 +7,8 @@ let ErrorInjectionGate = Gate.withoutKnownMatrix(
     "Error Injection Gate",
     "Throws an exception during circuit stat computations, for testing error paths.").
     markedAsStable().
-    withCustomShader(args => {
-        throw new DetailedError("Applied an Error Injection Gate", {qubit: args.row});
+    withCustomShader(ctx => {
+        throw new DetailedError("Applied an Error Injection Gate", {qubit: ctx.row});
     }).
     withSerializedId("__error__").
     withCustomDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red'));

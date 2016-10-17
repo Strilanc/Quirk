@@ -229,30 +229,48 @@ class CircuitDefinition {
     /**
      * This mainly exists for writing tests that are understandable.
      * @param {!string} diagram
-     * @param {!Map.<!string, !Gate>} gateMap
+     * @param {!Map.<!string, !Gate|!{ofSize: !function(!int) : !Gate}>} gateMap
      * @returns {!CircuitDefinition}
      */
     static fromTextDiagram(gateMap, diagram) {
         let lines = seq(diagram.split('\n')).map(e => e.trim()).filter(e => e !== '').toArray();
-        let colCount = seq(lines).map(e => e.length).max(0);
+        if (seq(lines.map(e => e.length)).distinct().count() > 1) {
+            throw new DetailedError("Uneven diagram", {diagram});
+        }
+
         let rowCount = lines.length;
+        let colCount = lines.length > 0 ? lines[0].length : 0;
+
+        let spanAt = (col, row) => {
+            for (let d = 1; row + d < lines.length; d++) {
+                if (gateMap.get(lines[row + d][col]) !== null) {
+                    return d;
+                }
+            }
+            return lines.length - row;
+        };
+
         return new CircuitDefinition(
             rowCount,
             Seq.range(colCount).
-                map(c => new GateColumn(lines.map(line => {
-                    if (c >= line.length) {
-                        throw new DetailedError("Uneven diagram", {diagram});
+                map(col => new GateColumn(seq(lines).mapWithIndex((line, row) => {
+                    let char = line[col];
+                    if (!gateMap.has(char)) {
+                        throw new DetailedError("Unspecified gate", {char});
                     }
-                    let g = line[c];
-                    if (!gateMap.has(g)) {
-                        throw new DetailedError("Unspecified gate", {char: g});
+                    let gateOrFamily = gateMap.get(char);
+                    if (gateOrFamily === null || gateOrFamily === undefined) {
+                        return undefined;
                     }
-                    let gate = gateMap.get(g);
-                    if (gate !== undefined && !(gate instanceof Gate)) {
-                        throw new DetailedError("Not a gate", gate);
+                    if (gateOrFamily.hasOwnProperty('ofSize')) {
+                        return gateOrFamily.ofSize(spanAt(col, row));
                     }
-                    return gate;
-                }))).
+                    if (gateOrFamily instanceof Gate) {
+                        return gateOrFamily;
+                    }
+
+                    throw new DetailedError("Not a gate", gateOrFamily);
+                }).toArray())).
                 toArray());
     }
 
@@ -658,10 +676,19 @@ class CircuitDefinition {
      * @returns {boolean}
      */
     colHasEnabledSwapGate(col) {
-        let pts = Seq.range(this.numWires).
-            map(row => new Point(col, row)).
-            filter(pt => this.gateInSlot(pt.x, pt.y) === Gates.Special.SwapHalf);
-        return !pts.any(pt => this.gateAtLocIsDisabledReason(pt.x, pt.y) !== undefined) && pts.count() === 2;
+        if (col < 0 || col >= this.columns.length) {
+            return false;
+        }
+        let count = 0;
+        for (let row = 0; row < this.numWires; row++) {
+            if (this.gateInSlot(col, row) === Gates.Special.SwapHalf) {
+                if (this.gateAtLocIsDisabledReason(col, row) !== undefined) {
+                    return false;
+                }
+                count++;
+            }
+        }
+        return count === 2;
     }
 
     /**
@@ -672,7 +699,12 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return false;
         }
-        return seq(this.columns[col].gates).any(e => e !== undefined && e.affectsOtherWires());
+        for (let gate of this.columns[col].gates) {
+            if (gate !== undefined && gate.affectsOtherWires()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -756,15 +788,15 @@ class CircuitDefinition {
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
+     * @param {!CircuitEvalContext} ctx
      * @return {void}
      */
-    applyMainOperationsInCol(colIndex, args) {
+    applyMainOperationsInCol(colIndex, ctx) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return;
         }
 
-        this._applyOpsInCol(colIndex, args, gate => {
+        this._applyOpsInCol(colIndex, ctx, gate => {
             if (gate.definitelyHasNoEffect() || gate === Gates.Special.SwapHalf) {
                 return undefined;
             }
@@ -773,41 +805,40 @@ class CircuitDefinition {
                 return gate.customOperation;
             }
 
-            return args => GateShaders.applyMatrixOperation(args, gate.knownMatrixAt(args.time));
+            return ctx => GateShaders.applyMatrixOperation(ctx, gate.knownMatrixAt(ctx.time));
         });
 
         for (let [i, j] of this.columns[colIndex].swapPairs()) {
             //noinspection JSUnusedAssignment
-            args.stateTrader.shadeAndTrade(
-                CircuitShaders.swap(args.withRow(i + args.row), j + args.row));
+            ctx.applyOperation(CircuitShaders.swap(ctx.withRow(i + ctx.row), j + ctx.row));
         }
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
+     * @param {!CircuitEvalContext} ctx
      * @return {void}
      */
-    applyBeforeOperationsInCol(colIndex, args) {
-        this._applyOpsInCol(colIndex, args, g => g.customBeforeOperation);
+    applyBeforeOperationsInCol(colIndex, ctx) {
+        this._applyOpsInCol(colIndex, ctx, g => g.customBeforeOperation);
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
+     * @param {!CircuitEvalContext} ctx
      * @return {void}
      */
-    applyAfterOperationsInCol(colIndex, args) {
-        this._applyOpsInCol(colIndex, args, g => g.customAfterOperation);
+    applyAfterOperationsInCol(colIndex, ctx) {
+        this._applyOpsInCol(colIndex, ctx, g => g.customAfterOperation);
     }
 
     /**
      * @param {!int} colIndex
-     * @param {!CircuitEvalArgs} args
-     * @param {!function(!Gate) : !function(!CircuitEvalArgs)} opGetter
+     * @param {!CircuitEvalContext} ctx
+     * @param {!function(!Gate) : !function(!CircuitEvalContext)} opGetter
      * @private
      */
-    _applyOpsInCol(colIndex, args, opGetter) {
+    _applyOpsInCol(colIndex, ctx, opGetter) {
         if (colIndex < 0 || colIndex >= this.columns.length) {
             return;
         }
@@ -821,7 +852,7 @@ class CircuitDefinition {
 
             let op = opGetter(gate);
             if (op !== undefined) {
-                op(args.withRow(args.row + row));
+                op(ctx.withRow(ctx.row + row));
             }
         }
     }
@@ -836,12 +867,15 @@ class CircuitDefinition {
         }
 
         let col = this.columns[colIndex];
-        return Seq.range(col.gates.length).
-            filter(row =>
-                col.gates[row] !== undefined &&
-                col.gates[row].customStatPostProcesser !== undefined &&
-                this.gateAtLocIsDisabledReason(colIndex, row) === undefined).
-            toArray();
+        let result = [];
+        for (let row = 0; row < col.gates.length; row++) {
+            if (col.gates[row] !== undefined &&
+                    col.gates[row].customStatPostProcesser !== undefined &&
+                    this.gateAtLocIsDisabledReason(colIndex, row) === undefined) {
+                result.push(row);
+            }
+        }
+        return result;
     }
 
     /**

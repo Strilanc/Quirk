@@ -3,7 +3,7 @@ import {Format} from "src/base/Format.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {RestartableRng} from "src/base/RestartableRng.js"
-import {Seq} from "src/base/Seq.js"
+import {seq, Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
 
 class Painter {
@@ -242,7 +242,7 @@ class Painter {
         let lines;
         let measures;
         let height;
-        let forcedLines = new Seq(text.split("\n"));
+        let forcedLines = seq(text.split("\n"));
         for (let df = 0; ; df++) { // Note: potential for quadratic behavior.
             fontSize = maxFontSize - df;
             this.ctx.font = fontSize + "px " + fontFamily;
@@ -250,7 +250,7 @@ class Painter {
                 flatMap(line => Util.breakLine(line, area.w, s => this.ctx.measureText(s).width)).
                 toArray();
             measures = lines.map(e => this.ctx.measureText(e));
-            height = new Seq(measures).map(heightOf).sum();
+            height = seq(measures.map(heightOf)).sum();
             if (height <= area.h || fontSize <= 4) {
                 break;
             }
