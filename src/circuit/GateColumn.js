@@ -116,7 +116,7 @@ class GateColumn {
         let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context, isNested);
         let tests = [
             () => g.customDisableReasonFinder(args),
-            () => this._disabledReason_needInput(args),
+            () => GateColumn._disabledReason_inputs(args),
             () => this._disabledReason_controlInside(row),
             () => this._disabledReason_remixing(row, inputMeasureMask),
             () => this._disabledReason_overlappingTags(outerRowOffset, row)
@@ -183,7 +183,25 @@ class GateColumn {
      * @returns {undefined|!string}
      * @private
      */
-    _disabledReason_needInput(args) {
+    static _disabledReason_inputs(args) {
+        let rangeVals = [];
+        for (let key of args.gate.getUnmetContextKeys()) {
+            if (key.startsWith("Input Range ") && args.context.has(key)) {
+                rangeVals.push(args.context.get(key));
+            }
+        }
+
+        return GateColumn._disabledReason_inputs_missing(args) ||
+            GateColumn._disabledReason_inputs_inside(args, rangeVals) ||
+            GateColumn._disabledReason_inputs_coherenceMismatch(args, rangeVals);
+    }
+
+    /**
+     * @param {!GateCheckArgs} args
+     * @returns {undefined|!string}
+     * @private
+     */
+    static _disabledReason_inputs_missing(args) {
         let missing = [];
         for (let key of args.gate.getUnmetContextKeys()) {
             if (!args.context.has(key) && !args.isNested) {
@@ -194,22 +212,43 @@ class GateColumn {
             return "Need\nInput\n " + missing.map(e => e.replace("Input Range ", "")).join(", ");
         }
 
+        return undefined;
+    }
+
+    /**
+     * @param {!GateCheckArgs} args
+     * @param {!Array.<!{offset: !int, length: !int}>} rangeVals
+     * @returns {undefined|!string}
+     * @private
+     */
+    static _disabledReason_inputs_inside(args, rangeVals) {
         let row = args.outerRow;
-        let rangeVals = seq(args.gate.getUnmetContextKeys()).
-            filter(key => key.startsWith("Input Range ") && args.context.has(key)).
-            map(key => args.context.get(key)).
-            toArray();
-
-        if (seq(rangeVals).any(({offset, length}) => offset + length > row && row + args.gate.height > offset)) {
-            return "input\ninside";
+        for (let {offset, length} of rangeVals) {
+            //noinspection JSUnusedAssignment
+            if (offset + length > row && row + args.gate.height > offset) {
+                return "input\ninside";
+            }
         }
+        return undefined;
+    }
 
+    /**
+     * @param {!GateCheckArgs} args
+     * @param {!Array.<!{offset: !int, length: !int}>} rangeVals
+     * @returns {undefined|!string}
+     * @private
+     */
+    static _disabledReason_inputs_coherenceMismatch(args, rangeVals) {
+        let row = args.outerRow;
         if (args.gate.effectMightPermutesStates()) {
             let hasMeasuredOutputs = ((args.measuredMask >> row) & ((1 << args.gate.height) - 1)) !== 0;
-            let hasUnmeasuredInputs =
-                seq(rangeVals).any(({offset, length}) => ((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0);
-            if (hasUnmeasuredInputs && hasMeasuredOutputs) {
-                return "no\nremix\n(sorry)";
+            if (hasMeasuredOutputs) {
+                for (let {offset, length} of rangeVals) {
+                    //noinspection JSUnusedAssignment
+                    if (((~args.measuredMask >> offset) & ((1 << length) - 1)) !== 0) {
+                        return "no\nremix\n(sorry)";
+                    }
+                }
             }
         }
 
@@ -242,10 +281,13 @@ class GateColumn {
     }
 
     maximumGateWidth() {
-        return seq(this.gates).
-            filter(g => g !== undefined).
-            map(g => g.width).
-            max(-Infinity);
+        let best = -Infinity;
+        for (let g of this.gates) {
+            if (g !== undefined) {
+                best = Math.max(best, g.width);
+            }
+        }
+        return best;
     }
 
     /**
@@ -274,44 +316,63 @@ class GateColumn {
         return allReasons;
     }
 
+    /**
+     * @param {{measureMask: !int, earlierRowWithSwapGate: undefined|!int}} state
+     * @param row
+     * @param {!Array.<undefined|!string>} disabledReasons
+     * @returns {}
+     * @private
+     */
+    _updateMeasureMask_gateStep(state, row, disabledReasons) {
+        if (disabledReasons[row] !== undefined) {
+            return;
+        }
+
+        let gate = this.gates[row];
+        let bit = 1 << row;
+
+        // The measurement gate measures.
+        if (gate === Gates.Special.Measurement) {
+            state.measureMask |= bit;
+            return;
+        }
+
+        // Post-selection gates un-measure (in that the simulator can then do coherent operations on the qubit
+        // without getting the wrong answer, at least).
+        let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
+            || gate === Gates.PostSelectionGates.PostSelectOff;
+        if (!this.hasControl() && hasSingleResult) {
+            state.measureMask &= ~bit;
+            return;
+        }
+
+        // Swap gate swaps measurements.
+        if (gate === Gates.Special.SwapHalf) {
+            if (state.earlierRowWithSwapGate === undefined) {
+                state.earlierRowWithSwapGate = row;
+                return;
+            }
+
+            let other = 1 << state.earlierRowWithSwapGate;
+            let d = row - state.earlierRowWithSwapGate;
+            state.measureMask = (state.measureMask & ~(other | bit)) |
+                                ((state.measureMask & other) << d) |
+                                ((state.measureMask & bit) >> d);
+            state.earlierRowWithSwapGate = undefined;
+        }
+    }
+
+    /**
+     * @param {!int} inputMeasureMask
+     * @param {!Array.<undefined|!string>} disabledReasons
+     * @returns {!int}
+     */
     nextMeasureMask(inputMeasureMask, disabledReasons) {
-        return Seq.range(this.gates.length).aggregate([inputMeasureMask, undefined], ([measureMask, prevSwap], row) => {
-            if (disabledReasons[row] !== undefined) {
-                return [measureMask, prevSwap];
-            }
-
-            let gate = this.gates[row];
-            let bit = 1 << row;
-
-            // The measurement gate measures.
-            if (gate === Gates.Special.Measurement) {
-                return [measureMask | bit, prevSwap];
-            }
-
-            // Post-selection gates un-measure (in that the simulator can then do coherent operations on the qubit
-            // without getting the wrong answer, at least).
-            let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
-                || gate === Gates.PostSelectionGates.PostSelectOff;
-            if (!this.hasControl() && hasSingleResult) {
-                return [measureMask & ~bit, prevSwap];
-            }
-
-            // Swap gate swaps measurements.
-            if (gate === Gates.Special.SwapHalf) {
-                if (prevSwap === undefined) {
-                    return [measureMask, row];
-                }
-
-                let other = 1 << prevSwap;
-                let d = row - prevSwap;
-                return [
-                    (measureMask & ~(other | bit)) | ((measureMask & other) << d) | ((measureMask & bit) >> d),
-                    undefined
-                ];
-            }
-
-            return [measureMask, prevSwap];
-        })[0];
+        let state = {measureMask: inputMeasureMask, earlierRowWithSwapGate: undefined};
+        for (let row = 0; row < this.gates.length; row++) {
+            this._updateMeasureMask_gateStep(state, row, disabledReasons);
+        }
+        return state.measureMask;
     }
 
     /**

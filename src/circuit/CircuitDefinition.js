@@ -517,7 +517,11 @@ class CircuitDefinition {
      * and assuming the gate positions are fixed (i.e. columns can only be added or removed from the right).
      */
     minimumRequiredColCount() {
-        return Math.max(0, seq(this.columns).mapWithIndex((c, i) => c.maximumGateWidth() + i).max(-Infinity));
+        let best = 0;
+        for (let col = 0; col < this.columns.length; col++) {
+            best = Math.max(best, this.columns[col].maximumGateWidth() + col);
+        }
+        return best;
     }
 
     /**

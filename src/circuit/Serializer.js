@@ -314,13 +314,34 @@ let toJson_CircuitDefinition = (v, context) => {
     return result;
 };
 
+let _fromJson_CircuitDefinition_cachedArg = undefined;
+let _fromJson_CircuitDefinition_cachedResult = undefined;
 /**
  * @param {object} json
  * @param {undefined|!CustomGateSet} context
  * @returns {!CircuitDefinition}
  * @throws
  */
-let fromJson_CircuitDefinition = (json, context=undefined) => {
+function fromJson_CircuitDefinition(json, context=undefined) {
+    if (context !== undefined) {
+        return _fromJson_CircuitDefinition_uncached(json, context);
+    }
+
+    if (_fromJson_CircuitDefinition_cachedArg === json) {
+        return _fromJson_CircuitDefinition_cachedResult;
+    }
+    _fromJson_CircuitDefinition_cachedArg = json;
+    _fromJson_CircuitDefinition_cachedResult = _fromJson_CircuitDefinition_uncached(json, undefined);
+    return _fromJson_CircuitDefinition_cachedResult;
+}
+
+/**
+ * @param {object} json
+ * @param {undefined|!CustomGateSet} context
+ * @returns {!CircuitDefinition}
+ * @throws
+ */
+function _fromJson_CircuitDefinition_uncached(json, context=undefined) {
     let {cols} = json;
     let customGateSet = context ||
         (json.gates === undefined ? new CustomGateSet() : fromJson_CustomGateSet(json.gates));
@@ -338,7 +359,7 @@ let fromJson_CircuitDefinition = (json, context=undefined) => {
 
     return new CircuitDefinition(numWires, gateCols, undefined, undefined, customGateSet).
         withTrailingSpacersIncluded();
-};
+}
 
 const BINDINGS = [
     [Complex, toJson_Complex, fromJson_Complex],
