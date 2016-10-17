@@ -64,9 +64,7 @@ Config.TOOLBOX_MARGIN_Y = 18;
  */
 Config.MINIMUM_CANVAS_HEIGHT = 400;
 
-Config.SUPPRESSED_GLSL_WARNING_PATTERNS = [
-    /^\s*([^\) ]+\): warning X3595: gradient instruction used in a loop with varying iteration; partial derivatives may have undefined value\b)+\s*$/
-];
+Config.SUPPRESSED_GLSL_WARNING_PATTERNS = [];
 
 // Draw constants.
 Config.DEFAULT_FILL_COLOR = 'white';
