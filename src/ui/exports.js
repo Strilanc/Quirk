@@ -2,7 +2,7 @@ import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
 import {ObservableValue} from "src/base/Obs.js"
 import {selectAndCopyToClipboard} from "src/browser/Clipboard.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
 import {saveFile} from "src/browser/SaveFile.js"
 
 const exportsIsVisible = new ObservableValue(false);
@@ -94,7 +94,7 @@ function initExports(revision, obsIsAnyOverlayShowing) {
         const fileNameForState = jsonText => {
             //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
             try {
-                let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+                let circuitDef = fromJsonText_CircuitDefinition(jsonText);
                 if (!circuitDef.isEmpty()) {
                     return `Quirk with Circuit - ${circuitDef.readableHash()}.html`;
                 }

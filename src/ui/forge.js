@@ -17,7 +17,7 @@ import {Observable, ObservableValue} from "src/base/Obs.js"
 import {Painter} from "src/draw/Painter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {fromJsonText_CircuitDefinition, Serializer} from "src/circuit/Serializer.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {textEditObservable} from "src/browser/EventUtil.js"
 import {Util} from "src/base/Util.js"
@@ -108,7 +108,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
      * @param {undefined|!CircuitDefinition=undefined} circuitDef
      */
     function createCustomGateAndClose(gate, circuitDef=undefined) {
-        let c = circuitDef || Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
+        let c = circuitDef || fromJsonText_CircuitDefinition(latestInspectorText);
         revision.commit(JSON.stringify(Serializer.toJson(c.withCustomGate(gate)), null, 0));
         forgeIsVisible.set(false);
     }
@@ -202,7 +202,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
 
         /** @returns {{gate: !Gate, circuit: !CircuitDefinition}} */
         function parseEnteredCircuitGate() {
-            let circuit = Serializer.fromJson(CircuitDefinition, JSON.parse(latestInspectorText));
+            let circuit = fromJsonText_CircuitDefinition(latestInspectorText);
             let gate = parseUserGateFromCircuitRange(
                 circuit,
                 valueElsePlaceholder(txtCols),

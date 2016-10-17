@@ -114,21 +114,11 @@ class GateColumn {
         }
 
         let args = new GateCheckArgs(g, this, outerRowOffset + row, inputMeasureMask, context, isNested);
-        let tests = [
-            () => g.customDisableReasonFinder(args),
-            () => GateColumn._disabledReason_inputs(args),
-            () => this._disabledReason_controlInside(row),
-            () => this._disabledReason_remixing(row, inputMeasureMask),
-            () => this._disabledReason_overlappingTags(outerRowOffset, row)
-        ];
-
-        for (let test of tests) {
-            let reason = test();
-            if (reason !== undefined) {
-                return reason;
-            }
-        }
-        return undefined;
+        return g.customDisableReasonFinder(args) ||
+            GateColumn._disabledReason_inputs(args) ||
+            this._disabledReason_controlInside(row) ||
+            this._disabledReason_remixing(row, inputMeasureMask) ||
+            this._disabledReason_overlappingTags(outerRowOffset, row);
     }
 
     /**

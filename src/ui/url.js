@@ -2,7 +2,7 @@ import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
 import {HistoryPusher} from "src/browser/HistoryPusher.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {fromJsonText_CircuitDefinition, Serializer} from "src/circuit/Serializer.js"
 
 /**
  * @param {!Revision} revision
@@ -38,8 +38,7 @@ function initUrlCircuitSync(revision) {
 
             let jsonText = params.get(Config.URL_CIRCUIT_PARAM_KEY);
             historyPusher.currentStateIsMemorableAndEqualTo(jsonText);
-            let json = JSON.parse(jsonText);
-            let circuitDef = Serializer.fromJson(CircuitDefinition, json);
+            let circuitDef = fromJsonText_CircuitDefinition(jsonText);
             let cleanedJson = JSON.stringify(Serializer.toJson(circuitDef));
             revision.clear(cleanedJson);
             if (circuitDef.isEmpty() && params.size === 1) {

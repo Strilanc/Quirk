@@ -314,25 +314,15 @@ let toJson_CircuitDefinition = (v, context) => {
     return result;
 };
 
-let _fromJson_CircuitDefinition_cachedArg = undefined;
-let _fromJson_CircuitDefinition_cachedResult = undefined;
-/**
- * @param {object} json
- * @param {undefined|!CustomGateSet} context
- * @returns {!CircuitDefinition}
- * @throws
- */
-function fromJson_CircuitDefinition(json, context=undefined) {
-    if (context !== undefined) {
-        return _fromJson_CircuitDefinition_uncached(json, context);
+let _cachedCircuit = undefined;
+let _cachedCircuit_Arg = undefined;
+function fromJsonText_CircuitDefinition(jsonText) {
+    if (_cachedCircuit_Arg === jsonText) {
+        return _cachedCircuit;
     }
-
-    if (_fromJson_CircuitDefinition_cachedArg === json) {
-        return _fromJson_CircuitDefinition_cachedResult;
-    }
-    _fromJson_CircuitDefinition_cachedArg = json;
-    _fromJson_CircuitDefinition_cachedResult = _fromJson_CircuitDefinition_uncached(json, undefined);
-    return _fromJson_CircuitDefinition_cachedResult;
+    _cachedCircuit_Arg = jsonText;
+    _cachedCircuit = fromJson_CircuitDefinition(JSON.parse(jsonText), undefined);
+    return _cachedCircuit;
 }
 
 /**
@@ -341,7 +331,7 @@ function fromJson_CircuitDefinition(json, context=undefined) {
  * @returns {!CircuitDefinition}
  * @throws
  */
-function _fromJson_CircuitDefinition_uncached(json, context=undefined) {
+function fromJson_CircuitDefinition(json, context=undefined) {
     let {cols} = json;
     let customGateSet = context ||
         (json.gates === undefined ? new CustomGateSet() : fromJson_CustomGateSet(json.gates));
@@ -350,12 +340,19 @@ function _fromJson_CircuitDefinition_uncached(json, context=undefined) {
         throw new Error(`CircuitDefinition json should contain an array of cols. Json: ${describe(json)}`);
     }
     let gateCols = cols.map(e => fromJson_GateColumn(e, customGateSet));
-    let numWires = seq(gateCols).map(c => c.minimumRequiredWireCount()).max(0);
+
+    let numWires = 0;
+    for (let col of gateCols) {
+        numWires = Math.max(numWires, col.minimumRequiredWireCount());
+    }
     numWires = Math.max(Config.MIN_WIRE_COUNT, Math.min(numWires, Config.MAX_WIRE_COUNT));
-    gateCols = gateCols.map(e => new GateColumn(seq(e.gates).
-            padded(numWires, undefined). // Pad column up to circuit length.
-            toArray().
-            slice(0, numWires))); // Silently discard gates off the edge of the circuit.
+
+    gateCols = gateCols.map(col => new GateColumn([
+            ...col.gates,
+            // Pad column up to circuit length.
+            ...new Array(Math.max(0, numWires - col.gates.length)).fill(undefined)
+        // Silently discard gates off the edge of the circuit.
+        ].slice(0, numWires)));
 
     return new CircuitDefinition(numWires, gateCols, undefined, undefined, customGateSet).
         withTrailingSpacersIncluded();
@@ -369,4 +366,4 @@ const BINDINGS = [
     [CircuitDefinition, toJson_CircuitDefinition, fromJson_CircuitDefinition]
 ];
 
-export {Serializer, initSerializer}
+export {Serializer, initSerializer, fromJsonText_CircuitDefinition}
