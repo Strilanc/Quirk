@@ -540,12 +540,15 @@ class CircuitDefinition {
             return 0;
         }
         let c = this.columns[col];
-        return Seq.range(c.gates.length).
-            filter(row => c.gates[row] === Gates.Displays.ChanceDisplay ||
-                c.gates[row] === Gates.Displays.BlochSphereDisplay ||
-                c.gates[row] === Gates.Displays.DensityMatrixDisplay).
-            filter(row => this.gateAtLocIsDisabledReason(col, row) === undefined).
-            aggregate(0, (a, i) => a | (1 << i));
+        let total = 0;
+        for (let row = 0; row < c.gates.length; row++) {
+            if (c.gates[row] !== undefined &&
+                    c.gates[row].isSingleQubitDisplay &&
+                    this.gateAtLocIsDisabledReason(col, row) === undefined) {
+                total |= 1 << row;
+            }
+        }
+        return total;
     }
 
     /**

@@ -204,6 +204,10 @@ module.exports = function(grunt) {
         'concat:concat-traceur-test-perf',
         'clean:clean-tmp'
     ]);
+    grunt.registerTask('build-test-perf-page', [
+        'build-test-perf',
+        'inject-js-into-html:test_perf/perf_test.template.html:out/test_perf.js:out/test_perf.html'
+    ]);
 
     grunt.registerTask('test-perf-chrome', ['build-test-perf', 'karma:perf-chrome']);
     grunt.registerTask('test-chrome', ['build-test', 'karma:unit-chrome']);

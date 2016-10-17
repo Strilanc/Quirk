@@ -236,6 +236,7 @@ let SingleChanceGate = Gate.fromIdentity(
     "Chance",
     "Probability Display",
     "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.").
+    markedAsSingleQubitDisplay().
     withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
         let {row, col} = args.positionInCircuit;
         MathPainter.paintProbabilityBox(
