@@ -36,7 +36,7 @@ function perfGoal(name, targetDuration, method, arg=undefined) {
         let dt = _measureDuration(method, arg, targetDuration.duration_nanos);
         let p = dt.duration_nanos / targetDuration.duration_nanos;
         let logger = (p > 1 ? console.warn : console.log);
-        logger(`${_proportionDesc(p)} of target (${_pad(targetDuration.description, 6)}) for ${name}`);
+        logger(`${_proportionDesc(p)} of goal [${_pad(targetDuration.description, 6)}] for ${name}`);
         return dt.duration_nanos <= targetDuration.duration_nanos
     }});
 }
@@ -47,7 +47,7 @@ function _pad(obj, length) {
 }
 
 function _proportionDesc(proportion) {
-    return `[${_proportionBar(proportion)}] ${_pad(Math.round(proportion*100), 2)}%`;
+    return `[${_proportionBar(proportion)}] finished in ${_pad(Math.round(proportion*100), 2)}%`;
 }
 
 function _proportionBar(proportion, length=20) {

@@ -229,30 +229,48 @@ class CircuitDefinition {
     /**
      * This mainly exists for writing tests that are understandable.
      * @param {!string} diagram
-     * @param {!Map.<!string, !Gate>} gateMap
+     * @param {!Map.<!string, !Gate|!{ofSize: !function(!int) : !Gate}>} gateMap
      * @returns {!CircuitDefinition}
      */
     static fromTextDiagram(gateMap, diagram) {
         let lines = seq(diagram.split('\n')).map(e => e.trim()).filter(e => e !== '').toArray();
-        let colCount = seq(lines).map(e => e.length).max(0);
+        if (seq(lines.map(e => e.length)).distinct().count() > 1) {
+            throw new DetailedError("Uneven diagram", {diagram});
+        }
+
         let rowCount = lines.length;
+        let colCount = lines.length > 0 ? lines[0].length : 0;
+
+        let spanAt = (col, row) => {
+            for (let d = 1; row + d < lines.length; d++) {
+                if (gateMap.get(lines[row + d][col]) !== null) {
+                    return d;
+                }
+            }
+            return lines.length - row;
+        };
+
         return new CircuitDefinition(
             rowCount,
             Seq.range(colCount).
-                map(c => new GateColumn(lines.map(line => {
-                    if (c >= line.length) {
-                        throw new DetailedError("Uneven diagram", {diagram});
+                map(col => new GateColumn(seq(lines).mapWithIndex((line, row) => {
+                    let char = line[col];
+                    if (!gateMap.has(char)) {
+                        throw new DetailedError("Unspecified gate", {char});
                     }
-                    let g = line[c];
-                    if (!gateMap.has(g)) {
-                        throw new DetailedError("Unspecified gate", {char: g});
+                    let gateOrFamily = gateMap.get(char);
+                    if (gateOrFamily === null || gateOrFamily === undefined) {
+                        return undefined;
                     }
-                    let gate = gateMap.get(g);
-                    if (gate !== undefined && !(gate instanceof Gate)) {
-                        throw new DetailedError("Not a gate", gate);
+                    if (gateOrFamily.hasOwnProperty('ofSize')) {
+                        return gateOrFamily.ofSize(spanAt(col, row));
                     }
-                    return gate;
-                }))).
+                    if (gateOrFamily instanceof Gate) {
+                        return gateOrFamily;
+                    }
+
+                    throw new DetailedError("Not a gate", gateOrFamily);
+                }).toArray())).
                 toArray());
     }
 
