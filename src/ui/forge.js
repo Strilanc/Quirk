@@ -51,6 +51,9 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         });
         obsForgeIsShowing.subscribe(showing => {
             forgeDiv.style.display = showing ? 'block' : 'none';
+            if (showing) {
+                document.getElementById('gate-forge-rotation-axis').focus();
+            }
         });
     })();
 

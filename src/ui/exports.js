@@ -29,6 +29,9 @@ function initExports(revision, obsIsAnyOverlayShowing) {
         });
         obsExportsIsShowing.subscribe(showing => {
             exportDiv.style.display = showing ? 'block' : 'none';
+            if (showing) {
+                document.getElementById('export-link-copy-button').focus();
+            }
         });
     })();
 
