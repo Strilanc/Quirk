@@ -284,6 +284,19 @@ export function assertThrows(func, extraArgCatcher) {
 
 /** @type {boolean|undefined} */
 let __webGLSupportPresent = undefined;
+function isWebGLSupportPresent() {
+    if (__webGLSupportPresent === undefined) {
+        if (window.WebGLRenderingContext === undefined) {
+            __webGLSupportPresent = false;
+        } else {
+            let canvas = document.createElement('canvas');
+            let context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            __webGLSupportPresent = context instanceof WebGLRenderingContext;
+        }
+    }
+    return __webGLSupportPresent;
+}
+
 
 let promiseImageDataFromSrc = src => {
     let img = document.createElement('img');
@@ -352,17 +365,7 @@ export class Suite {
      */
     webGlTest(name, method) {
         let wrappedMethod = status => {
-            if (__webGLSupportPresent === undefined) {
-                if (window.WebGLRenderingContext === undefined) {
-                    __webGLSupportPresent = false;
-                } else {
-                    let canvas = document.createElement('canvas');
-                    let context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                    __webGLSupportPresent = context instanceof WebGLRenderingContext;
-                }
-            }
-
-            if (!__webGLSupportPresent) {
+            if (!isWebGLSupportPresent()) {
                 console.warn(`Skipping ${this.name}.${name} due to lack of WebGL support.`);
                 assertThat(undefined); // Cancel 'no assertion' warning.
                 return;

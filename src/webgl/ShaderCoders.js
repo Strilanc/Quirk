@@ -695,7 +695,12 @@ function outputShaderCoder() {
 }
 
 function changeShaderCoder(newCoder) {
-    initializedWglContext().invalidateExistingResources();
+    //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
+    try {
+        initializedWglContext().invalidateExistingResources();
+    } catch (_) {
+    }
+
     _curShaderCoder = newCoder;
 }
 
