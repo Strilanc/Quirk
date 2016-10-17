@@ -97,7 +97,7 @@ class DisplayedCircuit {
             return this.circuitDefinition.numWires * Config.WIRE_SPACING;
         }
         let n = Math.max(Config.MIN_WIRE_COUNT, this.circuitDefinition.numWires) -
-            (this._extraWireStartIndex !== undefined ? 1 : 0);
+            (this._extraWireStartIndex !== undefined && this._extraWireStartIndex !== Config.MAX_WIRE_COUNT ? 1 : 0);
         return Math.max(n, this.circuitDefinition.minimumRequiredWireCount()) * Config.WIRE_SPACING + 55;
     }
 
@@ -915,7 +915,7 @@ class DisplayedCircuit {
      */
     importantWireCount() {
         return Math.max(
-            this.circuitDefinition.numWires - 1,
+            this.circuitDefinition.numWires - (this._extraWireStartIndex === Config.MAX_WIRE_COUNT ? 0 : 1),
             Math.max(
                 Config.MIN_WIRE_COUNT,
                 this.circuitDefinition.minimumRequiredWireCount()));
