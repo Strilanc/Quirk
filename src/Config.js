@@ -38,7 +38,7 @@ Config.SUPERPOSITION_FORE_COLOR = '#0BB';
 // Time constants.
 Config.CYCLE_DURATION_MS = 8000; // How long it takes for evolving gates to cycle, in milliseconds.
 Config.TIME_CACHE_GRANULARITY = 196; // The number of buckets the cycle is divided into.
-Config.REDRAW_COOLDOWN_MILLIS = 1000/60; // Milliseconds. Rate-limit on redraws.
+Config.REDRAW_COOLDOWN_MILLIS = 10; // Milliseconds. Rate-limit on redraws. Long draws pad this limit.
 
 /** Half of the span of a drawn gate, width-wise and height-wise.
 * @type {!number} */

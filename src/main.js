@@ -128,7 +128,7 @@ const redrawNow = () => {
     }
 };
 
-redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, true);
+redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, 0.1, true);
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 displayed.observable().subscribe(() => redrawThrottle.trigger());
 
