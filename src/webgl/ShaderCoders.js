@@ -199,6 +199,7 @@ class ShaderValueCoder {
      * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec4Data
      * @param {!function(!WglTexture) : !int} vec2ArrayPowerSizeOfTexture
      * @param {!function(!WglTexture) : !int} vec4ArrayPowerSizeOfTexture
+     * @param {!function(!WglTextureTrader) : void} vec2TradePack
      */
     constructor(vec2Input,
                 vec4Input,
@@ -214,7 +215,8 @@ class ShaderValueCoder {
                 prepVec4Data,
                 unpackVec4Data,
                 vec2ArrayPowerSizeOfTexture,
-                vec4ArrayPowerSizeOfTexture) {
+                vec4ArrayPowerSizeOfTexture,
+                vec2TradePack) {
         /** @type {!function(name: !string) : !ShaderPart} */
         this.vec2Input = vec2Input;
         /** @type {!function(name: !string) : !ShaderPart} */
@@ -245,6 +247,8 @@ class ShaderValueCoder {
         this.vec2ArrayPowerSizeOfTexture = vec2ArrayPowerSizeOfTexture;
         /** @type {!function(!WglTexture) : !int} */
         this.vec4ArrayPowerSizeOfTexture = vec4ArrayPowerSizeOfTexture;
+        /** @type {!function(!WglTextureTrader) : void} */
+        this.vec2TradePack = vec2TradePack;
     }
 }
 
@@ -624,6 +628,15 @@ function unspreadFloatVec2(pixelData) {
     return result;
 }
 
+/**
+ * @param {!WglTexture}
+ * @returns {!WglConfiguredShader)
+ */
+const PACK_VEC2S_INTO_VEC4S_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
+    'vec4 outputFor(float k) { return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0)); }');
+
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_FLOATS = new ShaderValueCoder(
     name => vecInput_Float(name, 2),
@@ -640,7 +653,8 @@ const SHADER_CODER_FLOATS = new ShaderValueCoder(
     e => e,
     e => e,
     t => Math.round(Math.log2(t.width * t.height)),
-    t => Math.round(Math.log2(t.width * t.height)));
+    t => Math.round(Math.log2(t.width * t.height)),
+    trader => trader.shadeHalveAndTrade(PACK_VEC2S_INTO_VEC4S_SHADER));
 
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_BYTES = new ShaderValueCoder(
@@ -658,7 +672,8 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     encodeFloatsIntoBytes,
     decodeBytesIntoFloats,
     t => Math.round(Math.log2(t.width * t.height)) - 1,
-    t => Math.round(Math.log2(t.width * t.height)) - 2);
+    t => Math.round(Math.log2(t.width * t.height)) - 2,
+    () => {});
 
 /** @type {!ShaderValueCoder} */
 let _curShaderCoder = SHADER_CODER_FLOATS;

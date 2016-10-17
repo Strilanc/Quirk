@@ -129,12 +129,6 @@ const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
          return read_input(k) + read_input(k + len_output());
      }`);
 
-Shaders.vec2AsVec4 = inputTexture => VEC2_AS_VEC4_SHADER(inputTexture);
-const VEC2_AS_VEC4_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [Inputs.vec2('input')],
-    Outputs.vec4(),
-    'vec4 outputFor(float k) { return vec4(read_input(k), vec2(0.0, 0.0)); }');
-
 /**
  * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar
  * to IEEE 754.

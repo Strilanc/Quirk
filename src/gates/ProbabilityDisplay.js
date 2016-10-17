@@ -41,7 +41,7 @@ function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLe
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
     }
 
-    trader.shadeAndTrade(Shaders.vec2AsVec4, WglTexturePool.takeVec4Tex(rangeLength));
+    currentShaderCoder().vec2TradePack(trader);
     return trader.currentTexture;
 }
 
@@ -74,13 +74,13 @@ function probabilityPixelsToColumnVector(pixels) {
         unity += e;
     }
     if (isNaN(unity) || unity < 0.000001) {
-        return Matrix.zero(1, pixels.length >> 2).times(NaN);
+        return Matrix.zero(1, pixels.length >> 1).times(NaN);
     }
-    let ps = new Float32Array(pixels.length >> 1);
-    for (let i = 0; i < ps.length; i++) {
-        ps[i * 2] = pixels[i * 4] / unity;
+    let ps = new Float32Array(pixels.length);
+    for (let i = 0; i < ps.length; i += 2) {
+        ps[i] = pixels[i] / unity;
     }
-    return new Matrix(1, pixels.length >> 2, ps);
+    return new Matrix(1, pixels.length >> 1, ps);
 }
 
 function _paintMultiProbabilityDisplay_grid(args) {

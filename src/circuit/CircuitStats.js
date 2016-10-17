@@ -240,9 +240,7 @@ class CircuitStats {
             circuitDefinition,
             true);
         controlTex.deallocByDepositingInPool("controlTex in _fromCircuitAtTime_noFallback");
-        stateTrader.shadeAndTrade(
-            tex => Shaders.vec2AsVec4(tex),
-            WglTexturePool.takeVec4Tex(currentShaderCoder().vec2ArrayPowerSizeOfTexture(stateTrader.currentTexture)));
+        currentShaderCoder().vec2TradePack(stateTrader);
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({

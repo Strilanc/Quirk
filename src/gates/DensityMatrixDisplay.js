@@ -54,7 +54,7 @@ function densityDisplayStatTexture(inp, qubitCount, controls, rangeOffset, range
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
     }
 
-    trader.shadeAndTrade(Shaders.vec2AsVec4, WglTexturePool.takeVec4Tex(rangeLength * 2));
+    currentShaderCoder().vec2TradePack(trader);
     return trader.currentTexture;
 }
 
@@ -120,23 +120,21 @@ function decohereMeasuredBitsInDensityMatrix(densityMatrix, isMeasuredMask) {
  * @returns {!Matrix}
  */
 function densityPixelsToMatrix(pixels, circuitDefinition, col, row) {
-    let n = pixels.length/4;
+    let n = pixels.length >> 1;
     let d = Math.round(Math.sqrt(n));
     let unity = 0;
     for (let i = 0; i < d; i++) {
-        unity += pixels[4*i*(d+1)];
+        unity += pixels[2*i*(d+1)];
     }
     if (isNaN(unity) || unity < 0.000001) {
         return Matrix.zero(d, d).times(NaN);
     }
-    let coefs = new Float32Array(d*d*2);
-    for (let i = 0; i < coefs.length; i++) {
-        coefs[i*2] = pixels[i*4]/unity;
-        coefs[i*2+1] = pixels[i*4+1]/unity;
+    for (let i = 0; i < pixels.length; i++) {
+        pixels[i] /= unity;
     }
 
     let isMeasuredMask = circuitDefinition.colIsMeasuredMask(col) >> row;
-    return decohereMeasuredBitsInDensityMatrix(new Matrix(d, d, coefs), isMeasuredMask);
+    return decohereMeasuredBitsInDensityMatrix(new Matrix(d, d, pixels), isMeasuredMask);
 }
 
 function densityMatrixDisplayMaker(span) {
