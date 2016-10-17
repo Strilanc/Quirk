@@ -7,14 +7,17 @@ class CooldownThrottle {
     /**
      * @param {!function(void) : void} action
      * @param {!number} cooldownMs
+     * @param {!number} slowActionCooldownPumpupFactor
      * @param {!boolean=false} waitWithRequestAnimationFrame
      * @constructor
      */
-    constructor(action, cooldownMs, waitWithRequestAnimationFrame=false) {
+    constructor(action, cooldownMs, slowActionCooldownPumpupFactor=0, waitWithRequestAnimationFrame=false) {
         /** @type {!function(void) : void} */
         this.action = action;
         /** @type {!number} */
         this.cooldownDuration = cooldownMs;
+        /** @type {!number} */
+        this.slowActionCooldownPumpupFactor = slowActionCooldownPumpupFactor;
         /** @type {!boolean} */
         this._waitWithRequestAnimationFrame = waitWithRequestAnimationFrame;
 
@@ -27,27 +30,27 @@ class CooldownThrottle {
          * @type {!number}
          * @private
          */
-        this._lastCompletionTime = -Infinity;
+        this._cooldownStartTime = -Infinity;
     }
 
     _triggerIdle() {
         // Still cooling down?
-        let remainingCooldownDuration = this.cooldownDuration - (performance.now() - this._lastCompletionTime);
+        let remainingCooldownDuration = this.cooldownDuration - (performance.now() - this._cooldownStartTime);
         if (remainingCooldownDuration > 0) {
-            this._state = 'waiting';
             this._forceIdleTriggerAfter(remainingCooldownDuration);
             return;
         }
 
         // Go go go!
         this._state = 'running';
+        let t0 = performance.now();
         try {
             this.action();
         } finally {
+            let dt = performance.now() - t0;
+            this._cooldownStartTime = performance.now() + (dt * this.slowActionCooldownPumpupFactor);
             // Were there any triggers while we were running?
-            this._lastCompletionTime = performance.now();
             if (this._state === 'running-and-triggered') {
-                this._state = 'waiting';
                 this._forceIdleTriggerAfter(this.cooldownDuration);
             } else {
                 this._state = 'idle';
@@ -83,6 +86,8 @@ class CooldownThrottle {
      * @private
      */
     _forceIdleTriggerAfter(duration) {
+        this._state = 'waiting';
+
         // setTimeout seems to refuse to run while I'm scrolling with my mouse wheel on chrome in windows.
         // So, for stuff that really has to come back in that case, we also support requestAnimationFrame looping.
         if (this._waitWithRequestAnimationFrame) {
@@ -94,14 +99,14 @@ class CooldownThrottle {
                     return;
                 }
                 this._state = 'idle';
-                this._lastCompletionTime = -Infinity;
+                this._cooldownStartTime = -Infinity;
                 this.trigger()
             };
             iter();
         } else {
             setTimeout(() => {
                 this._state = 'idle';
-                this._lastCompletionTime = -Infinity;
+                this._cooldownStartTime = -Infinity;
                 this.trigger()
             }, duration);
         }

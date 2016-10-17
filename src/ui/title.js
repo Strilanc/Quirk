@@ -1,6 +1,6 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
 
 /**
  * @param {!Revision} revision
@@ -9,7 +9,7 @@ function initTitleSync(revision) {
     const titleForState = jsonText => {
         //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
         try {
-            let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+            let circuitDef = fromJsonText_CircuitDefinition(jsonText);
             if (!circuitDef.isEmpty()) {
                 return `Quirk: ${circuitDef.readableHash()}`;
             }

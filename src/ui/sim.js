@@ -1,6 +1,6 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
-import {CycleCircuitStats} from "src/circuit/CycleCircuitStats.js"
+import {CircuitStats} from "src/circuit/CircuitStats.js"
 
 const getCircuitCycleTime = (() => {
     /**
@@ -24,17 +24,24 @@ const getCircuitCycleTime = (() => {
     };
 })();
 
-let cache = new CycleCircuitStats(CircuitDefinition.EMPTY, Config.TIME_CACHE_GRANULARITY);
+/** @type {undefined|!CircuitStats} */
+let _cachedStats = undefined;
 
 /**
  * @param {!CircuitDefinition} circuit
  * @returns {!CircuitStats}
  */
 function simulate(circuit) {
-    if (!cache.circuitDefinition.isEqualTo(circuit)) {
-        cache = new CycleCircuitStats(circuit, Config.TIME_CACHE_GRANULARITY);
+    if (_cachedStats !== undefined && _cachedStats.circuitDefinition.isEqualTo(circuit)) {
+        return _cachedStats;
     }
-    return cache.statsAtApproximateTime(getCircuitCycleTime());
+
+    _cachedStats = undefined;
+    let result = CircuitStats.fromCircuitAtTime(circuit, getCircuitCycleTime());
+    if (circuit.stableDuration() === Infinity) {
+        _cachedStats = result;
+    }
+    return result;
 }
 
 export {simulate, getCircuitCycleTime}

@@ -444,9 +444,11 @@ class CircuitDefinition {
      * @returns {!CircuitDefinition}
      */
     withTrailingSpacersIncluded(extra=0) {
-        return this.withColumns(seq(this.columns).
-            padded(this.minimumRequiredColCount()+extra, GateColumn.empty(this.numWires)).
-            toArray());
+        return this.withColumns([
+            ...this.columns,
+            ...new Array(Math.max(0, this.minimumRequiredColCount() + extra - this.columns.length)).
+                fill(GateColumn.empty(this.numWires))
+        ]);
     }
 
     /**
@@ -517,7 +519,11 @@ class CircuitDefinition {
      * and assuming the gate positions are fixed (i.e. columns can only be added or removed from the right).
      */
     minimumRequiredColCount() {
-        return Math.max(0, seq(this.columns).mapWithIndex((c, i) => c.maximumGateWidth() + i).max(-Infinity));
+        let best = 0;
+        for (let col = 0; col < this.columns.length; col++) {
+            best = Math.max(best, this.columns[col].maximumGateWidth() + col);
+        }
+        return best;
     }
 
     /**
@@ -540,12 +546,15 @@ class CircuitDefinition {
             return 0;
         }
         let c = this.columns[col];
-        return Seq.range(c.gates.length).
-            filter(row => c.gates[row] === Gates.Displays.ChanceDisplay ||
-                c.gates[row] === Gates.Displays.BlochSphereDisplay ||
-                c.gates[row] === Gates.Displays.DensityMatrixDisplay).
-            filter(row => this.gateAtLocIsDisabledReason(col, row) === undefined).
-            aggregate(0, (a, i) => a | (1 << i));
+        let total = 0;
+        for (let row = 0; row < c.gates.length; row++) {
+            if (c.gates[row] !== undefined &&
+                    c.gates[row].isSingleQubitDisplay &&
+                    this.gateAtLocIsDisabledReason(col, row) === undefined) {
+                total |= 1 << row;
+            }
+        }
+        return total;
     }
 
     /**

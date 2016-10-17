@@ -12,7 +12,7 @@ import {Painter} from "src/draw/Painter.js"
 import {Rect} from "src/math/Rect.js"
 import {RestartableRng} from "src/base/RestartableRng.js"
 import {Revision} from "src/base/Revision.js"
-import {initSerializer, Serializer} from "src/circuit/Serializer.js"
+import {initSerializer, fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
 import {TouchScrollBlocker} from "src/browser/TouchScrollBlocker.js"
 import {Util} from "src/base/Util.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
@@ -64,7 +64,7 @@ const displayed = new ObservableValue(
 let revision = Revision.startingAt(displayed.get().snapshot());
 
 revision.latestActiveCommit().subscribe(jsonText => {
-    let circuitDef = Serializer.fromJson(CircuitDefinition, JSON.parse(jsonText));
+    let circuitDef = fromJsonText_CircuitDefinition(jsonText);
     let newInspector = displayed.get().withCircuitDefinition(circuitDef);
     displayed.set(newInspector);
 });
@@ -128,7 +128,7 @@ const redrawNow = () => {
     }
 };
 
-redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, true);
+redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, 0.1, true);
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 displayed.observable().subscribe(() => redrawThrottle.trigger());
 

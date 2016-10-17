@@ -165,6 +165,7 @@ let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
     "Density",
     "Density Matrix Display",
     "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
+    markedAsSingleQubitDisplay().
     withSerializedId("Density").
     withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
         let {col, row} = args.positionInCircuit;

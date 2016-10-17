@@ -203,16 +203,19 @@ class CircuitStats {
      * @returns {!Array.<!Matrix>}
      */
     static scatterAndDecohereDensities(rawMatrices, numWires, qubitSpan, isMeasuredMask, hasDisplayMask) {
-        let nanMat = Matrix.zero(1 << qubitSpan, 1 << qubitSpan).times(NaN);
+        let nanMatrix = Matrix.zero(1 << qubitSpan, 1 << qubitSpan).times(NaN);
         let used = 0;
-        return Seq.range(numWires - qubitSpan + 1).map(row => {
+        let result = [];
+        for (let row = 0; row < numWires - qubitSpan + 1; row++) {
             if ((hasDisplayMask & (1 << row)) === 0) {
-                return nanMat;
+                result.push(nanMatrix);
+            } else {
+                result.push(CircuitStats.decohereMeasuredBitsInDensityMatrix(
+                    rawMatrices[used++],
+                    (isMeasuredMask >> row) & ((1 << qubitSpan) - 1)));
             }
-            return CircuitStats.decohereMeasuredBitsInDensityMatrix(
-                rawMatrices[used++],
-                (isMeasuredMask >> row) & ((1 << qubitSpan) - 1));
-        }).toArray();
+        }
+        return result;
     }
 
     /**
@@ -255,15 +258,16 @@ class CircuitStats {
         //noinspection JSCheckFunctionSignatures
         let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(pixelData.output, unity);
 
-        let qubitDensities = seq(pixelData.colQubitDensities).mapWithIndex((pixels, col) =>
-            CircuitStats.scatterAndDecohereDensities(
-                KetTextureUtil.pixelsToQubitDensityMatrices(pixels),
+        let qubitDensities = [];
+        for (let k = 0; k < pixelData.colQubitDensities.length; k++) {
+            qubitDensities.push(CircuitStats.scatterAndDecohereDensities(
+                KetTextureUtil.pixelsToQubitDensityMatrices(pixelData.colQubitDensities[k]),
                 numWires,
                 1,
-                circuitDefinition.colIsMeasuredMask(col),
+                circuitDefinition.colIsMeasuredMask(k),
                 // All wires have an output display in the after-last column.
-                col === numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(col))
-        ).toArray();
+                k === numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(k)));
+        }
 
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {

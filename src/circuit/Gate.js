@@ -99,6 +99,10 @@ class Gate {
          * @type {!Array.<!string>}
          */
         this._requiredContextKeys = [];
+        /**
+         * @type {!boolean}
+         */
+        this.isSingleQubitDisplay = false;
 
         /**
          * @type {undefined|!boolean}
@@ -292,6 +296,7 @@ class Gate {
         g.customStatPostProcesser = this.customStatPostProcesser;
         g.width = this.width;
         g.height = this.height;
+        g.isSingleQubitDisplay = this.isSingleQubitDisplay;
         g.gateFamily = this.gateFamily;
         if (this.gateFamily.length === 1 && this.gateFamily[0] === this) {
             g.gateFamily = [g];
@@ -351,6 +356,15 @@ class Gate {
     withCustomDisableReasonFinder(customDisableReasonFinder) {
         let g = this._copy();
         g.customDisableReasonFinder = customDisableReasonFinder;
+        return g;
+    }
+
+    /**
+     * @returns {!Gate}
+     */
+    markedAsSingleQubitDisplay() {
+        let g = this._copy();
+        g.isSingleQubitDisplay = true;
         return g;
     }
 

@@ -33,15 +33,21 @@ const diagram = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
 ]), diagram);
 
 perfGoal(
+    "Empty Circuit",
+    millis(4),
+    circuit => CircuitStats.fromCircuitAtTime(circuit, 0),
+    diagram(''));
+
+perfGoal(
     "2-Qubit QFT gate with manual de-QFT",
-    millis(15),
+    millis(10),
     circuit => CircuitStats.fromCircuitAtTime(circuit, 0),
     diagram(`-Q-H-1---
              -/---•-H-`));
 
 perfGoal(
     "4-Qubit QFT gate with manual de-QFT",
-    millis(15),
+    millis(12),
     circuit => CircuitStats.fromCircuitAtTime(circuit, 0),
     diagram(`-Q-H-1---2---3---
              -/---•-H-1---2---
@@ -50,7 +56,7 @@ perfGoal(
 
 perfGoal(
     "8-Qubit QFT gate with manual de-QFT",
-    millis(25),
+    millis(20),
     circuit => CircuitStats.fromCircuitAtTime(circuit, 0),
     diagram(`-Q-H-1---2---3---4---5---6---7---
              -/---•-H-1---2---3---4---5---6---
@@ -63,7 +69,7 @@ perfGoal(
 
 perfGoal(
     "16-Qubit QFT gate with manual de-QFT",
-    millis(85),
+    millis(75),
     circuit => CircuitStats.fromCircuitAtTime(circuit, 0),
     diagram(`-Q-H-1---2---3---4---5---6---7---8---9---A---B---C---D---E---F---
              -/---•-H-1---2---3---4---5---6---7---8---9---A---B---C---D---E---
