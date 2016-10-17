@@ -320,7 +320,6 @@ class DisplayedCircuit {
             this._drawWires(painter, !forTooltip);
         }
 
-
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
             this._drawColumn(painter, this.circuitDefinition.columns[col], col, hand, stats);
         }

@@ -1,3 +1,5 @@
+import {} from "src/browser/Polyfills.js"
+
 function nanos(nanoseconds) {
     return {
         duration_nanos: nanoseconds,

@@ -72,11 +72,10 @@ KetTextureUtil.pixelsToAmplitudes = (pixels, unity) => {
     }
 
     let d = Math.sqrt(unity);
-    let n = pixels.length / 4;
+    let n = pixels.length >> 1;
     let buf = new Float32Array(n * 2);
-    for (let i = 0; i < n; i++) {
-        buf[i * 2] = pixels[i * 4] / d;
-        buf[i * 2 + 1] = pixels[i * 4 + 1] / d;
+    for (let i = 0; i < pixels.length; i++) {
+        buf[i] = pixels[i] / d;
     }
     return new Matrix(1, n, buf);
 };
