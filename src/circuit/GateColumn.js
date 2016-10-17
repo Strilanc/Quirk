@@ -40,7 +40,7 @@ class GateColumn {
      * @returns {!GateColumn}
      */
     static empty(qubitCount) {
-        return new GateColumn(Seq.repeat(undefined, qubitCount).toArray());
+        return new GateColumn(new Array(qubitCount).fill(undefined));
     }
 
     /**

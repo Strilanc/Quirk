@@ -444,9 +444,11 @@ class CircuitDefinition {
      * @returns {!CircuitDefinition}
      */
     withTrailingSpacersIncluded(extra=0) {
-        return this.withColumns(seq(this.columns).
-            padded(this.minimumRequiredColCount()+extra, GateColumn.empty(this.numWires)).
-            toArray());
+        return this.withColumns([
+            ...this.columns,
+            ...new Array(Math.max(0, this.minimumRequiredColCount() + extra - this.columns.length)).
+                fill(GateColumn.empty(this.numWires))
+        ]);
     }
 
     /**

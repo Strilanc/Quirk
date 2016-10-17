@@ -10,7 +10,7 @@ import {Serializer} from "src/circuit/Serializer.js"
 
 perfGoal(
     "Update inspector circuit",
-    millis(15),
+    millis(4),
     ([oldInspector, newCircuit]) => {
         let json = JSON.stringify(Serializer.toJson(newCircuit));
         let empty = Serializer.fromJson(CircuitDefinition, {cols: []});
