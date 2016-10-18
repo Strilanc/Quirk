@@ -33,7 +33,7 @@ let _cachedStats = undefined;
  */
 function simulate(circuit) {
     if (_cachedStats !== undefined && _cachedStats.circuitDefinition.isEqualTo(circuit)) {
-        return _cachedStats;
+        return _cachedStats.withTime(getCircuitCycleTime());
     }
 
     _cachedStats = undefined;
