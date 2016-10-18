@@ -15,16 +15,16 @@ class DisplayedToolbox {
     /**
      * That thing showing gates you can grab.
      * @param {!string} name
-     * @param {!Rect} area
+     * @param {!number} top
      * @param {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} toolboxGroups
      * @param {!boolean} labelsOnTop
      * @param {undefined|!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>=} originalGroups
      */
-    constructor(name, area, toolboxGroups, labelsOnTop, originalGroups=undefined) {
+    constructor(name, top, toolboxGroups, labelsOnTop, originalGroups=undefined) {
         /** @type {!String} */
         this.name = name;
-        /** @type {!Rect} */
-        this.area = area;
+        /** @type {!number} */
+        this.top = top;
         /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
         this.toolboxGroups = toolboxGroups;
         /** @type {!boolean} */
@@ -48,7 +48,7 @@ class DisplayedToolbox {
             }
             groups.push(group);
         }
-        return new DisplayedToolbox(this.name, this.area, groups, this.labelsOnTop, this._originalGroups);
+        return new DisplayedToolbox(this.name, this.top, groups, this.labelsOnTop, this._originalGroups);
     }
 
     /**
@@ -61,10 +61,10 @@ class DisplayedToolbox {
         let dx = gateIndex % 2;
         let dy = Math.floor(gateIndex / 2);
 
-        let x = this.area.x + Config.TOOLBOX_MARGIN_X +
+        let x = Config.TOOLBOX_MARGIN_X +
             dx * Config.TOOLBOX_GATE_SPAN +
             groupIndex * Config.TOOLBOX_GROUP_SPAN;
-        let y = this.area.y +
+        let y = this.top +
             (this.labelsOnTop ? Config.TOOLBOX_MARGIN_Y : 3) +
             dy * Config.TOOLBOX_GATE_SPAN;
 
@@ -121,17 +121,25 @@ class DisplayedToolbox {
     isEqualTo(other) {
         return other instanceof DisplayedToolbox &&
             this.name === other.name &&
-            this.area.isEqualTo(other.area) &&
+            this.top === other.top &&
             this.toolboxGroups === other.toolboxGroups &&
             this.labelsOnTop === other.labelsOnTop;
     }
 
     /**
-     * @param {!Rect} drawArea
+     * @param {!number} newTop
      * @returns {!DisplayedToolbox}
      */
-    withArea(drawArea) {
-        return new DisplayedToolbox(this.name, drawArea, this.toolboxGroups, this.labelsOnTop, this._originalGroups);
+    withTop(newTop) {
+        return new DisplayedToolbox(this.name, newTop, this.toolboxGroups, this.labelsOnTop, this._originalGroups);
+    }
+
+    /**
+     * @param {!number} maxWidth
+     * @returns {!Rect}
+     */
+    curArea(maxWidth) {
+        return new Rect(0, this.top, maxWidth, this.desiredHeight());
     }
 
     /**
@@ -140,13 +148,13 @@ class DisplayedToolbox {
      * @param {!Hand} hand
      */
     paint(painter, stats, hand) {
-        painter.fillRect(this.area, Config.BACKGROUND_COLOR_TOOLBOX);
+        painter.fillRect(this.curArea(painter.canvas.width), Config.BACKGROUND_COLOR_TOOLBOX);
 
         for (let groupIndex = 0; groupIndex < this.toolboxGroups.length; groupIndex++) {
             this._paintGroup(painter, groupIndex, stats, hand);
         }
 
-        let r = new Rect(this.area.x, this.area.y, Config.TOOLBOX_MARGIN_X, this.area.h);
+        let r = this.curArea(Config.TOOLBOX_MARGIN_X);
         let {x, y} = r.center();
         painter.ctx.save();
         painter.ctx.translate(x, y);
@@ -234,6 +242,14 @@ class DisplayedToolbox {
      */
     desiredWidth() {
         return this.gateDrawRect(this.toolboxGroups.length - 1, 5).right() + 5;
+    }
+
+    //noinspection JSMethodCanBeStatic
+    /**
+     * @returns {!number}
+     */
+    desiredHeight() {
+        return 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
     }
 
     /**

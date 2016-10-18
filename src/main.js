@@ -69,6 +69,10 @@ revision.latestActiveCommit().subscribe(jsonText => {
     displayed.set(newInspector);
 });
 
+/**
+ * @param {!DisplayedInspector} curInspector
+ * @returns {{w: number, h: !number}}
+ */
 let desiredCanvasSizeFor = curInspector => {
     return {
         w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
