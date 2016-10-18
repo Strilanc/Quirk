@@ -3,10 +3,28 @@ import {WglShader} from "src/webgl/WglShader.js"
 import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "src/webgl/ShaderCoders.js"
 
 /**
- * @param {!String} head
- * @param {!String} body
- * @param {null|!int=null} span
- * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
+ * Creates a shader for a quantum gate based on a minimalist input like `return cmul(inp(0.0), vec2(0.0, 1.0));`.
+ *
+ * Available methods and values:
+ * - float out_id: The state for which we're computing an amplitude. Note that this state is relativized: when in a
+ *                      circuit with more qubits than the gate's span, it determines only the qubits covered by the
+ *                      gate. The ketShader mechanism handles iterating your operation over all states of the other
+ *                      qubits (i.e. it deals with the tensor product stuff and controlled operation stuff for you).
+ * - vec2 inp(float k): returns the amplitude of state k (as a vec2 with x=real, y=imaginary components). Note that
+ *                      k is also a relativized state.
+ * - float full_out_id: The non-relativized state id. Useful if you want to use the value of other qubits as an
+ *                      input (which e.g. the arithmetic gates do).
+ * - vec2 cmul(vec2 a, vec2 b): returns the product of two complex numbers represented as a vec2.
+ * - vec2 amp: The input amplitude of the output state being computed. This value had to be retrieved for the case where
+ *             controls aren't satisfied, and as a convenience/optimization-opportunity it's handed to your code.
+ * - float span [if you gave an undefined span]: Two to the power of the gate height.
+ *
+ * @param {!String} head Code that goes outside the output-computing function, for declaring uniforms and helper funcs.
+ * @param {!String} body Code that goes inside the output-computing function.
+ * @param {null|!int=null} span The height of the gate; the number of qubits it spans.
+ * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}} A function that, when given the args
+ * returned by ketArgs when given your input texture and also a WglArg for each custom uniform you defined, returns
+ * a WglConfiguredShader that can be used to renderTo a destination texture.
  */
 const ketShader = (head, body, span=null) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
     [
