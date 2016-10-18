@@ -485,11 +485,10 @@ class CircuitDefinition {
         }
         return new CircuitDefinition(
             newWireCount,
-            this.columns.map(c => new GateColumn(
-                seq(c.gates).
-                    take(newWireCount).
-                    padded(newWireCount, undefined).
-                    toArray())),
+            this.columns.map(c => new GateColumn([
+                ...c.gates.slice(0, newWireCount),
+                ...new Array(Math.max(0, newWireCount - c.gates.length)).fill(undefined)
+            ])),
             this.outerRowOffset,
             this.outerContext,
             this.customGateSet);
@@ -770,17 +769,18 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return Controls.NONE;
         }
-        return Seq.
-            range(this.columns[col].gates.length).
-            map(i => {
-                let g = this.columns[col].gates[i];
-                let isEnabled = this.gateAtLocIsDisabledReason(col, i) === undefined;
-                let b = g !== undefined && isEnabled ? g.controlBit() : undefined;
-                return b === undefined ? Controls.NONE :
-                    b === false ? Controls.bit(i, false) :
-                    Controls.bit(i, true);
-            }).
-            aggregate(Controls.NONE, (a, e) => a.and(e));
+        let result = Controls.NONE;
+        let column = this.columns[col];
+        for (let i = 0; i < column.gates.length; i++) {
+            let gate = column.gates[i];
+            if (gate !== undefined && this.gateAtLocIsDisabledReason(col, i) === undefined) {
+                let bit = gate.controlBit();
+                if (bit !== undefined) {
+                    result = result.and(Controls.bit(i, bit));
+                }
+            }
+        }
+        return result;
     }
 
     /**

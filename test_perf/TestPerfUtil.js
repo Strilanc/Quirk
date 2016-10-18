@@ -62,7 +62,9 @@ function _proportionBar(proportion, length=20) {
 
 function _measureDuration(method, arg, expected_nanos_hint) {
     let ms = 1.0e6;
-    let repeats = expected_nanos_hint < 30 * ms ? 50 : 10;
+    let repeats = expected_nanos_hint < 5 * ms ? 100 :
+        expected_nanos_hint < 30 * ms ? 50 :
+        10;
     // Dry run to get any one-time initialization done.
     method(arg);
 
