@@ -287,4 +287,6 @@ class CircuitStats {
     }
 }
 
+CircuitStats.EMPTY = CircuitStats.withNanDataFromCircuitAtTime(CircuitDefinition.EMPTY, 0);
+
 export {CircuitStats}
