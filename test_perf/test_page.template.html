@@ -12,7 +12,8 @@
                 start: undefined,
                 result: function(arg) {
                     if (!arg.success) {
-                        document.getElementById('output').innerText += "\n!!!!!!!!!!!!!!FAILED: " + arg.description;
+                        document.getElementById('output').innerText += "\nFAILED: " +
+                                arg.suite[0] + " " + arg.description;
                     }
                     for (var i = 0; i < arg.log.length; i++) {
                         document.getElementById('output').innerText += "\n     " + arg.log[i];

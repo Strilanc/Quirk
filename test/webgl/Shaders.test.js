@@ -13,7 +13,7 @@ import {Seq} from "src/base/Seq.js"
 
 let suite = new Suite("Shaders");
 
-suite.webGlTest("color", () => {
+suite.testUsingWebGLFloatTextures("color", () => {
     assertThat(Shaders.color(2, 3, -5, 7.5).readRawFloatOutputs(2)).isEqualTo(new Float32Array([
         2, 3, -5, 7.5,
         2, 3, -5, 7.5,
@@ -32,7 +32,7 @@ suite.webGlTest("color", () => {
     ]));
 });
 
-suite.webGlTest("passthrough", () => {
+suite.testUsingWebGLFloatTextures("passthrough", () => {
     let coords = new WglShader(`
         void main() {
             gl_FragColor = vec4(gl_FragCoord.x-0.5, gl_FragCoord.y-0.5, 0.0, 0.0);
@@ -57,7 +57,7 @@ suite.webGlTest("passthrough", () => {
     result.ensureDeinitialized();
 });
 
-suite.webGlTest("data", () => {
+suite.testUsingWebGLFloatTextures("data-floats", () => {
     let data2x2 = new Float32Array([
         0, 0.003, 42, -5,
         Math.PI, Math.E, Math.sqrt(2), 0.1,
@@ -69,10 +69,12 @@ suite.webGlTest("data", () => {
     let data2x4 = new Float32Array(Seq.range(2*4*4).map(e => e*e + (e - Math.sqrt(2)) / 3).toArray());
     assertThat(Shaders.data(data2x4).readRawFloatOutputs(3)).isEqualTo(data2x4);
 
+    assertThrows(() => Shaders.data(data2x4).readRawFloatOutputs(2));
+});
+
+suite.webGlTest("data-bytes", () => {
     let bytes4x4 = new Uint8Array(Seq.range(4*4*4).map(e => Math.floor(Math.random() * 256)).toArray());
     assertThat(Shaders.data(bytes4x4).readRawByteOutputs(4)).isEqualTo(bytes4x4);
-
-    assertThrows(() => Shaders.data(data2x4).readRawFloatOutputs(2));
 });
 
 suite.webGlTest("sumFold", () => {

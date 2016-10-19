@@ -2,7 +2,12 @@
 import {describe} from "src/base/Describe.js"
 import {equate} from "src/base/Equate.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
-import {changeShaderCoder, SHADER_CODER_BYTES, SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders.js"
+import {
+    changeShaderCoder,
+    SHADER_CODER_BYTES,
+    SHADER_CODER_FLOATS,
+    canTestFloatShaders
+} from "src/webgl/ShaderCoders.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {Config} from "src/Config.js"
 Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = true;
@@ -362,11 +367,22 @@ export class Suite {
     /**
      * @param {!string} name
      * @param {!function(!{ warn_only: !boolean|!string })} method
+     * @param {!boolean=false} needsFloatSupport
      */
-    webGlTest(name, method) {
-        let wrappedMethod = (caseName, status) => {
+    webGlTest(name, method, needsFloatSupport=false) {
+        let wrappedMethod = (caseName, status, subNeedFloats) => {
+            if (subNeedFloats && !canTestFloatShaders()) {
+                let msg = `Skipping ${this.name}.${caseName} due to lack of WebGL float texture support.`;
+                console.warn(msg);
+                status.log.push(msg);
+                assertThat(undefined); // Cancel 'no assertion' warning.
+                return;
+            }
+
             if (!isWebGLSupportPresent()) {
-                console.warn(`Skipping ${this.name}.${caseName} due to lack of WebGL support.`);
+                let msg = `Skipping ${this.name}.${caseName} due to lack of WebGL support.`;
+                console.warn(msg);
+                status.log.push(msg);
                 assertThat(undefined); // Cancel 'no assertion' warning.
                 return;
             }
@@ -384,24 +400,32 @@ export class Suite {
             status.wasWebGLTest = true;
         };
 
-        this.test(name + '[byte-coder]', (...args) => {
+        this.test(name + '[byte-coder]', status => {
             if (isFirstByteCoderWebGlTest) {
                 changeShaderCoder(SHADER_CODER_BYTES);
                 isFirstByteCoderWebGlTest = false;
             }
-            return wrappedMethod(name + '[byte-coder]', ...args)
+            wrappedMethod(name + '[byte-coder]', status, needsFloatSupport)
         }, false);
 
-        this.test(name + '[float-coder]', (...args) => {
+        this.test(name + '[float-coder]', status => {
             if (isFirstFloatCoderWebGlTest) {
                 changeShaderCoder(SHADER_CODER_FLOATS);
                 isFirstFloatCoderWebGlTest = false;
             }
-            return wrappedMethod(name + '[float-coder]', ...args);
+            wrappedMethod(name + '[float-coder]', status, true);
         }, true);
     }
 
     /**
+     * @param {!string} name
+     * @param {!function(!{ warn_only: !boolean|!string })} method
+     */
+    testUsingWebGLFloatTextures(name, method) {
+        this.webGlTest(name, method, true);
+    }
+
+        /**
      * A test that compares the drawing, performed by the test method on the given canvas, to the given expected image
      * or data.
      * @param {!string} name
