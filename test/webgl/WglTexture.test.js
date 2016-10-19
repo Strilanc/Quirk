@@ -15,7 +15,7 @@ suite.test("properties", () => {
     assertThat(t.toString()).isNotEqualTo(undefined);
 });
 
-suite.webGlTest("readPixels_bytes", () => {
+suite.testUsingWebGL("readPixels_bytes", () => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`
@@ -56,6 +56,6 @@ suite.testUsingWebGLFloatTextures("readPixels_floats", () => {
     ]));
 });
 
-suite.webGlTest("readPixels_empty", () => {
+suite.testUsingWebGL("readPixels_empty", () => {
     assertThat(new WglTexture(0, 0).readPixels()).isEqualTo(new Float32Array([]));
 });

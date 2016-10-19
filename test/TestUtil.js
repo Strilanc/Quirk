@@ -369,7 +369,7 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      * @param {!boolean=false} needsFloatSupport
      */
-    webGlTest(name, method, needsFloatSupport=false) {
+    testUsingWebGL(name, method, needsFloatSupport=false) {
         let wrappedMethod = (caseName, status, subNeedFloats) => {
             if (subNeedFloats && !canTestFloatShaders()) {
                 let msg = `Skipping ${this.name}.${caseName} due to lack of WebGL float texture support.`;
@@ -422,7 +422,7 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     testUsingWebGLFloatTextures(name, method) {
-        this.webGlTest(name, method, true);
+        this.testUsingWebGL(name, method, true);
     }
 
         /**

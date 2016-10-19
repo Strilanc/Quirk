@@ -4,7 +4,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("DensityMatrixDisplay");
 
-suite.webGlTest("amplitudesToCouplings", () => {
+suite.testUsingWebGL("amplitudesToCouplings", () => {
     let s = Math.sqrt(0.5);
     let inp = Shaders.vec2Data(new Float32Array([
         s,0,

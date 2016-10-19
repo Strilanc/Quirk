@@ -30,7 +30,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ['/', undefined]
 ]), diagram);
 
-suite.webGlTest("smoke", () => {
+suite.testUsingWebGL("smoke", () => {
     let c = circuit(`--X-H---•⊕-
                      --•-H---XX-
                      -H--M--@---`);
@@ -52,7 +52,7 @@ function tryGateSequence(gates, maxHeight) {
 // Try known gates, but in separate tests to avoid blowing the per-test time limit warning.
 let knownGateStripes = 16;
 for (let knownGateOffset of Seq.range(knownGateStripes)) {
-    suite.webGlTest(`try-known-gates-in-sequence-${knownGateOffset+1}-of-${knownGateStripes}`, () => {
+    suite.testUsingWebGL(`try-known-gates-in-sequence-${knownGateOffset+1}-of-${knownGateStripes}`, () => {
         let stripe = seq(Gates.KnownToSerializer).
             skip(knownGateOffset).
             stride(knownGateStripes).
@@ -61,7 +61,7 @@ for (let knownGateOffset of Seq.range(knownGateStripes)) {
     });
 }
 
-suite.webGlTest("nested-addition-gate", () => {
+suite.testUsingWebGL("nested-addition-gate", () => {
     let circuitDef = Serializer.fromJson(
         CircuitDefinition,
         {cols:[[1,"X"],[1,"~f2fa"]],gates:[{id:"~f2fa",circuit:{cols:[["+=A1","inputA1"]]}}]});
@@ -73,7 +73,7 @@ suite.webGlTest("nested-addition-gate", () => {
     assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(off);
 });
 
-suite.webGlTest('controlled-displays', () => {
+suite.testUsingWebGL('controlled-displays', () => {
     let c = circuit(`-H-•-@@-
                      ---X-⊕•-`);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
@@ -81,7 +81,7 @@ suite.webGlTest('controlled-displays', () => {
     assertThat(stats.qubitDensityMatrix(6, 0)).isApproximatelyEqualTo(Matrix.square(0, 0, 0, 1));
 });
 
-suite.webGlTest('incoherent-amplitude-display', () => {
+suite.testUsingWebGL('incoherent-amplitude-display', () => {
     let c = circuit(`-H-•-a-
                      ---X---`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(1)]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
@@ -94,7 +94,7 @@ suite.webGlTest('incoherent-amplitude-display', () => {
     });
 });
 
-suite.webGlTest('coherent-amplitude-display', () => {
+suite.testUsingWebGL('coherent-amplitude-display', () => {
     let c = circuit(`-H-•-a/--
                      ---X-//--
                      -H-------`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(2)]);
@@ -109,7 +109,7 @@ suite.webGlTest('coherent-amplitude-display', () => {
     });
 });
 
-suite.webGlTest('conditional-bloch-display', () => {
+suite.testUsingWebGL('conditional-bloch-display', () => {
     let c = circuit(`-H-@-
                      -H-•-`);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
@@ -119,7 +119,7 @@ suite.webGlTest('conditional-bloch-display', () => {
     assertThat(stats.customStatsForSlot(3, 0)).isEqualTo(undefined);
 });
 
-suite.webGlTest('probability-display', () => {
+suite.testUsingWebGL('probability-display', () => {
     let c = circuit(`-H-•-%-
                      ---X-/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
@@ -128,7 +128,7 @@ suite.webGlTest('probability-display', () => {
         Matrix.col(0.5, 0, 0, 0.5));
 });
 
-suite.webGlTest('density-display', () => {
+suite.testUsingWebGL('density-display', () => {
     let c = circuit(`-d/-
                      -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
@@ -140,7 +140,7 @@ suite.webGlTest('density-display', () => {
             0, 0, 0, 0));
 });
 
-suite.webGlTest('shifted-density-display', () => {
+suite.testUsingWebGL('shifted-density-display', () => {
     let c = circuit(`----
                      -d/-
                      -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);

@@ -7,7 +7,7 @@ import {WglArg} from "src/webgl/WglArg.js"
 
 let suite = new Suite("KetShaderUtil");
 
-suite.webGlTest("ketShader", () => {
+suite.testUsingWebGL("ketShader", () => {
     let shader = ketShader(
         'uniform vec2 a, b, c, d;',
         'return cmul(inp(0.0), a+(c-a)*out_id) + cmul(inp(1.0), b+(d-b)*out_id);',
@@ -22,7 +22,7 @@ suite.webGlTest("ketShader", () => {
         new Matrix(2, 2, new Float32Array([2, 3, 5, 7, 11, 13, 17, 19])));
 });
 
-suite.webGlTest("ketShaderPermute", () => {
+suite.testUsingWebGL("ketShaderPermute", () => {
     let shader = ketShaderPermute(
         '',
         'return mod(out_id + 1.0, 4.0);',
@@ -32,7 +32,7 @@ suite.webGlTest("ketShaderPermute", () => {
         Matrix.generateTransition(4, i => (i - 1) & 3));
 });
 
-suite.webGlTest("ketShaderPhase", () => {
+suite.testUsingWebGL("ketShaderPhase", () => {
     let shader = ketShaderPhase(
         '',
         'return vec2(cos(out_id/10.0), sin(out_id/10.0));',

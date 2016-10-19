@@ -10,7 +10,7 @@ import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 let suite = new Suite("GateShaders");
 
-suite.webGlTest('universalNot', () => {
+suite.testUsingWebGL('universalNot', () => {
     let input = Shaders.vec2Data(new Float32Array([
         1,2, 3,4,
         5,6, 7,8

@@ -51,7 +51,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
     return flipped.transpose();
 };
 
-suite.webGlTest("shaderMatchesMatrix", () => {
+suite.testUsingWebGL("shaderMatchesMatrix", () => {
     let time = 6/7;
     for (let gate of Gates.KnownToSerializer) {
         if (gate.height > 4) {

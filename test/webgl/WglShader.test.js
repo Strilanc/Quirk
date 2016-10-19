@@ -6,7 +6,7 @@ import {initializedWglContext} from "src/webgl/WglContext.js"
 
 let suite = new Suite("WglShader");
 
-suite.webGlTest("renderTo_large", () => {
+suite.testUsingWebGL("renderTo_large", () => {
     let tex = new WglTexture(256, 256, WebGLRenderingContext.UNSIGNED_BYTE);
     new WglShader("void main(){gl_FragColor=vec4(3.0,3.0,3.0,3.0)/255.0;}").withArgs().renderTo(tex);
     let expected = new Uint8Array(Seq.repeat(3, 4 * tex.width * tex.height).toArray());
@@ -19,7 +19,7 @@ suite.testUsingWebGLFloatTextures("renderTo_empty", () => {
     assertThat(tex.readPixels()).isEqualTo(new Float32Array([]));
 });
 
-suite.webGlTest("readPixels_bytes_all", () => {
+suite.testUsingWebGL("readPixels_bytes_all", () => {
     let shader = new WglShader(`
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);

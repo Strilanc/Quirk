@@ -180,7 +180,7 @@ suite.test("indexOfDisplayedRowAt", () => {
     assertThat(circuit.indexOfDisplayedRowAt(pts[4].y)).isEqualTo(undefined);
 });
 
-suite.webGlTest("drawCircuitCompletes_QuantumTeleportation", () => {
+suite.testUsingWebGL("drawCircuitCompletes_QuantumTeleportation", () => {
     let teleportCircuit = CircuitDefinition.fromTextDiagram(
         new Map([
             ['X', Gates.HalfTurns.X],

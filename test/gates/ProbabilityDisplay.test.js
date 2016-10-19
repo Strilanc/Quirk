@@ -7,7 +7,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("ProbabilityDisplay");
 
-suite.webGlTest("amplitudesToProbabilities", () => {
+suite.testUsingWebGL("amplitudesToProbabilities", () => {
     let inp = Shaders.vec2Data(new Float32Array([
         2, 3,
         4, 5,

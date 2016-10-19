@@ -202,7 +202,7 @@ suite.testUsingWebGLFloatTextures("vec2Input_floats", () => {
     });
 });
 
-suite.webGlTest("boolOutputs", () => {
+suite.testUsingWebGL("boolOutputs", () => {
     assertThat(SHADER_CODER_BYTES.boolOutput).is(SHADER_CODER_FLOATS.boolOutput);
 
     let output = SHADER_CODER_FLOATS.boolOutput;
@@ -256,7 +256,7 @@ suite.testUsingWebGLFloatTextures("vec4Output_floats", () => {
     ]));
 });
 
-suite.webGlTest("vec2Output_bytes", () => {
+suite.testUsingWebGL("vec2Output_bytes", () => {
     let output = SHADER_CODER_BYTES.vec2Output;
     let shader = combinedShaderPartsWithCode([output], `
         vec2 outputFor(float k) {
@@ -278,7 +278,7 @@ suite.webGlTest("vec2Output_bytes", () => {
         ]));
 });
 
-suite.webGlTest("vec4Output_bytes", () => {
+suite.testUsingWebGL("vec4Output_bytes", () => {
     let output = SHADER_CODER_BYTES.vec4Output;
     let shader = combinedShaderPartsWithCode([output], `
         vec4 outputFor(float k) {
@@ -300,7 +300,7 @@ suite.webGlTest("vec4Output_bytes", () => {
         ]));
 });
 
-suite.webGlTest("bytes_passthrough_vec2", () => {
+suite.testUsingWebGL("bytes_passthrough_vec2", () => {
     let input = SHADER_CODER_BYTES.vec2Input('prev');
     let output = SHADER_CODER_BYTES.vec2Output;
     let shader = combinedShaderPartsWithCode(
@@ -326,7 +326,7 @@ suite.webGlTest("bytes_passthrough_vec2", () => {
     assertThat(outFloats).isEqualTo(floats);
 });
 
-suite.webGlTest("bytes_passthrough_vec4", () => {
+suite.testUsingWebGL("bytes_passthrough_vec4", () => {
     let input = SHADER_CODER_BYTES.vec4Input('prev');
     let output = SHADER_CODER_BYTES.vec4Output;
     let shader = combinedShaderPartsWithCode(
@@ -351,7 +351,7 @@ suite.webGlTest("bytes_passthrough_vec4", () => {
     assertThat(outFloats).isEqualTo(floats);
 });
 
-suite.webGlTest("bytes_zip_through", () => {
+suite.testUsingWebGL("bytes_zip_through", () => {
     let inputA = SHADER_CODER_BYTES.vec4Input('a');
     let inputB = SHADER_CODER_BYTES.vec4Input('b');
     let output = SHADER_CODER_BYTES.vec4Output;
@@ -383,7 +383,7 @@ suite.webGlTest("bytes_zip_through", () => {
     assertThat(outFloats).withInfo({floatsA, floatsB}).isEqualTo(expectedFloats);
 });
 
-suite.webGlTest("bytes_encoding_precision", () => {
+suite.testUsingWebGL("bytes_encoding_precision", () => {
     let inputA = SHADER_CODER_BYTES.vec2Input('a');
     let output = SHADER_CODER_BYTES.vec2Output;
     let shader = combinedShaderPartsWithCode(
