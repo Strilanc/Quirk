@@ -38,12 +38,22 @@ class MathPainter {
                                backgroundColor = Config.DISPLAY_GATE_BACK_COLOR,
                                fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         painter.fillRect(drawArea, backgroundColor);
+        let cen = drawArea.center();
         if (isNaN(probability)) {
             painter.fillPolygon([drawArea.bottomLeft(), drawArea.topLeft(), drawArea.topRight()], fillColor);
-            painter.printParagraph("NaN", drawArea, new Point(0.5, 0.5), 'red');
+            painter.print("NaN", cen.x, cen.y, 'center', 'middle', 'red', '9pt sans-serif', drawArea.w, drawArea.h);
         } else {
             painter.fillRect(drawArea.takeBottomProportion(probability), fillColor);
-            painter.printParagraph(MathPainter.describeProbability(probability, 1), drawArea, new Point(0.5, 0.5));
+            painter.print(
+                MathPainter.describeProbability(probability, 1),
+                cen.x,
+                cen.y,
+                'center',
+                'middle',
+                'black',
+                '9pt sans-serif',
+                drawArea.w,
+                drawArea.h);
         }
 
         painter.strokeRect(drawArea, 'lightgray');
