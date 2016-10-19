@@ -13,7 +13,7 @@ class GateDrawParams {
      * @param {!CircuitStats} stats
      * @param {undefined|!{row: !int, col: !int}} positionInCircuit
      * @param {!Array.<!Point>} focusPoints
-     * @param {undefined|*} customStats
+     * @param {undefined|*} customStatsForCircuitPos
      */
     constructor(painter,
                 isInToolbox,
@@ -25,7 +25,7 @@ class GateDrawParams {
                 stats,
                 positionInCircuit,
                 focusPoints,
-                customStats) {
+                customStatsForCircuitPos) {
         /** @type {!Painter} */
         this.painter = painter;
         /** @type {!boolean} */
@@ -47,7 +47,7 @@ class GateDrawParams {
         /** @type {!Array.<!Point>} */
         this.focusPoints = focusPoints;
         /** @type {undefined|*} */
-        this.customStats = customStats;
+        this.customStats = customStatsForCircuitPos;
     }
 }
 

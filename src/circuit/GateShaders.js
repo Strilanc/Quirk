@@ -46,18 +46,18 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = ketShader(
     1);
 
 const multiQubitOperationMaker = qubitCount => ketShader(
-    `uniform float coefs[${2<<(2*qubitCount)}];`,
+    // Pack into vec4s to avoid blowing maximum uniform limits of 224 for the 16x16 matrix (which requires 512 numbers).
+    `uniform vec4 coefs[${1<<(2*qubitCount-1)}];`,
     `
         int row = int(out_id);
         vec2 t = vec2(0.0, 0.0);
         for (int d = 0; d < ${1<<qubitCount}; d++) {
             // Can't index by row, since it's not a constant, so we do a const brute force loop searching for it.
             if (d == row) {
-                for (int k = 0; k < ${1<<qubitCount}; k++) {
-                    vec2 v = inp(float(k));
-                    float r = coefs[d*${2<<qubitCount} + k*2];
-                    float i = coefs[d*${2<<qubitCount} + k*2 + 1];
-                    t += cmul(v, vec2(r, i));
+                for (int k = 0; k < ${1<<(qubitCount-1)}; k++) {
+                    vec4 u = coefs[d*${1<<(qubitCount-1)} + k];
+                    t += cmul(inp(float(k*2)), u.xy);
+                    t += cmul(inp(float(k*2+1)), u.zw);
                 }
             }
         }
@@ -89,7 +89,7 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
     let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
     ctx.applyOperation(shader.withArgs(
         ...ketArgs(ctx),
-        WglArg.float_array("coefs", matrix.rawBuffer())));
+        WglArg.vec4_array("coefs", matrix.rawBuffer())));
 };
 
 /**

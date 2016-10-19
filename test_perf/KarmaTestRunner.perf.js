@@ -19,8 +19,9 @@ let promiseRunPerfTest = ({name, method}) => {
 
     let t0 = performance.now();
     return execIntoPromise(method).then(
-        passed => {
-            result.success = passed;
+        ({pass, info}) => {
+            result.success = pass;
+            result.log.push(info);
         },
         ex => {
             result.log.push(String(ex));

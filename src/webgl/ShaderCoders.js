@@ -292,14 +292,21 @@ const PACK_FLOAT_INTO_BYTES = `
     vec4 _gen_packFloatIntoBytes(float val) {
         float sign = float(val < 0.0);
         float mag = abs(val);
-        float exponent = mag == 0.0 ? -127.0 : floor(0.1 + log2(mag));
-        exponent -= float(mag != 0.0 && exp2(exponent) > mag);
-        float mantissa = max(0.0, mag * exp2(-exponent) - 1.0);
+        float exponent = mag == 0.0 ? -127.0 : floor(log2(mag));
+        exponent += float(mag != 0.0 && exp2(exponent + 1.0) <= mag);
+        // Note: multiplying by exp2(-exponent), instead of dividing, may cause precision loss.
+        // (Happened on a Nexus tablet.)
+        float mantissa = max(0.0, (mag - exp2(exponent)) / exp2(exponent));
 
         float a = exponent + 127.0;
-        float b = floor(mantissa * 256.0);
-        float c = floor(mod(mantissa * 65536.0, 256.0));
-        float d = floor(mod(mantissa * 8388608.0, 128.0)) * 2.0 + sign;
+        mantissa *= 256.0;
+        float b = floor(mantissa);
+        mantissa -= b;
+        mantissa *= 256.0;
+        float c = floor(mantissa);
+        mantissa -= c;
+        mantissa *= 128.0;
+        float d = floor(mantissa) * 2.0 + sign;
         return vec4(a, b, c, d) / 255.0;
     }`;
 
@@ -702,6 +709,7 @@ function changeShaderCoder(newCoder) {
     }
 
     _curShaderCoder = newCoder;
+    _outShaderCoder = newCoder;
 }
 
 function _tryReadAndWriteFloatingPointTexture() {
@@ -710,7 +718,7 @@ function _tryReadAndWriteFloatingPointTexture() {
     //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(texture);
-        let result = texture.readPixels();
+        let result = texture.readPixels(false);
         return result instanceof Float32Array &&
             result.length === 4 &&
             result[0] === 2 &&
@@ -735,7 +743,7 @@ function _tryWriteFloatingPointWithByteReadTexture() {
     try {
         shader.withArgs().renderTo(textureFloat);
         passer.withArgs(WglArg.texture('t', textureFloat)).renderTo(textureByte);
-        let result = textureByte.readPixels();
+        let result = textureByte.readPixels(false);
         return result instanceof Uint8Array &&
             result.length === 4 &&
             result[0] === 2 &&
@@ -754,11 +762,11 @@ function _tryWriteFloatingPointWithByteReadTexture() {
 }
 
 function _chooseShaderCoders() {
-    if (_tryWriteFloatingPointWithByteReadTexture()) {
+    if (_tryReadAndWriteFloatingPointTexture()) {
         // Floats work. Hurray!
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_FLOATS;
-    } else if (_tryReadAndWriteFloatingPointTexture()) {
+    } else if (_tryWriteFloatingPointWithByteReadTexture()) {
         console.warn("Wrote but failed to read a floating point texture. Falling back to float-as-byte output coding.");
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_BYTES;
@@ -767,6 +775,14 @@ function _chooseShaderCoders() {
         _curShaderCoder = SHADER_CODER_BYTES;
         _outShaderCoder = SHADER_CODER_BYTES;
     }
+}
+
+let _floatShadersWorkWell = undefined;
+function canTestFloatShaders() {
+    if (_floatShadersWorkWell === undefined) {
+        _floatShadersWorkWell = _tryReadAndWriteFloatingPointTexture();
+    }
+    return _floatShadersWorkWell
 }
 
 _chooseShaderCoders();
@@ -783,6 +799,7 @@ export {
     changeShaderCoder,
     Inputs,
     Outputs,
-    outputShaderCoder
+    outputShaderCoder,
+    canTestFloatShaders
 }
 provideWorkingShaderCoderToWglConfiguredShader(currentShaderCoder);

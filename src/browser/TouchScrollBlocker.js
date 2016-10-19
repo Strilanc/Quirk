@@ -13,36 +13,60 @@ class TouchScrollBlocker {
         this._parentElement = parentElement;
 
         /**
-         * @type {!HTMLDivElement}
+         * @type {!{div: !HTMLDivElement, area: !Rect}}
          * @private
          */
-        this._blockerDivs = [];
+        this._curBlockers = [];
+
+        /**
+         * @type {!int}
+         * @private
+         */
+        this._curShowing = 0;
     }
 
+    //noinspection Eslint
     /**
-     * @param {!Array.<!{rect: !Rect, cursor: undefined|!string}>} blockers
+     * @param {!Array.<!{rect: !Rect, cursor: undefined|!string}>} desiredBlockers
      * @param {undefined|!string} overrideCursorStyle
      */
-    setBlockers(blockers, overrideCursorStyle) {
-        while (this._blockerDivs.length < blockers.length) {
+    setBlockers(desiredBlockers, overrideCursorStyle) {
+        while (this._curBlockers.length < desiredBlockers.length) {
             let blockerDiv = document.createElement('div');
             blockerDiv.style.touchAction = 'none';
             blockerDiv.style.position = 'absolute';
-            blockerDiv.style.opacity = 0;
+            blockerDiv.style.opacity = 0.0001;
             this._parentElement.appendChild(blockerDiv);
-            this._blockerDivs.push(blockerDiv);
+            this._curBlockers.push({div: blockerDiv, area: undefined});
         }
 
-        for (let i = 0; i < blockers.length; i++) {
-            let s = this._blockerDivs[i].style;
-            let r = blockers[i].rect;
-            [s.left, s.top, s.width, s.height] = [r.x, r.y, r.w, r.h].map(e => e + "px");
-            s.cursor = overrideCursorStyle || blockers[i].cursor || 'auto';
-            s.display = 'inline';
+        // Positioning.
+        for (let i = 0; i < desiredBlockers.length; i++) {
+            let desiredArea = desiredBlockers[i].rect;
+            let desiredCursor = overrideCursorStyle || desiredBlockers[i].cursor || 'auto';
+            let cur = this._curBlockers[i];
+            let style = cur.div.style;
+
+            if (!desiredArea.isEqualTo(cur.area)) {
+                cur.area = desiredArea;
+                style.left = desiredArea.x + "px";
+                style.top = desiredArea.y + "px";
+                style.width = desiredArea.w + "px";
+                style.height = desiredArea.h + "px";
+            }
+            if (style.cursor !== desiredCursor) {
+                style.cursor = desiredCursor;
+            }
         }
 
-        for (let i = blockers.length; i < this._blockerDivs.length; i++) {
-            this._blockerDivs[i].style.display = 'none';
+        // Visibility.
+        while (this._curShowing < desiredBlockers.length) {
+            this._curBlockers[this._curShowing].div.style.display = 'inline';
+            this._curShowing++;
+        }
+        while (this._curShowing > desiredBlockers.length) {
+            this._curShowing--;
+            this._curBlockers[this._curShowing].div.style.display = 'none';
         }
     }
 }

@@ -204,13 +204,16 @@ class WglCompiledShader {
         gl.shaderSource(shader, sourceCode);
         gl.compileShader(shader);
 
-        if (gl.getShaderInfoLog(shader) !== '') {
-            console.warn('WebGLShader: gl.getShaderInfoLog()', gl.getShaderInfoLog(shader));
-            console.warn(sourceCode);
+        let info = gl.getShaderInfoLog(shader);
+        if (info !== '') {
+            console.warn("WebGLShader: gl.getShaderInfoLog() wasn't empty: " + gl.getShaderInfoLog(shader));
+            console.warn("Source code was: " + sourceCode);
         }
 
         if (gl.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS) === false) {
-            throw new Error(`WebGLShader: Shader compile failed: ${sourceCode} ${gl.getError()}`);
+            throw new Error(`WebGLShader: Shader compile failed.
+                Info: ${info}
+                Source: ${sourceCode}`);
         }
 
         return shader;

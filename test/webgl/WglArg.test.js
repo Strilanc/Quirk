@@ -5,7 +5,7 @@ import {WglTexture} from "src/webgl/WglTexture.js"
 
 let suite = new Suite("WglArg");
 
-suite.webGlTest("bool", () => {
+suite.testUsingWebGLFloatTextures("bool", () => {
     let texture = new WglTexture(1, 1);
     let shader = new WglShader(`
         uniform bool arg;
@@ -24,7 +24,7 @@ suite.webGlTest("bool", () => {
     ]));
 });
 
-suite.webGlTest("float", () => {
+suite.testUsingWebGLFloatTextures("float", () => {
     let texture = new WglTexture(1, 1);
     let shader = new WglShader(`
         uniform float arg;
@@ -43,7 +43,7 @@ suite.webGlTest("float", () => {
     ]));
 });
 
-suite.webGlTest("int", () => {
+suite.testUsingWebGLFloatTextures("int", () => {
     let texture = new WglTexture(1, 1);
     let shader = new WglShader(`
         uniform int arg;
@@ -62,7 +62,7 @@ suite.webGlTest("int", () => {
     ]));
 });
 
-suite.webGlTest("vec2", () => {
+suite.testUsingWebGLFloatTextures("vec2", () => {
     let texture = new WglTexture(1, 1);
     let shader = new WglShader(`
         uniform vec2 arg;
@@ -81,7 +81,7 @@ suite.webGlTest("vec2", () => {
     ]));
 });
 
-suite.webGlTest("vec4", () => {
+suite.testUsingWebGLFloatTextures("vec4", () => {
     let texture = new WglTexture(1, 1);
     let shader = new WglShader(`
         uniform vec4 arg;
@@ -100,7 +100,7 @@ suite.webGlTest("vec4", () => {
     ]));
 });
 
-suite.webGlTest("mat4", () => {
+suite.testUsingWebGLFloatTextures("mat4", () => {
     let texture = new WglTexture(4, 1);
     let shader = new WglShader(`
         uniform mat4 arg;
@@ -121,7 +121,7 @@ suite.webGlTest("mat4", () => {
     assertThat(texture.readPixels()).isEqualTo(vals);
 });
 
-suite.webGlTest("texture", () => {
+suite.testUsingWebGLFloatTextures("texture", () => {
     let srcTexture = new WglTexture(1, 1);
     new WglShader("void main(){gl_FragColor=vec4(1, 2, 3, 5);}").withArgs().renderTo(srcTexture);
     let texture = new WglTexture(1, 1);
@@ -134,5 +134,47 @@ suite.webGlTest("texture", () => {
     shader.withArgs(WglArg.texture("arg", srcTexture)).renderTo(texture);
     assertThat(texture.readPixels()).isEqualTo(new Float32Array([
         1, 2, 3, 5
+    ]));
+});
+
+suite.testUsingWebGLFloatTextures("float_array", () => {
+    let texture = new WglTexture(1, 1);
+    let shader = new WglShader(`
+        uniform float arg[2];
+        void main() {
+            gl_FragColor = vec4(arg[0], arg[1], 0.0, 0.0);
+        }`);
+
+    shader.withArgs(WglArg.float_array("arg", new Float32Array([2, 3]))).renderTo(texture);
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
+        2, 3, 0, 0
+    ]));
+});
+
+suite.testUsingWebGLFloatTextures("vec2_array", () => {
+    let texture = new WglTexture(1, 1);
+    let shader = new WglShader(`
+        uniform vec2 arg[2];
+        void main() {
+            gl_FragColor = vec4(arg[0], arg[1]);
+        }`);
+
+    shader.withArgs(WglArg.vec2_array("arg", new Float32Array([2, 3, 5, 7]))).renderTo(texture);
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
+        2, 3, 5, 7
+    ]));
+});
+
+suite.testUsingWebGLFloatTextures("vec4_array", () => {
+    let texture = new WglTexture(1, 1);
+    let shader = new WglShader(`
+        uniform vec4 arg[1];
+        void main() {
+            gl_FragColor = arg[0];
+        }`);
+
+    shader.withArgs(WglArg.vec4_array("arg", new Float32Array([2, 3, 5, 7]))).renderTo(texture);
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
+        2, 3, 5, 7
     ]));
 });

@@ -13,7 +13,7 @@ suite.webGlTest("renderTo_large", () => {
     assertThat(tex.readPixels()).isEqualTo(expected);
 });
 
-suite.webGlTest("renderTo_empty", () => {
+suite.testUsingWebGLFloatTextures("renderTo_empty", () => {
     let tex = new WglTexture(0, 0);
     new WglShader("void main(){gl_FragColor=vec4(0.0,0.0,0.0,0.0);}").withArgs().renderTo(tex);
     assertThat(tex.readPixels()).isEqualTo(new Float32Array([]));
@@ -39,7 +39,7 @@ suite.webGlTest("readPixels_bytes_all", () => {
     tex.ensureDeinitialized();
 });
 
-suite.webGlTest("changeSourceAfterInvalidate", () => {
+suite.testUsingWebGLFloatTextures("changeSourceAfterInvalidate", () => {
     let tex = new WglTexture(1, 1);
     let flag = true;
     let shader = new WglShader(() => flag ?

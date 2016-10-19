@@ -67,7 +67,7 @@ suite.test("floats_vs_bytes_round_trip", () => {
     assertThat(decodeBytesIntoFloats(bytes)).isEqualTo(floats);
 });
 
-suite.webGlTest("boolInputs", () => {
+suite.testUsingWebGLFloatTextures("boolInputs", () => {
     assertThat(SHADER_CODER_FLOATS.boolInput).is(SHADER_CODER_BYTES.boolInput);
     let inp = SHADER_CODER_BYTES.boolInput('a');
     let shader = combinedShaderPartsWithCode([inp], `
@@ -87,7 +87,7 @@ suite.webGlTest("boolInputs", () => {
     tex.deallocByDepositingInPool();
 });
 
-suite.webGlTest("vec2Input_bytes", () => {
+suite.testUsingWebGLFloatTextures("vec2Input_bytes", () => {
     let param = SHADER_CODER_BYTES.vec2Input('a');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
@@ -116,7 +116,7 @@ suite.webGlTest("vec2Input_bytes", () => {
     });
 });
 
-suite.webGlTest("vec4Input_bytes", () => {
+suite.testUsingWebGLFloatTextures("vec4Input_bytes", () => {
     let param = SHADER_CODER_BYTES.vec4Input('test_input');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
@@ -143,7 +143,7 @@ suite.webGlTest("vec4Input_bytes", () => {
     });
 });
 
-suite.webGlTest("vec4Input_floats", () => {
+suite.testUsingWebGLFloatTextures("vec4Input_floats", () => {
     let param = SHADER_CODER_FLOATS.vec4Input('test_input');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
@@ -169,7 +169,7 @@ suite.webGlTest("vec4Input_floats", () => {
     });
 });
 
-suite.webGlTest("vec2Input_floats", () => {
+suite.testUsingWebGLFloatTextures("vec2Input_floats", () => {
     let param = SHADER_CODER_FLOATS.vec2Input('fancy');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
@@ -216,7 +216,7 @@ suite.webGlTest("boolOutputs", () => {
     ]));
 });
 
-suite.webGlTest("vec2Output_floats", () => {
+suite.testUsingWebGLFloatTextures("vec2Output_floats", () => {
     let output = SHADER_CODER_FLOATS.vec2Output;
     let shader = combinedShaderPartsWithCode([output], `
         vec2 outputFor(float k) {
@@ -236,7 +236,7 @@ suite.webGlTest("vec2Output_floats", () => {
     ]));
 });
 
-suite.webGlTest("vec4Output_floats", () => {
+suite.testUsingWebGLFloatTextures("vec4Output_floats", () => {
     let output = SHADER_CODER_FLOATS.vec4Output;
     let shader = combinedShaderPartsWithCode([output], `
         vec4 outputFor(float k) {
@@ -374,11 +374,35 @@ suite.webGlTest("bytes_zip_through", () => {
     texA.deallocByDepositingInPool();
     texB.deallocByDepositingInPool();
 
-    let expectedFloats = new Float32Array(floatsA.length);
+    let expectedFloats = new Float32Array(floatsA);
     for (let i = 0; i < expectedFloats.length; i++) {
         let r = i % 4;
         let q = i >> 2;
-        expectedFloats[i] = floatsA[i] + floatsB[(15 - q)*4 + r];
+        expectedFloats[i] += floatsB[(15 - q)*4 + r];
     }
-    assertThat(outFloats).isEqualTo(expectedFloats);
+    assertThat(outFloats).withInfo({floatsA, floatsB}).isEqualTo(expectedFloats);
+});
+
+suite.webGlTest("bytes_encoding_precision", () => {
+    let inputA = SHADER_CODER_BYTES.vec2Input('a');
+    let output = SHADER_CODER_BYTES.vec2Output;
+    let shader = combinedShaderPartsWithCode(
+        [inputA, output], `
+        vec2 outputFor(float k) { return read_a(k); }`);
+
+    let floatsIn = decodeBytesIntoFloats([
+        124, 168, 76, 193,
+        124, 168, 76, 194,
+        124, 168, 76, 195,
+        124, 168, 76, 196
+    ]);
+    let bytesIn = encodeFloatsIntoBytes(floatsIn);
+
+    let texA = Shaders.data(bytesIn).toRawByteTexture(2);
+    let bytesOut = shaderWithOutputPartAndArgs(shader, output, [...inputA.argsFor(texA)]).readRawByteOutputs(2);
+    let floatsOut = decodeBytesIntoFloats(bytesOut);
+    texA.deallocByDepositingInPool();
+
+    assertThat(bytesOut).isEqualTo(bytesIn);
+    assertThat(floatsOut).isEqualTo(floatsIn);
 });

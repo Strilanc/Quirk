@@ -36,7 +36,7 @@ suite.webGlTest("readPixels_bytes", () => {
     ]));
 });
 
-suite.webGlTest("readPixels_floats", () => {
+suite.testUsingWebGLFloatTextures("readPixels_floats", () => {
     let w = 2;
     let h = 2;
     let shader = new WglShader(`

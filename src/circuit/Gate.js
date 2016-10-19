@@ -565,7 +565,7 @@ class Gate {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {undefined|!boolean}
      */
     controlBit() {
         return this._controlBit;

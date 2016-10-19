@@ -16,7 +16,7 @@ let promiseRunTest = (suite, name, method) => {
         log: [],
         time: undefined
     };
-    let status = {warn_only: false};
+    let status = {warn_only: false, log: result.log};
 
     let t0;
     let t1;
@@ -42,12 +42,17 @@ let promiseRunTest = (suite, name, method) => {
         }
         return finish();
     }, ex => {
-        result.log.push(String(ex));
+        let msg = String(ex);
+        result.log.push(msg);
         if (ex.details !== undefined) {
             result.log.push(ex.details);
         }
         if (ex.stack !== undefined) {
-            result.log.push(ex.stack);
+            let stackMsg = String(ex.stack);
+            if (stackMsg.startsWith(msg)) {
+                stackMsg = stackMsg.substring(msg.length);
+            }
+            result.log.push(stackMsg);
         }
         if (status.warn_only) {
             console.warn(`${suite.name}.${name} FAILED, but is set to warn_only (${status.warn_only})`)
@@ -67,17 +72,22 @@ __karma__.start = () => {
     }
     __karma__.info({ total: total });
 
-    let early = Promise.all(Suite.suites.map(suite => {
-        let suiteResult = Promise.all(suite.tests.map(e => promiseRunTest(suite, e[0], e[1])));
-        suiteResult.catch(() => console.error(`${suite.name} suite failed`));
-        return suiteResult;
-    }));
+    let chain = Promise.resolve();
+    for (let suite of Suite.suites) {
+        chain = chain.then(() => new Promise(resolver => setTimeout(() => {
+            let suiteResult = Promise.all(suite.tests.map(e => promiseRunTest(suite, e[0], e[1])));
+            suiteResult.catch(() => console.error(`${suite.name} suite failed`));
+            resolver();
+        }, 0)));
+    }
 
-    let late = early.then(() => Promise.all(Suite.suites.map(suite => {
-        let suiteResult = Promise.all(suite.later_tests.map(e => promiseRunTest(suite, e[0], e[1])));
-        suiteResult.catch(() => console.error(`${suite.name} suite failed`));
-        return suiteResult;
-    })));
+    for (let suite of Suite.suites) {
+        chain = chain.then(() => new Promise(resolver => setTimeout(() => {
+            let suiteResult = Promise.all(suite.later_tests.map(e => promiseRunTest(suite, e[0], e[1])));
+            suiteResult.catch(() => console.error(`${suite.name} suite failed`));
+            resolver();
+        }, 0)));
+    }
 
-    return late.then(() => __karma__.complete());
+    return chain.then(() => __karma__.complete());
 };

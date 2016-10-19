@@ -553,23 +553,23 @@ class DisplayedCircuit {
 
         let hasTwoSwaps = stats.circuitDefinition.colHasEnabledSwapGate(columnIndex);
 
-        let firstLast = p => [Seq.range(n).filter(p).first(null), Seq.range(n).filter(p).last(null)];
+        let firstLast = predicate => firstLastMatchInRange(n, predicate);
         let [t1, t2] = firstLast(i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i)));
         let [c1, c2] = firstLast(i => this.circuitDefinition.locStartsSingleControlWire(new Point(columnIndex, i)));
         let [cc1, cc2] = firstLast(i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i)));
         let [s1, s2] = firstLast(i => hasTwoSwaps && gs[i] === Gates.Special.SwapHalf);
 
-        if (c1 !== null && t1 !== null) {
+        if (c1 !== undefined && t1 !== undefined) {
             let y1 =  this.wireRect(Math.min(t1, c1)).center().y;
             let y2 = this.wireRect(Math.max(t2, c2)).center().y;
             painter.strokeLine(new Point(x,y1), new Point(x, y2));
         }
-        if (s1 !== null) {
+        if (s1 !== undefined) {
             let y1 =  this.wireRect(s1).center().y;
             let y2 = this.wireRect(s2).center().y;
             painter.strokeLine(new Point(x,y1), new Point(x, y2));
         }
-        if (cc1 !== null && t1 !== null) {
+        if (cc1 !== undefined && t1 !== undefined) {
             let y1 =  this.wireRect(Math.min(t1, cc1)).center().y;
             let y2 = this.wireRect(Math.max(t2, cc2)).center().y;
             painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
@@ -961,9 +961,8 @@ class DisplayedCircuit {
     importantWireCount() {
         return Math.max(
             this.circuitDefinition.numWires - (this._extraWireStartIndex === Config.MAX_WIRE_COUNT ? 0 : 1),
-            Math.max(
-                Config.MIN_WIRE_COUNT,
-                this.circuitDefinition.minimumRequiredWireCount()));
+            Config.MIN_WIRE_COUNT,
+            this.circuitDefinition.minimumRequiredWireCount());
     }
 
     /**
@@ -975,7 +974,7 @@ class DisplayedCircuit {
      * @private
      */
     _drawOutputDisplays(painter, stats, hand) {
-        let chanceCol = this._clampedCircuitColCount() + 1;
+        let chanceCol = this.clampedCircuitColCount() + 1;
         let blochCol = chanceCol + 1;
         let numWire = this.importantWireCount();
 
@@ -1001,9 +1000,8 @@ class DisplayedCircuit {
 
     /**
      * @returns {!number} The number of columns used for drawing the circuit, before the output display.
-     * @private
      */
-    _clampedCircuitColCount() {
+    clampedCircuitColCount() {
         return Math.max(
             this.circuitDefinition.columns.length,
             Config.MIN_COL_COUNT + (this._compressedColumnIndex !== undefined ? 1 : 0));
@@ -1140,7 +1138,7 @@ class DisplayedCircuit {
      * @private
      */
     _rectForSuperpositionDisplay() {
-        let col = this._clampedCircuitColCount() + EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS + 1;
+        let col = this.clampedCircuitColCount() + EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS + 1;
         let numWire = this.importantWireCount();
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
@@ -1280,5 +1278,24 @@ let GATE_CIRCUIT_DRAWER = args => {
     }
     GatePainting.paintOutline(args);
 };
+
+/**
+ * @param {!int} rangeLen
+ * @param {!function(!int): !boolean} predicate
+ * @returns {!Array.<undefined|!int>}
+ */
+function firstLastMatchInRange(rangeLen, predicate){
+    let first = undefined;
+    let last = undefined;
+    for (let i = 0; i < rangeLen; i++) {
+        if (predicate(i)) {
+            if (first === undefined) {
+                first = i;
+            }
+            last = i;
+        }
+    }
+    return [first, last];
+}
 
 export {DisplayedCircuit, drawCircuitTooltip, GATE_CIRCUIT_DRAWER}

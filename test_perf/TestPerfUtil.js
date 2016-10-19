@@ -37,9 +37,14 @@ function perfGoal(name, targetDuration, method, arg=undefined) {
     _knownPerfTests.push({name, method: () => {
         let dt = _measureDuration(method, arg, targetDuration.duration_nanos);
         let p = dt.duration_nanos / targetDuration.duration_nanos;
-        let logger = (p > 1 ? console.warn : console.log);
-        logger(`${_proportionDesc(p)} of goal [${_pad(targetDuration.description, 6)}] for ${name}`);
-        return dt.duration_nanos <= targetDuration.duration_nanos
+        let pass = dt.duration_nanos <= targetDuration.duration_nanos;
+        let info = `${_proportionDesc(p)} of goal [${_pad(targetDuration.description, 6)}] for ${name}`;
+        if (pass) {
+            console.log(info);
+        } else {
+            console.warn(info);
+        }
+        return {pass, info}
     }});
 }
 
@@ -62,7 +67,9 @@ function _proportionBar(proportion, length=20) {
 
 function _measureDuration(method, arg, expected_nanos_hint) {
     let ms = 1.0e6;
-    let repeats = expected_nanos_hint < 30 * ms ? 50 : 10;
+    let repeats = expected_nanos_hint < 5 * ms ? 100 :
+        expected_nanos_hint < 30 * ms ? 50 :
+        10;
     // Dry run to get any one-time initialization done.
     method(arg);
 
