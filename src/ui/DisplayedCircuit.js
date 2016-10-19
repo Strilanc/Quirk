@@ -961,9 +961,8 @@ class DisplayedCircuit {
     importantWireCount() {
         return Math.max(
             this.circuitDefinition.numWires - (this._extraWireStartIndex === Config.MAX_WIRE_COUNT ? 0 : 1),
-            Math.max(
-                Config.MIN_WIRE_COUNT,
-                this.circuitDefinition.minimumRequiredWireCount()));
+            Config.MIN_WIRE_COUNT,
+            this.circuitDefinition.minimumRequiredWireCount());
     }
 
     /**
