@@ -269,28 +269,37 @@ class DisplayedInspector {
         this._drawHint_watchOutputsChange(painter);
         this._drawHint_useControls(painter);
     }
+
+    /**
+     * @returns {!number}
+     * @private
+     */
+    _watchOutputsChangeVisibility() {
+        let gatesInCircuit = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
+        let gatesInPlay = gatesInCircuit + (this.hand.isBusy() ? 1 : 0);
+        if (gatesInCircuit >= 2 || gatesInPlay === 0) {
+            return 0;
+        }
+
+        let handPosY = this.hand.pos === undefined ? Infinity : this.hand.pos.y;
+        return gatesInCircuit === 0 ? (handPosY - 125)/25 :
+               gatesInPlay === 2 ? (150 - handPosY)/25 :
+               1.0;
+    }
+
     /**
      * @param {!Painter} painter
      * @private
      */
     _drawHint_watchOutputsChange(painter) {
-        let gatesInCircuit = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
-        let gatesInPlay = gatesInCircuit + (this.hand.isBusy() ? 1 : 0);
-        if (gatesInCircuit >= 2 || gatesInPlay === 0) {
-            return;
-        }
-
-        let handPosY = this.hand.pos === undefined ? Infinity : this.hand.pos.y;
-        let visibilityFactor =
-            gatesInCircuit === 0 ? (handPosY - 125)/25 :
-            gatesInPlay === 2 ? (150 - handPosY)/25 :
-            1.0;
+        let visibilityFactor = this._watchOutputsChangeVisibility();
         if (visibilityFactor <= 0) {
             return;
         }
 
         painter.ctx.save();
         painter.ctx.globalAlpha *= Math.min(1, visibilityFactor);
+        painter.ctx.translate(this.displayedCircuit.opRect(this.displayedCircuit.clampedCircuitColCount()).x - 280, 15);
 
         painter.ctx.save();
         painter.ctx.translate(268, 250);
@@ -306,7 +315,7 @@ class DisplayedInspector {
         painter.ctx.bezierCurveTo(
             300, 245,
             315, 235,
-            328, 222);
+            325, 225);
         painter.ctx.strokeStyle = 'red';
         painter.ctx.lineWidth = 3;
         painter.ctx.stroke();
@@ -352,7 +361,7 @@ class DisplayedInspector {
         painter.ctx.bezierCurveTo(
             260, 170,
             235, 175,
-            210, 190);
+            217, 187);
         painter.ctx.strokeStyle = 'red';
         painter.ctx.lineWidth = 3;
         painter.ctx.stroke();
@@ -364,6 +373,10 @@ class DisplayedInspector {
         painter.ctx.restore();
     }
 
+    /**
+     * @returns {!number}
+     * @private
+     */
     _useControlsHintVisibility() {
         let circ = this.displayedCircuit.circuitDefinition;
         let gatesInCircuit = circ.countGatesUpTo(2);

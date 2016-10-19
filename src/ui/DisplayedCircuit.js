@@ -975,7 +975,7 @@ class DisplayedCircuit {
      * @private
      */
     _drawOutputDisplays(painter, stats, hand) {
-        let chanceCol = this._clampedCircuitColCount() + 1;
+        let chanceCol = this.clampedCircuitColCount() + 1;
         let blochCol = chanceCol + 1;
         let numWire = this.importantWireCount();
 
@@ -1001,9 +1001,8 @@ class DisplayedCircuit {
 
     /**
      * @returns {!number} The number of columns used for drawing the circuit, before the output display.
-     * @private
      */
-    _clampedCircuitColCount() {
+    clampedCircuitColCount() {
         return Math.max(
             this.circuitDefinition.columns.length,
             Config.MIN_COL_COUNT + (this._compressedColumnIndex !== undefined ? 1 : 0));
@@ -1140,7 +1139,7 @@ class DisplayedCircuit {
      * @private
      */
     _rectForSuperpositionDisplay() {
-        let col = this._clampedCircuitColCount() + EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS + 1;
+        let col = this.clampedCircuitColCount() + EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS + 1;
         let numWire = this.importantWireCount();
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
