@@ -169,9 +169,10 @@ class WglTexture {
 
     /**
      * Performs a blocking read of the pixel color data in this texture.
+     * @param {!boolean} isOnHotPath
      * @returns {!Uint8Array|!Float32Array}
      */
-    readPixels() {
+    readPixels(isOnHotPath=true) {
         const GL = WebGLRenderingContext;
         if (!this._hasBeenRenderedTo) {
             throw new Error("Called readPixels on a texture that hasn't been rendered to.");
@@ -195,10 +196,10 @@ class WglTexture {
 
         let gl = initializedWglContext().gl;
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.initializedFramebuffer());
-        checkGetErrorResult(gl, "framebufferTexture2D", true);
-        checkFrameBufferStatusResult(gl, true);
+        checkGetErrorResult(gl, "framebufferTexture2D", isOnHotPath);
+        checkFrameBufferStatusResult(gl, isOnHotPath);
         gl.readPixels(0, 0, this.width, this.height, GL.RGBA, this.pixelType, outputBuffer);
-        checkGetErrorResult(gl, `readPixels(..., RGBA, ${this.pixelType}, ...)`, true);
+        checkGetErrorResult(gl, `readPixels(..., RGBA, ${this.pixelType}, ...)`, isOnHotPath);
 
         return outputBuffer;
     }

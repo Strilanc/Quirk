@@ -710,7 +710,7 @@ function _tryReadAndWriteFloatingPointTexture() {
     //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(texture);
-        let result = texture.readPixels();
+        let result = texture.readPixels(false);
         return result instanceof Float32Array &&
             result.length === 4 &&
             result[0] === 2 &&
@@ -735,7 +735,7 @@ function _tryWriteFloatingPointWithByteReadTexture() {
     try {
         shader.withArgs().renderTo(textureFloat);
         passer.withArgs(WglArg.texture('t', textureFloat)).renderTo(textureByte);
-        let result = textureByte.readPixels();
+        let result = textureByte.readPixels(false);
         return result instanceof Uint8Array &&
             result.length === 4 &&
             result[0] === 2 &&
@@ -754,11 +754,11 @@ function _tryWriteFloatingPointWithByteReadTexture() {
 }
 
 function _chooseShaderCoders() {
-    if (_tryWriteFloatingPointWithByteReadTexture()) {
+    if (_tryReadAndWriteFloatingPointTexture()) {
         // Floats work. Hurray!
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_FLOATS;
-    } else if (_tryReadAndWriteFloatingPointTexture()) {
+    } else if (_tryWriteFloatingPointWithByteReadTexture()) {
         console.warn("Wrote but failed to read a floating point texture. Falling back to float-as-byte output coding.");
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_BYTES;
