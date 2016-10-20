@@ -18,6 +18,37 @@ import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 class KetTextureUtil {}
 
 /**
+ * @param {!WglTextureTrader} trader
+ * @returns {!Float32Array}
+ */
+KetTextureUtil.tradeTextureForVec2Output = trader => {
+    currentShaderCoder().vec2TradePack(trader);
+    return KetTextureUtil.tradeTextureForVec4Output(trader);
+};
+
+/**
+ * @param {!WglTextureTrader} trader
+ * @returns {!Float32Array}
+ */
+KetTextureUtil.tradeTextureForVec4Output = trader => {
+    if (outputShaderCoder() === currentShaderCoder()) {
+        let result = currentShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
+        trader.currentTexture.deallocByDepositingInPool("tradeTextureForVec4Output");
+        return result;
+    }
+
+    let sizePower = currentShaderCoder().vec4ArrayPowerSizeOfTexture(trader.currentTexture);
+    let adjustedSizePower = sizePower + outputShaderCoder().vec4PowerSizeOverhead;
+
+    trader.shadeAndTrade(
+        Shaders.convertVec4CodingForOutput,
+        WglTexturePool.take(adjustedSizePower, outputShaderCoder().vecPixelType));
+    let result = outputShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
+    trader.currentTexture.deallocByDepositingInPool("tradeTextureForVec4Output");
+    return result;
+};
+
+/**
  * @param {!Array.<!WglTexture>} textures The textures to read and deallocate as a group.
  * @returns {!Array.<!Float32Array>}
  */
@@ -35,19 +66,7 @@ KetTextureUtil.mergedReadFloats = textures => {
         offset += len(tex);
     }
 
-    let combinedPixels;
-    if (outputShaderCoder() !== currentShaderCoder()) {
-        let sizePower = currentShaderCoder().vec4ArrayPowerSizeOfTexture(trader.currentTexture);
-        let adjustedSizePower = sizePower + outputShaderCoder().vec4PowerSizeOverhead;
-
-        trader.shadeAndTrade(
-            Shaders.convertVec4CodingForOutput,
-            WglTexturePool.take(adjustedSizePower, outputShaderCoder().vecPixelType));
-        combinedPixels = outputShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
-    } else {
-        combinedPixels = currentShaderCoder().unpackVec4Data(trader.currentTexture.readPixels());
-    }
-    trader.currentTexture.deallocByDepositingInPool("trader.currentTexture in mergedReadFloats");
+    let combinedPixels = KetTextureUtil.tradeTextureForVec4Output(trader);
 
     let result = [];
     let pixelOffset = 0;

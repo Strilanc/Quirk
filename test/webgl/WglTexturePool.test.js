@@ -30,7 +30,7 @@ suite.testUsingWebGL("takeBoolTex", () => {
     t.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("takeVec2Tex", () => {
+suite.testUsingWebGLFloatTextures("takeVec2Tex", () => {
     let t = WglTexturePool.takeVec2Tex(2);
     makePseudoShaderWithInputsAndOutputAndCode(
         [],
@@ -47,7 +47,7 @@ suite.testUsingWebGL("takeVec2Tex", () => {
     t.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("takeVec4Tex", () => {
+suite.testUsingWebGLFloatTextures("takeVec4Tex", () => {
     let t = WglTexturePool.takeVec4Tex(2);
     makePseudoShaderWithInputsAndOutputAndCode(
         [],

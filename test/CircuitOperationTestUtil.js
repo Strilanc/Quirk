@@ -80,14 +80,13 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
         new Map());
     updateAction(ctx);
 
-    let outData = currentShaderCoder().unpackVec2Data(trader.currentTexture.readPixels());
+    controlsTexture.deallocByDepositingInPool();
+    let outData = KetTextureUtil.tradeTextureForVec2Output(trader);
     let outVec = new Matrix(1, ampCount, outData);
 
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
     assertThat(outVec).withInfo({matrix, inVec, ctx}).isApproximatelyEqualTo(expectedOutVec, 0.005);
-    trader.currentTexture.deallocByDepositingInPool();
-    controlsTexture.deallocByDepositingInPool();
 }
 
 export {
