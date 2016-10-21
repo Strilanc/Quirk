@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite, assertThat, assertTrue, assertFalse, fail} from "test/TestUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
@@ -151,4 +151,44 @@ suite.testUsingWebGL('shifted-density-display', () => {
             0, 0, 0, 0,
             0, 0, 0, 0,
             0, 0, 0, 0));
+});
+
+suite.testUsingWebGL('16-qubit-hadamard-transform', () => {
+    let stats = CircuitStats.fromCircuitAtTime(circuit(`-H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-
+                                                        -H-`), 0);
+
+    // This is a lot of values to check. Don't pay the cost of wrapping in assertThat.
+    let buf = stats.finalState.rawBuffer();
+    for (let i = 0; i*2 < buf.length; i++) {
+        if (buf[i*2 + 1] !== 0) {
+            assertThat(buf[i * 2 + 1]).withInfo({i}).isEqualTo(0);
+        }
+        if (Math.abs(buf[i * 2] * 256.0 - 1.0) > 0.000001) {
+            assertThat(buf[i * 2]).withInfo({i}).isEqualTo(1/256);
+        }
+    }
+
+    // Check densities.
+    for (let i = 0; i < 16; i++) {
+        assertThat(stats.qubitDensityMatrix(Infinity, i)).
+            withInfo({i}).
+            isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5), 0.0000001);
+    }
+
+    // And unity.
+    assertThat(stats.postSelectionSurvivalRate).isApproximatelyEqualTo(1, 0.0001);
 });

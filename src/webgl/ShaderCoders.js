@@ -89,7 +89,7 @@ class Outputs {
     static vec4WithOutputCoder() {
         return new ShaderPartDescription(
             _ => outputShaderCoder().vec4Output,
-            `Outputs.vec4()`);
+            `Outputs.vec4WithOutputCoder()`);
     }
 
     /**
@@ -287,16 +287,29 @@ function encodeFloatsIntoBytes(floats) {
     return result;
 }
 
-const PACK_FLOAT_INTO_BYTES = `
+const PACK_FLOAT_INTO_BYTES_CODE = `
     //////////// PACK_FLOAT_INTO_BYTES /////////////
     vec4 _gen_packFloatIntoBytes(float val) {
-        float sign = float(val < 0.0);
+        if (val == 0.0) {
+            // If log2(0) returns -Infinity, then the logic below would work out just right and this IF block
+            // wouldn't be needed. Unfortunately, log2(0) isn't guaranteed to do that (it's undefined by the spec).
+            return vec4(0.0, 0.0, 0.0, 0.0);
+        }
+
         float mag = abs(val);
-        float exponent = mag == 0.0 ? -127.0 : floor(log2(mag));
-        exponent += float(mag != 0.0 && exp2(exponent + 1.0) <= mag);
-        // Note: multiplying by exp2(-exponent), instead of dividing, may cause precision loss.
-        // (Happened on a Nexus tablet.)
-        float mantissa = max(0.0, (mag - exp2(exponent)) / exp2(exponent));
+        float exponent = floor(log2(mag));
+        // Correct log2 approximation errors.
+        exponent += float(exp2(exponent) <= mag / 2.0);
+        exponent -= float(exp2(exponent) > mag);
+
+        float mantissa;
+        if (exponent > 100.0) {
+            // Not sure why this needs to be done in two steps for the largest float to work. Best guess is the
+            // optimizer is rewriting '/ exp2(e)' into '* exp2(-e)', but exp2(-128.0) is too small to represent.
+            mantissa = mag / 1024.0 / exp2(exponent - 10.0) - 1.0;
+        } else {
+            mantissa = mag / float(exp2(exponent)) - 1.0;
+        }
 
         float a = exponent + 127.0;
         mantissa *= 256.0;
@@ -306,7 +319,7 @@ const PACK_FLOAT_INTO_BYTES = `
         float c = floor(mantissa);
         mantissa -= c;
         mantissa *= 128.0;
-        float d = floor(mantissa) * 2.0 + sign;
+        float d = floor(mantissa) * 2.0 + float(val < 0.0);
         return vec4(a, b, c, d) / 255.0;
     }`;
 
@@ -588,7 +601,7 @@ const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
 
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
-    [PACK_FLOAT_INTO_BYTES],
+    [PACK_FLOAT_INTO_BYTES_CODE],
     texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
 const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
@@ -614,7 +627,7 @@ const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
         float component = dot(result, picker);
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
-    [PACK_FLOAT_INTO_BYTES],
+    [PACK_FLOAT_INTO_BYTES_CODE],
     texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
 
 function spreadFloatVec2(vec2Data) {
@@ -800,6 +813,8 @@ export {
     Inputs,
     Outputs,
     outputShaderCoder,
-    canTestFloatShaders
+    canTestFloatShaders,
+    UNPACK_BYTES_INTO_FLOAT_CODE,
+    PACK_FLOAT_INTO_BYTES_CODE
 }
 provideWorkingShaderCoderToWglConfiguredShader(currentShaderCoder);
