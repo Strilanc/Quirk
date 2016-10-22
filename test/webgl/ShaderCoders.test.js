@@ -12,6 +12,7 @@ import {
     PACK_FLOAT_INTO_BYTES_CODE,
     UNPACK_BYTES_INTO_FLOAT_CODE
 } from "src/webgl/ShaderCoders.js"
+import {seq, Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -122,6 +123,24 @@ suite.testUsingWebGLFloatTextures("decodeInterestingFloatsWithShader", () => {
 
     tex.deallocByDepositingInPool();
     assertThat(packedOutFloats).isEqualTo(floats);
+});
+
+suite.testUsingWebGL("generateEncodedInterestingFloatsWithShader", () => {
+    let shader = new WglShader(
+        PACK_FLOAT_INTO_BYTES_CODE + `
+        void main() {
+            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+            float k = xy.y * 4.0 + xy.x;
+            float f = 0.0;
+            ${seq(INTERESTING_FLOATS).
+                mapWithIndex((e, i) => `if (k == ${i}.0) f = float(${e});`).
+                join('\n            ')}
+            gl_FragColor = _gen_packFloatIntoBytes(f);
+        }`);
+
+    let outBytes = shader.withArgs().readRawByteOutputs(4);
+    let outFloats = decodeBytesIntoFloats(outBytes);
+    assertThat(outFloats).isEqualTo(INTERESTING_FLOATS);
 });
 
 suite.testUsingWebGLFloatTextures("encodeInterestingFloatsWithShader", () => {
@@ -500,7 +519,7 @@ suite.testUsingWebGLFloatTextures("testByteToFloatToByteStability", () => {
         }
     `);
 
-    let sizePower = 18;
+    let sizePower = 16;
     let tex = shader.withArgs().toRawByteTexture(sizePower);
 
     let bytesToFloatsShader = combinedShaderPartsWithCode(
@@ -540,7 +559,7 @@ suite.testUsingWebGL("testByteToByteStability", () => {
         }
     `);
 
-    let sizePower = 18;
+    let sizePower = 16;
     let tex = shader.withArgs().toRawByteTexture(sizePower);
 
     let bytesToBytesShader = combinedShaderPartsWithCode(
