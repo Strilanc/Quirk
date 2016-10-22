@@ -70,7 +70,8 @@ const INTERESTING_FLOATS = new Float32Array([
     Math.pow(2.0, -126), // Smallest non-denormalized 32-bit float.
     0.9999999403953552 * Math.pow(2.0, 128), // Largest finite 32-bit float.
     Math.PI,
-    Math.E
+    Math.E,
+    16211.8955078125
 ]);
 
 /**
@@ -87,14 +88,12 @@ function randomFloat32Array(length) {
     return floats;
 }
 
-suite.test("roundTripInterestingFloats", () => {
-    let floats = INTERESTING_FLOATS;
-    let roundTripped = bytesAsFloats(floatsAsBytes(floats));
-    assertThat(roundTripped).isEqualTo(floats);
-});
+function variedFloat32Array(length) {
+    return new Float32Array([...INTERESTING_FLOATS, ...randomFloat32Array(length - INTERESTING_FLOATS.length)]);
+}
 
-suite.test("roundTripRandomFloats", () => {
-    let floats = randomFloat32Array(64);
+suite.test("roundTripInterestingFloats", () => {
+    let floats = variedFloat32Array(64);
     let roundTripped = bytesAsFloats(floatsAsBytes(floats));
     assertThat(roundTripped).isEqualTo(floats);
 });
@@ -111,7 +110,7 @@ suite.testUsingWebGLFloatTextures("decodeInterestingFloatsWithShader", () => {
             gl_FragColor = vec4(f, 0.0, 0.0, 0.0);
         }`);
 
-    let floats = new Float32Array([...INTERESTING_FLOATS, ...randomFloat32Array(64 - INTERESTING_FLOATS.length)]);
+    let floats = variedFloat32Array(64);
     let bytes = floatsAsBytes(floats);
     let tex = Shaders.data(bytes).toRawByteTexture(6);
     let outFloats = shader.withArgs(WglArg.texture('tex', tex)).readRawFloatOutputs(6);
@@ -128,19 +127,21 @@ suite.testUsingWebGLFloatTextures("decodeInterestingFloatsWithShader", () => {
 suite.testUsingWebGL("generateEncodedInterestingFloatsWithShader", () => {
     let shader = new WglShader(
         PACK_FLOAT_INTO_BYTES_CODE + `
+        uniform float vals[64];
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-            float k = xy.y * 4.0 + xy.x;
+            float k = xy.y * 8.0 + xy.x;
             float f = 0.0;
-            ${seq(INTERESTING_FLOATS).
-                mapWithIndex((e, i) => `if (k == ${i}.0) f = float(${e});`).
+            ${Seq.range(64).
+                mapWithIndex(i => `if (k == ${i}.0) f = vals[${i}];`).
                 join('\n            ')}
             gl_FragColor = _gen_packFloatIntoBytes(f);
         }`);
 
-    let outBytes = shader.withArgs().readRawByteOutputs(4);
+    let inFloats = variedFloat32Array(64);
+    let outBytes = shader.withArgs(WglArg.float_array('vals', inFloats)).readRawByteOutputs(6);
     let outFloats = bytesAsFloats(outBytes);
-    assertThat(outFloats).isEqualTo(INTERESTING_FLOATS);
+    assertThat(outFloats).isEqualTo(inFloats);
 });
 
 suite.testUsingWebGLFloatTextures("encodeInterestingFloatsWithShader", () => {
@@ -154,7 +155,7 @@ suite.testUsingWebGLFloatTextures("encodeInterestingFloatsWithShader", () => {
             gl_FragColor = _gen_packFloatIntoBytes(f);
         }`);
 
-    let floats = new Float32Array([...INTERESTING_FLOATS, ...randomFloat32Array(64 - INTERESTING_FLOATS.length)]);
+    let floats = variedFloat32Array(64);
     let spreadOutFloats = new Float32Array(floats.length << 2);
     for (let i = 0; i < floats.length; i++) {
         spreadOutFloats[i << 2] = floats[i];
@@ -204,7 +205,7 @@ suite.testUsingWebGLFloatTextures("vec2Input_bytes", () => {
             gl_FragColor = vec4(a1, a2);
         }`);
 
-    let floats = new Float32Array([...INTERESTING_FLOATS, ...randomFloat32Array(64 - INTERESTING_FLOATS.length)]);
+    let floats = variedFloat32Array(64);
     let bytes = floatsAsBytes(floats);
 
     let texSquare = Shaders.data(bytes).toRawByteTexture(6);
