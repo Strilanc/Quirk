@@ -3,8 +3,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {
     Outputs,
     Inputs,
-    makePseudoShaderWithInputsAndOutputAndCode,
-    decodeBytesIntoFloats
+    makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"

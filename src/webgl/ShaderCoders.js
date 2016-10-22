@@ -253,38 +253,30 @@ class ShaderValueCoder {
 }
 
 /**
- * Packs an array of single-precision floats into an array of bytes.
- *
- * Uses a rotated version of the usual IEEE format, where the sign bit is at the end instead of at the start
- * (to avoid a few shifts).
- *
- * @param {!Float32Array} floats
+ * Exposes an array of single-precision floats as an array of bytes.
+ * @param {!Float64Array|!Float32Array} floats
  * @returns {!Uint8Array}
  */
-function encodeFloatsIntoBytes(floats) {
-    let result = new Uint8Array(floats.length * 4);
-    for (let i = 0; i < floats.length; i++) {
-        let val = floats[i];
-
-        let sign = val < 0 ? 1 : 0;
-        let mag = Math.abs(val);
-        let exponent = mag === 0 ? -127 : Math.floor(0.1 + Math.log2(mag));
-        exponent -= mag !== 0 && Math.pow(2, exponent) > mag ? 1 : 0;
-        let mantissa = Math.max(0, mag * Math.pow(2, -exponent) - 1.0);
-
-        let a = exponent + 127;
-        let b = Math.floor(mantissa * 256);
-        let c = Math.floor((mantissa * 65536) & 0xFF);
-        let d = sign | (Math.floor((mantissa * 8388608) & 0x7F) << 1);
-
-        let k = i << 2;
-        result[k] = a;
-        result[k+1] = b;
-        result[k+2] = c;
-        result[k+3] = d;
+function floatsAsBytes(floats) {
+    if (floats instanceof Float64Array) {
+        return new Uint8Array(new Float32Array(floats).buffer, 0, floats.length << 2);
     }
+    if (floats instanceof Float32Array) {
+        return new Uint8Array(floats.buffer, 0, floats.length << 2);
+    }
+    throw new DetailedError("Not a Float32Array or Float64Array", {type: typeof floats, floats});
+}
 
-    return result;
+/**
+ * Exposes an array of bytes as an array of single-precision floats.
+ * @param {!Uint8Array} bytes
+ * @returns {!Float32Array}
+ */
+function bytesAsFloats(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+        throw new DetailedError("Not a Uint8Array", {type: typeof bytes, bytes});
+    }
+    return new Float32Array(bytes.buffer, 0, bytes.length >> 2);
 }
 
 const PACK_FLOAT_INTO_BYTES_CODE = `
@@ -311,66 +303,36 @@ const PACK_FLOAT_INTO_BYTES_CODE = `
             mantissa = mag / float(exp2(exponent)) - 1.0;
         }
 
-        float a = exponent + 127.0;
-        mantissa *= 256.0;
-        float b = floor(mantissa);
-        mantissa -= b;
+        exponent += 127.0;
+        float a = float(val < 0.0) * 128.0 + floor(exponent / 2.0);
+        mantissa *= 128.0;
+        float b = mod(exponent, 2.0) * 128.0 + floor(mantissa);
+        mantissa -= floor(mantissa);
         mantissa *= 256.0;
         float c = floor(mantissa);
         mantissa -= c;
-        mantissa *= 128.0;
-        float d = floor(mantissa) * 2.0 + float(val < 0.0);
-        return vec4(a, b, c, d) / 255.0;
+        mantissa *= 256.0;
+        float d = floor(mantissa);
+
+        return vec4(d, c, b, a) / 255.0;
     }`;
-
-function _decodeBytesIntoFloat(a, b, c, d) {
-    let exponent = a - 127;
-    let sign = 1 - ((d & 1) << 1);
-    let mantissa = (a > 0 ? 1 : 0)
-        + b / 256
-        + c / 65536
-        + (d & 0xFE) / 16777216;
-
-    return sign * mantissa * Math.pow(2, exponent);
-}
-
-/**
- * Recovers an array of single-precision floats from an array of bytes.
- *
- * Uses a rotated version of the usual IEEE format, where the sign bit is at the end instead of at the start
- * (to avoid a few shifts).
- *
- * @param {!Uint8Array|!Array.<int>} bytes
- * @returns {!Float32Array}
- */
-function decodeBytesIntoFloats(bytes) {
-    let result = new Float32Array(bytes.length >> 2);
-    for (let i = 0; i < result.length; i++) {
-        let k = i << 2;
-        let a = bytes[k];
-        let b = bytes[k+1];
-        let c = bytes[k+2];
-        let d = bytes[k+3];
-        result[i] = _decodeBytesIntoFloat(a, b, c, d);
-    }
-
-    return result;
-}
 
 const UNPACK_BYTES_INTO_FLOAT_CODE = `
     //////////// UNPACK_BYTES_INTO_FLOAT_CODE /////////////
     float _gen_unpackBytesIntoFloat(vec4 v) {
-        float a = floor(v.r * 255.0 + 0.5);
-        float b = floor(v.g * 255.0 + 0.5);
-        float c = floor(v.b * 255.0 + 0.5);
-        float d = floor(v.a * 255.0 + 0.5);
+        float d = floor(v.r * 255.0 + 0.5);
+        float c = floor(v.g * 255.0 + 0.5);
+        float b = floor(v.b * 255.0 + 0.5);
+        float a = floor(v.a * 255.0 + 0.5);
 
-        float exponent = a - 127.0;
-        float sign = 1.0 - mod(d, 2.0)*2.0;
-        float mantissa = float(a > 0.0)
-                       + b / 256.0
-                       + c / 65536.0
-                       + floor(d / 2.0) / 8388608.0;
+        float sign = floor(a / 128.0);
+        sign = 1.0 - sign * 2.0;
+
+        float exponent = mod(a, 128.0) * 2.0 + floor(b / 128.0) - 127.0;
+        float mantissa = float(exponent > -127.0)
+                       + mod(b, 128.0) / 128.0
+                       + c / 32768.0
+                       + d / 8388608.0;
         return sign * mantissa * exp2(exponent);
     }`;
 
@@ -687,10 +649,10 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     1,
     2,
     WebGLRenderingContext.UNSIGNED_BYTE,
-    encodeFloatsIntoBytes,
-    decodeBytesIntoFloats,
-    encodeFloatsIntoBytes,
-    decodeBytesIntoFloats,
+    floatsAsBytes,
+    bytesAsFloats,
+    floatsAsBytes,
+    bytesAsFloats,
     t => Math.round(Math.log2(t.width * t.height)) - 1,
     t => Math.round(Math.log2(t.width * t.height)) - 2,
     () => {});
@@ -803,8 +765,8 @@ _chooseShaderCoders();
 export {
     SHADER_CODER_BYTES,
     SHADER_CODER_FLOATS,
-    encodeFloatsIntoBytes,
-    decodeBytesIntoFloats,
+    floatsAsBytes,
+    bytesAsFloats,
     combinedShaderPartsWithCode,
     shaderWithOutputPartAndArgs,
     currentShaderCoder,
