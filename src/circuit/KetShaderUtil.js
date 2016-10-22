@@ -22,12 +22,14 @@ import {currentShaderCoder, makePseudoShaderWithInputsAndOutputAndCode, Inputs, 
  * @param {!String} head Code that goes outside the output-computing function, for declaring uniforms and helper funcs.
  * @param {!String} body Code that goes inside the output-computing function.
  * @param {null|!int=null} span The height of the gate; the number of qubits it spans.
+ * @param {!Array.<!ShaderPartDescription>} inputs
  * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}} A function that, when given the args
  * returned by ketArgs when given your input texture and also a WglArg for each custom uniform you defined, returns
  * a WglConfiguredShader that can be used to renderTo a destination texture.
  */
-const ketShader = (head, body, span=null) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
+const ketShader = (head, body, span=null, inputs=[]) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
     [
+        ...inputs,
         Inputs.vec2('ketgen_ket'),
         Inputs.bool('ketgen_control')
     ],
