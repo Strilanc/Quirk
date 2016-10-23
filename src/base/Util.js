@@ -81,19 +81,57 @@ class Util {
         if (n === 0) {
             return 0;
         }
-        return Math.floor(Math.log2(n) + 0.000001) + 1;
+        return Util.floorLg2(n) + 1;
     }
 
     /**
      * Returns the smallest power of 2 that is equal to or larger than the given integer.
-     * @param {!int} i
+     * @param {!int} n
      * @returns {!int}
      */
-    static ceilingPowerOf2(i) {
-        if (i <= 1) {
+    static ceilingPowerOf2(n) {
+        if (n <= 1) {
             return 1;
         }
-        return 1 << Math.ceil(Math.log2(i));
+        return 1 << Util.ceilLg2(n);
+    }
+
+    /**
+     * @param {!int} n
+     * @returns {!int}
+     */
+    static ceilLg2(n) {
+        if (n <= 1) {
+            return 0;
+        }
+        let p = Math.ceil(Math.log2(n));
+        let v = 1 << p;
+        if (v < n) {
+            return p + 1;
+        }
+        if (v >= n*2) {
+            return p - 1;
+        }
+        return p;
+    }
+
+    /**
+     * @param {!int} n
+     * @returns {!int}
+     */
+    static floorLg2(n) {
+        if (n <= 1) {
+            return 0;
+        }
+        let p = Math.floor(Math.log2(n));
+        let v = 1 << p;
+        if (v*2 < n) {
+            return p + 1;
+        }
+        if (v > n) {
+            return p - 1;
+        }
+        return p;
     }
 
     /**
