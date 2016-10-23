@@ -710,7 +710,6 @@ function changeShaderCoder(newCoder) {
 function _tryWriteAndReadFloatingPointTexture() {
     let texture = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
     let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.5, 7.0, -7654321.0); }`);
-    //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(texture);
         let result = texture.readPixels(false);
@@ -736,12 +735,11 @@ function _tryWriteAndPassFloatingPointWithByteReadTexture() {
     let passer = new WglShader(`uniform sampler2D t; void main() {
         vec4 v = texture2D(t, gl_FragCoord.xy);
         if (v == vec4(2.0, 3.0, 5.0, -7654321.0)) { // Testing that expected precision is present.
-            gl_FragColor = vec4(1.1, 3.0, 5.0, 7.0) / 255.0;
+            gl_FragColor = vec4(2.0, 3.0, 5.0, 254.0) / 255.0;
         } else {
             gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         }
     }`);
-    //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(textureFloat);
         passer.withArgs(WglArg.texture('t', textureFloat)).renderTo(textureByte);
@@ -751,7 +749,7 @@ function _tryWriteAndPassFloatingPointWithByteReadTexture() {
             result[0] === 2 &&
             result[1] === 3 &&
             result[2] === 5 &&
-            result[3] === 7;
+            result[3] === 254;
     } catch (ex) {
         console.warn(ex);
         return false;
