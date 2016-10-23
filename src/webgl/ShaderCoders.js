@@ -488,31 +488,36 @@ const BOOL_OUTPUT = new ShaderPart(`
     bool outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
         gl_FragColor = vec4(float(outputFor(k)), 0.0, 0.0, 0.0);
     }`,
     [],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC2_OUTPUT_AS_FLOAT = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_FLOAT ////////////
     vec2 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
 
         vec2 v = outputFor(k);
@@ -520,20 +525,24 @@ const VEC2_OUTPUT_AS_FLOAT = new ShaderPart(`
         gl_FragColor = vec4(v.x, v.y, 0.0, 0.0);
     }`,
     [],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC4_OUTPUT_AS_FLOAT = new ShaderPart(`
     ///////////// VEC4_OUTPUT_AS_FLOAT ////////////
     vec4 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
 
         vec4 v = outputFor(k);
@@ -541,20 +550,24 @@ const VEC4_OUTPUT_AS_FLOAT = new ShaderPart(`
         gl_FragColor = v;
     }`,
     [],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_BYTE ////////////
     vec2 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y / 2.0;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
         float r = mod(k, 2.0);
 
@@ -564,20 +577,24 @@ const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
     [PACK_FLOAT_INTO_BYTES_CODE],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
     ///////////// VEC4_OUTPUT_AS_BYTE ////////////
     vec4 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y / 4.0;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
         float r = mod(k, 4.0);
 
@@ -590,7 +607,10 @@ const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
     [PACK_FLOAT_INTO_BYTES_CODE],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 function spreadFloatVec2(vec2Data) {
     let result = new Float32Array(vec2Data.length << 1);
