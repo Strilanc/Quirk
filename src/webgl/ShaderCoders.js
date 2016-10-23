@@ -687,9 +687,9 @@ function changeShaderCoder(newCoder) {
     _outShaderCoder = newCoder;
 }
 
-function _tryReadAndWriteFloatingPointTexture() {
+function _tryWriteAndReadFloatingPointTexture() {
     let texture = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
-    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.5, 7.0, -1113.0); }`);
+    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.5, 7.0, -7654321.0); }`);
     //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(texture);
@@ -699,7 +699,7 @@ function _tryReadAndWriteFloatingPointTexture() {
             result[0] === 2 &&
             result[1] === 3.5 &&
             result[2] === 7 &&
-            result[3] === -1113;
+            result[3] === -7654321; // Testing that expected precision is present.
     } catch (ex) {
         console.warn(ex);
         return false;
@@ -709,11 +709,18 @@ function _tryReadAndWriteFloatingPointTexture() {
     }
 }
 
-function _tryWriteFloatingPointWithByteReadTexture() {
+function _tryWriteAndPassFloatingPointWithByteReadTexture() {
     let textureFloat = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
     let textureByte = new WglTexture(1, 1, WebGLRenderingContext.UNSIGNED_BYTE);
-    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.0, 5.0, 7.0)/255.0; }`);
-    let passer = new WglShader(`uniform sampler2D t; void main() { gl_FragColor = texture2D(t, gl_FragCoord.xy); }`);
+    let shader = new WglShader(`void main() { gl_FragColor = vec4(1.1, 3.0, 5.0, -7654321.0); }`);
+    let passer = new WglShader(`uniform sampler2D t; void main() {
+        vec4 v = texture2D(t, gl_FragCoord.xy);
+        if (v == vec4(2.0, 3.0, 5.0, -7654321.0)) { // Testing that expected precision is present.
+            gl_FragColor = vec4(1.1, 3.0, 5.0, 7.0) / 255.0;
+        } else {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        }
+    }`);
     //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(textureFloat);
@@ -737,11 +744,11 @@ function _tryWriteFloatingPointWithByteReadTexture() {
 }
 
 function _chooseShaderCoders() {
-    if (_tryReadAndWriteFloatingPointTexture()) {
+    if (_tryWriteAndReadFloatingPointTexture()) {
         // Floats work. Hurray!
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_FLOATS;
-    } else if (_tryWriteFloatingPointWithByteReadTexture()) {
+    } else if (_tryWriteAndPassFloatingPointWithByteReadTexture()) {
         console.warn("Wrote but failed to read a floating point texture. Falling back to float-as-byte output coding.");
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_BYTES;
@@ -755,7 +762,7 @@ function _chooseShaderCoders() {
 let _floatShadersWorkWell = undefined;
 function canTestFloatShaders() {
     if (_floatShadersWorkWell === undefined) {
-        _floatShadersWorkWell = _tryReadAndWriteFloatingPointTexture();
+        _floatShadersWorkWell = _tryWriteAndReadFloatingPointTexture();
     }
     return _floatShadersWorkWell
 }
