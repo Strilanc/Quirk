@@ -10,7 +10,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 
 let suite = new Suite("CycleBitsGates");
 
-suite.webGlTest('cycleBits', () => {
+suite.testUsingWebGL('cycleBits', () => {
     assertThatCircuitShaderActsLikeMatrix(
         ctx => cycleBits(ctx, 3, 2),
         Matrix.generateTransition(8, i => ((i&1)<<2) | ((i>>1)&3)));

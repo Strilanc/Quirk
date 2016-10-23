@@ -10,7 +10,7 @@ import {Matrix} from "src/math/Matrix.js"
 
 let suite = new Suite("MultiplyAccumulateGates");
 
-suite.webGlTest('plus_AB', () => {
+suite.testUsingWebGL('plus_AB', () => {
     assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,
@@ -29,7 +29,7 @@ suite.webGlTest('plus_AB', () => {
         }));
 });
 
-suite.webGlTest('minus_AB', () => {
+suite.testUsingWebGL('minus_AB', () => {
     assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,

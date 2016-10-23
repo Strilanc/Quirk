@@ -22,7 +22,7 @@ import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 let suite = new Suite("AmplitudeDisplay");
 
-suite.webGlTest("amplitudesToPolarKets", () => {
+suite.testUsingWebGL("amplitudesToPolarKets", () => {
     let input = Shaders.vec2Data(new Float32Array([
         1,0,
         3,4,
@@ -38,7 +38,7 @@ suite.webGlTest("amplitudesToPolarKets", () => {
     input.deallocByDepositingInPool();
 });
 
-suite.webGlTest("amplitudesToPolarKets_zero", () => {
+suite.testUsingWebGL("amplitudesToPolarKets_zero", () => {
     let input = Shaders.vec2Data(new Float32Array([
         0,0
     ])).toVec2Texture(0);
@@ -48,7 +48,7 @@ suite.webGlTest("amplitudesToPolarKets_zero", () => {
     input.deallocByDepositingInPool();
 });
 
-suite.webGlTest("spreadLengthAcrossPolarKets", () => {
+suite.testUsingWebGL("spreadLengthAcrossPolarKets", () => {
     let inp = Shaders.vec4Data(new Float32Array([
          1, 2,100,0,
          3, 4,200,0,
@@ -100,7 +100,7 @@ suite.webGlTest("spreadLengthAcrossPolarKets", () => {
     out.deallocByDepositingInPool();
 });
 
-suite.webGlTest("reduceToLongestPolarKet", () => {
+suite.testUsingWebGL("reduceToLongestPolarKet", () => {
     let inp = Shaders.vec4Data(new Float32Array([
         1, 2,300,0,
         3, 4,300,0,
@@ -137,7 +137,7 @@ suite.webGlTest("reduceToLongestPolarKet", () => {
     out.deallocByDepositingInPool();
 });
 
-suite.webGlTest("convertAwayFromPolar", () => {
+suite.testUsingWebGL("convertAwayFromPolar", () => {
     let input = Shaders.vec4Data(new Float32Array([
         1,0,3,0,
         25,new Complex(3,4).phase(),9,0,
@@ -154,7 +154,7 @@ suite.webGlTest("convertAwayFromPolar", () => {
     input.deallocByDepositingInPool();
 });
 
-suite.webGlTest("toRatiosVsRepresentative", () => {
+suite.testUsingWebGL("toRatiosVsRepresentative", () => {
     let c = (r, i=0) => new Complex(r, i);
     let inp = Shaders.vec2Data(new Float32Array([
         1,0,    1,0,    1,0,    1,0,
@@ -176,7 +176,7 @@ suite.webGlTest("toRatiosVsRepresentative", () => {
     rep.deallocByDepositingInPool();
 });
 
-suite.webGlTest("foldConsistentRatios", () => {
+suite.testUsingWebGL("foldConsistentRatios", () => {
     let inp = Shaders.vec4Data(new Float32Array([
         1,0,0,0,    2,0,0,0,
         0,0,1,0,    0,0,2,3,
@@ -227,7 +227,7 @@ suite.webGlTest("foldConsistentRatios", () => {
     out.deallocByDepositingInPool();
 });
 
-suite.webGlTest("pipelineToSumAll", () => {
+suite.testUsingWebGL("pipelineToSumAll", () => {
     let inp = Shaders.vec4Data(new Float32Array([
         2,0,0,0,
         0,0,2,3,
@@ -247,7 +247,7 @@ suite.webGlTest("pipelineToSumAll", () => {
     out.deallocByDepositingInPool();
 });
 
-suite.webGlTest("pipelineToSumAll_signal", () => {
+suite.testUsingWebGL("pipelineToSumAll_signal", () => {
     let inp = Shaders.vec4Data(new Float32Array([
         2,0,0,0,
         0,0,2,3,
@@ -267,7 +267,7 @@ suite.webGlTest("pipelineToSumAll_signal", () => {
     out.deallocByDepositingInPool();
 });
 
-suite.webGlTest("makeAmplitudeSpanPipeline_OffOff", () => {
+suite.testUsingWebGL("makeAmplitudeSpanPipeline_OffOff", () => {
     let inp = Shaders.vec2Data(new Float32Array([1,0, 0,0, 0,0, 0,0])).
         toVec2Texture(2);
     let [afterPolar, final] = amplitudeDisplayStatTextures(inp, Controls.NONE, 0, 2);

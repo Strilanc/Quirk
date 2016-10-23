@@ -11,74 +11,91 @@ import {Hand} from "src/ui/Hand.js"
 import {Painter} from "src/draw/Painter.js"
 import {seq, Seq} from "src/base/Seq.js"
 
-const TEST_GATES = new Map([
+const COMMON_GATES = new Map([
     ['X', Gates.HalfTurns.X],
     ['Y', Gates.HalfTurns.Y],
     ['Z', Gates.HalfTurns.Z],
     ['H', Gates.HalfTurns.H],
+    ['Q', Gates.FourierTransformGates.FourierTransformFamily],
     ['•', Gates.Controls.Control],
     ['◦', Gates.Controls.AntiControl],
-    ['.', Gates.SpacerGate],
 
     ['M', Gates.Special.Measurement],
     ['%', Gates.Displays.ChanceDisplay],
-    ['d', Gates.Displays.DensityMatrixDisplay],
-    ['D', Gates.Displays.DensityMatrixDisplay2],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
+    ['-', undefined],
     ['+', undefined],
-    ['/', undefined],
+    ['0', null],
+    ['1', null],
+    ['2', null],
+    ['3', null],
+    ['4', null],
+    ['5', null],
+    ['6', null],
+    ['7', null],
+    ['8', null],
+    ['9', null],
 
-    ['t', Gates.Exponentiating.XForward]
+    ['/', null]
 ]);
+
+let circuit = (diagramText, ...extraGateEntries) => CircuitDefinition.fromTextDiagram(
+    new Map([
+        ...COMMON_GATES.entries(),
+        ...extraGateEntries
+    ]),
+    diagramText);
 
 /**
  * @param {!string} diagramText
+ * @param {!Array<*>} extraGateEntries
  * @returns {!{circuit: !DisplayedCircuit, pts: !Array.<!Point>}}
  */
-let diagram = diagramText => {
-    let lines = diagramText.split('\n').map(e => {
-        let p = e.split('|');
-        if (p.length !== 2) {
-            fail('Bad diagram: ' + diagramText);
-        }
-        return p[1];
-    });
-    let circuitDiagramSubset = seq(lines).
-        skip(1).
-        stride(2).
-        map(line => seq(line).skip(1).stride(2).join("")).
-        join('\n');
-    let circuit = new DisplayedCircuit(
-        10,
-        CircuitDefinition.fromTextDiagram(TEST_GATES, circuitDiagramSubset),
-        undefined,
-        undefined,
-        undefined);
-    let pts = Seq.naturals().
-        takeWhile(k => diagramText.indexOf(k) !== -1).
-        map(k => {
-            let pos = seq(lines).mapWithIndex((line, row) => ({row, col: line.indexOf(k)})).
-                filter(e => e.col !== -1).
-                single();
-            if (lines[pos.row][pos.col + 1] === '^') {
-                pos.row -= 1;
-                pos.col += 1;
-            }
-            return new Point(
-                pos.col * Config.WIRE_SPACING / 2 + 35.5,
-                pos.row * Config.WIRE_SPACING / 2 + 10.5);
-        }).toArray();
-    return {circuit, pts};
+let displayedCircuit = (diagramText, ...extraGateEntries) => DisplayedCircuit.fromTextDiagram(
+    new Map([
+        ...COMMON_GATES.entries(),
+        ...extraGateEntries
+    ]),
+    diagramText);
+
+/**
+ * @param {!string} diagramText
+ * @param {undefined|!{duplicate: undefined|!boolean, wholeColumn: undefined|!boolean}} options
+ * @param {!Array<*>} extraGateEntries
+ * @returns {{
+ *   beforeGrab: !DisplayedCircuit,
+ *   afterGrab: !DisplayedCircuit,
+ *   hovers: !Array.<!DisplayedCircuit>,
+ *   afterDrop: !DisplayedCircuit,
+ *   afterDropAndTidy: !DisplayedCircuit,
+ * }}
+ */
+let simulateDrag = (diagramText, options={}, ...extraGateEntries) => {
+    let duplicate = options.duplicate || false;
+    let wholeColumn = options.wholeColumn || false;
+
+    let {circuit: beforeGrab, pts} = displayedCircuit(diagramText, ...extraGateEntries);
+    let {newCircuit: afterGrab, newHand: fullHand} =
+        beforeGrab.tryGrab(Hand.EMPTY.withPos(pts[0]), duplicate, wholeColumn);
+    let hovers = [];
+    for (let pt of pts) {
+        hovers.push(afterGrab.previewDrop(fullHand.withPos(pt)));
+    }
+    let afterDrop = afterGrab.afterDropping(fullHand.withPos(pts[pts.length - 1]));
+    let afterDropAndTidy = afterDrop.afterTidyingUp();
+    return {beforeGrab, afterGrab, hovers, afterDrop, afterDropAndTidy};
 };
 
 let suite = new Suite("DisplayedCircuit");
 
 suite.test("constructor_vs_isEqualTo", () => {
-    let d1 = CircuitDefinition.fromTextDiagram(TEST_GATES, '+H+\nX+Y');
-    let d2 = CircuitDefinition.fromTextDiagram(TEST_GATES, '++++\ntHHH');
+    let d1 = CircuitDefinition.fromTextDiagram(COMMON_GATES, `+H+
+                                                              X+Y`);
+    let d2 = CircuitDefinition.fromTextDiagram(COMMON_GATES, `++++
+                                                              ZHHH`);
     //noinspection JSCheckFunctionSignatures
     assertThrows(() => new DisplayedCircuit(23, "not a circuit", undefined, undefined, undefined));
     //noinspection JSCheckFunctionSignatures
@@ -110,45 +127,46 @@ suite.test("constructor_vs_isEqualTo", () => {
 });
 
 suite.test("bootstrap_diagram", () => {
-    assertThat(diagram(`|
-                        |-X-D//-
-                        |   ///
-                        |-+-///-
-                        |`)).isEqualTo({
+    assertThat(displayedCircuit(`|
+                                 |-X-D//-
+                                 |   ///
+                                 |-+-///-
+                                 |`,
+                                 ['D', Gates.Displays.DensityMatrixDisplay2])).isEqualTo({
         circuit: new DisplayedCircuit(
             10,
-            CircuitDefinition.fromTextDiagram(TEST_GATES, `XD+
-                                                           +++`),
+            circuit(`XD/
+                     +//`, ['D', Gates.Displays.DensityMatrixDisplay2]),
             undefined,
             undefined,
             undefined),
         pts: []
     });
 
-    assertThat(diagram(`|
-                        |-+-H-+-
-                        |
-                        |-+-Y-+-
-                        |`)).isEqualTo({
+    assertThat(displayedCircuit(`|
+                                 |-+-H-+-
+                                 |
+                                 |-+-Y-+-
+                                 |`)).isEqualTo({
         circuit: new DisplayedCircuit(
             10,
-            CircuitDefinition.fromTextDiagram(TEST_GATES, `+H+
-                                                           +Y+`),
+            circuit(`+H+
+                     +Y+`),
             undefined,
             undefined,
             undefined),
         pts: []
     });
 
-    assertThat(diagram(`|01
-                        |2+-H-+-
-                        |  3
-                        |-+-Y4+-
-                        |  5^   `)).isEqualTo({
+    assertThat(displayedCircuit(`|01
+                                 |2+-H-+-
+                                 |  3
+                                 |-+-Y4+-
+                                 |  5^   `)).isEqualTo({
         circuit: new DisplayedCircuit(
             10,
-            CircuitDefinition.fromTextDiagram(TEST_GATES, `+H+
-                                                           +Y+`),
+            circuit(`+H+
+                     +Y+`),
             undefined,
             undefined,
             undefined),
@@ -164,11 +182,11 @@ suite.test("bootstrap_diagram", () => {
 });
 
 suite.test("indexOfDisplayedRowAt", () => {
-    let {circuit, pts} = diagram(`|0
-                                  |1+-+-
-                                  |   2
-                                  |-+3+-
-                                  |  4`);
+    let {circuit, pts} = displayedCircuit(`|0
+                                           |1+-+-
+                                           |   2
+                                           |-+3+-
+                                           |  4`);
 
     assertThat(circuit.indexOfDisplayedRowAt(-9999)).isEqualTo(undefined);
     assertThat(circuit.indexOfDisplayedRowAt(+9999)).isEqualTo(undefined);
@@ -180,7 +198,7 @@ suite.test("indexOfDisplayedRowAt", () => {
     assertThat(circuit.indexOfDisplayedRowAt(pts[4].y)).isEqualTo(undefined);
 });
 
-suite.webGlTest("drawCircuitCompletes_QuantumTeleportation", () => {
+suite.testUsingWebGL("drawCircuitCompletes_QuantumTeleportation", () => {
     let teleportCircuit = CircuitDefinition.fromTextDiagram(
         new Map([
             ['X', Gates.HalfTurns.X],
@@ -211,4 +229,112 @@ suite.webGlTest("drawCircuitCompletes_QuantumTeleportation", () => {
     let inputState = stats.qubitDensityMatrix(7, 0);
     let outputState = stats.qubitDensityMatrix(Infinity, 2);
     assertThat(outputState).isApproximatelyEqualTo(inputState);
+});
+
+suite.test("dragXIntoCNot", () => {
+    let drag = simulateDrag(`|
+                             |-H-•-X-
+                             |    0^
+                             |-+3421-
+                             |`);
+
+    assertThat(drag.beforeGrab.circuitDefinition).isEqualTo(circuit(`H•X
+                                                                     ---`));
+    assertThat(drag.afterGrab.circuitDefinition).isEqualTo(circuit(`H•-
+                                                                    ---`));
+    assertThat(drag.hovers.map(e => e.circuitDefinition)).isEqualTo([
+        circuit(`H•X
+                 ---`),
+        circuit(`H•-
+                 --X`),
+        circuit(`H•--
+                 --X-`),
+        circuit(`H-•-
+                 -X--`),
+        circuit(`H•-
+                 -X-`)]);
+    assertThat(drag.afterDrop.circuitDefinition).isEqualTo(circuit(`H•-
+                                                                    -X-`));
+    assertThat(drag.afterDropAndTidy.circuitDefinition).isEqualTo(circuit(`H•
+                                                                           -X`));
+});
+
+suite.test("resizeQft", () => {
+    let drag = simulateDrag(`|
+                             |-Q-
+                             | 1
+                             |-/-
+                             | 0
+                             |-+-
+                             |
+                             |-+-
+                             | 2`);
+
+    assertThat(drag.beforeGrab.circuitDefinition).isEqualTo(circuit(`Q
+                                                                     /
+                                                                     -
+                                                                     -`));
+    assertThat(drag.afterGrab.circuitDefinition).isEqualTo(circuit(`Q
+                                                                    /
+                                                                    -
+                                                                    -`));
+    assertThat(drag.hovers.map(e => e.circuitDefinition)).isEqualTo([
+        circuit(`Q
+                 /
+                 -
+                 -`),
+        circuit(`Q
+                 -
+                 -
+                 -`),
+        circuit(`Q
+                 /
+                 /
+                 /`)]);
+    assertThat(drag.afterDrop.circuitDefinition).isEqualTo(circuit(`Q
+                                                                    /
+                                                                    /
+                                                                    /`));
+    assertThat(drag.afterDropAndTidy.circuitDefinition).isEqualTo(circuit(`Q
+                                                                           /
+                                                                           /
+                                                                           /`));
+});
+
+suite.test("dragQft", () => {
+    let drag = simulateDrag(`|
+                             |-Q-
+                             | 0
+                             |-/-
+                             |
+                             |-+-
+                             | 1
+                             |-+-
+                             |`);
+
+    assertThat(drag.beforeGrab.circuitDefinition).isEqualTo(circuit(`Q
+                                                                     /
+                                                                     -
+                                                                     -`));
+    assertThat(drag.afterGrab.circuitDefinition).isEqualTo(circuit(`-
+                                                                    -
+                                                                    -
+                                                                    -`));
+    assertThat(drag.hovers.map(e => e.circuitDefinition)).isEqualTo([
+        circuit(`Q
+                 /
+                 -
+                 -`),
+        circuit(`-
+                 -
+                 Q
+                 /`)]);
+    assertThat(drag.afterDrop.circuitDefinition).isEqualTo(circuit(`-
+                                                                    -
+                                                                    Q
+                                                                    /`));
+    assertThat(drag.afterDropAndTidy.circuitDefinition).isEqualTo(circuit(`-
+                                                                           -
+                                                                           Q
+                                                                           /`));
 });

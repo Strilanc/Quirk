@@ -89,7 +89,7 @@ class Outputs {
     static vec4WithOutputCoder() {
         return new ShaderPartDescription(
             _ => outputShaderCoder().vec4Output,
-            `Outputs.vec4()`);
+            `Outputs.vec4WithOutputCoder()`);
     }
 
     /**
@@ -253,111 +253,86 @@ class ShaderValueCoder {
 }
 
 /**
- * Packs an array of single-precision floats into an array of bytes.
- *
- * Uses a rotated version of the usual IEEE format, where the sign bit is at the end instead of at the start
- * (to avoid a few shifts).
- *
- * @param {!Float32Array} floats
+ * Exposes an array of single-precision floats as an array of bytes.
+ * @param {!Float64Array|!Float32Array} floats
  * @returns {!Uint8Array}
  */
-function encodeFloatsIntoBytes(floats) {
-    let result = new Uint8Array(floats.length * 4);
-    for (let i = 0; i < floats.length; i++) {
-        let val = floats[i];
-
-        let sign = val < 0 ? 1 : 0;
-        let mag = Math.abs(val);
-        let exponent = mag === 0 ? -127 : Math.floor(0.1 + Math.log2(mag));
-        exponent -= mag !== 0 && Math.pow(2, exponent) > mag ? 1 : 0;
-        let mantissa = Math.max(0, mag * Math.pow(2, -exponent) - 1.0);
-
-        let a = exponent + 127;
-        let b = Math.floor(mantissa * 256);
-        let c = Math.floor((mantissa * 65536) & 0xFF);
-        let d = sign | (Math.floor((mantissa * 8388608) & 0x7F) << 1);
-
-        let k = i << 2;
-        result[k] = a;
-        result[k+1] = b;
-        result[k+2] = c;
-        result[k+3] = d;
+function floatsAsBytes(floats) {
+    if (floats instanceof Float64Array) {
+        return new Uint8Array(new Float32Array(floats).buffer, 0, floats.length << 2);
     }
-
-    return result;
-}
-
-const PACK_FLOAT_INTO_BYTES = `
-    //////////// PACK_FLOAT_INTO_BYTES /////////////
-    vec4 _gen_packFloatIntoBytes(float val) {
-        float sign = float(val < 0.0);
-        float mag = abs(val);
-        float exponent = mag == 0.0 ? -127.0 : floor(log2(mag));
-        exponent += float(mag != 0.0 && exp2(exponent + 1.0) <= mag);
-        // Note: multiplying by exp2(-exponent), instead of dividing, may cause precision loss.
-        // (Happened on a Nexus tablet.)
-        float mantissa = max(0.0, (mag - exp2(exponent)) / exp2(exponent));
-
-        float a = exponent + 127.0;
-        mantissa *= 256.0;
-        float b = floor(mantissa);
-        mantissa -= b;
-        mantissa *= 256.0;
-        float c = floor(mantissa);
-        mantissa -= c;
-        mantissa *= 128.0;
-        float d = floor(mantissa) * 2.0 + sign;
-        return vec4(a, b, c, d) / 255.0;
-    }`;
-
-function _decodeBytesIntoFloat(a, b, c, d) {
-    let exponent = a - 127;
-    let sign = 1 - ((d & 1) << 1);
-    let mantissa = (a > 0 ? 1 : 0)
-        + b / 256
-        + c / 65536
-        + (d & 0xFE) / 16777216;
-
-    return sign * mantissa * Math.pow(2, exponent);
+    if (floats instanceof Float32Array) {
+        return new Uint8Array(floats.buffer, 0, floats.length << 2);
+    }
+    throw new DetailedError("Not a Float32Array or Float64Array", {type: typeof floats, floats});
 }
 
 /**
- * Recovers an array of single-precision floats from an array of bytes.
- *
- * Uses a rotated version of the usual IEEE format, where the sign bit is at the end instead of at the start
- * (to avoid a few shifts).
- *
- * @param {!Uint8Array|!Array.<int>} bytes
+ * Exposes an array of bytes as an array of single-precision floats.
+ * @param {!Uint8Array} bytes
  * @returns {!Float32Array}
  */
-function decodeBytesIntoFloats(bytes) {
-    let result = new Float32Array(bytes.length >> 2);
-    for (let i = 0; i < result.length; i++) {
-        let k = i << 2;
-        let a = bytes[k];
-        let b = bytes[k+1];
-        let c = bytes[k+2];
-        let d = bytes[k+3];
-        result[i] = _decodeBytesIntoFloat(a, b, c, d);
+function bytesAsFloats(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+        throw new DetailedError("Not a Uint8Array", {type: typeof bytes, bytes});
     }
-
-    return result;
+    return new Float32Array(bytes.buffer, 0, bytes.length >> 2);
 }
+
+const PACK_FLOAT_INTO_BYTES_CODE = `
+    //////////// PACK_FLOAT_INTO_BYTES /////////////
+    vec4 _gen_packFloatIntoBytes(float val) {
+        if (val == 0.0) {
+            // If log2(0) returns -Infinity, then the logic below would work out just right and this IF block
+            // wouldn't be needed. Unfortunately, log2(0) isn't guaranteed to do that (it's undefined by the spec).
+            return vec4(0.0, 0.0, 0.0, 0.0);
+        }
+
+        float mag = abs(val);
+        float exponent = floor(log2(mag));
+        // Correct log2 approximation errors.
+        exponent += float(exp2(exponent) <= mag / 2.0);
+        exponent -= float(exp2(exponent) > mag);
+
+        float mantissa;
+        if (exponent > 100.0) {
+            // Not sure why this needs to be done in two steps for the largest float to work. Best guess is the
+            // optimizer is rewriting '/ exp2(e)' into '* exp2(-e)', but exp2(-128.0) is too small to represent.
+            mantissa = mag / 1024.0 / exp2(exponent - 10.0) - 1.0;
+        } else {
+            mantissa = mag / float(exp2(exponent)) - 1.0;
+        }
+
+        exponent += 127.0;
+        float a = float(val < 0.0) * 128.0 + floor(exponent / 2.0);
+        mantissa *= 128.0;
+        float b = mod(exponent, 2.0) * 128.0 + floor(mantissa);
+        mantissa -= floor(mantissa);
+        mantissa *= 256.0;
+        float c = floor(mantissa);
+        mantissa -= c;
+        mantissa *= 256.0;
+        float d = floor(mantissa);
+
+        return vec4(d, c, b, a) / 255.0;
+    }`;
 
 const UNPACK_BYTES_INTO_FLOAT_CODE = `
     //////////// UNPACK_BYTES_INTO_FLOAT_CODE /////////////
     float _gen_unpackBytesIntoFloat(vec4 v) {
-        float a = floor(v.r * 255.0 + 0.5);
-        float b = floor(v.g * 255.0 + 0.5);
-        float c = floor(v.b * 255.0 + 0.5);
-        float d = floor(v.a * 255.0 + 0.5);
+        float d = floor(v.r * 255.0 + 0.5);
+        float c = floor(v.g * 255.0 + 0.5);
+        float b = floor(v.b * 255.0 + 0.5);
+        float a = floor(v.a * 255.0 + 0.5);
 
-        float exponent = a - 127.0;
-        float sign = 1.0 - mod(d, 2.0)*2.0;
-        float mantissa = float(a > 0.0)
-                       + b / 256.0
-                       + c / 65536.0
-                       + floor(d / 2.0) / 8388608.0;
+        float sign = floor(a / 128.0);
+        sign = 1.0 - sign * 2.0;
+
+        float exponent = mod(a, 128.0) * 2.0 + floor(b / 128.0) - 127.0;
+        float mantissa = float(exponent > -127.0)
+                       + mod(b, 128.0) / 128.0
+                       + c / 32768.0
+                       + d / 8388608.0;
         return sign * mantissa * exp2(exponent);
     }`;
 
@@ -513,31 +488,36 @@ const BOOL_OUTPUT = new ShaderPart(`
     bool outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
         gl_FragColor = vec4(float(outputFor(k)), 0.0, 0.0, 0.0);
     }`,
     [],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC2_OUTPUT_AS_FLOAT = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_FLOAT ////////////
     vec2 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
 
         vec2 v = outputFor(k);
@@ -545,20 +525,24 @@ const VEC2_OUTPUT_AS_FLOAT = new ShaderPart(`
         gl_FragColor = vec4(v.x, v.y, 0.0, 0.0);
     }`,
     [],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC4_OUTPUT_AS_FLOAT = new ShaderPart(`
     ///////////// VEC4_OUTPUT_AS_FLOAT ////////////
     vec4 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
 
         vec4 v = outputFor(k);
@@ -566,20 +550,24 @@ const VEC4_OUTPUT_AS_FLOAT = new ShaderPart(`
         gl_FragColor = v;
     }`,
     [],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
     ///////////// VEC2_OUTPUT_AS_BYTE ////////////
     vec2 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y / 2.0;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
         float r = mod(k, 2.0);
 
@@ -588,21 +576,25 @@ const VEC2_OUTPUT_AS_BYTE = new ShaderPart(`
 
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
-    [PACK_FLOAT_INTO_BYTES],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    [PACK_FLOAT_INTO_BYTES_CODE],
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
     ///////////// VEC4_OUTPUT_AS_BYTE ////////////
     vec4 outputFor(float k);
 
     uniform vec2 _gen_output_size;
+    uniform float _gen_secret_half;
 
     float len_output() {
         return _gen_output_size.x * _gen_output_size.y / 4.0;
     }
 
     void main() {
-        vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
+        vec2 xy = gl_FragCoord.xy - vec2(_gen_secret_half, _gen_secret_half);
         float k = xy.y * _gen_output_size.x + xy.x;
         float r = mod(k, 4.0);
 
@@ -614,8 +606,11 @@ const VEC4_OUTPUT_AS_BYTE = new ShaderPart(`
         float component = dot(result, picker);
         gl_FragColor = _gen_packFloatIntoBytes(component);
     }`,
-    [PACK_FLOAT_INTO_BYTES],
-    texture => [WglArg.vec2('_gen_output_size', texture.width, texture.height)]);
+    [PACK_FLOAT_INTO_BYTES_CODE],
+    texture => [
+        WglArg.vec2('_gen_output_size', texture.width, texture.height),
+        WglArg.float('_gen_secret_half', 0.5)
+    ]);
 
 function spreadFloatVec2(vec2Data) {
     let result = new Float32Array(vec2Data.length << 1);
@@ -674,10 +669,10 @@ const SHADER_CODER_BYTES = new ShaderValueCoder(
     1,
     2,
     WebGLRenderingContext.UNSIGNED_BYTE,
-    encodeFloatsIntoBytes,
-    decodeBytesIntoFloats,
-    encodeFloatsIntoBytes,
-    decodeBytesIntoFloats,
+    floatsAsBytes,
+    bytesAsFloats,
+    floatsAsBytes,
+    bytesAsFloats,
     t => Math.round(Math.log2(t.width * t.height)) - 1,
     t => Math.round(Math.log2(t.width * t.height)) - 2,
     () => {});
@@ -712,9 +707,9 @@ function changeShaderCoder(newCoder) {
     _outShaderCoder = newCoder;
 }
 
-function _tryReadAndWriteFloatingPointTexture() {
+function _tryWriteAndReadFloatingPointTexture() {
     let texture = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
-    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.5, 7.0, -1113.0); }`);
+    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.5, 7.0, -7654321.0); }`);
     //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(texture);
@@ -724,7 +719,7 @@ function _tryReadAndWriteFloatingPointTexture() {
             result[0] === 2 &&
             result[1] === 3.5 &&
             result[2] === 7 &&
-            result[3] === -1113;
+            result[3] === -7654321; // Testing that expected precision is present.
     } catch (ex) {
         console.warn(ex);
         return false;
@@ -734,11 +729,18 @@ function _tryReadAndWriteFloatingPointTexture() {
     }
 }
 
-function _tryWriteFloatingPointWithByteReadTexture() {
+function _tryWriteAndPassFloatingPointWithByteReadTexture() {
     let textureFloat = new WglTexture(1, 1, WebGLRenderingContext.FLOAT);
     let textureByte = new WglTexture(1, 1, WebGLRenderingContext.UNSIGNED_BYTE);
-    let shader = new WglShader(`void main() { gl_FragColor = vec4(2.0, 3.0, 5.0, 7.0)/255.0; }`);
-    let passer = new WglShader(`uniform sampler2D t; void main() { gl_FragColor = texture2D(t, gl_FragCoord.xy); }`);
+    let shader = new WglShader(`void main() { gl_FragColor = vec4(1.1, 3.0, 5.0, -7654321.0); }`);
+    let passer = new WglShader(`uniform sampler2D t; void main() {
+        vec4 v = texture2D(t, gl_FragCoord.xy);
+        if (v == vec4(2.0, 3.0, 5.0, -7654321.0)) { // Testing that expected precision is present.
+            gl_FragColor = vec4(1.1, 3.0, 5.0, 7.0) / 255.0;
+        } else {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        }
+    }`);
     //noinspection UnusedCatchParameterJS
     try {
         shader.withArgs().renderTo(textureFloat);
@@ -762,11 +764,11 @@ function _tryWriteFloatingPointWithByteReadTexture() {
 }
 
 function _chooseShaderCoders() {
-    if (_tryReadAndWriteFloatingPointTexture()) {
+    if (_tryWriteAndReadFloatingPointTexture()) {
         // Floats work. Hurray!
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_FLOATS;
-    } else if (_tryWriteFloatingPointWithByteReadTexture()) {
+    } else if (_tryWriteAndPassFloatingPointWithByteReadTexture()) {
         console.warn("Wrote but failed to read a floating point texture. Falling back to float-as-byte output coding.");
         _curShaderCoder = SHADER_CODER_FLOATS;
         _outShaderCoder = SHADER_CODER_BYTES;
@@ -780,7 +782,7 @@ function _chooseShaderCoders() {
 let _floatShadersWorkWell = undefined;
 function canTestFloatShaders() {
     if (_floatShadersWorkWell === undefined) {
-        _floatShadersWorkWell = _tryReadAndWriteFloatingPointTexture();
+        _floatShadersWorkWell = _tryWriteAndReadFloatingPointTexture();
     }
     return _floatShadersWorkWell
 }
@@ -790,8 +792,8 @@ _chooseShaderCoders();
 export {
     SHADER_CODER_BYTES,
     SHADER_CODER_FLOATS,
-    encodeFloatsIntoBytes,
-    decodeBytesIntoFloats,
+    floatsAsBytes,
+    bytesAsFloats,
     combinedShaderPartsWithCode,
     shaderWithOutputPartAndArgs,
     currentShaderCoder,
@@ -800,6 +802,8 @@ export {
     Inputs,
     Outputs,
     outputShaderCoder,
-    canTestFloatShaders
+    canTestFloatShaders,
+    UNPACK_BYTES_INTO_FLOAT_CODE,
+    PACK_FLOAT_INTO_BYTES_CODE
 }
 provideWorkingShaderCoderToWglConfiguredShader(currentShaderCoder);

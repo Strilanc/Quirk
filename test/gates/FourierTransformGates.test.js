@@ -10,7 +10,7 @@ import {Matrix} from "src/math/Matrix.js"
 
 let suite = new Suite("FourierTransformGates");
 
-suite.webGlTest('controlledPhaseGradient', () => {
+suite.testUsingWebGL('controlledPhaseGradient', () => {
     assertThatCircuitUpdateActsLikeMatrix(
         ctx => applyControlledPhaseGradient(ctx, 3, 1),
         Matrix.generateDiagonal(8, i => i < 4 ? 1 : Complex.polar(1, (i-4)*Math.PI/4)));
@@ -20,7 +20,7 @@ suite.webGlTest('controlledPhaseGradient', () => {
         Matrix.generateDiagonal(16, i => i < 8 ? 1 : Complex.polar(1, -(i-8)*Math.PI/8)));
 });
 
-suite.webGlTest('fourierTransform', () => {
+suite.testUsingWebGL('fourierTransform', () => {
     assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,

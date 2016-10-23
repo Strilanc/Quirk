@@ -3,8 +3,7 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {
     Outputs,
     Inputs,
-    makePseudoShaderWithInputsAndOutputAndCode,
-    decodeBytesIntoFloats
+    makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
@@ -72,12 +71,12 @@ suite.testUsingWebGLFloatTextures("data-floats", () => {
     assertThrows(() => Shaders.data(data2x4).readRawFloatOutputs(2));
 });
 
-suite.webGlTest("data-bytes", () => {
+suite.testUsingWebGL("data-bytes", () => {
     let bytes4x4 = new Uint8Array(Seq.range(4*4*4).map(e => Math.floor(Math.random() * 256)).toArray());
     assertThat(Shaders.data(bytes4x4).readRawByteOutputs(4)).isEqualTo(bytes4x4);
 });
 
-suite.webGlTest("sumFold", () => {
+suite.testUsingWebGL("sumFold", () => {
     let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 2.0), floor(k/2.0));

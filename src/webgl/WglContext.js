@@ -26,7 +26,12 @@ class WglContext {
             throw new Error('Error creating WebGL context.');
         }
         if (this.gl.getExtension('OES_texture_float') === undefined) {
-            throw new Error("OES_texture_float webgl extension not present.");
+            // We'll just fall back to using byte coding of intermediate values.
+            console.warn("OES_texture_float webgl extension not present.");
+        }
+        if (this.gl.getExtension('WEBGL_color_buffer_float') === undefined) {
+            // We'll just fall back to using byte coding of intermediate values.
+            console.warn("WEBGL_color_buffer_float webgl extension not present.");
         }
 
         /** @type {!function(void):void} */

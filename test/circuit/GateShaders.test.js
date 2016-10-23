@@ -13,7 +13,7 @@ import {WglTexture} from "src/webgl/WglTexture.js"
 
 let suite = new Suite("GateShaders");
 
-suite.webGlTest('cycleAllBits', () => {
+suite.testUsingWebGL('cycleAllBits', () => {
     let inp = Shaders.vec2Data(Seq.range(16).flatMap(e => [e*4 + 1, e*4 + 2]).toFloat32Array()).toVec2Texture(4);
     let actual = GateShaders.cycleAllBits(inp, -1).readVec2Outputs(4);
     assertThat(actual).isEqualTo(new Float32Array([
@@ -25,7 +25,7 @@ suite.webGlTest('cycleAllBits', () => {
     inp.deallocByDepositingInPool();
 });
 
-suite.webGlTest("matrixOperation", () => {
+suite.testUsingWebGL("matrixOperation", () => {
     let repeats = 3;
     for (let size = 1; size < 5; size++) {
         let d = 1<<size;

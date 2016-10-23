@@ -27,6 +27,38 @@ suite.test("isPowerOf2", () => {
     assertFalse(Util.isPowerOf2(5));
 });
 
+suite.test("ceilLg2", () => {
+    assertThat(Util.ceilLg2(0)).isEqualTo(0);
+    assertThat(Util.ceilLg2(1)).isEqualTo(0);
+    assertThat(Util.ceilLg2(2)).isEqualTo(1);
+    assertThat(Util.ceilLg2(3)).isEqualTo(2);
+    assertThat(Util.ceilLg2(4)).isEqualTo(2);
+    assertThat(Util.ceilLg2(5)).isEqualTo(3);
+    assertThat(Util.ceilLg2(6)).isEqualTo(3);
+    assertThat(Util.ceilLg2(7)).isEqualTo(3);
+    assertThat(Util.ceilLg2(8)).isEqualTo(3);
+    assertThat(Util.ceilLg2(9)).isEqualTo(4);
+    assertThat(Util.ceilLg2((1<<20)-1)).isEqualTo(20);
+    assertThat(Util.ceilLg2((1<<20))).isEqualTo(20);
+    assertThat(Util.ceilLg2((1<<20)+1)).isEqualTo(21);
+});
+
+suite.test("floorLg2", () => {
+    assertThat(Util.floorLg2(0)).isEqualTo(0);
+    assertThat(Util.floorLg2(1)).isEqualTo(0);
+    assertThat(Util.floorLg2(2)).isEqualTo(1);
+    assertThat(Util.floorLg2(3)).isEqualTo(1);
+    assertThat(Util.floorLg2(4)).isEqualTo(2);
+    assertThat(Util.floorLg2(5)).isEqualTo(2);
+    assertThat(Util.floorLg2(6)).isEqualTo(2);
+    assertThat(Util.floorLg2(7)).isEqualTo(2);
+    assertThat(Util.floorLg2(8)).isEqualTo(3);
+    assertThat(Util.floorLg2(9)).isEqualTo(3);
+    assertThat(Util.floorLg2((1<<20)-1)).isEqualTo(19);
+    assertThat(Util.floorLg2((1<<20))).isEqualTo(20);
+    assertThat(Util.floorLg2((1<<20)+1)).isEqualTo(20);
+});
+
 suite.test("bitSize", () => {
     assertThat(Util.bitSize(0)).isEqualTo(0);
     assertThat(Util.bitSize(1)).isEqualTo(1);

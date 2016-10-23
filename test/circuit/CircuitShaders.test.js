@@ -14,7 +14,7 @@ import {Outputs, Inputs, makePseudoShaderWithInputsAndOutputAndCode} from "src/w
 
 let suite = new Suite("CircuitShaders");
 
-suite.webGlTest("classicalState", () => {
+suite.testUsingWebGL("classicalState", () => {
     assertThat(CircuitShaders.classicalState(0).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(1, 0, 0, 0));
     assertThat(CircuitShaders.classicalState(1).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(0, 1, 0, 0));
     assertThat(CircuitShaders.classicalState(2).readVec2OutputsAsKet(2)).isEqualTo(Matrix.col(0, 0, 1, 0));
@@ -24,7 +24,7 @@ suite.webGlTest("classicalState", () => {
     assertThat(CircuitShaders.classicalState(5).readVec2OutputsAsKet(3)).isEqualTo(Matrix.col(0, 0, 0, 0, 0, 1, 0, 0));
 });
 
-suite.webGlTest("linearOverlay", () => {
+suite.testUsingWebGL("linearOverlay", () => {
     let fore = Shaders.vec4Data(new Float32Array(Seq.range(2*2*4).map(e => e + 900).toArray())).toVec4Texture(2);
     let back = Shaders.vec4Data(new Float32Array(Seq.range(4*4*4).map(e => -e).toArray())).toVec4Texture(4);
 
@@ -74,7 +74,7 @@ suite.webGlTest("linearOverlay", () => {
     back.deallocByDepositingInPool();
 });
 
-suite.webGlTest("controlMask", () => {
+suite.testUsingWebGL("controlMask", () => {
     assertThat(CircuitShaders.controlMask(new Controls(0x3, 0x1)).readBoolOutputs(2)).isEqualTo(new Uint8Array([
         0, 1, 0, 0
     ]));
@@ -96,7 +96,7 @@ suite.webGlTest("controlMask", () => {
     ]));
 });
 
-suite.webGlTest("controlMask_largeReference", () => {
+suite.testUsingWebGL("controlMask_largeReference", () => {
     let mask = new Controls(0b10111010101010111, 0b10011000001010001);
     let expected = new Uint8Array(Seq.range(1 << 13).
         map(i => mask.allowsState(i) ? 1 : 0).
@@ -104,7 +104,7 @@ suite.webGlTest("controlMask_largeReference", () => {
     assertThat(CircuitShaders.controlMask(mask).readBoolOutputs(13)).isEqualTo(expected);
 });
 
-suite.webGlTest("controlSelect_simple", () => {
+suite.testUsingWebGL("controlSelect_simple", () => {
     let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 4.0), floor(k/4.0));
@@ -170,7 +170,7 @@ suite.webGlTest("controlSelect_simple", () => {
     coords.deallocByDepositingInPool();
 });
 
-suite.webGlTest("controlSelect_multiple", () => {
+suite.testUsingWebGL("controlSelect_multiple", () => {
     let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 4.0), floor(k/4.0));
@@ -206,7 +206,7 @@ suite.webGlTest("controlSelect_multiple", () => {
     coords.deallocByDepositingInPool();
 });
 
-suite.webGlTest("qubitDensities", () => {
+suite.testUsingWebGL("qubitDensities", () => {
     let s = Math.sqrt(0.5);
     let q = 0.25;
     let h = 0.5;
@@ -332,7 +332,7 @@ suite.webGlTest("qubitDensities", () => {
     mix.deallocByDepositingInPool();
 });
 
-suite.webGlTest("swap", () => {
+suite.testUsingWebGL("swap", () => {
     assertThatCircuitShaderActsLikeMatrix(
         ctx => CircuitShaders.swap(ctx, ctx.row + 1),
         Matrix.square(

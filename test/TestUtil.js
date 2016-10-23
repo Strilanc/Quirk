@@ -1,4 +1,5 @@
 // Cheat a little bit on the testing library being independent from what it tests
+import {} from "src/browser/Polyfills.js"
 import {describe} from "src/base/Describe.js"
 import {equate} from "src/base/Equate.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
@@ -369,7 +370,7 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      * @param {!boolean=false} needsFloatSupport
      */
-    webGlTest(name, method, needsFloatSupport=false) {
+    testUsingWebGL(name, method, needsFloatSupport=false) {
         let wrappedMethod = (caseName, status, subNeedFloats) => {
             if (subNeedFloats && !canTestFloatShaders()) {
                 let msg = `Skipping ${this.name}.${caseName} due to lack of WebGL float texture support.`;
@@ -422,7 +423,7 @@ export class Suite {
      * @param {!function(!{ warn_only: !boolean|!string })} method
      */
     testUsingWebGLFloatTextures(name, method) {
-        this.webGlTest(name, method, true);
+        this.testUsingWebGL(name, method, true);
     }
 
         /**

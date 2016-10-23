@@ -1206,6 +1206,63 @@ class DisplayedCircuit {
                 50);
         }
     }
+
+    /**
+     * Parses a text diagram of a circuit, with positions marked by numbers, into a displayed circuit and a list of the
+     * positions of the marked points.
+     *
+     * Note: All lines should start with a pipe (|).
+     * Note: Follow a number with a carat (^) to indicate a position above the carat.
+     * Note: Separate wires with blank lines. Also start and end with blank lines.
+     * Note: Hyphens (-) mark wires, but can't be used at gate locations. Use a char mapped to undefined for that.
+     *
+     * Example diagram, which could be used to seed a drag of the X gate from after the control to under the control:
+     *    |
+     *    |-H-C-X-
+     *    |    0^
+     *    |-+-1-+-
+     *    |
+     *
+     * @param {!string} diagramText
+     * @param {!Map<!string, undefined|!Gate>} gateMap
+     * @returns {!{circuit: !DisplayedCircuit, pts: !Array.<!Point>}}
+     */
+    static fromTextDiagram(gateMap, diagramText) {
+        let lines = diagramText.split('\n').map(e => {
+            let p = e.split('|');
+            if (p.length !== 2) {
+                fail('Bad diagram: ' + diagramText);
+            }
+            return p[1];
+        });
+        let circuitDiagramSubset = seq(lines).
+            skip(1).
+            stride(2).
+            map(line => seq(line).skip(1).stride(2).join("")).
+            join('\n');
+        let top = 10;
+        let circuit = new DisplayedCircuit(
+            top,
+            CircuitDefinition.fromTextDiagram(gateMap, circuitDiagramSubset),
+            undefined,
+            undefined,
+            undefined);
+        let pts = Seq.naturals().
+            takeWhile(k => diagramText.indexOf(k) !== -1).
+            map(k => {
+                let pos = seq(lines).mapWithIndex((line, row) => ({row, col: line.indexOf(k)})).
+                    filter(e => e.col !== -1).
+                    single();
+                if (lines[pos.row][pos.col + 1] === '^') {
+                    pos.row -= 1;
+                    pos.col += 1;
+                }
+                return new Point(
+                    pos.col * Config.WIRE_SPACING / 2 + 35.5,
+                    pos.row * Config.WIRE_SPACING / 2 + 10.5);
+            }).toArray();
+        return {circuit, pts};
+    }
 }
 
 /**

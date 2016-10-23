@@ -13,7 +13,7 @@ import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 
 let suite = new Suite("WglTexturePool");
 
-suite.webGlTest("takeBoolTex", () => {
+suite.testUsingWebGL("takeBoolTex", () => {
     let t = WglTexturePool.takeBoolTex(2);
     makePseudoShaderWithInputsAndOutputAndCode(
         [],
@@ -30,7 +30,7 @@ suite.webGlTest("takeBoolTex", () => {
     t.deallocByDepositingInPool();
 });
 
-suite.webGlTest("takeVec2Tex", () => {
+suite.testUsingWebGLFloatTextures("takeVec2Tex", () => {
     let t = WglTexturePool.takeVec2Tex(2);
     makePseudoShaderWithInputsAndOutputAndCode(
         [],
@@ -47,7 +47,7 @@ suite.webGlTest("takeVec2Tex", () => {
     t.deallocByDepositingInPool();
 });
 
-suite.webGlTest("takeVec4Tex", () => {
+suite.testUsingWebGLFloatTextures("takeVec4Tex", () => {
     let t = WglTexturePool.takeVec4Tex(2);
     makePseudoShaderWithInputsAndOutputAndCode(
         [],

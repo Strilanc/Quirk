@@ -33,7 +33,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ...extras
 ]), diagram);
 
-suite.webGlTest("nestedControls", () => {
+suite.testUsingWebGL("nestedControls", () => {
     let cnot = circuitDefinitionToGate(circuit(`-•-
                                                 -X-`));
     let ccnot_circuit = circuit(`-•-
@@ -45,7 +45,7 @@ suite.webGlTest("nestedControls", () => {
         ccnot_matrix);
 });
 
-suite.webGlTest("multiNestedControls", () => {
+suite.testUsingWebGL("multiNestedControls", () => {
     let notc = circuitDefinitionToGate(circuit(`-X-
                                                 -•-`));
     let i_notcc = circuitDefinitionToGate(circuit(`---
@@ -64,7 +64,7 @@ suite.webGlTest("multiNestedControls", () => {
         shifted_notccc_matrix);
 });
 
-suite.webGlTest("innerAndOuterInputs", () => {
+suite.testUsingWebGL("innerAndOuterInputs", () => {
     let plus_a_times = circuitDefinitionToGate(circuit(`-*-
                                                         -a-`));
     let notcc_circuit = circuit(`-?-
@@ -76,7 +76,7 @@ suite.webGlTest("innerAndOuterInputs", () => {
         notcc_matrix);
 });
 
-suite.webGlTest("doublyNestedInputs", () => {
+suite.testUsingWebGL("doublyNestedInputs", () => {
     let plus_a_times = circuitDefinitionToGate(circuit(`-*-
                                                         -a-`));
     let plus_a_times_b = circuitDefinitionToGate(circuit(`-?-
@@ -92,7 +92,7 @@ suite.webGlTest("doublyNestedInputs", () => {
         shifted_notcc_matrix);
 });
 
-suite.webGlTest("rawAddition", () => {
+suite.testUsingWebGL("rawAddition", () => {
     let adder = circuit(`-+-
                          -/-
                          -/-
@@ -114,7 +114,7 @@ suite.webGlTest("rawAddition", () => {
 });
 
 
-suite.webGlTest('swap', () => {
+suite.testUsingWebGL('swap', () => {
     let circ = circuit(`-S-
                         -S-`, ['S', Gates.Special.SwapHalf]);
     assertThatCircuitUpdateActsLikeMatrix(

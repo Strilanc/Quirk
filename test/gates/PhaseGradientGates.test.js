@@ -7,7 +7,7 @@ import {Matrix} from "src/math/Matrix.js"
 
 let suite = new Suite("PhaseGradientGates");
 
-suite.webGlTest('phaseGradient', () => {
+suite.testUsingWebGL('phaseGradient', () => {
     assertThatCircuitShaderActsLikeMatrix(
         ctx => phaseGradient(ctx, 3, 1),
         Matrix.generateDiagonal(8, i => Complex.polar(1, i*Math.PI/8)));

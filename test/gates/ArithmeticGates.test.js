@@ -13,7 +13,7 @@ import {Matrix} from "src/math/Matrix.js"
 
 let suite = new Suite("ArithmeticGates");
 
-suite.webGlTest('increment', () => {
+suite.testUsingWebGL('increment', () => {
     assertThatCircuitShaderActsLikeMatrix(
         ctx => incrementShaderFunc(ctx, 3, 5),
         Matrix.generateTransition(8, e => (e+5)&7));
@@ -23,7 +23,7 @@ suite.webGlTest('increment', () => {
         Matrix.generateTransition(4, e => (e-3)&3));
 });
 
-suite.webGlTest('plus_A', () => {
+suite.testUsingWebGL('plus_A', () => {
     assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,
@@ -37,7 +37,7 @@ suite.webGlTest('plus_A', () => {
         }));
 });
 
-suite.webGlTest('minus_A', () => {
+suite.testUsingWebGL('minus_A', () => {
     assertThatCircuitUpdateActsLikeMatrix(
         ctx => advanceStateWithCircuit(
             ctx,

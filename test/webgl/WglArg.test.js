@@ -178,3 +178,24 @@ suite.testUsingWebGLFloatTextures("vec4_array", () => {
         2, 3, 5, 7
     ]));
 });
+
+suite.testUsingWebGLFloatTextures("mat4_array", () => {
+    let texture = new WglTexture(1, 1);
+    let shader = new WglShader(`
+        uniform mat4 arg[2];
+        void main() {
+            gl_FragColor = arg[0][1];
+        }`);
+
+    shader.withArgs(WglArg.mat4_array("arg", new Float32Array([2, 3, 5, 7,
+                                                               11, 13, 17, 19,
+                                                               23, 29, 31, 37,
+                                                               41, 43, 47, 53,
+                                                               9, 9, 9, 9,
+                                                               9, 9, 9, 9,
+                                                               9, 9, 9, 9,
+                                                               9, 9, 9, 9]))).renderTo(texture);
+    assertThat(texture.readPixels()).isEqualTo(new Float32Array([
+        11, 13, 17, 19
+    ]));
+});

@@ -45,8 +45,19 @@ const CUSTOM_SINGLE_QUBIT_OPERATION_SHADER = ketShader(
     'return cmul(inp(0.0), a+(c-a)*out_id) + cmul(inp(1.0), b+(d-b)*out_id);',
     1);
 
+const hugeQubitOperationMaker = qubitCount => ketShader(
+    '',
+    `
+        vec2 t = vec2(0.0, 0.0);
+        for (int k = 0; k < ${1<<qubitCount}; k++) {
+            t += cmul(inp(float(k)),
+                      read_coefs(out_id * ${1<<qubitCount}.0 + float(k)));
+        }
+        return t;
+    `,
+    qubitCount,
+    [Inputs.vec2('coefs')]);
 const multiQubitOperationMaker = qubitCount => ketShader(
-    // Pack into vec4s to avoid blowing maximum uniform limits of 224 for the 16x16 matrix (which requires 512 numbers).
     `uniform vec4 coefs[${1<<(2*qubitCount-1)}];`,
     `
         int row = int(out_id);
@@ -65,9 +76,11 @@ const multiQubitOperationMaker = qubitCount => ketShader(
     `,
     qubitCount);
 const matrix_operation_shaders = [
+    undefined,
+    undefined,
     multiQubitOperationMaker(2),
     multiQubitOperationMaker(3),
-    multiQubitOperationMaker(4)
+    hugeQubitOperationMaker(4)
 ];
 
 /**
@@ -76,20 +89,39 @@ const matrix_operation_shaders = [
  * @returns {void}
  */
 GateShaders.applyMatrixOperation = (ctx, matrix) => {
+    if (!Util.isPowerOf2(matrix.width())) {
+        throw new DetailedError("Matrix size isn't a power of 2.", {ctx, matrix});
+    }
+
+    // Tiny matrix.
     if (matrix.width() === 2) {
         _applySingleQubitOperationFunc(ctx, matrix);
         return;
     }
-    if (!Util.isPowerOf2(matrix.width())) {
-        throw new DetailedError("Matrix size isn't a power of 2.", {ctx, matrix});
+    let sizePower = Math.round(Math.log2(matrix.width()));
+
+    // Small matrix (fits in uniforms).
+    if (sizePower <= 3) {
+        ctx.applyOperation(matrix_operation_shaders[sizePower].withArgs(
+            ...ketArgs(ctx),
+            WglArg.vec4_array("coefs", matrix.rawBuffer())));
+        return;
     }
-    if (matrix.width() > 1 << 4) {
-        throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {ctx, matrix});
+
+    // Big matrix (requires a texture).
+    if (sizePower <= 4) {
+        let tex = Shaders.data(currentShaderCoder().prepVec2Data(matrix.rawBuffer())).toVec2Texture(sizePower * 2);
+        try {
+            ctx.applyOperation(matrix_operation_shaders[sizePower].withArgs(
+                tex,
+                ...ketArgs(ctx)));
+        } finally {
+            tex.deallocByDepositingInPool();
+        }
+        return;
     }
-    let shader = matrix_operation_shaders[Math.round(Math.log2(matrix.width())) - 2];
-    ctx.applyOperation(shader.withArgs(
-        ...ketArgs(ctx),
-        WglArg.vec4_array("coefs", matrix.rawBuffer())));
+
+    throw new DetailedError("Matrix is past 4 qubits. Too expensive.", {ctx, matrix});
 };
 
 /**
