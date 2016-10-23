@@ -5,14 +5,23 @@ Float32Array.prototype.slice = Float32Array.prototype.slice || function(a, b) {
 Float64Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
     return new Float64Array(Array.from(this).slice(a, b));
 };
-Uint32Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+Uint32Array.prototype.slice = Uint32Array.prototype.slice || function(a, b) {
     return new Uint32Array(Array.from(this).slice(a, b));
 };
-Uint16Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+Int32Array.prototype.slice = Int32Array.prototype.slice || function(a, b) {
+    return new Int32Array(Array.from(this).slice(a, b));
+};
+Uint16Array.prototype.slice = Uint16Array.prototype.slice || function(a, b) {
     return new Uint16Array(Array.from(this).slice(a, b));
 };
-Uint8Array.prototype.slice = Float64Array.prototype.slice || function(a, b) {
+Int16Array.prototype.slice = Int16Array.prototype.slice || function(a, b) {
+    return new Int16Array(Array.from(this).slice(a, b));
+};
+Uint8Array.prototype.slice = Uint8Array.prototype.slice || function(a, b) {
     return new Uint8Array(Array.from(this).slice(a, b));
+};
+Int8Array.prototype.slice = Int8Array.prototype.slice || function(a, b) {
+    return new Int8Array(Array.from(this).slice(a, b));
 };
 
 const ARRAY_ITER = function() {
@@ -28,6 +37,9 @@ Float64Array.prototype[Symbol.iterator] = Float64Array.prototype[Symbol.iterator
 Uint32Array.prototype[Symbol.iterator] = Uint32Array.prototype[Symbol.iterator] || ARRAY_ITER;
 Uint16Array.prototype[Symbol.iterator] = Uint16Array.prototype[Symbol.iterator] || ARRAY_ITER;
 Uint8Array.prototype[Symbol.iterator] = Uint8Array.prototype[Symbol.iterator] || ARRAY_ITER;
+Int32Array.prototype[Symbol.iterator] = Int32Array.prototype[Symbol.iterator] || ARRAY_ITER;
+Int16Array.prototype[Symbol.iterator] = Int16Array.prototype[Symbol.iterator] || ARRAY_ITER;
+Int8Array.prototype[Symbol.iterator] = Int8Array.prototype[Symbol.iterator] || ARRAY_ITER;
 
 // This was missing on the iPhone I tested.
 window.performance = window.performance || {};
