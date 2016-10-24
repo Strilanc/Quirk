@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)
 [![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)
 
-Quirk is a toy quantum circuit simulator, intended to help people learning about quantum computing.
+Quirk is a toy quantum circuit simulator, intended to help people in learning about quantum computing.
 
 If you want to quickly explore the behavior of a small quantum circuit, Quirk is the tool for you.
 There's no installing or configuring or scripting: just go to **[algorithmicassertions.com/quirk](http://algorithmicassertions.com/quirk)**, drag gates onto the circuit, and the output displays will update in real time.
@@ -20,16 +20,10 @@ Quirk assumes you already know background facts like "each wire represents a qub
 - Bookmarkable / linkable circuits.
 - Up to 16 qubits.
 
-**Notable problems**:
+**Notable limitations**:
 
-- Measurement is a hack based on the [deferred measurement principle](https://en.wikipedia.org/wiki/Deferred_Measurement_Principle).
-    - Can't do operations that would recohere measured qubits.
-    - Can't do conditional measurement.
-    - Can't make custom measurement gates.
-- Poor support for mobile browsers.
-    - Can't simulate in Safari on iPhones (displays default to NaN).
-    - Can't simulate in Firefox on Android (displays default to NaN).
-    - Can't consistently drag gates in Firefox on Android (keeps scrolling instead).
+- Can't recohere measured qubits (because measurement is implemented as a hack based on the [deferred measurement principle](https://en.wikipedia.org/wiki/Deferred_Measurement_Principle)).
+- Dragging works poorly in Firefox on Android (because Firefox doesn't support [`touch-action: none`](https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action) yet).
 
 **Try it out**:
 
