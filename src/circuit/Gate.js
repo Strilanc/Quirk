@@ -119,6 +119,10 @@ class Gate {
          * @returns {undefined|!string}
          */
         this.customDisableReasonFinder = args => undefined;
+        /**
+         * @type {undefined | !function(!int) : !int}
+         */
+        this.knownBitPermutationFunc = undefined;
     }
 
     /**
@@ -290,6 +294,7 @@ class Gate {
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
         g.customBeforeOperation = this.customBeforeOperation;
+        g.knownBitPermutationFunc = this.knownBitPermutationFunc;
         g.customOperation = this.customOperation;
         g.customAfterOperation = this.customAfterOperation;
         g.customStatTexturesMaker = this.customStatTexturesMaker;
@@ -395,6 +400,16 @@ class Gate {
     withCustomDrawer(drawer) {
         let g = this._copy();
         g.customDrawer = drawer;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!function(!int) : !int} permutationFunc Returns the output of the permutation for a given
+     * input, assuming the gate is exactly sized to the overall circuit.
+     */
+    withKnownBitPermutation(knownBitPermutationFunc) {
+        let g = this._copy();
+        g.knownBitPermutationFunc = knownBitPermutationFunc;
         return g;
     }
 

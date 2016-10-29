@@ -161,7 +161,9 @@ class GateColumn {
             if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
-            if (g.effectMightPermutesStates() && (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
+            if (g.effectMightPermutesStates() &&
+                    g.knownBitPermutationFunc === undefined &&
+                    (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
                 return "no\nremix\n(sorry)";
             }
         }
@@ -310,7 +312,7 @@ class GateColumn {
      * @param {{measureMask: !int, earlierRowWithSwapGate: undefined|!int}} state
      * @param row
      * @param {!Array.<undefined|!string>} disabledReasons
-     * @returns {}
+     * @returns {void}
      * @private
      */
     _updateMeasureMask_gateStep(state, row, disabledReasons) {
@@ -319,11 +321,14 @@ class GateColumn {
         }
 
         let gate = this.gates[row];
-        let bit = 1 << row;
+
+        if (gate === undefined) {
+            return;
+        }
 
         // The measurement gate measures.
         if (gate === Gates.Special.Measurement) {
-            state.measureMask |= bit;
+            state.measureMask |= 1<<row;
             return;
         }
 
@@ -332,23 +337,62 @@ class GateColumn {
         let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
             || gate === Gates.PostSelectionGates.PostSelectOff;
         if (!this.hasControl() && hasSingleResult) {
-            state.measureMask &= ~bit;
+            state.measureMask &= ~(1<<row);
             return;
         }
 
-        // Swap gate swaps measurements.
-        if (gate === Gates.Special.SwapHalf) {
-            if (state.earlierRowWithSwapGate === undefined) {
-                state.earlierRowWithSwapGate = row;
-                return;
-            }
+        GateColumn._updateMeasureMask_swapGate(gate, state, row);
+        GateColumn._updateMeasureMask_customPermute(gate, state, row);
+    }
 
-            let other = 1 << state.earlierRowWithSwapGate;
-            let d = row - state.earlierRowWithSwapGate;
-            state.measureMask = (state.measureMask & ~(other | bit)) |
-                                ((state.measureMask & other) << d) |
-                                ((state.measureMask & bit) >> d);
-            state.earlierRowWithSwapGate = undefined;
+    /**
+     * @param {!Gate} gate
+     * @param {{measureMask: !int, earlierRowWithSwapGate: undefined|!int}} state
+     * @param row
+     * @returns {void}
+     * @private
+     */
+    static _updateMeasureMask_swapGate(gate, state, row) {
+        if (gate !== Gates.Special.SwapHalf) {
+            return;
+        }
+
+        if (state.earlierRowWithSwapGate === undefined) {
+            state.earlierRowWithSwapGate = row;
+            return;
+        }
+
+        // Swap gate swaps measurement states.
+        let other = 1 << state.earlierRowWithSwapGate;
+        let d = row - state.earlierRowWithSwapGate;
+        let bit = 1 << row;
+        state.measureMask = (state.measureMask & ~(other | bit)) |
+            ((state.measureMask & other) << d) |
+            ((state.measureMask & bit) >> d);
+        state.earlierRowWithSwapGate = undefined;
+    }
+
+    /**
+     * @param {!Gate} gate
+     * @param {{measureMask: !int, earlierRowWithSwapGate: undefined|!int}} state
+     * @param row
+     * @returns {void}
+     * @private
+     */
+    static _updateMeasureMask_customPermute(gate, state, row) {
+        if (gate.knownBitPermutationFunc === undefined) {
+            return;
+        }
+
+        let mask = ((1 << gate.height) - 1) << row;
+        let prev = state.measureMask & mask;
+        state.measureMask &= ~mask;
+        for (let i = 0; i < gate.height; i++) {
+            let prevBit = 1 << (row + i);
+            if ((prev & prevBit) !== 0) {
+                let nextBit = 1 << (row + gate.knownBitPermutationFunc(i));
+                state.measureMask |= nextBit;
+            }
         }
     }
 

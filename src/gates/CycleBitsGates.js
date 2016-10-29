@@ -36,6 +36,7 @@ CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.without
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
     withSerializedId("<<" + span).
     withHeight(span).
+    withKnownBitPermutation(i => (i + 1) % span).
     withCustomShader(ctx => cycleBits(ctx, span, +1)));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
@@ -47,6 +48,7 @@ CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
     withSerializedId(">>" + span).
     withHeight(span).
+    withKnownBitPermutation(i => (i + span - 1) % span).
     withCustomShader(ctx => cycleBits(ctx, span, -1)));
 
 CycleBitsGates.all = [

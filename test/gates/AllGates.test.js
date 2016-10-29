@@ -51,7 +51,23 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
     return flipped.transpose();
 };
 
-suite.testUsingWebGL("shaderMatchesMatrix", () => {
+/**
+ * @param {!Gate} gate
+ * @returns {!Matrix}
+ */
+let reconstructMatrixFromKnownBitPermutation = gate => {
+    return Matrix.generateTransition(1<<gate.height, input => {
+        let out = 0;
+        for (let i = 0; i < gate.height; i++) {
+            if ((input & (1<<i)) !== 0) {
+                out |= 1<<gate.knownBitPermutationFunc(i);
+            }
+        }
+        return out;
+    });
+};
+
+suite.testUsingWebGL("customShaderMatchesKnownMatrix", () => {
     let time = 6/7;
     for (let gate of Gates.KnownToSerializer) {
         if (gate.height > 4) {
@@ -69,5 +85,26 @@ suite.testUsingWebGL("shaderMatchesMatrix", () => {
         }
 
         assertThat(reconstructed).withInfo({gate, time}).isApproximatelyEqualTo(matrix, 0.0001);
+    }
+});
+
+suite.testUsingWebGL("knownBitPermutationMatchesKnowMatrixAndCustomShader", () => {
+    let time = 6/7;
+    for (let gate of Gates.KnownToSerializer) {
+        if (gate.height > 4 || gate.knownBitPermutationFunc === undefined) {
+            continue;
+        }
+
+        let permuteBitsMatrix = reconstructMatrixFromKnownBitPermutation(gate);
+
+        let knownMatrix = gate.knownMatrixAt(time);
+        if (knownMatrix !== undefined) {
+            assertThat(knownMatrix).withInfo(gate).isEqualTo(permuteBitsMatrix);
+        }
+
+        let shaderMatrix = reconstructMatrixFromGateCustomOperation(gate, time);
+        if (shaderMatrix !== undefined) {
+            assertThat(shaderMatrix).withInfo(gate).isEqualTo(permuteBitsMatrix);
+        }
     }
 });

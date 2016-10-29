@@ -47,12 +47,15 @@ const TEST_GATES = new Map([
     ['D', Gates.Displays.DensityMatrixDisplay2],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
+    ['R', Gates.ReverseBitsGateFamily],
+    ['↡', Gates.CycleBitsGates.CycleBitsFamily],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['-', undefined],
+    ['=', undefined],
     ['+', undefined],
     ['|', undefined],
-    ['/', undefined],
+    ['/', null],
 
     ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
@@ -399,8 +402,15 @@ suite.test("colIsMeasuredMask", () => {
     // Post-selection clears
     assertAbout(`M!`).isEqualTo([0, 0, 1, 0, 0]);
     // Swap moves measured
-    assertAbout(`---s-
-                 -M-s-`).isEqualTo([0, 0, 0, 2, 2, 1, 1, 1]);
+    assertAbout(`---s=
+                 -M=s-`).isEqualTo([0, 0, 0, 2, 2, 1, 1, 1]);
+    // Custom permutations move measured
+    assertAbout(`---↡=↡-
+                 ---/-/=
+                 -M=/-/-`).isEqualTo([0, 0, 0, 4, 4, 1, 1, 2, 2, 2]);
+    assertAbout(`---R=R-
+                 ---/-/-
+                 -M=/-/=`).isEqualTo([0, 0, 0, 4, 4, 1, 1, 4, 4, 4]);
 
     // Disallowed measurements don't cause measurement. Controlled measurement not allowed.
     assertAbout(`•

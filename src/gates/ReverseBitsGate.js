@@ -47,6 +47,7 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
         withSerializedId("rev" + span).
         withHeight(span).
         withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
+        withKnownBitPermutation(i => span - 1 - i).
         withCustomShader(reverseShaderForSize(span));
 });
 
