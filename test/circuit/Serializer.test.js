@@ -189,6 +189,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "+=A1", "+=A2", "+=A3", "+=A4", "+=A5", "+=A6", "+=A7", "+=A8", "+=A9", "+=A10", "+=A11", "+=A12", "+=A13", "+=A14", "+=A15", "+=A16",
     "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "sub10", "sub11", "sub12", "sub13", "sub14", "sub15", "sub16",
     "-=A1", "-=A2", "-=A3", "-=A4", "-=A5", "-=A6", "-=A7", "-=A8", "-=A9", "-=A10", "-=A11", "-=A12", "-=A13", "-=A14", "-=A15", "-=A16",
+    "+cntA1", "+cntA2", "+cntA3", "+cntA4", "+cntA5", "+cntA6", "+cntA7", "+cntA8", "+cntA9", "+cntA10", "+cntA11", "+cntA12", "+cntA13", "+cntA14", "+cntA15", "+cntA16",
+    "-cntA1", "-cntA2", "-cntA3", "-cntA4", "-cntA5", "-cntA6", "-cntA7", "-cntA8", "-cntA9", "-cntA10", "-cntA11", "-cntA12", "-cntA13", "-cntA14", "-cntA15", "-cntA16",
     "X^⌈t⌉", "X^⌈t-¼⌉",
     "Counting1", "Counting2", "Counting3", "Counting4", "Counting5", "Counting6", "Counting7", "Counting8",
     "Uncounting1", "Uncounting2", "Uncounting3", "Uncounting4", "Uncounting5", "Uncounting6", "Uncounting7", "Uncounting8",
