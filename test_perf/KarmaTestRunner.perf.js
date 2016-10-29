@@ -40,5 +40,15 @@ let promiseRunPerfTest = ({name, method}) => {
 __karma__.start = () => {
     let known = getKnownPerfTests();
     __karma__.info({ total: known.length });
-    Promise.all(known.map(promiseRunPerfTest)).then(() => __karma__.complete());
+
+    let chain = Promise.resolve();
+    for (let test of known) {
+        chain = chain.then(() =>
+            new Promise(resolver =>
+                setTimeout(() =>
+                    resolver(promiseRunPerfTest(test)),
+                    25)));
+    }
+
+    chain.then(() => __karma__.complete());
 };
