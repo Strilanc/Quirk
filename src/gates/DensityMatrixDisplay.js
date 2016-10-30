@@ -36,7 +36,7 @@ function densityDisplayStatTexture(inp, qubitCount, controls, rangeOffset, range
     trader.dontDeallocCurrentTexture();
 
     // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-    let startingQubits = currentShaderCoder().vec2ArrayPowerSizeOfTexture(inp);
+    let startingQubits = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inp);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     trader.shadeAndTrade(

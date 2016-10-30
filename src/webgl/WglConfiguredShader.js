@@ -129,7 +129,7 @@ class WglConfiguredShader {
      * @returns {!Float32Array}
      */
     readVec2Outputs(sizePower) {
-        return currentShaderCoder().unpackVec2Data(
+        return currentShaderCoder().vec2.pixelsToData(
             this._renderReadDealloc(WglTexturePool.takeVec2Tex(sizePower)))
     }
 
@@ -146,7 +146,7 @@ class WglConfiguredShader {
      * @returns {!Float32Array}
      */
     readVec4Outputs(sizePower) {
-        return currentShaderCoder().unpackVec4Data(
+        return currentShaderCoder().vec4.pixelsToData(
             this._renderReadDealloc(WglTexturePool.takeVec4Tex(sizePower)))
     }
 

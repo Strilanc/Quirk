@@ -166,7 +166,7 @@ const SWAP_QUBITS_SHADER = ketShaderPermute('', `
  */
 CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
     if (keptBitMask === undefined) {
-        keptBitMask = (1 << currentShaderCoder().vec2ArrayPowerSizeOfTexture(inputTexture)) - 1;
+        keptBitMask = (1 << currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture)) - 1;
     }
     let keptCount = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
 

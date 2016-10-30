@@ -174,22 +174,6 @@ class ShaderValueCoder {
         this.float = parent.float;
         this.bool = parent.bool;
 
-        /** @type {!int} */
-        this.vec2PowerSizeOverhead = parent.vec2.powerSizeOverhead;
-        /** @type {!int} */
-        this.vec4PowerSizeOverhead = parent.vec4.powerSizeOverhead;
-        /** @type {!int} */
-        this.vecPixelType = parent.vec2.pixelType;
-        /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
-        this.prepVec2Data = parent.vec2.dataToPixels;
-        /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
-        this.unpackVec2Data = parent.vec2.pixelsToData;
-        /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
-        this.prepVec4Data = parent.vec4.dataToPixels;
-        /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
-        this.unpackVec4Data = parent.vec4.pixelsToData;
-        this.vec2ArrayPowerSizeOfTexture = tex => parent.vec2.arrayPowerSizeOfTexture(tex);
-        this.vec4ArrayPowerSizeOfTexture = tex => parent.vec4.arrayPowerSizeOfTexture(tex);
         /** @type {!function(!WglTextureTrader) : void} */
         this.vec2TradePack = vec2TradePack;
     }

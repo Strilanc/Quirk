@@ -60,7 +60,7 @@ suite.testUsingWebGL("spreadLengthAcrossPolarKets", () => {
         15,16,12800,0
     ])).toVec4Texture(3);
     let out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 1), true);
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
          1, 2,300,0,
          3, 4,300,0,
          5, 6,1200,0,
@@ -73,7 +73,7 @@ suite.testUsingWebGL("spreadLengthAcrossPolarKets", () => {
     out.deallocByDepositingInPool();
 
     out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 2), true);
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         1, 2,1500,0,
         3, 4,1500,0,
         5, 6,1500,0,
@@ -87,7 +87,7 @@ suite.testUsingWebGL("spreadLengthAcrossPolarKets", () => {
 
 
     out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 3));
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         1, 2,25500,0,
         3, 4,25500,0,
         5, 6,25500,0,
@@ -114,7 +114,7 @@ suite.testUsingWebGL("reduceToLongestPolarKet", () => {
     let out;
 
     out = inp.tradeThrough(t => reduceToLongestPolarKet(t, 1));
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         1+5+9+13,14,25500,0,    3+7+11+15,16,25500,0
     ]));
     out.deallocByDepositingInPool();
@@ -130,7 +130,7 @@ suite.testUsingWebGL("reduceToLongestPolarKet", () => {
         15,16,19200,0
     ])).toVec4Texture(3);
     out = inp.tradeThrough(t => reduceToLongestPolarKet(t, 1));
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         1+55+9+13,6,144300,0,
         3+7+11+15,16,25500,0
     ]));
@@ -190,7 +190,7 @@ suite.testUsingWebGL("foldConsistentRatios", () => {
     let out;
 
     out = inp.tradeThrough(t => foldConsistentRatios(t, 1), true);
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         2,0,0,0,
         0,0,2,3,
         2,0,2,0,
@@ -203,7 +203,7 @@ suite.testUsingWebGL("foldConsistentRatios", () => {
     out.deallocByDepositingInPool();
 
     out = inp.tradeThrough(t => foldConsistentRatios(t, 2));
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         -666,-666,-666,-666,
         -666,-666,-666,-666,
         -666,-666,-666,-666,
@@ -218,7 +218,7 @@ suite.testUsingWebGL("foldConsistentRatios", () => {
         -666,0,0,0,  0,0,0,0,   0,0,0,0,  0,0,0,0
     ])).toVec4Texture(4);
     out = inp.tradeThrough(t => foldConsistentRatios(t, 2));
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         20,0,0,0,
         -666,-666,-666,-666,
         0,0,0,0,
@@ -241,7 +241,7 @@ suite.testUsingWebGL("pipelineToSumAll", () => {
     let out;
 
     out = inp.tradeThrough(signallingSumAll);
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         10,6,19,16
     ]));
     out.deallocByDepositingInPool();
@@ -261,7 +261,7 @@ suite.testUsingWebGL("pipelineToSumAll_signal", () => {
     let out;
 
     out = inp.tradeThrough(signallingSumAll);
-    assertThat(currentShaderCoder().unpackVec4Data(out.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
         -666.0,-666.0,-666.0,-666.0
     ]));
     out.deallocByDepositingInPool();
@@ -271,9 +271,9 @@ suite.testUsingWebGL("makeAmplitudeSpanPipeline_OffOff", () => {
     let inp = Shaders.vec2Data(new Float32Array([1,0, 0,0, 0,0, 0,0])).
         toVec2Texture(2);
     let [afterPolar, final] = amplitudeDisplayStatTextures(inp, Controls.NONE, 0, 2);
-    assertThat(currentShaderCoder().unpackVec4Data(afterPolar.readPixels())).isEqualTo(
+    assertThat(currentShaderCoder().vec4.pixelsToData(afterPolar.readPixels())).isEqualTo(
         new Float32Array([1,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]));
-    assertThat(currentShaderCoder().unpackVec4Data(final.readPixels())).isEqualTo(new Float32Array([1,0,1,0]));
+    assertThat(currentShaderCoder().vec4.pixelsToData(final.readPixels())).isEqualTo(new Float32Array([1,0,1,0]));
 
     inp.deallocByDepositingInPool();
     afterPolar.deallocByDepositingInPool();

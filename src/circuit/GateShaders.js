@@ -110,7 +110,7 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
 
     // Big matrix (requires a texture).
     if (sizePower <= 4) {
-        let tex = Shaders.data(currentShaderCoder().prepVec2Data(matrix.rawBuffer())).toVec2Texture(sizePower * 2);
+        let tex = Shaders.data(currentShaderCoder().vec2.dataToPixels(matrix.rawBuffer())).toVec2Texture(sizePower * 2);
         try {
             ctx.applyOperation(matrix_operation_shaders[sizePower].withArgs(
                 tex,
@@ -130,7 +130,7 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
  * @returns {!WglConfiguredShader}
  */
 GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
-    let size = currentShaderCoder().vec2ArrayPowerSizeOfTexture(inputTexture);
+    let size = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture);
     return CYCLE_ALL_SHADER(
         inputTexture,
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));

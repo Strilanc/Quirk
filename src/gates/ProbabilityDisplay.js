@@ -35,7 +35,7 @@ function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLe
     trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture));
     trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, -rangeOffset));
 
-    let n = currentShaderCoder().vec2ArrayPowerSizeOfTexture(ketTexture);
+    let n = currentShaderCoder().vec2.arrayPowerSizeOfTexture(ketTexture);
     while (n > rangeLength) {
         n -= 1;
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);

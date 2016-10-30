@@ -37,7 +37,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLeng
     trader.dontDeallocCurrentTexture();
 
     // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-    let startingQubits = currentShaderCoder().vec2ArrayPowerSizeOfTexture(stateKet);
+    let startingQubits = currentShaderCoder().vec2.arrayPowerSizeOfTexture(stateKet);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     let involvedQubits = startingQubits - lostQubits;
@@ -193,7 +193,7 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
  * @returns {void}
  */
 function reduceToLongestPolarKet(textureTrader, includedQubitCount) {
-    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4.arrayPowerSizeOfTexture(textureTrader.currentTexture);
     while (curQubitCount > includedQubitCount) {
         curQubitCount -= 1;
         textureTrader.shadeHalveAndTrade(
@@ -258,7 +258,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
  * @returns {void}
  */
 function foldConsistentRatios(textureTrader, includedQubitCount) {
-    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4.arrayPowerSizeOfTexture(textureTrader.currentTexture);
     let remainingIncludedQubitCount = includedQubitCount;
     while (remainingIncludedQubitCount > 0) {
         remainingIncludedQubitCount -= 1;
@@ -305,7 +305,7 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
  * @param {!WglTextureTrader} textureTrader
  */
 function signallingSumAll(textureTrader) {
-    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4.arrayPowerSizeOfTexture(textureTrader.currentTexture);
     while (curQubitCount > 0) {
         curQubitCount -= 1;
         textureTrader.shadeHalveAndTrade(SIGNALLING_SUM_SHADER_VEC4);

@@ -123,8 +123,8 @@ class WglTexturePool {
      */
     static takeVec2Tex(sizePower) {
         return WglTexturePool.take(
-            sizePower + currentShaderCoder().vec2PowerSizeOverhead,
-            currentShaderCoder().vecPixelType);
+            sizePower + currentShaderCoder().vec2.powerSizeOverhead,
+            currentShaderCoder().vec2.pixelType);
     }
 
     /**
@@ -133,8 +133,8 @@ class WglTexturePool {
      */
     static takeVec4Tex(sizePower) {
         return WglTexturePool.take(
-            sizePower + currentShaderCoder().vec4PowerSizeOverhead,
-            currentShaderCoder().vecPixelType);
+            sizePower + currentShaderCoder().vec4.powerSizeOverhead,
+            currentShaderCoder().vec4.pixelType);
     }
 }
 

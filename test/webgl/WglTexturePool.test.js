@@ -38,7 +38,7 @@ suite.testUsingWebGLFloatTextures("takeVec2Tex", () => {
         `vec2 outputFor(float k) {
             return vec2(k / 4.0, k * k);
         }`)().renderTo(t);
-    assertThat(currentShaderCoder().unpackVec2Data(t.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec2.pixelsToData(t.readPixels())).isEqualTo(new Float32Array([
         0, 0,
         0.25, 1,
         0.5, 4,
@@ -55,7 +55,7 @@ suite.testUsingWebGLFloatTextures("takeVec4Tex", () => {
         `vec4 outputFor(float k) {
             return vec4(k, k / 4.0, k * k, 5.0);
         }`)().renderTo(t);
-    assertThat(currentShaderCoder().unpackVec4Data(t.readPixels())).isEqualTo(new Float32Array([
+    assertThat(currentShaderCoder().vec4.pixelsToData(t.readPixels())).isEqualTo(new Float32Array([
         0, 0, 0, 5,
         1, 0.25, 1, 5,
         2, 0.5, 4, 5,

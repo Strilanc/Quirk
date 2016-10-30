@@ -94,14 +94,14 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
  */
-Shaders.vec2Data = floats => Shaders.data(currentShaderCoder().prepVec2Data(floats));
+Shaders.vec2Data = floats => Shaders.data(currentShaderCoder().vec2.dataToPixels(floats));
 
 /**
  * Returns a configured shader that overlays the destination texture with the given vec4 data.
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
  */
-Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().prepVec4Data(floats));
+Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().vec4.dataToPixels(floats));
 
 /**
  * Adds the second half of its input into the first half.

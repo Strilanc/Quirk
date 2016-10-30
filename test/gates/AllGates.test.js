@@ -39,7 +39,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
             trader,
             new Map());
         gate.customOperation(ctx);
-        let buf = currentShaderCoder().unpackVec2Data(trader.currentTexture.readPixels());
+        let buf = currentShaderCoder().vec2.pixelsToData(trader.currentTexture.readPixels());
         let col = new Matrix(1, 1 << numQubits, buf);
         trader.currentTexture.deallocByDepositingInPool();
         cols.push(col);
