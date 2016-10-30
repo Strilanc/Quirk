@@ -518,6 +518,64 @@ class DisplayedCircuit {
 
             this._drawGate_disabledReason(painter, col, row, gateRect, isHighlighted);
         }
+
+        this._drawColumnSurvivalRate(painter, gateColumn, col, stats);
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!GateColumn} gateColumn
+     * @param {!int} col
+     * @param {!CircuitStats} stats
+     * @private
+     */
+    _drawColumnSurvivalRate(painter, gateColumn, col, stats) {
+        if (gateColumn.indexOfNonUnitaryGate() === undefined) {
+            return;
+        }
+
+        let preRate = stats.survivalRate(col - 1);
+        let postRate = stats.survivalRate(col);
+
+        let marginalRate = (postRate - preRate) / preRate;
+        if (isNaN(marginalRate) || Math.abs(marginalRate) <= 0.005) {
+            return;
+        }
+
+        let descAmount;
+        let descCategory;
+        if (marginalRate < 0) {
+            let rate = Math.round(-marginalRate * 100);
+            let rateDesc = marginalRate === -1 ? "100" : rate < 100 ? rate : ">99";
+            descAmount = `${rateDesc}%`;
+            descCategory = 'fails';
+        } else {
+            let factor = Math.round(marginalRate * 100 + 100);
+            descAmount = `${factor}%`;
+            descCategory = 'gain';
+        }
+
+        let pt = this.opRect(col).bottomCenter();
+        painter.print(
+            descCategory,
+            pt.x,
+            pt.y - 28,
+            'center',
+            'bottom',
+            'red',
+            '14px sans-serif',
+            800,
+            50);
+        painter.print(
+            descAmount,
+            pt.x,
+            pt.y - 13,
+            'center',
+            'bottom',
+            'red',
+            '14px sans-serif',
+            800,
+            50);
     }
 
     _drawColumnDragHighlight(painter, col) {
@@ -542,12 +600,13 @@ class DisplayedCircuit {
         let gs = gateColumn.gates;
         let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
 
-        if (stats.circuitDefinition.colHasNonLocalGates(columnIndex)) {
+        // Dashed line indicates effects from non-unitary gates may affect, or appear to affect, other wires.
+        if (stats.circuitDefinition.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
             painter.ctx.save();
             painter.ctx.setLineDash([1, 4]);
             painter.strokeLine(
                 new Point(x, this.gateRect(0, 0).y),
-                new Point(x, this.gateRect(this.circuitDefinition.numWires-1, 0).bottom()));
+                new Point(x, this.opRect(0).bottom() - 40));
             painter.ctx.restore();
         }
 
@@ -1184,14 +1243,17 @@ class DisplayedCircuit {
         }
 
         // Discard rate warning.
-        if (Math.abs(stats.postSelectionSurvivalRate - 1) > 0.01) {
+        let survivalRate = stats.survivalRate(Infinity);
+        if (Math.abs(survivalRate - 1) > 0.01) {
             let desc;
-            if (stats.postSelectionSurvivalRate < 1) {
-                let rate = Math.round(100 - stats.postSelectionSurvivalRate * 100);
-                let rateDesc = stats.postSelectionSurvivalRate === 0 ? "100" : rate < 100 ? rate : ">99";
-                desc = `Discard rate: ${rateDesc}%`;
+            if (survivalRate < 1) {
+                let rate = Math.round(survivalRate * 100);
+                let rateDesc = survivalRate === 0 ? "0" :
+                    rate > 0 ? rate :
+                    "<1";
+                desc = `Survival rate: ${rateDesc}%`;
             } else {
-                let factor = Math.round(stats.postSelectionSurvivalRate * 100);
+                let factor = Math.round(survivalRate * 100);
                 desc = `Over-unity: ${factor}%`;
             }
             painter.print(

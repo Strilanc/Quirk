@@ -126,7 +126,7 @@ function _extractStateStatsNeededByCircuitColumn(
     let qubitDensities = KetTextureUtil.superpositionToQubitDensities(
         ctx.stateTrader.currentTexture,
         ctx.controls,
-        circuitDefinition.colHasSingleQubitDisplayMask(col));
+        circuitDefinition.colDesiredSingleQubitStatsMask(col));
 
     return {qubitDensities, customGateStats};
 }

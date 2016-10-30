@@ -21,7 +21,6 @@ let UniversalNotGate = Gate.withoutKnownMatrix(
     "Mirrors through the origin of the Bloch sphere.\nImpossible in practice.").
     markedAsStable().
     withCustomShader(universalNot).
-    withSerializedId("__unstable__UniversalNot").
-    markedAsAffectsOtherWires();
+    withSerializedId("__unstable__UniversalNot");
 
 export {universalNot, UniversalNotGate}

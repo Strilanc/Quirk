@@ -26,6 +26,7 @@ ExponentiatingGates.XForward = Gate.fromVaryingMatrix(
     XExp,
     "X-Exponentiating Gate (forward)",
     "Right-hand rotation around the X axis.\nPasses through ±iX instead of X.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(0.5, 1, 2));
 
 ExponentiatingGates.XBackward = Gate.fromVaryingMatrix(
@@ -33,6 +34,7 @@ ExponentiatingGates.XBackward = Gate.fromVaryingMatrix(
     t => XExp(-t),
     "X-Exponentiating Gate (backward)",
     "Left-hand rotation around the X axis.\nPasses through ±iX instead of X.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(-0.5, 1, 2));
 
 ExponentiatingGates.YForward = Gate.fromVaryingMatrix(
@@ -40,6 +42,7 @@ ExponentiatingGates.YForward = Gate.fromVaryingMatrix(
     YExp,
     "Y-Exponentiating Gate (forward)",
     "Right-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(-1, 1, 2));
 
 ExponentiatingGates.YBackward = Gate.fromVaryingMatrix(
@@ -47,6 +50,7 @@ ExponentiatingGates.YBackward = Gate.fromVaryingMatrix(
     t => YExp(-t),
     "Y-Exponentiating Gate (backward)",
     "Left-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(1, 1, 2));
 
 ExponentiatingGates.ZForward = Gate.fromVaryingMatrix(

@@ -7,7 +7,6 @@ const ZeroGate = Gate.fromKnownMatrix(
     Matrix.square(0, 0, 0, 0),
     "Zero Gate",
     "Destroys the universe.").
-    markedAsAffectsOtherWires().
     withCustomDrawer(args => {
         if (args.isHighlighted || args.isInToolbox) {
             GatePainting.paintBackground(args);

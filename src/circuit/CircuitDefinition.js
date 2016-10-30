@@ -103,6 +103,13 @@ class CircuitDefinition {
     /**
      * @returns {!boolean}
      */
+    hasOnlyUnitaryGates() {
+        return this.columns.every(e => e.indexOfNonUnitaryGate() === undefined);
+    }
+
+    /**
+     * @returns {!boolean}
+     */
     hasNonControlGates() {
         let colHasNonControl = col => !col.gates.every(e => e === undefined || e.isControl());
         return !this.columns.every(e => !colHasNonControl(e));
@@ -540,7 +547,7 @@ class CircuitDefinition {
      * @param {!int} col
      * @returns {!int}
      */
-    colHasSingleQubitDisplayMask(col) {
+    colDesiredSingleQubitStatsMask(col) {
         if (col < 0 || col >= this.columns.length) {
             return 0;
         }
@@ -553,6 +560,15 @@ class CircuitDefinition {
                 total |= 1 << row;
             }
         }
+
+        // When there is post-selection, we want at least one qubit stat in order to compute the survival rate.
+        if (total === 0) {
+            let nonUnitaryIndex = c.indexOfNonUnitaryGate();
+            if (nonUnitaryIndex !== undefined) {
+                total = 1 << nonUnitaryIndex;
+            }
+        }
+
         return total;
     }
 
@@ -577,21 +593,6 @@ class CircuitDefinition {
             }
         }
         return result;
-    }
-
-    /**
-     * @param {!int} col
-     * @returns {!int}
-     */
-    colHasDoubleQubitDisplayMask(col) {
-        if (col < 0 || col >= this.columns.length) {
-            return 0;
-        }
-        let c = this.columns[col];
-        return Seq.range(c.gates.length).
-            filter(row => c.gates[row] === Gates.Displays.DensityMatrixDisplay2).
-            filter(row => this.gateAtLocIsDisabledReason(col, row) === undefined).
-            aggregate(0, (a, i) => a | (1 << i));
     }
 
     /**
@@ -697,22 +698,6 @@ class CircuitDefinition {
             }
         }
         return count === 2;
-    }
-
-    /**
-     * @param {int} col
-     * @returns {boolean}
-     */
-    colHasNonLocalGates(col) {
-        if (col < 0 || col >= this.columns.length) {
-            return false;
-        }
-        for (let gate of this.columns[col].gates) {
-            if (gate !== undefined && gate.affectsOtherWires()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

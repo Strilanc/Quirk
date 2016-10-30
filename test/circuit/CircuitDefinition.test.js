@@ -433,48 +433,31 @@ suite.test("colIsMeasuredMask", () => {
                  M•`).isEqualTo([0, 0, 3, 3, 3]);
 });
 
-suite.test("colHasSingleQubitDisplayMask", () => {
+suite.test("colDesiredSingleQubitStatsMask", () => {
     let assertAbout = diagram => {
         let c = circuit(diagram);
-        return assertThat(Seq.range(c.columns.length + 3).map(i => c.colHasSingleQubitDisplayMask(i-1)).toArray());
+        return assertThat(Seq.range(c.columns.length + 3).map(i => c.colDesiredSingleQubitStatsMask(i-1)).toArray());
     };
 
     //noinspection SpellCheckingInspection
-    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0]);
     assertAbout('%d@').isEqualTo([0, 1, 1, 1, 0, 0]);
-    assertAbout(`---%
-                 %--%
-                 --d%
-                 -@-%`).isEqualTo([0, 2, 8, 4, 15, 0, 0]);
+    assertAbout(`---%--
+                 %--%-!
+                 --d%--
+                 -@-%--`).isEqualTo([0, 2, 8, 4, 15, 0, 2, 0, 0]);
 });
 
-suite.test("colHasDoubleQubitDisplayMask", () => {
-    let assertAbout = diagram => {
-        let c = circuit(diagram);
-        return assertThat(Seq.range(c.columns.length + 3).map(i => c.colHasDoubleQubitDisplayMask(i-1)).toArray());
-    };
-
-    //noinspection SpellCheckingInspection
-    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    assertAbout('D').isEqualTo([0, 1, 0, 0]);
-    assertAbout(`---D
-                 D---
-                 --DD
-                 ----`).isEqualTo([0, 2, 0, 4, 5, 0, 0]);
-});
-
-suite.test("colHasNonLocalGates", () => {
+suite.test("nonUnitaryGates", () => {
     let c = circuit(`-M-•-
                      --!--
                      ---X-`);
-    assertFalse(c.colHasNonLocalGates(-1));
-    assertFalse(c.colHasNonLocalGates(0));
-    assertFalse(c.colHasNonLocalGates(1));
-    assertTrue(c.colHasNonLocalGates(2));
-    assertFalse(c.colHasNonLocalGates(3));
-    assertFalse(c.colHasNonLocalGates(4));
-    assertFalse(c.colHasNonLocalGates(5));
-    assertFalse(c.colHasNonLocalGates(6));
+    assertFalse(c.hasOnlyUnitaryGates());
+    assertThat(c.columns[0].indexOfNonUnitaryGate()).isEqualTo(undefined);
+    assertThat(c.columns[1].indexOfNonUnitaryGate()).isEqualTo(undefined);
+    assertThat(c.columns[2].indexOfNonUnitaryGate()).isEqualTo(1);
+    assertThat(c.columns[3].indexOfNonUnitaryGate()).isEqualTo(undefined);
+    assertThat(c.columns[4].indexOfNonUnitaryGate()).isEqualTo(undefined);
 });
 
 suite.test("locIsMeasured", () => {

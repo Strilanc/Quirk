@@ -23,6 +23,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
 
     ['M', Gates.Special.Measurement],
     ['@', Gates.Displays.BlochSphereDisplay],
+    ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['-', undefined],
     ['+', undefined],
@@ -190,5 +191,27 @@ suite.testUsingWebGL('16-qubit-hadamard-transform', () => {
     }
 
     // And unity.
-    assertThat(stats.postSelectionSurvivalRate).isApproximatelyEqualTo(1, 0.0001);
+    assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(1, 0.0001);
+});
+
+suite.testUsingWebGL('survival-rates', () => {
+    let stats = CircuitStats.fromCircuitAtTime(circuit(`-H-!-------
+                                                        ---X-!-----
+                                                        -------H-!-`), 0);
+
+    assertThat(stats.survivalRate(-1)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(0)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(1)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(2)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(3)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(4)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(5)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(6)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(7)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(8)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(7)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(8)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(9)).isApproximatelyEqualTo(0.25);
+    assertThat(stats.survivalRate(10)).isApproximatelyEqualTo(0.25);
+    assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(0.25);
 });

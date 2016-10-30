@@ -47,7 +47,7 @@ class GateColumn {
      * @returns {Infinity|!number}
      */
     stableDuration() {
-        return seq(this.gates).filter(e => e !== undefined).map(e => e.stableDuration()).min(Infinity);
+        return Math.min(Infinity, ...this.gates.filter(e => e !== undefined).map(e => e.stableDuration()));
     }
 
     /**
@@ -165,6 +165,19 @@ class GateColumn {
                     g.knownBitPermutationFunc === undefined &&
                     (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
                 return "no\nremix\n(sorry)";
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * @returns {undefined|!int} The index of some non-unitary gate in the column, if any.
+     */
+    indexOfNonUnitaryGate() {
+        for (let i = 0; i < this.gates.length; i++) {
+            let gate = this.gates[i];
+            if (gate !== undefined && !gate.isDefinitelyUnitary()) {
+                return i;
             }
         }
         return undefined;

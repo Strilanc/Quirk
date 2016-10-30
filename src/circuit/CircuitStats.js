@@ -24,16 +24,16 @@ class CircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
+     * @param {!Array.<!number>} survivalRates
      * @param {!Array.<!Array.<!Matrix>>} singleQubitDensities
      * @param {!Matrix} finalState
-     * @param {NaN|!number} postSelectionSurvivalRate
      * @param {!Map<!string, *>} customStatsProcessed
      */
     constructor(circuitDefinition,
                 time,
+                survivalRates,
                 singleQubitDensities,
                 finalState,
-                postSelectionSurvivalRate,
                 customStatsProcessed) {
         /**
          * The circuit that these stats apply to.
@@ -45,6 +45,11 @@ class CircuitStats {
          * @type {!number}
          */
         this.time = time;
+        /**
+         * @type {!Array.<!number>}
+         * @private
+         */
+        this._survivalRates = survivalRates;
         /**
          * The density matrix of individual qubits.
          * (This case is special-cased, instead of using customStats like the other density displays, because
@@ -58,10 +63,6 @@ class CircuitStats {
          * @type {!Matrix}
          */
         this.finalState = finalState;
-        /**
-         * @type {NaN|!number}
-         */
-        this.postSelectionSurvivalRate = postSelectionSurvivalRate;
         /**
          * @type {!Map.<!string, *>}
          * @private
@@ -85,10 +86,10 @@ class CircuitStats {
 
         // The initial state is all-qubits-off.
         if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
-            if (this.qubitDensityMatrix(colIndex, 0).hasNaN()) {
+            if (wireIndex >= this.circuitDefinition.numWires && this.qubitDensityMatrix(colIndex, 0).hasNaN()) {
                 return Matrix.zero(2, 2).times(NaN);
             }
-            let buf = new Float32Array(2*2*2);
+            let buf = new Float32Array(8);
             buf[0] = 1;
             return new Matrix(2, 2, buf);
         }
@@ -98,6 +99,19 @@ class CircuitStats {
             return Matrix.zero(2, 2).times(NaN);
         }
         return this._qubitDensities[col][wireIndex];
+    }
+
+    /**
+     * Determines how often the circuit evaluation survives to the given column, without being post-selected out.
+     *
+     * Note that over-unitary gates will increase this number, so perhaps 'survival rate' isn't quite the best name.
+     *
+     * @param {!int} colIndex
+     * @returns {!number}
+     */
+    survivalRate(colIndex) {
+        colIndex = Math.min(colIndex, this._survivalRates.length - 1);
+        return colIndex < 0 ? 1 : this._survivalRates[colIndex];
     }
 
     /**
@@ -131,9 +145,9 @@ class CircuitStats {
         return new CircuitStats(
             this.circuitDefinition,
             time,
+            this._survivalRates,
             this._qubitDensities,
             this.finalState,
-            this.postSelectionSurvivalRate,
             this._customStatsProcessed);
     }
 
@@ -146,9 +160,9 @@ class CircuitStats {
         return new CircuitStats(
             circuitDefinition,
             time,
+            [0],
             [],
             Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
-            NaN,
             new Map());
     }
 
@@ -220,6 +234,37 @@ class CircuitStats {
 
     /**
      * @param {!CircuitDefinition} circuitDefinition
+     * @param {!Array.<!Float32Array>} colQubitDensitiesPixelData
+     * @returns {!{survivalRates: !Array.<!number>, qubitDensities: !Array.<!Array<!Matrix>>}}
+     * @private
+     */
+    static _extractCommonColumnStatsFromColPixelDatas(circuitDefinition, colQubitDensitiesPixelData) {
+        let survivalRate = 1;
+        let survivalRates = [];
+        let qubitDensities = [];
+        for (let col = 0; col < colQubitDensitiesPixelData.length; col++) {
+            let qubitDensityPixelsForCol = colQubitDensitiesPixelData[col];
+            if (qubitDensityPixelsForCol.length > 0) {
+                survivalRate = qubitDensityPixelsForCol[0] + qubitDensityPixelsForCol[3];
+            }
+            survivalRates.push(survivalRate);
+
+            let dataHasStatsMask = col === circuitDefinition.columns.length ?
+                -1 : // All wires have an output display in the after-last column.
+                circuitDefinition.colDesiredSingleQubitStatsMask(col);
+            qubitDensities.push(CircuitStats.scatterAndDecohereDensities(
+                KetTextureUtil.pixelsToQubitDensityMatrices(qubitDensityPixelsForCol),
+                circuitDefinition.numWires,
+                1,
+                circuitDefinition.colIsMeasuredMask(col),
+                dataHasStatsMask));
+        }
+
+        return {survivalRates, qubitDensities};
+    }
+
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
      * @returns {!CircuitStats}
      */
@@ -252,22 +297,11 @@ class CircuitStats {
             customStats});
 
         // -- INTERPRET --
-
-        let final = pixelData.colQubitDensities[pixelData.colQubitDensities.length - 1];
-        let unity = final[0] + final[3];
-        //noinspection JSCheckFunctionSignatures
-        let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(pixelData.output, unity);
-
-        let qubitDensities = [];
-        for (let k = 0; k < pixelData.colQubitDensities.length; k++) {
-            qubitDensities.push(CircuitStats.scatterAndDecohereDensities(
-                KetTextureUtil.pixelsToQubitDensityMatrices(pixelData.colQubitDensities[k]),
-                numWires,
-                1,
-                circuitDefinition.colIsMeasuredMask(k),
-                // All wires have an output display in the after-last column.
-                k === numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(k)));
-        }
+        let {survivalRates, qubitDensities} =
+            CircuitStats._extractCommonColumnStatsFromColPixelDatas(circuitDefinition, pixelData.colQubitDensities);
+        let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(
+            pixelData.output,
+            survivalRates[survivalRates.length - 1]);
 
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {
@@ -280,9 +314,9 @@ class CircuitStats {
         return new CircuitStats(
             circuitDefinition,
             time,
+            survivalRates,
             qubitDensities,
             outputSuperposition,
-            unity,
             customStatsProcessed);
     }
 }

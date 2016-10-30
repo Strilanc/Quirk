@@ -76,6 +76,7 @@ FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span =
     "Fourier Transform Gate",
     "Transforms to/from phase frequency space.").
     markedAsStable().
+    markedAsUnitary().
     withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT" + span).
     withHeight(span).
@@ -86,6 +87,7 @@ FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16,
     "Inverse Fourier Transform Gate",
     "Transforms from/to phase frequency space.").
     markedAsStable().
+    markedAsUnitary().
     withKnownMatrix(span >= 4 ? undefined : INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT†" + span).
     withHeight(span).

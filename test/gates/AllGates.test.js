@@ -108,3 +108,76 @@ suite.testUsingWebGL("knownBitPermutationMatchesKnowMatrixAndCustomShader", () =
         }
     }
 });
+
+suite.testUsingWebGL("knownNonUnitaryGates", () => {
+    let nonUnitaryGates = new Set(Gates.KnownToSerializer.
+        filter(g => !g.isDefinitelyUnitary()).
+        map(g => g.serializedId));
+    assertThat(nonUnitaryGates).isEqualTo(new Set([
+        '__error__',
+        '__unstable__UniversalNot',
+        // Post-selection isn't unitary.
+        '0',
+        '|0⟩⟨0|',
+        '|1⟩⟨1|',
+        '|+⟩⟨+|',
+        '|-⟩⟨-|',
+        '|X⟩⟨X|',
+        '|/⟩⟨/|'
+    ]));
+});
+
+suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
+    let doNothingFamilies = new Set(Gates.KnownToSerializer.
+        filter(g => g.definitelyHasNoEffect()).
+        map(g => g.gateFamily[0].serializedId));
+    assertThat(doNothingFamilies).isEqualTo(new Set([
+        // Measurement technically does something, but internally it's deferred and handled special almost everywhere.
+        'Measure',
+        // Operation modifiers technically do things, but we assign the effects to the operation itself.
+        '•',
+        '◦',
+        'inputA1',
+        'inputB1',
+        'revinputA1',
+        'revinputB1',
+        // Displays don't have effects.
+        'Amps1',
+        'Chance',
+        'Sample1',
+        'Density',
+        'Bloch',
+        // Spacer gate.
+        '…'
+    ]));
+});
+
+suite.testUsingWebGL("knownDynamicGateFamilies", () => {
+    let doNothingFamilies = new Set(Gates.KnownToSerializer.
+        filter(g => g.stableDuration() !== Infinity).
+        map(g => g.gateFamily[0].serializedId));
+    assertThat(doNothingFamilies).isEqualTo(new Set([
+        // Dynamic displays.
+        'Sample1',
+        // Qubit rotating gates.
+        'X^t',
+        'Y^t',
+        'Z^t',
+        'X^-t',
+        'Y^-t',
+        'Z^-t',
+        'e^iXt',
+        'e^iYt',
+        'e^iZt',
+        'e^-iXt',
+        'e^-iYt',
+        'e^-iZt',
+        // Discrete cycles.
+        'Counting1',
+        'Uncounting1',
+        '>>t2',
+        '<<t2',
+        'X^⌈t⌉',
+        'X^⌈t-¼⌉'
+    ]));
+});
