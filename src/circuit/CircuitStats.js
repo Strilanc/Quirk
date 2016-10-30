@@ -160,7 +160,7 @@ class CircuitStats {
         return new CircuitStats(
             circuitDefinition,
             time,
-            [0],
+            [1],
             [],
             Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
             new Map());
@@ -314,7 +314,7 @@ class CircuitStats {
             CircuitStats._extractColumnSurvivalRateStatsFromPixelDatas(pixelData.colNorms);
         let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(
             pixelData.output,
-            survivalRates[survivalRates.length - 1]);
+            survivalRates.length === 0 ? 1 : survivalRates[survivalRates.length - 1]);
 
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {

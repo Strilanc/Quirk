@@ -31,6 +31,12 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ['/', undefined]
 ]), diagram);
 
+suite.testUsingWebGL("empty", () => {
+    let stats = CircuitStats.fromCircuitAtTime(CircuitDefinition.EMPTY.withWireCount(1), 0.1);
+    assertThat(stats.finalState).isApproximatelyEqualTo(Matrix.col(1, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(1, 0, 0, 0));
+});
+
 suite.testUsingWebGL("smoke", () => {
     let c = circuit(`--X-H---•⊕-
                      --•-H---XX-
