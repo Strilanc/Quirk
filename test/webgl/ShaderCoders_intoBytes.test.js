@@ -161,104 +161,33 @@ suite.testUsingWebGLFloatTextures("encodeInterestingFloatsWithShader", () => {
     assertThat(outFloats).isEqualTo(floats);
 });
 
-suite.testUsingWebGLFloatTextures("vec2Input_bytes", () => {
-    let param = SHADER_CODER_BYTES.vec2.inputPartGetter('a');
-    let shader = combinedShaderPartsWithCode([param], `
-        void main() {
-            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-            float k = xy.y * 4.0 + xy.x;
-            vec2 a1 = read_a(k * 2.0);
-            vec2 a2 = read_a(k * 2.0 + 1.0);
-            gl_FragColor = vec4(a1, a2);
-        }`);
-
-    let floats = variedFloat32Array(64);
-    let bytes = floatsAsBytes(floats);
-
-    let texSquare = Shaders.data(bytes).toRawByteTexture(6);
-    assertThat(shader.withArgs(...param.argsFor(texSquare)).readRawFloatOutputs(4)).isEqualTo(floats);
-    texSquare.deallocByDepositingInPool();
-
-    // Wrong type.
+suite.testUsingWebGLFloatTextures("input_wrongType", () => {
     assertThrows(() => {
         let tex = Shaders.data(new Float32Array([0, 0, 0, 0])).toRawFloatTexture(0);
         try {
-            param.argsFor(tex);
+            SHADER_CODER_BYTES.float.inputPartGetter('a').argsFor(tex);
         } finally {
             tex.deallocByDepositingInPool();
         }
     });
-});
 
-suite.testUsingWebGLFloatTextures("vec4Input_bytes", () => {
-    let param = SHADER_CODER_BYTES.vec4.inputPartGetter('test_input');
-    let shader = combinedShaderPartsWithCode([param], `
-        void main() {
-            vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
-            float k = xy.y * 4.0 + xy.x;
-            gl_FragColor = read_test_input(k);
-        }`);
-
-    let floats = randomFloat32Array(64);
-    let bytes = floatsAsBytes(floats);
-
-    let texSquare = Shaders.data(bytes).toRawByteTexture(4 + 2);
-    assertThat(shader.withArgs(...param.argsFor(texSquare)).readRawFloatOutputs(4)).isEqualTo(floats);
-    texSquare.deallocByDepositingInPool();
-
-    // Wrong type.
     assertThrows(() => {
         let tex = Shaders.data(new Float32Array([0, 0, 0, 0])).toRawFloatTexture(0);
         try {
-            param.argsFor(tex);
+            SHADER_CODER_BYTES.vec2.inputPartGetter('a').argsFor(tex);
         } finally {
             tex.deallocByDepositingInPool();
         }
     });
-});
 
-suite.testUsingWebGL("vec2Output_bytes", () => {
-    let output = SHADER_CODER_BYTES.vec2.outputPart;
-    let shader = combinedShaderPartsWithCode([output], `
-        vec2 outputFor(float k) {
-            return vec2(k, k + 0.5);
-        }`);
-
-    assertThat(bytesAsFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(2))).
-        isEqualTo(new Float32Array([
-            0, 0.5,
-            1, 1.5
-        ]));
-
-    assertThat(bytesAsFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(3))).
-        isEqualTo(new Float32Array([
-            0, 0.5,
-            1, 1.5,
-            2, 2.5,
-            3, 3.5
-        ]));
-});
-
-suite.testUsingWebGL("vec4Output_bytes", () => {
-    let output = SHADER_CODER_BYTES.vec4.outputPart;
-    let shader = combinedShaderPartsWithCode([output], `
-        vec4 outputFor(float k) {
-            return vec4(k, k + 0.25, k + 0.5, k + 0.75);
-        }`);
-
-    assertThat(bytesAsFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(3))).
-        isEqualTo(new Float32Array([
-            0, 0.25, 0.5, 0.75,
-            1, 1.25, 1.5, 1.75
-        ]));
-
-    assertThat(bytesAsFloats(shaderWithOutputPartAndArgs(shader, output, []).readRawByteOutputs(4))).
-        isEqualTo(new Float32Array([
-            0, 0.25, 0.5, 0.75,
-            1, 1.25, 1.5, 1.75,
-            2, 2.25, 2.5, 2.75,
-            3, 3.25, 3.5, 3.75
-        ]));
+    assertThrows(() => {
+        let tex = Shaders.data(new Float32Array([0, 0, 0, 0])).toRawFloatTexture(0);
+        try {
+            SHADER_CODER_BYTES.vec4.inputPartGetter('a').argsFor(tex);
+        } finally {
+            tex.deallocByDepositingInPool();
+        }
+    });
 });
 
 suite.testUsingWebGL("bytes_passthrough_vec2", () => {

@@ -121,6 +121,16 @@ class WglTexturePool {
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */
+    static takeVecFloatTex(sizePower) {
+        return WglTexturePool.take(
+            sizePower + currentShaderCoder().float.powerSizeOverhead,
+            currentShaderCoder().float.pixelType);
+    }
+
+    /**
+     * @param {!int} sizePower
+     * @returns {!WglTexture}
+     */
     static takeVec2Tex(sizePower) {
         return WglTexturePool.take(
             sizePower + currentShaderCoder().vec2.powerSizeOverhead,

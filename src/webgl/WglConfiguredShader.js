@@ -128,6 +128,15 @@ class WglConfiguredShader {
      * @param {!int} sizePower
      * @returns {!Float32Array}
      */
+    readVecFloatOutputs(sizePower) {
+        return currentShaderCoder().float.pixelsToData(
+            this._renderReadDealloc(WglTexturePool.takeVecFloatTex(sizePower)))
+    }
+
+    /**
+     * @param {!int} sizePower
+     * @returns {!Float32Array}
+     */
     readVec2Outputs(sizePower) {
         return currentShaderCoder().vec2.pixelsToData(
             this._renderReadDealloc(WglTexturePool.takeVec2Tex(sizePower)))
@@ -148,6 +157,16 @@ class WglConfiguredShader {
     readVec4Outputs(sizePower) {
         return currentShaderCoder().vec4.pixelsToData(
             this._renderReadDealloc(WglTexturePool.takeVec4Tex(sizePower)))
+    }
+
+    /**
+     * @param {!int} sizePower
+     * @returns {!WglTexture}
+     */
+    toVecFloatTexture(sizePower) {
+        let texture = WglTexturePool.takeVecFloatTex(sizePower);
+        this._renderToElseDealloc(texture);
+        return texture;
     }
 
     /**
