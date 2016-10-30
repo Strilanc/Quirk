@@ -63,6 +63,15 @@ class WglTextureTrader {
             reducingShaderFunc,
             WglTexturePool.take(Math.max(0, this.currentTexture.sizePower() - 1), this.currentTexture.pixelType))
     }
+
+    /**
+     * @param {!function(!WglTexture) : !WglConfiguredShader} reducingShaderFunc
+     */
+    shadeQuarterAndTrade(reducingShaderFunc) {
+        this.shadeAndTrade(
+            reducingShaderFunc,
+            WglTexturePool.take(Math.max(0, this.currentTexture.sizePower() - 2), this.currentTexture.pixelType))
+    }
 }
 
 /**

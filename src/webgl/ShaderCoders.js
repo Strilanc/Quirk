@@ -85,11 +85,30 @@ class Outputs {
     /**
      * @returns {!ShaderPartDescription}
      */
+    static bool() {
+        return new ShaderPartDescription(
+            coder => coder.bool.outputPart,
+            `Outputs.bool()`);
+    }
+
+    /**
+     * @returns {!ShaderPartDescription}
+     */
+    static float() {
+        return new ShaderPartDescription(
+            coder => coder.float.outputPart,
+            `Outputs.float()`);
+    }
+
+    /**
+     * @returns {!ShaderPartDescription}
+     */
     static vec2() {
         return new ShaderPartDescription(
             coder => coder.vec2.outputPart,
             `Outputs.vec2()`);
     }
+
     /**
      * @returns {!ShaderPartDescription}
      */
@@ -106,15 +125,6 @@ class Outputs {
         return new ShaderPartDescription(
             _ => outputShaderCoder().vec4.outputPart,
             `Outputs.vec4WithOutputCoder()`);
-    }
-
-    /**
-     * @returns {!ShaderPartDescription}
-     */
-    static bool() {
-        return new ShaderPartDescription(
-            coder => coder.bool.outputPart,
-            `Outputs.bool()`);
     }
 }
 
@@ -282,8 +292,6 @@ function canTestFloatShaders() {
 _chooseShaderCoders();
 
 export {
-    SHADER_CODER_BYTES,
-    SHADER_CODER_FLOATS,
     combinedShaderPartsWithCode,
     shaderWithOutputPartAndArgs,
     currentShaderCoder,

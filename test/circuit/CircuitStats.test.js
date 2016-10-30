@@ -51,7 +51,7 @@ function tryGateSequence(gates, maxHeight) {
 }
 
 // Try known gates, but in separate tests to avoid blowing the per-test time limit warning.
-let knownGateStripes = 16;
+let knownGateStripes = 32;
 for (let knownGateOffset of Seq.range(knownGateStripes)) {
     suite.testUsingWebGL(`try-known-gates-in-sequence-${knownGateOffset+1}-of-${knownGateStripes}`, () => {
         let stripe = seq(Gates.KnownToSerializer).
@@ -197,7 +197,8 @@ suite.testUsingWebGL('16-qubit-hadamard-transform', () => {
 suite.testUsingWebGL('survival-rates', () => {
     let stats = CircuitStats.fromCircuitAtTime(circuit(`-H-!-------
                                                         ---X-!-----
-                                                        -------H-!-`), 0);
+                                                        -------H-!-
+                                                        -----------`), 0);
 
     assertThat(stats.survivalRate(-1)).isApproximatelyEqualTo(1);
     assertThat(stats.survivalRate(0)).isApproximatelyEqualTo(1);
@@ -214,4 +215,22 @@ suite.testUsingWebGL('survival-rates', () => {
     assertThat(stats.survivalRate(9)).isApproximatelyEqualTo(0.25);
     assertThat(stats.survivalRate(10)).isApproximatelyEqualTo(0.25);
     assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(0.25);
+});
+
+suite.testUsingWebGL('survival-rates-controlled-postselection', () => {
+    let stats = CircuitStats.fromCircuitAtTime(circuit(`---•-H-•-!---•-
+                                                        -X-!-X-X-•-X-!-`), 0);
+    assertThat(stats.survivalRate(2)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(3)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(4)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(5)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(6)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(7)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(8)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(9)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(10)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(11)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(12)).isApproximatelyEqualTo(1);
+    assertThat(stats.survivalRate(13)).isApproximatelyEqualTo(0.5);
+    assertThat(stats.survivalRate(14)).isApproximatelyEqualTo(0.5);
 });

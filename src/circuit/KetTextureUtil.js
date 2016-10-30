@@ -8,7 +8,13 @@ import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {outputShaderCoder, currentShaderCoder} from "src/webgl/ShaderCoders.js"
+import {
+    outputShaderCoder,
+    currentShaderCoder,
+    makePseudoShaderWithInputsAndOutputAndCode,
+    Inputs,
+    Outputs
+} from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
@@ -184,6 +190,40 @@ KetTextureUtil.pixelsToQubitDensityMatrices = buffer => {
         let bi = buffer[i*4 + 2] / unity;
         return new Matrix(2, 2, new Float32Array([a / unity, 0, br, bi, br, -bi, d / unity, 0]));
     }).toArray();
+};
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @returns {!WglConfiguredShader}
+ */
+const amplitudesToProbabilities = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.float(),
+    `float outputFor(float k) {
+        vec2 amp = read_input(k);
+        return dot(amp, amp);
+    }`);
+
+/**
+ * @param {!WglTexture} stateTex
+ * @param {!boolean} mayHaveChanged
+ * @returns {!WglTexture}
+ */
+KetTextureUtil.superpositionToNorm = (stateTex, mayHaveChanged) => {
+    if (!mayHaveChanged) {
+        return new WglTexture(0, 0, currentShaderCoder().vec4.pixelType);
+    }
+    let trader = new WglTextureTrader(stateTex);
+    trader.dontDeallocCurrentTexture();
+    let n = currentShaderCoder().vec2.arrayPowerSizeOfTexture(stateTex);
+
+    trader.shadeAndTrade(amplitudesToProbabilities, WglTexturePool.takeVecFloatTex(n));
+    while (n > 0) {
+        n -= 1;
+        trader.shadeHalveAndTrade(Shaders.sumFoldFloat);
+    }
+    trader.shadeAndTrade(Shaders.packFloatIntoVec4, WglTexturePool.takeVec4Tex(0));
+    return trader.currentTexture;
 };
 
 export {KetTextureUtil}

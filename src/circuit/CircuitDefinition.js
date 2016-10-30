@@ -561,14 +561,6 @@ class CircuitDefinition {
             }
         }
 
-        // When there is post-selection, we want at least one qubit stat in order to compute the survival rate.
-        if (total === 0) {
-            let nonUnitaryIndex = c.indexOfNonUnitaryGate();
-            if (nonUnitaryIndex !== undefined) {
-                total = 1 << nonUnitaryIndex;
-            }
-        }
-
         return total;
     }
 

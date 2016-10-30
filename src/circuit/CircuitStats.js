@@ -235,32 +235,41 @@ class CircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!Array.<!Float32Array>} colQubitDensitiesPixelData
-     * @returns {!{survivalRates: !Array.<!number>, qubitDensities: !Array.<!Array<!Matrix>>}}
+     * @returns {!Array.<!Array<!Matrix>>}
      * @private
      */
-    static _extractCommonColumnStatsFromColPixelDatas(circuitDefinition, colQubitDensitiesPixelData) {
-        let survivalRate = 1;
-        let survivalRates = [];
-        let qubitDensities = [];
+    static _extractColumnQubitStatsFromPixelDatas(circuitDefinition, colQubitDensitiesPixelData) {
+        let qubitDensityGrid = [];
         for (let col = 0; col < colQubitDensitiesPixelData.length; col++) {
-            let qubitDensityPixelsForCol = colQubitDensitiesPixelData[col];
-            if (qubitDensityPixelsForCol.length > 0) {
-                survivalRate = qubitDensityPixelsForCol[0] + qubitDensityPixelsForCol[3];
-            }
-            survivalRates.push(survivalRate);
-
             let dataHasStatsMask = col === circuitDefinition.columns.length ?
                 -1 : // All wires have an output display in the after-last column.
                 circuitDefinition.colDesiredSingleQubitStatsMask(col);
-            qubitDensities.push(CircuitStats.scatterAndDecohereDensities(
-                KetTextureUtil.pixelsToQubitDensityMatrices(qubitDensityPixelsForCol),
+            qubitDensityGrid.push(CircuitStats.scatterAndDecohereDensities(
+                KetTextureUtil.pixelsToQubitDensityMatrices(colQubitDensitiesPixelData[col]),
                 circuitDefinition.numWires,
                 1,
                 circuitDefinition.colIsMeasuredMask(col),
                 dataHasStatsMask));
         }
 
-        return {survivalRates, qubitDensities};
+        return qubitDensityGrid;
+    }
+
+    /**
+     * @param {!Array.<!Float32Array>} normsPixelData
+     * @returns {!Array.<!number>}
+     * @private
+     */
+    static _extractColumnSurvivalRateStatsFromPixelDatas(normsPixelData) {
+        let curSurvivalRate = 1;
+        let survivalRates = [];
+        for (let col = 0; col < normsPixelData.length; col++) {
+            if (normsPixelData[col].length > 0) {
+                curSurvivalRate = normsPixelData[col][0];
+            }
+            survivalRates.push(curSurvivalRate);
+        }
+        return survivalRates;
     }
 
     /**
@@ -271,12 +280,11 @@ class CircuitStats {
     static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
         circuitDefinition = circuitDefinition.withMinimumWireCount();
         const numWires = circuitDefinition.numWires;
-        const numCols = circuitDefinition.columns.length;
 
         // Advance state while collecting stats into textures.
         let stateTrader = new WglTextureTrader(CircuitShaders.classicalState(0).toVec2Texture(numWires));
         let controlTex = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(numWires);
-        let {colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
+        let {colQubitDensities, colNorms, customStats, customStatsMap} = advanceStateWithCircuit(
             new CircuitEvalContext(
                 time,
                 0,
@@ -296,11 +304,14 @@ class CircuitStats {
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({
             output: stateTrader.currentTexture,
             colQubitDensities,
+            colNorms,
             customStats});
 
         // -- INTERPRET --
-        let {survivalRates, qubitDensities} =
-            CircuitStats._extractCommonColumnStatsFromColPixelDatas(circuitDefinition, pixelData.colQubitDensities);
+        let qubitDensities =
+            CircuitStats._extractColumnQubitStatsFromPixelDatas(circuitDefinition, pixelData.colQubitDensities);
+        let survivalRates =
+            CircuitStats._extractColumnSurvivalRateStatsFromPixelDatas(pixelData.colNorms);
         let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(
             pixelData.output,
             survivalRates[survivalRates.length - 1]);

@@ -3,12 +3,9 @@ import {} from "src/browser/Polyfills.js"
 import {describe} from "src/base/Describe.js"
 import {equate} from "src/base/Equate.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
-import {
-    changeShaderCoder,
-    SHADER_CODER_BYTES,
-    SHADER_CODER_FLOATS,
-    canTestFloatShaders
-} from "src/webgl/ShaderCoders.js"
+import {changeShaderCoder, canTestFloatShaders} from "src/webgl/ShaderCoders.js"
+import {SHADER_CODER_BYTES} from "src/webgl/ShaderCoders_intoBytes.js"
+import {SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders_intoFloats.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {Config} from "src/Config.js"
 Config.CHECK_WEB_GL_ERRORS_EVEN_ON_HOT_PATHS = true;

@@ -8,9 +8,9 @@ import {
     currentShaderCoder,
     Inputs,
     Outputs,
-    makePseudoShaderWithInputsAndOutputAndCode,
-    SHADER_CODER_BYTES
+    makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
+import {SHADER_CODER_BYTES} from "src/webgl/ShaderCoders_intoBytes.js"
 
 /**
  * Utilities for creating/configuring shaders that render various simple things.
@@ -107,15 +107,6 @@ Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().vec4.dataToPixels
  * @param {!WglTexture}
  * @returns {!WglConfiguredShader)
  */
-Shaders.packVec2IntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [Inputs.vec2('input')],
-    Outputs.vec4(),
-    'vec4 outputFor(float k) { return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0)); }');
-
-/**
- * @param {!WglTexture}
- * @returns {!WglConfiguredShader)
- */
 Shaders.packFloatIntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.float('input')],
     Outputs.vec4(),
@@ -128,16 +119,25 @@ Shaders.packFloatIntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
     }`);
 
 /**
+ * @param {!WglTexture}
+ * @returns {!WglConfiguredShader)
+ */
+Shaders.packVec2IntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
+    'vec4 outputFor(float k) { return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0)); }');
+
+/**
  * Adds the second half of its input into the first half.
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
  */
-Shaders.sumFoldVec4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [Inputs.vec4('input')],
-    Outputs.vec4(),
-    `vec4 outputFor(float k) {
-        return read_input(k) + read_input(k + len_output());
-    }`);
+Shaders.sumFoldFloat = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.float('input')],
+    Outputs.float(),
+    `float outputFor(float k) {
+         return read_input(k) + read_input(k + len_output());
+     }`);
 
 /**
  * Adds the second half of its input into the first half.
@@ -152,13 +152,24 @@ Shaders.sumFoldVec2 = makePseudoShaderWithInputsAndOutputAndCode(
      }`);
 
 /**
+ * Adds the second half of its input into the first half.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
+    `vec4 outputFor(float k) {
+        return read_input(k) + read_input(k + len_output());
+    }`);
+
+/**
  * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar
  * to IEEE 754.
  * @param {!WglTexture} inputTexture
  * @returns {!WglConfiguredShader}
  */
-Shaders.convertVec4CodingForOutput = inputTexture => FLOATS_TO_ENCODED_BYTES_SHADER(inputTexture);
-const FLOATS_TO_ENCODED_BYTES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+Shaders.convertVec4CodingForOutput = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec4('input')],
     Outputs.vec4WithOutputCoder(),
     'vec4 outputFor(float k) { return read_input(k); }');

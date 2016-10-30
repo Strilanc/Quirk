@@ -48,23 +48,30 @@ function circuitDefinitionToGate(circuitDefinition, symbol="", name="", blurb=""
  * @param {!CircuitEvalContext} ctx
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!boolean} collectStats
- * @returns {!{output:!WglTexture, colQubitDensities:!Array.<!WglTexture>,customStats:!Array, customStatsMap:!Array}}
+ * @returns {!{
+ *     colQubitDensities: !Array.<!WglTexture>,
+ *     colNorms: !Array.<!WglTexture>,
+ *     customStats: !Array.<*>,
+ *     customStatsMap: !Array.<*>
+ * }}
  */
 function advanceStateWithCircuit(ctx, circuitDefinition, collectStats) {
     // Prep stats collection.
     let colQubitDensities = [];
     let customStats = [];
+    let colNorms = [];
     let customStatsMap = [];
     let statsCallback = col => statArgs => {
         if (!collectStats) {
             return;
         }
 
-        let {qubitDensities, customGateStats} = _extractStateStatsNeededByCircuitColumn(
+        let {qubitDensities, norm, customGateStats} = _extractStateStatsNeededByCircuitColumn(
             statArgs,
             circuitDefinition,
             col);
         colQubitDensities.push(qubitDensities);
+        colNorms.push(norm);
         for (let {row, stat} of customGateStats) {
             //noinspection JSUnusedAssignment
             customStatsMap.push({col, row, out: customStats.length});
@@ -89,8 +96,8 @@ function advanceStateWithCircuit(ctx, circuitDefinition, collectStats) {
     }
 
     return {
-        output: ctx.stateTrader.currentTexture,
         colQubitDensities,
+        colNorms,
         customStats,
         customStatsMap
     };
@@ -101,7 +108,11 @@ function advanceStateWithCircuit(ctx, circuitDefinition, collectStats) {
  * @param {!CircuitDefinition} circuitDefinition
  * @param {!int} col
  * @private
- * @returns {!{qubitDensities:!WglTexture, customGateStats:!Array.<!{row:!int,stat:!WglTexture}>}}
+ * @returns {!{
+ *     qubitDensities: !WglTexture,
+ *     norm: !WglTexture,
+ *     customGateStats: !Array.<!{row: !int, stat: !WglTexture}>
+ * }}
  */
 function _extractStateStatsNeededByCircuitColumn(
         ctx,
@@ -128,7 +139,11 @@ function _extractStateStatsNeededByCircuitColumn(
         ctx.controls,
         circuitDefinition.colDesiredSingleQubitStatsMask(col));
 
-    return {qubitDensities, customGateStats};
+    // Compute survival rate.
+    let normMayHaveChanged = circuitDefinition.columns[col].indexOfNonUnitaryGate() !== undefined;
+    let norm = KetTextureUtil.superpositionToNorm(ctx.stateTrader.currentTexture, normMayHaveChanged);
+
+    return {qubitDensities, norm, customGateStats};
 }
 
 /**

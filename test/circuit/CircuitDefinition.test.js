@@ -440,12 +440,12 @@ suite.test("colDesiredSingleQubitStatsMask", () => {
     };
 
     //noinspection SpellCheckingInspection
-    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0]);
+    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     assertAbout('%d@').isEqualTo([0, 1, 1, 1, 0, 0]);
     assertAbout(`---%--
                  %--%-!
                  --d%--
-                 -@-%--`).isEqualTo([0, 2, 8, 4, 15, 0, 2, 0, 0]);
+                 -@-%--`).isEqualTo([0, 2, 8, 4, 15, 0, 0, 0, 0]);
 });
 
 suite.test("nonUnitaryGates", () => {
