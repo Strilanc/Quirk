@@ -6,8 +6,8 @@ import {initializedWglContext} from "src/webgl/WglContext.js"
 import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 import {ShaderPart} from "src/webgl/ShaderCoders_Base.js"
-import {SHADER_CODER_BYTES__} from "src/webgl/ShaderCoders_intoBytes.js"
-import {SHADER_CODER_FLOATS__} from "src/webgl/ShaderCoders_intoFloats.js"
+import {SHADER_CODER_BYTES} from "src/webgl/ShaderCoders_intoBytes.js"
+import {SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders_intoFloats.js"
 
 class ShaderPartDescription {
     /**
@@ -170,12 +170,6 @@ function shaderWithOutputPartAndArgs(shader, outputShaderPart, args) {
     return new WglConfiguredShader(destinationTexture =>
         shader.withArgs(...args, ...outputShaderPart.argsFor(destinationTexture)).renderTo(destinationTexture));
 }
-
-/** @type {!ShaderCoder} */
-const SHADER_CODER_FLOATS = SHADER_CODER_FLOATS__;
-
-/** @type {!ShaderCoder} */
-const SHADER_CODER_BYTES = SHADER_CODER_BYTES__;
 
 /** @type {!ShaderCoder} */
 let _curShaderCoder = SHADER_CODER_FLOATS;

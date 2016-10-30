@@ -192,14 +192,14 @@ const VEC4_TYPE_CODER = new SingleTypeCoder(
     false);
 
 /** @type {!ShaderCoder} */
-const SHADER_CODER_BYTES__ = new ShaderCoder(
+const SHADER_CODER_BYTES = new ShaderCoder(
     BOOL_TYPE_CODER,
     FLOAT_TYPE_CODER,
     VEC2_TYPE_CODER,
     VEC4_TYPE_CODER);
 
 export {
-    SHADER_CODER_BYTES__,
+    SHADER_CODER_BYTES,
     floatsAsBytes,
     bytesAsFloats,
     UNPACK_BYTES_INTO_FLOAT_CODE,
