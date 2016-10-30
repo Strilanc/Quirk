@@ -177,8 +177,8 @@ suite.test("floats_vs_bytes_round_trip", () => {
 });
 
 suite.testUsingWebGLFloatTextures("boolInputs", () => {
-    assertThat(SHADER_CODER_FLOATS.boolInput).is(SHADER_CODER_BYTES.boolInput);
-    let inp = SHADER_CODER_BYTES.boolInput('a');
+    assertThat(SHADER_CODER_FLOATS.bool).is(SHADER_CODER_BYTES.bool);
+    let inp = SHADER_CODER_BYTES.bool.inputPartGetter('a');
     let shader = combinedShaderPartsWithCode([inp], `
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
@@ -197,7 +197,7 @@ suite.testUsingWebGLFloatTextures("boolInputs", () => {
 });
 
 suite.testUsingWebGLFloatTextures("vec2Input_bytes", () => {
-    let param = SHADER_CODER_BYTES.vec2Input('a');
+    let param = SHADER_CODER_BYTES.vec2.inputPartGetter('a');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
@@ -226,7 +226,7 @@ suite.testUsingWebGLFloatTextures("vec2Input_bytes", () => {
 });
 
 suite.testUsingWebGLFloatTextures("vec4Input_bytes", () => {
-    let param = SHADER_CODER_BYTES.vec4Input('test_input');
+    let param = SHADER_CODER_BYTES.vec4.inputPartGetter('test_input');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
@@ -253,7 +253,7 @@ suite.testUsingWebGLFloatTextures("vec4Input_bytes", () => {
 });
 
 suite.testUsingWebGLFloatTextures("vec4Input_floats", () => {
-    let param = SHADER_CODER_FLOATS.vec4Input('test_input');
+    let param = SHADER_CODER_FLOATS.vec4.inputPartGetter('test_input');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
@@ -279,7 +279,7 @@ suite.testUsingWebGLFloatTextures("vec4Input_floats", () => {
 });
 
 suite.testUsingWebGLFloatTextures("vec2Input_floats", () => {
-    let param = SHADER_CODER_FLOATS.vec2Input('fancy');
+    let param = SHADER_CODER_FLOATS.vec2.inputPartGetter('fancy');
     let shader = combinedShaderPartsWithCode([param], `
         void main() {
             vec2 xy = gl_FragCoord.xy - vec2(0.5, 0.5);
@@ -312,9 +312,9 @@ suite.testUsingWebGLFloatTextures("vec2Input_floats", () => {
 });
 
 suite.testUsingWebGL("boolOutputs", () => {
-    assertThat(SHADER_CODER_BYTES.boolOutput).is(SHADER_CODER_FLOATS.boolOutput);
+    assertThat(SHADER_CODER_BYTES.bool.outputPart).is(SHADER_CODER_FLOATS.bool.outputPart);
 
-    let output = SHADER_CODER_FLOATS.boolOutput;
+    let output = SHADER_CODER_FLOATS.bool.outputPart;
     let shader = combinedShaderPartsWithCode([output], `
         bool outputFor(float k) {
             return mod(k, 3.0) == 1.0;
@@ -326,7 +326,7 @@ suite.testUsingWebGL("boolOutputs", () => {
 });
 
 suite.testUsingWebGLFloatTextures("vec2Output_floats", () => {
-    let output = SHADER_CODER_FLOATS.vec2Output;
+    let output = SHADER_CODER_FLOATS.vec2.outputPart;
     let shader = combinedShaderPartsWithCode([output], `
         vec2 outputFor(float k) {
             return vec2(k, k + 0.5);
@@ -346,7 +346,7 @@ suite.testUsingWebGLFloatTextures("vec2Output_floats", () => {
 });
 
 suite.testUsingWebGLFloatTextures("vec4Output_floats", () => {
-    let output = SHADER_CODER_FLOATS.vec4Output;
+    let output = SHADER_CODER_FLOATS.vec4.outputPart;
     let shader = combinedShaderPartsWithCode([output], `
         vec4 outputFor(float k) {
             return vec4(k, k + 0.25, k + 0.5, k + 0.75);
@@ -366,7 +366,7 @@ suite.testUsingWebGLFloatTextures("vec4Output_floats", () => {
 });
 
 suite.testUsingWebGL("vec2Output_bytes", () => {
-    let output = SHADER_CODER_BYTES.vec2Output;
+    let output = SHADER_CODER_BYTES.vec2.outputPart;
     let shader = combinedShaderPartsWithCode([output], `
         vec2 outputFor(float k) {
             return vec2(k, k + 0.5);
@@ -388,7 +388,7 @@ suite.testUsingWebGL("vec2Output_bytes", () => {
 });
 
 suite.testUsingWebGL("vec4Output_bytes", () => {
-    let output = SHADER_CODER_BYTES.vec4Output;
+    let output = SHADER_CODER_BYTES.vec4.outputPart;
     let shader = combinedShaderPartsWithCode([output], `
         vec4 outputFor(float k) {
             return vec4(k, k + 0.25, k + 0.5, k + 0.75);
@@ -410,8 +410,8 @@ suite.testUsingWebGL("vec4Output_bytes", () => {
 });
 
 suite.testUsingWebGL("bytes_passthrough_vec2", () => {
-    let input = SHADER_CODER_BYTES.vec2Input('prev');
-    let output = SHADER_CODER_BYTES.vec2Output;
+    let input = SHADER_CODER_BYTES.vec2.inputPartGetter('prev');
+    let output = SHADER_CODER_BYTES.vec2.outputPart;
     let shader = combinedShaderPartsWithCode(
         [input, output], `
         vec2 outputFor(float k) {
@@ -430,8 +430,8 @@ suite.testUsingWebGL("bytes_passthrough_vec2", () => {
 });
 
 suite.testUsingWebGL("bytes_passthrough_vec4", () => {
-    let input = SHADER_CODER_BYTES.vec4Input('prev');
-    let output = SHADER_CODER_BYTES.vec4Output;
+    let input = SHADER_CODER_BYTES.vec4.inputPartGetter('prev');
+    let output = SHADER_CODER_BYTES.vec4.outputPart;
     let shader = combinedShaderPartsWithCode(
         [input, output], `
         vec4 outputFor(float k) {
@@ -455,9 +455,9 @@ suite.testUsingWebGL("bytes_passthrough_vec4", () => {
 });
 
 suite.testUsingWebGL("bytes_zip_through", () => {
-    let inputA = SHADER_CODER_BYTES.vec4Input('a');
-    let inputB = SHADER_CODER_BYTES.vec4Input('b');
-    let output = SHADER_CODER_BYTES.vec4Output;
+    let inputA = SHADER_CODER_BYTES.vec4.inputPartGetter('a');
+    let inputB = SHADER_CODER_BYTES.vec4.inputPartGetter('b');
+    let output = SHADER_CODER_BYTES.vec4.outputPart;
     let shader = combinedShaderPartsWithCode(
         [inputA, inputB, output], `
         vec4 outputFor(float k) {
@@ -487,8 +487,8 @@ suite.testUsingWebGL("bytes_zip_through", () => {
 });
 
 suite.testUsingWebGL("bytes_encoding_precision", () => {
-    let inputA = SHADER_CODER_BYTES.vec2Input('a');
-    let output = SHADER_CODER_BYTES.vec2Output;
+    let inputA = SHADER_CODER_BYTES.vec2.inputPartGetter('a');
+    let output = SHADER_CODER_BYTES.vec2.outputPart;
     let shader = combinedShaderPartsWithCode(
         [inputA, output], `
         vec2 outputFor(float k) { return read_a(k); }`);
@@ -526,21 +526,21 @@ suite.testUsingWebGLFloatTextures("testByteToFloatToByteStability", () => {
     let tex = shader.withArgs().toRawByteTexture(sizePower);
 
     let bytesToFloatsShader = combinedShaderPartsWithCode(
-        [SHADER_CODER_BYTES.vec4Input('prev'), SHADER_CODER_FLOATS.vec4Output],
+        [SHADER_CODER_BYTES.vec4.inputPartGetter('prev'), SHADER_CODER_FLOATS.vec4.outputPart],
         'vec4 outputFor(float k) { return read_prev(k); }');
     let texAsFloats = shaderWithOutputPartAndArgs(
         bytesToFloatsShader,
-        SHADER_CODER_FLOATS.vec4Output,
-        [...SHADER_CODER_BYTES.vec4Input('prev').argsFor(tex)]
+        SHADER_CODER_FLOATS.vec4.outputPart,
+        [...SHADER_CODER_BYTES.vec4.inputPartGetter('prev').argsFor(tex)]
     ).toRawFloatTexture(sizePower - 2);
 
     let floatsToBytesShader = combinedShaderPartsWithCode(
-        [SHADER_CODER_FLOATS.vec4Input('prev'), SHADER_CODER_BYTES.vec4Output],
+        [SHADER_CODER_FLOATS.vec4.inputPartGetter('prev'), SHADER_CODER_BYTES.vec4.outputPart],
         'vec4 outputFor(float k) { return read_prev(k); }');
     let reBytes = shaderWithOutputPartAndArgs(
         floatsToBytesShader,
-        SHADER_CODER_BYTES.vec4Output,
-        [...SHADER_CODER_FLOATS.vec4Input('prev').argsFor(texAsFloats)]
+        SHADER_CODER_BYTES.vec4.outputPart,
+        [...SHADER_CODER_FLOATS.vec4.inputPartGetter('prev').argsFor(texAsFloats)]
     ).readRawByteOutputs(sizePower);
 
     let bytes = tex.readPixels();
@@ -566,12 +566,12 @@ suite.testUsingWebGL("testByteToByteStability", () => {
     let tex = shader.withArgs().toRawByteTexture(sizePower);
 
     let bytesToBytesShader = combinedShaderPartsWithCode(
-        [SHADER_CODER_BYTES.vec4Input('prev'), SHADER_CODER_BYTES.vec4Output],
+        [SHADER_CODER_BYTES.vec4.inputPartGetter('prev'), SHADER_CODER_BYTES.vec4.outputPart],
         'vec4 outputFor(float k) { return read_prev(k); }');
     let reBytes = shaderWithOutputPartAndArgs(
         bytesToBytesShader,
-        SHADER_CODER_BYTES.vec4Output,
-        [...SHADER_CODER_BYTES.vec4Input('prev').argsFor(tex)]
+        SHADER_CODER_BYTES.vec4.outputPart,
+        [...SHADER_CODER_BYTES.vec4.inputPartGetter('prev').argsFor(tex)]
     ).readRawByteOutputs(sizePower);
 
     let bytes = tex.readPixels();

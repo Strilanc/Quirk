@@ -46,7 +46,7 @@ class Inputs {
      */
     static vec2(name) {
         return new ShaderPartDescription(
-            coder => coder.vec2Input(name),
+            coder => coder.vec2.inputPartGetter(name),
             `Inputs.vec2(${name})`);
     }
     /**
@@ -55,7 +55,7 @@ class Inputs {
      */
     static vec4(name) {
         return new ShaderPartDescription(
-            coder => coder.vec4Input(name),
+            coder => coder.vec4.inputPartGetter(name),
             `Inputs.vec4(${name})`);
     }
     /**
@@ -64,7 +64,7 @@ class Inputs {
      */
     static bool(name) {
         return new ShaderPartDescription(
-            coder => coder.boolInput(name),
+            coder => coder.bool.inputPartGetter(name),
             `Inputs.bool(${name})`);
     }
 }
@@ -75,7 +75,7 @@ class Outputs {
      */
     static vec2() {
         return new ShaderPartDescription(
-            coder => coder.vec2Output,
+            coder => coder.vec2.outputPart,
             `Outputs.vec2()`);
     }
     /**
@@ -83,7 +83,7 @@ class Outputs {
      */
     static vec4() {
         return new ShaderPartDescription(
-            coder => coder.vec4Output,
+            coder => coder.vec4.outputPart,
             `Outputs.vec4()`);
     }
 
@@ -92,7 +92,7 @@ class Outputs {
      */
     static vec4WithOutputCoder() {
         return new ShaderPartDescription(
-            _ => outputShaderCoder().vec4Output,
+            _ => outputShaderCoder().vec4.outputPart,
             `Outputs.vec4WithOutputCoder()`);
     }
 
@@ -101,7 +101,7 @@ class Outputs {
      */
     static bool() {
         return new ShaderPartDescription(
-            coder => coder.boolOutput,
+            coder => coder.bool.outputPart,
             `Outputs.bool()`);
     }
 }
@@ -165,69 +165,31 @@ function shaderWithOutputPartAndArgs(shader, outputShaderPart, args) {
  */
 class ShaderValueCoder {
     /**
-     * @param {!function(name: !string) : !ShaderPart} vec2Input
-     * @param {!function(name: !string) : !ShaderPart} vec4Input
-     * @param {!function(name: !string) : !ShaderPart} boolInput
-     * @param {!ShaderPart} vec2Output
-     * @param {!ShaderPart} vec4Output
-     * @param {!ShaderPart} boolOutput
-     * @param {!int} vec2Overhead
-     * @param {!int} vec4Overhead
-     * @param {!int} vecPixelType
-     * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec2Data
-     * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec2Data
-     * @param {!function(!Float32Array) : !Float32Array|!Uint8Array} prepVec4Data
-     * @param {!function(!Float32Array|!Uint8Array) : !Float32Array} unpackVec4Data
-     * @param {!function(!WglTexture) : !int} vec2ArrayPowerSizeOfTexture
-     * @param {!function(!WglTexture) : !int} vec4ArrayPowerSizeOfTexture
+     * @param {!ShaderCoder} parent
      * @param {!function(!WglTextureTrader) : void} vec2TradePack
      */
-    constructor(vec2Input,
-                vec4Input,
-                boolInput,
-                vec2Output,
-                vec4Output,
-                boolOutput,
-                vec2Overhead,
-                vec4Overhead,
-                vecPixelType,
-                prepVec2Data,
-                unpackVec2Data,
-                prepVec4Data,
-                unpackVec4Data,
-                vec2ArrayPowerSizeOfTexture,
-                vec4ArrayPowerSizeOfTexture,
-                vec2TradePack) {
-        /** @type {!function(name: !string) : !ShaderPart} */
-        this.vec2Input = vec2Input;
-        /** @type {!function(name: !string) : !ShaderPart} */
-        this.vec4Input = vec4Input;
-        /** @type {!function(name: !string) : !ShaderPart} */
-        this.boolInput = boolInput;
-        /** @type {!ShaderPart} */
-        this.vec2Output = vec2Output;
-        /** @type {!ShaderPart} */
-        this.vec4Output = vec4Output;
-        /** @type {!ShaderPart} */
-        this.boolOutput = boolOutput;
+    constructor(parent, vec2TradePack) {
+        this.vec2 = parent.vec2;
+        this.vec4 = parent.vec4;
+        this.float = parent.float;
+        this.bool = parent.bool;
+
         /** @type {!int} */
-        this.vec2PowerSizeOverhead = vec2Overhead;
+        this.vec2PowerSizeOverhead = parent.vec2.powerSizeOverhead;
         /** @type {!int} */
-        this.vec4PowerSizeOverhead = vec4Overhead;
+        this.vec4PowerSizeOverhead = parent.vec4.powerSizeOverhead;
         /** @type {!int} */
-        this.vecPixelType = vecPixelType;
+        this.vecPixelType = parent.vec2.pixelType;
         /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
-        this.prepVec2Data = prepVec2Data;
+        this.prepVec2Data = parent.vec2.dataToPixels;
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
-        this.unpackVec2Data = unpackVec2Data;
+        this.unpackVec2Data = parent.vec2.pixelsToData;
         /** {!function(!Float32Array) : !Float32Array|!Uint8Array} */
-        this.prepVec4Data = prepVec4Data;
+        this.prepVec4Data = parent.vec4.dataToPixels;
         /** {!function(!Float32Array|!Uint8Array) : !Float32Array} */
-        this.unpackVec4Data = unpackVec4Data;
-        /** @type {!function(!WglTexture) : !int} */
-        this.vec2ArrayPowerSizeOfTexture = vec2ArrayPowerSizeOfTexture;
-        /** @type {!function(!WglTexture) : !int} */
-        this.vec4ArrayPowerSizeOfTexture = vec4ArrayPowerSizeOfTexture;
+        this.unpackVec4Data = parent.vec4.pixelsToData;
+        this.vec2ArrayPowerSizeOfTexture = tex => parent.vec2.arrayPowerSizeOfTexture(tex);
+        this.vec4ArrayPowerSizeOfTexture = tex => parent.vec4.arrayPowerSizeOfTexture(tex);
         /** @type {!function(!WglTextureTrader) : void} */
         this.vec2TradePack = vec2TradePack;
     }
@@ -244,40 +206,12 @@ const PACK_VEC2S_INTO_VEC4S_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
 
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_FLOATS = new ShaderValueCoder(
-    SHADER_CODER_FLOATS__.vec2.inputPartGetter,
-    SHADER_CODER_FLOATS__.vec4.inputPartGetter,
-    SHADER_CODER_FLOATS__.bool.inputPartGetter,
-    SHADER_CODER_FLOATS__.vec2.outputPart,
-    SHADER_CODER_FLOATS__.vec4.outputPart,
-    SHADER_CODER_FLOATS__.bool.outputPart,
-    SHADER_CODER_FLOATS__.vec2.powerSizeOverhead,
-    SHADER_CODER_FLOATS__.vec4.powerSizeOverhead,
-    SHADER_CODER_FLOATS__.vec2.pixelType,
-    SHADER_CODER_FLOATS__.vec2.dataToPixels,
-    SHADER_CODER_FLOATS__.vec2.pixelsToData,
-    SHADER_CODER_FLOATS__.vec4.dataToPixels,
-    SHADER_CODER_FLOATS__.vec4.pixelsToData,
-    i => SHADER_CODER_FLOATS__.vec2.arrayPowerSizeOfTexture(i),
-    i => SHADER_CODER_FLOATS__.vec4.arrayPowerSizeOfTexture(i),
+    SHADER_CODER_FLOATS__,
     trader => trader.shadeHalveAndTrade(PACK_VEC2S_INTO_VEC4S_SHADER));
 
 /** @type {!ShaderValueCoder} */
 const SHADER_CODER_BYTES = new ShaderValueCoder(
-    SHADER_CODER_BYTES__.vec2.inputPartGetter,
-    SHADER_CODER_BYTES__.vec4.inputPartGetter,
-    SHADER_CODER_BYTES__.bool.inputPartGetter,
-    SHADER_CODER_BYTES__.vec2.outputPart,
-    SHADER_CODER_BYTES__.vec4.outputPart,
-    SHADER_CODER_BYTES__.bool.outputPart,
-    SHADER_CODER_BYTES__.vec2.powerSizeOverhead,
-    SHADER_CODER_BYTES__.vec4.powerSizeOverhead,
-    SHADER_CODER_BYTES__.vec2.pixelType,
-    SHADER_CODER_BYTES__.vec2.dataToPixels,
-    SHADER_CODER_BYTES__.vec2.pixelsToData,
-    SHADER_CODER_BYTES__.vec4.dataToPixels,
-    SHADER_CODER_BYTES__.vec4.pixelsToData,
-    i => SHADER_CODER_BYTES__.vec2.arrayPowerSizeOfTexture(i),
-    i => SHADER_CODER_BYTES__.vec4.arrayPowerSizeOfTexture(i),
+    SHADER_CODER_BYTES__,
     () => {});
 
 /** @type {!ShaderValueCoder} */
