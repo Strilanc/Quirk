@@ -3,15 +3,17 @@ import {
     combinedShaderPartsWithCode,
     SHADER_CODER_BYTES,
     SHADER_CODER_FLOATS,
-    floatsAsBytes,
-    bytesAsFloats,
     shaderWithOutputPartAndArgs,
     makePseudoShaderWithInputsAndOutputAndCode,
     Outputs,
-    currentShaderCoder,
-    PACK_FLOAT_INTO_BYTES_CODE,
-    UNPACK_BYTES_INTO_FLOAT_CODE
+    currentShaderCoder
 } from "src/webgl/ShaderCoders.js"
+import {
+    floatsAsBytes,
+    bytesAsFloats,
+    PACK_FLOAT_INTO_BYTES_CODE,
+    UNPACK_BYTES_INTO_FLOAT_CODE,
+} from "src/webgl/ShaderCoders_intoBytes.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
