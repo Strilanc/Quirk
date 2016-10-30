@@ -41,7 +41,9 @@ function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLe
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
     }
 
-    currentShaderCoder().vec2TradePack(trader);
+    if (currentShaderCoder().vec2.needRearrangingToBeInVec4Format) {
+        trader.shadeHalveAndTrade(Shaders.packVec2IntoVec4);
+    }
     return trader.currentTexture;
 }
 

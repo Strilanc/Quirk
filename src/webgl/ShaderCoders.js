@@ -11,12 +11,12 @@ import {SHADER_CODER_FLOATS__} from "src/webgl/ShaderCoders_intoFloats.js"
 
 class ShaderPartDescription {
     /**
-     * @param {!function(!ShaderValueCoder) : !ShaderPart} partMaker
+     * @param {!function(!ShaderCoder) : !ShaderPart} partMaker
      * @param {!string} description
      */
     constructor(partMaker, description) {
         /**
-         * @type {!(function(!ShaderValueCoder): !ShaderPart)}
+         * @type {!(function(!ShaderCoder): !ShaderPart)}
          * @private
          */
         this._partMaker = partMaker;
@@ -27,7 +27,7 @@ class ShaderPartDescription {
     }
 
     /**
-     * @param {!ShaderValueCoder} coder
+     * @param {!ShaderCoder} coder
      * @returns {!ShaderPart}
      */
     toConcretePart(coder=undefined) {
@@ -44,11 +44,32 @@ class Inputs {
      * @param {!string} name
      * @returns {!ShaderPartDescription}
      */
+    static bool(name) {
+        return new ShaderPartDescription(
+            coder => coder.bool.inputPartGetter(name),
+            `Inputs.bool(${name})`);
+    }
+
+    /**
+     * @param {!string} name
+     * @returns {!ShaderPartDescription}
+     */
+    static float(name) {
+        return new ShaderPartDescription(
+            coder => coder.float.inputPartGetter(name),
+            `Inputs.float(${name})`);
+    }
+
+    /**
+     * @param {!string} name
+     * @returns {!ShaderPartDescription}
+     */
     static vec2(name) {
         return new ShaderPartDescription(
             coder => coder.vec2.inputPartGetter(name),
             `Inputs.vec2(${name})`);
     }
+
     /**
      * @param {!string} name
      * @returns {!ShaderPartDescription}
@@ -57,15 +78,6 @@ class Inputs {
         return new ShaderPartDescription(
             coder => coder.vec4.inputPartGetter(name),
             `Inputs.vec4(${name})`);
-    }
-    /**
-     * @param {!string} name
-     * @returns {!ShaderPartDescription}
-     */
-    static bool(name) {
-        return new ShaderPartDescription(
-            coder => coder.bool.inputPartGetter(name),
-            `Inputs.bool(${name})`);
     }
 }
 
@@ -159,59 +171,26 @@ function shaderWithOutputPartAndArgs(shader, outputShaderPart, args) {
         shader.withArgs(...args, ...outputShaderPart.argsFor(destinationTexture)).renderTo(destinationTexture));
 }
 
-/**
- * A strategy for converting between values used inside the shader and the textures those values must live in between
- * shaders.
- */
-class ShaderValueCoder {
-    /**
-     * @param {!ShaderCoder} parent
-     * @param {!function(!WglTextureTrader) : void} vec2TradePack
-     */
-    constructor(parent, vec2TradePack) {
-        this.vec2 = parent.vec2;
-        this.vec4 = parent.vec4;
-        this.float = parent.float;
-        this.bool = parent.bool;
+/** @type {!ShaderCoder} */
+const SHADER_CODER_FLOATS = SHADER_CODER_FLOATS__;
 
-        /** @type {!function(!WglTextureTrader) : void} */
-        this.vec2TradePack = vec2TradePack;
-    }
-}
+/** @type {!ShaderCoder} */
+const SHADER_CODER_BYTES = SHADER_CODER_BYTES__;
 
-/**
- * @param {!WglTexture}
- * @returns {!WglConfiguredShader)
- */
-const PACK_VEC2S_INTO_VEC4S_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [Inputs.vec2('input')],
-    Outputs.vec4(),
-    'vec4 outputFor(float k) { return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0)); }');
-
-/** @type {!ShaderValueCoder} */
-const SHADER_CODER_FLOATS = new ShaderValueCoder(
-    SHADER_CODER_FLOATS__,
-    trader => trader.shadeHalveAndTrade(PACK_VEC2S_INTO_VEC4S_SHADER));
-
-/** @type {!ShaderValueCoder} */
-const SHADER_CODER_BYTES = new ShaderValueCoder(
-    SHADER_CODER_BYTES__,
-    () => {});
-
-/** @type {!ShaderValueCoder} */
+/** @type {!ShaderCoder} */
 let _curShaderCoder = SHADER_CODER_FLOATS;
-/** @type {!ShaderValueCoder} */
+/** @type {!ShaderCoder} */
 let _outShaderCoder = SHADER_CODER_BYTES;
 
 /**
- * @returns {!ShaderValueCoder}
+ * @returns {!ShaderCoder}
  */
 function currentShaderCoder() {
     return _curShaderCoder;
 }
 
 /**
- * @returns {!ShaderValueCoder}
+ * @returns {!ShaderCoder}
  */
 function outputShaderCoder() {
     return _outShaderCoder;

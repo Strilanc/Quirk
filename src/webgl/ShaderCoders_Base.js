@@ -34,13 +34,15 @@ class SingleTypeCoder {
      * @param {!int} pixelType
      * @param {!function(*) : !Float32Array|!Uint8Array} dataToPixels
      * @param {!function(!Float32Array|!Uint8Array) : *} pixelsToData
+     * @param {!bool} needRearrangingToBeInVec4Format
      */
     constructor(inputPartGetter,
                 outputPart,
                 powerSizeOverhead,
                 pixelType,
                 dataToPixels,
-                pixelsToData) {
+                pixelsToData,
+                needRearrangingToBeInVec4Format) {
         /** @type {!function(name: !string) : !ShaderPart} */
         this.inputPartGetter = inputPartGetter;
         /** @type {!ShaderPart} */
@@ -53,6 +55,8 @@ class SingleTypeCoder {
         this.dataToPixels = dataToPixels;
         /** @type {!function(!Float32Array|!Uint8Array) : *} */
         this.pixelsToData = pixelsToData;
+        /** @type {!bool} */
+        this.needRearrangingToBeInVec4Format = needRearrangingToBeInVec4Format;
     }
 
     /**
@@ -142,6 +146,7 @@ const BOOL_TYPE_CODER = new SingleTypeCoder(
     0,
     WebGLRenderingContext.UNSIGNED_BYTE,
     e => e,
-    e => e);
+    e => e,
+    false);
 
 export {SingleTypeCoder, ShaderCoder, ShaderPart, BOOL_TYPE_CODER}

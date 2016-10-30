@@ -1,11 +1,11 @@
 import {Matrix} from "src/math/Matrix.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 
-/** @returns {undefined|!ShaderValueCoder} */
+/** @returns {undefined|!ShaderCoder} */
 let currentShaderCoder = undefined;
 let WglTexturePool;
 /**
- * @param {!ShaderValueCoder} newCurrentShaderCoder
+ * @param {!ShaderCoder} newCurrentShaderCoder
  */
 function provideWorkingShaderCoderToWglConfiguredShader(newCurrentShaderCoder) {
     currentShaderCoder = newCurrentShaderCoder;

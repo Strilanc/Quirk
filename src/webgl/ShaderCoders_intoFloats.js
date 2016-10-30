@@ -157,7 +157,8 @@ const FLOAT_TYPE_CODER = new SingleTypeCoder(
     0,
     WebGLRenderingContext.FLOAT,
     spreadFloatVec1,
-    unspreadFloatVec1);
+    unspreadFloatVec1,
+    true);
 
 const VEC2_TYPE_CODER = new SingleTypeCoder(
     name => makeFloatCoderInput(2, name),
@@ -165,7 +166,8 @@ const VEC2_TYPE_CODER = new SingleTypeCoder(
     0,
     WebGLRenderingContext.FLOAT,
     spreadFloatVec2,
-    unspreadFloatVec2);
+    unspreadFloatVec2,
+    true);
 
 const VEC4_TYPE_CODER = new SingleTypeCoder(
     name => makeFloatCoderInput(4, name),
@@ -173,7 +175,8 @@ const VEC4_TYPE_CODER = new SingleTypeCoder(
     0,
     WebGLRenderingContext.FLOAT,
     e => e,
-    e => e);
+    e => e,
+    false);
 
 /** @type {!ShaderCoder} */
 const SHADER_CODER_FLOATS__ = new ShaderCoder(

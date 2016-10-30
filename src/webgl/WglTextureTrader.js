@@ -61,7 +61,7 @@ class WglTextureTrader {
     shadeHalveAndTrade(reducingShaderFunc) {
         this.shadeAndTrade(
             reducingShaderFunc,
-            WglTexturePool.take(this.currentTexture.sizePower() - 1, this.currentTexture.pixelType))
+            WglTexturePool.take(Math.max(0, this.currentTexture.sizePower() - 1), this.currentTexture.pixelType))
     }
 }
 

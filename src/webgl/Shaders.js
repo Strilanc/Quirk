@@ -104,12 +104,35 @@ Shaders.vec2Data = floats => Shaders.data(currentShaderCoder().vec2.dataToPixels
 Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().vec4.dataToPixels(floats));
 
 /**
+ * @param {!WglTexture}
+ * @returns {!WglConfiguredShader)
+ */
+Shaders.packVec2IntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
+    'vec4 outputFor(float k) { return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0)); }');
+
+/**
+ * @param {!WglTexture}
+ * @returns {!WglConfiguredShader)
+ */
+Shaders.packFloatIntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.float('input')],
+    Outputs.vec4(),
+    `vec4 outputFor(float k) {
+        return vec4(
+            read_input(k*4.0),
+            read_input(k*4.0 + 1.0),
+            read_input(k*4.0 + 2.0),
+            read_input(k*4.0 + 3.0));
+    }`);
+
+/**
  * Adds the second half of its input into the first half.
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
  */
-Shaders.sumFoldVec4 = inp => SUM_FOLD_SHADER_VEC4(inp);
-const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
+Shaders.sumFoldVec4 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec4('input')],
     Outputs.vec4(),
     `vec4 outputFor(float k) {
@@ -121,8 +144,7 @@ const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
  */
-Shaders.sumFoldVec2 = inp => SUM_FOLD_SHADER_VEC2(inp);
-const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
+Shaders.sumFoldVec2 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec2('input')],
     Outputs.vec2(),
     `vec2 outputFor(float k) {

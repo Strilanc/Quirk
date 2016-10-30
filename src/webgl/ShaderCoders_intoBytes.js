@@ -170,7 +170,8 @@ const FLOAT_TYPE_CODER = new SingleTypeCoder(
     0,
     WebGLRenderingContext.UNSIGNED_BYTE,
     floatsAsBytes,
-    bytesAsFloats);
+    bytesAsFloats,
+    false);
 
 const VEC2_TYPE_CODER = new SingleTypeCoder(
     name => makeByteCoderInput(2, name),
@@ -178,7 +179,8 @@ const VEC2_TYPE_CODER = new SingleTypeCoder(
     1,
     WebGLRenderingContext.UNSIGNED_BYTE,
     floatsAsBytes,
-    bytesAsFloats);
+    bytesAsFloats,
+    false);
 
 const VEC4_TYPE_CODER = new SingleTypeCoder(
     name => makeByteCoderInput(4, name),
@@ -186,7 +188,8 @@ const VEC4_TYPE_CODER = new SingleTypeCoder(
     2,
     WebGLRenderingContext.UNSIGNED_BYTE,
     floatsAsBytes,
-    bytesAsFloats);
+    bytesAsFloats,
+    false);
 
 /** @type {!ShaderCoder} */
 const SHADER_CODER_BYTES__ = new ShaderCoder(

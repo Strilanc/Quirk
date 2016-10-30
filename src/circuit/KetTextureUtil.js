@@ -22,7 +22,9 @@ class KetTextureUtil {}
  * @returns {!Float32Array}
  */
 KetTextureUtil.tradeTextureForVec2Output = trader => {
-    currentShaderCoder().vec2TradePack(trader);
+    if (currentShaderCoder().vec2.needRearrangingToBeInVec4Format) {
+        trader.shadeHalveAndTrade(Shaders.packVec2IntoVec4);
+    }
     return KetTextureUtil.tradeTextureForVec4Output(trader);
 };
 
