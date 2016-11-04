@@ -6,14 +6,10 @@ import {DisplayedToolbox} from "src/ui/DisplayedToolbox.js"
 import {GateDrawParams} from "src/draw/GateDrawParams.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Gates} from "src/gates/AllGates.js"
-import {MathPainter} from "src/draw/MathPainter.js"
-import {Matrix} from "src/math/Matrix.js"
 import {Hand} from "src/ui/Hand.js"
 import {Painter} from "src/draw/Painter.js"
 import {Rect} from "src/math/Rect.js"
 import {Serializer} from "src/circuit/Serializer.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {Util} from "src/base/Util.js"
 
 class DisplayedInspector {
     /**

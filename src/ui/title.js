@@ -1,4 +1,3 @@
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
 import {fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
 

@@ -30,7 +30,7 @@ import {VariousZGates} from "src/gates/VariousZGates.js"
 import {ZeroGate} from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
-import {seq, Seq} from "src/base/Seq.js"
+import {seq} from "src/base/Seq.js"
 
 let Gates = {};
 

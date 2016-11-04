@@ -77,8 +77,8 @@ class MathPainter {
      * @param {!Rect} drawArea The rectangle to draw the matrix within.
      * @param {!Array.<!Point>} focusPoints
      * @param {!function(!int, !int) : !string} titleFunc
-     * @param {!function(!int, !int) : !string} valueTextFunc1
-     * @param {!function(!int, !int) : !string=} valueTextFunc2
+     * @param {!function(!int, !int, !Complex) : !string} valueTextFunc1
+     * @param {(!function(!int, !int, !Complex) : (undefined|!string))=} valueTextFunc2
      */
     static paintMatrixTooltip(
             painter,

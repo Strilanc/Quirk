@@ -12,7 +12,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {Util} from "src/base/Util.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {MysteryGateSymbol, MysteryGateMakerWithMatrix} from "src/gates/Joke_MysteryGate.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {seq} from "src/base/Seq.js"
 import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
 
 let matrixDrawer = undefined;

@@ -1,11 +1,6 @@
-import {Config} from "src/Config.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {GateDrawParams} from "src/draw/GateDrawParams.js"
-import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 /**
@@ -359,7 +354,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(!GateCheckArgs) : undefined|!string} customDisableReasonFinder
+     * @param {!function(!GateCheckArgs) : (undefined|!string)} customDisableReasonFinder
      * @returns {!Gate}
      */
     withCustomDisableReasonFinder(customDisableReasonFinder) {
@@ -410,6 +405,7 @@ class Gate {
     /**
      * @param {undefined|!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
      * given input, assuming the gate is exactly sized to the overall circuit.
+     * @returns {!Gate}
      */
     withKnownBitPermutation(knownBitPermutationFunc) {
         let g = this._copy();
@@ -430,6 +426,7 @@ class Gate {
 
     /**
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
+     * @returns {!Gate}
      */
     withCustomBeforeOperation(customOperation) {
         if (customOperation !== undefined && typeof customOperation !== "function") {
@@ -442,6 +439,7 @@ class Gate {
 
     /**
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
+     * @returns {!Gate}
      */
     withCustomAfterOperation(customOperation) {
         if (customOperation !== undefined && typeof customOperation !== "function") {
@@ -505,6 +503,10 @@ class Gate {
         return g;
     }
 
+    /**
+     * @param {...!String} keys
+     * @returns {!Gate}
+     */
     withRequiredContextKeys(...keys) {
         let g = this._copy();
         g._requiredContextKeys = keys;
