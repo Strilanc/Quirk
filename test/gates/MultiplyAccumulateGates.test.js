@@ -20,7 +20,7 @@ suite.testUsingWebGL('plus_AB', () => {
                 InputGates.InputAFamily.ofSize(2),
                 undefined,
                 InputGates.InputBFamily.ofSize(1)])]),
-            false).output,
+            false),
         Matrix.generateTransition(32, i => {
             let a = (i>>2)&3;
             let b = (i>>4)&1;

@@ -5,7 +5,6 @@ import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 

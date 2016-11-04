@@ -1,4 +1,4 @@
-import {Suite, assertThat, fail} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {Painter} from "src/draw/Painter.js"
 
 import {Point} from "src/math/Point.js"

@@ -8,7 +8,7 @@ import {
 } from "src/webgl/ShaderCoders_intoBytes.js"
 import {SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders_intoFloats.js"
 import {combinedShaderPartsWithCode, shaderWithOutputPartAndArgs } from "src/webgl/ShaderCoders.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"

@@ -1,13 +1,11 @@
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {Gates} from "src/gates/AllGates.js"
 
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Matrix} from "src/math/Matrix.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {seq} from "src/base/Seq.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 

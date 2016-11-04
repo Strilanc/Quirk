@@ -29,7 +29,7 @@ suite.testUsingWebGL('plus_A', () => {
             ctx,
             new CircuitDefinition(4, [new GateColumn([
                 ArithmeticGates.PlusAFamily.ofSize(2), undefined, InputGates.InputAFamily.ofSize(2), undefined])]),
-            false).output,
+            false),
         Matrix.generateTransition(16, i => {
             let a = (i >> 2) & 3;
             let t = i & 3;
@@ -43,7 +43,7 @@ suite.testUsingWebGL('minus_A', () => {
             ctx,
             new CircuitDefinition(4, [new GateColumn([
                 InputGates.InputAFamily.ofSize(2), undefined, ArithmeticGates.MinusAFamily.ofSize(2), undefined])]),
-            false).output,
+            false),
         Matrix.generateTransition(16, i => {
             let a = i & 3;
             let t = (i >> 2) & 3;

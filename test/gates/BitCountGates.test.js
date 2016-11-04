@@ -1,14 +1,10 @@
 import {Suite} from "test/TestUtil.js"
 import {BitCountGates} from "src/gates/BitCountGates.js"
 import {InputGates} from "src/gates/InputGates.js"
-import {
-    assertThatCircuitShaderActsLikeMatrix,
-    assertThatCircuitUpdateActsLikeMatrix
-} from "test/CircuitOperationTestUtil.js"
+import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Util} from "src/base/Util.js"
 
@@ -32,7 +28,7 @@ suite.testUsingWebGL('PlusBitCountA', () => {
                  -/-
                  -P-
                  -/-`),
-            false).output,
+            false),
         Matrix.generateTransition(1<<5, i => {
             let a = i & 7;
             let t = (i >> 3) & 3;
@@ -52,7 +48,7 @@ suite.testUsingWebGL('MinusBitCountA', () => {
                  -/-
                  -M-
                  -/-`),
-            false).output,
+            false),
         Matrix.generateTransition(1<<5, i => {
             let a = i & 7;
             let t = (i >> 3) & 3;

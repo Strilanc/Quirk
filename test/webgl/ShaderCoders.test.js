@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {combinedShaderPartsWithCode, shaderWithOutputPartAndArgs} from "src/webgl/ShaderCoders.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 import {Shaders} from "src/webgl/Shaders.js"

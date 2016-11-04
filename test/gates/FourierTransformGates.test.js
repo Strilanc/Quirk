@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {Suite} from "test/TestUtil.js"
 import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {applyControlledPhaseGradient, FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"

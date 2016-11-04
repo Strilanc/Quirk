@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {
     amplitudesToPolarKets,
     convertAwayFromPolar,
@@ -10,15 +10,11 @@ import {
     toRatiosVsRepresentative
 } from "src/gates/AmplitudeDisplay.js"
 
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 let suite = new Suite("AmplitudeDisplay");
 

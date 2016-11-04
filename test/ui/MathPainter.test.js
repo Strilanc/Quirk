@@ -1,4 +1,4 @@
-import {Suite, assertThat, fail} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {MathPainter} from "src/draw/MathPainter.js"
 
 let suite = new Suite("MathPainter");
