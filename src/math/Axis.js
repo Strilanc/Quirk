@@ -63,10 +63,10 @@ class Axis {
     /**
      * @param {!number|!Axis} a
      * @param {!number|!Axis} b
-     * @param {!function(!number, !number): !number|!Axis} numNum
-     * @param {!function(!Axis, !number): !number|!Axis} axisNum
-     * @param {!function(!number, !Axis): !number|!Axis} numAxis
-     * @param {!function(!Axis, !Axis): !number|!Axis} axisAxis
+     * @param {!function(!number, !number): (!number|!Axis)} numNum
+     * @param {!function(!Axis, !number): (!number|!Axis)} axisNum
+     * @param {!function(!number, !Axis): (!number|!Axis)} numAxis
+     * @param {!function(!Axis, !Axis): (!number|!Axis)} axisAxis
      * @returns {!number|!Axis}
      */
     static op(a, b, numNum, axisNum, numAxis, axisAxis) {

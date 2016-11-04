@@ -1,10 +1,8 @@
 import {Complex} from "src/math/Complex.js"
 import {Gate} from "src/circuit/Gate.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 const τ = Math.PI * 2;

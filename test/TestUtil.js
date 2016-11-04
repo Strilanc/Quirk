@@ -435,7 +435,7 @@ export class Suite {
      */
     canvasAppearanceTest(name, width, height, method, expectedSrc, tolerance = 256) {
         this.test(name, status => {
-            let actualCanvas = document.createElement("canvas");
+            let actualCanvas = /** @type {!HTMLCanvasElement} */ document.createElement("canvas");
             actualCanvas.width = width;
             actualCanvas.height = height;
             method(actualCanvas, status);

@@ -1,4 +1,3 @@
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"

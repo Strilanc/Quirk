@@ -1,13 +1,9 @@
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
 import {MathPainter} from "src/draw/MathPainter.js"
-import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {probabilityStatTexture, probabilityPixelsToColumnVector} from "src/gates/ProbabilityDisplay.js"
 

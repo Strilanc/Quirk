@@ -1,7 +1,6 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {ShaderPart, SingleTypeCoder, ShaderCoder, BOOL_TYPE_CODER} from "src/webgl/ShaderCoders_Base.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 
 /**
  * @param {!int} vecSize
@@ -124,32 +123,6 @@ function unspreadFloatVec2(pixelData) {
     }
     return result;
 }
-
-/**
- * @param {!WglTexture}
- * @returns {!WglConfiguredShader)
- */
-const PACK_VEC2S_INTO_VEC4S_SHADER = new WglShader(`
-    ${makeFloatCoderInput(2, 'input').code}
-    ${makeFloatCoderOutput(4).code}
-    vec4 outputFor(float k) {
-        return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0));
-    }`);
-
-/**
- * @param {!WglTexture}
- * @returns {!WglConfiguredShader)
- */
-const PACK_VEC1S_INTO_VEC4S_SHADER = new WglShader(`
-    ${makeFloatCoderInput(1, 'input').code}
-    ${makeFloatCoderOutput(4).code}
-    vec4 outputFor(float k) {
-        return vec4(
-            read_input(k*4.0),
-            read_input(k*4.0 + 1.0),
-            read_input(k*4.0 + 2.0),
-            read_input(k*4.0 + 3.0));
-    }`);
 
 const FLOAT_TYPE_CODER = new SingleTypeCoder(
     name => makeFloatCoderInput(1, name),

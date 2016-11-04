@@ -1,4 +1,3 @@
-import {DetailedError} from "src/base/DetailedError.js"
 import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 
 /**
@@ -216,7 +215,7 @@ class Observable {
     /**
      *
      * @param {!int} count
-     * @returns {!Observable.<T>
+     * @returns {!Observable.<T>}
      * @template T
      */
     skip(count) {

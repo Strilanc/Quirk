@@ -7,17 +7,17 @@ class CooldownThrottle {
     /**
      * @param {!function() : void} action
      * @param {!number} cooldownMs
-     * @param {!number} slowActionCooldownPumpupFactor
+     * @param {!number} slowActionCooldownPumpUpFactor
      * @param {!boolean=false} waitWithRequestAnimationFrame
      * @constructor
      */
-    constructor(action, cooldownMs, slowActionCooldownPumpupFactor=0, waitWithRequestAnimationFrame=false) {
+    constructor(action, cooldownMs, slowActionCooldownPumpUpFactor=0, waitWithRequestAnimationFrame=false) {
         /** @type {!function() : void} */
         this.action = action;
         /** @type {!number} */
         this.cooldownDuration = cooldownMs;
         /** @type {!number} */
-        this.slowActionCooldownPumpupFactor = slowActionCooldownPumpupFactor;
+        this.slowActionCooldownPumpupFactor = slowActionCooldownPumpUpFactor;
         /** @type {!boolean} */
         this._waitWithRequestAnimationFrame = waitWithRequestAnimationFrame;
 

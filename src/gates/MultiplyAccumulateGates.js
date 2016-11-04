@@ -3,7 +3,6 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 let MultiplyAccumulateGates = {};

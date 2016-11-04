@@ -2,7 +2,7 @@ import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Rect} from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {Seq} from "src/base/Seq.js"
 
 let SwapGateHalf = Gate.fromKnownMatrix(
     "Swap",

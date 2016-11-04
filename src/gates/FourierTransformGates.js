@@ -1,16 +1,10 @@
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Config} from "src/Config.js"
 import {Complex} from "src/math/Complex.js"
 import {Gate} from "src/circuit/Gate.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
-import {seq, Seq} from "src/base/Seq.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
  * @param {!CircuitEvalContext} ctx

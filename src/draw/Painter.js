@@ -59,7 +59,7 @@ class Painter {
     }
 
     /**
-     * @param {!function(): void} tooltipPainter
+     * @param {!function()} tooltipPainter
      */
     defer(tooltipPainter) {
         this._deferredPaintActions.push(tooltipPainter);
