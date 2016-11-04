@@ -101,7 +101,7 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!bool=true} forTooltip
+     * @param {!boolean=true} forTooltip
      * @returns {!number}
      */
     desiredHeight(forTooltip=false) {
@@ -112,7 +112,7 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!bool=true} forTooltip
+     * @param {!boolean=true} forTooltip
      * @returns {!number}
      */
     desiredWidth(forTooltip=false) {
@@ -322,8 +322,8 @@ class DisplayedCircuit {
      * @param {!Painter} painter
      * @param {!Hand} hand
      * @param {!CircuitStats} stats
-     * @param {!bool=false} forTooltip
-     * @param {!bool} showWires
+     * @param {!boolean=false} forTooltip
+     * @param {!boolean} showWires
      */
     paint(painter, hand, stats, forTooltip=false, showWires=true) {
         if (showWires) {

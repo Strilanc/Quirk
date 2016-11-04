@@ -1,5 +1,4 @@
 import {DetailedError} from "src/base/DetailedError.js"
-import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {WglShader} from "src/webgl/WglShader.js"
@@ -10,7 +9,6 @@ import {
     Outputs,
     makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
-import {SHADER_CODER_BYTES} from "src/webgl/ShaderCoders_intoBytes.js"
 
 /**
  * Utilities for creating/configuring shaders that render various simple things.
@@ -105,7 +103,7 @@ Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().vec4.dataToPixels
 
 /**
  * @param {!WglTexture}
- * @returns {!WglConfiguredShader)
+ * @returns {!WglConfiguredShader}
  */
 Shaders.packFloatIntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.float('input')],
@@ -120,7 +118,7 @@ Shaders.packFloatIntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
 
 /**
  * @param {!WglTexture}
- * @returns {!WglConfiguredShader)
+ * @returns {!WglConfiguredShader}
  */
 Shaders.packVec2IntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec2('input')],

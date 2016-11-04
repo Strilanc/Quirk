@@ -4,13 +4,13 @@
  */
 class WglMortalValueSlot {
     /**
-     * @param {!function(void) : T} initializer
+     * @param {!function() : T} initializer
      * @param {!function(T) : void} deinitializer
      * @template T
      */
     constructor(initializer, deinitializer) {
         /**
-         * @type {!(function(void): T)}
+         * @type {!(function(): T)}
          * @template T
          */
         this.initializer = initializer;

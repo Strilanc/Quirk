@@ -1,6 +1,6 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {Seq, seq} from "src/base/Seq.js"
+import {Seq} from "src/base/Seq.js"
 import {ShaderPart, SingleTypeCoder, ShaderCoder, BOOL_TYPE_CODER} from "src/webgl/ShaderCoders_Base.js"
 
 /**

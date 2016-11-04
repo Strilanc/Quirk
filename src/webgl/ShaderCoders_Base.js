@@ -34,7 +34,7 @@ class SingleTypeCoder {
      * @param {!int} pixelType
      * @param {!function(*) : !Float32Array|!Uint8Array} dataToPixels
      * @param {!function(!Float32Array|!Uint8Array) : *} pixelsToData
-     * @param {!bool} needRearrangingToBeInVec4Format
+     * @param {!boolean} needRearrangingToBeInVec4Format
      */
     constructor(inputPartGetter,
                 outputPart,
@@ -55,7 +55,7 @@ class SingleTypeCoder {
         this.dataToPixels = dataToPixels;
         /** @type {!function(!Float32Array|!Uint8Array) : *} */
         this.pixelsToData = pixelsToData;
-        /** @type {!bool} */
+        /** @type {!boolean} */
         this.needRearrangingToBeInVec4Format = needRearrangingToBeInVec4Format;
     }
 

@@ -1,4 +1,3 @@
-import {DetailedError} from "src/base/DetailedError.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglShader} from "src/webgl/WglShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"

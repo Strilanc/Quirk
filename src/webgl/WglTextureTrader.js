@@ -1,4 +1,3 @@
-import {Shaders} from "src/webgl/Shaders.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"

@@ -1,8 +1,7 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {Util} from "src/base/Util.js"
-import {WglArg} from "src/webgl/WglArg.js"
 import {WglMortalValueSlot} from "src/webgl/WglMortalValueSlot.js"
-import { initializedWglContext }  from "src/webgl/WglContext.js"
+import {initializedWglContext}  from "src/webgl/WglContext.js"
 import {checkGetErrorResult, checkFrameBufferStatusResult} from "src/webgl/WglUtil.js"
 
 /**

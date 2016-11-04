@@ -48,7 +48,7 @@ class Axis {
 
     /**
      * @param {!number|!Axis} v
-     * @returns {!bool}
+     * @returns {!boolean}
      */
     static classify(v) {
         if (typeof v === "number") {

@@ -259,7 +259,7 @@ class DisplayedToolbox {
      * @param {!Painter} painter
      * @param {!Gate} gate
      * @param {!Rect} rect
-     * @param {!bool} isHighlighted
+     * @param {!boolean} isHighlighted
      * @param {!CircuitStats} stats
      * @private
      */
