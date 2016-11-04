@@ -1,16 +1,12 @@
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {assertThatCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 
-import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {Outputs, Inputs, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
+import {Outputs, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("CircuitShaders");
 

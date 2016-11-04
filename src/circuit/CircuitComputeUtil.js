@@ -4,12 +4,7 @@ import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Gate} from "src/circuit/Gate.js"
 import {Gates} from "src/gates/AllGates.js"
-import {Point} from "src/math/Point.js"
 import {Util} from "src/base/Util.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 /**
  * @param {!CircuitDefinition} circuitDefinition

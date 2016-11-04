@@ -28,7 +28,7 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
 }
 
 /**
- * @param {function(!CircuitEvalContext) : void} updateAction
+ * @param {function(!CircuitEvalContext)} updateAction
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */

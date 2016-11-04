@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {Serializer} from "src/circuit/Serializer.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
@@ -6,15 +6,12 @@ import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {describe} from "src/base/Describe.js"
-import {DetailedError} from "src/base/DetailedError.js"
-import {Format} from "src/base/Format.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
-import {GatePainting} from "src/draw/GatePainting.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
-import {Seq, seq} from "src/base/Seq.js"
+import {seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
 
 let suite = new Suite("Serializer");

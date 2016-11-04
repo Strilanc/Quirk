@@ -1,9 +1,7 @@
-import {Suite, assertThat, assertTrue, assertFalse, fail} from "test/TestUtil.js"
+import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {Complex} from "src/math/Complex.js"
-import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"

@@ -451,7 +451,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
+     * @param {undefined|!function(!CircuitEvalContext)} customOperation
      * @returns {!Gate}
      */
     withCustomOperation(customOperation) {
@@ -484,7 +484,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalContext) : !WglTexture|!Array.<!WglTexture>} customStatTexturesMaker
+     * @param {undefined|!function(!CircuitEvalContext) : (!WglTexture|!Array.<!WglTexture>)} customStatTexturesMaker
      * @returns {!Gate}
      */
     withCustomStatTexturesMaker(customStatTexturesMaker) {

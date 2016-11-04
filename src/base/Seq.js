@@ -144,7 +144,7 @@ class Seq {
 
     /**
      * Returns a set containing the distinct items of this sequence.
-     * @returns {!Set.<T>)
+     * @returns {!Set.<T>}
      * @template T
      */
     toSet() {

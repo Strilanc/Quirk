@@ -26,9 +26,9 @@ class Revision {
         this.index = index;
         /** @type {!boolean} */
         this.isWorkingOnCommit = isWorkingOnCommit;
-        /** @type {!ObservableSource */
+        /** @type {!ObservableSource} */
         this._changes = new ObservableSource();
-        /** @type {!ObservableSource */
+        /** @type {!ObservableSource} */
         this._latestActiveCommit = new ObservableValue(this.history[this.index]);
     }
 

@@ -1,13 +1,9 @@
-import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {ketArgs, ketShader} from "src/circuit/KetShaderUtil.js"
-import {initializedWglContext} from "src/webgl/WglContext.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
     Inputs,

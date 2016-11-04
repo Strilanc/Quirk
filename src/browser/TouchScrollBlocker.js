@@ -1,4 +1,3 @@
-import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 
 class TouchScrollBlocker {

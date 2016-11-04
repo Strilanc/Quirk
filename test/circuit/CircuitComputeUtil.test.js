@@ -1,17 +1,11 @@
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite} from "test/TestUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {circuitDefinitionToGate, advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 
-import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
-import {Gate} from "src/circuit/Gate.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {Seq} from "src/base/Seq.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 
 let suite = new Suite("CircuitComputeUtil");
 

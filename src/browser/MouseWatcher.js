@@ -1,5 +1,4 @@
 import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
 
 const ALLOW_REGRAB_WATCHDOG_TIME_MS = 5000;
 const MOUSE_ID = "mouse!";
