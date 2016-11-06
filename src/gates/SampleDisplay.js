@@ -92,7 +92,7 @@ function sampleGateMaker(span) {
         withSerializedId("Sample" + span).
         withCustomStatTexturesMaker(ctx =>
             probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
-        withCustomStatPostProcessor(probabilityPixelsToColumnVector).
+        withCustomStatPostProcessor(e => probabilityPixelsToColumnVector(e, span)).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
         withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);

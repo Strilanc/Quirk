@@ -494,7 +494,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int):*} pixelFunc
+     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int)} pixelFunc
      * @returns {!Gate}
      */
     withCustomStatPostProcessor(pixelFunc) {
@@ -518,7 +518,6 @@ class Gate {
      * @param {!int} maxSize
      * @param {!function(!int):!Gate} gateGenerator
      * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}}
-     * @template T
      */
     static generateFamily(minSize, maxSize, gateGenerator) {
         let gates = Seq.range(maxSize + 1).skip(minSize).map(i => gateGenerator(i)._copy()).toArray();
