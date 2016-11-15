@@ -1,5 +1,4 @@
 import {DetailedError} from "src/base/DetailedError.js"
-import {Gates} from "src/gates/AllGates.js"
 
 class CustomGateSet {
     /**

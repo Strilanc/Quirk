@@ -6,11 +6,8 @@ import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
-import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
     Inputs,
@@ -31,17 +28,19 @@ import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLength) {
     let trader = new WglTextureTrader(ketTexture);
     trader.dontDeallocCurrentTexture();
+    let n = currentShaderCoder().vec2.arrayPowerSizeOfTexture(ketTexture);
 
-    trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture));
     trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, -rangeOffset));
+    trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture), WglTexturePool.takeVecFloatTex(n));
 
-    let n = currentShaderCoder().vec2ArrayPowerSizeOfTexture(ketTexture);
     while (n > rangeLength) {
         n -= 1;
-        trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
+        trader.shadeHalveAndTrade(Shaders.sumFoldFloat);
     }
 
-    currentShaderCoder().vec2TradePack(trader);
+    if (currentShaderCoder().float.needRearrangingToBeInVec4Format) {
+        trader.shadeQuarterAndTrade(Shaders.packFloatIntoVec4);
+    }
     return trader.currentTexture;
 }
 
@@ -57,30 +56,32 @@ const AMPLITUDES_TO_PROBABILITIES_SHADER = makePseudoShaderWithInputsAndOutputAn
         Inputs.vec2('input'),
         Inputs.bool('control')
     ],
-    Outputs.vec2(),
-    `vec2 outputFor(float k) {
+    Outputs.float(),
+    `float outputFor(float k) {
         vec2 amp = read_input(k);
-        return vec2(dot(amp, amp) * read_control(k), 0.0);
+        return dot(amp, amp) * read_control(k);
     }`);
 
 /**
  * Post-processes the pixels that come out of makeProbabilitySpanPipeline into a vector of normalized probabilities.
  * @param {!Float32Array} pixels
+ * @param {!int} span
  * @returns {!Matrix}
  */
-function probabilityPixelsToColumnVector(pixels) {
+function probabilityPixelsToColumnVector(pixels, span) {
+    let n = 1 << span;
     let unity = 0;
     for (let e of pixels) {
         unity += e;
     }
     if (isNaN(unity) || unity < 0.000001) {
-        return Matrix.zero(1, pixels.length >> 1).times(NaN);
+        return Matrix.zero(1, n).times(NaN);
     }
-    let ps = new Float32Array(pixels.length);
-    for (let i = 0; i < ps.length; i += 2) {
-        ps[i] = pixels[i] / unity;
+    let buf = new Float32Array(n*2);
+    for (let i = 0; i <  n; i++) {
+        buf[i*2] = pixels[i] / unity;
     }
-    return new Matrix(1, pixels.length >> 1, ps);
+    return new Matrix(1, n, buf);
 }
 
 function _paintMultiProbabilityDisplay_grid(args) {
@@ -227,7 +228,7 @@ function multiChanceGateMaker(span) {
         withSerializedId("Chance" + span).
         withCustomStatTexturesMaker(ctx =>
             probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
-        withCustomStatPostProcessor(probabilityPixelsToColumnVector).
+        withCustomStatPostProcessor(pixels => probabilityPixelsToColumnVector(pixels, span)).
         withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
         withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }

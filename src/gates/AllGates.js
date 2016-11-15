@@ -1,5 +1,6 @@
 import {ArithmeticGates} from "src/gates/ArithmeticGates.js"
 import {AmplitudeDisplayFamily} from "src/gates/AmplitudeDisplay.js"
+import {BitCountGates} from "src/gates/BitCountGates.js"
 import {BlochSphereDisplay} from "src/gates/BlochSphereDisplay.js"
 import {Controls} from "src/gates/Controls.js"
 import {CountingGates} from "src/gates/CountingGates.js"
@@ -29,7 +30,7 @@ import {VariousZGates} from "src/gates/VariousZGates.js"
 import {ZeroGate} from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
-import {seq, Seq} from "src/base/Seq.js"
+import {seq} from "src/base/Seq.js"
 
 let Gates = {};
 
@@ -50,6 +51,7 @@ Gates.Displays = {
     BlochSphereDisplay: BlochSphereDisplay
 };
 Gates.Arithmetic = ArithmeticGates;
+Gates.BitCountGates = BitCountGates;
 Gates.Controls = Controls;
 Gates.CountingGates = CountingGates;
 Gates.CycleBitsGates = CycleBitsGates;
@@ -94,6 +96,7 @@ Gates.KnownToSerializer = [
     BlochSphereDisplay,
 
     ...ArithmeticGates.all,
+    ...BitCountGates.all,
     ...CountingGates.all,
     ...CycleBitsGates.all,
     ...ExponentiatingGates.all,

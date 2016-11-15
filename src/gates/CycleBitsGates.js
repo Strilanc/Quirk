@@ -3,7 +3,6 @@ import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 let CycleBitsGates = {};
@@ -36,6 +35,7 @@ CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.without
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
     withSerializedId("<<" + span).
     withHeight(span).
+    withKnownBitPermutation(i => (i + 1) % span).
     withCustomShader(ctx => cycleBits(ctx, span, +1)));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
@@ -47,6 +47,7 @@ CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.
     withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
     withSerializedId(">>" + span).
     withHeight(span).
+    withKnownBitPermutation(i => (i + span - 1) % span).
     withCustomShader(ctx => cycleBits(ctx, span, -1)));
 
 CycleBitsGates.all = [

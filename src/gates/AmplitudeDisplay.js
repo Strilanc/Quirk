@@ -1,7 +1,5 @@
 import {Config} from "src/Config.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {DetailedError} from "src/base/DetailedError.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
@@ -9,12 +7,8 @@ import {Format} from "src/base/Format.js"
 import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
     Inputs,
@@ -37,7 +31,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLeng
     trader.dontDeallocCurrentTexture();
 
     // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-    let startingQubits = currentShaderCoder().vec2ArrayPowerSizeOfTexture(stateKet);
+    let startingQubits = currentShaderCoder().vec2.arrayPowerSizeOfTexture(stateKet);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     let involvedQubits = startingQubits - lostQubits;
@@ -193,7 +187,7 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
  * @returns {void}
  */
 function reduceToLongestPolarKet(textureTrader, includedQubitCount) {
-    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4.arrayPowerSizeOfTexture(textureTrader.currentTexture);
     while (curQubitCount > includedQubitCount) {
         curQubitCount -= 1;
         textureTrader.shadeHalveAndTrade(
@@ -258,7 +252,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
  * @returns {void}
  */
 function foldConsistentRatios(textureTrader, includedQubitCount) {
-    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4.arrayPowerSizeOfTexture(textureTrader.currentTexture);
     let remainingIncludedQubitCount = includedQubitCount;
     while (remainingIncludedQubitCount > 0) {
         remainingIncludedQubitCount -= 1;
@@ -305,7 +299,7 @@ const FOLD_CONSISTENT_RATIOS_SHADER = makePseudoShaderWithInputsAndOutputAndCode
  * @param {!WglTextureTrader} textureTrader
  */
 function signallingSumAll(textureTrader) {
-    let curQubitCount = currentShaderCoder().vec4ArrayPowerSizeOfTexture(textureTrader.currentTexture);
+    let curQubitCount = currentShaderCoder().vec4.arrayPowerSizeOfTexture(textureTrader.currentTexture);
     while (curQubitCount > 0) {
         curQubitCount -= 1;
         textureTrader.shadeHalveAndTrade(SIGNALLING_SUM_SHADER_VEC4);

@@ -1,4 +1,3 @@
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Config} from "src/Config.js"
 import {ObservableValue} from "src/base/Obs.js"
 import {selectAndCopyToClipboard} from "src/browser/Clipboard.js"

@@ -1,4 +1,3 @@
-import {Shaders} from "src/webgl/Shaders.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
@@ -61,7 +60,16 @@ class WglTextureTrader {
     shadeHalveAndTrade(reducingShaderFunc) {
         this.shadeAndTrade(
             reducingShaderFunc,
-            WglTexturePool.take(this.currentTexture.sizePower() - 1, this.currentTexture.pixelType))
+            WglTexturePool.take(Math.max(0, this.currentTexture.sizePower() - 1), this.currentTexture.pixelType))
+    }
+
+    /**
+     * @param {!function(!WglTexture) : !WglConfiguredShader} reducingShaderFunc
+     */
+    shadeQuarterAndTrade(reducingShaderFunc) {
+        this.shadeAndTrade(
+            reducingShaderFunc,
+            WglTexturePool.take(Math.max(0, this.currentTexture.sizePower() - 2), this.currentTexture.pixelType))
     }
 }
 

@@ -1,15 +1,10 @@
 import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
-import {DetailedError} from "src/base/DetailedError.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {initializedWglContext} from "src/webgl/WglContext.js"
 import {
     currentShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode,
@@ -166,7 +161,7 @@ const SWAP_QUBITS_SHADER = ketShaderPermute('', `
  */
 CircuitShaders.qubitDensities = (inputTexture, keptBitMask = undefined) => {
     if (keptBitMask === undefined) {
-        keptBitMask = (1 << currentShaderCoder().vec2ArrayPowerSizeOfTexture(inputTexture)) - 1;
+        keptBitMask = (1 << currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture)) - 1;
     }
     let keptCount = Util.ceilingPowerOf2(Util.numberOfSetBits(keptBitMask));
 

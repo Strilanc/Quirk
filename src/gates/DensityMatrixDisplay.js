@@ -1,18 +1,12 @@
-import {Config} from "src/Config.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {DetailedError} from "src/base/DetailedError.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
     Inputs,
@@ -36,7 +30,7 @@ function densityDisplayStatTexture(inp, qubitCount, controls, rangeOffset, range
     trader.dontDeallocCurrentTexture();
 
     // Put into normal form by throwing away areas not satisfying the controls and cycling the offset away.
-    let startingQubits = currentShaderCoder().vec2ArrayPowerSizeOfTexture(inp);
+    let startingQubits = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inp);
     let lostQubits = Util.numberOfSetBits(controls.inclusionMask);
     let lostHeadQubits = Util.numberOfSetBits(controls.inclusionMask & ((1<<rangeOffset)-1));
     trader.shadeAndTrade(
@@ -54,7 +48,9 @@ function densityDisplayStatTexture(inp, qubitCount, controls, rangeOffset, range
         trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
     }
 
-    currentShaderCoder().vec2TradePack(trader);
+    if (currentShaderCoder().vec2.needRearrangingToBeInVec4Format) {
+        trader.shadeHalveAndTrade(Shaders.packVec2IntoVec4);
+    }
     return trader.currentTexture;
 }
 

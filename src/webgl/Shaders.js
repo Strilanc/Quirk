@@ -1,5 +1,4 @@
 import {DetailedError} from "src/base/DetailedError.js"
-import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {initializedWglContext} from "src/webgl/WglContext.js"
 import {WglShader} from "src/webgl/WglShader.js"
@@ -8,8 +7,7 @@ import {
     currentShaderCoder,
     Inputs,
     Outputs,
-    makePseudoShaderWithInputsAndOutputAndCode,
-    SHADER_CODER_BYTES
+    makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
 
 /**
@@ -94,35 +92,57 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
  */
-Shaders.vec2Data = floats => Shaders.data(currentShaderCoder().prepVec2Data(floats));
+Shaders.vec2Data = floats => Shaders.data(currentShaderCoder().vec2.dataToPixels(floats));
 
 /**
  * Returns a configured shader that overlays the destination texture with the given vec4 data.
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
  */
-Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().prepVec4Data(floats));
+Shaders.vec4Data = floats => Shaders.data(currentShaderCoder().vec4.dataToPixels(floats));
 
 /**
- * Adds the second half of its input into the first half.
- * @param {!WglTexture} inp
+ * @param {!WglTexture}
  * @returns {!WglConfiguredShader}
  */
-Shaders.sumFoldVec4 = inp => SUM_FOLD_SHADER_VEC4(inp);
-const SUM_FOLD_SHADER_VEC4 = makePseudoShaderWithInputsAndOutputAndCode(
-    [Inputs.vec4('input')],
+Shaders.packFloatIntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.float('input')],
     Outputs.vec4(),
     `vec4 outputFor(float k) {
-        return read_input(k) + read_input(k + len_output());
+        return vec4(
+            read_input(k*4.0),
+            read_input(k*4.0 + 1.0),
+            read_input(k*4.0 + 2.0),
+            read_input(k*4.0 + 3.0));
     }`);
 
 /**
+ * @param {!WglTexture}
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.packVec2IntoVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.vec4(),
+    'vec4 outputFor(float k) { return vec4(read_input(k*2.0), read_input(k*2.0 + 1.0)); }');
+
+/**
  * Adds the second half of its input into the first half.
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
  */
-Shaders.sumFoldVec2 = inp => SUM_FOLD_SHADER_VEC2(inp);
-const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
+Shaders.sumFoldFloat = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.float('input')],
+    Outputs.float(),
+    `float outputFor(float k) {
+         return read_input(k) + read_input(k + len_output());
+     }`);
+
+/**
+ * Adds the second half of its input into the first half.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldVec2 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec2('input')],
     Outputs.vec2(),
     `vec2 outputFor(float k) {
@@ -130,13 +150,24 @@ const SUM_FOLD_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
      }`);
 
 /**
+ * Adds the second half of its input into the first half.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldVec4 = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec4('input')],
+    Outputs.vec4(),
+    `vec4 outputFor(float k) {
+        return read_input(k) + read_input(k + len_output());
+    }`);
+
+/**
  * Packs all the values in a float-pixel type texture into a larger byte-pixel type texture, using an encoding similar
  * to IEEE 754.
  * @param {!WglTexture} inputTexture
  * @returns {!WglConfiguredShader}
  */
-Shaders.convertVec4CodingForOutput = inputTexture => FLOATS_TO_ENCODED_BYTES_SHADER(inputTexture);
-const FLOATS_TO_ENCODED_BYTES_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+Shaders.convertVec4CodingForOutput = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec4('input')],
     Outputs.vec4WithOutputCoder(),
     'vec4 outputFor(float k) { return read_input(k); }');

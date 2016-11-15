@@ -8,7 +8,6 @@ import {Painter} from "src/draw/Painter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {seq, Seq} from "src/base/Seq.js"
-import {Util} from "src/base/Util.js"
 import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
 
 class WidgetPainter {
@@ -53,7 +52,7 @@ class WidgetPainter {
      * @param {!number} pad
      * @param {!number} dispSize
      * @param {!number} w
-     * @param {!function(!Rect):void} pushRect
+     * @param {!function(!Rect, pad:!number=):void} pushRect
      * @param {!function():!number} nextY
      * @private
      */
@@ -100,7 +99,7 @@ class WidgetPainter {
      * @param {!number} pad
      * @param {!number} dispSize
      * @param {!number} w
-     * @param {!function(!Rect):void} pushRect
+     * @param {!function(!Rect, pad:!number=):void} pushRect
      * @param {!function():!number} nextY
      * @private
      */
@@ -150,7 +149,7 @@ class WidgetPainter {
      * @param {!number} pad
      * @param {!number} dispSize
      * @param {!number} w
-     * @param {!function(!Rect):void} pushRect
+     * @param {!function(!Rect, pad:!number=):void} pushRect
      * @param {!function():!number} nextY
      * @param {!number} time
      * @private

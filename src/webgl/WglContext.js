@@ -1,7 +1,3 @@
-import {Rect} from "src/math/Rect.js"
-import {WglMortalValueSlot} from "src/webgl/WglMortalValueSlot.js"
-import {checkGetErrorResult, checkFrameBufferStatusResult} from "src/webgl/WglUtil.js"
-
 /**
  * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.
  */
@@ -34,7 +30,7 @@ class WglContext {
             console.warn("WEBGL_color_buffer_float webgl extension not present.");
         }
 
-        /** @type {!function(void):void} */
+        /** @type {!function():void} */
         this.onContextRestored = undefined;
 
         /**

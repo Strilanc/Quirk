@@ -2,7 +2,6 @@ import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {
     Outputs,
-    Inputs,
     makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
 import {WglShader} from "src/webgl/WglShader.js"

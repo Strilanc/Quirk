@@ -1,13 +1,9 @@
-import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {ketArgs, ketShader} from "src/circuit/KetShaderUtil.js"
-import {initializedWglContext} from "src/webgl/WglContext.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 import {
     Inputs,
@@ -110,7 +106,7 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
 
     // Big matrix (requires a texture).
     if (sizePower <= 4) {
-        let tex = Shaders.data(currentShaderCoder().prepVec2Data(matrix.rawBuffer())).toVec2Texture(sizePower * 2);
+        let tex = Shaders.data(currentShaderCoder().vec2.dataToPixels(matrix.rawBuffer())).toVec2Texture(sizePower * 2);
         try {
             ctx.applyOperation(matrix_operation_shaders[sizePower].withArgs(
                 tex,
@@ -130,7 +126,7 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
  * @returns {!WglConfiguredShader}
  */
 GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
-    let size = currentShaderCoder().vec2ArrayPowerSizeOfTexture(inputTexture);
+    let size = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture);
     return CYCLE_ALL_SHADER(
         inputTexture,
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));

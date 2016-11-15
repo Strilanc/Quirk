@@ -1,7 +1,6 @@
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 

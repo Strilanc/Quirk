@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {Gate} from "src/circuit/Gate.js"
 
 import {Matrix} from "src/math/Matrix.js"

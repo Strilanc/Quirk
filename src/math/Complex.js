@@ -1,6 +1,5 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {Format, UNICODE_FRACTIONS} from "src/base/Format.js"
-import {seq, Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
 import {parseFormula} from "src/math/FormulaParser.js"
 

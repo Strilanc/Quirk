@@ -1,5 +1,5 @@
 import {DetailedError} from "src/base/DetailedError.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {seq} from "src/base/Seq.js"
 
 /**
  * @param {!Array.<!String>} tokens

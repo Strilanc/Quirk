@@ -1,15 +1,13 @@
-import {Suite, assertThat, assertThrows, fail} from "test/TestUtil.js"
+import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
 import {DisplayedCircuit} from "src/ui/DisplayedCircuit.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Config} from "src/Config.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Point} from "src/math/Point.js"
 import {RestartableRng} from "src/base/RestartableRng.js"
 import {Hand} from "src/ui/Hand.js"
 import {Painter} from "src/draw/Painter.js"
-import {seq, Seq} from "src/base/Seq.js"
 
 const COMMON_GATES = new Map([
     ['X', Gates.HalfTurns.X],

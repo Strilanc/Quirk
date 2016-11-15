@@ -1,4 +1,3 @@
-import {DetailedError} from "src/base/DetailedError.js"
 import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 
 /**
@@ -9,12 +8,12 @@ import {CooldownThrottle} from "src/base/CooldownThrottle.js"
  */
 class Observable {
     /**
-     * @param {!function(!function(T):void): (!function(void):void)} subscribe
+     * @param {!function(!function(T):void): (!function():void)} subscribe
      * @template T
      */
     constructor(subscribe) {
         /**
-         * @type {!(function(!(function(T): void)): !(function(void): void))}
+         * @type {!(function(!(function(T): void)): !(function(): void))}
          * @template T
          * @private
          */
@@ -23,7 +22,7 @@ class Observable {
 
     /**
      * @param {!function(T):void} observer
-     * @returns {!function(void):void} unsubscriber
+     * @returns {!function():void} unsubscriber
      * @template T
      */
     subscribe(observer) {
@@ -216,7 +215,7 @@ class Observable {
     /**
      *
      * @param {!int} count
-     * @returns {!Observable.<T>
+     * @returns {!Observable.<T>}
      * @template T
      */
     skip(count) {

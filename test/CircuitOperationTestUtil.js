@@ -5,10 +5,7 @@ import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 // Turn this on to make it easier to debug why a randomized test is failing.
@@ -30,7 +27,7 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
 }
 
 /**
- * @param {function(!CircuitEvalContext) : void} updateAction
+ * @param {function(!CircuitEvalContext)} updateAction
  * @param {!Matrix} matrix
  * @param {!int=} repeats
  */

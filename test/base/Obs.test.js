@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite, assertThat} from "test/TestUtil.js"
 import {Observable, ObservableValue, ObservableSource} from "src/base/Obs.js"
 
 let suite = new Suite("Obs");
@@ -79,6 +79,11 @@ suite.test("Observable.flattenLatest", () => {
     v1.send(5);
     v2.send(6);
     v3.send(7);
+    assertThat(seen).isEqualTo([1, 2, 4, 7]);
+    unreg();
+    v1.send(8);
+    v2.send(9);
+    v3.send(10);
     assertThat(seen).isEqualTo([1, 2, 4, 7]);
 });
 

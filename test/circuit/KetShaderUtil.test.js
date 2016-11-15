@@ -1,4 +1,4 @@
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
+import {Suite} from "test/TestUtil.js"
 import {ketArgs, ketShader, ketShaderPermute, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {assertThatCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {Complex} from "src/math/Complex.js"

@@ -26,6 +26,7 @@ PoweringGates.XForward = Gate.fromVaryingMatrix(
     XPow,
     "X-Raising Gate (forward)",
     "Right-handed cycle from no-op to X.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(0.5, 1));
 
 PoweringGates.XBackward = Gate.fromVaryingMatrix(
@@ -33,6 +34,7 @@ PoweringGates.XBackward = Gate.fromVaryingMatrix(
     t => XPow(-t),
     "X-Raising Gate (backward)",
     "Left-handed cycle from no-op to X.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(-0.5, 1));
 
 PoweringGates.YForward = Gate.fromVaryingMatrix(
@@ -40,6 +42,7 @@ PoweringGates.YForward = Gate.fromVaryingMatrix(
     YPow,
     "Y-Raising Gate (forward)",
     "Right-handed cycle from no-op to Y.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(-1, 1));
 
 PoweringGates.YBackward = Gate.fromVaryingMatrix(
@@ -47,6 +50,7 @@ PoweringGates.YBackward = Gate.fromVaryingMatrix(
     t => YPow(-t),
     "Y-Raising Gate (backward)",
     "Left-handed cycle from no-op to Y.").
+    markedAsUnitary().
     withCustomDrawer(GatePainting.makeCycleDrawer(1, 1));
 
 PoweringGates.ZForward = Gate.fromVaryingMatrix(

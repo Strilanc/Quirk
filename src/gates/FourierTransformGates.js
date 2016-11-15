@@ -1,16 +1,10 @@
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Config} from "src/Config.js"
 import {Complex} from "src/math/Complex.js"
 import {Gate} from "src/circuit/Gate.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
-import {seq, Seq} from "src/base/Seq.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
  * @param {!CircuitEvalContext} ctx
@@ -76,6 +70,7 @@ FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span =
     "Fourier Transform Gate",
     "Transforms to/from phase frequency space.").
     markedAsStable().
+    markedAsUnitary().
     withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT" + span).
     withHeight(span).
@@ -86,6 +81,7 @@ FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16,
     "Inverse Fourier Transform Gate",
     "Transforms from/to phase frequency space.").
     markedAsStable().
+    markedAsUnitary().
     withKnownMatrix(span >= 4 ? undefined : INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)).
     withSerializedId("QFT†" + span).
     withHeight(span).

@@ -1,5 +1,4 @@
 import {Config} from "src/Config.js"
-import {Format} from "src/base/Format.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {RestartableRng} from "src/base/RestartableRng.js"
@@ -60,7 +59,7 @@ class Painter {
     }
 
     /**
-     * @param {!function(void): void} tooltipPainter
+     * @param {!function()} tooltipPainter
      */
     defer(tooltipPainter) {
         this._deferredPaintActions.push(tooltipPainter);

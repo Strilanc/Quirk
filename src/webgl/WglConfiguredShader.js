@@ -1,11 +1,11 @@
 import {Matrix} from "src/math/Matrix.js"
 import {WglTexture} from "src/webgl/WglTexture.js"
 
-/** @returns {undefined|!ShaderValueCoder} */
+/** @returns {undefined|!ShaderCoder} */
 let currentShaderCoder = undefined;
 let WglTexturePool;
 /**
- * @param {!ShaderValueCoder} newCurrentShaderCoder
+ * @param {!ShaderCoder} newCurrentShaderCoder
  */
 function provideWorkingShaderCoderToWglConfiguredShader(newCurrentShaderCoder) {
     currentShaderCoder = newCurrentShaderCoder;
@@ -128,8 +128,17 @@ class WglConfiguredShader {
      * @param {!int} sizePower
      * @returns {!Float32Array}
      */
+    readVecFloatOutputs(sizePower) {
+        return currentShaderCoder().float.pixelsToData(
+            this._renderReadDealloc(WglTexturePool.takeVecFloatTex(sizePower)))
+    }
+
+    /**
+     * @param {!int} sizePower
+     * @returns {!Float32Array}
+     */
     readVec2Outputs(sizePower) {
-        return currentShaderCoder().unpackVec2Data(
+        return currentShaderCoder().vec2.pixelsToData(
             this._renderReadDealloc(WglTexturePool.takeVec2Tex(sizePower)))
     }
 
@@ -146,8 +155,18 @@ class WglConfiguredShader {
      * @returns {!Float32Array}
      */
     readVec4Outputs(sizePower) {
-        return currentShaderCoder().unpackVec4Data(
+        return currentShaderCoder().vec4.pixelsToData(
             this._renderReadDealloc(WglTexturePool.takeVec4Tex(sizePower)))
+    }
+
+    /**
+     * @param {!int} sizePower
+     * @returns {!WglTexture}
+     */
+    toVecFloatTexture(sizePower) {
+        let texture = WglTexturePool.takeVecFloatTex(sizePower);
+        this._renderToElseDealloc(texture);
+        return texture;
     }
 
     /**

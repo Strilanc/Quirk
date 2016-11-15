@@ -1,11 +1,6 @@
-import {Config} from "src/Config.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {GateDrawParams} from "src/draw/GateDrawParams.js"
-import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {Util} from "src/base/Util.js"
 import {seq, Seq} from "src/base/Seq.js"
 
 /**
@@ -64,10 +59,10 @@ class Gate {
          */
         this._knownMatrixFunc = undefined;
         /**
-         * @type {undefined|!boolean}
+         * @type {!boolean}
          * @private
          */
-        this._hasNoEffect = undefined;
+        this._hasNoEffect = false;
         /**
          * @type {undefined|!boolean}
          * @private
@@ -78,11 +73,6 @@ class Gate {
          * @private
          */
         this._effectCreatesSuperpositions = undefined;
-        /**
-         * @type {!boolean}
-         * @private
-         */
-        this._affectsOtherWires = false;
         /**
          * @type {!boolean}
          */
@@ -110,6 +100,11 @@ class Gate {
          */
         this._controlBit = undefined;
         /**
+         * @type {!boolean}
+         * @private
+         */
+        this._isDefinitelyUnitary = false;
+        /**
          * @param {!int} qubit
          * @returns {!Array.<!{key: !string, val: *}>}
          */
@@ -119,6 +114,10 @@ class Gate {
          * @returns {undefined|!string}
          */
         this.customDisableReasonFinder = args => undefined;
+        /**
+         * @type {undefined | !function(!int) : !int}
+         */
+        this.knownBitPermutationFunc = undefined;
     }
 
     /**
@@ -132,10 +131,7 @@ class Gate {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
-        let result = new Gate(symbol, name, blurb);
-        result._knownMatrix = matrix;
-        result._stableDuration = Infinity;
-        return result;
+        return new Gate(symbol, name, blurb).withKnownMatrix(matrix);
     }
 
     /**
@@ -158,6 +154,11 @@ class Gate {
     withKnownMatrix(matrix) {
         let g = this._copy();
         g._knownMatrix = matrix;
+        if (matrix !== undefined) {
+            g._isDefinitelyUnitary = matrix.isUnitary(0.01);
+            g._hasNoEffect = matrix.isIdentity();
+            g._stableDuration = Infinity;
+        }
         return g;
     }
 
@@ -205,6 +206,7 @@ class Gate {
         let result = new Gate(symbol, name, blurb);
         result._stableDuration = Infinity;
         result._hasNoEffect = true;
+        result._isDefinitelyUnitary = true;
         result._effectPermutesStates = false;
         result._effectCreatesSuperpositions = false;
         return result;
@@ -228,6 +230,7 @@ class Gate {
         g._hasNoEffect = false;
         g._effectPermutesStates = true;
         g._effectCreatesSuperpositions = false;
+        g._isDefinitelyUnitary = true;
         return g;
     }
 
@@ -239,15 +242,7 @@ class Gate {
         g._hasNoEffect = false;
         g._effectPermutesStates = false;
         g._effectCreatesSuperpositions = false;
-        return g;
-    }
-
-    /**
-     * @returns {!Gate}
-     */
-    markedAsAffectsOtherWires() {
-        let g = this._copy();
-        g._affectsOtherWires = true;
+        g._isDefinitelyUnitary = true;
         return g;
     }
 
@@ -259,6 +254,7 @@ class Gate {
         let g = this._copy();
         g._controlBit = bit;
         g.isControlWireSource = true;
+        g._isDefinitelyUnitary = true;
         return g;
     }
 
@@ -281,6 +277,15 @@ class Gate {
     }
 
     /**
+     * @returns {!Gate}
+     */
+    markedAsUnitary() {
+        let g = this._copy();
+        g._isDefinitelyUnitary = true;
+        return g;
+    }
+
+    /**
      * @private
      * @returns {!Gate}
      */
@@ -290,6 +295,7 @@ class Gate {
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
         g.customBeforeOperation = this.customBeforeOperation;
+        g.knownBitPermutationFunc = this.knownBitPermutationFunc;
         g.customOperation = this.customOperation;
         g.customAfterOperation = this.customAfterOperation;
         g.customStatTexturesMaker = this.customStatTexturesMaker;
@@ -297,10 +303,6 @@ class Gate {
         g.width = this.width;
         g.height = this.height;
         g.isSingleQubitDisplay = this.isSingleQubitDisplay;
-        g.gateFamily = this.gateFamily;
-        if (this.gateFamily.length === 1 && this.gateFamily[0] === this) {
-            g.gateFamily = [g];
-        }
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
         g.knownCircuitNested = this.knownCircuitNested;
@@ -313,6 +315,7 @@ class Gate {
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
         g.isControlWireSource = this.isControlWireSource;
+        g._isDefinitelyUnitary = this._isDefinitelyUnitary;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
@@ -336,6 +339,7 @@ class Gate {
         let g = this._copy();
         g.knownCircuit = circuitDefinition;
         g.knownCircuitNested = circuitDefinition.withDisabledReasonsForEmbeddedContext(0, new Map());
+        g._isDefinitelyUnitary = circuitDefinition.hasOnlyUnitaryGates();
         return g;
     }
 
@@ -350,7 +354,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(!GateCheckArgs) : undefined|!string} customDisableReasonFinder
+     * @param {!function(!GateCheckArgs) : (undefined|!string)} customDisableReasonFinder
      * @returns {!Gate}
      */
     withCustomDisableReasonFinder(customDisableReasonFinder) {
@@ -399,6 +403,18 @@ class Gate {
     }
 
     /**
+     * @param {undefined|!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
+     * given input, assuming the gate is exactly sized to the overall circuit.
+     * @returns {!Gate}
+     */
+    withKnownBitPermutation(knownBitPermutationFunc) {
+        let g = this._copy();
+        g.knownBitPermutationFunc = knownBitPermutationFunc;
+        g._isDefinitelyUnitary = true;
+        return g;
+    }
+
+    /**
      * @param {!string} serializedId
      * @returns {!Gate}
      */
@@ -410,6 +426,7 @@ class Gate {
 
     /**
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
+     * @returns {!Gate}
      */
     withCustomBeforeOperation(customOperation) {
         if (customOperation !== undefined && typeof customOperation !== "function") {
@@ -422,6 +439,7 @@ class Gate {
 
     /**
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
+     * @returns {!Gate}
      */
     withCustomAfterOperation(customOperation) {
         if (customOperation !== undefined && typeof customOperation !== "function") {
@@ -433,7 +451,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
+     * @param {undefined|!function(!CircuitEvalContext)} customOperation
      * @returns {!Gate}
      */
     withCustomOperation(customOperation) {
@@ -466,7 +484,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!CircuitEvalContext) : !WglTexture|!Array.<!WglTexture>} customStatTexturesMaker
+     * @param {undefined|!function(!CircuitEvalContext) : (!WglTexture|!Array.<!WglTexture>)} customStatTexturesMaker
      * @returns {!Gate}
      */
     withCustomStatTexturesMaker(customStatTexturesMaker) {
@@ -476,7 +494,7 @@ class Gate {
     }
 
     /**
-     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int):*} pixelFunc
+     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int)} pixelFunc
      * @returns {!Gate}
      */
     withCustomStatPostProcessor(pixelFunc) {
@@ -485,6 +503,10 @@ class Gate {
         return g;
     }
 
+    /**
+     * @param {...!String} keys
+     * @returns {!Gate}
+     */
     withRequiredContextKeys(...keys) {
         let g = this._copy();
         g._requiredContextKeys = keys;
@@ -496,7 +518,6 @@ class Gate {
      * @param {!int} maxSize
      * @param {!function(!int):!Gate} gateGenerator
      * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}}
-     * @template T
      */
     static generateFamily(minSize, maxSize, gateGenerator) {
         let gates = Seq.range(maxSize + 1).skip(minSize).map(i => gateGenerator(i)._copy()).toArray();
@@ -553,13 +574,6 @@ class Gate {
     /**
      * @returns {!boolean}
      */
-    affectsOtherWires() {
-        return this._affectsOtherWires;
-    }
-
-    /**
-     * @returns {!boolean}
-     */
     isControl() {
         return this._controlBit !== undefined;
     }
@@ -593,9 +607,14 @@ class Gate {
      * @returns {!boolean}
      */
     definitelyHasNoEffect() {
-        return this._hasNoEffect !== undefined ? this._hasNoEffect :
-            this._knownMatrix !== undefined ? this._knownMatrix.isIdentity() :
-            false;
+        return this._hasNoEffect;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    isDefinitelyUnitary() {
+        return this._isDefinitelyUnitary;
     }
 
     /**

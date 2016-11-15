@@ -47,12 +47,15 @@ const TEST_GATES = new Map([
     ['D', Gates.Displays.DensityMatrixDisplay2],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
+    ['R', Gates.ReverseBitsGateFamily],
+    ['↡', Gates.CycleBitsGates.CycleBitsFamily],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['-', undefined],
+    ['=', undefined],
     ['+', undefined],
     ['|', undefined],
-    ['/', undefined],
+    ['/', null],
 
     ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
     ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
@@ -399,8 +402,15 @@ suite.test("colIsMeasuredMask", () => {
     // Post-selection clears
     assertAbout(`M!`).isEqualTo([0, 0, 1, 0, 0]);
     // Swap moves measured
-    assertAbout(`---s-
-                 -M-s-`).isEqualTo([0, 0, 0, 2, 2, 1, 1, 1]);
+    assertAbout(`---s=
+                 -M=s-`).isEqualTo([0, 0, 0, 2, 2, 1, 1, 1]);
+    // Custom permutations move measured
+    assertAbout(`---↡=↡-
+                 ---/-/=
+                 -M=/-/-`).isEqualTo([0, 0, 0, 4, 4, 1, 1, 2, 2, 2]);
+    assertAbout(`---R=R-
+                 ---/-/-
+                 -M=/-/=`).isEqualTo([0, 0, 0, 4, 4, 1, 1, 4, 4, 4]);
 
     // Disallowed measurements don't cause measurement. Controlled measurement not allowed.
     assertAbout(`•
@@ -423,48 +433,31 @@ suite.test("colIsMeasuredMask", () => {
                  M•`).isEqualTo([0, 0, 3, 3, 3]);
 });
 
-suite.test("colHasSingleQubitDisplayMask", () => {
+suite.test("colDesiredSingleQubitStatsMask", () => {
     let assertAbout = diagram => {
         let c = circuit(diagram);
-        return assertThat(Seq.range(c.columns.length + 3).map(i => c.colHasSingleQubitDisplayMask(i-1)).toArray());
+        return assertThat(Seq.range(c.columns.length + 3).map(i => c.colDesiredSingleQubitStatsMask(i-1)).toArray());
     };
 
     //noinspection SpellCheckingInspection
     assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     assertAbout('%d@').isEqualTo([0, 1, 1, 1, 0, 0]);
-    assertAbout(`---%
-                 %--%
-                 --d%
-                 -@-%`).isEqualTo([0, 2, 8, 4, 15, 0, 0]);
+    assertAbout(`---%--
+                 %--%-!
+                 --d%--
+                 -@-%--`).isEqualTo([0, 2, 8, 4, 15, 0, 0, 0, 0]);
 });
 
-suite.test("colHasDoubleQubitDisplayMask", () => {
-    let assertAbout = diagram => {
-        let c = circuit(diagram);
-        return assertThat(Seq.range(c.columns.length + 3).map(i => c.colHasDoubleQubitDisplayMask(i-1)).toArray());
-    };
-
-    //noinspection SpellCheckingInspection
-    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    assertAbout('D').isEqualTo([0, 1, 0, 0]);
-    assertAbout(`---D
-                 D---
-                 --DD
-                 ----`).isEqualTo([0, 2, 0, 4, 5, 0, 0]);
-});
-
-suite.test("colHasNonLocalGates", () => {
+suite.test("nonUnitaryGates", () => {
     let c = circuit(`-M-•-
                      --!--
                      ---X-`);
-    assertFalse(c.colHasNonLocalGates(-1));
-    assertFalse(c.colHasNonLocalGates(0));
-    assertFalse(c.colHasNonLocalGates(1));
-    assertTrue(c.colHasNonLocalGates(2));
-    assertFalse(c.colHasNonLocalGates(3));
-    assertFalse(c.colHasNonLocalGates(4));
-    assertFalse(c.colHasNonLocalGates(5));
-    assertFalse(c.colHasNonLocalGates(6));
+    assertFalse(c.hasOnlyUnitaryGates());
+    assertThat(c.columns[0].indexOfNonUnitaryGate()).isEqualTo(undefined);
+    assertThat(c.columns[1].indexOfNonUnitaryGate()).isEqualTo(undefined);
+    assertThat(c.columns[2].indexOfNonUnitaryGate()).isEqualTo(1);
+    assertThat(c.columns[3].indexOfNonUnitaryGate()).isEqualTo(undefined);
+    assertThat(c.columns[4].indexOfNonUnitaryGate()).isEqualTo(undefined);
 });
 
 suite.test("locIsMeasured", () => {

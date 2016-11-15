@@ -2,38 +2,31 @@ import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
-import {Format} from "src/base/Format.js"
-import {Gate} from "src/circuit/Gate.js"
-import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Serializer} from "src/circuit/Serializer.js"
 import {Util} from "src/base/Util.js"
-import {seq, Seq} from "src/base/Seq.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 class CircuitStats {
     /**
      * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
+     * @param {!Array.<!number>} survivalRates
      * @param {!Array.<!Array.<!Matrix>>} singleQubitDensities
      * @param {!Matrix} finalState
-     * @param {NaN|!number} postSelectionSurvivalRate
      * @param {!Map<!string, *>} customStatsProcessed
      */
     constructor(circuitDefinition,
                 time,
+                survivalRates,
                 singleQubitDensities,
                 finalState,
-                postSelectionSurvivalRate,
                 customStatsProcessed) {
         /**
          * The circuit that these stats apply to.
@@ -45,6 +38,11 @@ class CircuitStats {
          * @type {!number}
          */
         this.time = time;
+        /**
+         * @type {!Array.<!number>}
+         * @private
+         */
+        this._survivalRates = survivalRates;
         /**
          * The density matrix of individual qubits.
          * (This case is special-cased, instead of using customStats like the other density displays, because
@@ -58,10 +56,6 @@ class CircuitStats {
          * @type {!Matrix}
          */
         this.finalState = finalState;
-        /**
-         * @type {NaN|!number}
-         */
-        this.postSelectionSurvivalRate = postSelectionSurvivalRate;
         /**
          * @type {!Map.<!string, *>}
          * @private
@@ -85,10 +79,10 @@ class CircuitStats {
 
         // The initial state is all-qubits-off.
         if (colIndex < 0 || wireIndex >= this.circuitDefinition.numWires) {
-            if (this.qubitDensityMatrix(colIndex, 0).hasNaN()) {
+            if (wireIndex >= this.circuitDefinition.numWires && this.qubitDensityMatrix(colIndex, 0).hasNaN()) {
                 return Matrix.zero(2, 2).times(NaN);
             }
-            let buf = new Float32Array(2*2*2);
+            let buf = new Float32Array(8);
             buf[0] = 1;
             return new Matrix(2, 2, buf);
         }
@@ -98,6 +92,19 @@ class CircuitStats {
             return Matrix.zero(2, 2).times(NaN);
         }
         return this._qubitDensities[col][wireIndex];
+    }
+
+    /**
+     * Determines how often the circuit evaluation survives to the given column, without being post-selected out.
+     *
+     * Note that over-unitary gates will increase this number, so perhaps 'survival rate' isn't quite the best name.
+     *
+     * @param {!int} colIndex
+     * @returns {!number}
+     */
+    survivalRate(colIndex) {
+        colIndex = Math.min(colIndex, this._survivalRates.length - 1);
+        return colIndex < 0 ? 1 : this._survivalRates[colIndex];
     }
 
     /**
@@ -131,9 +138,9 @@ class CircuitStats {
         return new CircuitStats(
             this.circuitDefinition,
             time,
+            this._survivalRates,
             this._qubitDensities,
             this.finalState,
-            this.postSelectionSurvivalRate,
             this._customStatsProcessed);
     }
 
@@ -146,9 +153,9 @@ class CircuitStats {
         return new CircuitStats(
             circuitDefinition,
             time,
+            [1],
             [],
             Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
-            NaN,
             new Map());
     }
 
@@ -220,18 +227,57 @@ class CircuitStats {
 
     /**
      * @param {!CircuitDefinition} circuitDefinition
+     * @param {!Array.<!Float32Array>} colQubitDensitiesPixelData
+     * @returns {!Array.<!Array<!Matrix>>}
+     * @private
+     */
+    static _extractColumnQubitStatsFromPixelDatas(circuitDefinition, colQubitDensitiesPixelData) {
+        let qubitDensityGrid = [];
+        for (let col = 0; col < colQubitDensitiesPixelData.length; col++) {
+            let dataHasStatsMask = col === circuitDefinition.columns.length ?
+                -1 : // All wires have an output display in the after-last column.
+                circuitDefinition.colDesiredSingleQubitStatsMask(col);
+            qubitDensityGrid.push(CircuitStats.scatterAndDecohereDensities(
+                KetTextureUtil.pixelsToQubitDensityMatrices(colQubitDensitiesPixelData[col]),
+                circuitDefinition.numWires,
+                1,
+                circuitDefinition.colIsMeasuredMask(col),
+                dataHasStatsMask));
+        }
+
+        return qubitDensityGrid;
+    }
+
+    /**
+     * @param {!Array.<!Float32Array>} normsPixelData
+     * @returns {!Array.<!number>}
+     * @private
+     */
+    static _extractColumnSurvivalRateStatsFromPixelDatas(normsPixelData) {
+        let curSurvivalRate = 1;
+        let survivalRates = [];
+        for (let col = 0; col < normsPixelData.length; col++) {
+            if (normsPixelData[col].length > 0) {
+                curSurvivalRate = normsPixelData[col][0];
+            }
+            survivalRates.push(curSurvivalRate);
+        }
+        return survivalRates;
+    }
+
+    /**
+     * @param {!CircuitDefinition} circuitDefinition
      * @param {!number} time
      * @returns {!CircuitStats}
      */
     static _fromCircuitAtTime_noFallback(circuitDefinition, time) {
         circuitDefinition = circuitDefinition.withMinimumWireCount();
         const numWires = circuitDefinition.numWires;
-        const numCols = circuitDefinition.columns.length;
 
         // Advance state while collecting stats into textures.
         let stateTrader = new WglTextureTrader(CircuitShaders.classicalState(0).toVec2Texture(numWires));
         let controlTex = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(numWires);
-        let {colQubitDensities, customStats, customStatsMap} = advanceStateWithCircuit(
+        let {colQubitDensities, colNorms, customStats, customStatsMap} = advanceStateWithCircuit(
             new CircuitEvalContext(
                 time,
                 0,
@@ -243,31 +289,25 @@ class CircuitStats {
             circuitDefinition,
             true);
         controlTex.deallocByDepositingInPool("controlTex in _fromCircuitAtTime_noFallback");
-        currentShaderCoder().vec2TradePack(stateTrader);
+        if (currentShaderCoder().vec2.needRearrangingToBeInVec4Format) {
+            stateTrader.shadeHalveAndTrade(Shaders.packVec2IntoVec4);
+        }
 
         // Read all texture data.
         let pixelData = Util.objectifyArrayFunc(KetTextureUtil.mergedReadFloats)({
             output: stateTrader.currentTexture,
             colQubitDensities,
+            colNorms,
             customStats});
 
         // -- INTERPRET --
-
-        let final = pixelData.colQubitDensities[pixelData.colQubitDensities.length - 1];
-        let unity = final[0] + final[3];
-        //noinspection JSCheckFunctionSignatures
-        let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(pixelData.output, unity);
-
-        let qubitDensities = [];
-        for (let k = 0; k < pixelData.colQubitDensities.length; k++) {
-            qubitDensities.push(CircuitStats.scatterAndDecohereDensities(
-                KetTextureUtil.pixelsToQubitDensityMatrices(pixelData.colQubitDensities[k]),
-                numWires,
-                1,
-                circuitDefinition.colIsMeasuredMask(k),
-                // All wires have an output display in the after-last column.
-                k === numCols ? -1 : circuitDefinition.colHasSingleQubitDisplayMask(k)));
-        }
+        let qubitDensities =
+            CircuitStats._extractColumnQubitStatsFromPixelDatas(circuitDefinition, pixelData.colQubitDensities);
+        let survivalRates =
+            CircuitStats._extractColumnSurvivalRateStatsFromPixelDatas(pixelData.colNorms);
+        let outputSuperposition = KetTextureUtil.pixelsToAmplitudes(
+            pixelData.output,
+            survivalRates.length === 0 ? 1 : survivalRates[survivalRates.length - 1]);
 
         let customStatsProcessed = new Map();
         for (let {col, row, out} of customStatsMap) {
@@ -280,9 +320,9 @@ class CircuitStats {
         return new CircuitStats(
             circuitDefinition,
             time,
+            survivalRates,
             qubitDensities,
             outputSuperposition,
-            unity,
             customStatsProcessed);
     }
 }

@@ -1,4 +1,3 @@
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
@@ -47,6 +46,7 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
         withSerializedId("rev" + span).
         withHeight(span).
         withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
+        withKnownBitPermutation(i => span - 1 - i).
         withCustomShader(reverseShaderForSize(span));
 });
 
