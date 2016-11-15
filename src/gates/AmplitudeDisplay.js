@@ -14,6 +14,7 @@ import {
     Inputs,
     Outputs,
     currentShaderCoder,
+    combinedShaderPartsWithCode,
     makePseudoShaderWithInputsAndOutputAndCode
 } from "src/webgl/ShaderCoders.js"
 import {WglTexturePool} from "src/webgl/WglTexturePool.js"
@@ -56,8 +57,81 @@ function amplitudeDisplayStatTextures(stateKet, controls, rangeOffset, rangeLeng
     foldConsistentRatios(trader, rangeLength);
     signallingSumAll(trader);
 
-    return [amps, trader.currentTexture];
+    let pixel_height = 2*Config.GATE_RADIUS + (rangeLength-1)*Config.WIRE_SPACING;
+    let numRows = rangeLength === 1 ? 1 : 1 << Math.ceil(rangeLength/2);
+    let numCols = (1<<rangeLength) / numRows;
+    let radius = pixel_height/numRows/2;
+    let pixel_width = 2*radius*numCols;
+    let areaPower = Util.ceilLg2(pixel_height * pixel_width);
+    let drawn = drawShader(
+            amps,
+            WglArg.float('radius', radius),
+            WglArg.float('numCols', numCols)
+        ).
+        toVec4Texture(areaPower);
+    return [
+        amps,
+        trader.currentTexture,
+        drawn
+    ];
 }
+
+const drawShader = makePseudoShaderWithInputsAndOutputAndCode([Inputs.vec4('data')], Outputs.vec4(), `
+    uniform float numCols;
+    uniform float radius;
+
+    vec3 overlay(vec3 cur, vec3 fore, float alpha) {
+        return fore + (cur - fore) * min(1.0, max(0.0, alpha));
+    }
+
+    vec3 stroke(vec3 cur, vec3  fore, float d, float thickness) {
+        return overlay(cur, fore, d*d/thickness*1000.0);
+    }
+
+    vec3 BACKGROUND = vec3(14.0/15.0, 1.0, 1.0);
+    vec3 PHASE_LINE = vec3(0.0, 0.0, 0.0);
+    vec3 MAG_LINE = vec3(0.0, 0.0, 0.0);
+    vec3 LOG_MAG_LINE = vec3(10.0/15.0, 10.0/15.0, 10.0/15.0);
+    vec3 MAG_AREA = vec3(8.0/15.0, 1.0, 1.0);
+    vec3 PROB_AREA = vec3(0.0, 11.0/15.0, 11.0/15.0);
+    vec3 GRID_LINE = vec3(211.0, 211.0, 211.0) / 255.0;
+
+    vec4 outputFor(float pixelIndex) {
+        float diam = radius * 2.0;
+        float total_width = diam * numCols;
+        float x = mod(pixelIndex, total_width);
+        float y = floor(pixelIndex / total_width);
+        float col = floor(x / diam);
+        float row = floor(y / diam);
+        vec2 p = vec2(mod(x, diam),
+                      mod(y, diam)) / vec2(radius, radius) - vec2(1.0, 1.0);
+        float on_grid = min(abs(mod(x / diam + 0.5, 1.0) - 0.5),
+                            abs(mod(y / diam + 0.5, 1.0) - 0.5));
+        float k = row * numCols + col;
+        vec4 d = read_data(k);
+        float r = sqrt(dot(p, p));
+        float m = sqrt(d.x*d.x + d.y*d.y);
+        float lm = 1.0+log(m)/7.5;
+        float lm2 = 1.0+log(m)/10.0;
+        float s = (p.x * d.x - p.y * d.y) / m;
+        float z = (p.x * d.y + p.y * d.x) / m;
+
+        vec3 color = BACKGROUND;
+        if (1.0 - (p.y + 1.0) / 2.0 < m*m) {
+            color = PROB_AREA;
+        }
+        color = stroke(color, LOG_MAG_LINE, r - lm, 0.75);
+        if (r < m) {
+            color = MAG_AREA;
+        }
+        color = stroke(color, MAG_LINE, r - m, 0.75);
+        if (s > 0.0 && s < lm2) {
+            color = stroke(color, PHASE_LINE, z, 1.0);
+        }
+        color = stroke(color, GRID_LINE, on_grid, 1.0);
+        return vec4(color.x, color.y, color.z, 1.0) * 255.0;
+    }
+`);
 
 /**
  * @param {!int} span
@@ -93,7 +167,8 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
     return {
         probabilities: undefined,
         superposition: new Matrix(w, h, buf),
-        phaseLockIndex: phaseIndex
+        phaseLockIndex: phaseIndex,
+        extra: pixelGroups[2]
     };
 }
 
@@ -369,6 +444,19 @@ const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args =
                 cw*0.5,
                 rh*0.5);
         }
+    }
+
+    if (args.customStats !== undefined && args.customStats.extra !== undefined) {
+        let arr = new Uint8ClampedArray(args.customStats.extra);
+
+        let pixel_height = 2*Config.GATE_RADIUS + (n-1)*Config.WIRE_SPACING;
+        let numRows = n === 1 ? 1 : 1 << Math.ceil(n/2);
+        let numCols = (1<<n) / numRows;
+        let radius = pixel_height/numRows/2;
+        let pixel_width = 2*radius*numCols;
+
+        let image = new ImageData(arr.slice(0, pixel_width*pixel_height*4), pixel_width, pixel_height);
+        args.painter.ctx.putImageData(image, drawRect.x, drawRect.y, 0, 0, drawRect.w, drawRect.h);
     }
 
     paintErrorIfPresent(args, isIncoherent);
