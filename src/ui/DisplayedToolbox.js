@@ -37,8 +37,7 @@ class DisplayedToolbox {
          * @private
          */
         this._standardApperance = standardAppearance || new CachablePainting(
-            this.desiredWidth(),
-            this.desiredHeight(),
+            () => ({width: this.desiredWidth(), height: this.desiredHeight()}),
             painter => {
                 painter.ctx.save();
                 painter.ctx.translate(0, -this.top);

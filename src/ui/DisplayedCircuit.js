@@ -1,3 +1,4 @@
+import {CachablePainting} from "src/draw/CachablePainting.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Config} from "src/Config.js"
@@ -1103,74 +1104,8 @@ class DisplayedCircuit {
     _drawOutputSuperpositionDisplay_labels(painter) {
         let gridRect = this._rectForSuperpositionDisplay();
         let numWire = this.importantWireCount();
-        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
-        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
-        let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
-
-        // Row labels.
-        painter.ctx.save();
-        painter.ctx.translate(gridRect.right(), gridRect.y);
-        let prefix = colWires < 4 ? "_".repeat(colWires) : ".._";
-        DisplayedCircuit._drawLabelsReasonablyFast(
-            painter,
-            dh,
-            rowCount,
-            i => prefix + Util.bin(i, rowWires),
-            SUPERPOSITION_GRID_LABEL_SPAN);
-        painter.ctx.restore();
-
-        // Column labels.
-        painter.ctx.save();
-        painter.ctx.translate(gridRect.x + colCount*dw, gridRect.bottom());
-        painter.ctx.rotate(Math.PI/2);
-        let suffix = rowWires < 4 ? "_".repeat(rowWires) : "_..";
-        DisplayedCircuit._drawLabelsReasonablyFast(
-            painter,
-            dw,
-            colCount,
-            i => Util.bin(colCount-1-i, rowWires) + suffix,
-            SUPERPOSITION_GRID_LABEL_SPAN);
-        painter.ctx.restore();
-    }
-
-    /**
-     * @param {!Painter} painter
-     * @param {!number} dy
-     * @param {!int} n
-     * @param {!function(!int) : !String} labeller
-     * @param {!number} boundingWidth
-     * @private
-     */
-    static _drawLabelsReasonablyFast(painter, dy, n, labeller, boundingWidth) {
-        let ctx = painter.ctx;
-        ctx.save();
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        painter.ctx.font = '12px monospace';
-        let w = Math.max(
-            painter.ctx.measureText(labeller(0)).width,
-            painter.ctx.measureText(labeller(n-1)).width);
-        let h = ctx.measureText("0").width * 2.5;
-        let scale = Math.min(Math.min(boundingWidth / w, dy / h), 1);
-
-        // Row labels.
-        let step = dy/scale;
-        let pad = 2/scale;
-        ctx.scale(scale, scale);
-        ctx.translate(0, dy*0.5/scale - h*0.5);
-        ctx.fillStyle = 'lightgray';
-        if (h < step*0.95) {
-            for (let i = 0; i < n; i++) {
-                ctx.fillRect(0, step * i, w + 2 * pad, h);
-            }
-        } else {
-            ctx.fillRect(0, 0, w + 2 * pad, h*n);
-        }
-        ctx.fillStyle = 'black';
-        for (let i = 0; i < n; i++) {
-            ctx.fillText(labeller(i), pad, h*0.5 + step*i);
-        }
-        ctx.restore();
+        _cachedRowLabelDrawer.paint(gridRect.right(), gridRect.y, painter, numWire);
+        _cachedColLabelDrawer.paint(gridRect.x, gridRect.bottom(), painter, numWire);
     }
 
     /**
@@ -1293,7 +1228,7 @@ class DisplayedCircuit {
         let lines = diagramText.split('\n').map(e => {
             let p = e.split('|');
             if (p.length !== 2) {
-                fail('Bad diagram: ' + diagramText);
+                throw new DetailedError('Bad diagram', {diagramText, gateMap});
             }
             return p[1];
         });
@@ -1416,5 +1351,89 @@ function firstLastMatchInRange(rangeLen, predicate){
     }
     return [first, last];
 }
+
+/**
+ * @param {!Painter} painter
+ * @param {!number} dy
+ * @param {!int} n
+ * @param {!function(!int) : !String} labeller
+ * @param {!number} boundingWidth
+ * @private
+ */
+function _drawLabelsReasonablyFast(painter, dy, n, labeller, boundingWidth) {
+    let ctx = painter.ctx;
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    painter.ctx.font = '12px monospace';
+    let w = Math.max(
+        painter.ctx.measureText(labeller(0)).width,
+        painter.ctx.measureText(labeller(n-1)).width);
+    let h = ctx.measureText("0").width * 2.5;
+    let scale = Math.min(Math.min(boundingWidth / w, dy / h), 1);
+
+    // Row labels.
+    let step = dy/scale;
+    let pad = 2/scale;
+    ctx.scale(scale, scale);
+    ctx.translate(0, dy*0.5/scale - h*0.5);
+    ctx.fillStyle = 'lightgray';
+    if (h < step*0.95) {
+        for (let i = 0; i < n; i++) {
+            ctx.fillRect(0, step * i, w + 2 * pad, h);
+        }
+    } else {
+        ctx.fillRect(0, 0, w + 2 * pad, h*n);
+    }
+    ctx.fillStyle = 'black';
+    for (let i = 0; i < n; i++) {
+        ctx.fillText(labeller(i), pad, h*0.5 + step*i);
+    }
+    ctx.restore();
+}
+
+let _cachedRowLabelDrawer = new CachablePainting(
+    numWire => ({
+        width: SUPERPOSITION_GRID_LABEL_SPAN,
+        height: (numWire - 1) * Config.WIRE_SPACING + Config.GATE_RADIUS * 2
+    }),
+    (painter, numWire) => {
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let rowCount = 1 << rowWires;
+        let prefix = colWires < 4 ? "_".repeat(colWires) : ".._";
+        _drawLabelsReasonablyFast(
+            painter,
+            painter.canvas.height / rowCount,
+            rowCount,
+            i => prefix + Util.bin(i, rowWires),
+            SUPERPOSITION_GRID_LABEL_SPAN);
+    });
+
+let _cachedColLabelDrawer = new CachablePainting(
+    numWire => {
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
+        let total_height = (numWire - 1) * Config.WIRE_SPACING + Config.GATE_RADIUS * 2;
+        let cellDiameter = total_height / rowCount;
+        return {
+            width: colCount * cellDiameter,
+            height: SUPERPOSITION_GRID_LABEL_SPAN
+        }
+    },
+    (painter, numWire) => {
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let colCount = 1 << colWires;
+        let dw = painter.canvas.width / colCount;
+
+        painter.ctx.translate(colCount*dw, 0);
+        painter.ctx.rotate(Math.PI/2);
+        let suffix = rowWires < 4 ? "_".repeat(rowWires) : "_..";
+        _drawLabelsReasonablyFast(
+            painter,
+            dw,
+            colCount,
+            i => Util.bin(colCount-1-i, rowWires) + suffix,
+            SUPERPOSITION_GRID_LABEL_SPAN);
+    });
 
 export {DisplayedCircuit, drawCircuitTooltip, GATE_CIRCUIT_DRAWER}

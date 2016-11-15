@@ -8,44 +8,40 @@ const fixedRng = new RestartableRng();
  */
 class CachablePainting {
     /**
-     * @param {!int} width
-     * @param {!int} height
-     * @param {!function(painter: !Painter) : void} drawingFunc
+     * @param {!function(key: *) : !{width: !int, height: !int}} sizeFunc
+     * @param {!function(painter: !Painter | !(function(!Painter, !string): void)) : void} drawingFunc
      */
-    constructor(width, height, drawingFunc) {
-        /** @type {!int} */
-        this.width = width;
-        /** @type {!int} */
-        this.height = height;
+    constructor(sizeFunc, drawingFunc) {
+        /** @type {!function(key: *) : !{width: !int, height: !int}} */
+        this.sizeFunc = sizeFunc;
         /**
-         * @type {!(function(!Painter): void)}
+         * @type {!(function(!Painter): void) | !(function(!Painter, !string): void)}
          * @private
          */
         this._drawingFunc = drawingFunc;
         /**
-         * @type {undefined|!HTMLCanvasElement}
+         * @type {!Map.<!string, !HTMLCanvasElement>}
          * @private
          */
-        this._cacheCanvas = undefined;
+        this._cachedCanvases = new Map();
     }
 
     /**
      * @param {!int} x
      * @param {!int} y
      * @param {!Painter} painter
+     * @param {!*=} key
      */
-    paint(x, y, painter) {
-        if (this._cacheCanvas === undefined) {
-            this._initCache();
+    paint(x, y, painter, key=undefined) {
+        if (!this._cachedCanvases.has(key)) {
+            let canvas = /** @type {!HTMLCanvasElement} */ document.createElement('canvas');
+            let {width, height} = this.sizeFunc(key);
+            canvas.width = width;
+            canvas.height = height;
+            this._drawingFunc(new Painter(canvas, fixedRng.restarted()), key);
+            this._cachedCanvases.set(key, canvas);
         }
-        painter.ctx.drawImage(this._cacheCanvas, x, y);
-    }
-
-    _initCache() {
-        this._cacheCanvas = document.createElement('canvas');
-        this._cacheCanvas.width = this.width;
-        this._cacheCanvas.height = this.height;
-        this._drawingFunc(new Painter(this._cacheCanvas, fixedRng.restarted()));
+        painter.ctx.drawImage(this._cachedCanvases.get(key), x, y);
     }
 }
 
