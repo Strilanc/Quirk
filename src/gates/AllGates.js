@@ -27,6 +27,7 @@ import {UniversalNotGate} from "src/gates/Impossible_UniversalNotGate.js"
 import {VariousXGates} from "src/gates/VariousXGates.js"
 import {VariousYGates} from "src/gates/VariousYGates.js"
 import {VariousZGates} from "src/gates/VariousZGates.js"
+import {XorGates} from "src/gates/XorGates.js"
 import {ZeroGate} from "src/gates/Joke_ZeroGate.js"
 import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
 
@@ -110,7 +111,8 @@ Gates.KnownToSerializer = [
     ...ReverseBitsGateFamily.all,
     ...VariousXGates.all,
     ...VariousYGates.all,
-    ...VariousZGates.all
+    ...VariousZGates.all,
+    ...XorGates.all
 ];
 
 let gatesById = seq(Gates.KnownToSerializer).keyedBy(g => g.serializedId);
