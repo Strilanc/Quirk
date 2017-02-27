@@ -1400,12 +1400,12 @@ let _cachedRowLabelDrawer = new CachablePainting(
     (painter, numWire) => {
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let rowCount = 1 << rowWires;
-        let prefix = colWires < 4 ? "_".repeat(colWires) : ".._";
+        let suffix = colWires < 4 ? "_".repeat(colWires) : "_..";
         _drawLabelsReasonablyFast(
             painter,
             painter.canvas.height / rowCount,
             rowCount,
-            i => prefix + Util.bin(i, rowWires),
+            i => Util.bin(i, rowWires) + suffix,
             SUPERPOSITION_GRID_LABEL_SPAN);
     });
 
@@ -1427,12 +1427,12 @@ let _cachedColLabelDrawer = new CachablePainting(
 
         painter.ctx.translate(colCount*dw, 0);
         painter.ctx.rotate(Math.PI/2);
-        let suffix = rowWires < 4 ? "_".repeat(rowWires) : "_..";
+        let prefix = rowWires < 4 ? "_".repeat(rowWires) : ".._";
         _drawLabelsReasonablyFast(
             painter,
             dw,
             colCount,
-            i => Util.bin(colCount-1-i, rowWires) + suffix,
+            i => prefix + Util.bin(colCount-1-i, rowWires),
             SUPERPOSITION_GRID_LABEL_SPAN);
     });
 

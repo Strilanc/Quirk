@@ -29,7 +29,7 @@
   - Z is +up/-down
 - Ordering
   - Top wire is the low bit. Bottom wire is the high bit.
-  - Kets are little-endian. |10100⟩ is 5, not 20.
+  - Kets are big-endian. |00101⟩ is 5, not 20.
   - Listed/grided values are in ascending row-major order from top left to bottom right.
 - Colors
   - Blue: amplitudes

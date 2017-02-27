@@ -45,8 +45,14 @@ class Util {
         return i & 0xFF;
     }
 
+    /**
+     * Returns a big-endian binary representation of the given number, zero-padded and truncated to the given length.
+     * @param {!number|!int} number
+     * @param {!int} fixedLen
+     * @returns {!string}
+     */
     static bin(number, fixedLen) {
-        return ("0".repeat(fixedLen) + number.toString(2)).slice(-fixedLen).split("").reverse().join("");
+        return ("0".repeat(fixedLen) + number.toString(2)).slice(-fixedLen).split("").join("");
     }
 
     /**
