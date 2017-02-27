@@ -406,10 +406,11 @@ class DisplayedInspector {
         painter.ctx.save();
         painter.ctx.globalAlpha *= Math.min(1, visibilityFactor);
 
-        let fy = this.displayedCircuit.circuitDefinition.gateInSlot(0, 0) === undefined ? 173 : 223;
+        let firstSlotAvailable = this.displayedCircuit.circuitDefinition.gateInSlot(0, 0) === undefined;
+        let fy = firstSlotAvailable ? 173 : 223;
 
         painter.ctx.save();
-        painter.ctx.translate(64, fy-6);
+        painter.ctx.translate(70, fy-3);
         painter.ctx.rotate(Math.PI * -0.01);
         painter.ctx.fillStyle = 'red';
         painter.ctx.font = '16px sans-serif';
@@ -417,11 +418,19 @@ class DisplayedInspector {
         painter.ctx.restore();
 
         painter.ctx.beginPath();
-        painter.ctx.moveTo(90, 125);
-        painter.ctx.bezierCurveTo(
-            60, 140,
-            48, 160,
-            55, fy);
+        if (firstSlotAvailable) {
+            painter.ctx.moveTo(90, 125);
+            painter.ctx.bezierCurveTo(
+                60, 140,
+                48, 160,
+                55, fy);
+        } else {
+            painter.ctx.moveTo(100, 125);
+            painter.ctx.bezierCurveTo(
+                115, 150,
+                105, 170,
+                55, fy);
+        }
         painter.ctx.strokeStyle = 'red';
         painter.ctx.lineWidth = 3;
         painter.ctx.stroke();
