@@ -712,7 +712,7 @@ class DisplayedCircuit {
         }
 
         // Shift gates downward.
-        while (rowShift > 0 && gatesOfCol.length < Config.MAX_WIRE_COUNT) {
+        while (rowShift > 0 && new GateColumn(gatesOfCol).minimumRequiredWireCount() < Config.MAX_WIRE_COUNT) {
             gatesOfCol.unshift(undefined);
             if (new GateColumn(gatesOfCol).minimumRequiredWireCount() < gatesOfCol.length) {
                 gatesOfCol.pop();
