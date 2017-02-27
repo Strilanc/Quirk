@@ -592,17 +592,45 @@ class DisplayedCircuit {
     /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
+     * @param {!number} x
+     * @param {!boolean} doubleWire
+     * @param {!function(!int) : !boolean} srcPredicate
+     * @param {!function(!int) : !boolean} dstPredicate
+     * @private
+     */
+    _drawColumnControlWires_helper(painter, gateColumn, x, doubleWire, srcPredicate, dstPredicate) {
+        let n = gateColumn.gates.length;
+
+        let [src1, src2] = firstLastMatchInRange(n, srcPredicate);
+        let [dst1, dst2] = firstLastMatchInRange(n, dstPredicate);
+        if (dst1 === undefined || src1 === undefined) {
+            return;
+        }
+
+        let y1 =  this.wireRect(Math.min(src1, dst1)).center().y;
+        let y2 = this.wireRect(Math.max(src2, dst2)).center().y;
+        if (doubleWire) {
+            painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
+            painter.strokeLine(new Point(x-1, y1), new Point(x-1, y2));
+        } else {
+            painter.strokeLine(new Point(x, y1), new Point(x, y2));
+        }
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!GateColumn} gateColumn
      * @param {!int} columnIndex
      * @param {!CircuitStats} stats
      * @private
      */
     _drawColumnControlWires(painter, gateColumn, columnIndex, stats) {
-        let n = gateColumn.gates.length;
         let gs = gateColumn.gates;
+        let c = stats.circuitDefinition;
         let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
 
         // Dashed line indicates effects from non-unitary gates may affect, or appear to affect, other wires.
-        if (stats.circuitDefinition.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
+        if (c.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
             painter.ctx.save();
             painter.ctx.setLineDash([1, 4]);
             painter.strokeLine(
@@ -611,29 +639,31 @@ class DisplayedCircuit {
             painter.ctx.restore();
         }
 
-        let hasTwoSwaps = stats.circuitDefinition.colHasEnabledSwapGate(columnIndex);
+        let hasTwoSwaps = c.colHasEnabledSwapGate(columnIndex);
 
-        let firstLast = predicate => firstLastMatchInRange(n, predicate);
-        let [t1, t2] = firstLast(i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i)));
-        let [c1, c2] = firstLast(i => this.circuitDefinition.locStartsSingleControlWire(new Point(columnIndex, i)));
-        let [cc1, cc2] = firstLast(i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i)));
-        let [s1, s2] = firstLast(i => hasTwoSwaps && gs[i] === Gates.Special.SwapHalf);
+        let pt = i => new Point(columnIndex, i);
+        let hasControllable = i => c.locHasControllableGate(pt(i));
+        let hasCoherentControl = i => this.circuitDefinition.locStartsSingleControlWire(pt(i));
+        let hasMeasuredControl = i => this.circuitDefinition.locStartsDoubleControlWire(pt(i));
+        let hasSwap = i => hasTwoSwaps && gs[i] === Gates.Special.SwapHalf;
+        let coversCoherentWire = i => c.locClassifyMeasuredIncludingGateExtension(pt(i)) !== true;
+        let coversMeasuredWire = i => c.locClassifyMeasuredIncludingGateExtension(pt(i)) !== false;
 
-        if (c1 !== undefined && t1 !== undefined) {
-            let y1 =  this.wireRect(Math.min(t1, c1)).center().y;
-            let y2 = this.wireRect(Math.max(t2, c2)).center().y;
-            painter.strokeLine(new Point(x,y1), new Point(x, y2));
-        }
-        if (s1 !== undefined) {
-            let y1 =  this.wireRect(s1).center().y;
-            let y2 = this.wireRect(s2).center().y;
-            painter.strokeLine(new Point(x,y1), new Point(x, y2));
-        }
-        if (cc1 !== undefined && t1 !== undefined) {
-            let y1 =  this.wireRect(Math.min(t1, cc1)).center().y;
-            let y2 = this.wireRect(Math.max(t2, cc2)).center().y;
-            painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
-            painter.strokeLine(new Point(x-1, y1), new Point(x-1, y2));
+        // Control connections.
+        this._drawColumnControlWires_helper(painter, gateColumn, x, false, hasControllable, hasCoherentControl);
+        this._drawColumnControlWires_helper(painter, gateColumn, x, true, hasControllable, hasMeasuredControl);
+        this._drawColumnControlWires_helper(painter, gateColumn, x, false, hasSwap, hasSwap);
+
+        // Input->Output gate connections.
+        for (let key of ["Input Range A", "Input Range B"]) {
+            let isInput = i => c.locProvidesStat(pt(i), key);
+            let isOutput = i => c.locNeedsStat(pt(i), key);
+            this._drawColumnControlWires_helper(painter, gateColumn, x, false,
+                i => isInput(i) && coversCoherentWire(i),
+                isOutput);
+            this._drawColumnControlWires_helper(painter, gateColumn, x, true,
+                i => isInput(i) && coversMeasuredWire(i),
+                isOutput);
         }
     }
 
