@@ -17,6 +17,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ['Z', Gates.HalfTurns.Z],
     ['H', Gates.HalfTurns.H],
     ['•', Gates.Controls.Control],
+    ['◦', Gates.Controls.AntiControl],
     ['⊕', Gates.Controls.PlusControl],
 
     ['M', Gates.Special.Measurement],
@@ -131,6 +132,15 @@ suite.testUsingWebGL('probability-display', () => {
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo(
         Matrix.col(0.5, 0, 0, 0.5));
+});
+
+suite.testUsingWebGL('controlled-multi-probability-display', () => {
+    let c = circuit(`---◦-
+                     -H-%-
+                     ---/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.customStatsForSlot(3, 1)).isApproximatelyEqualTo(
+        Matrix.col(0.5, 0.5, 0, 0));
 });
 
 suite.testUsingWebGL('density-display', () => {
