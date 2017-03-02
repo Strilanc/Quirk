@@ -239,7 +239,7 @@ initExports(revision, obsIsAnyOverlayShowing.observable());
 initForge(revision, obsIsAnyOverlayShowing.observable());
 initUndoRedo(revision, obsIsAnyOverlayShowing.observable());
 initClear(revision, obsIsAnyOverlayShowing.observable());
-initMenu(obsIsAnyOverlayShowing.observable());
+initMenu(revision, obsIsAnyOverlayShowing.observable());
 initTitleSync(revision);
 obsForgeIsShowing.
     zipLatest(obsExportsIsShowing, (e1, e2) => e1 || e2).
