@@ -683,6 +683,9 @@ class DisplayedCircuit {
      * @private
      */
     _previewDropMovedGateColumn(hand) {
+        if (hand.pos === undefined) {
+            return this;
+        }
         let halfCol = this.findOpHalfColumnAt(new Point(hand.pos.x, this.top));
         let mustInsert = halfCol % 1 === 0 &&
             this.circuitDefinition.columns[halfCol] !== undefined &&
