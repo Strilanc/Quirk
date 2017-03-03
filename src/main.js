@@ -19,6 +19,7 @@ import {watchDrags, isMiddleClicking, eventPosRelativeTo} from "src/browser/Mous
 import {ObservableValue, ObservableSource} from "src/base/Obs.js"
 import {initExports, obsExportsIsShowing} from "src/ui/exports.js"
 import {initForge, obsForgeIsShowing} from "src/ui/forge.js"
+import {initMenu, obsMenuIsShowing, closeMenu} from "src/ui/menu.js"
 import {initUndoRedo} from "src/ui/undo.js"
 import {initClear} from "src/ui/clear.js"
 import {initUrlCircuitSync} from "src/ui/url.js"
@@ -238,12 +239,16 @@ initExports(revision, obsIsAnyOverlayShowing.observable());
 initForge(revision, obsIsAnyOverlayShowing.observable());
 initUndoRedo(revision, obsIsAnyOverlayShowing.observable());
 initClear(revision, obsIsAnyOverlayShowing.observable());
+initMenu(revision, obsIsAnyOverlayShowing.observable());
 initTitleSync(revision);
-obsForgeIsShowing.zipLatest(obsExportsIsShowing, (e1, e2) => e1 || e2).whenDifferent().subscribe(e => {
-    obsIsAnyOverlayShowing.send(e);
-    canvasDiv.tabIndex = e ? -1 : 0;
-    document.getElementById('about-link').tabIndex = e ? -1 : undefined;
-});
+obsForgeIsShowing.
+    zipLatest(obsExportsIsShowing, (e1, e2) => e1 || e2).
+    zipLatest(obsMenuIsShowing, (e1, e2) => e1 || e2).
+    whenDifferent().
+    subscribe(e => {
+        obsIsAnyOverlayShowing.send(e);
+        canvasDiv.tabIndex = e ? -1 : 0;
+    });
 
 // If the webgl initialization is going to fail, don't fail during the module loading phase.
 haveLoaded = true;
@@ -251,6 +256,11 @@ setTimeout(() => {
     inspectorDiv.style.display = 'block';
     redrawNow();
     document.getElementById("loading-div").style.display = 'none';
+    document.getElementById("close-menu-button").style.display = 'block';
+    if (!displayed.get().displayedCircuit.circuitDefinition.isEmpty()) {
+        closeMenu();
+    }
+
     try {
         initializedWglContext().onContextRestored = () => redrawThrottle.trigger();
     } catch (ex) {

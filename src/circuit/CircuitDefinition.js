@@ -693,6 +693,26 @@ class CircuitDefinition {
 
     /**
      * @param {!Point} pt
+     * @param {!string} key
+     * @returns {!boolean}
+     */
+    locProvidesStat(pt, key) {
+        let g = this.gateInSlot(pt.x, pt.y);
+        return g !== undefined && !g.customColumnContextProvider(0).every(e => e.key !== key);
+    }
+
+    /**
+     * @param {!Point} pt
+     * @param {!string} key
+     * @returns {!boolean}
+     */
+    locNeedsStat(pt, key) {
+        let g = this.gateInSlot(pt.x, pt.y);
+        return g !== undefined && g._requiredContextKeys.indexOf(key) !== -1;
+    }
+
+    /**
+     * @param {!Point} pt
      * @returns {!boolean}
      */
     locHasControllableGate(pt) {

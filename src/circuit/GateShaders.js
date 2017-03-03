@@ -127,17 +127,41 @@ GateShaders.applyMatrixOperation = (ctx, matrix) => {
  */
 GateShaders.cycleAllBits = (inputTexture, shiftAmount) => {
     let size = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture);
-    return CYCLE_ALL_SHADER(
+    return CYCLE_ALL_SHADER_VEC2(
         inputTexture,
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));
 };
-const CYCLE_ALL_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+const CYCLE_ALL_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec2('input')],
     Outputs.vec2(),
     `
     uniform float shiftAmount;
 
     vec2 outputFor(float k) {
+        float span = len_input();
+        float shiftedState = k * shiftAmount;
+        float cycledState = mod(shiftedState, span) + floor(shiftedState / span);
+        return read_input(cycledState);
+    }`);
+
+/**
+ * @param {!WglTexture} inputTexture
+ * @param {!int} shiftAmount
+ * @returns {!WglConfiguredShader}
+ */
+GateShaders.cycleAllBitsFloat = (inputTexture, shiftAmount) => {
+    let size = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture);
+    return CYCLE_ALL_SHADER_FLOAT(
+        inputTexture,
+        WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));
+};
+const CYCLE_ALL_SHADER_FLOAT = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.float('input')],
+    Outputs.float(),
+    `
+    uniform float shiftAmount;
+
+    float outputFor(float k) {
         float span = len_input();
         float shiftedState = k * shiftAmount;
         float cycledState = mod(shiftedState, span) + floor(shiftedState / span);

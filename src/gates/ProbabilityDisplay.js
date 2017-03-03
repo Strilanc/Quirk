@@ -30,8 +30,8 @@ function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLe
     trader.dontDeallocCurrentTexture();
     let n = currentShaderCoder().vec2.arrayPowerSizeOfTexture(ketTexture);
 
-    trader.shadeAndTrade(tex => GateShaders.cycleAllBits(tex, -rangeOffset));
     trader.shadeAndTrade(tex => amplitudesToProbabilities(tex, controlTexture), WglTexturePool.takeVecFloatTex(n));
+    trader.shadeAndTrade(tex => GateShaders.cycleAllBitsFloat(tex, -rangeOffset));
 
     while (n > rangeLength) {
         n -= 1;

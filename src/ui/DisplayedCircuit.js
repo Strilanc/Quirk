@@ -1,3 +1,4 @@
+import {CachablePainting} from "src/draw/CachablePainting.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Config} from "src/Config.js"
@@ -591,17 +592,45 @@ class DisplayedCircuit {
     /**
      * @param {!Painter} painter
      * @param {!GateColumn} gateColumn
+     * @param {!number} x
+     * @param {!boolean} doubleWire
+     * @param {!function(!int) : !boolean} srcPredicate
+     * @param {!function(!int) : !boolean} dstPredicate
+     * @private
+     */
+    _drawColumnControlWires_helper(painter, gateColumn, x, doubleWire, srcPredicate, dstPredicate) {
+        let n = gateColumn.gates.length;
+
+        let [src1, src2] = firstLastMatchInRange(n, srcPredicate);
+        let [dst1, dst2] = firstLastMatchInRange(n, dstPredicate);
+        if (dst1 === undefined || src1 === undefined) {
+            return;
+        }
+
+        let y1 =  this.wireRect(Math.min(src1, dst1)).center().y;
+        let y2 = this.wireRect(Math.max(src2, dst2)).center().y;
+        if (doubleWire) {
+            painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
+            painter.strokeLine(new Point(x-1, y1), new Point(x-1, y2));
+        } else {
+            painter.strokeLine(new Point(x, y1), new Point(x, y2));
+        }
+    }
+
+    /**
+     * @param {!Painter} painter
+     * @param {!GateColumn} gateColumn
      * @param {!int} columnIndex
      * @param {!CircuitStats} stats
      * @private
      */
     _drawColumnControlWires(painter, gateColumn, columnIndex, stats) {
-        let n = gateColumn.gates.length;
         let gs = gateColumn.gates;
+        let c = stats.circuitDefinition;
         let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
 
         // Dashed line indicates effects from non-unitary gates may affect, or appear to affect, other wires.
-        if (stats.circuitDefinition.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
+        if (c.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
             painter.ctx.save();
             painter.ctx.setLineDash([1, 4]);
             painter.strokeLine(
@@ -610,29 +639,31 @@ class DisplayedCircuit {
             painter.ctx.restore();
         }
 
-        let hasTwoSwaps = stats.circuitDefinition.colHasEnabledSwapGate(columnIndex);
+        let hasTwoSwaps = c.colHasEnabledSwapGate(columnIndex);
 
-        let firstLast = predicate => firstLastMatchInRange(n, predicate);
-        let [t1, t2] = firstLast(i => stats.circuitDefinition.locHasControllableGate(new Point(columnIndex, i)));
-        let [c1, c2] = firstLast(i => this.circuitDefinition.locStartsSingleControlWire(new Point(columnIndex, i)));
-        let [cc1, cc2] = firstLast(i => this.circuitDefinition.locStartsDoubleControlWire(new Point(columnIndex, i)));
-        let [s1, s2] = firstLast(i => hasTwoSwaps && gs[i] === Gates.Special.SwapHalf);
+        let pt = i => new Point(columnIndex, i);
+        let hasControllable = i => c.locHasControllableGate(pt(i));
+        let hasCoherentControl = i => this.circuitDefinition.locStartsSingleControlWire(pt(i));
+        let hasMeasuredControl = i => this.circuitDefinition.locStartsDoubleControlWire(pt(i));
+        let hasSwap = i => hasTwoSwaps && gs[i] === Gates.Special.SwapHalf;
+        let coversCoherentWire = i => c.locClassifyMeasuredIncludingGateExtension(pt(i)) !== true;
+        let coversMeasuredWire = i => c.locClassifyMeasuredIncludingGateExtension(pt(i)) !== false;
 
-        if (c1 !== undefined && t1 !== undefined) {
-            let y1 =  this.wireRect(Math.min(t1, c1)).center().y;
-            let y2 = this.wireRect(Math.max(t2, c2)).center().y;
-            painter.strokeLine(new Point(x,y1), new Point(x, y2));
-        }
-        if (s1 !== undefined) {
-            let y1 =  this.wireRect(s1).center().y;
-            let y2 = this.wireRect(s2).center().y;
-            painter.strokeLine(new Point(x,y1), new Point(x, y2));
-        }
-        if (cc1 !== undefined && t1 !== undefined) {
-            let y1 =  this.wireRect(Math.min(t1, cc1)).center().y;
-            let y2 = this.wireRect(Math.max(t2, cc2)).center().y;
-            painter.strokeLine(new Point(x+1, y1), new Point(x+1, y2));
-            painter.strokeLine(new Point(x-1, y1), new Point(x-1, y2));
+        // Control connections.
+        this._drawColumnControlWires_helper(painter, gateColumn, x, false, hasControllable, hasCoherentControl);
+        this._drawColumnControlWires_helper(painter, gateColumn, x, true, hasControllable, hasMeasuredControl);
+        this._drawColumnControlWires_helper(painter, gateColumn, x, false, hasSwap, hasSwap);
+
+        // Input->Output gate connections.
+        for (let key of ["Input Range A", "Input Range B"]) {
+            let isInput = i => c.locProvidesStat(pt(i), key);
+            let isOutput = i => c.locNeedsStat(pt(i), key);
+            this._drawColumnControlWires_helper(painter, gateColumn, x, false,
+                i => isInput(i) && coversCoherentWire(i),
+                isOutput);
+            this._drawColumnControlWires_helper(painter, gateColumn, x, true,
+                i => isInput(i) && coversMeasuredWire(i),
+                isOutput);
         }
     }
 
@@ -652,6 +683,9 @@ class DisplayedCircuit {
      * @private
      */
     _previewDropMovedGateColumn(hand) {
+        if (hand.pos === undefined) {
+            return this;
+        }
         let halfCol = this.findOpHalfColumnAt(new Point(hand.pos.x, this.top));
         let mustInsert = halfCol % 1 === 0 &&
             this.circuitDefinition.columns[halfCol] !== undefined &&
@@ -681,7 +715,7 @@ class DisplayedCircuit {
         }
 
         // Shift gates downward.
-        while (rowShift > 0 && gatesOfCol.length < Config.MAX_WIRE_COUNT) {
+        while (rowShift > 0 && new GateColumn(gatesOfCol).minimumRequiredWireCount() < Config.MAX_WIRE_COUNT) {
             gatesOfCol.unshift(undefined);
             if (new GateColumn(gatesOfCol).minimumRequiredWireCount() < gatesOfCol.length) {
                 gatesOfCol.pop();
@@ -1103,74 +1137,8 @@ class DisplayedCircuit {
     _drawOutputSuperpositionDisplay_labels(painter) {
         let gridRect = this._rectForSuperpositionDisplay();
         let numWire = this.importantWireCount();
-        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
-        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
-        let [dw, dh] = [gridRect.w / colCount, gridRect.h / rowCount];
-
-        // Row labels.
-        painter.ctx.save();
-        painter.ctx.translate(gridRect.right(), gridRect.y);
-        let prefix = colWires < 4 ? "_".repeat(colWires) : ".._";
-        DisplayedCircuit._drawLabelsReasonablyFast(
-            painter,
-            dh,
-            rowCount,
-            i => prefix + Util.bin(i, rowWires),
-            SUPERPOSITION_GRID_LABEL_SPAN);
-        painter.ctx.restore();
-
-        // Column labels.
-        painter.ctx.save();
-        painter.ctx.translate(gridRect.x + colCount*dw, gridRect.bottom());
-        painter.ctx.rotate(Math.PI/2);
-        let suffix = rowWires < 4 ? "_".repeat(rowWires) : "_..";
-        DisplayedCircuit._drawLabelsReasonablyFast(
-            painter,
-            dw,
-            colCount,
-            i => Util.bin(colCount-1-i, rowWires) + suffix,
-            SUPERPOSITION_GRID_LABEL_SPAN);
-        painter.ctx.restore();
-    }
-
-    /**
-     * @param {!Painter} painter
-     * @param {!number} dy
-     * @param {!int} n
-     * @param {!function(!int) : !String} labeller
-     * @param {!number} boundingWidth
-     * @private
-     */
-    static _drawLabelsReasonablyFast(painter, dy, n, labeller, boundingWidth) {
-        let ctx = painter.ctx;
-        ctx.save();
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        painter.ctx.font = '12px monospace';
-        let w = Math.max(
-            painter.ctx.measureText(labeller(0)).width,
-            painter.ctx.measureText(labeller(n-1)).width);
-        let h = ctx.measureText("0").width * 2.5;
-        let scale = Math.min(Math.min(boundingWidth / w, dy / h), 1);
-
-        // Row labels.
-        let step = dy/scale;
-        let pad = 2/scale;
-        ctx.scale(scale, scale);
-        ctx.translate(0, dy*0.5/scale - h*0.5);
-        ctx.fillStyle = 'lightgray';
-        if (h < step*0.95) {
-            for (let i = 0; i < n; i++) {
-                ctx.fillRect(0, step * i, w + 2 * pad, h);
-            }
-        } else {
-            ctx.fillRect(0, 0, w + 2 * pad, h*n);
-        }
-        ctx.fillStyle = 'black';
-        for (let i = 0; i < n; i++) {
-            ctx.fillText(labeller(i), pad, h*0.5 + step*i);
-        }
-        ctx.restore();
+        _cachedRowLabelDrawer.paint(gridRect.right(), gridRect.y, painter, numWire);
+        _cachedColLabelDrawer.paint(gridRect.x, gridRect.bottom(), painter, numWire);
     }
 
     /**
@@ -1293,7 +1261,7 @@ class DisplayedCircuit {
         let lines = diagramText.split('\n').map(e => {
             let p = e.split('|');
             if (p.length !== 2) {
-                fail('Bad diagram: ' + diagramText);
+                throw new DetailedError('Bad diagram', {diagramText, gateMap});
             }
             return p[1];
         });
@@ -1416,5 +1384,89 @@ function firstLastMatchInRange(rangeLen, predicate){
     }
     return [first, last];
 }
+
+/**
+ * @param {!Painter} painter
+ * @param {!number} dy
+ * @param {!int} n
+ * @param {!function(!int) : !String} labeller
+ * @param {!number} boundingWidth
+ * @private
+ */
+function _drawLabelsReasonablyFast(painter, dy, n, labeller, boundingWidth) {
+    let ctx = painter.ctx;
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    painter.ctx.font = '12px monospace';
+    let w = Math.max(
+        painter.ctx.measureText(labeller(0)).width,
+        painter.ctx.measureText(labeller(n-1)).width);
+    let h = ctx.measureText("0").width * 2.5;
+    let scale = Math.min(Math.min(boundingWidth / w, dy / h), 1);
+
+    // Row labels.
+    let step = dy/scale;
+    let pad = 2/scale;
+    ctx.scale(scale, scale);
+    ctx.translate(0, dy*0.5/scale - h*0.5);
+    ctx.fillStyle = 'lightgray';
+    if (h < step*0.95) {
+        for (let i = 0; i < n; i++) {
+            ctx.fillRect(0, step * i, w + 2 * pad, h);
+        }
+    } else {
+        ctx.fillRect(0, 0, w + 2 * pad, h*n);
+    }
+    ctx.fillStyle = 'black';
+    for (let i = 0; i < n; i++) {
+        ctx.fillText(labeller(i), pad, h*0.5 + step*i);
+    }
+    ctx.restore();
+}
+
+let _cachedRowLabelDrawer = new CachablePainting(
+    numWire => ({
+        width: SUPERPOSITION_GRID_LABEL_SPAN,
+        height: (numWire - 1) * Config.WIRE_SPACING + Config.GATE_RADIUS * 2
+    }),
+    (painter, numWire) => {
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let rowCount = 1 << rowWires;
+        let suffix = colWires < 4 ? "_".repeat(colWires) : "_..";
+        _drawLabelsReasonablyFast(
+            painter,
+            painter.canvas.height / rowCount,
+            rowCount,
+            i => Util.bin(i, rowWires) + suffix,
+            SUPERPOSITION_GRID_LABEL_SPAN);
+    });
+
+let _cachedColLabelDrawer = new CachablePainting(
+    numWire => {
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
+        let total_height = (numWire - 1) * Config.WIRE_SPACING + Config.GATE_RADIUS * 2;
+        let cellDiameter = total_height / rowCount;
+        return {
+            width: colCount * cellDiameter,
+            height: SUPERPOSITION_GRID_LABEL_SPAN
+        }
+    },
+    (painter, numWire) => {
+        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let colCount = 1 << colWires;
+        let dw = painter.canvas.width / colCount;
+
+        painter.ctx.translate(colCount*dw, 0);
+        painter.ctx.rotate(Math.PI/2);
+        let prefix = rowWires < 4 ? "_".repeat(rowWires) : ".._";
+        _drawLabelsReasonablyFast(
+            painter,
+            dw,
+            colCount,
+            i => prefix + Util.bin(colCount-1-i, rowWires),
+            SUPERPOSITION_GRID_LABEL_SPAN);
+    });
 
 export {DisplayedCircuit, drawCircuitTooltip, GATE_CIRCUIT_DRAWER}

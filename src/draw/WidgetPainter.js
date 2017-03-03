@@ -7,8 +7,9 @@ import {Matrix} from "src/math/Matrix.js"
 import {Painter} from "src/draw/Painter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {Seq} from "src/base/Seq.js"
 import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
+import {Util} from "src/base/Util.js"
 
 class WidgetPainter {
 
@@ -237,6 +238,13 @@ class WidgetPainter {
         return {maxW: maxX, maxH: maxY};
     }
 
+    /**
+     * @param {!int} bitCount
+     * @param {!int} bitMask
+     * @param {!Complex|!number} factor
+     * @param {!Format} format
+     * @returns {!string}
+     */
     static describeKet(bitCount, bitMask, factor, format) {
         factor = Complex.from(factor);
         if (factor.isEqualTo(0)) {
@@ -250,7 +258,7 @@ class WidgetPainter {
             (factor.real === 0 || factor.imag === 0) && format !== Format.CONSISTENT ? factor.toString(format) :
             '(' + factor.toString(format) + ')·';
 
-        let bitDesc = seq(bitMask.toString(2)).reverse().padded(bitCount, '0').join('');
+        let bitDesc = Util.bin(bitMask, bitCount);
         return scaleFactorDesc + '|' + bitDesc + '⟩';
     }
     /**
