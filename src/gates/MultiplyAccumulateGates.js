@@ -150,11 +150,55 @@ MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.generateFamily(1, 16
             -1)
     }));
 
+MultiplyAccumulateGates.SquareAddInputFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "+=A^2",
+    "Square-Add Gate [Input A]",
+    "Adds the square of input A into the qubits covered by this gate.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("+=AA" + span).
+    withHeight(span).
+    withRequiredContextKeys('Input Range A').
+    withCustomShader(ctx => {
+        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
+        return multiplyAccumulate(
+            ctx,
+            span,
+            inputOffsetA,
+            inputLengthA,
+            inputOffsetA,
+            inputLengthA,
+            +1)
+    }));
+
+MultiplyAccumulateGates.SquareSubtractInputFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "-=A^2",
+    "Square-Subtract Gate [Input A]",
+    "Subtracts the square of input A out of the qubits covered by this gate.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("-=AA" + span).
+    withHeight(span).
+    withRequiredContextKeys('Input Range A').
+    withCustomShader(ctx => {
+        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
+        return multiplyAccumulate(
+            ctx,
+            span,
+            inputOffsetA,
+            inputLengthA,
+            inputOffsetA,
+            inputLengthA,
+            -1)
+    }));
+
 MultiplyAccumulateGates.all = [
     ...MultiplyAccumulateGates.MultiplyAddFamily.all,
     ...MultiplyAccumulateGates.MultiplySubtractFamily.all,
     ...MultiplyAccumulateGates.MultiplyAddInputsFamily.all,
-    ...MultiplyAccumulateGates.MultiplySubtractInputsFamily.all
+    ...MultiplyAccumulateGates.MultiplySubtractInputsFamily.all,
+    ...MultiplyAccumulateGates.SquareAddInputFamily.all,
+    ...MultiplyAccumulateGates.SquareSubtractInputFamily.all,
 ];
 
 export {MultiplyAccumulateGates}
