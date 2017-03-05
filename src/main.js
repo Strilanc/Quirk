@@ -27,7 +27,7 @@ import {initTitleSync} from "src/ui/title.js"
 import {simulate} from "src/ui/sim.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GATE_CIRCUIT_DRAWER} from "src/ui/DisplayedCircuit.js"
-initSerializer(GatePainting.MATRIX_DRAWER, GATE_CIRCUIT_DRAWER);
+initSerializer(GatePainting.LABEL_DRAWER, GatePainting.MATRIX_DRAWER, GATE_CIRCUIT_DRAWER);
 
 const canvasDiv = document.getElementById("canvasDiv");
 
