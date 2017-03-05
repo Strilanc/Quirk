@@ -10,12 +10,15 @@ import {makeCycleBitsMatrix, cycleBits} from "src/gates/CycleBitsGates.js"
 let CountingGates = {};
 
 const staircaseCurve = steps => {
+    steps = Math.min(128, steps);
     let curve = [];
     for (let i = 0; i < steps; i++) {
         let x = i/steps;
         let y = i/(steps-1);
-        curve.push(new Point(x, y));
-        curve.push(new Point(x + 1/steps, y));
+        if (steps < 128) {
+            curve.push(new Point(x, y));
+        }
+        curve.push(new Point(x + 1 / steps, y));
     }
     return curve;
 };
@@ -83,7 +86,7 @@ CountingGates.QuarterPhaseClockPulseGate = Gate.fromVaryingMatrix(
     withCustomDrawer(STAIRCASE_DRAWER(0.75, 2)).
     withStableDuration(0.25);
 
-CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
+CountingGates.CountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+⌈t⌉",
     "Counting Gate",
     "Adds an increasing little-endian count into a block of qubits.").
@@ -96,7 +99,7 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKno
     withStableDuration(1.0 / (1<<span)).
     withCustomShader(ctx => incrementShaderFunc(ctx, span, Math.floor(ctx.time*(1<<span)))));
 
-CountingGates.UncountingFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
+CountingGates.UncountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-⌈t⌉",
     "Down Counting Gate",
     "Subtracts an increasing little-endian count from a block of qubits.").
