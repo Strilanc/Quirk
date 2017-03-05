@@ -1465,7 +1465,7 @@ let _cachedColLabelDrawer = new CachablePainting(
             painter,
             dw,
             colCount,
-            i => prefix + Util.bin(colCount-1-i, rowWires),
+            i => prefix + Util.bin(colCount-1-i, colWires),
             SUPERPOSITION_GRID_LABEL_SPAN);
     });
 

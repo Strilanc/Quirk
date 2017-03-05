@@ -15,9 +15,19 @@ import {MysteryGateSymbol, MysteryGateMakerWithMatrix} from "src/gates/Joke_Myst
 import {seq} from "src/base/Seq.js"
 import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
 
+/** @type {!function(!GateDrawParams)} */
 let matrixDrawer = undefined;
+/** @type {!function(!GateDrawParams)} */
 let circuitDrawer = undefined;
-function initSerializer(gateMatrixDrawer, gateCircuitDrawer) {
+/** @type {!function(!GateDrawParams)} */
+let labelDrawer = undefined;
+/**
+ * @param {!function(!GateDrawParams)} gateLabelDrawer
+ * @param {!function(!GateDrawParams)} gateMatrixDrawer
+ * @param {!function(!GateDrawParams)} gateCircuitDrawer
+ */
+function initSerializer(gateLabelDrawer, gateMatrixDrawer, gateCircuitDrawer) {
+    labelDrawer = gateLabelDrawer;
     matrixDrawer = gateMatrixDrawer;
     circuitDrawer = gateCircuitDrawer;
 }
@@ -193,9 +203,12 @@ let fromJson_Gate_Matrix = props => {
 
     let height = Math.round(Math.log2(mat.height()));
     let width = props.symbol === '' ? height : 1;
+    let matrix = _parseGateMatrix(props.matrix);
 
-    return Gate.fromKnownMatrix(props.symbol, _parseGateMatrix(props.matrix), props.name, '').
-        withCustomDrawer(props.symbol === "" ? matrixDrawer : undefined).
+    return Gate.fromKnownMatrix(props.symbol, matrix, props.name, '').
+        withCustomDrawer(props.symbol === "" ? matrixDrawer
+            : matrix.isIdentity() ? labelDrawer
+            : undefined).
         withSerializedId(props.id).
         withHeight(height).
         withWidth(width);

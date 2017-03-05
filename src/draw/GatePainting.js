@@ -29,6 +29,21 @@ GatePainting.paintBackground =
     };
 
 /**
+ * @param {!GateDrawParams} args
+ */
+GatePainting.LABEL_DRAWER = args => {
+    if (args.positionInCircuit === undefined || args.isHighlighted) {
+        GatePainting.DEFAULT_DRAWER(args);
+        return;
+    }
+
+    let cut = Math.max(0, args.rect.h - Config.GATE_RADIUS*2)/2;
+    args.painter.fillRect(args.rect.skipTop(cut).skipBottom(cut), Config.GATE_FILL_COLOR);
+
+    GatePainting.paintGateSymbol(args);
+};
+
+/**
  * @param {!string=} toolboxFillColor
  * @param {!string=} normalFillColor
  * @constructor
