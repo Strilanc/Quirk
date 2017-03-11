@@ -149,7 +149,7 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
         -1)));
 
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+=A",
+    "+A",
     "Addition Gate [input A]",
     "Adds 'input A' into the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -163,7 +163,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     }));
 
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-=A",
+    "−A",
     "Subtraction Gate [input A]",
     "Subtracts 'input A' out of the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -178,7 +178,7 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
 
 ArithmeticGates.ALessThanB = Gate.withoutKnownMatrix(
     "⊕A<B",
-    "Less-Than Comparison Gate [inputs A, B]",
+    "Less-Than Gate [inputs A, B]",
     "Toggles the target if 'input A' is less than 'input B'.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
@@ -188,7 +188,7 @@ ArithmeticGates.ALessThanB = Gate.withoutKnownMatrix(
 
 ArithmeticGates.AGreaterThanB = Gate.withoutKnownMatrix(
     "⊕A>B",
-    "Greater-Than Comparison Gate [inputs A, B]",
+    "Greater-Than Gate [inputs A, B]",
     "Toggles the target if 'input A' is greater than 'input B'.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
@@ -198,7 +198,7 @@ ArithmeticGates.AGreaterThanB = Gate.withoutKnownMatrix(
 
 ArithmeticGates.ALessThanOrEqualToB = Gate.withoutKnownMatrix(
     "⊕A≤B",
-    "Less-Than Comparison Gate [inputs A, B]",
+    "At-Most Gate [inputs A, B]",
     "Toggles the target if 'input A' is less than 'input B'.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
@@ -208,7 +208,7 @@ ArithmeticGates.ALessThanOrEqualToB = Gate.withoutKnownMatrix(
 
 ArithmeticGates.AGreaterThanOrEqualToB = Gate.withoutKnownMatrix(
     "⊕A≥B",
-    "Greater-Than Comparison Gate [inputs A, B]",
+    "At-Least Gate [inputs A, B]",
     "Toggles the target if 'input A' is greater than 'input B'.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
@@ -218,7 +218,7 @@ ArithmeticGates.AGreaterThanOrEqualToB = Gate.withoutKnownMatrix(
 
 ArithmeticGates.AEqualToB = Gate.withoutKnownMatrix(
     "⊕A=B",
-    "Equality Comparison Gate [inputs A, B]",
+    "Equality Gate [inputs A, B]",
     "Toggles the target if 'input A' is equal to 'input B'.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
@@ -228,7 +228,7 @@ ArithmeticGates.AEqualToB = Gate.withoutKnownMatrix(
 
 ArithmeticGates.ANotEqualToB = Gate.withoutKnownMatrix(
     "⊕A≠B",
-    "Equality Comparison Gate [inputs A, B]",
+    "Inequality Gate [inputs A, B]",
     "Toggles the target if 'input A' is equal to 'input B'.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().

@@ -132,7 +132,6 @@ suite.testUsingWebGL('A_less_than_or_equal_to_B', () => {
         }));
 });
 
-
 suite.testUsingWebGL('A_greater_than_B', () => {
     let circ = circuit(`-?-
                         -A-
@@ -148,7 +147,6 @@ suite.testUsingWebGL('A_greater_than_B', () => {
             return t | (i & ~1)
         }));
 });
-
 
 suite.testUsingWebGL('A_greater_than_or_equal_to_B', () => {
     let circ = circuit(`-?-
@@ -166,7 +164,6 @@ suite.testUsingWebGL('A_greater_than_or_equal_to_B', () => {
         }));
 });
 
-
 suite.testUsingWebGL('A_equal_to_B', () => {
     let circ = circuit(`-?-
                         -A-
@@ -182,7 +179,6 @@ suite.testUsingWebGL('A_equal_to_B', () => {
             return t | (i & ~1)
         }));
 });
-
 
 suite.testUsingWebGL('A_not_equal_to_B', () => {
     let circ = circuit(`-?-
