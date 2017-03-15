@@ -91,7 +91,6 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     "Counting Gate",
     "Adds an increasing little-endian count into a block of qubits.").
     markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : COUNTING_MATRIX_MAKER(span)).
     withSerializedId("Counting" + span).
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
@@ -104,7 +103,6 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 16, span => Gate.without
     "Down Counting Gate",
     "Subtracts an increasing little-endian count from a block of qubits.").
     markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : UNCOUNTING_MATRIX_MAKER(span)).
     withSerializedId("Uncounting" + span).
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
@@ -117,7 +115,6 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
     "Right-Shift Cycling Gate",
     "Right-rotates a block of bits by more and more.").
     markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : RIGHT_SHIFTING_MATRIX_MAKER(span)).
     withSerializedId(">>t" + span).
     withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
@@ -130,7 +127,6 @@ CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.
     "Left-Shift Cycling Gate",
     "Left-rotates a block of bits by more and more.").
     markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrixFunc(span >= 4 ? undefined : LEFT_SHIFTING_MATRIX_MAKER(span)).
     withSerializedId("<<t" + span).
     withCustomDrawer(STAIRCASE_DRAWER(0, span)).
