@@ -2,6 +2,7 @@ import {ArithmeticGates} from "src/gates/ArithmeticGates.js"
 import {AmplitudeDisplayFamily} from "src/gates/AmplitudeDisplay.js"
 import {BitCountGates} from "src/gates/BitCountGates.js"
 import {BlochSphereDisplay} from "src/gates/BlochSphereDisplay.js"
+import {ComparisonGates} from "src/gates/ComparisonGates.js"
 import {Controls} from "src/gates/Controls.js"
 import {CountingGates} from "src/gates/CountingGates.js"
 import {CycleBitsGates} from "src/gates/CycleBitsGates.js"
@@ -53,6 +54,7 @@ Gates.Displays = {
 };
 Gates.Arithmetic = ArithmeticGates;
 Gates.BitCountGates = BitCountGates;
+Gates.ComparisonGates = ComparisonGates;
 Gates.Controls = Controls;
 Gates.CountingGates = CountingGates;
 Gates.CycleBitsGates = CycleBitsGates;
@@ -98,6 +100,7 @@ Gates.KnownToSerializer = [
 
     ...ArithmeticGates.all,
     ...BitCountGates.all,
+    ...ComparisonGates.all,
     ...CountingGates.all,
     ...CycleBitsGates.all,
     ...ExponentiatingGates.all,
@@ -215,9 +218,9 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Compare",
         gates: [
-            ArithmeticGates.ALessThanB, ArithmeticGates.AGreaterThanB,
-            ArithmeticGates.ALessThanOrEqualToB, ArithmeticGates.AGreaterThanOrEqualToB,
-            ArithmeticGates.AEqualToB, ArithmeticGates.ANotEqualToB,
+            ComparisonGates.ALessThanB, ComparisonGates.AGreaterThanB,
+            ComparisonGates.ALessThanOrEqualToB, ComparisonGates.AGreaterThanOrEqualToB,
+            ComparisonGates.AEqualToB, ComparisonGates.ANotEqualToB,
         ]
     },
     {
