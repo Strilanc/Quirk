@@ -80,7 +80,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withCustomShader(ctx => incrementShaderFunc(ctx, span, +1)));
 
 ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "−−",
+    "- -",
     "Decrement Gate",
     "Subtracts 1 from the little-endian number represented by a block of qubits.").
     markedAsOnlyPermutingAndPhasing().

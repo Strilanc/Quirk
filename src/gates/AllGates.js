@@ -13,6 +13,7 @@ import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
+import {ModularArithmeticGates} from "src/gates/ModularArithmeticGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
 import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
@@ -65,6 +66,7 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.ModularArithmeticGates = ModularArithmeticGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.OtherX = VariousXGates;
 Gates.OtherY = VariousYGates;
@@ -106,6 +108,7 @@ Gates.KnownToSerializer = [
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
+    ...ModularArithmeticGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
     ...PhaseGradientGates.all,
