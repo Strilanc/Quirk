@@ -174,20 +174,19 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: 'Fourier',
+        hint: "Sixteenths",
         gates: [
-            PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined, ReverseBitsGateFamily.ofSize(2),
-            FourierTransformGates.FourierTransformFamily.ofSize(2),
-                FourierTransformGates.InverseFourierTransformFamily.ofSize(2)
+            VariousZGates.Z8,  VariousZGates.Z8i,
+            VariousYGates.Y8,  VariousYGates.Y8i,
+            VariousXGates.X8,  VariousXGates.X8i
         ]
     },
     {
-        hint: "Other Probes",
+        hint: "Spinning",
         gates: [
-            Controls.PlusControl, Controls.MinusControl,
-            Controls.CrossControl, PostSelectionGates.PostSelectCross,
-            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
+            PoweringGates.ZForward, PoweringGates.ZBackward,
+            PoweringGates.YForward, PoweringGates.YBackward,
+            PoweringGates.XForward, PoweringGates.XBackward
         ]
     },
     {
@@ -203,13 +202,39 @@ Gates.TopToolboxGroups = [
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.BottomToolboxGroups = [
     {
+        hint: "Perp Probes",
+        gates: [
+            Controls.PlusControl, Controls.MinusControl,
+            Controls.CrossControl, PostSelectionGates.PostSelectCross,
+            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
+        ]
+    },
+    {
+        hint: 'Fourier',
+        gates: [
+            FourierTransformGates.FourierTransformFamily.ofSize(2),
+            FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
+            PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
+            undefined, ReverseBitsGateFamily.ofSize(2),
+        ]
+    },
+    {
+        hint: "Cycling",
+        gates: [
+            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
+            CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
+            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
+        ]
+    },
+    {
         hint: "Inputs",
         gates: [
             InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
             undefined, undefined,
             InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2)
         ]
-    }, {
+    },
+    {
         hint: 'Arithmetic',
         gates: [
             ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
@@ -227,45 +252,13 @@ Gates.BottomToolboxGroups = [
         ]
     },
     {
-        hint: "Cycling",
+        hint: "Modular",
         gates: [
-            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
-            CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
-            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
+            ModularArithmeticGates.IncrementModAFamily.ofSize(2), ModularArithmeticGates.DecrementModAFamily.ofSize(2),
+            ModularArithmeticGates.PlusAModBFamily.ofSize(2), ModularArithmeticGates.MinusAModBFamily.ofSize(2),
+            undefined, undefined,
         ]
     },
-    {
-        hint: "Raising",
-        gates: [
-            PoweringGates.ZForward, PoweringGates.ZBackward,
-            PoweringGates.YForward, PoweringGates.YBackward,
-            PoweringGates.XForward, PoweringGates.XBackward
-        ]
-    },
-    {
-        hint: "Exponentiating",
-        gates: [
-            ExponentiatingGates.ZForward, ExponentiatingGates.ZBackward,
-            ExponentiatingGates.YForward, ExponentiatingGates.YBackward,
-            ExponentiatingGates.XForward, ExponentiatingGates.XBackward
-        ]
-    },
-    {
-        hint: "1/8",
-        gates: [
-            VariousZGates.Z8,  VariousZGates.Z8i,
-            VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousXGates.X8,  VariousXGates.X8i
-        ]
-    },
-    {
-        hint: "1/16",
-        gates: [
-            VariousZGates.Z16, VariousZGates.Z16i,
-            VariousYGates.Y16, VariousYGates.Y16i,
-            VariousXGates.X16, VariousXGates.X16i
-        ]
-    }
 ];
 
 export {Gates}
