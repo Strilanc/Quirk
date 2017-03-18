@@ -213,6 +213,14 @@ Gates.BottomToolboxGroups = [
         ]
     },
     {
+        hint: "Compare",
+        gates: [
+            ArithmeticGates.ALessThanB, ArithmeticGates.AGreaterThanB,
+            ArithmeticGates.ALessThanOrEqualToB, ArithmeticGates.AGreaterThanOrEqualToB,
+            ArithmeticGates.AEqualToB, ArithmeticGates.ANotEqualToB,
+        ]
+    },
+    {
         hint: "Cycling",
         gates: [
             CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),

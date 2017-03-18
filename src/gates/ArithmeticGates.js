@@ -68,6 +68,30 @@ const ADDITION_SHADER = ketShaderPermute(
         d = mod(d, span);
         return mod(out_id + span - d, span);`);
 
+/**
+ * @param {!string} compareCode
+ * @returns {!WglConfiguredShader}
+ */
+function customComparisonShader(compareCode) {
+    const shader = ketShaderPermute(
+        'uniform float lhsOffset, lhsSpan, rhsOffset, rhsSpan;',
+        `
+            float lhs = mod(floor(full_out_id / lhsOffset), lhsSpan);
+            float rhs = mod(floor(full_out_id / rhsOffset), rhsSpan);
+            return mod(out_id + ((${compareCode}) ? 1.0 : 0.0), 2.0);`);
+
+    return ctx => {
+        let {offset: lhsOffset, length: lhsSpan} = ctx.customContextFromGates.get('Input Range A');
+        let {offset: rhsOffset, length: rhsSpan} = ctx.customContextFromGates.get('Input Range B');
+        return shader.withArgs(
+            ...ketArgs(ctx, 1),
+            WglArg.float("lhsOffset", 1 << lhsOffset),
+            WglArg.float("rhsOffset", 1 << rhsOffset),
+            WglArg.float("lhsSpan", 1 << lhsSpan),
+            WglArg.float("rhsSpan", 1 << rhsSpan));
+    };
+}
+
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "++",
     "Increment Gate",
@@ -125,7 +149,7 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
         -1)));
 
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+=A",
+    "+A",
     "Addition Gate [input A]",
     "Adds 'input A' into the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -139,7 +163,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     }));
 
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-=A",
+    "−A",
     "Subtraction Gate [input A]",
     "Subtracts 'input A' out of the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -152,13 +176,80 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
         return additionShaderFunc(ctx, span, inputOffset, inputLength, -1);
     }));
 
+ArithmeticGates.ALessThanB = Gate.withoutKnownMatrix(
+    "⊕A<B",
+    "Less-Than Gate [inputs A, B]",
+    "Toggles the target if 'input A' is less than 'input B'.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("^A<B").
+    withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomShader(customComparisonShader('lhs < rhs'));
+
+ArithmeticGates.AGreaterThanB = Gate.withoutKnownMatrix(
+    "⊕A>B",
+    "Greater-Than Gate [inputs A, B]",
+    "Toggles the target if 'input A' is greater than 'input B'.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("^A>B").
+    withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomShader(customComparisonShader('lhs > rhs'));
+
+ArithmeticGates.ALessThanOrEqualToB = Gate.withoutKnownMatrix(
+    "⊕A≤B",
+    "At-Most Gate [inputs A, B]",
+    "Toggles the target if 'input A' is less than 'input B'.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("^A<=B").
+    withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomShader(customComparisonShader('lhs <= rhs'));
+
+ArithmeticGates.AGreaterThanOrEqualToB = Gate.withoutKnownMatrix(
+    "⊕A≥B",
+    "At-Least Gate [inputs A, B]",
+    "Toggles the target if 'input A' is greater than 'input B'.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("^A>=B").
+    withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomShader(customComparisonShader('lhs >= rhs'));
+
+ArithmeticGates.AEqualToB = Gate.withoutKnownMatrix(
+    "⊕A=B",
+    "Equality Gate [inputs A, B]",
+    "Toggles the target if 'input A' is equal to 'input B'.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("^A=B").
+    withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomShader(customComparisonShader('lhs == rhs'));
+
+ArithmeticGates.ANotEqualToB = Gate.withoutKnownMatrix(
+    "⊕A≠B",
+    "Inequality Gate [inputs A, B]",
+    "Toggles the target if 'input A' is equal to 'input B'.").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withSerializedId("^A!=B").
+    withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomShader(customComparisonShader('lhs != rhs'));
+
 ArithmeticGates.all = [
     ...ArithmeticGates.IncrementFamily.all,
     ...ArithmeticGates.DecrementFamily.all,
     ...ArithmeticGates.AdditionFamily.all,
     ...ArithmeticGates.SubtractionFamily.all,
     ...ArithmeticGates.PlusAFamily.all,
-    ...ArithmeticGates.MinusAFamily.all
+    ...ArithmeticGates.MinusAFamily.all,
+
+    ArithmeticGates.ALessThanB,
+    ArithmeticGates.AGreaterThanB,
+    ArithmeticGates.AEqualToB,
+    ArithmeticGates.ANotEqualToB,
+    ArithmeticGates.ALessThanOrEqualToB,
+    ArithmeticGates.AGreaterThanOrEqualToB,
 ];
 
 export {ArithmeticGates, makeOffsetMatrix, incrementShaderFunc, additionShaderFunc}

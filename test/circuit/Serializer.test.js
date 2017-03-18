@@ -191,6 +191,7 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "-=AA1", "-=AA2", "-=AA3", "-=AA4", "-=AA5", "-=AA6", "-=AA7", "-=AA8", "-=AA9", "-=AA10", "-=AA11", "-=AA12", "-=AA13", "-=AA14", "-=AA15", "-=AA16",
     "+cntA1", "+cntA2", "+cntA3", "+cntA4", "+cntA5", "+cntA6", "+cntA7", "+cntA8", "+cntA9", "+cntA10", "+cntA11", "+cntA12", "+cntA13", "+cntA14", "+cntA15", "+cntA16",
     "-cntA1", "-cntA2", "-cntA3", "-cntA4", "-cntA5", "-cntA6", "-cntA7", "-cntA8", "-cntA9", "-cntA10", "-cntA11", "-cntA12", "-cntA13", "-cntA14", "-cntA15", "-cntA16",
+    "^A<B", "^A>B", "^A<=B", "^A>=B", "^A=B", "^A!=B",
     "X^⌈t⌉", "X^⌈t-¼⌉",
     "Counting1", "Counting2", "Counting3", "Counting4", "Counting5", "Counting6", "Counting7", "Counting8", "Counting9", "Counting10", "Counting11", "Counting12", "Counting13", "Counting14", "Counting15", "Counting16",
     "Uncounting1", "Uncounting2", "Uncounting3", "Uncounting4", "Uncounting5", "Uncounting6", "Uncounting7", "Uncounting8", "Uncounting9", "Uncounting10", "Uncounting11", "Uncounting12", "Uncounting13", "Uncounting14", "Uncounting15", "Uncounting16",
