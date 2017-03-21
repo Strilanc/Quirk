@@ -45,14 +45,30 @@ const incrementShader = ketShaderPermute(
     'uniform float amount;',
     'return mod(out_id - amount + span, span);');
 
-/**
- * @param {!CircuitEvalContext} ctx
- * @param {!int} span
- * @param {!int} srcOffset
- * @param {!int} srcSpan
- * @param {!int} scaleFactor
- * @returns {!WglConfiguredShader}
- */
+function flipShaderFunc(ctx, span, srcOffset, srcSpan) {
+    return FLIP_SHADER.withArgs(
+        ...ketArgs(ctx, span),
+        WglArg.float("srcOffset", 1 << srcOffset),
+        WglArg.float("srcSpan", 1 << srcSpan));
+}
+const FLIP_SHADER = ketShaderPermute(
+    'uniform float srcOffset, srcSpan;',
+    `
+        float d = mod(floor(full_out_id / srcOffset), srcSpan);
+        return out_id >= d ? out_id : mod(d - 1.0 - out_id, span);`);
+
+function flipShaderFunc2(ctx, span, srcOffset, srcSpan) {
+    return FLIP_SHADER_2.withArgs(
+        ...ketArgs(ctx, span),
+        WglArg.float("srcOffset", 1 << srcOffset),
+        WglArg.float("srcSpan", 1 << srcSpan));
+}
+const FLIP_SHADER_2 = ketShaderPermute(
+    'uniform float srcOffset, srcSpan;',
+    `
+        float d = mod(floor(full_out_id / srcOffset), srcSpan);
+        return out_id > d ? out_id : mod(d - out_id, span);`);
+
 function additionShaderFunc(ctx, span, srcOffset, srcSpan, scaleFactor) {
     return ADDITION_SHADER.withArgs(
         ...ketArgs(ctx, span),
@@ -176,6 +192,34 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
         return additionShaderFunc(ctx, span, inputOffset, inputLength, -1);
     }));
 
+ArithmeticGates.FlipBelow = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "Flip<A",
+    "Flip Gate [input A]",
+    "?????").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withHeight(span).
+    withSerializedId("Flip<A" + span).
+    withRequiredContextKeys("Input Range A").
+    withCustomShader(ctx => {
+        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
+        return flipShaderFunc(ctx, span, inputOffset, inputLength);
+    }));
+
+ArithmeticGates.FlipBelow2 = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "Flip≤A",
+    "Flip Gate [input A]",
+    "?????").
+    markedAsOnlyPermutingAndPhasing().
+    markedAsStable().
+    withHeight(span).
+    withSerializedId("Flip<=A" + span).
+    withRequiredContextKeys("Input Range A").
+    withCustomShader(ctx => {
+        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
+        return flipShaderFunc2(ctx, span, inputOffset, inputLength);
+    }));
+
 ArithmeticGates.ALessThanB = Gate.withoutKnownMatrix(
     "⊕A<B",
     "Less-Than Gate [inputs A, B]",
@@ -243,6 +287,8 @@ ArithmeticGates.all = [
     ...ArithmeticGates.SubtractionFamily.all,
     ...ArithmeticGates.PlusAFamily.all,
     ...ArithmeticGates.MinusAFamily.all,
+    ...ArithmeticGates.FlipBelow.all,
+    ...ArithmeticGates.FlipBelow2.all,
 
     ArithmeticGates.ALessThanB,
     ArithmeticGates.AGreaterThanB,
