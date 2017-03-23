@@ -318,4 +318,80 @@ GatePainting.MATRIX_SYMBOL_DRAWER_EXCEPT_IN_TOOLBOX = args => {
     GatePainting.MATRIX_DRAWER(args);
 };
 
+/**
+ * @param {!GateDrawParams} args
+ * @param {!int} offset
+ * @returns {!number}
+ */
+function _wireY(args, offset) {
+    return args.rect.center().y + (offset - args.gate.height/2 + 0.5) * Config.WIRE_SPACING;
+}
+
+/**
+ * @param {!GateDrawParams} args
+ */
+function _eraseWiresForPermutation(args) {
+    for (let i = 0; i < args.gate.height; i++) {
+        let y = _wireY(args, i);
+        let p = new Point(args.rect.x, y);
+        let c = new Point(args.rect.x + Config.GATE_RADIUS, y);
+        let q = new Point(args.rect.right(), y);
+        let pt = new Point(args.positionInCircuit.col, args.positionInCircuit.row + i);
+        let isMeasured1 = args.stats.circuitDefinition.locIsMeasured(pt);
+        let isMeasured2 = args.stats.circuitDefinition.locIsMeasured(pt.offsetBy(1, 0));
+
+        for (let dy of isMeasured1 ? [-1, +1] : [0]) {
+            args.painter.strokeLine(p.offsetBy(0, dy), c.offsetBy(0, dy), 'white');
+        }
+        for (let dy of isMeasured2 ? [-1, +1] : [0]) {
+            args.painter.strokeLine(c.offsetBy(0, dy), q.offsetBy(0, dy), 'white');
+        }
+    }
+}
+
+/**
+ * @param {!GateDrawParams} args
+ * @returns {!boolean}
+ */
+function _useFallbackDrawerInsteadOfPermutation(args) {
+    return args.isHighlighted ||
+        args.isResizeHighlighted ||
+        args.positionInCircuit === undefined ||
+        args.stats.circuitDefinition.colHasControls(args.positionInCircuit.col);
+}
+
+/**
+ * Draws the gate as a re-arrangement of wires.
+ * @param {!GateDrawParams} args
+ */
+GatePainting.PERMUTATION_DRAWER = args => {
+    if (_useFallbackDrawerInsteadOfPermutation(args)) {
+        GatePainting.DEFAULT_DRAWER(args);
+        return;
+    }
+
+    _eraseWiresForPermutation(args);
+
+    // Draw wires.
+    for (let i = 0; i < args.gate.height; i++) {
+        let j = args.gate.knownBitPermutationFunc(i);
+
+        let pt = new Point(args.positionInCircuit.col, args.positionInCircuit.row + i);
+        let isMeasured = args.stats.circuitDefinition.locIsMeasured(pt);
+        let y1 = _wireY(args, i);
+        let y2 = _wireY(args, j);
+        let x1 = args.rect.x;
+        let x2 = args.rect.right();
+        args.painter.ctx.beginPath();
+        args.painter.ctx.strokeStyle = 'black';
+        for (let [dx, dy] of isMeasured ? [[j > i ? +1 : -1, -1], [0, +1]] : [[0, 0]]) {
+            args.painter.ctx.moveTo(Math.min(x1, x1 + dx), y1 + dy);
+            args.painter.ctx.lineTo(x1 + dx, y1 + dy);
+            args.painter.ctx.lineTo(x2 + dx, y2 + dy);
+            args.painter.ctx.lineTo(Math.max(x2, x2 + dx), y2 + dy);
+        }
+        args.painter.ctx.stroke();
+    }
+};
+
 export {GatePainting}
