@@ -117,29 +117,6 @@ GatePainting.paintGateSymbol = args => {
     const font = '16px sans-serif';
     rect = rect.paddedBy(-2);
 
-    let defaultNote = args.gate.gateFamily.length > 1 && args.isInToolbox
-        ? "↕"
-        : undefined;
-    let noteIndex = symbol.indexOf('\n');
-    let forcedNote = undefined;
-    if (noteIndex !== -1) {
-        forcedNote = symbol.substring(noteIndex + 1);
-        symbol = symbol.substring(0, noteIndex);
-    }
-    let note = forcedNote || defaultNote;
-    if (note !== undefined && (args.isInToolbox || args.isHighlighted)) {
-        painter.print(
-            note,
-            rect.x + rect.w,
-            rect.y + rect.h,
-            'right',
-            'bottom',
-            'black' ,
-            '16px sans-serif',
-            rect.w,
-            rect.h/2);
-    }
-
     let parts = symbol.split("^");
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
         painter.print(

@@ -3,7 +3,8 @@ import {incrementShaderFunc, ArithmeticGates} from "src/gates/ArithmeticGates.js
 import {InputGates} from "src/gates/InputGates.js"
 import {
     assertThatCircuitShaderActsLikeMatrix,
-    assertThatCircuitUpdateActsLikeMatrix
+    assertThatCircuitUpdateActsLikeMatrix,
+    assertThatGateActsLikePermutation
 } from "test/CircuitOperationTestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
@@ -49,4 +50,16 @@ suite.testUsingWebGL('minus_A', () => {
             let t = (i >> 2) & 3;
             return a | (((t-a)&3)<<2);
         }));
+});
+
+suite.testUsingWebGL('plus_minus_A_like_permutation', () => {
+    assertThatGateActsLikePermutation(
+        ArithmeticGates.PlusAFamily.ofSize(3),
+        (a, t) => (t + a) & 7,
+        [2]);
+
+    assertThatGateActsLikePermutation(
+        ArithmeticGates.MinusAFamily.ofSize(3),
+        (a, t) => (t - a) & 7,
+        [4]);
 });

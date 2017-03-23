@@ -107,7 +107,7 @@ MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(3, 16, span
     }));
 
 MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+=AB",
+    "+AB",
     "Multiply-Add Gate [Inputs A, B]",
     "Adds the product of inputs A and B into the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -129,7 +129,7 @@ MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.generateFamily(1, 16, spa
     }));
 
 MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-=AB",
+    "−AB",
     "Multiply-Subtract Gate [Inputs A, B]",
     "Subtracts the product of inputs A and B out of the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().

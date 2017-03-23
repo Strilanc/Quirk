@@ -5,8 +5,7 @@ import {
     deinterleaveBit,
     valPermuteFromBit,
     interleave,
-    deinterleave,
-    InterleaveGates,
+    deinterleave
 } from "src/gates/InterleaveBitsGates.js"
 
 let suite = new Suite("InterleaveGates");

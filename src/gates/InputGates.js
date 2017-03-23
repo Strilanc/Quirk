@@ -20,11 +20,11 @@ let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fr
     withCustomBeforeOperation(ctx => span > 1 ? reverseShaderForSize(span) : undefined).
     withCustomAfterOperation(ctx => span > 1 ? reverseShaderForSize(span) : undefined).
     withCustomDrawer(args => {
-        GatePainting.paintBackground(args);
+        GatePainting.paintBackground(args, '#DDD', '#DDD');
         if (args.isInToolbox) {
             GatePainting.paintOutline(args);
         } else {
-            args.painter.strokeRect(args.rect, '#AAA');
+            args.painter.strokeRect(args.rect, '#888');
         }
         GatePainting.paintResizeTab(args);
 

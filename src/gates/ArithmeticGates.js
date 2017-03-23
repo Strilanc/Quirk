@@ -125,7 +125,7 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
         -1)));
 
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+=A",
+    "+A",
     "Addition Gate [input A]",
     "Adds 'input A' into the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -139,7 +139,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     }));
 
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-=A",
+    "−A",
     "Subtraction Gate [input A]",
     "Subtracts 'input A' out of the qubits covered by this gate.").
     markedAsOnlyPermutingAndPhasing().
@@ -158,7 +158,7 @@ ArithmeticGates.all = [
     ...ArithmeticGates.AdditionFamily.all,
     ...ArithmeticGates.SubtractionFamily.all,
     ...ArithmeticGates.PlusAFamily.all,
-    ...ArithmeticGates.MinusAFamily.all
+    ...ArithmeticGates.MinusAFamily.all,
 ];
 
 export {ArithmeticGates, makeOffsetMatrix, incrementShaderFunc, additionShaderFunc}
