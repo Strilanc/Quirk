@@ -89,7 +89,7 @@ suite.testUsingWebGL("customShaderMatchesKnownMatrix", () => {
 suite.testUsingWebGL("knownBitPermutationMatchesKnowMatrixAndCustomShader", () => {
     let time = 6/7;
     for (let gate of Gates.KnownToSerializer) {
-        if (gate.height > 4 || gate.knownBitPermutationFunc === undefined) {
+        if (gate.height > 6 || gate.knownBitPermutationFunc === undefined) {
             continue;
         }
 

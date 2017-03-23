@@ -92,7 +92,7 @@ let _interleaveShadersForSize = Seq.range(Config.MAX_WIRE_COUNT + 1).
  */
 let _deinterleaveShadersForSize = Seq.range(Config.MAX_WIRE_COUNT + 1).
     skip(2).
-    toMap(k => k, k => shaderFromBitPermutation(k, interleaveBit));
+    toMap(k => k, k => shaderFromBitPermutation(k, deinterleaveBit));
 
 InterleaveBitsGates.InterleaveBitsGateFamily = Gate.generateFamily(4, 16, span => Gate.withoutKnownMatrix(
     "Weave",
