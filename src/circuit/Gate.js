@@ -410,7 +410,13 @@ class Gate {
     withKnownBitPermutation(knownBitPermutationFunc) {
         let g = this._copy();
         g.knownBitPermutationFunc = knownBitPermutationFunc;
-        g._isDefinitelyUnitary = true;
+        if (knownBitPermutationFunc !== undefined) {
+            g._isDefinitelyUnitary = true;
+            g._stableDuration = Infinity;
+            g._hasNoEffect = false;
+            g._effectPermutesStates = true;
+            g._effectCreatesSuperpositions = false;
+        }
         return g;
     }
 

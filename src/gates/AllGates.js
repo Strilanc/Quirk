@@ -12,6 +12,7 @@ import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {InputGates} from "src/gates/InputGates.js"
+import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
 import {ModularArithmeticGates} from "src/gates/ModularArithmeticGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
@@ -66,8 +67,11 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.InputGates = InputGates;
+Gates.InterleaveBitsGates = InterleaveBitsGates;
 Gates.ModularArithmeticGates = ModularArithmeticGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
+Gates.NeGate = NeGate;
 Gates.OtherX = VariousXGates;
 Gates.OtherY = VariousYGates;
 Gates.OtherZ = VariousZGates;
@@ -79,8 +83,6 @@ Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 Gates.ZeroGate = ZeroGate;
-Gates.NeGate = NeGate;
-Gates.InputGates = InputGates;
 
 /** @type {!Array.<!Gate>} */
 Gates.KnownToSerializer = [
@@ -108,6 +110,7 @@ Gates.KnownToSerializer = [
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
+    ...InterleaveBitsGates.all,
     ...ModularArithmeticGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
