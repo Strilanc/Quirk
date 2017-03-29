@@ -182,12 +182,16 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "Bloch",
     "inc1", "inc2", "inc3", "inc4", "inc5", "inc6", "inc7", "inc8", "inc9", "inc10", "inc11", "inc12", "inc13", "inc14", "inc15", "inc16",
     "dec1", "dec2", "dec3", "dec4", "dec5", "dec6", "dec7", "dec8", "dec9", "dec10", "dec11", "dec12", "dec13", "dec14", "dec15", "dec16",
+    "incmodA1", "incmodA2", "incmodA3", "incmodA4", "incmodA5", "incmodA6", "incmodA7", "incmodA8", "incmodA9", "incmodA10", "incmodA11", "incmodA12", "incmodA13", "incmodA14", "incmodA15", "incmodA16",
+    "decmodA1", "decmodA2", "decmodA3", "decmodA4", "decmodA5", "decmodA6", "decmodA7", "decmodA8", "decmodA9", "decmodA10", "decmodA11", "decmodA12", "decmodA13", "decmodA14", "decmodA15", "decmodA16",
     "add2", "add3", "add4", "add5", "add6", "add7", "add8", "add9", "add10", "add11", "add12", "add13", "add14", "add15", "add16",
     "+=A1", "+=A2", "+=A3", "+=A4", "+=A5", "+=A6", "+=A7", "+=A8", "+=A9", "+=A10", "+=A11", "+=A12", "+=A13", "+=A14", "+=A15", "+=A16",
+    "+AmodB1", "+AmodB2", "+AmodB3", "+AmodB4", "+AmodB5", "+AmodB6", "+AmodB7", "+AmodB8", "+AmodB9", "+AmodB10", "+AmodB11", "+AmodB12", "+AmodB13", "+AmodB14", "+AmodB15", "+AmodB16",
     "+=AA1", "+=AA2", "+=AA3", "+=AA4", "+=AA5", "+=AA6", "+=AA7", "+=AA8", "+=AA9", "+=AA10", "+=AA11", "+=AA12", "+=AA13", "+=AA14", "+=AA15", "+=AA16",
     "^=A1", "^=A2", "^=A3", "^=A4", "^=A5", "^=A6", "^=A7", "^=A8",
     "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "sub10", "sub11", "sub12", "sub13", "sub14", "sub15", "sub16",
     "-=A1", "-=A2", "-=A3", "-=A4", "-=A5", "-=A6", "-=A7", "-=A8", "-=A9", "-=A10", "-=A11", "-=A12", "-=A13", "-=A14", "-=A15", "-=A16",
+    "-AmodB1", "-AmodB2", "-AmodB3", "-AmodB4", "-AmodB5", "-AmodB6", "-AmodB7", "-AmodB8", "-AmodB9", "-AmodB10", "-AmodB11", "-AmodB12", "-AmodB13", "-AmodB14", "-AmodB15", "-AmodB16",
     "-=AA1", "-=AA2", "-=AA3", "-=AA4", "-=AA5", "-=AA6", "-=AA7", "-=AA8", "-=AA9", "-=AA10", "-=AA11", "-=AA12", "-=AA13", "-=AA14", "-=AA15", "-=AA16",
     "+cntA1", "+cntA2", "+cntA3", "+cntA4", "+cntA5", "+cntA6", "+cntA7", "+cntA8", "+cntA9", "+cntA10", "+cntA11", "+cntA12", "+cntA13", "+cntA14", "+cntA15", "+cntA16",
     "-cntA1", "-cntA2", "-cntA3", "-cntA4", "-cntA5", "-cntA6", "-cntA7", "-cntA8", "-cntA9", "-cntA10", "-cntA11", "-cntA12", "-cntA13", "-cntA14", "-cntA15", "-cntA16",
@@ -207,7 +211,9 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "-=AB1", "-=AB2", "-=AB3", "-=AB4", "-=AB5", "-=AB6", "-=AB7", "-=AB8", "-=AB9", "-=AB10", "-=AB11", "-=AB12", "-=AB13", "-=AB14", "-=AB15", "-=AB16",
     "PhaseGradient1", "PhaseGradient2", "PhaseGradient3", "PhaseGradient4", "PhaseGradient5", "PhaseGradient6", "PhaseGradient7", "PhaseGradient8", "PhaseGradient9", "PhaseGradient10", "PhaseGradient11", "PhaseGradient12", "PhaseGradient13", "PhaseGradient14", "PhaseGradient15", "PhaseGradient16",
     "PhaseUngradient1", "PhaseUngradient2", "PhaseUngradient3", "PhaseUngradient4", "PhaseUngradient5", "PhaseUngradient6", "PhaseUngradient7", "PhaseUngradient8", "PhaseUngradient9", "PhaseUngradient10", "PhaseUngradient11", "PhaseUngradient12", "PhaseUngradient13", "PhaseUngradient14", "PhaseUngradient15", "PhaseUngradient16",
-    "rev2", "rev3", "rev4", "rev5", "rev6", "rev7", "rev8", "rev9", "rev10", "rev11", "rev12", "rev13", "rev14", "rev15", "rev16"
+    "rev2", "rev3", "rev4", "rev5", "rev6", "rev7", "rev8", "rev9", "rev10", "rev11", "rev12", "rev13", "rev14", "rev15", "rev16",
+    "weave4", "weave5", "weave6", "weave7", "weave8", "weave9", "weave10", "weave11", "weave12", "weave13", "weave14", "weave15", "weave16",
+    "split4", "split5", "split6", "split7", "split8", "split9", "split10", "split11", "split12", "split13", "split14", "split15", "split16",
 ];
 
 suite.test("known_gates_backwards_compatible", () => {

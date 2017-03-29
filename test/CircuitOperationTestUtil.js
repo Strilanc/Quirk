@@ -1,11 +1,16 @@
 import {assertThat} from "test/TestUtil.js"
+import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Gates} from "src/gates/AllGates.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Matrix} from "src/math/Matrix.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
+import {seq, Seq} from "src/base/Seq.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 // Turn this on to make it easier to debug why a randomized test is failing.
@@ -24,6 +29,53 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
         ctx => ctx.applyOperation(shaderFunc),
         matrix,
         repeats);
+}
+
+/**
+ * @param {!Gate} gate
+ * @param {!function(inputA:!int,target:!int):!int|!function(inputA:!int,inputB:!int,target:!int):!int} inversePermutationFunc
+ * @param {!Array.<!int>} inputSpans
+ * @param {!int=5} repeats
+ */
+function assertThatGateActsLikePermutation(gate, inversePermutationFunc, inputSpans, repeats=5) {
+    let inputGates = seq(inputSpans).
+        zip([Gates.InputGates.InputAFamily, Gates.InputGates.InputBFamily], (len, fam) => fam.ofSize(len)).
+        toArray();
+
+    for (let _ of Seq.range(repeats)) {
+        let dstWire = 0;
+        let wireCount = dstWire + gate.height;
+        let inpWires = new Array(inputGates.length);
+        for (let i = 0; i < inputGates.length; i++) {
+            if (Math.random() < 0.5) {
+                wireCount += 1;
+            }
+            inpWires[i] = wireCount;
+            wireCount += inputGates[i].height;
+        }
+
+        // Useful facts.
+        let dstMask = ((1 << gate.height) - 1) << dstWire;
+        let inpMasks = seq(inpWires).zip(inputGates, (off, g) => ((1 << g.height) - 1) << off).toArray();
+
+        // Make permutation matrix.
+        let matrix = Matrix.generateTransition(1 << wireCount, val => {
+            let dst = (val & dstMask) >> dstWire;
+            let inps = seq(inpMasks).zip(inpWires, (m, w) => (val & m) >> w).toArray();
+            let out = inversePermutationFunc(...inps, dst);
+            return (val & ~dstMask) | out;
+        });
+
+        // Make circuit.
+        let col = new Array(wireCount).fill(undefined);
+        for (let i = 0; i < inputSpans.length; i++) {
+            col[inpWires[i]] = inputGates[i];
+        }
+        col[dstWire] = gate;
+        let circuit = new CircuitDefinition(wireCount, [new GateColumn(col)]);
+
+        assertThatCircuitUpdateActsLikeMatrix(ctx => advanceStateWithCircuit(ctx, circuit, false), matrix, 1);
+    }
 }
 
 /**
@@ -88,5 +140,6 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
 
 export {
     assertThatCircuitUpdateActsLikeMatrix,
-    assertThatCircuitShaderActsLikeMatrix
+    assertThatCircuitShaderActsLikeMatrix,
+    assertThatGateActsLikePermutation
 }

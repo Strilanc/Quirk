@@ -41,8 +41,6 @@ let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
         "Reverse",
         "Reverse Bits Gate",
         "Swaps some bits into the opposite order.").
-        markedAsStable().
-        markedAsOnlyPermutingAndPhasing().
         withSerializedId("rev" + span).
         withHeight(span).
         withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).

@@ -64,6 +64,7 @@ const ketShader = (head, body, span=null, inputs=[]) => ({withArgs: makePseudoSh
  * @param {!String} head
  * @param {!String} body
  * @param {null|!int=null} span
+ * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
  */
 const ketShaderPermute = (head, body, span=null) => ketShader(
     head + `float _ketgen_input_for(float out_id) { ${body} }`,
@@ -74,6 +75,7 @@ const ketShaderPermute = (head, body, span=null) => ketShader(
  * @param {!String} head
  * @param {!String} body
  * @param {null|!int=null} span
+ * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
  */
 const ketShaderPhase = (head, body, span=null) => ketShader(
     head + `vec2 _ketgen_phase_for(float out_id) { ${body} }`,
