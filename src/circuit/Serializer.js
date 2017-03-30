@@ -205,13 +205,17 @@ let fromJson_Gate_Matrix = props => {
     let width = props.symbol === '' ? height : 1;
     let matrix = _parseGateMatrix(props.matrix);
 
-    return Gate.fromKnownMatrix(props.symbol, matrix, props.name, '').
+    let gate = Gate.fromKnownMatrix(props.symbol, matrix, props.name, '').
         withCustomDrawer(props.symbol === "" ? matrixDrawer
             : matrix.isIdentity() ? labelDrawer
             : undefined).
         withSerializedId(props.id).
         withHeight(height).
         withWidth(width);
+    if (matrix.isIdentity()) {
+        gate = gate.markedAsNotInterestedInControls();
+    }
+    return gate;
 };
 
 let fromJson_Gate_Circuit = (props, context) => {

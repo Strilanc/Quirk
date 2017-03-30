@@ -717,10 +717,7 @@ class CircuitDefinition {
      */
     locHasControllableGate(pt) {
         let g = this.gateInSlot(pt.x, pt.y);
-        return g !== undefined &&
-            !g.isControl() &&
-            g !== Gates.SpacerGate &&
-            (g !== Gates.Special.SwapHalf || this.colHasEnabledSwapGate(pt.x));
+        return g !== undefined && g.interestedInControls;
     }
 
     /**
@@ -911,6 +908,85 @@ class CircuitDefinition {
             this.outerContext,
             this.customGateSet.withGate(gate));
     }
+
+    /**
+     * @param {!int} columnIndex
+     * @returns {!Array.<!{first: !int, last: !int, measured: !boolean}>}
+     */
+    controlLinesRanges(columnIndex) {
+        let col = this.columns[columnIndex];
+        let n = col.gates.length;
+
+        let hasTwoSwaps = this.colHasEnabledSwapGate(columnIndex);
+
+        let pt = i => new Point(columnIndex, i);
+        let hasControllable = i => this.locHasControllableGate(pt(i));
+        let hasCoherentControl = i => this.locStartsSingleControlWire(pt(i));
+        let hasMeasuredControl = i => this.locStartsDoubleControlWire(pt(i));
+        let hasSwap = i => hasTwoSwaps && col.gates[i] === Gates.Special.SwapHalf;
+        let coversCoherentWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== true;
+        let coversMeasuredWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== false;
+
+        // Control connections.
+        let result = [
+            srcDstMatchInRange(n, hasSwap, hasSwap, false),
+            srcDstMatchInRange(n, hasControllable, hasCoherentControl, false),
+            srcDstMatchInRange(n, hasControllable, hasMeasuredControl, true),
+        ];
+
+        // Input->Output gate connections.
+        for (let key of ["Input Range A", "Input Range B"]) {
+            let isInput = i => this.locProvidesStat(pt(i), key);
+            let isOutput = i => this.locNeedsStat(pt(i), key);
+            result.push(
+                srcDstMatchInRange(n, i => isInput(i) && coversCoherentWire(i), isOutput, false),
+                srcDstMatchInRange(n, i => isInput(i) && coversMeasuredWire(i), isOutput, true)
+            );
+        }
+
+        return result.filter(e => e !== undefined);
+    }
+}
+
+
+/**
+ * @param {!int} rangeLen
+ * @param {!function(!int) : !boolean} srcPredicate
+ * @param {!function(!int) : !boolean} dstPredicate
+ * @param {!boolean} measured
+ * @returns {undefined|!{first:!int, last:!int, measured:!boolean}}
+ * @private
+ */
+function srcDstMatchInRange(rangeLen, srcPredicate, dstPredicate, measured) {
+    let [src1, src2] = firstLastMatchInRange(rangeLen, srcPredicate);
+    let [dst1, dst2] = firstLastMatchInRange(rangeLen, dstPredicate);
+    if (dst1 === undefined || src1 === undefined) {
+        return undefined;
+    }
+    return {
+        first: Math.min(src1, dst1),
+        last: Math.max(src2, dst2),
+        measured: measured
+    };
+}
+
+/**
+ * @param {!int} rangeLen
+ * @param {!function(!int): !boolean} predicate
+ * @returns {!Array.<undefined|!int>}
+ */
+function firstLastMatchInRange(rangeLen, predicate){
+    let first = undefined;
+    let last = undefined;
+    for (let i = 0; i < rangeLen; i++) {
+        if (predicate(i)) {
+            if (first === undefined) {
+                first = i;
+            }
+            last = i;
+        }
+    }
+    return [first, last];
 }
 
 CircuitDefinition.EMPTY = new CircuitDefinition(0, []);

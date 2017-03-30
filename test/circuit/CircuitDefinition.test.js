@@ -1,6 +1,7 @@
 import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 
+import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Gate} from "src/circuit/Gate.js"
@@ -8,7 +9,9 @@ import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
-import {Seq} from "src/base/Seq.js"
+import {Seq, seq} from "src/base/Seq.js"
+import {Serializer} from "src/circuit/Serializer.js"
+import {Util} from "src/base/Util.js"
 
 let suite = new Suite("CircuitDefinition");
 
@@ -17,38 +20,27 @@ const Y = Gates.HalfTurns.Y;
 const Z = Gates.HalfTurns.Z;
 const H = Gates.HalfTurns.H;
 const C = Gates.Controls.Control;
-const A = Gates.Controls.AntiControl;
 const _ = undefined;
-const M = Gates.Special.Measurement;
 const TEST_GATES = new Map([
     ['X', X],
     ['Y', Y],
     ['Z', Z],
     ['H', H],
-    ['•', C],
-    ['◦', A],
+    ['●', C],
+    ['○', Gates.Controls.AntiControl],
     ['⊖', Gates.Controls.MinusControl],
     ['⊕', Gates.Controls.PlusControl],
     ['⊗', Gates.Controls.CrossControl],
     ['.', Gates.SpacerGate],
 
-    ['a', Gates.InputGates.InputAFamily.ofSize(1)],
-    ['A', Gates.InputGates.InputAFamily.ofSize(2)],
-    ['b', Gates.InputGates.InputBFamily.ofSize(1)],
-    ['B', Gates.InputGates.InputBFamily.ofSize(2)],
-    ['⩮', Gates.MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(1)],
-    ['⩲', Gates.Arithmetic.PlusAFamily.ofSize(1)],
-    ['⨧', Gates.Arithmetic.PlusAFamily.ofSize(2)],
+    ['A', Gates.InputGates.InputAFamily],
+    ['B', Gates.InputGates.InputBFamily],
 
-
-    ['M', M],
+    ['M', Gates.Special.Measurement],
     ['%', Gates.Displays.ChanceDisplay],
-    ['d', Gates.Displays.DensityMatrixDisplay],
-    ['D', Gates.Displays.DensityMatrixDisplay2],
+    ['D', Gates.Displays.DensityMatrixDisplayFamily],
     ['@', Gates.Displays.BlochSphereDisplay],
     ['s', Gates.Special.SwapHalf],
-    ['R', Gates.ReverseBitsGateFamily],
-    ['↡', Gates.CycleBitsGates.CycleBitsFamily],
     ['!', Gates.PostSelectionGates.PostSelectOn],
 
     ['-', undefined],
@@ -61,14 +53,15 @@ const TEST_GATES = new Map([
     ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
     ['2', Gates.Arithmetic.IncrementFamily.ofSize(2)],
     ['3', Gates.Arithmetic.IncrementFamily.ofSize(3)],
-    ['4', Gates.Arithmetic.IncrementFamily.ofSize(4)],
     ['Q', Gate.fromKnownMatrix('Q', Matrix.square(1, 1, 1, 1,
                                       1, Complex.I, -1, Complex.I.neg(),
                                       1, -1, 1, -1,
                                       1, Complex.I.neg(), -1, Complex.I), 'Q', 'Q').withHeight(2)],
     ['t', Gates.Exponentiating.XForward]
 ]);
-const circuit = diagram => CircuitDefinition.fromTextDiagram(TEST_GATES, diagram);
+const circuit = (diagram, ...extraGates) => CircuitDefinition.fromTextDiagram(
+    Util.mergeMaps(TEST_GATES, new Map(extraGates)),
+    diagram);
 
 suite.test("isEqualTo", () => {
     let c1 = new CircuitDefinition(2, [
@@ -118,7 +111,7 @@ suite.test("fromTextDiagram", () => {
             new GateColumn([X, Y]),
             new GateColumn([_, _])]));
     assertThat(circuit(`
-        -•
+        -●
         -|
         -Z
         `)).isEqualTo(new CircuitDefinition(3, [new GateColumn([_, _, _]), new GateColumn([C, _, Z])]));
@@ -147,7 +140,7 @@ suite.test("stableDuration", () => {
     assertThat(circuit('-XY-').stableDuration()).isEqualTo(Infinity);
     assertThat(circuit(`-XY-
                         --X-`).stableDuration()).isEqualTo(Infinity);
-    assertThat(circuit(`•Z#M
+    assertThat(circuit(`●Z#M
                         --X/`).stableDuration()).isEqualTo(Infinity);
 
     assertThat(circuit('t').stableDuration()).isEqualTo(0);
@@ -164,7 +157,7 @@ suite.test("readableHash", () => {
     assertThat(typeof CircuitDefinition.EMPTY.readableHash()).isEqualTo('string');
     assertThat(typeof circuit('----').readableHash()).isEqualTo('string');
     assertThat(typeof circuit('-\n-').readableHash()).isEqualTo('string');
-    assertThat(typeof circuit('tXY•').readableHash()).isEqualTo('string');
+    assertThat(typeof circuit('tXY●').readableHash()).isEqualTo('string');
 });
 
 suite.test("readableHash", () => {
@@ -243,24 +236,24 @@ suite.test("withWidthOverlapsFixed", () => {
                                                                              -/Yt-`));
     assertThat(circuit(`-2Z-
                         -Yt-
-                        -•--
-                        -◦--`).withHeightOverlapsFixed()).isEqualTo(circuit(`-2-Z-
+                        -●--
+                        -○--`).withHeightOverlapsFixed()).isEqualTo(circuit(`-2-Z-
                                                                              -/Yt-
-                                                                             -••--
-                                                                             -◦◦--`));
+                                                                             -●●--
+                                                                             -○○--`));
     assertThat(circuit(`-3-
-                        -•-
-                        -•-
-                        -◦-`).withHeightOverlapsFixed()).isEqualTo(circuit(`-3--
-                                                                            -/•-
-                                                                            -/•-
-                                                                            -◦◦-`));
+                        -●-
+                        -●-
+                        -○-`).withHeightOverlapsFixed()).isEqualTo(circuit(`-3--
+                                                                            -/●-
+                                                                            -/●-
+                                                                            -○○-`));
     assertThat(circuit(`-3-
-                        -•-
-                        -•-
+                        -●-
+                        -●-
                         -X-`).withHeightOverlapsFixed()).isEqualTo(circuit(`-3--
-                                                                            -/•-
-                                                                            -/•-
+                                                                            -/●-
+                                                                            -/●-
                                                                             -X--`));
     assertThat(circuit(`-3-
                         -3-
@@ -382,8 +375,8 @@ suite.test("minimumRequiredColCount", () => {
 });
 
 suite.test("colIsMeasuredMask", () => {
-    let assertAbout = diagram => {
-        let c = circuit(diagram);
+    let assertAbout = (diagram, ...extraGates) => {
+        let c = circuit(diagram, ...extraGates);
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colIsMeasuredMask(i-1)).toArray());
     };
 
@@ -396,7 +389,7 @@ suite.test("colIsMeasuredMask", () => {
     // Lack of operation doesn't measure
     assertAbout('-').isEqualTo([0, 0, 0, 0]);
     // Normal operations don't measure
-    assertAbout('XYZt!d%').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assertAbout('XYZt!D%').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     // Measurement is idempodent
     assertAbout('MM').isEqualTo([0, 0, 1, 1, 1]);
     // Post-selection clears
@@ -407,49 +400,50 @@ suite.test("colIsMeasuredMask", () => {
     // Custom permutations move measured
     assertAbout(`---↡=↡-
                  ---/-/=
-                 -M=/-/-`).isEqualTo([0, 0, 0, 4, 4, 1, 1, 2, 2, 2]);
+                 -M=/-/-`, ['↡', Gates.CycleBitsGates.CycleBitsFamily]).isEqualTo([0, 0, 0, 4, 4, 1, 1, 2, 2, 2]);
     assertAbout(`---R=R-
                  ---/-/-
-                 -M=/-/=`).isEqualTo([0, 0, 0, 4, 4, 1, 1, 4, 4, 4]);
+                 -M=/-/=`, ['R', Gates.ReverseBitsGateFamily]).isEqualTo([0, 0, 0, 4, 4, 1, 1, 4, 4, 4]);
 
     // Disallowed measurements don't cause measurement. Controlled measurement not allowed.
-    assertAbout(`•
+    assertAbout(`●
                  M`).isEqualTo([0, 0, 0, 0]);
     // Disallowed swaps don't swap.
     assertAbout(`-s
                  Ms
-                 -•`).isEqualTo([0, 0, 2, 2, 2]);
+                 -●`).isEqualTo([0, 0, 2, 2, 2]);
     assertAbout(`-s
                  Ms
-                 M•`).isEqualTo([0, 0, 6, 6, 6]);
+                 M●`).isEqualTo([0, 0, 6, 6, 6]);
     assertAbout(`-s
                  -s
-                 M•`).isEqualTo([0, 0, 4, 4, 4]);
+                 M●`).isEqualTo([0, 0, 4, 4, 4]);
     // Disallowed post-selections don't clear.
     assertAbout(`M!
-                 -•`).isEqualTo([0, 0, 1, 1, 1]);
+                 -●`).isEqualTo([0, 0, 1, 1, 1]);
     // Unclear post-selections also don't clear.
     assertAbout(`M!
-                 M•`).isEqualTo([0, 0, 3, 3, 3]);
+                 M●`).isEqualTo([0, 0, 3, 3, 3]);
 });
 
 suite.test("colDesiredSingleQubitStatsMask", () => {
-    let assertAbout = diagram => {
-        let c = circuit(diagram);
+    let assertAbout = (diagram, ...extraGates) => {
+        let c = circuit(diagram, ...extraGates);
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colDesiredSingleQubitStatsMask(i-1)).toArray());
     };
 
     //noinspection SpellCheckingInspection
-    assertAbout('XYZH•◦M%dD@s!-#~23t').isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    assertAbout('%d@').isEqualTo([0, 1, 1, 1, 0, 0]);
+    assertAbout('XYZH●○M%D?@s!-#~23t', ['?', Gates.Displays.DensityMatrixDisplay2]).
+        isEqualTo([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assertAbout('%D@').isEqualTo([0, 1, 1, 1, 0, 0]);
     assertAbout(`---%--
                  %--%-!
-                 --d%--
+                 --D%--
                  -@-%--`).isEqualTo([0, 2, 8, 4, 15, 0, 0, 0, 0]);
 });
 
 suite.test("nonUnitaryGates", () => {
-    let c = circuit(`-M-•-
+    let c = circuit(`-M-●-
                      --!--
                      ---X-`);
     assertFalse(c.hasOnlyUnitaryGates());
@@ -482,7 +476,7 @@ suite.test("locIsMeasured", () => {
 suite.test("gateInSlot", () => {
     let c = circuit(`ZXY--
                      -#/%-
-                     -//•-`);
+                     -//●-`);
 
     assertThat(c.gateInSlot(-10, 0)).isEqualTo(undefined);
     assertThat(c.gateInSlot(+10, 0)).isEqualTo(undefined);
@@ -506,7 +500,7 @@ suite.test("gateInSlot", () => {
 suite.test("findGateCoveringSlot", () => {
     let c = circuit(`ZXY--
                      -#/%-
-                     -//•-`);
+                     -//●-`);
 
     assertThat(c.findGateCoveringSlot(-10, 0)).isEqualTo(undefined);
     assertThat(c.findGateCoveringSlot(+10, 0)).isEqualTo(undefined);
@@ -533,7 +527,7 @@ suite.test("findGateCoveringSlot", () => {
 });
 
 suite.test("colControls", () => {
-    let c = circuit(`-•-◦-⊖⊗⊕-M-⊕⊗⊖-◦-•-`);
+    let c = circuit(`-●-○-⊖⊗⊕-M-⊕⊗⊖-○-●-`);
     assertThat(c.colControls(-1)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(0)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(1)).isEqualTo(Controls.bit(0, true));
@@ -549,9 +543,9 @@ suite.test("colControls", () => {
     assertThat(c.colControls(17)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(102)).isEqualTo(Controls.NONE);
 
-    let c2 = circuit(`--•◦◦-
-                      -X◦•s-
-                      ---s•-`);
+    let c2 = circuit(`--●○○-
+                      -X○●s-
+                      ---s●-`);
     assertThat(c2.colControls(0)).isEqualTo(Controls.NONE);
     assertThat(c2.colControls(1)).isEqualTo(Controls.NONE);
     assertThat(c2.colControls(2)).isEqualTo(new Controls(3, 1));
@@ -560,9 +554,9 @@ suite.test("colControls", () => {
 });
 
 suite.test("locIsControlWireStarter", () => {
-    let c = circuit(`Z•Y--
-                     -#/%◦
-                     -/◦•-`);
+    let c = circuit(`Z●Y--
+                     -#/%○
+                     -/○●-`);
 
     assertFalse(c.locIsControlWireStarter(new Point(-10, 0)));
     assertFalse(c.locIsControlWireStarter(new Point(+10, 0)));
@@ -589,10 +583,10 @@ suite.test("locIsControlWireStarter", () => {
 });
 
 suite.test("locStartsSingleControlWire", () => {
-    let c = circuit(`-M-•-
-                     -M-◦-
-                     ---•-
-                     ---◦-
+    let c = circuit(`-M-●-
+                     -M-○-
+                     ---●-
+                     ---○-
                      ---X-`);
 
     assertFalse(c.locStartsSingleControlWire(new Point(-10, 0)));
@@ -611,10 +605,10 @@ suite.test("locStartsSingleControlWire", () => {
 });
 
 suite.test("locStartsDoubleControlWire", () => {
-    let c = circuit(`-M-•-
-                     -M-◦-
-                     ---•-
-                     ---◦-
+    let c = circuit(`-M-●-
+                     -M-○-
+                     ---●-
+                     ---○-
                      ---X-`);
 
     assertFalse(c.locStartsDoubleControlWire(new Point(-10, 0)));
@@ -633,7 +627,7 @@ suite.test("locStartsDoubleControlWire", () => {
 });
 
 suite.test("colHasEnabledSwapGate", () => {
-    let c = circuit(`-s-•-s-•-•
+    let c = circuit(`-s-●-s-●-●
                      --ss---sMs
                      --X-ss-s-s
                      ----s-----
@@ -655,7 +649,7 @@ suite.test("colHasEnabledSwapGate", () => {
 });
 
 suite.test("locHasControllableGate", () => {
-    let c = circuit(`•H-M-H-X-----
+    let c = circuit(`●H-M-H-X-----
                      -%-.--s------
                      ------s-s----`);
 
@@ -684,13 +678,13 @@ suite.test("locHasControllableGate", () => {
     assertFalse(c.locHasControllableGate(new Point(0, 0)));
 
     // Unmatched swap.
-    assertFalse(c.locHasControllableGate(new Point(8, 2)));
+    assertTrue(c.locHasControllableGate(new Point(8, 2)));
 });
 
 suite.test("colHasControls", () => {
-    let c = circuit(`-•-•----
-                     M-◦-X-•-
-                     ---◦----`);
+    let c = circuit(`-●-●----
+                     M-○-X-●-
+                     ---○----`);
 
     assertFalse(c.colHasControls(-1));
     assertFalse(c.colHasControls(0));
@@ -706,9 +700,9 @@ suite.test("colHasControls", () => {
 });
 
 suite.test("colHasSingleWireControl", () => {
-    let c = circuit(`-•-•----
-                     M-◦-X-•-
-                     ---◦----`);
+    let c = circuit(`-●-●----
+                     M-○-X-●-
+                     ---○----`);
 
     assertFalse(c.colHasSingleWireControl(-1));
     assertFalse(c.colHasSingleWireControl(0));
@@ -724,9 +718,9 @@ suite.test("colHasSingleWireControl", () => {
 });
 
 suite.test("colHasDoubleWireControl", () => {
-    let c = circuit(`-•-•----
-                     M-◦-X-•-
-                     ---◦----`);
+    let c = circuit(`-●-●----
+                     M-○-X-●-
+                     ---○----`);
 
     assertFalse(c.colHasDoubleWireControl(-1));
     assertFalse(c.colHasDoubleWireControl(0));
@@ -742,10 +736,10 @@ suite.test("colHasDoubleWireControl", () => {
 });
 
 suite.test("gateAtLocIsDisabledReason", () => {
-    let bad = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
-    let good = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
+    let bad = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
+    let good = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
     good(-100, 0, `-`);
     good(+100, 0, `-`);
@@ -753,7 +747,7 @@ suite.test("gateAtLocIsDisabledReason", () => {
     good(0, +100, `-`);
 
     // Controlled measurement.
-    bad(1, 1, `-•-
+    bad(1, 1, `-●-
                -M-
                ---`);
 
@@ -777,27 +771,27 @@ suite.test("gateAtLocIsDisabledReason", () => {
     // Swap that causes a measured value to be affected by a coherent value.
     bad(1, 1, `-s-
                Ms-
-               -•-`);
+               -●-`);
 
     bad(1, 1, `-s-
                Ms-
-               M•-`);
+               M●-`);
 
     bad(1, 1, `Ms-
                Ms-
-               -•-`);
+               -●-`);
 
     good(1, 1, `-s-
                 -s-
-                -•-`);
+                -●-`);
 
     good(1, 1, `-s-
                 -s-
-                M•-`);
+                M●-`);
 
     good(1, 1, `Ms-
                 Ms-
-                M•-`);
+                M●-`);
 
     // Recohering.
     bad(1, 1, `---
@@ -810,19 +804,19 @@ suite.test("gateAtLocIsDisabledReason", () => {
     // Permutation of a measured value involving a coherent control or second value.
     bad(1, 1, `---
                MX-
-               -•-`);
+               -●-`);
 
     good(1, 1, `---
                 MX-
-                M•-`);
+                M●-`);
 
     good(1, 1, `---
                 MZ-
-                -•-`);
+                -●-`);
 
     good(1, 1, `---
                 M%-
-                -•-`);
+                -●-`);
 
     good(1, 1, `---
                 -X-
@@ -831,17 +825,17 @@ suite.test("gateAtLocIsDisabledReason", () => {
     // Control inside gate.
     bad(1, 1, `---
                -2-
-               -•-`);
+               -●-`);
     bad(1, 1, `---
-               -D/
-               -◦/`);
+               -?/
+               -○/`, ['?', Gates.Displays.DensityMatrixDisplay2]);
     good(1, 1, `---
-               -D•
-               -X◦`);
+               -?●
+               -X○`, ['?', Gates.Displays.DensityMatrixDisplay2]);
 });
 
 suite.test("gateAtLocIsDisabledReason_controls", () => {
-    assertThat(circuit(`-•-◦-⊖-⊕-M-⊕-⊖-◦-•-`)).isNotEqualTo(undefined);
+    assertThat(circuit(`-●-○-⊖-⊕-M-⊕-⊖-○-●-`)).isNotEqualTo(undefined);
 
     let bad = (col, row, diagram) =>
         assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
@@ -849,11 +843,11 @@ suite.test("gateAtLocIsDisabledReason_controls", () => {
         assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
     good(1, 1, `---
-                M•-
+                M●-
                 ---`);
 
     good(1, 1, `---
-                M◦-
+                M○-
                 ---`);
 
     bad(1, 1, `---
@@ -865,11 +859,11 @@ suite.test("gateAtLocIsDisabledReason_controls", () => {
                ---`);
 
     good(1, 1, `---
-                -•M
+                -●M
                 ---`);
 
     good(1, 1, `---
-                -◦M
+                -○M
                 ---`);
 
     good(1, 1, `---
@@ -882,45 +876,63 @@ suite.test("gateAtLocIsDisabledReason_controls", () => {
 });
 
 suite.test("gateAtLocIsDisabledReason_tagCollision", () => {
-    let bad = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
-    let good = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
+    /**
+     * @param {!int} col
+     * @param {!int} row
+     * @param {!string} diagram
+     * @param {![!string, !Gate]} extraGates
+     */
+    let bad = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
+    let good = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
     good(1, 1, `---
-                -a-
+                -A-
                 ---`);
 
     good(1, 1, `---
-                aa-
+                AA-
                 ---`);
 
     good(1, 1, `---
-                -a-
-                -a-`);
+                -A-
+                -A-`);
 
-    bad(1, 1, `-a-
-               -a-
-               ---`);
-
-    bad(1, 1, `-a-
+    bad(1, 1, `-A-
                -A-
-               -#-`);
-
-    bad(1, 1, `-b-
-               -b-
                ---`);
 
-    good(1, 1, `-b-
-                -a-
+    bad(1, 1, `-A-
+               -?-
+               -#-`, ['?', Gates.InputGates.InputAFamily.ofSize(2)]);
+
+    bad(1, 1, `-B-
+               -B-
+               ---`);
+
+    good(1, 1, `-B-
+                -A-
                 ---`);
 });
 
 suite.test("gateAtLocIsDisabledReason_needInput", () => {
-    let bad = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
-    let good = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
+    let ownExtraGates = [
+        ['*', Gates.MultiplyAccumulateGates.MultiplyAddInputsFamily],
+        ['⩲', Gates.Arithmetic.PlusAFamily],
+        ['⨧', Gates.Arithmetic.PlusAFamily.ofSize(2)],
+        ['?', Gates.InputGates.InputAFamily.ofSize(2)]
+    ];
+    let bad = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(
+            diagram,
+            ...ownExtraGates,
+            ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
+    let good = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(
+            diagram,
+            ...ownExtraGates,
+            ...extraGates).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
     good(1, 1, `---
                 -X-
@@ -930,145 +942,157 @@ suite.test("gateAtLocIsDisabledReason_needInput", () => {
                -⩲-
                ---`);
 
-    bad(1, 1, `-b-
+    bad(1, 1, `-B-
                -⩲-
                ---`);
 
-    good(1, 1, `-a-
+    good(1, 1, `-A-
                 -⩲-
                 ---`);
 
     // Still works when one of the inputs is broken.
-    good(1, 1, `-a-
+    good(1, 1, `-A-
                 -⩲-
-                -a-`);
+                -A-`);
 
     bad(1, 1, `---
                -⨧-
                -#-`);
 
-    good(1, 1, `-a-
+    good(1, 1, `-A-
                 -⨧-
                 -#-`);
 
     // Overlap.
-    bad(1, 1, `-A-
+    bad(1, 1, `-?-
                -⨧-
                -#-`);
 
     bad(1, 1, `---
-               -⩮-
+               -*-
                ---`);
 
-    bad(1, 1, `-a-
-               -⩮-
+    bad(1, 1, `-A-
+               -*-
                ---`);
 
-    bad(1, 1, `-b-
-               -⩮-
+    bad(1, 1, `-B-
+               -*-
                ---`);
 
-    good(1, 1, `-a-
-                -⩮-
-                -b-`);
+    good(1, 1, `-A-
+                -*-
+                -B-`);
 });
 
 suite.test("gateAtLocIsDisabledReason_tagWithWrongCoherence", () => {
-    let bad = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
-    let good = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
+    let ownExtraGates = [
+        ['*', Gates.MultiplyAccumulateGates.MultiplyAddInputsFamily],
+        ['⩲', Gates.Arithmetic.PlusAFamily],
+        ['⨧', Gates.Arithmetic.PlusAFamily.ofSize(2)],
+        ['?', Gates.InputGates.InputAFamily.ofSize(2)]
+    ];
+    let bad = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(
+            diagram,
+            ...ownExtraGates,
+            ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
+    let good = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(
+            diagram,
+            ...ownExtraGates,
+            ...extraGates).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
 
-    good(3, 1, `---a-
+    good(3, 1, `---A-
                 ---⩲-
                 -----`);
 
-    good(3, 1, `-M-a-
+    good(3, 1, `-M-A-
                 ---⩲-
                 -----`);
 
-    bad(3, 1, `---a-
+    bad(3, 1, `---A-
                -M-⩲-
                -----`);
 
-    good(3, 1, `-M-a-
+    good(3, 1, `-M-A-
                 -M-⩲-
                 -----`);
 
-    good(3, 2, `---A-
+    good(3, 2, `---?-
                 ---#-
                 ---⨧-
                 ---#-`);
 
-    good(3, 2, `---A-
+    good(3, 2, `---?-
                 -M-#-
                 ---⨧-
                 ---#-`);
 
-    bad(3, 2, `---A-
+    bad(3, 2, `---?-
                ---#-
                -M-⨧-
                ---#-`);
 
-    bad(3, 2, `---A-
+    bad(3, 2, `---?-
                ---#-
                ---⨧-
                -M-#-`);
 
-    bad(3, 2, `---A-
+    bad(3, 2, `---?-
                ---#-
                -M-⨧-
                -M-#-`);
 
-    good(3, 2, `-M-A-
+    good(3, 2, `-M-?-
                 -M-#-
                 ---⨧-
                 ---#-`);
 
-    good(3, 2, `-M-A-
+    good(3, 2, `-M-?-
                 -M-#-
                 -M-⨧-
                 -M-#-`);
 
-    good(3, 1, `---a-
-                ---⩮-
-                ---b-`);
+    good(3, 1, `---A-
+                ---*-
+                ---B-`);
 
-    good(3, 1, `-M-a-
-                ---⩮-
-                ---b-`);
+    good(3, 1, `-M-A-
+                ---*-
+                ---B-`);
 
-    good(3, 1, `---a-
-                ---⩮-
-                -M-b-`);
+    good(3, 1, `---A-
+                ---*-
+                -M-B-`);
 
-    good(3, 1, `-M-a-
-                ---⩮-
-                -M-b-`);
+    good(3, 1, `-M-A-
+                ---*-
+                -M-B-`);
 
-    bad(3, 1, `---a-
-               -M-⩮-
-               ---b-`);
+    bad(3, 1, `---A-
+               -M-*-
+               ---B-`);
 
-    bad(3, 1, `-M-a-
-               -M-⩮-
-               ---b-`);
+    bad(3, 1, `-M-A-
+               -M-*-
+               ---B-`);
 
-    bad(3, 1, `---a-
-               -M-⩮-
-               -M-b-`);
+    bad(3, 1, `---A-
+               -M-*-
+               -M-B-`);
 
-    good(3, 1, `-M-a-
-                -M-⩮-
-                -M-b-`);
+    good(3, 1, `-M-A-
+                -M-*-
+                -M-B-`);
 });
 
 suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {
-    let bad = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
-    let good = (col, row, diagram) =>
-        assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
+    let bad = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
+    let good = (col, row, diagram, ...extraGates) =>
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
     bad(1, 1, `---
                M2-
@@ -1078,7 +1102,7 @@ suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {
                -2-
                M/-`);
 
-    bad(1, 1, `-•-
+    bad(1, 1, `-●-
                M2-
                M/-`);
 
@@ -1098,15 +1122,15 @@ suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {
                 M2-
                 M/-`);
 
-    good(1, 1, `-•-
+    good(1, 1, `-●-
                 MD/
                 M//`);
 
 });
 
 suite.test("colCustomContextFromGates", () => {
-    let c = circuit(`-a-b-
-                     -a-a-
+    let c = circuit(`-A-B-
+                     -A-A-
                      --X--`);
     assertThat(c.colCustomContextFromGates(-10, 0)).isEqualTo(new Map());
     assertThat(c.colCustomContextFromGates(0, 0)).isEqualTo(new Map());
@@ -1148,3 +1172,99 @@ suite.test("isSlotRectCoveredByGateInSameColumn", () => {
                         /
                         -`).isSlotRectCoveredByGateInSameColumn(0, 1, 1));
 });
+
+suite.test("controlLineRanges", () => {
+    // Basic CNOTs.
+    assertControlLinesMatchDiagram(`-●-X-●-X-M=●=
+                                         | |   ║
+                                    -●-X-X-●---X-`);
+
+    // Mixed measurement CNOTs.
+    assertControlLinesMatchDiagram(`---●-X-
+                                       | ┃
+                                    ---X-●-
+                                       ║ ║
+                                    -M-●=●=`);
+
+    // Swap gates.
+    assertControlLinesMatchDiagram(`-s-s-s-s-s---s===s=
+                                       | |   |   |   ┃
+                                    ---s-+-s-s-M=s-M=s=
+                                         |   |       ║
+                                    -----s-s-●-----M=●=`);
+
+    // Input/output gates.
+    assertControlLinesMatchDiagram(`-A-A-A-A---A-P-P-P-
+                                       | | |   | ┃ ┃ ║
+                                    ---/-P-P---P-A-A-+-
+                                       |   |   ║ ║ ║ ║
+                                    -●-P---●-M=●=●=A=A=`, ['P', Gates.Arithmetic.PlusAFamily]);
+
+    // Custom circuit gate containing outputs.
+    let N = circuitDefinitionToGate(circuit(`-P-`, ['P', Gates.Arithmetic.PlusAFamily]));
+    assertControlLinesMatchDiagram(`-A-A-A---A-N-
+                                       | |   | ┃
+                                    ---N-N---N-A-
+                                         |   ║ ║
+                                    -●---●-M=●=●=`, ['N', N]);
+
+    // Custom circuit gate containing inputs.
+    let I = circuitDefinitionToGate(circuit(`-A-`));
+    assertControlLinesMatchDiagram(`-I-I-I---I-P-
+                                     |   |   ║ ║
+                                    -+-P-P---P-I-
+                                     |   |   ║ ║
+                                    -●---●-M=●=●=`, ['P', Gates.Arithmetic.PlusAFamily], ['I', I]);
+
+    // Custom matrix operations.
+    let customIdentityGate = Serializer.fromJson(Gate, {
+        id: "~stay",
+        name: "id",
+        matrix: "{{1,0},{0,1}}"
+    });
+    let customOtherGate = Serializer.fromJson(Gate, {
+        id: "~jump",
+        name: "id",
+        matrix: "{{1,0},{0,i}}"
+    });
+    assertControlLinesMatchDiagram(`-I-J-
+                                       |
+                                    -●-●-`, ['I', customIdentityGate], ['J', customOtherGate]);
+});
+
+/**
+ * @param {!string} diagram
+ * @param {...[!string, !Gate]} extraGates
+ */
+function assertControlLinesMatchDiagram(diagram, ...extraGates) {
+    let lines = diagram.split('\n');
+    let indentation = lines[2].search(/\S/);
+    let c = circuit(seq(lines).stride(2).join('\n'), ...extraGates);
+    let controlLines = seq(lines).
+        skip(1).
+        stride(2).
+        map(e => e.substring(indentation)).
+        map(e => seq(e).
+            map(c => c === '┃' ? 3 :
+                     c === '║' ? 2 :
+                     c === '|' || c === '│' ? 1 :
+                     0).
+            padded(c.columns.length, 0).
+            toArray()).
+        toArray();
+
+    for (let col = 0; col < c.columns.length; col++) {
+        let diagramColControlLines = new Array(c.numWires - 1).fill(0);
+        for (let {first, last, measured} of c.controlLinesRanges(col)) {
+            for (let i = first; i < last; i++) {
+                diagramColControlLines[i] |= measured ? 2 : 1;
+            }
+        }
+
+        for (let row = 0; row < c.numWires - 1; row++) {
+            assertThat(controlLines[row][col]).
+                withInfo({col, row, diagram}).
+                isEqualTo(diagramColControlLines[row]);
+        }
+    }
+}
