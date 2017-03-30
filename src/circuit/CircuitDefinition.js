@@ -57,10 +57,10 @@ class CircuitDefinition {
         this.isNested = isNested;
 
         /**
-         * @type {!Array.<undefined|!string>}
+         * @type {!Array.<!Array.<undefined|!string>>}
          * @private
          */
-        this._disabledReasons = [];
+        this._colRowDisabledReason = [];
         /**
          * @type {!Array.<undefined|!int>}
          * @private
@@ -68,9 +68,9 @@ class CircuitDefinition {
         this._measureMasks = [0];
         let mask = 0;
         for (let col of columns) {
-            let reasons = col.disabledReasons(mask, outerRowOffset, outerContext, isNested);
-            mask = col.nextMeasureMask(mask, reasons);
-            this._disabledReasons.push(reasons);
+            let rowReasons = col.perRowDisabledReasons(mask, outerRowOffset, outerContext, isNested);
+            mask = col.nextMeasureMask(mask, rowReasons);
+            this._colRowDisabledReason.push(rowReasons);
             this._measureMasks.push(mask);
         }
 
@@ -785,10 +785,10 @@ class CircuitDefinition {
      * @returns {undefined|!string}
      */
     gateAtLocIsDisabledReason(col, row) {
-        if (col < 0 || row < 0 || col >= this._disabledReasons.length || row >= this.numWires) {
+        if (col < 0 || row < 0 || col >= this._colRowDisabledReason.length || row >= this.numWires) {
             return undefined;
         }
-        return this._disabledReasons[col][row];
+        return this._colRowDisabledReason[col][row];
     }
 
     /**
