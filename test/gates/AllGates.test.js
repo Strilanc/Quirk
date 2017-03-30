@@ -151,10 +151,10 @@ suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
 });
 
 suite.testUsingWebGL("knownDynamicGateFamilies", () => {
-    let doNothingFamilies = new Set(Gates.KnownToSerializer.
+    let dynamicFamilies = new Set(Gates.KnownToSerializer.
         filter(g => g.stableDuration() !== Infinity).
         map(g => g.gateFamily[0].serializedId));
-    assertThat(doNothingFamilies).isEqualTo(new Set([
+    assertThat(dynamicFamilies).isEqualTo(new Set([
         // Dynamic displays.
         'Sample1',
         // Qubit rotating gates.
