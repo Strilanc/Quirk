@@ -708,7 +708,7 @@ class CircuitDefinition {
      */
     locNeedsStat(pt, key) {
         let g = this.gateInSlot(pt.x, pt.y);
-        return g !== undefined && g._requiredContextKeys.indexOf(key) !== -1;
+        return g !== undefined && g.getUnmetContextKeys().has(key);
     }
 
     /**
