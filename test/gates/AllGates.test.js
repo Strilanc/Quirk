@@ -8,6 +8,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {seq} from "src/base/Seq.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
+import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
 
 let suite = new Suite("AllGates");
 
@@ -103,6 +104,14 @@ suite.testUsingWebGL("knownBitPermutationMatchesKnowMatrixAndCustomShader", () =
         let shaderMatrix = reconstructMatrixFromGateCustomOperation(gate, time);
         if (shaderMatrix !== undefined) {
             assertThat(shaderMatrix).withInfo(gate).isEqualTo(permuteBitsMatrix);
+        }
+    }
+});
+
+suite.testUsingWebGL("gatesActLikeTheirKnownPermutation", () => {
+    for (let gate of Gates.KnownToSerializer) {
+        if (gate.knownPermutationFuncTakingInputs !== undefined && gate.height <= 3) {
+            assertThatGateActsLikePermutation(gate, gate.knownPermutationFuncTakingInputs, [2, 2], 3, true);
         }
     }
 });

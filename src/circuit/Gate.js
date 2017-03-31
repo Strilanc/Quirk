@@ -120,6 +120,15 @@ class Gate {
          * @type {undefined | !function(!int) : !int}
          */
         this.knownBitPermutationFunc = undefined;
+        /**
+         * @type {
+         *      !function(val: !int) : !int |
+         *      !function(val: !int, a: !int) : !int |
+         *      !function(val: !int, a: !int, b: !int) : !int |
+         *      !function(val: !int, inputs: ...!int) : !int
+         *  }
+         */
+        this.knownPermutationFuncTakingInputs = undefined;
     }
 
     /**
@@ -320,6 +329,7 @@ class Gate {
         g._controlBit = this._controlBit;
         g.isControlWireSource = this.isControlWireSource;
         g._isDefinitelyUnitary = this._isDefinitelyUnitary;
+        g.knownPermutationFuncTakingInputs = this.knownPermutationFuncTakingInputs;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
@@ -413,6 +423,28 @@ class Gate {
     withCustomDrawer(drawer) {
         let g = this._copy();
         g.customDrawer = drawer;
+        return g;
+    }
+
+    /**
+     * @param {
+     *      !function(val: !int) : !int |
+     *      !function(val: !int, a: !int) : !int |
+     *      !function(val: !int, a: !int, b: !int) : !int |
+     *      !function(val: !int, inputs: ...!int) : !int
+     *  } knownPermutationFuncTakingInputs
+     * @returns {!Gate}
+     */
+    withKnownPermutation(knownPermutationFuncTakingInputs) {
+        let g = this._copy();
+        g.knownPermutationFuncTakingInputs = knownPermutationFuncTakingInputs;
+        if (knownPermutationFuncTakingInputs !== undefined) {
+            g._stableDuration = Infinity;
+            g._hasNoEffect = false;
+            g._effectPermutesStates = true;
+            g._effectCreatesSuperpositions = false;
+            g._isDefinitelyUnitary = true;
+        }
         return g;
     }
 

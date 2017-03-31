@@ -33,14 +33,25 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
 
 /**
  * @param {!Gate} gate
- * @param {!function(inputA:!int,target:!int):!int|!function(inputA:!int,inputB:!int,target:!int):!int} inversePermutationFunc
+ * @param {!function(target:!int,inputA:!int):!int|!function(target:!int,inputA:!int,inputB:!int):!int} permutationFunc
  * @param {!Array.<!int>} inputSpans
  * @param {!int=5} repeats
+ * @param {!boolean} ignoreTargetEndsUpDisabled
  */
-function assertThatGateActsLikePermutation(gate, inversePermutationFunc, inputSpans, repeats=5) {
-    let inputGates = seq(inputSpans).
-        zip([Gates.InputGates.InputAFamily, Gates.InputGates.InputBFamily], (len, fam) => fam.ofSize(len)).
-        toArray();
+function assertThatGateActsLikePermutation(
+        gate,
+        permutationFunc,
+        inputSpans,
+        repeats=5,
+        ignoreTargetEndsUpDisabled=false) {
+    let inputGates = [];
+    for (let [key, inputGate] of [['Input Range A', Gates.InputGates.InputAFamily],
+                                  ['Input Range B', Gates.InputGates.InputBFamily]]) {
+        if (gate.getUnmetContextKeys().has(key)) {
+            inputGates.push(inputGate.ofSize(inputSpans[inputGates.length]));
+        }
+    }
+    inputSpans = inputSpans.slice(0, inputGates.length);
 
     for (let _ of Seq.range(repeats)) {
         let dstWire = 0;
@@ -62,7 +73,7 @@ function assertThatGateActsLikePermutation(gate, inversePermutationFunc, inputSp
         let matrix = Matrix.generateTransition(1 << wireCount, val => {
             let dst = (val & dstMask) >> dstWire;
             let inps = seq(inpMasks).zip(inpWires, (m, w) => (val & m) >> w).toArray();
-            let out = inversePermutationFunc(...inps, dst);
+            let out = permutationFunc(dst, ...inps);
             return (val & ~dstMask) | out;
         });
 
@@ -73,6 +84,13 @@ function assertThatGateActsLikePermutation(gate, inversePermutationFunc, inputSp
         }
         col[dstWire] = gate;
         let circuit = new CircuitDefinition(wireCount, [new GateColumn(col)]);
+
+        if (circuit.gateAtLocIsDisabledReason(0, 0) !== undefined) {
+            if (ignoreTargetEndsUpDisabled) {
+                return;
+            }
+            assertThat(circuit.gateAtLocIsDisabledReason(0, 0)).withInfo({gate}).isEqualTo(undefined);
+        }
 
         assertThatCircuitUpdateActsLikeMatrix(ctx => advanceStateWithCircuit(ctx, circuit, false), matrix, 1);
     }

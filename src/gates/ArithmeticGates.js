@@ -12,7 +12,7 @@ const makeOffsetMatrix = (offset, qubitSpan) =>
 
 const INCREMENT_MATRIX_MAKER = span => makeOffsetMatrix(1, span);
 const DECREMENT_MATRIX_MAKER = span => makeOffsetMatrix(-1, span);
-const ADDITION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e => {
+const CHUNKED_ADDITION_PERMUTATION_MAKER = span => e => {
     let sa = Math.floor(span/2);
     let sb = Math.ceil(span/2);
     let a = e & ((1 << sa) - 1);
@@ -20,8 +20,10 @@ const ADDITION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e => {
     b += a;
     b &= ((1 << sb) - 1);
     return a + (b << sa);
-});
-const SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e => {
+};
+const CHUNKED_ADDITION_MATRIX_MAKER = span => Matrix.generateTransition(
+    1<<span, CHUNKED_ADDITION_PERMUTATION_MAKER(span));
+const CHUNKED_SUBTRACTION_PERMUTATION_MAKER = span => e => {
     let sa = Math.floor(span/2);
     let sb = Math.ceil(span/2);
     let a = e & ((1 << sa) - 1);
@@ -29,7 +31,9 @@ const SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(1<<span, e =>
     b -= a;
     b &= ((1 << sb) - 1);
     return a + (b << sa);
-});
+};
+const CHUNKED_SUBTRACTION_MATRIX_MAKER = span => Matrix.generateTransition(
+    1<<span, CHUNKED_SUBTRACTION_PERMUTATION_MAKER(span));
 
 /**
  * @param {!CircuitEvalContext} ctx
@@ -72,9 +76,8 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     "++",
     "Increment Gate",
     "Adds 1 to the little-endian number represented by a block of qubits.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
+    withKnownPermutation(t => (t + 1) & ((1 << span) - 1)).
     withSerializedId("inc" + span).
     withHeight(span).
     withCustomShader(ctx => incrementShaderFunc(ctx, span, +1)));
@@ -83,9 +86,8 @@ ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     "- -",
     "Decrement Gate",
     "Subtracts 1 from the little-endian number represented by a block of qubits.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
+    withKnownPermutation(t => (t - 1) & ((1 << span) - 1)).
     withSerializedId("dec" + span).
     withHeight(span).
     withCustomShader(ctx => incrementShaderFunc(ctx, span, -1)));
@@ -94,9 +96,8 @@ ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.without
     "b+=a",
     "Addition Gate",
     "Adds a little-endian number into another.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withKnownMatrix(span >= 5 ? undefined : ADDITION_MATRIX_MAKER(span)).
+    withKnownMatrix(span >= 5 ? undefined : CHUNKED_ADDITION_MATRIX_MAKER(span)).
+    withKnownPermutation(CHUNKED_ADDITION_PERMUTATION_MAKER(span)).
     withSerializedId("add" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
     withHeight(span).
@@ -111,9 +112,8 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     "b-=a",
     "Subtraction Gate",
     "Subtracts a little-endian number from another.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withKnownMatrix(span >= 5 ? undefined : SUBTRACTION_MATRIX_MAKER(span)).
+    withKnownMatrix(span >= 5 ? undefined : CHUNKED_SUBTRACTION_MATRIX_MAKER(span)).
+    withKnownPermutation(CHUNKED_SUBTRACTION_PERMUTATION_MAKER(span)).
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
@@ -128,9 +128,8 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     "+A",
     "Addition Gate [input A]",
     "Adds 'input A' into the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withHeight(span).
+    withKnownPermutation((v, a) => (v + a) & ((1 << span) - 1)).
     withSerializedId("+=A" + span).
     withRequiredContextKeys("Input Range A").
     withCustomShader(ctx => {
@@ -142,8 +141,7 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     "−A",
     "Subtraction Gate [input A]",
     "Subtracts 'input A' out of the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
+    withKnownPermutation((v, a) => (v - a) & ((1 << span) - 1)).
     withHeight(span).
     withSerializedId("-=A" + span).
     withRequiredContextKeys("Input Range A").

@@ -14,7 +14,7 @@ let CycleBitsGates = {};
  * @param {!int} shiftAmount
  * @returns {!WglConfiguredShader}
  */
-let cycleBits = (ctx, qubitSpan, shiftAmount) =>
+let cycleBitsShader = (ctx, qubitSpan, shiftAmount) =>
     CYCLE_SHADER.withArgs(
         ...ketArgs(ctx, qubitSpan),
         WglArg.float("amount", 1 << Util.properMod(-shiftAmount, qubitSpan)));
@@ -35,7 +35,7 @@ CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.without
     withSerializedId("<<" + span).
     withHeight(span).
     withKnownBitPermutation(i => (i + 1) % span).
-    withCustomShader(ctx => cycleBits(ctx, span, +1)).
+    withCustomShader(ctx => cycleBitsShader(ctx, span, +1)).
     withCustomDrawer(GatePainting.PERMUTATION_DRAWER));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
@@ -46,7 +46,7 @@ CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.
     withSerializedId(">>" + span).
     withHeight(span).
     withKnownBitPermutation(i => (i + span - 1) % span).
-    withCustomShader(ctx => cycleBits(ctx, span, -1)).
+    withCustomShader(ctx => cycleBitsShader(ctx, span, -1)).
     withCustomDrawer(GatePainting.PERMUTATION_DRAWER));
 
 CycleBitsGates.all = [
@@ -54,4 +54,4 @@ CycleBitsGates.all = [
     ...CycleBitsGates.ReverseCycleBitsFamily.all
 ];
 
-export {CycleBitsGates, cycleBits, makeCycleBitsMatrix};
+export {CycleBitsGates, cycleBitsShader, makeCycleBitsMatrix};

@@ -14,7 +14,7 @@ let sectionSizes = totalSize => {
     return [a, b, totalSize - a - b];
 };
 
-const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransition(1<<span, e => {
+const makeScaledMultiplyAddPermutation = (span, scaleFactor) => e => {
     let [sa, sb, sc] = sectionSizes(span);
     let a = e & ((1 << sa) - 1);
     let b = (e >> sa) & ((1 << sb) - 1);
@@ -22,7 +22,9 @@ const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransi
     c += a*b*scaleFactor;
     c &= ((1 << sc) - 1);
     return a | (b << sa) | (c << (sa+sb));
-});
+};
+const makeScaledMultiplyAddMatrix = (span, scaleFactor) =>
+    Matrix.generateTransition(1<<span, makeScaledMultiplyAddPermutation(span, scaleFactor));
 
 /**
  * @param {!CircuitEvalContext} ctx
@@ -62,9 +64,8 @@ MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(3, 16, span => G
     "c+=ab",
     "Multiply-Add Gate",
     "Adds the product of two numbers into a third.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrix(span >= 5 ? undefined : makeScaledMultiplyAddMatrix(span, +1)).
+    withKnownPermutation(makeScaledMultiplyAddPermutation(span, +1)).
     withSerializedId("c+=ab" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(
         ["a", "b", "c+=ab"],
@@ -86,9 +87,8 @@ MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(3, 16, span
     "c-=ab",
     "Multiply-Subtract Gate",
     "Subtracts the product of two numbers from a third.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrix(span >= 5 ? undefined : makeScaledMultiplyAddMatrix(span, -1)).
+    withKnownPermutation(makeScaledMultiplyAddPermutation(span, -1)).
     withSerializedId("c-=ab" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(
         ["a", "b", "c-=ab"],
@@ -110,10 +110,9 @@ MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.generateFamily(1, 16, spa
     "+AB",
     "Multiply-Add Gate [Inputs A, B]",
     "Adds the product of inputs A and B into the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("+=AB" + span).
     withHeight(span).
+    withKnownPermutation((t, a, b) => (t + a*b) & ((1 << span) - 1)).
     withRequiredContextKeys('Input Range A', 'Input Range B').
     withCustomShader(ctx => {
         let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
@@ -132,10 +131,9 @@ MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.generateFamily(1, 16
     "−AB",
     "Multiply-Subtract Gate [Inputs A, B]",
     "Subtracts the product of inputs A and B out of the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("-=AB" + span).
     withHeight(span).
+    withKnownPermutation((t, a, b) => (t - a*b) & ((1 << span) - 1)).
     withRequiredContextKeys('Input Range A', 'Input Range B').
     withCustomShader(ctx => {
         let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
@@ -154,10 +152,9 @@ MultiplyAccumulateGates.SquareAddInputFamily = Gate.generateFamily(1, 16, span =
     "+=A^2",
     "Square-Add Gate [Input A]",
     "Adds the square of input A into the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("+=AA" + span).
     withHeight(span).
+    withKnownPermutation((t, a) => (t + a*a) & ((1 << span) - 1)).
     withRequiredContextKeys('Input Range A').
     withCustomShader(ctx => {
         let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
@@ -175,9 +172,8 @@ MultiplyAccumulateGates.SquareSubtractInputFamily = Gate.generateFamily(1, 16, s
     "-=A^2",
     "Square-Subtract Gate [Input A]",
     "Subtracts the square of input A out of the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("-=AA" + span).
+    withKnownPermutation((t, a) => (t - a*a) & ((1 << span) - 1)).
     withHeight(span).
     withRequiredContextKeys('Input Range A').
     withCustomShader(ctx => {
