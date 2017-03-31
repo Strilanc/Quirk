@@ -54,6 +54,7 @@ const MULTIPLICATION_SHADER = ketShaderPermute(
     `,
     `
         float input_a = mod(floor(full_out_id / input_a_offset), input_a_span);
+        input_a = mod(input_a, span);
         float s = extract2s(input_a);
         float v = modular_multiplicative_inverse(input_a / s, span);
         float r = out_id;
@@ -74,6 +75,7 @@ const INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
     `,
     `
         float input_a = mod(floor(full_out_id / input_a_offset), input_a_span);
+        input_a = mod(input_a, span);
         float s = extract2s(input_a);
         float v = input_a / s;
         float r = out_id;
@@ -89,6 +91,7 @@ const INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
     `);
 
 function reversible2sComplementMultiply(x, a, bitSpan) {
+    a &= (1 << bitSpan) - 1;
     if (a === 0) {
         return x;
     }
@@ -106,6 +109,7 @@ function reversible2sComplementMultiply(x, a, bitSpan) {
 }
 
 function reversible2sComplementUnmultiply(x, a, bitSpan) {
+    a &= (1 << bitSpan) - 1;
     if (a === 0) {
         return x;
     }

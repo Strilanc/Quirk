@@ -143,11 +143,21 @@ suite.testUsingWebGL('multiplication_gate', () => {
         MultiplicationGates.TimesAFamily.ofSize(4),
         (x, a) => reversible2sComplementMultiply(x, a, 4),
         [4]);
+
+    assertThatGateActsLikePermutation(
+        MultiplicationGates.TimesAFamily.ofSize(2),
+        (x, a) => reversible2sComplementMultiply(x, a, 2),
+        [4]);
 });
 
 suite.testUsingWebGL('inverse_multiplication_gate', () => {
     assertThatGateActsLikePermutation(
         MultiplicationGates.TimesAInverseFamily.ofSize(4),
         (x, a) => reversible2sComplementUnmultiply(x, a, 4),
+        [4]);
+
+    assertThatGateActsLikePermutation(
+        MultiplicationGates.TimesAInverseFamily.ofSize(2),
+        (x, a) => reversible2sComplementUnmultiply(x, a, 2),
         [4]);
 });
