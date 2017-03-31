@@ -300,7 +300,7 @@ class GateColumn {
      * @param {!boolean} isNested
      * @returns {!Array.<undefined|!string>}
      */
-    disabledReasons(inputMeasureMask, outerRowOffset, outerContext, isNested) {
+    perRowDisabledReasons(inputMeasureMask, outerRowOffset, outerContext, isNested) {
         let context = new Map(outerContext);
         for (let row = this.gates.length - 1; row >= 0; row--) {
             let g = this.gates[row];

@@ -7,6 +7,7 @@ let SpacerGate = Gate.fromIdentity(
     "…",
     "Spacer",
     "A gate with no effect.").
+    markedAsNotInterestedInControls().
     withCustomDrawer(args => {
         // Drawn as an ellipsis.
         if (args.isInToolbox || args.isHighlighted) {

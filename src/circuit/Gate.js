@@ -43,6 +43,8 @@ class Gate {
         /** @type {!Array.<!Gate>} */
         this.gateFamily = [this];
 
+        /** @type {!boolean} */
+        this.interestedInControls = true;
         /**
          * @type {undefined|Infinity|!number}
          * @private
@@ -255,6 +257,7 @@ class Gate {
         g._controlBit = bit;
         g.isControlWireSource = true;
         g._isDefinitelyUnitary = true;
+        g.interestedInControls = false;
         return g;
     }
 
@@ -294,6 +297,7 @@ class Gate {
         g.serializedId = this.serializedId;
         g.tag = this.tag;
         g.customDrawer = this.customDrawer;
+        g.interestedInControls = this.interestedInControls;
         g.customBeforeOperation = this.customBeforeOperation;
         g.knownBitPermutationFunc = this.knownBitPermutationFunc;
         g.customOperation = this.customOperation;
@@ -389,6 +393,16 @@ class Gate {
     withHeight(height) {
         let g = this._copy();
         g.height = height;
+        return g;
+    }
+
+    /**
+     * Indicates that this gate is not a control wire destination when drawing.
+     * @returns {!Gate}
+     */
+    markedAsNotInterestedInControls() {
+        let g = this._copy();
+        g.interestedInControls = false;
         return g;
     }
 

@@ -10,6 +10,7 @@ let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fr
     `Marks some qubits as input '${key}'${reverse ? ', in big-endian order' : ''}.`).
     withSerializedId((reverse ? 'rev' : '') + `input${key}${span}`).
     withHeight(span).
+    markedAsNotInterestedInControls().
     withCustomColumnContextProvider(qubitIndex => [{
         key: `Input Range ${key}`,
         val: {
