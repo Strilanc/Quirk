@@ -15,6 +15,7 @@ import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
 import {ModularArithmeticGates} from "src/gates/ModularArithmeticGates.js"
+import {MultiplicationGates} from "src/gates/MultiplicationGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
 import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
@@ -70,6 +71,7 @@ Gates.HalfTurns = HalfTurnGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
 Gates.ModularArithmeticGates = ModularArithmeticGates;
+Gates.MultiplicationGates = MultiplicationGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.NeGate = NeGate;
 Gates.OtherX = VariousXGates;
@@ -112,6 +114,7 @@ Gates.KnownToSerializer = [
     ...HalfTurnGates.all,
     ...InterleaveBitsGates.all,
     ...ModularArithmeticGates.all,
+    ...MultiplicationGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
     ...PhaseGradientGates.all,

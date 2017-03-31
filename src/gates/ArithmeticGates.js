@@ -73,7 +73,7 @@ const ADDITION_SHADER = ketShaderPermute(
         return mod(out_id + span - d, span);`);
 
 ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "++",
+    "+1",
     "Increment Gate",
     "Adds 1 to the little-endian number represented by a block of qubits.").
     withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
@@ -83,7 +83,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     withCustomShader(ctx => incrementShaderFunc(ctx, span, +1)));
 
 ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "- -",
+    "−1",
     "Decrement Gate",
     "Subtracts 1 from the little-endian number represented by a block of qubits.").
     withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).

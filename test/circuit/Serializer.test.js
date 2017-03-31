@@ -193,6 +193,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "-=A1", "-=A2", "-=A3", "-=A4", "-=A5", "-=A6", "-=A7", "-=A8", "-=A9", "-=A10", "-=A11", "-=A12", "-=A13", "-=A14", "-=A15", "-=A16",
     "-AmodB1", "-AmodB2", "-AmodB3", "-AmodB4", "-AmodB5", "-AmodB6", "-AmodB7", "-AmodB8", "-AmodB9", "-AmodB10", "-AmodB11", "-AmodB12", "-AmodB13", "-AmodB14", "-AmodB15", "-AmodB16",
     "-=AA1", "-=AA2", "-=AA3", "-=AA4", "-=AA5", "-=AA6", "-=AA7", "-=AA8", "-=AA9", "-=AA10", "-=AA11", "-=AA12", "-=AA13", "-=AA14", "-=AA15", "-=AA16",
+    "*A1", "*A2", "*A3", "*A4", "*A5", "*A6", "*A7", "*A8", "*A9", "*A10", "*A11", "*A12", "*A13", "*A14", "*A15", "*A16",
+    "/A1", "/A2", "/A3", "/A4", "/A5", "/A6", "/A7", "/A8", "/A9", "/A10", "/A11", "/A12", "/A13", "/A14", "/A15", "/A16",
     "+cntA1", "+cntA2", "+cntA3", "+cntA4", "+cntA5", "+cntA6", "+cntA7", "+cntA8", "+cntA9", "+cntA10", "+cntA11", "+cntA12", "+cntA13", "+cntA14", "+cntA15", "+cntA16",
     "-cntA1", "-cntA2", "-cntA3", "-cntA4", "-cntA5", "-cntA6", "-cntA7", "-cntA8", "-cntA9", "-cntA10", "-cntA11", "-cntA12", "-cntA13", "-cntA14", "-cntA15", "-cntA16",
     "^A<B", "^A>B", "^A<=B", "^A>=B", "^A=B", "^A!=B",
