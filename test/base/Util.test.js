@@ -389,6 +389,7 @@ suite.test("extended_gcd", () => {
     assertThat(Util.extended_gcd(11, 0)).isEqualTo({x: 1, y: 0, gcd: 11});
     assertThat(Util.extended_gcd(11, 1)).isEqualTo({x: 0, y: 1, gcd: 1});
     assertThat(Util.extended_gcd(240, 46)).isEqualTo({x: -9, y: 47, gcd: 2});
+    assertThat(Util.extended_gcd(3655, 3826)).isEqualTo({x: -179, y: 171, gcd: 1});
 });
 
 suite.test("modular_multiplicative_inverse", () => {

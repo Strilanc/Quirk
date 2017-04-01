@@ -28,7 +28,7 @@ const MODULAR_INCREMENT_SHADER = ketShaderPermute(
             : floor(mod(out_id + r - amount, r - 0.000001));`);
 
 ModularArithmeticGates.IncrementModAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+1%A",
+    "+1\nmod A",
     "Modular Increment Gate",
     "Adds 1 to a block of qubits, but wraps to 0 at A.\n" +
         "Only affects values less than A.").
@@ -47,7 +47,7 @@ ModularArithmeticGates.IncrementModAFamily = Gate.generateFamily(1, 16, span => 
     }));
 
 ModularArithmeticGates.DecrementModAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "−1%A",
+    "−1\nmod A",
     "Modular Decrement Gate",
     "Subtracts 1 from a block of qubits, but wraps to A-1 at -1.\n" +
         "Only affects values less than A.").
@@ -78,7 +78,7 @@ const MODULAR_ADDITION_SHADER = ketShaderPermute(
             : floor(mod(out_id + r - d, r - 0.000001) + 0.5);`);
 
 ModularArithmeticGates.PlusAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+A%B",
+    "+A\nmod B",
     "Modular Addition Gate",
     "Adds 'input A' into the qubits covered by this gate.").
     withHeight(span).
@@ -99,7 +99,7 @@ ModularArithmeticGates.PlusAModBFamily = Gate.generateFamily(1, 16, span => Gate
     }));
 
 ModularArithmeticGates.MinusAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "−A%B",
+    "−A\nmod B",
     "Modular Subtraction Gate",
     "Subtracts 'input A' out of the qubits covered by this gate.").
     withHeight(span).
@@ -126,4 +126,4 @@ ModularArithmeticGates.all = [
     ...ModularArithmeticGates.MinusAModBFamily.all,
 ];
 
-export {ModularArithmeticGates}
+export {ModularArithmeticGates, modulusTooBigChecker}

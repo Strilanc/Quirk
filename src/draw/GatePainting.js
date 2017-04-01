@@ -10,6 +10,8 @@ import {Util} from "src/base/Util.js"
  */
 class GatePainting {}
 
+const GATE_SYMBOL_FONT = '16px sans-serif';
+
 GatePainting.paintOutline = args => {
     if (args.isInToolbox) {
         let r = args.rect.shiftedBy(0.5, 0.5);
@@ -112,28 +114,28 @@ GatePainting.paintResizeTab = args => {
  */
 GatePainting.paintGateSymbol = args => {
     let painter = args.painter;
-    let symbol = args.gate.symbol;
-    let rect = args.rect;
-    const font = '16px sans-serif';
-    rect = rect.paddedBy(-2);
+    let rect = args.rect.paddedBy(-2);
+    let {symbol, offsetY} = _paintSymbolHandleLines(args, rect);
 
     let parts = symbol.split("^");
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
         painter.print(
             symbol,
             rect.x + rect.w/2,
-            rect.y + rect.h/2,
+            rect.y + rect.h/2 + offsetY,
             'center',
             'middle',
             'black',
-            font,
+            GATE_SYMBOL_FONT,
             rect.w,
             rect.h);
         return;
     }
 
     let [baseText, expText] = parts;
-    painter.ctx.font = font;
+    let lines = baseText.split('\n');
+    baseText = lines[0];
+
     let baseWidth = painter.ctx.measureText(baseText).width;
     let expWidth = painter.ctx.measureText(expText).width;
     let scaleDown = Math.min(rect.w, baseWidth + expWidth) / (baseWidth + expWidth);
@@ -141,24 +143,51 @@ GatePainting.paintGateSymbol = args => {
     painter.print(
         baseText,
         rect.x + divider,
-        rect.y + rect.h/2,
+        rect.y + rect.h/2 + offsetY,
         'right',
         'hanging',
         'black',
-        font,
+        GATE_SYMBOL_FONT,
         divider,
         rect.h);
     painter.print(
         expText,
         rect.x + divider,
-        rect.y + rect.h/2,
+        rect.y + rect.h/2 + offsetY,
         'left',
         'alphabetic',
         'black',
-        font,
+        GATE_SYMBOL_FONT,
         rect.w - divider,
         rect.h);
 };
+
+/**
+ * @param {!GateDrawParams} args
+ * @param {!Rect} rect
+ * @returns {!{symbol: !string, offsetY: !int}} The symbol without any extra lines.
+ * @private
+ */
+function _paintSymbolHandleLines(args, rect) {
+    let painter = args.painter;
+
+    let lines = args.gate.symbol.split('\n');
+
+    for (let i = 1; i < lines.length; i++) {
+        painter.print(
+            lines[i],
+            rect.x + rect.w/2,
+            rect.y + rect.h/2 + 9*i,
+            'center',
+            'hanging',
+            'black',
+            GATE_SYMBOL_FONT,
+            rect.w,
+            rect.h);
+    }
+
+    return {symbol: lines[0], offsetY: lines.length > 1 ? -5 : 0};
+}
 
 GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
     if (args.isInToolbox) {

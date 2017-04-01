@@ -15,6 +15,7 @@ import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
 import {ModularArithmeticGates} from "src/gates/ModularArithmeticGates.js"
+import {ModularMultiplicationGates} from "src/gates/ModularMultiplicationGates.js"
 import {MultiplicationGates} from "src/gates/MultiplicationGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
@@ -71,6 +72,7 @@ Gates.HalfTurns = HalfTurnGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
 Gates.ModularArithmeticGates = ModularArithmeticGates;
+Gates.ModularMultiplicationGates = ModularMultiplicationGates;
 Gates.MultiplicationGates = MultiplicationGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.NeGate = NeGate;
@@ -114,6 +116,7 @@ Gates.KnownToSerializer = [
     ...HalfTurnGates.all,
     ...InterleaveBitsGates.all,
     ...ModularArithmeticGates.all,
+    ...ModularMultiplicationGates.all,
     ...MultiplicationGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
@@ -262,7 +265,8 @@ Gates.BottomToolboxGroups = [
         gates: [
             ModularArithmeticGates.IncrementModAFamily.ofSize(2), ModularArithmeticGates.DecrementModAFamily.ofSize(2),
             ModularArithmeticGates.PlusAModBFamily.ofSize(2), ModularArithmeticGates.MinusAModBFamily.ofSize(2),
-            undefined, undefined,
+            ModularMultiplicationGates.TimesAModBFamily.ofSize(2),
+                ModularMultiplicationGates.TimesAModBInverseFamily.ofSize(2),
         ]
     },
 ];
