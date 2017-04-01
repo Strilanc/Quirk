@@ -134,7 +134,7 @@ suite.testUsingWebGL("knownNonUnitaryGates", () => {
     ]));
 });
 
-suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
+suite.test("knownDoNothingGateFamilies", () => {
     let doNothingFamilies = new Set(Gates.KnownToSerializer.
         filter(g => g.definitelyHasNoEffect()).
         map(g => g.gateFamily[0].serializedId));
@@ -148,6 +148,8 @@ suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
         'inputB1',
         'revinputA1',
         'revinputB1',
+        'setA',
+        'setB',
         // Displays don't have effects.
         'Amps1',
         'Chance',

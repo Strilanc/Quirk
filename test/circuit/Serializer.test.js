@@ -180,6 +180,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "Sample1", "Sample2", "Sample3", "Sample4", "Sample5", "Sample6", "Sample7", "Sample8", "Sample9", "Sample10", "Sample11", "Sample12", "Sample13", "Sample14", "Sample15", "Sample16",
     "Density", "Density2", "Density3", "Density4", "Density5", "Density6", "Density7", "Density8",
     "Bloch",
+    "setA",
+    "setB",
     "inc1", "inc2", "inc3", "inc4", "inc5", "inc6", "inc7", "inc8", "inc9", "inc10", "inc11", "inc12", "inc13", "inc14", "inc15", "inc16",
     "dec1", "dec2", "dec3", "dec4", "dec5", "dec6", "dec7", "dec8", "dec9", "dec10", "dec11", "dec12", "dec13", "dec14", "dec15", "dec16",
     "incmodA1", "incmodA2", "incmodA3", "incmodA4", "incmodA5", "incmodA6", "incmodA7", "incmodA8", "incmodA9", "incmodA10", "incmodA11", "incmodA12", "incmodA13", "incmodA14", "incmodA15", "incmodA16",
