@@ -46,7 +46,8 @@ function assertThatGateActsLikePermutation(
         ignoreTargetEndsUpDisabled=false) {
     let inputGates = [];
     for (let [key, inputGate] of [['Input Range A', Gates.InputGates.InputAFamily],
-                                  ['Input Range B', Gates.InputGates.InputBFamily]]) {
+                                  ['Input Range B', Gates.InputGates.InputBFamily],
+                                  ['Input Range R', Gates.InputGates.InputRFamily]]) {
         if (gate.getUnmetContextKeys().has(key)) {
             inputGates.push(inputGate.ofSize(inputSpans[inputGates.length]));
         }

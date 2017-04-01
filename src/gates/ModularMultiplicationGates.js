@@ -87,64 +87,62 @@ const MODULAR_MULTIPLICATION_SHADER = ketShaderPermute(
     `
         ${MODULAR_INVERSE_SHADER_CODE}
         ${ketInputGateShaderCode('A')}
-        ${ketInputGateShaderCode('B')}
+        ${ketInputGateShaderCode('R')}
     `,
     `
         float input_a = read_input_A();
-        float input_b = read_input_B();
-        input_a = mod(input_a, input_b);
-        float v = modular_multiplicative_inverse(input_a, input_b);
-        if (v == -1.0 || out_id >= input_b) {
+        float modulus = read_input_R();
+        input_a = mod(input_a, modulus);
+        float v = modular_multiplicative_inverse(input_a, modulus);
+        if (v == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return mod(out_id * v, input_b);
+        return mod(out_id * v, modulus);
     `);
 
 const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
     `
-        uniform float input_a_offset, input_a_span;
-        uniform float input_b_offset, input_b_span;
         ${MODULAR_INVERSE_SHADER_CODE}
         ${ketInputGateShaderCode('A')}
-        ${ketInputGateShaderCode('B')}
+        ${ketInputGateShaderCode('R')}
     `,
     `
         float input_a = read_input_A();
-        float input_b = read_input_B();
-        input_a = mod(input_a, input_b);
-        if (modular_multiplicative_inverse(input_a, input_b) == -1.0 || out_id >= input_b) {
+        float modulus = read_input_R();
+        input_a = mod(input_a, modulus);
+        if (modular_multiplicative_inverse(input_a, modulus) == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return mod(out_id * input_a, input_b);
+        return mod(out_id * input_a, modulus);
     `);
 
-ModularMultiplicationGates.TimesAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "×A\nmod B",
+ModularMultiplicationGates.TimesAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "×A\nmod R",
     "Modular Multiplication Gate",
     "Multiplies the target by input A mod input B.\n" +
         "But does nothing if the multiplication would be irreversible.").
-    withSerializedId("*AmodB" + span).
+    withSerializedId("*AmodR" + span).
     withHeight(span).
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomDisableReasonFinder(modulusTooBigChecker("B", span)).
+    withRequiredContextKeys("Input Range A", "Input Range R").
+    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
     withKnownPermutation(modularMultiply).
-    withCustomShader(ctx => MODULAR_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'B']))));
+    withCustomShader(ctx => MODULAR_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'R']))));
 
-ModularMultiplicationGates.TimesAModBInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "×A^-1\nmod B",
+ModularMultiplicationGates.TimesAModRInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "×A^-1\nmod R",
     "Inverse Multiplication Gate",
-    "Inverse-multiplies the target by input A mod input B.\n" +
+    "Inverse-multiplies the target by input A mod input R.\n" +
         "But does nothing if the multiplication would be irreversible.").
-    withSerializedId("/AmodB" + span).
+    withSerializedId("/AmodR" + span).
     withHeight(span).
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomDisableReasonFinder(modulusTooBigChecker("B", span)).
+    withRequiredContextKeys("Input Range A", "Input Range R").
+    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
     withKnownPermutation(modularUnmultiply).
     withCustomShader(ctx => MODULAR_INVERSE_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'B']))));
 
 ModularMultiplicationGates.all = [
-    ...ModularMultiplicationGates.TimesAModBFamily.all,
-    ...ModularMultiplicationGates.TimesAModBInverseFamily.all,
+    ...ModularMultiplicationGates.TimesAModRFamily.all,
+    ...ModularMultiplicationGates.TimesAModRInverseFamily.all,
 ];
 
 export {

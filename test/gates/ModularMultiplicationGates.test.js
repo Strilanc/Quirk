@@ -126,24 +126,24 @@ suite.test("modularMultiply_vs_Unmultiply_fuzz", () => {
 
 suite.testUsingWebGL('times_a_mod_b_gate', () => {
     assertThatGateActsLikePermutation(
-        ModularMultiplicationGates.TimesAModBFamily.ofSize(3),
+        ModularMultiplicationGates.TimesAModRFamily.ofSize(3),
         modularMultiply,
         [3, 3]);
 
     assertThatGateActsLikePermutation(
-        ModularMultiplicationGates.TimesAModBFamily.ofSize(2),
+        ModularMultiplicationGates.TimesAModRFamily.ofSize(2),
         modularMultiply,
         [3, 2]);
 });
 
 suite.testUsingWebGL('times_a_mod_b_inverse_gate', () => {
     assertThatGateActsLikePermutation(
-        ModularMultiplicationGates.TimesAModBInverseFamily.ofSize(3),
+        ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(3),
         modularUnmultiply,
         [3, 3]);
 
     assertThatGateActsLikePermutation(
-        ModularMultiplicationGates.TimesAModBInverseFamily.ofSize(2),
+        ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
         modularUnmultiply,
         [3, 2]);
 });

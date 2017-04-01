@@ -25,52 +25,52 @@ let modulusTooBigChecker = (inputKey, span) => args => {
 const MODULAR_INCREMENT_SHADER = ketShaderPermute(
     `
         uniform float amount;
-        ${ketInputGateShaderCode('A')}
+        ${ketInputGateShaderCode('R')}
     `,
     `
-        float r = read_input_A();
+        float r = read_input_R();
         return out_id >= r
             ? out_id
             // HACK: sometimes mod(value-equal-to-r, r) returns r instead of 0. The perturbation works around it.
             : floor(mod(out_id + r - amount, r - 0.000001));`);
 
 ModularArithmeticGates.IncrementModAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+1\nmod A",
+    "+1\nmod R",
     "Modular Increment Gate",
-    "Adds 1 to a block of qubits, but wraps to 0 at A.\n" +
-        "Only affects values less than A.").
-    withSerializedId("incmodA" + span).
+    "Adds 1 into the target, but wraps R-1 to 0.\n" +
+        "Only affects values less than R.").
+    withSerializedId("incmodR" + span).
     withHeight(span).
-    withRequiredContextKeys("Input Range A").
+    withRequiredContextKeys("Input Range R").
     withKnownPermutation((t, a) => t < a ? (t + 1) % a : t).
-    withCustomDisableReasonFinder(modulusTooBigChecker("A", span)).
+    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
     withCustomShader(ctx => MODULAR_INCREMENT_SHADER.withArgs(
-        ...ketArgs(ctx, span, ['A']),
+        ...ketArgs(ctx, span, ['R']),
         WglArg.float("amount", +1))));
 
 ModularArithmeticGates.DecrementModAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "−1\nmod A",
+    "−1\nmod R",
     "Modular Decrement Gate",
-    "Subtracts 1 from a block of qubits, but wraps to A-1 at -1.\n" +
-        "Only affects values less than A.").
-    withSerializedId("decmodA" + span).
+    "Subtracts 1 out of the target, but wraps 0 to R-1.\n" +
+        "Only affects values less than R.").
+    withSerializedId("decmodR" + span).
     withHeight(span).
-    withRequiredContextKeys("Input Range A").
+    withRequiredContextKeys("Input Range R").
     withKnownPermutation((t, a) => t < a ? Util.properMod(t - 1, a) : t).
-    withCustomDisableReasonFinder(modulusTooBigChecker("A", span)).
+    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
     withCustomShader(ctx => MODULAR_INCREMENT_SHADER.withArgs(
-        ...ketArgs(ctx, span, ['A']),
+        ...ketArgs(ctx, span, ['R']),
         WglArg.float("amount", -1))));
 
 const MODULAR_ADDITION_SHADER = ketShaderPermute(
     `
         uniform float factor;
         ${ketInputGateShaderCode('A')}
-        ${ketInputGateShaderCode('B')}
+        ${ketInputGateShaderCode('R')}
     `,
     `
         float d = read_input_A();
-        float r = read_input_B();
+        float r = read_input_R();
         d *= factor;
         d = mod(d, r);
         return out_id >= r
@@ -78,37 +78,37 @@ const MODULAR_ADDITION_SHADER = ketShaderPermute(
             // HACK: sometimes mod(value-equal-to-r, r) returns r instead of 0. The perturbation works around it.
             : floor(mod(out_id + r - d, r - 0.000001) + 0.5);`);
 
-ModularArithmeticGates.PlusAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+A\nmod B",
+ModularArithmeticGates.PlusAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "+A\nmod R",
     "Modular Addition Gate",
-    "Adds input A into the qubits covered by this gate.").
+    "Adds input A into the target, mod input R.\nOnly affects values below R.").
     withHeight(span).
-    withSerializedId("+AmodB" + span).
-    withRequiredContextKeys("Input Range A", "Input Range B").
+    withSerializedId("+AmodR" + span).
+    withRequiredContextKeys("Input Range A", "Input Range R").
     withKnownPermutation((t, a, b) => t < b ? (t + a) % b : t).
-    withCustomDisableReasonFinder(modulusTooBigChecker("B", span)).
+    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
     withCustomShader(ctx => MODULAR_ADDITION_SHADER.withArgs(
-        ...ketArgs(ctx, span, ['A', 'B']),
+        ...ketArgs(ctx, span, ['A', 'R']),
         WglArg.float("factor", +1))));
 
-ModularArithmeticGates.MinusAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "−A\nmod B",
+ModularArithmeticGates.MinusAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+    "−A\nmod R",
     "Modular Subtraction Gate",
-    "Subtracts input A out of the qubits covered by this gate.").
+    "Subtracts input A out of the target, mod input R.\nOnly affects values below R.").
     withHeight(span).
-    withSerializedId("-AmodB" + span).
-    withRequiredContextKeys("Input Range A", "Input Range B").
+    withSerializedId("-AmodR" + span).
+    withRequiredContextKeys("Input Range A", "Input Range R").
     withKnownPermutation((t, a, b) => t < b ? Util.properMod(t - a, b) : t).
-    withCustomDisableReasonFinder(modulusTooBigChecker("B", span)).
+    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
     withCustomShader(ctx => MODULAR_ADDITION_SHADER.withArgs(
-        ...ketArgs(ctx, span, ['A', 'B']),
+        ...ketArgs(ctx, span, ['A', 'R']),
         WglArg.float("factor", -1))));
 
 ModularArithmeticGates.all = [
     ...ModularArithmeticGates.IncrementModAFamily.all,
     ...ModularArithmeticGates.DecrementModAFamily.all,
-    ...ModularArithmeticGates.PlusAModBFamily.all,
-    ...ModularArithmeticGates.MinusAModBFamily.all,
+    ...ModularArithmeticGates.PlusAModRFamily.all,
+    ...ModularArithmeticGates.MinusAModRFamily.all,
 ];
 
 export {ModularArithmeticGates, modulusTooBigChecker}

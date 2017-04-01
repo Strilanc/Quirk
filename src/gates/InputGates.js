@@ -77,18 +77,22 @@ let makeSetInputGate = key => Gate.fromIdentity(
 
 InputGates.InputAFamily = makeInputGate('A', false);
 InputGates.InputBFamily = makeInputGate('B', false);
+InputGates.InputRFamily = makeInputGate('R', false);
 InputGates.InputRevAFamily = makeInputGate('A', true);
 InputGates.InputRevBFamily = makeInputGate('B', true);
 InputGates.SetA = makeSetInputGate('A');
 InputGates.SetB = makeSetInputGate('B');
+InputGates.SetR = makeSetInputGate('R');
 
 InputGates.all = [
     ...InputGates.InputAFamily.all,
     ...InputGates.InputBFamily.all,
+    ...InputGates.InputRFamily.all,
     ...InputGates.InputRevAFamily.all,
     ...InputGates.InputRevBFamily.all,
     InputGates.SetA,
     InputGates.SetB,
+    InputGates.SetR,
 ];
 
 export {InputGates}

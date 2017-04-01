@@ -15,8 +15,8 @@ suite.testUsingWebGL('mod_too_big_disable', () => {
 
         ['x', ModularArithmeticGates.IncrementModAFamily],
         ['y', ModularArithmeticGates.DecrementModAFamily],
-        ['z', ModularArithmeticGates.PlusAModBFamily],
-        ['t', ModularArithmeticGates.MinusAModBFamily],
+        ['z', ModularArithmeticGates.PlusAModRFamily],
+        ['t', ModularArithmeticGates.MinusAModRFamily],
 
         ['-', undefined],
         ['/', null],
@@ -103,34 +103,34 @@ suite.testUsingWebGL('decrement_mod_A', () => {
 
 suite.testUsingWebGL('plus_A_mod_B', () => {
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.PlusAModBFamily.ofSize(2),
+        ModularArithmeticGates.PlusAModRFamily.ofSize(2),
         (t, a, b) => t < b ? (t + a) % b : t,
         [2, 2]);
 
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.PlusAModBFamily.ofSize(3),
+        ModularArithmeticGates.PlusAModRFamily.ofSize(3),
         (t, a, b) => t < b ? (t + a) % b : t,
         [1, 2]);
 
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.PlusAModBFamily.ofSize(2),
+        ModularArithmeticGates.PlusAModRFamily.ofSize(2),
         (t, a, b) => t < b ? (t + a) % b : t,
         [3, 2]);
 });
 
 suite.testUsingWebGL('minus_A_mod_B', () => {
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.MinusAModBFamily.ofSize(2),
+        ModularArithmeticGates.MinusAModRFamily.ofSize(2),
         (t, a, b) => t < b ? Util.properMod(t - a, b) : t,
         [2, 2]);
 
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.MinusAModBFamily.ofSize(3),
+        ModularArithmeticGates.MinusAModRFamily.ofSize(3),
         (t, a, b) => t < b ? Util.properMod(t - a, b) : t,
         [1, 2]);
 
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.MinusAModBFamily.ofSize(2),
+        ModularArithmeticGates.MinusAModRFamily.ofSize(2),
         (t, a, b) => t < b ? Util.properMod(t - a, b) : t,
         [3, 2]);
 });

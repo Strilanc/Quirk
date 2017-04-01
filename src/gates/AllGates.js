@@ -244,7 +244,7 @@ Gates.BottomToolboxGroups = [
             InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
             InputGates.SetA, InputGates.SetB,
             InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2),
-            undefined, undefined,
+            InputGates.InputRFamily.ofSize(2), InputGates.SetR,
         ]
     },
     {
@@ -270,9 +270,9 @@ Gates.BottomToolboxGroups = [
         hint: "Modular",
         gates: [
             ModularArithmeticGates.IncrementModAFamily.ofSize(2), ModularArithmeticGates.DecrementModAFamily.ofSize(2),
-            ModularArithmeticGates.PlusAModBFamily.ofSize(2), ModularArithmeticGates.MinusAModBFamily.ofSize(2),
-            ModularMultiplicationGates.TimesAModBFamily.ofSize(2),
-                ModularMultiplicationGates.TimesAModBInverseFamily.ofSize(2),
+            ModularArithmeticGates.PlusAModRFamily.ofSize(2), ModularArithmeticGates.MinusAModRFamily.ofSize(2),
+            ModularMultiplicationGates.TimesAModRFamily.ofSize(2),
+                ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
             undefined, undefined,
         ]
     },
