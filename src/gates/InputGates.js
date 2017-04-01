@@ -7,7 +7,7 @@ let InputGates = {};
 let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
     (reverse ? 'rev ' : '') + `input ${key}`,
     `Input Gate [${key}]` + (reverse ? ' [reversed]' : ''),
-    `Marks some qubits as input '${key}'${reverse ? ', in big-endian order' : ''}.`).
+    `Temporarily uses some qubits as input ${key}${reverse ? ', in big-endian order' : ''}.`).
     withSerializedId((reverse ? 'rev' : '') + `input${key}${span}`).
     withHeight(span).
     markedAsNotInterestedInControls().
@@ -52,16 +52,43 @@ let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fr
             args.rect.h / 2);
     }));
 
+let makeSetInputGate = key => Gate.fromIdentity(
+    `set${key}`,
+    `Set Default ${key}`,
+    `Sets a default value to use for input ${key}.\nDefaults used in columns without their own input gate.'}.`).
+    withWidth(2).
+    withParam(0).
+    markedAsNotInterestedInControls().
+    withStickyContext().
+    withCustomColumnContextProvider((qubitIndex, gate) => [{
+        key: `Input Default ${key}`,
+        val: gate.param,
+        sticky: true
+    }]).
+    withCustomDrawer(args => {
+        GatePainting.paintBackground(args, '#EEE', '#EEE');
+        GatePainting.paintOutline(args);
+        if (args.isInToolbox) {
+            GatePainting.paintGateSymbol(args, `${key}=#\ndefault`);
+        } else {
+            GatePainting.paintGateSymbol(args, `${key}=${args.gate.param}`);
+        }
+    });
+
 InputGates.InputAFamily = makeInputGate('A', false);
 InputGates.InputBFamily = makeInputGate('B', false);
 InputGates.InputRevAFamily = makeInputGate('A', true);
 InputGates.InputRevBFamily = makeInputGate('B', true);
+InputGates.SetA = makeSetInputGate('A');
+InputGates.SetB = makeSetInputGate('B');
 
 InputGates.all = [
     ...InputGates.InputAFamily.all,
     ...InputGates.InputBFamily.all,
     ...InputGates.InputRevAFamily.all,
-    ...InputGates.InputRevBFamily.all
+    ...InputGates.InputRevBFamily.all,
+    InputGates.SetA,
+    InputGates.SetB,
 ];
 
 export {InputGates}

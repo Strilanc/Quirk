@@ -1,6 +1,6 @@
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -49,25 +49,13 @@ const incrementShader = ketShaderPermute(
     'uniform float amount;',
     'return mod(out_id - amount + span, span);');
 
-/**
- * @param {!CircuitEvalContext} ctx
- * @param {!int} span
- * @param {!int} srcOffset
- * @param {!int} srcSpan
- * @param {!int} scaleFactor
- * @returns {!WglConfiguredShader}
- */
-function additionShaderFunc(ctx, span, srcOffset, srcSpan, scaleFactor) {
-    return ADDITION_SHADER.withArgs(
-        ...ketArgs(ctx, span),
-        WglArg.float("srcOffset", 1 << srcOffset),
-        WglArg.float("srcSpan", 1 << srcSpan),
-        WglArg.float("factor", scaleFactor));
-}
 const ADDITION_SHADER = ketShaderPermute(
-    'uniform float srcOffset, srcSpan, factor;',
     `
-        float d = mod(floor(full_out_id / srcOffset), srcSpan);
+        uniform float factor;
+        ${ketInputGateShaderCode('A')}
+    `,
+    `
+        float d = read_input_A();
         d *= factor;
         d = mod(d, span);
         return mod(out_id + span - d, span);`);
@@ -101,12 +89,10 @@ ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.without
     withSerializedId("add" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
     withHeight(span).
-    withCustomShader(ctx => additionShaderFunc(
-        ctx.withRow(ctx.row + Math.floor(span/2)),
-        Math.ceil(span/2),
-        ctx.row,
-        Math.floor(span/2),
-        +1)));
+    withCustomOperation(ctx =>
+        ArithmeticGates.PlusAFamily.ofSize(Math.ceil(span/2)).customOperation(
+            ctx.withRow(ctx.row + Math.floor(span/2)).
+                withInputSetToRange('A', ctx.row, Math.floor(span/2)))));
 
 ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "b-=a",
@@ -117,12 +103,10 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
     withHeight(span).
-    withCustomShader(ctx => additionShaderFunc(
-        ctx.withRow(ctx.row + Math.floor(span/2)),
-        Math.ceil(span/2),
-        ctx.row,
-        Math.floor(span/2),
-        -1)));
+    withCustomOperation(ctx =>
+        ArithmeticGates.MinusAFamily.ofSize(Math.ceil(span/2)).customOperation(
+            ctx.withRow(ctx.row + Math.floor(span/2)).
+                withInputSetToRange('A', ctx.row, Math.floor(span/2)))));
 
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+A",
@@ -132,10 +116,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
     withKnownPermutation((v, a) => (v + a) & ((1 << span) - 1)).
     withSerializedId("+=A" + span).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => {
-        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
-        return additionShaderFunc(ctx, span, inputOffset, inputLength, +1);
-    }));
+    withCustomShader(ctx => ADDITION_SHADER.withArgs(...ketArgs(ctx, span, ['A']), WglArg.float("factor", +1))));
 
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "−A",
@@ -145,10 +126,7 @@ ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     withHeight(span).
     withSerializedId("-=A" + span).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => {
-        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
-        return additionShaderFunc(ctx, span, inputOffset, inputLength, -1);
-    }));
+    withCustomShader(ctx => ADDITION_SHADER.withArgs(...ketArgs(ctx, span, ['A']), WglArg.float("factor", -1))));
 
 ArithmeticGates.all = [
     ...ArithmeticGates.IncrementFamily.all,
@@ -159,4 +137,4 @@ ArithmeticGates.all = [
     ...ArithmeticGates.MinusAFamily.all,
 ];
 
-export {ArithmeticGates, makeOffsetMatrix, incrementShaderFunc, additionShaderFunc}
+export {ArithmeticGates, makeOffsetMatrix, incrementShaderFunc}

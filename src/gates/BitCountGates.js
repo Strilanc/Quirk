@@ -1,29 +1,18 @@
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
+import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 
 let BitCountGates = {};
 
-/**
- * @param {!CircuitEvalContext} ctx
- * @param {!int} span
- * @param {!int} srcOffset
- * @param {!int} srcSpan
- * @param {!int} scaleFactor
- * @returns {!WglConfiguredShader}
- */
-function popCountOffsetShader(ctx, span, srcOffset, srcSpan, scaleFactor) {
-    return POP_COUNT_SHADER.withArgs(
-        ...ketArgs(ctx, span),
-        WglArg.float("srcOffset", 1 << srcOffset),
-        WglArg.float("srcSpan", 1 << srcSpan),
-        WglArg.float("factor", scaleFactor));
-}
 const POP_COUNT_SHADER = ketShaderPermute(
-    'uniform float srcOffset, srcSpan, factor;',
     `
-        float d = mod(floor(full_out_id / srcOffset), srcSpan);
+        uniform float factor;
+        ${ketInputGateShaderCode('A')}
+    `,
+    `
+        float d = read_input_A();
         float popcnt = 0.0;
         for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
             popcnt += mod(d, 2.0);
@@ -36,29 +25,21 @@ BitCountGates.PlusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.with
     "+1s(A)",
     "Bit Count Gate [input A]",
     "Counts the number of ON bits in 'input A' and adds that into this output.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withHeight(span).
     withSerializedId("+cntA" + span).
+    withKnownPermutation((t, a) => (t + Util.numberOfSetBits(a)) & ((1 << span) - 1)).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => {
-        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
-        return popCountOffsetShader(ctx, span, inputOffset, inputLength, +1);
-    }));
+    withCustomShader(ctx => POP_COUNT_SHADER.withArgs(...ketArgs(ctx, span, ['A']), WglArg.float("factor", +1))));
 
 BitCountGates.MinusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-1s(A)",
     "Bit Un-Count Gate [input A]",
     "Counts the number of ON bits in 'input A' and subtracts that into this output.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withHeight(span).
     withSerializedId("-cntA" + span).
+    withKnownPermutation((t, a) => (t - Util.numberOfSetBits(a)) & ((1 << span) - 1)).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => {
-        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
-        return popCountOffsetShader(ctx, span, inputOffset, inputLength, -1);
-    }));
+    withCustomShader(ctx => POP_COUNT_SHADER.withArgs(...ketArgs(ctx, span, ['A']), WglArg.float("factor", -1))));
 
 BitCountGates.all = [
     ...BitCountGates.PlusBitCountAFamily.all,

@@ -111,11 +111,15 @@ GatePainting.paintResizeTab = args => {
 
 /**
  * @param {!GateDrawParams} args
+ * @param {undefined|!string=undefined} symbolOverride
  */
-GatePainting.paintGateSymbol = args => {
+GatePainting.paintGateSymbol = (args, symbolOverride=undefined) => {
     let painter = args.painter;
     let rect = args.rect.paddedBy(-2);
-    let {symbol, offsetY} = _paintSymbolHandleLines(args, rect);
+    if (symbolOverride === undefined) {
+        symbolOverride = args.gate.symbol;
+    }
+    let {symbol, offsetY} = _paintSymbolHandleLines(args.painter, symbolOverride, rect);
 
     let parts = symbol.split("^");
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
@@ -163,15 +167,14 @@ GatePainting.paintGateSymbol = args => {
 };
 
 /**
- * @param {!GateDrawParams} args
+ * @param {!Painter} painter
+ * @param {!string} symbol
  * @param {!Rect} rect
  * @returns {!{symbol: !string, offsetY: !int}} The symbol without any extra lines.
  * @private
  */
-function _paintSymbolHandleLines(args, rect) {
-    let painter = args.painter;
-
-    let lines = args.gate.symbol.split('\n');
+function _paintSymbolHandleLines(painter, symbol, rect) {
+    let lines = symbol.split('\n');
 
     for (let i = 1; i < lines.length; i++) {
         painter.print(
@@ -183,7 +186,7 @@ function _paintSymbolHandleLines(args, rect) {
             'black',
             GATE_SYMBOL_FONT,
             rect.w,
-            rect.h);
+            16);
     }
 
     return {symbol: lines[0], offsetY: lines.length > 1 ? -5 : 0};

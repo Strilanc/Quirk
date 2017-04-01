@@ -1,14 +1,13 @@
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {WglArg} from "src/webgl/WglArg.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 
 let XorGates = {};
 
 const XOR_SHADER = ketShaderPermute(
-    'uniform float srcOffset, srcSpan;',
+    ketInputGateShaderCode('A'),
     `
-        float srcMask = mod(floor(full_out_id / srcOffset), srcSpan);
+        float srcMask = mod(read_input_A(), span);
         float bitPos = 1.0;
         float result = 0.0;
         for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
@@ -23,19 +22,11 @@ XorGates.XorAFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "⊕A",
     "Xor Gate [input A]",
     "Xors 'input A' into the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withHeight(span).
     withSerializedId("^=A" + span).
     withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => {
-        let {offset: inputOffset, length: inputLength} = ctx.customContextFromGates.get('Input Range A');
-        let n = Math.min(inputLength, span);
-        return XOR_SHADER.withArgs(
-            ...ketArgs(ctx, n),
-            WglArg.float("srcOffset", 1 << inputOffset),
-            WglArg.float("srcSpan", 1 << n));
-    }));
+    withKnownPermutation((t, a) => t ^ (a & ((1<<span)-1))).
+    withCustomShader(ctx => XOR_SHADER.withArgs(...ketArgs(ctx, span, ['A']))));
 
 XorGates.all = [
     ...XorGates.XorAFamily.all,

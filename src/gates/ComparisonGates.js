@@ -1,6 +1,5 @@
 import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {WglArg} from "src/webgl/WglArg.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 let ComparisonGates = {};
@@ -11,22 +10,16 @@ let ComparisonGates = {};
  */
 function customComparisonShader(compareCode) {
     const shader = ketShaderPermute(
-        'uniform float lhsOffset, lhsSpan, rhsOffset, rhsSpan;',
         `
-            float lhs = mod(floor(full_out_id / lhsOffset), lhsSpan);
-            float rhs = mod(floor(full_out_id / rhsOffset), rhsSpan);
+            ${ketInputGateShaderCode('A')}
+            ${ketInputGateShaderCode('B')}
+        `,
+        `
+            float lhs = read_input_A();
+            float rhs = read_input_B();
             return mod(out_id + ((${compareCode}) ? 1.0 : 0.0), 2.0);`);
 
-    return ctx => {
-        let {offset: lhsOffset, length: lhsSpan} = ctx.customContextFromGates.get('Input Range A');
-        let {offset: rhsOffset, length: rhsSpan} = ctx.customContextFromGates.get('Input Range B');
-        return shader.withArgs(
-            ...ketArgs(ctx, 1),
-            WglArg.float("lhsOffset", 1 << lhsOffset),
-            WglArg.float("rhsOffset", 1 << rhsOffset),
-            WglArg.float("lhsSpan", 1 << lhsSpan),
-            WglArg.float("rhsSpan", 1 << rhsSpan));
-    };
+    return ctx => shader.withArgs(...ketArgs(ctx, 1, ['A', 'B']));
 }
 
 ComparisonGates.ALessThanB = Gate.withoutKnownMatrix(

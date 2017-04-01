@@ -1,9 +1,12 @@
 import {Config} from "src/Config.js";
 import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
+import {
+    ketArgs,
+    ketShaderPermute,
+    ketInputGateShaderCode
+} from "src/circuit/KetShaderUtil.js"
 import {modulusTooBigChecker} from "src/gates/ModularArithmeticGates.js"
 import {Util} from "src/base/Util.js"
-import {WglArg} from "src/webgl/WglArg.js"
 
 let ModularMultiplicationGates = {};
 
@@ -82,13 +85,13 @@ function modularUnmultiply(val, factor, modulus) {
 
 const MODULAR_MULTIPLICATION_SHADER = ketShaderPermute(
     `
-        uniform float input_a_offset, input_a_span;
-        uniform float input_b_offset, input_b_span;
         ${MODULAR_INVERSE_SHADER_CODE}
+        ${ketInputGateShaderCode('A')}
+        ${ketInputGateShaderCode('B')}
     `,
     `
-        float input_a = mod(floor(full_out_id / input_a_offset), input_a_span);
-        float input_b = mod(floor(full_out_id / input_b_offset), input_b_span);
+        float input_a = read_input_A();
+        float input_b = read_input_B();
         input_a = mod(input_a, input_b);
         float v = modular_multiplicative_inverse(input_a, input_b);
         if (v == -1.0 || out_id >= input_b) {
@@ -102,10 +105,12 @@ const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
         uniform float input_a_offset, input_a_span;
         uniform float input_b_offset, input_b_span;
         ${MODULAR_INVERSE_SHADER_CODE}
+        ${ketInputGateShaderCode('A')}
+        ${ketInputGateShaderCode('B')}
     `,
     `
-        float input_a = mod(floor(full_out_id / input_a_offset), input_a_span);
-        float input_b = mod(floor(full_out_id / input_b_offset), input_b_span);
+        float input_a = read_input_A();
+        float input_b = read_input_B();
         input_a = mod(input_a, input_b);
         if (modular_multiplicative_inverse(input_a, input_b) == -1.0 || out_id >= input_b) {
             return out_id;
@@ -121,18 +126,9 @@ ModularMultiplicationGates.TimesAModBFamily = Gate.generateFamily(1, 16, span =>
     withSerializedId("*AmodB" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomDisableReasonFinder(modulusTooBigChecker("Input Range B", span)).
+    withCustomDisableReasonFinder(modulusTooBigChecker("B", span)).
     withKnownPermutation(modularMultiply).
-    withCustomShader(ctx => {
-        let {offset: a_offset, length: a_length} = ctx.customContextFromGates.get('Input Range A');
-        let {offset: b_offset, length: b_length} = ctx.customContextFromGates.get('Input Range B');
-        return MODULAR_MULTIPLICATION_SHADER.withArgs(
-            ...ketArgs(ctx, span),
-            WglArg.float("input_a_offset", 1 << a_offset),
-            WglArg.float("input_a_span", 1 << a_length),
-            WglArg.float("input_b_offset", 1 << b_offset),
-            WglArg.float("input_b_span", 1 << b_length));
-    }));
+    withCustomShader(ctx => MODULAR_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'B']))));
 
 ModularMultiplicationGates.TimesAModBInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "×A^-1\nmod B",
@@ -142,18 +138,9 @@ ModularMultiplicationGates.TimesAModBInverseFamily = Gate.generateFamily(1, 16, 
     withSerializedId("/AmodB" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomDisableReasonFinder(modulusTooBigChecker("Input Range B", span)).
+    withCustomDisableReasonFinder(modulusTooBigChecker("B", span)).
     withKnownPermutation(modularUnmultiply).
-    withCustomShader(ctx => {
-        let {offset: a_offset, length: a_length} = ctx.customContextFromGates.get('Input Range A');
-        let {offset: b_offset, length: b_length} = ctx.customContextFromGates.get('Input Range B');
-        return MODULAR_INVERSE_MULTIPLICATION_SHADER.withArgs(
-            ...ketArgs(ctx, span),
-            WglArg.float("input_a_offset", 1 << a_offset),
-            WglArg.float("input_a_span", 1 << a_length),
-            WglArg.float("input_b_offset", 1 << b_offset),
-            WglArg.float("input_b_span", 1 << b_length));
-    }));
+    withCustomShader(ctx => MODULAR_INVERSE_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'B']))));
 
 ModularMultiplicationGates.all = [
     ...ModularMultiplicationGates.TimesAModBFamily.all,

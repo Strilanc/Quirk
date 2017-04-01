@@ -114,8 +114,12 @@ let fromJson_Matrix = json => {
  * @returns {!object}
  */
 let toJson_Gate = (gate, context=new CustomGateSet()) => {
-    if (Gates.findKnownGateById(gate.serializedId, context) === gate) {
+    let found = Gates.findKnownGateById(gate.serializedId, context);
+    if (found === gate) {
         return gate.serializedId;
+    }
+    if (found !== undefined && found.param !== undefined) {
+        return {id: gate.serializedId, arg: gate.param};
     }
 
     if (gate.name === "Parse Error") {
@@ -184,13 +188,14 @@ let fromJson_Gate_props = json => {
     let id = _getGateId(json);
     let matrix = json["matrix"];
     let circuit = json["circuit"];
+    let param = json["arg"];
     let symbol = json.name !== undefined ? json.name :
         id.startsWith('~') ? '' :
         id;
     let name = id.startsWith('~') ? `${symbol || 'Custom'} Gate [${id.substring(1)}]` :
         symbol !== '' ? symbol :
         id;
-    return {id, matrix, circuit, symbol, name};
+    return {id, matrix, circuit, symbol, name, param};
 };
 
 let fromJson_Gate_Matrix = props => {
@@ -248,6 +253,9 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
         let match = Gates.findKnownGateById(props.id, context);
         if (match === undefined) {
             throw new DetailedError(`No gate with the id '${props.id}'.`, {json});
+        }
+        if (props.param !== undefined) {
+            match = match.withParam(props.param);
         }
         return match;
 

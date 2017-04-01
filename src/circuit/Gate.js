@@ -25,6 +25,8 @@ class Gate {
         this.width = 1;
         /** @type {!int} */
         this.height = 1;
+        /** @type {undefined|!int} */
+        this.param = undefined;
 
         /** @type {undefined|!function(!GateDrawParams) : void} */
         this.customDrawer = undefined;
@@ -108,9 +110,12 @@ class Gate {
         this._isDefinitelyUnitary = false;
         /**
          * @param {!int} qubit
+         * @param {!Gate} gate
          * @returns {!Array.<!{key: !string, val: *}>}
          */
-        this.customColumnContextProvider = qubit => [];
+        this.customColumnContextProvider = (qubit, gate) => [];
+        /** @type {!boolean} */
+        this.isContextTemporary = true;
         /**
          * @param {!GateCheckArgs} args
          * @returns {undefined|!string}
@@ -305,6 +310,7 @@ class Gate {
         let g = new Gate(this.symbol, this.name, this.blurb);
         g.serializedId = this.serializedId;
         g.tag = this.tag;
+        g.param = this.param;
         g.customDrawer = this.customDrawer;
         g.interestedInControls = this.interestedInControls;
         g.customBeforeOperation = this.customBeforeOperation;
@@ -318,6 +324,7 @@ class Gate {
         g.isSingleQubitDisplay = this.isSingleQubitDisplay;
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
+        g.isContextTemporary = this.isContextTemporary;
         g.knownCircuitNested = this.knownCircuitNested;
         g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
@@ -358,7 +365,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(qubit:!int):!Array.<!{key: !string, val: *}>} customColumnContextProvider
+     * @param {!function(qubit:!int,gate:!Gate):!Array.<!{key: !string, val: *}>} customColumnContextProvider
      * @returns {!Gate}
      */
     withCustomColumnContextProvider(customColumnContextProvider) {
@@ -393,6 +400,16 @@ class Gate {
     withWidth(width) {
         let g = this._copy();
         g.width = width;
+        return g;
+    }
+
+    /**
+     * @param {undefined|!int} value
+     * @returns {!Gate}
+     */
+    withParam(value) {
+        let g = this._copy();
+        g.param = value;
         return g;
     }
 
@@ -645,6 +662,16 @@ class Gate {
             this._knownMatrix !== undefined ? !this._knownMatrix.isDiagonal() :
             true;
     }
+
+    /**
+     * @returns {!Gate}
+     */
+    withStickyContext() {
+        let g = this._copy();
+        g.isContextTemporary = false;
+        return g;
+    }
+
 
     /**
      * @returns {!boolean}

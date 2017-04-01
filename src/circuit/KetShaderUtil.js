@@ -85,9 +85,10 @@ const ketShaderPhase = (head, body, span=null) => ketShader(
 /**
  * @param {!CircuitEvalContext} ctx
  * @param {undefined|!int=undefined} span
+ * @param {undefined|!Array.<!string>} input_letters
  * @returns {!Array.<!WglArg>}
  */
-function ketArgs(ctx, span=undefined) {
+function ketArgs(ctx, span=undefined, input_letters=[]) {
     let result = [
         ctx.stateTrader.currentTexture,
         ctx.controlsTexture,
@@ -96,7 +97,57 @@ function ketArgs(ctx, span=undefined) {
     if (span !== undefined) {
         result.push(WglArg.float('span', 1 << span));
     }
+    for (let letter of input_letters) {
+        result.push(...ketInputGateArgs(ctx, letter));
+    }
     return result;
 }
 
-export {ketArgs, ketShader, ketShaderPermute, ketShaderPhase}
+/**
+ * @param {!string} letter
+ * @returns {!string}
+ */
+function ketInputGateShaderCode(letter) {
+    return `
+        //////// INPUT GATE ${letter} ////////
+        uniform float _gen_input_default_${letter};
+        uniform float _gen_input_offset_${letter};
+        uniform float _gen_input_span_${letter};
+        
+        float read_input_${letter}() {
+            return _gen_input_span_${letter} == 0.0
+                ? _gen_input_default_${letter}
+                : mod(floor(full_out_id / _gen_input_offset_${letter}), _gen_input_span_${letter});
+        }`;
+}
+
+/**
+ * @param {!CircuitEvalContext} ctx
+ * @param {!string} letter
+ * @returns {!Array.<!WglArg>}
+ */
+function ketInputGateArgs(ctx, letter) {
+    let offset = 0;
+    let length = -1;
+    let defaultVal = ctx.customContextFromGates.get(`Input Default ${letter}`) || 0;
+    let inputCtx = ctx.customContextFromGates.get(`Input Range ${letter}`);
+    if (inputCtx !== undefined) {
+        offset = inputCtx.offset;
+        length = inputCtx.length;
+    }
+
+    return [
+        WglArg.float(`_gen_input_default_${letter}`, defaultVal),
+        WglArg.float(`_gen_input_offset_${letter}`, 1<<offset),
+        WglArg.float(`_gen_input_span_${letter}`, length === -1 ? 0 : 1<<length),
+    ];
+}
+
+export {
+    ketArgs,
+    ketShader,
+    ketShaderPermute,
+    ketShaderPhase,
+    ketInputGateShaderCode,
+    ketInputGateArgs
+}

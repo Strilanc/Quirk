@@ -1,21 +1,20 @@
 import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 import {
     modularMultiply,
     modularUnmultiply,
     MODULAR_INVERSE_SHADER_CODE
 } from "src/gates/ModularMultiplicationGates.js"
-import {WglArg} from "src/webgl/WglArg.js"
 
 let MultiplicationGates = {};
 
 const MULTIPLICATION_SHADER = ketShaderPermute(
     `
-        uniform float input_a_offset, input_a_span;
         ${MODULAR_INVERSE_SHADER_CODE}
+        ${ketInputGateShaderCode('A')}
     `,
     `
-        float input_a = mod(floor(full_out_id / input_a_offset), input_a_span);
+        float input_a = read_input_A();
         input_a = mod(input_a, span);
         float v = modular_multiplicative_inverse(input_a, span);
         if (v == -1.0) {
@@ -26,11 +25,11 @@ const MULTIPLICATION_SHADER = ketShaderPermute(
 
 const INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
     `
-        uniform float input_a_offset, input_a_span;
         ${MODULAR_INVERSE_SHADER_CODE}
+        ${ketInputGateShaderCode('A')}
     `,
     `
-        float input_a = mod(floor(full_out_id / input_a_offset), input_a_span);
+        float input_a = read_input_A();
         input_a = mod(input_a, span);
         if (modular_multiplicative_inverse(input_a, span) == -1.0) {
             return out_id;
@@ -47,13 +46,7 @@ MultiplicationGates.TimesAFamily = Gate.generateFamily(1, 16, span => Gate.witho
     withHeight(span).
     withRequiredContextKeys("Input Range A").
     withKnownPermutation((x, a) => modularMultiply(x, a, 1<<span)).
-    withCustomShader(ctx => {
-        let {offset: a_offset, length: a_length} = ctx.customContextFromGates.get('Input Range A');
-        return MULTIPLICATION_SHADER.withArgs(
-            ...ketArgs(ctx, span),
-            WglArg.float("input_a_offset", 1 << a_offset),
-            WglArg.float("input_a_span", 1 << a_length));
-    }));
+    withCustomShader(ctx => MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A']))));
 
 MultiplicationGates.TimesAInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "×A^-1",
@@ -64,13 +57,7 @@ MultiplicationGates.TimesAInverseFamily = Gate.generateFamily(1, 16, span => Gat
     withHeight(span).
     withRequiredContextKeys("Input Range A").
     withKnownPermutation((x, a) => modularUnmultiply(x, a, 1<<span)).
-    withCustomShader(ctx => {
-        let {offset: a_offset, length: a_length} = ctx.customContextFromGates.get('Input Range A');
-        return INVERSE_MULTIPLICATION_SHADER.withArgs(
-            ...ketArgs(ctx, span),
-            WglArg.float("input_a_offset", 1 << a_offset),
-            WglArg.float("input_a_span", 1 << a_length));
-    }));
+    withCustomShader(ctx => INVERSE_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A']))));
 
 MultiplicationGates.all = [
     ...MultiplicationGates.TimesAFamily.all,
