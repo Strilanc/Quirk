@@ -121,7 +121,7 @@ const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
 ModularMultiplicationGates.TimesAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "×A\nmod B",
     "Modular Multiplication Gate",
-    "Multiplies the target by 'input A' mod 'input B'.\n" +
+    "Multiplies the target by input A mod input B.\n" +
         "But does nothing if the multiplication would be irreversible.").
     withSerializedId("*AmodB" + span).
     withHeight(span).
@@ -133,7 +133,7 @@ ModularMultiplicationGates.TimesAModBFamily = Gate.generateFamily(1, 16, span =>
 ModularMultiplicationGates.TimesAModBInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "×A^-1\nmod B",
     "Inverse Multiplication Gate",
-    "Inverse-multiplies the target by 'input A' mod 'input B'.\n" +
+    "Inverse-multiplies the target by input A mod input B.\n" +
         "But does nothing if the multiplication would be irreversible.").
     withSerializedId("/AmodB" + span).
     withHeight(span).

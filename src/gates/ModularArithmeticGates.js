@@ -81,7 +81,7 @@ const MODULAR_ADDITION_SHADER = ketShaderPermute(
 ModularArithmeticGates.PlusAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+A\nmod B",
     "Modular Addition Gate",
-    "Adds 'input A' into the qubits covered by this gate.").
+    "Adds input A into the qubits covered by this gate.").
     withHeight(span).
     withSerializedId("+AmodB" + span).
     withRequiredContextKeys("Input Range A", "Input Range B").
@@ -94,7 +94,7 @@ ModularArithmeticGates.PlusAModBFamily = Gate.generateFamily(1, 16, span => Gate
 ModularArithmeticGates.MinusAModBFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "−A\nmod B",
     "Modular Subtraction Gate",
-    "Subtracts 'input A' out of the qubits covered by this gate.").
+    "Subtracts input A out of the qubits covered by this gate.").
     withHeight(span).
     withSerializedId("-AmodB" + span).
     withRequiredContextKeys("Input Range A", "Input Range B").

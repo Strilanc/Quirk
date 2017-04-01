@@ -111,7 +111,7 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
 ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+A",
     "Addition Gate [input A]",
-    "Adds 'input A' into the qubits covered by this gate.").
+    "Adds input A into the qubits covered by this gate.").
     withHeight(span).
     withKnownPermutation((v, a) => (v + a) & ((1 << span) - 1)).
     withSerializedId("+=A" + span).
@@ -121,7 +121,7 @@ ArithmeticGates.PlusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKno
 ArithmeticGates.MinusAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "−A",
     "Subtraction Gate [input A]",
-    "Subtracts 'input A' out of the qubits covered by this gate.").
+    "Subtracts input A out of the qubits covered by this gate.").
     withKnownPermutation((v, a) => (v - a) & ((1 << span) - 1)).
     withHeight(span).
     withSerializedId("-=A" + span).

@@ -24,7 +24,7 @@ const POP_COUNT_SHADER = ketShaderPermute(
 BitCountGates.PlusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+1s(A)",
     "Bit Count Gate [input A]",
-    "Counts the number of ON bits in 'input A' and adds that into this output.").
+    "Counts the number of ON bits in input A and adds that into this output.").
     withHeight(span).
     withSerializedId("+cntA" + span).
     withKnownPermutation((t, a) => (t + Util.numberOfSetBits(a)) & ((1 << span) - 1)).
@@ -34,7 +34,7 @@ BitCountGates.PlusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.with
 BitCountGates.MinusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-1s(A)",
     "Bit Un-Count Gate [input A]",
-    "Counts the number of ON bits in 'input A' and subtracts that into this output.").
+    "Counts the number of ON bits in input A and subtracts that into this output.").
     withHeight(span).
     withSerializedId("-cntA" + span).
     withKnownPermutation((t, a) => (t - Util.numberOfSetBits(a)) & ((1 << span) - 1)).

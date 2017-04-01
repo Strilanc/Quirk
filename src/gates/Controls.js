@@ -38,7 +38,7 @@ Controls.AntiControl = Gate.fromIdentity(
 
 Controls.PlusControl = Gate.withoutKnownMatrix(
     "⊕",
-    "Plus Control",
+    "X-Axis Anti-Control",
     "Conditions on a qubit being ON+OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(false).
@@ -61,7 +61,7 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
 
 Controls.MinusControl = Gate.withoutKnownMatrix(
     "⊖",
-    "Minus Control",
+    "X-Axis Control",
     "Conditions on a qubit being ON-OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     withSerializedId("⊖").
@@ -85,7 +85,7 @@ let x1 = Matrix.fromPauliRotation(0.25, 0, 0);
 let x2 = Matrix.fromPauliRotation(-0.25, 0, 0);
 Controls.CrossControl = Gate.withoutKnownMatrix(
     "⊗",
-    "Cross Control",
+    "Y-Axis Anti-Control",
     "Conditions on a qubit being ON+iOFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(true).
@@ -111,9 +111,9 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     });
 Controls.AntiCrossControl = Gate.withoutKnownMatrix(
     "(/)",
-    "Anti-Cross Control",
+    "Y-Axis Control",
     "Conditions on a qubit being ON-iOFF.\n" +
-    "Gates in the same column only apply to states meeting the condition.").
+        "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(true).
     withSerializedId("(/)").
     markedAsStable().

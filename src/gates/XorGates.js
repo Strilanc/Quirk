@@ -21,7 +21,7 @@ const XOR_SHADER = ketShaderPermute(
 XorGates.XorAFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
     "⊕A",
     "Xor Gate [input A]",
-    "Xors 'input A' into the qubits covered by this gate.").
+    "Xors input A into the qubits covered by this gate.").
     withHeight(span).
     withSerializedId("^=A" + span).
     withRequiredContextKeys("Input Range A").

@@ -211,11 +211,12 @@ Gates.TopToolboxGroups = [
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.BottomToolboxGroups = [
     {
-        hint: "Perp Probes",
+        hint: "X/Y Probes",
         gates: [
             Controls.PlusControl, Controls.MinusControl,
-            Controls.CrossControl, PostSelectionGates.PostSelectCross,
-            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
+            Controls.CrossControl, Controls.AntiCrossControl,
+            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus,
+            PostSelectionGates.PostSelectCross, PostSelectionGates.PostSelectAntiCross,
         ]
     },
     {
@@ -225,6 +226,7 @@ Gates.BottomToolboxGroups = [
             FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
             PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
             undefined, ReverseBitsGateFamily.ofSize(2),
+            undefined, undefined,
         ]
     },
     {
@@ -232,7 +234,8 @@ Gates.BottomToolboxGroups = [
         gates: [
             CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
             CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
-            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
+            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3),
+            undefined, undefined,
         ]
     },
     {
@@ -240,7 +243,8 @@ Gates.BottomToolboxGroups = [
         gates: [
             InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
             InputGates.SetA, InputGates.SetB,
-            InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2)
+            InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2),
+            undefined, undefined,
         ]
     },
     {
@@ -249,7 +253,8 @@ Gates.BottomToolboxGroups = [
             ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
             ArithmeticGates.PlusAFamily.ofSize(2), ArithmeticGates.MinusAFamily.ofSize(2),
             MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
-                MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2)
+                MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2),
+            MultiplicationGates.TimesAFamily.ofSize(2), MultiplicationGates.TimesAInverseFamily.ofSize(2),
         ]
     },
     {
@@ -258,6 +263,7 @@ Gates.BottomToolboxGroups = [
             ComparisonGates.ALessThanB, ComparisonGates.AGreaterThanB,
             ComparisonGates.ALessThanOrEqualToB, ComparisonGates.AGreaterThanOrEqualToB,
             ComparisonGates.AEqualToB, ComparisonGates.ANotEqualToB,
+            undefined, undefined,
         ]
     },
     {
@@ -267,6 +273,7 @@ Gates.BottomToolboxGroups = [
             ModularArithmeticGates.PlusAModBFamily.ofSize(2), ModularArithmeticGates.MinusAModBFamily.ofSize(2),
             ModularMultiplicationGates.TimesAModBFamily.ofSize(2),
                 ModularMultiplicationGates.TimesAModBInverseFamily.ofSize(2),
+            undefined, undefined,
         ]
     },
 ];
