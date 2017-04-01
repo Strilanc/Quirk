@@ -121,6 +121,7 @@ ModularMultiplicationGates.TimesAModBFamily = Gate.generateFamily(1, 16, span =>
     withSerializedId("*AmodB" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A", "Input Range B").
+    withCustomDisableReasonFinder(modulusTooBigChecker("Input Range B", span)).
     withKnownPermutation(modularMultiply).
     withCustomShader(ctx => {
         let {offset: a_offset, length: a_length} = ctx.customContextFromGates.get('Input Range A');
