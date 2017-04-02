@@ -220,21 +220,22 @@ Gates.BottomToolboxGroups = [
         ]
     },
     {
+        hint: "Order",
+        gates: [
+            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
+            ReverseBitsGateFamily.ofSize(2), undefined,
+            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3),
+            InterleaveBitsGates.InterleaveBitsGateFamily.ofSize(6),
+            InterleaveBitsGates.DeinterleaveBitsGateFamily.ofSize(6),
+        ]
+    },
+    {
         hint: 'Fourier',
         gates: [
             FourierTransformGates.FourierTransformFamily.ofSize(2),
             FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
             PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined, ReverseBitsGateFamily.ofSize(2),
             undefined, undefined,
-        ]
-    },
-    {
-        hint: "Cycling",
-        gates: [
-            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
-            CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
-            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3),
             undefined, undefined,
         ]
     },
@@ -242,9 +243,9 @@ Gates.BottomToolboxGroups = [
         hint: "Inputs",
         gates: [
             InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
-            InputGates.SetA, InputGates.SetB,
             InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2),
             InputGates.InputRFamily.ofSize(2), InputGates.SetR,
+            InputGates.SetA, InputGates.SetB,
         ]
     },
     {

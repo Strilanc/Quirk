@@ -359,29 +359,29 @@ function _eraseWiresForPermutation(args) {
 }
 
 /**
- * @param {!GateDrawParams} args
- * @returns {!boolean}
- */
-function _useFallbackDrawerInsteadOfPermutation(args) {
-    return args.isHighlighted ||
-        args.isResizeHighlighted ||
-        args.positionInCircuit === undefined ||
-        args.stats.circuitDefinition.colHasControls(args.positionInCircuit.col);
-}
-
-/**
  * Draws the gate as a re-arrangement of wires.
  * @param {!GateDrawParams} args
  */
 GatePainting.PERMUTATION_DRAWER = args => {
-    if (_useFallbackDrawerInsteadOfPermutation(args)) {
+    if (args.positionInCircuit === undefined) {
         GatePainting.DEFAULT_DRAWER(args);
         return;
     }
 
-    _eraseWiresForPermutation(args);
+    if (args.isHighlighted ||
+            args.isResizeHighlighted ||
+            args.stats.circuitDefinition.colHasControls(args.positionInCircuit.col)) {
+        GatePainting.paintBackground(args, '#F3F3F3', '#F3F3F3');
+        GatePainting.paintOutline(args);
+        GatePainting.paintResizeTab(args);
+    } else {
+        _eraseWiresForPermutation(args);
+    }
 
     // Draw wires.
+    let x1 = args.rect.x;
+    let x2 = args.rect.right();
+    args.painter.ctx.strokeStyle = 'black';
     for (let i = 0; i < args.gate.height; i++) {
         let j = args.gate.knownBitPermutationFunc(i);
 
@@ -389,10 +389,7 @@ GatePainting.PERMUTATION_DRAWER = args => {
         let isMeasured = args.stats.circuitDefinition.locIsMeasured(pt);
         let y1 = _wireY(args, i);
         let y2 = _wireY(args, j);
-        let x1 = args.rect.x;
-        let x2 = args.rect.right();
         args.painter.ctx.beginPath();
-        args.painter.ctx.strokeStyle = 'black';
         for (let [dx, dy] of isMeasured ? [[j > i ? +1 : -1, -1], [0, +1]] : [[0, 0]]) {
             args.painter.ctx.moveTo(Math.min(x1, x1 + dx), y1 + dy);
             args.painter.ctx.lineTo(x1 + dx, y1 + dy);

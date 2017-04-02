@@ -55,7 +55,7 @@ let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fr
 let makeSetInputGate = key => Gate.fromIdentity(
     `set${key}`,
     `Set Default ${key}`,
-    `Sets a default value to use for input ${key}.\nDefaults used in columns without their own input gate.'}.`).
+    `Sets a default value for input ${key}, for when an inline input isn't given.`).
     withWidth(2).
     withParam(0).
     markedAsNotInterestedInControls().

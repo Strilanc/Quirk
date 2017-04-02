@@ -45,7 +45,7 @@ ComparisonGates.AGreaterThanB = Gate.withoutKnownMatrix(
 ComparisonGates.ALessThanOrEqualToB = Gate.withoutKnownMatrix(
     "⊕A≤B",
     "At-Most Gate",
-    "Toggles a qubit if input A is less than input B.").
+    "Toggles a qubit if input A is at most input B.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withSerializedId("^A<=B").
@@ -55,7 +55,7 @@ ComparisonGates.ALessThanOrEqualToB = Gate.withoutKnownMatrix(
 ComparisonGates.AGreaterThanOrEqualToB = Gate.withoutKnownMatrix(
     "⊕A≥B",
     "At-Least Gate",
-    "Toggles a qubit if input A is greater than input B.").
+    "Toggles a qubit if input A is at least input B.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withSerializedId("^A>=B").
@@ -75,7 +75,7 @@ ComparisonGates.AEqualToB = Gate.withoutKnownMatrix(
 ComparisonGates.ANotEqualToB = Gate.withoutKnownMatrix(
     "⊕A≠B",
     "Inequality Gate",
-    "Toggles the target if input A is equal to input B.").
+    "Toggles the target if input A isn't equal to input B.").
     markedAsOnlyPermutingAndPhasing().
     markedAsStable().
     withSerializedId("^A!=B").
