@@ -111,7 +111,7 @@ suite.testUsingWebGL("knownBitPermutationMatchesKnowMatrixAndCustomShader", () =
 suite.testUsingWebGL("gatesActLikeTheirKnownPermutation", () => {
     for (let gate of Gates.KnownToSerializer) {
         if (gate.knownPermutationFuncTakingInputs !== undefined && gate.height <= 3) {
-            assertThatGateActsLikePermutation(gate, gate.knownPermutationFuncTakingInputs, [2, 2], 3, true);
+            assertThatGateActsLikePermutation(gate, gate.knownPermutationFuncTakingInputs, [2, 2, 2], true);
         }
     }
 });
@@ -146,10 +146,12 @@ suite.test("knownDoNothingGateFamilies", () => {
         '◦',
         'inputA1',
         'inputB1',
+        'inputR1',
         'revinputA1',
         'revinputB1',
         'setA',
         'setB',
+        'setR',
         // Displays don't have effects.
         'Amps1',
         'Chance',

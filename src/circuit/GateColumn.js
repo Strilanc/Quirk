@@ -208,13 +208,17 @@ class GateColumn {
     static _disabledReason_inputs_missing(args) {
         let missing = [];
         for (let key of args.gate.getUnmetContextKeys()) {
-            let altKey = key.replace("Input Range ", "Input Default ");
+            let altKey = key.
+                replace("Input Range ", "Input Default ").
+                replace("Input NO_DEFAULT Range ", "Input Range ");
             if (!args.context.has(key) && !args.context.has(altKey) && !args.isNested) {
                 missing.push(key);
             }
         }
         if (missing.length > 0) {
-            return "Need\nInput\n " + missing.map(e => e.replace("Input Range ", "")).join(", ");
+            return "Need\nInput\n " + missing.
+                map(e => e.replace("Input NO_DEFAULT Range ", "").replace("Input Range ", "")).
+                join(", ");
         }
 
         return undefined;

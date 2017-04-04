@@ -523,16 +523,14 @@ class MathPainter {
         let traceCouplingsWith = cellTraceFunc => painter.trace(trace => {
             for (let row = 0; row < numRows; row++) {
                 for (let col = 0; col < numCols; col++) {
-                    if (col !== row) {
-                        let k = (row * numCols + col) * 2;
-                        cellTraceFunc(
-                            trace,
-                            buf[k],
-                            buf[k + 1],
-                            x + diam * col,
-                            y + diam * row,
-                            diam);
-                    }
+                    let k = (row * numCols + col) * 2;
+                    cellTraceFunc(
+                        trace,
+                        buf[k],
+                        buf[k + 1],
+                        x + diam * col,
+                        y + diam * row,
+                        diam);
                 }
             }
         });

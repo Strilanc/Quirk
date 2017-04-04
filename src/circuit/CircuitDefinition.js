@@ -156,7 +156,9 @@ class CircuitDefinition {
             let ctx = this.colCustomContextFromGates(c, 0);
             for (let gate of col.gates) {
                 for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
-                    let altKey = key.replace('Input Range ', 'Input Default ');
+                    let altKey = key.
+                        replace('Input Range ', 'Input Default ').
+                        replace('Input NO_DEFAULT Range', 'Input Range ');
                     if (!ctx.has(key) && !ctx.has(altKey)) {
                         result.add(key);
                     }
@@ -975,9 +977,10 @@ class CircuitDefinition {
         // Input->Output gate connections.
         for (let letter of ["A", "B"]) {
             let key = `Input Range ${letter}`;
-            let altKey = `Input Default ${letter}`;
-            let isInput = i => this.locProvidesStat(pt(i), key) || this.locProvidesStat(pt(i), altKey);
-            let isOutput = i => this.locNeedsStat(pt(i), key);
+            let altInKey = `Input Default ${letter}`;
+            let altOutKey = `Input NO_DEFAULT Range ${letter}`;
+            let isInput = i => this.locProvidesStat(pt(i), key) || this.locProvidesStat(pt(i), altInKey);
+            let isOutput = i => this.locNeedsStat(pt(i), key) || this.locNeedsStat(pt(i), altOutKey);
             result.push(
                 srcDstMatchInRange(n, i => isInput(i) && coversCoherentWire(i), isOutput, false),
                 srcDstMatchInRange(n, i => isInput(i) && coversMeasuredWire(i), isOutput, true)

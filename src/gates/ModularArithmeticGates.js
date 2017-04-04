@@ -34,7 +34,7 @@ const MODULAR_INCREMENT_SHADER = ketShaderPermute(
             // HACK: sometimes mod(value-equal-to-r, r) returns r instead of 0. The perturbation works around it.
             : floor(mod(out_id + r - amount, r - 0.000001));`);
 
-ModularArithmeticGates.IncrementModAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+ModularArithmeticGates.IncrementModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+1\nmod R",
     "Modular Increment Gate",
     "Adds 1 into the target, but wraps R-1 to 0.\n" +
@@ -48,7 +48,7 @@ ModularArithmeticGates.IncrementModAFamily = Gate.generateFamily(1, 16, span => 
         ...ketArgs(ctx, span, ['R']),
         WglArg.float("amount", +1))));
 
-ModularArithmeticGates.DecrementModAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
+ModularArithmeticGates.DecrementModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "−1\nmod R",
     "Modular Decrement Gate",
     "Subtracts 1 out of the target, but wraps 0 to R-1.\n" +
@@ -105,8 +105,8 @@ ModularArithmeticGates.MinusAModRFamily = Gate.generateFamily(1, 16, span => Gat
         WglArg.float("factor", -1))));
 
 ModularArithmeticGates.all = [
-    ...ModularArithmeticGates.IncrementModAFamily.all,
-    ...ModularArithmeticGates.DecrementModAFamily.all,
+    ...ModularArithmeticGates.IncrementModRFamily.all,
+    ...ModularArithmeticGates.DecrementModRFamily.all,
     ...ModularArithmeticGates.PlusAModRFamily.all,
     ...ModularArithmeticGates.MinusAModRFamily.all,
 ];

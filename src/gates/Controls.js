@@ -37,8 +37,8 @@ Controls.AntiControl = Gate.fromIdentity(
     });
 
 Controls.PlusControl = Gate.withoutKnownMatrix(
-    "⊕",
-    "X-Axis Anti-Control",
+    "⊖",
+    "Negative X-Axis Control",
     "Conditions on a qubit being ON+OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(false).
@@ -55,13 +55,12 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
         args.painter.strokeCircle(p, 5);
-        args.painter.strokeLine(p.offsetBy(0, -5), p.offsetBy(0, +5));
         args.painter.strokeLine(p.offsetBy(-5, 0), p.offsetBy(+5, 0));
     });
 
 Controls.MinusControl = Gate.withoutKnownMatrix(
-    "⊖",
-    "X-Axis Control",
+    "⊕",
+    "Positive X-Axis Control",
     "Conditions on a qubit being ON-OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     withSerializedId("⊖").
@@ -78,14 +77,15 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
         args.painter.strokeCircle(p, 5);
+        args.painter.strokeLine(p.offsetBy(0, -5), p.offsetBy(0, +5));
         args.painter.strokeLine(p.offsetBy(-5, 0), p.offsetBy(+5, 0));
     });
 
 let x1 = Matrix.fromPauliRotation(0.25, 0, 0);
 let x2 = Matrix.fromPauliRotation(-0.25, 0, 0);
 Controls.CrossControl = Gate.withoutKnownMatrix(
-    "⊗",
-    "Y-Axis Anti-Control",
+    "(/)",
+    "Negative Y-Axis Control",
     "Conditions on a qubit being ON+iOFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markedAsControl(true).
@@ -94,6 +94,32 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
     withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
     withCustomOperation(() => {}).
     withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
+    withCustomDrawer(args => {
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
+        }
+        let p = args.rect.center();
+        args.painter.fillCircle(p, 5);
+        args.painter.strokeCircle(p, 5);
+        let r = 5*Math.sqrt(0.5)*1.1;
+        args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintOutline(args);
+        }
+    });
+
+Controls.AntiCrossControl = Gate.withoutKnownMatrix(
+    "⊗",
+    "Positive Y-Axis Control",
+    "Conditions on a qubit being ON-iOFF.\n" +
+        "Gates in the same column only apply to states meeting the condition.").
+    markedAsControl(true).
+    withSerializedId("(/)").
+    markedAsStable().
+    withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
+    withCustomOperation(() => {}).
+    withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
     withCustomDrawer(ctx => {
         if (ctx.isInToolbox || ctx.isHighlighted) {
             GatePainting.paintBackground(ctx);
@@ -107,31 +133,6 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
         ctx.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
         if (ctx.isInToolbox || ctx.isHighlighted) {
             GatePainting.paintOutline(ctx);
-        }
-    });
-Controls.AntiCrossControl = Gate.withoutKnownMatrix(
-    "(/)",
-    "Y-Axis Control",
-    "Conditions on a qubit being ON-iOFF.\n" +
-        "Gates in the same column only apply to states meeting the condition.").
-    markedAsControl(true).
-    withSerializedId("(/)").
-    markedAsStable().
-    withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
-    withCustomOperation(() => {}).
-    withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
-    withCustomDrawer(args => {
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintBackground(args);
-            GatePainting.paintOutline(args);
-        }
-        let p = args.rect.center();
-        args.painter.fillCircle(p, 5);
-        args.painter.strokeCircle(p, 5);
-        let r = 5*Math.sqrt(0.5)*1.1;
-        args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
-        if (args.isInToolbox || args.isHighlighted) {
-            GatePainting.paintOutline(args);
         }
     });
 

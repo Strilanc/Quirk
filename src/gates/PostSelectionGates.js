@@ -35,31 +35,35 @@ PostSelectionGates.PostSelectOn = Gate.fromKnownMatrix(
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectPlus = Gate.fromKnownMatrix(
-    "|+⟩⟨+|",
+    "|-⟩⟨-|",
     Matrix.square(1, 1, 1, 1).times(0.5),
-    "Postselect anti-X-axis",
+    "Postselect X-axis Negative",
     "Keeps ON+OFF states, discards/retries ON-OFF states.").
+    withSerializedId("|+⟩⟨+|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
-    "|-⟩⟨-|",
+    "|+⟩⟨+|",
     Matrix.square(1, -1, -1, 1).times(0.5),
-    "Postselect X-axis",
+    "Postselect X-axis Positive",
     "Keeps ON-OFF states, discards/retries ON+OFF states.").
+    withSerializedId("|-⟩⟨-|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectCross = Gate.fromKnownMatrix(
-    "|X⟩⟨X|",
+    "|/⟩⟨/|",
     Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(0.5),
-    "Postselect anti-Y-axis",
+    "Postselect Y-axis Negative",
     "Keeps ON+iOFF states, discards ON-iOFF states.").
+    withSerializedId("|X⟩⟨X|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectAntiCross = Gate.fromKnownMatrix(
-    "|/⟩⟨/|",
+    "|X⟩⟨X|",
     Matrix.square(1, Complex.I, Complex.I.neg(), 1).times(0.5),
-    "Postselect Y-axis",
+    "Postselect Y-axis Positive",
     "Keeps ON-iOFF states, discards/retries ON+iOFF states.").
+    withSerializedId("|/⟩⟨/|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.all = [

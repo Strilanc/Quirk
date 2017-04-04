@@ -230,13 +230,13 @@ Gates.BottomToolboxGroups = [
         ]
     },
     {
-        hint: 'Fourier',
+        hint: 'Phase',
         gates: [
             FourierTransformGates.FourierTransformFamily.ofSize(2),
-            FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
+                FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
+            undefined, undefined,
             PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined, undefined,
-            undefined, undefined,
+            PhaseGradientGates.PhaseByFracA, PhaseGradientGates.PhaseByMinusFracA,
         ]
     },
     {
@@ -270,11 +270,12 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Modular",
         gates: [
-            ModularArithmeticGates.IncrementModAFamily.ofSize(2), ModularArithmeticGates.DecrementModAFamily.ofSize(2),
+            ModularArithmeticGates.IncrementModRFamily.ofSize(2), ModularArithmeticGates.DecrementModRFamily.ofSize(2),
             ModularArithmeticGates.PlusAModRFamily.ofSize(2), ModularArithmeticGates.MinusAModRFamily.ofSize(2),
             ModularMultiplicationGates.TimesAModRFamily.ofSize(2),
                 ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
-            undefined, undefined,
+            ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(2),
+                ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(2),
         ]
     },
 ];

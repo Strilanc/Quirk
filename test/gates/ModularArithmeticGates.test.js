@@ -12,9 +12,11 @@ suite.testUsingWebGL('mod_too_big_disable', () => {
     let circuit = diagram => CircuitDefinition.fromTextDiagram(new Map([
         ['A', InputGates.InputAFamily],
         ['B', InputGates.InputBFamily],
+        ['R', InputGates.InputRFamily],
+        ['r', InputGates.SetR.withParam(3)],
 
-        ['x', ModularArithmeticGates.IncrementModAFamily],
-        ['y', ModularArithmeticGates.DecrementModAFamily],
+        ['x', ModularArithmeticGates.IncrementModRFamily],
+        ['y', ModularArithmeticGates.DecrementModRFamily],
         ['z', ModularArithmeticGates.PlusAModRFamily],
         ['t', ModularArithmeticGates.MinusAModRFamily],
 
@@ -26,15 +28,15 @@ suite.testUsingWebGL('mod_too_big_disable', () => {
     let good = (col, row, diagram) =>
         assertThat(circuit(diagram).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
 
-    bad(1, 2, `-A-
+    bad(1, 2, `-R-
                -/-
                -x-`);
 
     bad(1, 0, `-y-
-               -A-
+               -R-
                -/-`);
 
-    good(1, 2, `-A-
+    good(1, 2, `-R-
                 -/-
                 -y-
                 -/-`);
@@ -42,16 +44,16 @@ suite.testUsingWebGL('mod_too_big_disable', () => {
     good(1, 2, `-x-
                 -/-
                 -/-
-                -A-
+                -R-
                 -/-`);
 
     bad(1, 2, `-A-
                -/-
                -z-
-               -B-
+               -R-
                -/-`);
 
-    bad(1, 2, `-B-
+    bad(1, 2, `-R-
                -/-
                -t-
                -A-
@@ -60,48 +62,53 @@ suite.testUsingWebGL('mod_too_big_disable', () => {
     bad(1, 2, `-A-
                ---
                -z-
-               -B-
+               -R-
                -/-`);
 
     good(1, 2, `-A-
                 -/-
                 -z-
-                -B-
+                -R-
                 ---`);
 
     good(1, 2, `-A-
                 -/-
                 -t-
                 -/-
-                -B-
+                -R-
+                -/-`);
+
+    good(1, 2, `-A-
+                r/-
+                -t-
                 -/-`);
 });
 
-suite.testUsingWebGL('increment_mod_A', () => {
+suite.testUsingWebGL('increment_mod_R', () => {
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.IncrementModAFamily.ofSize(2),
+        ModularArithmeticGates.IncrementModRFamily.ofSize(2),
         (t, a) => t < a ? (t + 1) % a : t,
         [2]);
 
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.IncrementModAFamily.ofSize(3),
+        ModularArithmeticGates.IncrementModRFamily.ofSize(3),
         (t, a) => t < a ? (t + 1) % a : t,
         [2]);
 });
 
-suite.testUsingWebGL('decrement_mod_A', () => {
+suite.testUsingWebGL('decrement_mod_R', () => {
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.DecrementModAFamily.ofSize(3),
+        ModularArithmeticGates.DecrementModRFamily.ofSize(3),
         (t, a) => t < a ? (t - 1 + a) % a : t,
         [3]);
 
     assertThatGateActsLikePermutation(
-        ModularArithmeticGates.DecrementModAFamily.ofSize(3),
+        ModularArithmeticGates.DecrementModRFamily.ofSize(3),
         (t, a) => t < a ? (t - 1 + a) % a : t,
         [2]);
 });
 
-suite.testUsingWebGL('plus_A_mod_B', () => {
+suite.testUsingWebGL('plus_A_mod_R', () => {
     assertThatGateActsLikePermutation(
         ModularArithmeticGates.PlusAModRFamily.ofSize(2),
         (t, a, b) => t < b ? (t + a) % b : t,
@@ -118,7 +125,7 @@ suite.testUsingWebGL('plus_A_mod_B', () => {
         [3, 2]);
 });
 
-suite.testUsingWebGL('minus_A_mod_B', () => {
+suite.testUsingWebGL('minus_A_mod_R', () => {
     assertThatGateActsLikePermutation(
         ModularArithmeticGates.MinusAModRFamily.ofSize(2),
         (t, a, b) => t < b ? Util.properMod(t - a, b) : t,
