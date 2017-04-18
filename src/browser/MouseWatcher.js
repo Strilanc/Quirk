@@ -49,6 +49,20 @@ let addListenerUntilResultInvoked = (target, type, listener) => {
     return () => target.removeEventListener(type, listener);
 };
 
+/**
+ * @param {!EventTarget} target
+ * @param {!string} type
+ * @param {!EventListener|!Function} listener
+ * @returns {!function(void) : void}
+ */
+let addTouchListenerUntilResultInvoked = (target, type, listener) => {
+    if(target && target.preventDefault) {
+        target.preventDefault();
+    }
+    target.addEventListener(type, listener);
+    return () => target.removeEventListener(type, listener);
+};
+
 class DragWatcher {
     /**
      * @param {!HTMLElement} element
@@ -87,10 +101,10 @@ class DragWatcher {
             addListenerUntilResultInvoked(document, 'mouseleave', ev => this.handleMouseEventWith(ev, this.onLeave)),
             addListenerUntilResultInvoked(document, 'mouseenter', ev => this.handleMouseEventWith(ev, this.onEnter)),
 
-            addListenerUntilResultInvoked(e, 'touchstart', ev => this.handleTouchEventWith(ev, this.onDown)),
-            addListenerUntilResultInvoked(e, 'touchmove', ev => this.handleTouchEventWith(ev, this.onMove)),
-            addListenerUntilResultInvoked(e, 'touchend', ev => this.handleTouchEventWith(ev, this.onUp)),
-            addListenerUntilResultInvoked(e, 'touchcancel', ev => this.handleTouchEventWith(ev, this.onCancel))
+            addTouchListenerUntilResultInvoked(e, 'touchstart', ev => this.handleTouchEventWith(ev, this.onDown)),
+            addTouchListenerUntilResultInvoked(e, 'touchmove', ev => this.handleTouchEventWith(ev, this.onMove)),
+            addTouchListenerUntilResultInvoked(e, 'touchend', ev => this.handleTouchEventWith(ev, this.onUp)),
+            addTouchListenerUntilResultInvoked(e, 'touchcancel', ev => this.handleTouchEventWith(ev, this.onCancel))
         ];
 
         return () => {
