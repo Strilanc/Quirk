@@ -10,6 +10,8 @@ import {Util} from "src/base/Util.js"
  */
 class GatePainting {}
 
+const GATE_SYMBOL_FONT = '16px sans-serif';
+
 GatePainting.paintOutline = args => {
     if (args.isInToolbox) {
         let r = args.rect.shiftedBy(0.5, 0.5);
@@ -109,31 +111,35 @@ GatePainting.paintResizeTab = args => {
 
 /**
  * @param {!GateDrawParams} args
+ * @param {undefined|!string=undefined} symbolOverride
  */
-GatePainting.paintGateSymbol = args => {
+GatePainting.paintGateSymbol = (args, symbolOverride=undefined) => {
     let painter = args.painter;
-    let symbol = args.gate.symbol;
-    let rect = args.rect;
-    const font = '16px sans-serif';
-    rect = rect.paddedBy(-2);
+    let rect = args.rect.paddedBy(-2);
+    if (symbolOverride === undefined) {
+        symbolOverride = args.gate.symbol;
+    }
+    let {symbol, offsetY} = _paintSymbolHandleLines(args.painter, symbolOverride, rect);
 
     let parts = symbol.split("^");
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
         painter.print(
             symbol,
             rect.x + rect.w/2,
-            rect.y + rect.h/2,
+            rect.y + rect.h/2 + offsetY,
             'center',
             'middle',
             'black',
-            font,
+            GATE_SYMBOL_FONT,
             rect.w,
             rect.h);
         return;
     }
 
     let [baseText, expText] = parts;
-    painter.ctx.font = font;
+    let lines = baseText.split('\n');
+    baseText = lines[0];
+
     let baseWidth = painter.ctx.measureText(baseText).width;
     let expWidth = painter.ctx.measureText(expText).width;
     let scaleDown = Math.min(rect.w, baseWidth + expWidth) / (baseWidth + expWidth);
@@ -141,24 +147,50 @@ GatePainting.paintGateSymbol = args => {
     painter.print(
         baseText,
         rect.x + divider,
-        rect.y + rect.h/2,
+        rect.y + rect.h/2 + offsetY,
         'right',
         'hanging',
         'black',
-        font,
+        GATE_SYMBOL_FONT,
         divider,
         rect.h);
     painter.print(
         expText,
         rect.x + divider,
-        rect.y + rect.h/2,
+        rect.y + rect.h/2 + offsetY,
         'left',
         'alphabetic',
         'black',
-        font,
+        GATE_SYMBOL_FONT,
         rect.w - divider,
         rect.h);
 };
+
+/**
+ * @param {!Painter} painter
+ * @param {!string} symbol
+ * @param {!Rect} rect
+ * @returns {!{symbol: !string, offsetY: !int}} The symbol without any extra lines.
+ * @private
+ */
+function _paintSymbolHandleLines(painter, symbol, rect) {
+    let lines = symbol.split('\n');
+
+    for (let i = 1; i < lines.length; i++) {
+        painter.print(
+            lines[i],
+            rect.x + rect.w/2,
+            rect.y + rect.h/2 + 9*i,
+            'center',
+            'hanging',
+            'black',
+            GATE_SYMBOL_FONT,
+            rect.w,
+            16);
+    }
+
+    return {symbol: lines[0], offsetY: lines.length > 1 ? -5 : 0};
+}
 
 GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
     if (args.isInToolbox) {
@@ -327,29 +359,29 @@ function _eraseWiresForPermutation(args) {
 }
 
 /**
- * @param {!GateDrawParams} args
- * @returns {!boolean}
- */
-function _useFallbackDrawerInsteadOfPermutation(args) {
-    return args.isHighlighted ||
-        args.isResizeHighlighted ||
-        args.positionInCircuit === undefined ||
-        args.stats.circuitDefinition.colHasControls(args.positionInCircuit.col);
-}
-
-/**
  * Draws the gate as a re-arrangement of wires.
  * @param {!GateDrawParams} args
  */
 GatePainting.PERMUTATION_DRAWER = args => {
-    if (_useFallbackDrawerInsteadOfPermutation(args)) {
+    if (args.positionInCircuit === undefined) {
         GatePainting.DEFAULT_DRAWER(args);
         return;
     }
 
-    _eraseWiresForPermutation(args);
+    if (args.isHighlighted ||
+            args.isResizeHighlighted ||
+            args.stats.circuitDefinition.colHasControls(args.positionInCircuit.col)) {
+        GatePainting.paintBackground(args, '#F3F3F3', '#F3F3F3');
+        GatePainting.paintOutline(args);
+        GatePainting.paintResizeTab(args);
+    } else {
+        _eraseWiresForPermutation(args);
+    }
 
     // Draw wires.
+    let x1 = args.rect.x;
+    let x2 = args.rect.right();
+    args.painter.ctx.strokeStyle = 'black';
     for (let i = 0; i < args.gate.height; i++) {
         let j = args.gate.knownBitPermutationFunc(i);
 
@@ -357,10 +389,7 @@ GatePainting.PERMUTATION_DRAWER = args => {
         let isMeasured = args.stats.circuitDefinition.locIsMeasured(pt);
         let y1 = _wireY(args, i);
         let y2 = _wireY(args, j);
-        let x1 = args.rect.x;
-        let x2 = args.rect.right();
         args.painter.ctx.beginPath();
-        args.painter.ctx.strokeStyle = 'black';
         for (let [dx, dy] of isMeasured ? [[j > i ? +1 : -1, -1], [0, +1]] : [[0, 0]]) {
             args.painter.ctx.moveTo(Math.min(x1, x1 + dx), y1 + dy);
             args.painter.ctx.lineTo(x1 + dx, y1 + dy);

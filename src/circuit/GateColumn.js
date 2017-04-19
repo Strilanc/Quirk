@@ -126,14 +126,15 @@ class GateColumn {
      * @private
      */
     _disabledReason_overlappingTags(outerRow, row) {
-        let keys = new Set(this.gates[row].customColumnContextProvider(outerRow + row).map(e => e.key));
+        let keys = new Set(
+            this.gates[row].customColumnContextProvider(outerRow + row, this.gates[row]).map(e => e.key));
         if (keys.length === 0) {
             return undefined;
         }
 
         for (let i = 0; i < row; i++) {
             let g = this.gates[i];
-            for (let {key: otherKey} of g === undefined ? [] : g.customColumnContextProvider(outerRow + i)) {
+            for (let {key: otherKey} of g === undefined ? [] : g.customColumnContextProvider(outerRow + i, g)) {
                 //noinspection JSUnusedAssignment
                 if (keys.has(otherKey)) {
                     return "already\ndefined";
@@ -207,12 +208,17 @@ class GateColumn {
     static _disabledReason_inputs_missing(args) {
         let missing = [];
         for (let key of args.gate.getUnmetContextKeys()) {
-            if (!args.context.has(key) && !args.isNested) {
+            let altKey = key.
+                replace("Input Range ", "Input Default ").
+                replace("Input NO_DEFAULT Range ", "Input Range ");
+            if (!args.context.has(key) && !args.context.has(altKey) && !args.isNested) {
                 missing.push(key);
             }
         }
         if (missing.length > 0) {
-            return "Need\nInput\n " + missing.map(e => e.replace("Input Range ", "")).join(", ");
+            return "Need\nInput\n " + missing.
+                map(e => e.replace("Input NO_DEFAULT Range ", "").replace("Input Range ", "")).
+                join(", ");
         }
 
         return undefined;
@@ -297,17 +303,22 @@ class GateColumn {
      * @param {!int} inputMeasureMask
      * @param {!int} outerRowOffset
      * @param {!Map.<!string, *>} outerContext
+     * @param {!Map.<!string, *>} prevStickyCtx
      * @param {!boolean} isNested
-     * @returns {!Array.<undefined|!string>}
+     * @returns {{allReasons: !Array.<undefined|!string>, stickyCtx: !Map<!string, *>}}
      */
-    perRowDisabledReasons(inputMeasureMask, outerRowOffset, outerContext, isNested) {
-        let context = new Map(outerContext);
+    perRowDisabledReasons(inputMeasureMask, outerRowOffset, outerContext, prevStickyCtx, isNested) {
+        let context = Util.mergeMaps(outerContext, prevStickyCtx);
+        let stickyCtx = new Map(prevStickyCtx);
         for (let row = this.gates.length - 1; row >= 0; row--) {
             let g = this.gates[row];
             if (g !== undefined) {
-                for (let {key, val} of g.customColumnContextProvider(row + outerRowOffset)) {
+                for (let {key, val} of g.customColumnContextProvider(row + outerRowOffset, g)) {
                     //noinspection JSUnusedAssignment
                     context.set(key, val);
+                    if (!g.isContextTemporary) {
+                        stickyCtx.set(key, val);
+                    }
                 }
             }
         }
@@ -316,7 +327,7 @@ class GateColumn {
         for (let i = 0; i < this.gates.length; i++) {
             allReasons.push(this._disabledReason(inputMeasureMask, i, outerRowOffset, context, isNested))
         }
-        return allReasons;
+        return {allReasons, stickyCtx};
     }
 
     /**

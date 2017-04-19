@@ -23,49 +23,47 @@ let POST_SELECT_DRAWER = args => {
 PostSelectionGates.PostSelectOff = Gate.fromKnownMatrix(
     "|0⟩⟨0|",
     Matrix.square(1, 0, 0, 0),
-    "Post-selection Gate [Off]",
-    "Keeps OFF states, discards ON states.\n" +
-        "Means 'restart until satisfied'.").
+    "Postselect Off",
+    "Keeps OFF states, discards/retries ON states.").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectOn = Gate.fromKnownMatrix(
     "|1⟩⟨1|",
     Matrix.square(0, 0, 0, 1),
-    "Post-selection Gate [On]",
-    "Keeps ON states, discards OFF states.\n" +
-        "Means 'restart until satisfied'.").
+    "Postselect On",
+    "Keeps ON states, discards/retries OFF states.").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectPlus = Gate.fromKnownMatrix(
-    "|+⟩⟨+|",
+    "|-⟩⟨-|",
     Matrix.square(1, 1, 1, 1).times(0.5),
-    "Post-selection Gate [Plus]",
-    "Keeps ON+OFF states, discards ON-OFF states.\n" +
-        "Means 'restart until satisfied'.").
+    "Postselect X-axis Negative",
+    "Keeps ON+OFF states, discards/retries ON-OFF states.").
+    withSerializedId("|+⟩⟨+|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
-    "|-⟩⟨-|",
+    "|+⟩⟨+|",
     Matrix.square(1, -1, -1, 1).times(0.5),
-    "Post-selection Gate [Minus]",
-    "Keeps ON-OFF states, discards ON+OFF states\n" +
-        "Means 'restart until satisfied'.").
+    "Postselect X-axis Positive",
+    "Keeps ON-OFF states, discards/retries ON+OFF states.").
+    withSerializedId("|-⟩⟨-|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectCross = Gate.fromKnownMatrix(
-    "|X⟩⟨X|",
+    "|/⟩⟨/|",
     Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(0.5),
-    "Post-selection Gate [Cross]",
-    "Keeps ON+iOFF states, discards ON-iOFF states.\n" +
-        "Means 'restart until satisfied'.").
+    "Postselect Y-axis Negative",
+    "Keeps ON+iOFF states, discards ON-iOFF states.").
+    withSerializedId("|X⟩⟨X|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.PostSelectAntiCross = Gate.fromKnownMatrix(
-    "|/⟩⟨/|",
+    "|X⟩⟨X|",
     Matrix.square(1, Complex.I, Complex.I.neg(), 1).times(0.5),
-    "Post-selection Gate [Cross]",
-    "Keeps ON-iOFF states, discards ON+iOFF states.\n" +
-        "Means 'restart until satisfied'.").
+    "Postselect Y-axis Positive",
+    "Keeps ON-iOFF states, discards/retries ON+iOFF states.").
+    withSerializedId("|/⟩⟨/|").
     withCustomDrawer(POST_SELECT_DRAWER);
 
 PostSelectionGates.all = [

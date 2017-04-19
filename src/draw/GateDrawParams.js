@@ -42,7 +42,7 @@ class GateDrawParams {
         this.gate = gate;
         /** @type {!CircuitStats} */
         this.stats = stats;
-        /** @type {?{row: !int, col: !int}} */
+        /** @type {undefined|!{row: !int, col: !int}} */
         this.positionInCircuit = positionInCircuit;
         /** @type {!Array.<!Point>} */
         this.focusPoints = focusPoints;

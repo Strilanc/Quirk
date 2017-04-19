@@ -25,6 +25,8 @@ class Gate {
         this.width = 1;
         /** @type {!int} */
         this.height = 1;
+        /** @type {undefined|!int} */
+        this.param = undefined;
 
         /** @type {undefined|!function(!GateDrawParams) : void} */
         this.customDrawer = undefined;
@@ -108,9 +110,12 @@ class Gate {
         this._isDefinitelyUnitary = false;
         /**
          * @param {!int} qubit
+         * @param {!Gate} gate
          * @returns {!Array.<!{key: !string, val: *}>}
          */
-        this.customColumnContextProvider = qubit => [];
+        this.customColumnContextProvider = (qubit, gate) => [];
+        /** @type {!boolean} */
+        this.isContextTemporary = true;
         /**
          * @param {!GateCheckArgs} args
          * @returns {undefined|!string}
@@ -120,6 +125,15 @@ class Gate {
          * @type {undefined | !function(!int) : !int}
          */
         this.knownBitPermutationFunc = undefined;
+        /**
+         * @type {
+         *      !function(val: !int) : !int |
+         *      !function(val: !int, a: !int) : !int |
+         *      !function(val: !int, a: !int, b: !int) : !int |
+         *      !function(val: !int, inputs: ...!int) : !int
+         *  }
+         */
+        this.knownPermutationFuncTakingInputs = undefined;
     }
 
     /**
@@ -296,6 +310,7 @@ class Gate {
         let g = new Gate(this.symbol, this.name, this.blurb);
         g.serializedId = this.serializedId;
         g.tag = this.tag;
+        g.param = this.param;
         g.customDrawer = this.customDrawer;
         g.interestedInControls = this.interestedInControls;
         g.customBeforeOperation = this.customBeforeOperation;
@@ -309,6 +324,7 @@ class Gate {
         g.isSingleQubitDisplay = this.isSingleQubitDisplay;
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
+        g.isContextTemporary = this.isContextTemporary;
         g.knownCircuitNested = this.knownCircuitNested;
         g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
@@ -320,6 +336,7 @@ class Gate {
         g._controlBit = this._controlBit;
         g.isControlWireSource = this.isControlWireSource;
         g._isDefinitelyUnitary = this._isDefinitelyUnitary;
+        g.knownPermutationFuncTakingInputs = this.knownPermutationFuncTakingInputs;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
         return g;
@@ -348,7 +365,7 @@ class Gate {
     }
 
     /**
-     * @param {!function(qubit:!int):!Array.<!{key: !string, val: *}>} customColumnContextProvider
+     * @param {!function(qubit:!int,gate:!Gate):!Array.<!{key: !string, val: *}>} customColumnContextProvider
      * @returns {!Gate}
      */
     withCustomColumnContextProvider(customColumnContextProvider) {
@@ -387,6 +404,16 @@ class Gate {
     }
 
     /**
+     * @param {undefined|!int} value
+     * @returns {!Gate}
+     */
+    withParam(value) {
+        let g = this._copy();
+        g.param = value;
+        return g;
+    }
+
+    /**
      * @param {!int} height
      * @returns {!Gate}
      */
@@ -413,6 +440,28 @@ class Gate {
     withCustomDrawer(drawer) {
         let g = this._copy();
         g.customDrawer = drawer;
+        return g;
+    }
+
+    /**
+     * @param {
+     *      !function(val: !int) : !int |
+     *      !function(val: !int, a: !int) : !int |
+     *      !function(val: !int, a: !int, b: !int) : !int |
+     *      !function(val: !int, inputs: ...!int) : !int
+     *  } knownPermutationFuncTakingInputs
+     * @returns {!Gate}
+     */
+    withKnownPermutation(knownPermutationFuncTakingInputs) {
+        let g = this._copy();
+        g.knownPermutationFuncTakingInputs = knownPermutationFuncTakingInputs;
+        if (knownPermutationFuncTakingInputs !== undefined) {
+            g._stableDuration = Infinity;
+            g._hasNoEffect = false;
+            g._effectPermutesStates = true;
+            g._effectCreatesSuperpositions = false;
+            g._isDefinitelyUnitary = true;
+        }
         return g;
     }
 
@@ -613,6 +662,16 @@ class Gate {
             this._knownMatrix !== undefined ? !this._knownMatrix.isDiagonal() :
             true;
     }
+
+    /**
+     * @returns {!Gate}
+     */
+    withStickyContext() {
+        let g = this._copy();
+        g.isContextTemporary = false;
+        return g;
+    }
+
 
     /**
      * @returns {!boolean}

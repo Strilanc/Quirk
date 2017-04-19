@@ -1,4 +1,4 @@
-import {assertThat} from "test/TestUtil.js"
+import {assertThat, assertTrue} from "test/TestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
@@ -33,49 +33,74 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
 
 /**
  * @param {!Gate} gate
- * @param {!function(inputA:!int,target:!int):!int|!function(inputA:!int,inputB:!int,target:!int):!int} inversePermutationFunc
+ * @param {!function(target:!int,inputA:!int):!int|!function(target:!int,inputA:!int,inputB:!int):!int} permutationFunc
  * @param {!Array.<!int>} inputSpans
- * @param {!int=5} repeats
+ * @param {!boolean} ignoreTargetEndsUpDisabled
  */
-function assertThatGateActsLikePermutation(gate, inversePermutationFunc, inputSpans, repeats=5) {
-    let inputGates = seq(inputSpans).
-        zip([Gates.InputGates.InputAFamily, Gates.InputGates.InputBFamily], (len, fam) => fam.ofSize(len)).
-        toArray();
-
-    for (let _ of Seq.range(repeats)) {
-        let dstWire = 0;
-        let wireCount = dstWire + gate.height;
-        let inpWires = new Array(inputGates.length);
-        for (let i = 0; i < inputGates.length; i++) {
-            if (Math.random() < 0.5) {
-                wireCount += 1;
-            }
-            inpWires[i] = wireCount;
-            wireCount += inputGates[i].height;
+function assertThatGateActsLikePermutation(
+        gate,
+        permutationFunc,
+        inputSpans,
+        ignoreTargetEndsUpDisabled=false) {
+    let inputGates = [];
+    for (let [key, inputGate] of [['Input Range A', Gates.InputGates.InputAFamily],
+                                  ['Input Range B', Gates.InputGates.InputBFamily],
+                                  ['Input Range R', Gates.InputGates.InputRFamily]]) {
+        if (gate.getUnmetContextKeys().has(key)) {
+            inputGates.push(inputGate.ofSize(inputSpans[inputGates.length]));
         }
-
-        // Useful facts.
-        let dstMask = ((1 << gate.height) - 1) << dstWire;
-        let inpMasks = seq(inpWires).zip(inputGates, (off, g) => ((1 << g.height) - 1) << off).toArray();
-
-        // Make permutation matrix.
-        let matrix = Matrix.generateTransition(1 << wireCount, val => {
-            let dst = (val & dstMask) >> dstWire;
-            let inps = seq(inpMasks).zip(inpWires, (m, w) => (val & m) >> w).toArray();
-            let out = inversePermutationFunc(...inps, dst);
-            return (val & ~dstMask) | out;
-        });
-
-        // Make circuit.
-        let col = new Array(wireCount).fill(undefined);
-        for (let i = 0; i < inputSpans.length; i++) {
-            col[inpWires[i]] = inputGates[i];
-        }
-        col[dstWire] = gate;
-        let circuit = new CircuitDefinition(wireCount, [new GateColumn(col)]);
-
-        assertThatCircuitUpdateActsLikeMatrix(ctx => advanceStateWithCircuit(ctx, circuit, false), matrix, 1);
     }
+    inputSpans = inputSpans.slice(0, inputGates.length);
+
+    let dstWire = 0;
+    let wireCount = dstWire + gate.height;
+    let inpWires = new Array(inputGates.length);
+    for (let i = 0; i < inputGates.length; i++) {
+        if (Math.random() < 0.5) {
+            wireCount += 1;
+        }
+        inpWires[i] = wireCount;
+        wireCount += inputGates[i].height;
+    }
+
+    // Useful facts.
+    let dstMask = ((1 << gate.height) - 1) << dstWire;
+    let inpMasks = seq(inpWires).zip(inputGates, (off, g) => ((1 << g.height) - 1) << off).toArray();
+
+    // Make permutation matrix.
+    let fullPermutation = val => {
+        let dst = (val & dstMask) >> dstWire;
+        let inps = seq(inpMasks).zip(inpWires, (m, w) => (val & m) >> w).toArray();
+        let out = permutationFunc(dst, ...inps);
+        return (val & ~dstMask) | out;
+    };
+
+    // Make circuit.
+    let col = new Array(wireCount).fill(undefined);
+    for (let i = 0; i < inputSpans.length; i++) {
+        col[inpWires[i]] = inputGates[i];
+    }
+    col[dstWire] = gate;
+    let circuit = new CircuitDefinition(wireCount, [new GateColumn(col)]);
+
+    if (circuit.gateAtLocIsDisabledReason(0, 0) !== undefined) {
+        if (ignoreTargetEndsUpDisabled) {
+            return;
+        }
+        assertThat(circuit.gateAtLocIsDisabledReason(0, 0)).withInfo({gate}).isEqualTo(undefined);
+    }
+
+    let updateAction = ctx => advanceStateWithCircuit(ctx, circuit, false);
+    _assertThatCircuitMutationActsLikePermutation_single(
+        wireCount,
+        updateAction,
+        fullPermutation,
+        {
+            gate_id: gate.serializedId,
+            dstWire,
+            inpWires,
+            inputSpans
+        });
 }
 
 /**
@@ -136,6 +161,51 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
     let expectedOutVec = matrix.applyToStateVectorAtQubitWithControls(inVec, qubitIndex, controls);
 
     assertThat(outVec).withInfo({matrix, inVec, ctx}).isApproximatelyEqualTo(expectedOutVec, 0.005);
+}
+
+/**
+ * @param {!int} wireCount
+ * @param {!function(!CircuitEvalContext)} updateAction
+ * @param {!function(!int) : !int} permutation
+ * @param {*} permuteInfo
+ */
+function _assertThatCircuitMutationActsLikePermutation_single(wireCount, updateAction, permutation, permuteInfo) {
+    let time = Math.random();
+
+    let ampCount = 1 << wireCount;
+    let inVec = Matrix.generate(1, ampCount, r => new Complex(r + Math.random(), Math.random()*1000));
+    let tex = Shaders.vec2Data(inVec.rawBuffer()).toVec2Texture(wireCount);
+    let trader = new WglTextureTrader(tex);
+    let controlsTexture = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(wireCount);
+    let ctx = new CircuitEvalContext(
+        time,
+        0,
+        wireCount,
+        Controls.NONE,
+        controlsTexture,
+        trader,
+        new Map());
+    updateAction(ctx);
+
+    controlsTexture.deallocByDepositingInPool();
+    let outData = KetTextureUtil.tradeTextureForVec2Output(trader);
+    let outVec = new Matrix(1, ampCount, outData);
+
+    for (let i = 0; i < ampCount; i++) {
+        let j = permutation(i);
+        let inVal = inVec.cell(0, i);
+        let outVal = outVec.cell(0, j);
+        if (!outVal.isApproximatelyEqualTo(inVal, 0.001)) {
+            let actualIn = Math.floor(outVec.cell(0, j).real);
+            let actualOut = Seq.range(ampCount).filter(k => Math.floor(outVec.cell(0, k).real) === i).first('[NONE]');
+            assertThat(outVal).
+                withInfo({i, j, actualIn, actualOut, permuteInfo}).
+                isApproximatelyEqualTo(inVal, 0.001);
+        }
+    }
+
+    // Increment assertion count.
+    assertTrue(true);
 }
 
 export {

@@ -5,7 +5,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 
 import {makeOffsetMatrix, incrementShaderFunc} from "src/gates/ArithmeticGates.js"
-import {makeCycleBitsMatrix, cycleBits} from "src/gates/CycleBitsGates.js"
+import {makeCycleBitsMatrix, cycleBitsShader} from "src/gates/CycleBitsGates.js"
 
 let CountingGates = {};
 
@@ -120,7 +120,7 @@ CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate
     withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader(ctx => cycleBits(ctx, span, -Math.floor(ctx.time*span))));
+    withCustomShader(ctx => cycleBitsShader(ctx, span, -Math.floor(ctx.time*span))));
 
 CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↡⌈t⌉",
@@ -132,7 +132,7 @@ CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.
     withCustomDrawer(STAIRCASE_DRAWER(0, span)).
     withHeight(span).
     withStableDuration(1.0 / span).
-    withCustomShader(ctx => cycleBits(ctx, span, Math.floor(ctx.time*span))));
+    withCustomShader(ctx => cycleBitsShader(ctx, span, Math.floor(ctx.time*span))));
 
 CountingGates.all = [
     CountingGates.ClockPulseGate,

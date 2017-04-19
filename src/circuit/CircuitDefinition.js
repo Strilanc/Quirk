@@ -67,11 +67,18 @@ class CircuitDefinition {
          */
         this._measureMasks = [0];
         let mask = 0;
+        let prevStickyCtx = new Map();
         for (let col of columns) {
-            let rowReasons = col.perRowDisabledReasons(mask, outerRowOffset, outerContext, isNested);
+            let {allReasons: rowReasons, stickyCtx} = col.perRowDisabledReasons(
+                mask,
+                outerRowOffset,
+                outerContext,
+                prevStickyCtx,
+                isNested);
             mask = col.nextMeasureMask(mask, rowReasons);
             this._colRowDisabledReason.push(rowReasons);
             this._measureMasks.push(mask);
+            prevStickyCtx = stickyCtx;
         }
 
         /**
@@ -79,6 +86,12 @@ class CircuitDefinition {
          * @private
          */
         this._gateSlotCoverMap = this._computeGateSlotCoverMap();
+
+        /**
+         * @type {!Map.<!string, !Array.<!Map.<!string, *>>>}
+         * @private
+         */
+        this._cachedColumnContexts = new Map();
     }
 
     /**
@@ -143,7 +156,10 @@ class CircuitDefinition {
             let ctx = this.colCustomContextFromGates(c, 0);
             for (let gate of col.gates) {
                 for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
-                    if (!ctx.has(key)) {
+                    let altKey = key.
+                        replace('Input Range ', 'Input Default ').
+                        replace('Input NO_DEFAULT Range', 'Input Range ');
+                    if (!ctx.has(key) && !ctx.has(altKey)) {
                         result.add(key);
                     }
                 }
@@ -569,21 +585,45 @@ class CircuitDefinition {
      * @returns {!Map.<!string, *>}
      */
     colCustomContextFromGates(col, outerRowOffset) {
-        let result = new Map();
         if (col < 0 || col >= this.columns.length) {
-            return result;
+            return new Map();
         }
-        let c = this.columns[col];
-        for (let row = 0; row < c.gates.length; row++) {
-            let g = c.gates[row];
-            if (g !== undefined && this.gateAtLocIsDisabledReason(col, row) === undefined) {
-                for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row)) {
+        let key = "" + outerRowOffset;
+        let result = this._cachedColumnContexts.get(key);
+        if (result === undefined) {
+            result = this._uncached_customContextFromGates(outerRowOffset);
+            this._cachedColumnContexts.set(key, result);
+        }
+        return result[col];
+    }
+
+    /**
+     * @param {!int} outerRowOffset
+     * @returns {!Array.<!Map.<!string, *>>}
+     */
+    _uncached_customContextFromGates(outerRowOffset) {
+        let results = [];
+        let stickyCtx = new Map();
+        for (let col = 0; col < this.columns.length; col++) {
+            let ctx = new Map(stickyCtx);
+            let c = this.columns[col];
+            for (let row = 0; row < c.gates.length; row++) {
+                let g = c.gates[row];
+                if (g === undefined || this.gateAtLocIsDisabledReason(col, row) !== undefined) {
+                    continue;
+                }
+
+                for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row, g)) {
                     //noinspection JSUnusedAssignment
-                    result.set(key, val);
+                    ctx.set(key, val);
+                    if (!g.isContextTemporary) {
+                        stickyCtx.set(key, val);
+                    }
                 }
             }
+            results.push(ctx);
         }
-        return result;
+        return results;
     }
 
     /**
@@ -698,7 +738,7 @@ class CircuitDefinition {
      */
     locProvidesStat(pt, key) {
         let g = this.gateInSlot(pt.x, pt.y);
-        return g !== undefined && !g.customColumnContextProvider(0).every(e => e.key !== key);
+        return g !== undefined && !g.customColumnContextProvider(0, g).every(e => e.key !== key);
     }
 
     /**
@@ -935,9 +975,12 @@ class CircuitDefinition {
         ];
 
         // Input->Output gate connections.
-        for (let key of ["Input Range A", "Input Range B"]) {
-            let isInput = i => this.locProvidesStat(pt(i), key);
-            let isOutput = i => this.locNeedsStat(pt(i), key);
+        for (let letter of ["A", "B"]) {
+            let key = `Input Range ${letter}`;
+            let altInKey = `Input Default ${letter}`;
+            let altOutKey = `Input NO_DEFAULT Range ${letter}`;
+            let isInput = i => this.locProvidesStat(pt(i), key) || this.locProvidesStat(pt(i), altInKey);
+            let isOutput = i => this.locNeedsStat(pt(i), key) || this.locNeedsStat(pt(i), altOutKey);
             result.push(
                 srcDstMatchInRange(n, i => isInput(i) && coversCoherentWire(i), isOutput, false),
                 srcDstMatchInRange(n, i => isInput(i) && coversMeasuredWire(i), isOutput, true)

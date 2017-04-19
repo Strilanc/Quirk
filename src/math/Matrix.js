@@ -167,7 +167,7 @@ class Matrix {
      * Returns a matrix of the given dimensions, using the given function to generate the coefficients.
      * @param {!int} width
      * @param {!int} height
-     * @param {!function(!int, !int): (!number|!Complex)} coefficientRowColGenerator
+     * @param {!function(row: !int, col: !int): (!number|!Complex)} coefficientRowColGenerator
      * @returns {!Matrix}
      */
     static generate(width, height, coefficientRowColGenerator) {

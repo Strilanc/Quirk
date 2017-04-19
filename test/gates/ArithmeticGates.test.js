@@ -55,11 +55,11 @@ suite.testUsingWebGL('minus_A', () => {
 suite.testUsingWebGL('plus_minus_A_like_permutation', () => {
     assertThatGateActsLikePermutation(
         ArithmeticGates.PlusAFamily.ofSize(3),
-        (a, t) => (t + a) & 7,
+        (t, a) => (t + a) & 7,
         [2]);
 
     assertThatGateActsLikePermutation(
         ArithmeticGates.MinusAFamily.ofSize(3),
-        (a, t) => (t - a) & 7,
+        (t, a) => (t - a) & 7,
         [4]);
 });

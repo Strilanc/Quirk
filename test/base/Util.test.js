@@ -381,3 +381,21 @@ suite.test("properMod", () => {
     assertThat(Util.properMod(1.5, 1.5)).isEqualTo(0);
     assertThat(Util.properMod(2, 1.5)).isEqualTo(0.5);
 });
+
+suite.test("extended_gcd", () => {
+    assertThat(Util.extended_gcd(2, 2)).isEqualTo({x: 0, y: 1, gcd: 2});
+    assertThat(Util.extended_gcd(2, 3)).isEqualTo({x: -1, y: 1, gcd: 1});
+    assertThat(Util.extended_gcd(3, 2)).isEqualTo({x: 1, y: -1, gcd: 1});
+    assertThat(Util.extended_gcd(11, 0)).isEqualTo({x: 1, y: 0, gcd: 11});
+    assertThat(Util.extended_gcd(11, 1)).isEqualTo({x: 0, y: 1, gcd: 1});
+    assertThat(Util.extended_gcd(240, 46)).isEqualTo({x: -9, y: 47, gcd: 2});
+    assertThat(Util.extended_gcd(3655, 3826)).isEqualTo({x: -179, y: 171, gcd: 1});
+});
+
+suite.test("modular_multiplicative_inverse", () => {
+    assertThat(Util.modular_multiplicative_inverse(10, 11)).isEqualTo(10);
+    assertThat(Util.modular_multiplicative_inverse(2, 4)).isEqualTo(undefined);
+    assertThat(Util.modular_multiplicative_inverse(2, 11)).isEqualTo(6);
+    assertThat(Util.modular_multiplicative_inverse(3, 1024)).isEqualTo(683);
+    assertThat(Util.modular_multiplicative_inverse(683, 1024)).isEqualTo(3);
+});

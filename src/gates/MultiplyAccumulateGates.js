@@ -1,9 +1,8 @@
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 let MultiplyAccumulateGates = {};
 
@@ -14,7 +13,7 @@ let sectionSizes = totalSize => {
     return [a, b, totalSize - a - b];
 };
 
-const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransition(1<<span, e => {
+const makeScaledMultiplyAddPermutation = (span, scaleFactor) => e => {
     let [sa, sb, sc] = sectionSizes(span);
     let a = e & ((1 << sa) - 1);
     let b = (e >> sa) & ((1 << sb) - 1);
@@ -22,39 +21,19 @@ const makeScaledMultiplyAddMatrix = (span, scaleFactor) => Matrix.generateTransi
     c += a*b*scaleFactor;
     c &= ((1 << sc) - 1);
     return a | (b << sa) | (c << (sa+sb));
-});
+};
+const makeScaledMultiplyAddMatrix = (span, scaleFactor) =>
+    Matrix.generateTransition(1<<span, makeScaledMultiplyAddPermutation(span, scaleFactor));
 
-/**
- * @param {!CircuitEvalContext} ctx
- * @param {!int} span
- * @param {!int} srcIndex1
- * @param {!int} srcSpan1
- * @param {!int} srcIndex2
- * @param {!int} srcSpan2
- * @param {!int} scaleFactor
- * @returns {!WglConfiguredShader}
- */
-function multiplyAccumulate(
-        ctx,
-        span,
-        srcIndex1,
-        srcSpan1,
-        srcIndex2,
-        srcSpan2,
-        scaleFactor) {
-    return MULTIPLY_ACCUMULATE_SHADER.withArgs(
-        ...ketArgs(ctx, span),
-        WglArg.float("srcOffset1", 1 << srcIndex1),
-        WglArg.float("srcSpan1", 1 << srcSpan1),
-        WglArg.float("srcOffset2", 1 << srcIndex2),
-        WglArg.float("srcSpan2", 1 << srcSpan2),
-        WglArg.float("factor", scaleFactor));
-}
 const MULTIPLY_ACCUMULATE_SHADER = ketShaderPermute(
-    'uniform float srcOffset1, srcSpan1, srcOffset2, srcSpan2, factor;',
     `
-        float d1 = mod(floor(full_out_id / srcOffset1), srcSpan1);
-        float d2 = mod(floor(full_out_id / srcOffset2), srcSpan2);
+        uniform float factor;
+        ${ketInputGateShaderCode('A')}
+        ${ketInputGateShaderCode('B')}
+    `,
+    `
+        float d1 = read_input_A();
+        float d2 = read_input_B();
         float d = mod(d1*d2*factor, span);
         return mod(out_id + span - d, span);`);
 
@@ -62,135 +41,87 @@ MultiplyAccumulateGates.MultiplyAddFamily = Gate.generateFamily(3, 16, span => G
     "c+=ab",
     "Multiply-Add Gate",
     "Adds the product of two numbers into a third.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrix(span >= 5 ? undefined : makeScaledMultiplyAddMatrix(span, +1)).
+    withKnownPermutation(makeScaledMultiplyAddPermutation(span, +1)).
     withSerializedId("c+=ab" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(
         ["a", "b", "c+=ab"],
         sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader(ctx => {
+    withCustomOperation(ctx => {
         let [a, b, c] = sectionSizes(span);
-        return multiplyAccumulate(
-            ctx.withRow(ctx.row + a + b),
-            c,
-            ctx.row,
-            a,
-            ctx.row + a,
-            b,
-            +1)
+        return MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(c).customOperation(
+            ctx.withRow(ctx.row + a + b).
+                withInputSetToRange('A', ctx.row, a).
+                withInputSetToRange('B', ctx.row + a, b));
     }));
 
 MultiplyAccumulateGates.MultiplySubtractFamily = Gate.generateFamily(3, 16, span => Gate.withoutKnownMatrix(
     "c-=ab",
     "Multiply-Subtract Gate",
     "Subtracts the product of two numbers from a third.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withKnownMatrix(span >= 5 ? undefined : makeScaledMultiplyAddMatrix(span, -1)).
+    withKnownPermutation(makeScaledMultiplyAddPermutation(span, -1)).
     withSerializedId("c-=ab" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(
         ["a", "b", "c-=ab"],
         sectionSizes(span).slice(0, 2).map(e => e/span))).
     withHeight(span).
-    withCustomShader(ctx => {
+    withCustomOperation(ctx => {
         let [a, b, c] = sectionSizes(span);
-        return multiplyAccumulate(
-            ctx.withRow(ctx.row + a + b),
-            c,
-            ctx.row,
-            a,
-            ctx.row + a,
-            b,
-            -1)
+        return MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(c).customOperation(
+            ctx.withRow(ctx.row + a + b).
+                withInputSetToRange('A', ctx.row, a).
+                withInputSetToRange('B', ctx.row + a, b));
     }));
 
 MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+AB",
     "Multiply-Add Gate [Inputs A, B]",
     "Adds the product of inputs A and B into the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("+=AB" + span).
     withHeight(span).
+    withKnownPermutation((t, a, b) => (t + a*b) & ((1 << span) - 1)).
     withRequiredContextKeys('Input Range A', 'Input Range B').
-    withCustomShader(ctx => {
-        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
-        let {offset: inputOffsetB, length: inputLengthB} = ctx.customContextFromGates.get('Input Range B');
-        return multiplyAccumulate(
-            ctx,
-            span,
-            inputOffsetA,
-            inputLengthA,
-            inputOffsetB,
-            inputLengthB,
-            +1)
-    }));
+    withCustomShader(ctx => MULTIPLY_ACCUMULATE_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A', 'B']),
+        WglArg.float("factor", +1))));
 
 MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "−AB",
     "Multiply-Subtract Gate [Inputs A, B]",
     "Subtracts the product of inputs A and B out of the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("-=AB" + span).
     withHeight(span).
+    withKnownPermutation((t, a, b) => (t - a*b) & ((1 << span) - 1)).
     withRequiredContextKeys('Input Range A', 'Input Range B').
-    withCustomShader(ctx => {
-        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
-        let {offset: inputOffsetB, length: inputLengthB} = ctx.customContextFromGates.get('Input Range B');
-        return multiplyAccumulate(
-            ctx,
-            span,
-            inputOffsetA,
-            inputLengthA,
-            inputOffsetB,
-            inputLengthB,
-            -1)
-    }));
+    withCustomShader(ctx => MULTIPLY_ACCUMULATE_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A', 'B']),
+        WglArg.float("factor", -1))));
 
 MultiplyAccumulateGates.SquareAddInputFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "+=A^2",
     "Square-Add Gate [Input A]",
     "Adds the square of input A into the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("+=AA" + span).
     withHeight(span).
+    withKnownPermutation((t, a) => (t + a*a) & ((1 << span) - 1)).
     withRequiredContextKeys('Input Range A').
-    withCustomShader(ctx => {
-        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
-        return multiplyAccumulate(
-            ctx,
-            span,
-            inputOffsetA,
-            inputLengthA,
-            inputOffsetA,
-            inputLengthA,
-            +1)
-    }));
+    withCustomOperation(ctx =>
+        MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(span).customOperation(
+            ctx.withInputSetToOtherInput('B', 'A'))));
 
 MultiplyAccumulateGates.SquareSubtractInputFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-=A^2",
     "Square-Subtract Gate [Input A]",
     "Subtracts the square of input A out of the qubits covered by this gate.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
     withSerializedId("-=AA" + span).
+    withKnownPermutation((t, a) => (t - a*a) & ((1 << span) - 1)).
     withHeight(span).
     withRequiredContextKeys('Input Range A').
-    withCustomShader(ctx => {
-        let {offset: inputOffsetA, length: inputLengthA} = ctx.customContextFromGates.get('Input Range A');
-        return multiplyAccumulate(
-            ctx,
-            span,
-            inputOffsetA,
-            inputLengthA,
-            inputOffsetA,
-            inputLengthA,
-            -1)
-    }));
+    withCustomOperation(ctx =>
+        MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(span).customOperation(
+            ctx.withInputSetToOtherInput('B', 'A'))));
 
 MultiplyAccumulateGates.all = [
     ...MultiplyAccumulateGates.MultiplyAddFamily.all,

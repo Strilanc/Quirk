@@ -595,6 +595,17 @@ class DisplayedCircuit {
      */
     _drawColumnControlWires(painter, columnIndex) {
         let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
+
+        // Dashed line indicates effects from non-unitary gates may affect, or appear to affect, other wires.
+        if (this.circuitDefinition.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
+            painter.ctx.save();
+            painter.ctx.setLineDash([1, 4]);
+            painter.strokeLine(
+                new Point(x, this.gateRect(0, 0).y),
+                new Point(x, this.opRect(0).bottom() - 40));
+            painter.ctx.restore();
+        }
+
         for (let {first, last, measured} of this.circuitDefinition.controlLinesRanges(columnIndex)) {
             let y1 =  this.wireRect(first).center().y;
             let y2 = this.wireRect(last).center().y;
