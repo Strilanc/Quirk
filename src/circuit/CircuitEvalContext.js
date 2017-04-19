@@ -1,3 +1,4 @@
+import {Util} from "src/base/Util.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**
@@ -72,6 +73,54 @@ class CircuitEvalContext {
     withRow(row) {
         let r = this._clone();
         r.row = row;
+        return r;
+    }
+
+    /**
+     * @param {!string} letter
+     * @param {!int} offset
+     * @param {!int} length
+     * @returns {!CircuitEvalContext}
+     */
+    withInputSetToRange(letter, offset, length) {
+        let r = this._clone();
+        r.customContextFromGates = new Map(r.customContextFromGates);
+        r.customContextFromGates.set(`Input Range ${letter}`, {offset, length});
+        return r;
+    }
+
+    /**
+     * @param {!string} letter
+     * @param {!int} value
+     * @returns {!CircuitEvalContext}
+     */
+    withInputSetToConstant(letter, value) {
+        let r = this._clone();
+        r.customContextFromGates = new Map(r.customContextFromGates);
+        r.customContextFromGates.delete(`Input Range ${letter}`);
+        r.customContextFromGates.set(`Input Default ${letter}`, value);
+        return r;
+    }
+
+    /**
+     * @param {!string} letter
+     * @param {!string} other
+     * @returns {!CircuitEvalContext}
+     */
+    withInputSetToOtherInput(letter, other) {
+        let r = this._clone();
+
+        r.customContextFromGates = new Map(r.customContextFromGates);
+
+        for (let key of ['Range', 'Default']) {
+            let otherVal = r.customContextFromGates.get(`Input ${key} ${other}`);
+            if (otherVal !== undefined) {
+                r.customContextFromGates.set(`Input ${key} ${letter}`, otherVal);
+            } else {
+                r.customContextFromGates.delete(`Input ${key} ${letter}`);
+            }
+        }
+
         return r;
     }
 }

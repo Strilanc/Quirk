@@ -18,10 +18,18 @@ class DisplayedToolbox {
      * @param {!number} top
      * @param {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} toolboxGroups
      * @param {!boolean} labelsOnTop
+     * @param {!int} groupHeight
      * @param {undefined|!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>=} originalGroups
      * @param {undefined|!CachablePainting=undefined} standardAppearance
      */
-    constructor(name, top, toolboxGroups, labelsOnTop, originalGroups=undefined, standardAppearance=undefined) {
+    constructor(
+            name,
+            top,
+            toolboxGroups,
+            labelsOnTop,
+            groupHeight,
+            originalGroups=undefined,
+            standardAppearance=undefined) {
         /** @type {!String} */
         this.name = name;
         /** @type {!number} */
@@ -30,6 +38,8 @@ class DisplayedToolbox {
         this.toolboxGroups = toolboxGroups;
         /** @type {!boolean} */
         this.labelsOnTop = labelsOnTop;
+        /** @type {!int} */
+        this.groupHeight = groupHeight;
         /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
         this._originalGroups = originalGroups || this.toolboxGroups;
         /**
@@ -51,12 +61,12 @@ class DisplayedToolbox {
      */
     withCustomGatesInserted(customGateSet) {
         let groups = [...this._originalGroups];
-        for (let i = 0; i < Math.max(1, customGateSet.gates.length); i += 6) {
+        for (let i = 0; i < Math.max(1, customGateSet.gates.length); i += this.groupHeight*2) {
             let group = {
                 hint: 'Custom Gates',
                 gates: [undefined, undefined, undefined, undefined, undefined, undefined]
             };
-            for (let j = 0; j < 6 && i + j < customGateSet.gates.length; j++) {
+            for (let j = 0; j < this.groupHeight*2 && i + j < customGateSet.gates.length; j++) {
                 group.gates[j] = customGateSet.gates[i + j];
             }
             groups.push(group);
@@ -66,6 +76,7 @@ class DisplayedToolbox {
             this.top,
             groups,
             this.labelsOnTop,
+            this.groupHeight,
             this._originalGroups,
             this._standardApperance);
     }
@@ -106,7 +117,7 @@ class DisplayedToolbox {
             return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y, Config.TOOLBOX_GATE_SPAN * 2, 20);
         }
 
-        let r = this.gateDrawRect(groupIndex, 4);
+        let r = this.gateDrawRect(groupIndex, this.groupHeight*2 - 2);
         let c = new Point(r.x + Config.TOOLBOX_GATE_SPAN - Config.TOOLBOX_GATE_SPACING / 2, r.bottom());
         return new Rect(c.x - Config.TOOLBOX_GATE_SPAN, c.y+2, Config.TOOLBOX_GATE_SPAN * 2, 20);
     }
@@ -156,6 +167,7 @@ class DisplayedToolbox {
             newTop,
             this.toolboxGroups,
             this.labelsOnTop,
+            this.groupHeight,
             this._originalGroups,
             this._standardApperance);
     }
@@ -322,7 +334,7 @@ class DisplayedToolbox {
      * @returns {!number}
      */
     desiredHeight() {
-        return 4 * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
+        return (1 + this.groupHeight) * (Config.GATE_RADIUS * 2 + 2) - Config.GATE_RADIUS;
     }
 
     /**

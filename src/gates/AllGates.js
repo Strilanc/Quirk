@@ -15,6 +15,8 @@ import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
 import {ModularArithmeticGates} from "src/gates/ModularArithmeticGates.js"
+import {ModularMultiplicationGates} from "src/gates/ModularMultiplicationGates.js"
+import {MultiplicationGates} from "src/gates/MultiplicationGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
 import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
@@ -70,6 +72,8 @@ Gates.HalfTurns = HalfTurnGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
 Gates.ModularArithmeticGates = ModularArithmeticGates;
+Gates.ModularMultiplicationGates = ModularMultiplicationGates;
+Gates.MultiplicationGates = MultiplicationGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.NeGate = NeGate;
 Gates.OtherX = VariousXGates;
@@ -113,6 +117,8 @@ Gates.KnownToSerializer = [
     ...HalfTurnGates.all,
     ...InterleaveBitsGates.all,
     ...ModularArithmeticGates.all,
+    ...ModularMultiplicationGates.all,
+    ...MultiplicationGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
     ...PhaseGradientGates.all,
@@ -206,36 +212,41 @@ Gates.TopToolboxGroups = [
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.BottomToolboxGroups = [
     {
-        hint: "Perp Probes",
+        hint: "X/Y Probes",
         gates: [
             Controls.PlusControl, Controls.MinusControl,
-            Controls.CrossControl, PostSelectionGates.PostSelectCross,
-            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus
+            Controls.CrossControl, Controls.AntiCrossControl,
+            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus,
+            PostSelectionGates.PostSelectCross, PostSelectionGates.PostSelectAntiCross,
         ]
     },
     {
-        hint: 'Fourier',
-        gates: [
-            FourierTransformGates.FourierTransformFamily.ofSize(2),
-            FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
-            PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            undefined, ReverseBitsGateFamily.ofSize(2),
-        ]
-    },
-    {
-        hint: "Cycling",
+        hint: "Order",
         gates: [
             CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
-            CountingGates.LeftShiftRotatingFamily.ofSize(3), CountingGates.RightShiftRotatingFamily.ofSize(3),
-            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3)
+            ReverseBitsGateFamily.ofSize(2), undefined,
+            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3),
+            InterleaveBitsGates.InterleaveBitsGateFamily.ofSize(6),
+            InterleaveBitsGates.DeinterleaveBitsGateFamily.ofSize(6),
+        ]
+    },
+    {
+        hint: 'Phase',
+        gates: [
+            FourierTransformGates.FourierTransformFamily.ofSize(2),
+                FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
+            undefined, undefined,
+            PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
+            PhaseGradientGates.PhaseByFracA, PhaseGradientGates.PhaseByMinusFracA,
         ]
     },
     {
         hint: "Inputs",
         gates: [
             InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
-            undefined, undefined,
-            InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2)
+            InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2),
+            InputGates.InputRFamily.ofSize(2), InputGates.SetR,
+            InputGates.SetA, InputGates.SetB,
         ]
     },
     {
@@ -244,7 +255,8 @@ Gates.BottomToolboxGroups = [
             ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
             ArithmeticGates.PlusAFamily.ofSize(2), ArithmeticGates.MinusAFamily.ofSize(2),
             MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
-                MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2)
+                MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2),
+            MultiplicationGates.TimesAFamily.ofSize(2), MultiplicationGates.TimesAInverseFamily.ofSize(2),
         ]
     },
     {
@@ -253,14 +265,18 @@ Gates.BottomToolboxGroups = [
             ComparisonGates.ALessThanB, ComparisonGates.AGreaterThanB,
             ComparisonGates.ALessThanOrEqualToB, ComparisonGates.AGreaterThanOrEqualToB,
             ComparisonGates.AEqualToB, ComparisonGates.ANotEqualToB,
+            undefined, undefined,
         ]
     },
     {
         hint: "Modular",
         gates: [
-            ModularArithmeticGates.IncrementModAFamily.ofSize(2), ModularArithmeticGates.DecrementModAFamily.ofSize(2),
-            ModularArithmeticGates.PlusAModBFamily.ofSize(2), ModularArithmeticGates.MinusAModBFamily.ofSize(2),
-            undefined, undefined,
+            ModularArithmeticGates.IncrementModRFamily.ofSize(2), ModularArithmeticGates.DecrementModRFamily.ofSize(2),
+            ModularArithmeticGates.PlusAModRFamily.ofSize(2), ModularArithmeticGates.MinusAModRFamily.ofSize(2),
+            ModularMultiplicationGates.TimesAModRFamily.ofSize(2),
+                ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
+            ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(2),
+                ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(2),
         ]
     },
 ];

@@ -8,6 +8,7 @@ import {Matrix} from "src/math/Matrix.js"
 import {seq} from "src/base/Seq.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
+import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
 
 let suite = new Suite("AllGates");
 
@@ -107,6 +108,14 @@ suite.testUsingWebGL("knownBitPermutationMatchesKnowMatrixAndCustomShader", () =
     }
 });
 
+suite.testUsingWebGL("gatesActLikeTheirKnownPermutation", () => {
+    for (let gate of Gates.KnownToSerializer) {
+        if (gate.knownPermutationFuncTakingInputs !== undefined && gate.height <= 3) {
+            assertThatGateActsLikePermutation(gate, gate.knownPermutationFuncTakingInputs, [2, 2, 2], true);
+        }
+    }
+});
+
 suite.testUsingWebGL("knownNonUnitaryGates", () => {
     let nonUnitaryGates = new Set(Gates.KnownToSerializer.
         filter(g => !g.isDefinitelyUnitary()).
@@ -125,7 +134,7 @@ suite.testUsingWebGL("knownNonUnitaryGates", () => {
     ]));
 });
 
-suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
+suite.test("knownDoNothingGateFamilies", () => {
     let doNothingFamilies = new Set(Gates.KnownToSerializer.
         filter(g => g.definitelyHasNoEffect()).
         map(g => g.gateFamily[0].serializedId));
@@ -137,8 +146,12 @@ suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
         '◦',
         'inputA1',
         'inputB1',
+        'inputR1',
         'revinputA1',
         'revinputB1',
+        'setA',
+        'setB',
+        'setR',
         // Displays don't have effects.
         'Amps1',
         'Chance',
@@ -151,10 +164,10 @@ suite.testUsingWebGL("knownDoNothingGateFamilies", () => {
 });
 
 suite.testUsingWebGL("knownDynamicGateFamilies", () => {
-    let doNothingFamilies = new Set(Gates.KnownToSerializer.
+    let dynamicFamilies = new Set(Gates.KnownToSerializer.
         filter(g => g.stableDuration() !== Infinity).
         map(g => g.gateFamily[0].serializedId));
-    assertThat(doNothingFamilies).isEqualTo(new Set([
+    assertThat(dynamicFamilies).isEqualTo(new Set([
         // Dynamic displays.
         'Sample1',
         // Qubit rotating gates.

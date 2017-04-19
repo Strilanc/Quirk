@@ -61,9 +61,9 @@ function _paintSampleDisplay_result(args) {
                 painter,
                 x + w,
                 y + k * d,
-                `Chance of |${Util.bin(sample, args.gate.height)}⟩`,
-                (p * 100).toFixed(4) + "%",
-                undefined,
+                `Sampled |${Util.bin(sample, args.gate.height)}⟩`,
+                `decimal: |${sample}⟩`,
+                "chance: " + (p * 100).toFixed(4) + "%",
                 Config.OPERATION_BACK_COLOR);
         }
     }

@@ -39,8 +39,8 @@ let reverseShaderForSize = span => ctx => reverseShaders[span].withArgs(...ketAr
 let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
     return Gate.withoutKnownMatrix(
         "Reverse",
-        "Reverse Bits Gate",
-        "Swaps some bits into the opposite order.").
+        "Reverse Order",
+        "Swaps bits into the opposite order.").
         withSerializedId("rev" + span).
         withHeight(span).
         withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).

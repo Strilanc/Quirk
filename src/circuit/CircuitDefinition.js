@@ -57,21 +57,28 @@ class CircuitDefinition {
         this.isNested = isNested;
 
         /**
-         * @type {!Array.<undefined|!string>}
+         * @type {!Array.<!Array.<undefined|!string>>}
          * @private
          */
-        this._disabledReasons = [];
+        this._colRowDisabledReason = [];
         /**
          * @type {!Array.<undefined|!int>}
          * @private
          */
         this._measureMasks = [0];
         let mask = 0;
+        let prevStickyCtx = new Map();
         for (let col of columns) {
-            let reasons = col.disabledReasons(mask, outerRowOffset, outerContext, isNested);
-            mask = col.nextMeasureMask(mask, reasons);
-            this._disabledReasons.push(reasons);
+            let {allReasons: rowReasons, stickyCtx} = col.perRowDisabledReasons(
+                mask,
+                outerRowOffset,
+                outerContext,
+                prevStickyCtx,
+                isNested);
+            mask = col.nextMeasureMask(mask, rowReasons);
+            this._colRowDisabledReason.push(rowReasons);
             this._measureMasks.push(mask);
+            prevStickyCtx = stickyCtx;
         }
 
         /**
@@ -79,6 +86,12 @@ class CircuitDefinition {
          * @private
          */
         this._gateSlotCoverMap = this._computeGateSlotCoverMap();
+
+        /**
+         * @type {!Map.<!string, !Array.<!Map.<!string, *>>>}
+         * @private
+         */
+        this._cachedColumnContexts = new Map();
     }
 
     /**
@@ -143,7 +156,10 @@ class CircuitDefinition {
             let ctx = this.colCustomContextFromGates(c, 0);
             for (let gate of col.gates) {
                 for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
-                    if (!ctx.has(key)) {
+                    let altKey = key.
+                        replace('Input Range ', 'Input Default ').
+                        replace('Input NO_DEFAULT Range', 'Input Range ');
+                    if (!ctx.has(key) && !ctx.has(altKey)) {
                         result.add(key);
                     }
                 }
@@ -569,21 +585,45 @@ class CircuitDefinition {
      * @returns {!Map.<!string, *>}
      */
     colCustomContextFromGates(col, outerRowOffset) {
-        let result = new Map();
         if (col < 0 || col >= this.columns.length) {
-            return result;
+            return new Map();
         }
-        let c = this.columns[col];
-        for (let row = 0; row < c.gates.length; row++) {
-            let g = c.gates[row];
-            if (g !== undefined && this.gateAtLocIsDisabledReason(col, row) === undefined) {
-                for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row)) {
+        let key = "" + outerRowOffset;
+        let result = this._cachedColumnContexts.get(key);
+        if (result === undefined) {
+            result = this._uncached_customContextFromGates(outerRowOffset);
+            this._cachedColumnContexts.set(key, result);
+        }
+        return result[col];
+    }
+
+    /**
+     * @param {!int} outerRowOffset
+     * @returns {!Array.<!Map.<!string, *>>}
+     */
+    _uncached_customContextFromGates(outerRowOffset) {
+        let results = [];
+        let stickyCtx = new Map();
+        for (let col = 0; col < this.columns.length; col++) {
+            let ctx = new Map(stickyCtx);
+            let c = this.columns[col];
+            for (let row = 0; row < c.gates.length; row++) {
+                let g = c.gates[row];
+                if (g === undefined || this.gateAtLocIsDisabledReason(col, row) !== undefined) {
+                    continue;
+                }
+
+                for (let {key, val} of g.customColumnContextProvider(outerRowOffset + row, g)) {
                     //noinspection JSUnusedAssignment
-                    result.set(key, val);
+                    ctx.set(key, val);
+                    if (!g.isContextTemporary) {
+                        stickyCtx.set(key, val);
+                    }
                 }
             }
+            results.push(ctx);
         }
-        return result;
+        return results;
     }
 
     /**
@@ -698,7 +738,7 @@ class CircuitDefinition {
      */
     locProvidesStat(pt, key) {
         let g = this.gateInSlot(pt.x, pt.y);
-        return g !== undefined && !g.customColumnContextProvider(0).every(e => e.key !== key);
+        return g !== undefined && !g.customColumnContextProvider(0, g).every(e => e.key !== key);
     }
 
     /**
@@ -717,10 +757,7 @@ class CircuitDefinition {
      */
     locHasControllableGate(pt) {
         let g = this.gateInSlot(pt.x, pt.y);
-        return g !== undefined &&
-            !g.isControl() &&
-            g !== Gates.SpacerGate &&
-            (g !== Gates.Special.SwapHalf || this.colHasEnabledSwapGate(pt.x));
+        return g !== undefined && g.interestedInControls;
     }
 
     /**
@@ -785,10 +822,10 @@ class CircuitDefinition {
      * @returns {undefined|!string}
      */
     gateAtLocIsDisabledReason(col, row) {
-        if (col < 0 || row < 0 || col >= this._disabledReasons.length || row >= this.numWires) {
+        if (col < 0 || row < 0 || col >= this._colRowDisabledReason.length || row >= this.numWires) {
             return undefined;
         }
-        return this._disabledReasons[col][row];
+        return this._colRowDisabledReason[col][row];
     }
 
     /**
@@ -911,6 +948,88 @@ class CircuitDefinition {
             this.outerContext,
             this.customGateSet.withGate(gate));
     }
+
+    /**
+     * @param {!int} columnIndex
+     * @returns {!Array.<!{first: !int, last: !int, measured: !boolean}>}
+     */
+    controlLinesRanges(columnIndex) {
+        let col = this.columns[columnIndex];
+        let n = col.gates.length;
+
+        let hasTwoSwaps = this.colHasEnabledSwapGate(columnIndex);
+
+        let pt = i => new Point(columnIndex, i);
+        let hasControllable = i => this.locHasControllableGate(pt(i));
+        let hasCoherentControl = i => this.locStartsSingleControlWire(pt(i));
+        let hasMeasuredControl = i => this.locStartsDoubleControlWire(pt(i));
+        let hasSwap = i => hasTwoSwaps && col.gates[i] === Gates.Special.SwapHalf;
+        let coversCoherentWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== true;
+        let coversMeasuredWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== false;
+
+        // Control connections.
+        let result = [
+            srcDstMatchInRange(n, hasSwap, hasSwap, false),
+            srcDstMatchInRange(n, hasControllable, hasCoherentControl, false),
+            srcDstMatchInRange(n, hasControllable, hasMeasuredControl, true),
+        ];
+
+        // Input->Output gate connections.
+        for (let letter of ["A", "B"]) {
+            let key = `Input Range ${letter}`;
+            let altInKey = `Input Default ${letter}`;
+            let altOutKey = `Input NO_DEFAULT Range ${letter}`;
+            let isInput = i => this.locProvidesStat(pt(i), key) || this.locProvidesStat(pt(i), altInKey);
+            let isOutput = i => this.locNeedsStat(pt(i), key) || this.locNeedsStat(pt(i), altOutKey);
+            result.push(
+                srcDstMatchInRange(n, i => isInput(i) && coversCoherentWire(i), isOutput, false),
+                srcDstMatchInRange(n, i => isInput(i) && coversMeasuredWire(i), isOutput, true)
+            );
+        }
+
+        return result.filter(e => e !== undefined);
+    }
+}
+
+
+/**
+ * @param {!int} rangeLen
+ * @param {!function(!int) : !boolean} srcPredicate
+ * @param {!function(!int) : !boolean} dstPredicate
+ * @param {!boolean} measured
+ * @returns {undefined|!{first:!int, last:!int, measured:!boolean}}
+ * @private
+ */
+function srcDstMatchInRange(rangeLen, srcPredicate, dstPredicate, measured) {
+    let [src1, src2] = firstLastMatchInRange(rangeLen, srcPredicate);
+    let [dst1, dst2] = firstLastMatchInRange(rangeLen, dstPredicate);
+    if (dst1 === undefined || src1 === undefined) {
+        return undefined;
+    }
+    return {
+        first: Math.min(src1, dst1),
+        last: Math.max(src2, dst2),
+        measured: measured
+    };
+}
+
+/**
+ * @param {!int} rangeLen
+ * @param {!function(!int): !boolean} predicate
+ * @returns {!Array.<undefined|!int>}
+ */
+function firstLastMatchInRange(rangeLen, predicate){
+    let first = undefined;
+    let last = undefined;
+    for (let i = 0; i < rangeLen; i++) {
+        if (predicate(i)) {
+            if (first === undefined) {
+                first = i;
+            }
+            last = i;
+        }
+    }
+    return [first, last];
 }
 
 CircuitDefinition.EMPTY = new CircuitDefinition(0, []);

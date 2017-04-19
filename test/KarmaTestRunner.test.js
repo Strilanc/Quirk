@@ -28,7 +28,7 @@ let promiseRunTest = (suite, name, method) => {
     });
     let finish = () => {
         result.time = t1 - t0;
-        if (result.time > 1000) {
+        if (result.time > 5000) {
             console.warn(`${suite.name}.${name} took ${Math.ceil(result.time)}ms to run.`)
         }
         __karma__.result(result);

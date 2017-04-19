@@ -381,6 +381,45 @@ class Util {
         }
         return result;
     }
+
+    /**
+     * @param {!int} value
+     * @param {!int} modulus
+     * @returns {!int} A value r in [0, modulus) such that r*value = 1 (mod modulus).
+     */
+    static modular_multiplicative_inverse(value, modulus) {
+        let {x, gcd} = Util.extended_gcd(value, modulus);
+        if (gcd !== 1) {
+            return undefined;
+        }
+        x %= modulus;
+        if (x < 0) {
+            x += modulus;
+        }
+        return x;
+    }
+
+    /**
+     * @param {!int} a
+     * @param {!int} b
+     * @returns {!{x: !int, y: !int, gcd: !int}} Such that x*a + y*b = gcd = GCD(a, b)
+     */
+    static extended_gcd(a, b) {
+        let s = 0;
+        let t = 1;
+        let r = b;
+
+        let old_s = 1;
+        let old_t = 0;
+        let old_r = a;
+        while (r !== 0) {
+            let q = Math.floor(old_r / r);
+            [old_r, r] = [r, old_r - q * r];
+            [old_s, s] = [s, old_s - q * s];
+            [old_t, t] = [t, old_t - q * t];
+        }
+        return {x: old_s, y: old_t, gcd: old_r};
+    }
 }
 
 /**
