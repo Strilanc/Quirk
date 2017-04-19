@@ -82,6 +82,7 @@ Gates.QuarterTurns = QuarterTurnGates;
 Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
+Gates.XorGates = XorGates;
 Gates.ZeroGate = ZeroGate;
 
 /** @type {!Array.<!Gate>} */
