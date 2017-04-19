@@ -494,6 +494,24 @@ class Gate {
     }
 
     /**
+     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
+     * @returns {!Gate}
+     */
+    withCustomBeforeShader(shaderFunc) {
+        return this.withCustomBeforeOperation(
+            shaderFunc === undefined ? undefined : ctx => ctx.applyOperation(shaderFunc));
+    }
+
+    /**
+     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
+     * @returns {!Gate}
+     */
+    withCustomAfterShader(shaderFunc) {
+        return this.withCustomAfterOperation(
+            shaderFunc === undefined ? undefined : ctx => ctx.applyOperation(shaderFunc));
+    }
+
+    /**
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      * @returns {!Gate}
      */
