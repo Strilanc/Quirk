@@ -41,7 +41,7 @@ MultiplicationGates.TimesAFamily = Gate.generateFamily(1, 16, span => Gate.witho
     "×A",
     "Multiplication Gate",
     "Multiplies the target by input A.\n" +
-        "But does nothing if the multiplication would be irreversible.").
+        "No effect if the multiplication would be irreversible.").
     withSerializedId("*A" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A").
@@ -52,7 +52,7 @@ MultiplicationGates.TimesAInverseFamily = Gate.generateFamily(1, 16, span => Gat
     "×A^-1",
     "Inverse Multiplication Gate",
     "Inverse-multiplies the target by input A (modulo 2^n).\n" +
-        "But does nothing if the multiplication would be irreversible.").
+        "No effect if the multiplication would be irreversible.").
     withSerializedId("/A" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A").

@@ -19,6 +19,7 @@ import {ModularMultiplicationGates} from "src/gates/ModularMultiplicationGates.j
 import {MultiplicationGates} from "src/gates/MultiplicationGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
+import {ParametrizedRotationGates} from "src/gates/ParametrizedRotationGates.js"
 import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
 import {PostSelectionGates} from "src/gates/PostSelectionGates.js"
 import {PoweringGates} from "src/gates/PoweringGates.js"
@@ -79,6 +80,7 @@ Gates.NeGate = NeGate;
 Gates.OtherX = VariousXGates;
 Gates.OtherY = VariousYGates;
 Gates.OtherZ = VariousZGates;
+Gates.ParametrizedRotationGates = ParametrizedRotationGates;
 Gates.PhaseGradientGates = PhaseGradientGates;
 Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
@@ -120,6 +122,7 @@ Gates.KnownToSerializer = [
     ...MultiplicationGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
+    ...ParametrizedRotationGates.all,
     ...PhaseGradientGates.all,
     ...PostSelectionGates.all,
     ...PoweringGates.all,
@@ -179,7 +182,7 @@ Gates.TopToolboxGroups = [
         gates: [
             VariousZGates.Z4, VariousZGates.Z4i,
             VariousYGates.Y4, VariousYGates.Y4i,
-            VariousXGates.X4, VariousXGates.X4i
+            VariousXGates.X4, VariousXGates.X4i,
         ]
     },
     {
@@ -187,7 +190,7 @@ Gates.TopToolboxGroups = [
         gates: [
             VariousZGates.Z8,  VariousZGates.Z8i,
             VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousXGates.X8,  VariousXGates.X8i
+            VariousXGates.X8,  VariousXGates.X8i,
         ]
     },
     {
@@ -195,7 +198,15 @@ Gates.TopToolboxGroups = [
         gates: [
             PoweringGates.ZForward, PoweringGates.ZBackward,
             PoweringGates.YForward, PoweringGates.YBackward,
-            PoweringGates.XForward, PoweringGates.XBackward
+            PoweringGates.XForward, PoweringGates.XBackward,
+        ]
+    },
+    {
+        hint: "Parametrized",
+        gates: [
+            ParametrizedRotationGates.ZToA, ParametrizedRotationGates.ZToMinusA,
+            ParametrizedRotationGates.YToA, ParametrizedRotationGates.YToMinusA,
+            ParametrizedRotationGates.XToA, ParametrizedRotationGates.XToMinusA,
         ]
     },
     {
@@ -230,13 +241,13 @@ Gates.BottomToolboxGroups = [
         ]
     },
     {
-        hint: 'Phase',
+        hint: 'Fourier',
         gates: [
             FourierTransformGates.FourierTransformFamily.ofSize(2),
                 FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
             undefined, undefined,
             PhaseGradientGates.PhaseGradientFamily.ofSize(2), PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            PhaseGradientGates.PhaseByFracA, PhaseGradientGates.PhaseByMinusFracA,
+            undefined, undefined,
         ]
     },
     {

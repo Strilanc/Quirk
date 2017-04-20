@@ -1,6 +1,6 @@
 import {Complex} from "src/math/Complex.js"
 import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPhase, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
+import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -48,46 +48,9 @@ PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Ga
     withHeight(span).
     withCustomShader(ctx => phaseGradient(ctx, span, -1)));
 
-const PHASE_BY_A_SHADER = ketShaderPhase(
-    `
-        uniform float factor;
-        ${ketInputGateShaderCode('A')}
-    `,
-    `
-        float angle = read_input_A() * out_id * factor / _gen_input_span_A;
-        return vec2(cos(angle), sin(angle));
-    `);
-
-PhaseGradientGates.PhaseByFracA = Gate.withoutKnownMatrix(
-        "Z^A%",
-        "Proportional Phase Gate",
-        "Phases the target by input A * π / 2^n radians.\nn is the number of qubits in input A.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withSerializedId("Z^A").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomShader(ctx => PHASE_BY_A_SHADER.withArgs(
-        ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', Math.PI)));
-
-PhaseGradientGates.PhaseByMinusFracA = Gate.withoutKnownMatrix(
-    "Z^-A%",
-    "Proportional Counter-Phase Gate",
-    "Counter-phases the target by input A * π / 2^n radians.\nn is the number of qubits in input A.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withSerializedId("Z^-A").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomShader(ctx => PHASE_BY_A_SHADER.withArgs(
-        ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', -Math.PI)));
-
-
 PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseGradientFamily.all,
     ...PhaseGradientGates.PhaseDegradientFamily.all,
-    PhaseGradientGates.PhaseByFracA,
-    PhaseGradientGates.PhaseByMinusFracA
 ];
 
 export {PhaseGradientGates, phaseGradient}

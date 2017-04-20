@@ -187,7 +187,7 @@ const MODULAR_POWER_MULTIPLICATION_SHADER = ketShaderPermute(
 ModularMultiplicationGates.TimesAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "×A\nmod R",
     "Modular Multiplication Gate",
-    "Multiplies the target by input A mod input B.\n" +
+    "Multiplies the target by input A mod input R.\n" +
         "Only affects values less than R.\n" +
         "No effect if the multiplication would be irreversible.").
     withSerializedId("*AmodR" + span).
