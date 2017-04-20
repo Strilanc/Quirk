@@ -556,6 +556,26 @@ class Gate {
     }
 
     /**
+     * Sets a setup shader to unconditionally run before executing the operations in a column containing this gate.
+     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
+     * @returns {!Gate}
+     */
+    withCustomBeforeShader(shaderFunc) {
+        return this.withCustomBeforeOperation(
+            shaderFunc === undefined ? undefined : ctx => ctx.applyOperation(shaderFunc));
+    }
+
+    /**
+     * Sets a cleanup shader to unconditionally run before executing the operations in a column containing this gate.
+     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
+     * @returns {!Gate}
+     */
+    withCustomAfterShader(shaderFunc) {
+        return this.withCustomAfterOperation(
+            shaderFunc === undefined ? undefined : ctx => ctx.applyOperation(shaderFunc));
+    }
+
+    /**
      * Sets a setup operation to unconditionally run before executing the operations in a column containing this gate.
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      * @returns {!Gate}
