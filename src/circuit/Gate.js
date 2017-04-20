@@ -13,119 +13,165 @@ class Gate {
      * @param {!string} blurb A helpful description of what the operation does.
      */
     constructor(symbol, name, blurb) {
-        /** @type {!string} */
+        /** @type {!string} The text shown when drawing the gate. */
         this.symbol = symbol;
-        /** @type {!string} */
+        /** @type {!string} The identifier text used for the gate when serializing/parsing JSON. */
         this.serializedId = symbol;
-        /** @type {!string} */
+        /** @type {!string} The title text of gate tooltips. */
         this.name = name;
-        /** @type {!string} */
+        /** @type {!string} Detail text of gate tooltips. */
         this.blurb = blurb;
-        /** @type {!int} */
+        /** @type {!int} The number of columns the gate spans on a circuit. Controls go on the first column. */
         this.width = 1;
-        /** @type {!int} */
+        /** @type {!int} The number of wires the gate spans on a circuit. */
         this.height = 1;
-        /** @type {undefined|!int} */
+        /** @type {undefined|!int} A custom value that gets serialized. Each gate may use it to determine behavior. */
         this.param = undefined;
 
-        /** @type {undefined|!function(!GateDrawParams) : void} */
+        /** @type {undefined|!function(!GateDrawParams) : void} Draws the gate. A default is used when undefined. */
         this.customDrawer = undefined;
-        /** @type {undefined|*} */
+        /** @type {undefined|*} Used to stash error information when parsing goes bad. */
         this.tag = undefined;
-        /** @type {undefined|!function(!CircuitEvalContext) : void} */
+        /**
+         * An operation applied during the 'setup' phase of computing a column.
+         * NOT AFFECTED BY CONTROLS.
+         * @type {undefined|!function(!CircuitEvalContext) : void}
+         */
         this.customBeforeOperation = undefined;
-        /** @type {undefined|!function(!CircuitEvalContext) : void} */
+        /**
+         * An operation applied during the main phase of computing a column.
+         * @type {undefined|!function(!CircuitEvalContext) : void}
+         */
         this.customOperation = undefined;
-        /** @type {undefined|!function(!CircuitEvalContext) : void} */
+        /**
+         * An operation applied during the 'cleanup' phase of computing a column.
+         * Usually the inverse of the before operation.
+         * NOT AFFECTED BY CONTROLS.
+         * @type {undefined|!function(!CircuitEvalContext) : void}
+         */
         this.customAfterOperation = undefined;
-        /** @type {undefined|!function(!CircuitEvalContext) : !WglTexture|!Array.<!WglTexture>} */
+        /**
+         * Produces a texture containing information that can be used by the drawing code of display gates.
+         * @type {undefined|!function(!CircuitEvalContext) : !WglTexture|!Array.<!WglTexture>}
+         */
         this.customStatTexturesMaker = undefined;
-        /** @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *} */
+        /**
+         * Returns some more useful form of the pixel data read from the custom-stat texture.
+         * @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *}
+         */
         this.customStatPostProcesser = undefined;
-        /** @type {!Array.<!Gate>} */
+        /** @type {!Array.<!Gate>} A list of size variants of this gate.*/
         this.gateFamily = [this];
 
-        /** @type {!boolean} */
+        /** @type {!boolean} Determines if vertical lines are drawn between this gate and controls. */
         this.interestedInControls = true;
         /**
+         * Determines if circuits containing this gate need to actively animate.
          * @type {undefined|Infinity|!number}
          * @private
          */
         this._stableDuration = undefined;
         /**
+         * Determines the gate's operation (if no shader is specified).
          * @type {undefined|!Matrix}
          * @private
          */
         this._knownMatrix = undefined;
         /**
-         * @type {undefined|!function(!number) : !Matrix}
+         * Determines the gate's time-varying operation (if no shader is specified).
+         * @type {undefined|!function(time: !number) : !Matrix}
          * @private
          */
         this._knownMatrixFunc = undefined;
         /**
+         * Indicates whether the gate can just be skipped over when computing.
          * @type {!boolean}
          * @private
          */
         this._hasNoEffect = false;
         /**
+         * Indicates whether the gate's effect is classical, and so can apply to measured bits but perhaps not
+         * combinations of measured and unmeasured bits.
          * @type {undefined|!boolean}
          * @private
          */
         this._effectPermutesStates = undefined;
         /**
+         * Indicates whether the gate's effect is inherent quantum (w.r.t. the Z basis), and so is not safe to apply
+         * to measured bits.
          * @type {undefined|!boolean}
          * @private
          */
         this._effectCreatesSuperpositions = undefined;
         /**
+         * Indicates whether vertical lines should be drawn from this gate to gate's marked as controllable.
          * @type {!boolean}
          */
         this.isControlWireSource = false;
         /**
+         * A circuit that is equivalent to this gate.
+         * If no shader or matrix is specified, the circuit will be recursed into to compute the gate.
          * @type {undefined|!CircuitDefinition}
          */
         this.knownCircuit = undefined;
         /**
+         * A cached version of the circuit equivalent to this gate, with slightly looser disabled reasons, used when
+         * drawing tooltips.
          * @type {undefined|!CircuitDefinition}
          */
         this.knownCircuitNested = undefined;
         /**
+         * Indicates context (such as 'Input Range A') that must be provided by other gates in the same column, or
+         * earlier in the circuit in some cases, in order for this gate to function.
+         * Doesn't include keys inherited from the gate's circuit (if known).
          * @type {!Array.<!string>}
          */
         this._requiredContextKeys = [];
         /**
+         * Indicates whether the simulator needs to compute a qubit density matrix at locations/times where this gate is
+         * placed.
          * @type {!boolean}
          */
         this.isSingleQubitDisplay = false;
 
         /**
+         * Determines if this gate conditions or anti-conditions other operations or not.
+         * Note that 'False' means 'anti-control', not 'not a control'. Use undefined for 'not a control'.
+         * Non-computational-basis controls also use this mechanism, but with before/after operations.
          * @type {undefined|!boolean}
          * @private
          */
         this._controlBit = undefined;
         /**
+         * Indicates that this gate is guaranteed to preserve probability (as opposed to e.g. post-selection).
+         * When gates with this property not set to true are present in a column, the simulator computes losses/gains.
          * @type {!boolean}
          * @private
          */
         this._isDefinitelyUnitary = false;
         /**
+         * Returns context provided by this gate to other gates in the same column (or later columns in some cases).
          * @param {!int} qubit
          * @param {!Gate} gate
          * @returns {!Array.<!{key: !string, val: *}>}
          */
         this.customColumnContextProvider = (qubit, gate) => [];
-        /** @type {!boolean} */
+        /** @type {!boolean} Determines if context generated by this gate sticks around for later columns or not. */
         this.isContextTemporary = true;
         /**
+         * Checks for non-standard reasons that a gate should be disabled (e.g. modulus too big to fit in target).
          * @param {!GateCheckArgs} args
          * @returns {undefined|!string}
          */
         this.customDisableReasonFinder = args => undefined;
         /**
+         * Indicates that a gate is a re-arrangement of the wires equivalent to the given function.
          * @type {undefined | !function(!int) : !int}
          */
         this.knownBitPermutationFunc = undefined;
         /**
+         * Indicates that a gate is a re-arrangement of the basis states equivalent to the given function.
+         * Used by all-gate tests to check that shaders are behaving correctly.
          * @type {
          *      !function(val: !int) : !int |
          *      !function(val: !int, a: !int) : !int |
@@ -151,6 +197,7 @@ class Gate {
     }
 
     /**
+     * Returns context keys required by this gate, including keys inherited from its custom circuit (if applicable).
      * @returns {!Set.<!String>}
      */
     getUnmetContextKeys() {
@@ -164,6 +211,7 @@ class Gate {
     }
 
     /**
+     * Sets the gate's known matrix, and updates meta-properties like 'is unitary'.
      * @param {undefined|!Matrix} matrix
      * @returns {!Gate}
      */
@@ -179,6 +227,7 @@ class Gate {
     }
 
     /**
+     * Sets the gate's known matrix function. Doesn't update meta-properties, since functions are hard to inspect.
      * @param {undefined|!function(!number) : !Matrix} matrixFunc
      * @returns {!Gate}
      */
@@ -213,6 +262,7 @@ class Gate {
     }
 
     /**
+     * Creates a gate with meta-properties defaulted to "doesn't do anything".
      * @param {!string} symbol
      * @param {!string} name
      * @param {!string} blurb
@@ -239,6 +289,7 @@ class Gate {
     }
 
     /**
+     * Sets meta-properties to indicate a gate is safe for classical use and quantum use, but not safe for mixed used.
      * @returns {!Gate}
      */
     markedAsOnlyPermutingAndPhasing() {
@@ -251,6 +302,7 @@ class Gate {
     }
 
     /**
+     * Sets meta-properties to indicate a gate is safe for classical, quantum, and mixed use.
      * @returns {!Gate}
      */
     markedAsOnlyPhasing() {
@@ -263,7 +315,8 @@ class Gate {
     }
 
     /**
-     * @param {!boolean} bit
+     * Sets meta-properties to indicate a gate is a control.
+     * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
      * @returns {!Gate}
      */
     markedAsControl(bit) {
@@ -276,15 +329,8 @@ class Gate {
     }
 
     /**
-     * @returns {!Gate}
-     */
-    markedAsControlWireSource() {
-        let g = this._copy();
-        g.isControlWireSource = true;
-        return g;
-    }
-
-    /**
+     * Sets meta-properties to indicate a gate doesn't change over time, and so doesn't force the circuit to
+     * constantly recompute.
      * @returns {!Gate}
      */
     markedAsStable() {
@@ -294,6 +340,7 @@ class Gate {
     }
 
     /**
+     * Sets meta-properties to indicate a gate preserves probability, and so doesn't force gain/loss computations.
      * @returns {!Gate}
      */
     markedAsUnitary() {
@@ -303,6 +350,7 @@ class Gate {
     }
 
     /**
+     * Returns a copy of this gate which can be safely mutated.
      * @private
      * @returns {!Gate}
      */
@@ -343,6 +391,8 @@ class Gate {
     }
 
     /**
+     * Sets meta-properties to indicate whether a gate may change over time, forcing the circuit to
+     * constantly recompute.
      * @param {undefined|Infinity|!number} duration
      * @returns {!Gate}
      */
@@ -353,6 +403,7 @@ class Gate {
     }
 
     /**
+     * Provides a circuit equivalent to the gate's effect, which can be used to simulate or analyze the gate.
      * @param {undefined|!CircuitDefinition} circuitDefinition
      * @returns {!Gate}
      */
@@ -365,6 +416,7 @@ class Gate {
     }
 
     /**
+     * Specifies a function for retrieving the context provided by a gate to other gates.
      * @param {!function(qubit:!int,gate:!Gate):!Array.<!{key: !string, val: *}>} customColumnContextProvider
      * @returns {!Gate}
      */
@@ -375,6 +427,7 @@ class Gate {
     }
 
     /**
+     * Specifies a function for retrieving unusual reasons a gate is being misused and so must be disabled.
      * @param {!function(!GateCheckArgs) : (undefined|!string)} customDisableReasonFinder
      * @returns {!Gate}
      */
@@ -385,6 +438,7 @@ class Gate {
     }
 
     /**
+     * Sets meta-properties indicating a qubit density matrix needs to be computed wherever this gate is placed.
      * @returns {!Gate}
      */
     markedAsSingleQubitDisplay() {
@@ -394,6 +448,7 @@ class Gate {
     }
 
     /**
+     * Sets the number of columns the gate spans.
      * @param {!int} width
      * @returns {!Gate}
      */
@@ -404,6 +459,7 @@ class Gate {
     }
 
     /**
+     * Sets an arbitrary number, saved and restored with the circuit, that the gate's custom functions may use.
      * @param {undefined|!int} value
      * @returns {!Gate}
      */
@@ -414,6 +470,7 @@ class Gate {
     }
 
     /**
+     * Sets the number of wires the gate spans.
      * @param {!int} height
      * @returns {!Gate}
      */
@@ -434,6 +491,7 @@ class Gate {
     }
 
     /**
+     * Provides a custom drawing function for the gate (use undefined to use the default boxed-symbol drawer).
      * @param {undefined|!function(!GateDrawParams) : void} drawer
      * @returns {!Gate}
      */
@@ -444,6 +502,7 @@ class Gate {
     }
 
     /**
+     * Provides a function equivalent to the gate's effect, for checking in tests if the gate's behavior is correct.
      * @param {
      *      !function(val: !int) : !int |
      *      !function(val: !int, a: !int) : !int |
@@ -466,6 +525,8 @@ class Gate {
     }
 
     /**
+     * Provides a function equivalent to how the gate rearranges wires, for checking in tests if the gate's behavior is
+     * correct.
      * @param {undefined|!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
      * given input, assuming the gate is exactly sized to the overall circuit.
      * @returns {!Gate}
@@ -484,6 +545,7 @@ class Gate {
     }
 
     /**
+     * Specifies the id to use when serializing/parsing this gate (instead of defaulting to the symbol).
      * @param {!string} serializedId
      * @returns {!Gate}
      */
@@ -494,6 +556,7 @@ class Gate {
     }
 
     /**
+     * Sets a setup operation to unconditionally run before executing the operations in a column containing this gate.
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      * @returns {!Gate}
      */
@@ -507,6 +570,7 @@ class Gate {
     }
 
     /**
+     * Sets a cleanup operation to unconditionally run before executing the operations in a column containing this gate.
      * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
      * @returns {!Gate}
      */
@@ -520,6 +584,7 @@ class Gate {
     }
 
     /**
+     * Sets a custom circuit-update function to run when simulating this gate.
      * @param {undefined|!function(!CircuitEvalContext)} customOperation
      * @returns {!Gate}
      */
@@ -533,6 +598,7 @@ class Gate {
     }
 
     /**
+     * Sets a shader as the custom circuit-update function to run when simulating this gate.
      * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
      * @returns {!Gate}
      */
@@ -541,6 +607,7 @@ class Gate {
     }
 
     /**
+     * Sets a sequence of shaders as the custom circuit-update function to run when simulating this gate.
      * @param {!Array.<!function(!CircuitEvalContext) : !WglConfiguredShader>} shaderFuncs
      * @returns {!Gate}
      */
@@ -553,6 +620,7 @@ class Gate {
     }
 
     /**
+     * Specifies how to extract data that will be needed when drawing a display gate.
      * @param {undefined|!function(!CircuitEvalContext) : (!WglTexture|!Array.<!WglTexture>)} customStatTexturesMaker
      * @returns {!Gate}
      */
@@ -563,6 +631,7 @@ class Gate {
     }
 
     /**
+     * Specifies how to process raw pixel data from the custom stats texture maker into a more useful value.
      * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int)} pixelFunc
      * @returns {!Gate}
      */
@@ -573,6 +642,7 @@ class Gate {
     }
 
     /**
+     * Specifies context values provided by other gates that this gate needs to be present in order to function.
      * @param {...!String} keys
      * @returns {!Gate}
      */
@@ -583,6 +653,7 @@ class Gate {
     }
 
     /**
+     * Creates size-variants of a gate that can be resized between.
      * @param {!int} minSize
      * @param {!int} maxSize
      * @param {!function(!int):!Gate} gateGenerator
@@ -664,6 +735,8 @@ class Gate {
     }
 
     /**
+     * Determines if the context provided by this gate should stick around and apply to later columns, instead of just
+     * the column the gate is in.
      * @returns {!Gate}
      */
     withStickyContext() {
