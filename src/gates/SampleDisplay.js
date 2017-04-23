@@ -83,21 +83,16 @@ function paintSampleDisplay(args) {
     args.painter.strokeRect(args.rect, 'lightgray');
 }
 
-function sampleGateMaker(span) {
-    return Gate.fromIdentity(
-        "Sample",
-        "Sampled Results Display",
-        "Shows a random sample of possible measurement outcomes.\nUse controls to see conditional samples.").
-        withHeight(span).
-        withSerializedId("Sample" + span).
-        withCustomStatTexturesMaker(ctx =>
-            probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
-        withCustomStatPostProcessor(e => probabilityPixelsToColumnVector(e, span)).
-        withCustomDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
-        withStableDuration(Config.SEMI_STABLE_RANDOM_VALUE_LIFETIME_MILLIS / Config.CYCLE_DURATION_MS).
-        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
-}
-
-let SampleDisplayFamily = Gate.generateFamily(1, 16, sampleGateMaker);
+let SampleDisplayFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("Sample" + span).
+    setSymbol("Sample").
+    setTitle("Sampled Results Display").
+    setBlurb("Shows a random sample of possible measurement outcomes.\nUse controls to see conditional samples.").
+    setStatTexturesMaker(ctx =>
+        probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
+    setStatPixelDataPostProcessor(e => probabilityPixelsToColumnVector(e, span)).
+    promiseHasNoNetEffectOnStateVectorButStillRequiresDynamicRedraw().
+    setDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
+    setExtraDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined));
 
 export {SampleDisplayFamily}
