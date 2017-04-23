@@ -403,26 +403,18 @@ function paintErrorIfPresent(args, isIncoherent) {
     }
 }
 
-/**
- * @param {!int} span
- * @returns {!Gate}
- */
-function amplitudeDisplayMaker(span) {
-    return Gate.fromIdentity(
-        "Amps",
-        "Amplitude Display",
-        "Shows the amplitudes of some wires, if separable.\nUse controls to see conditional amplitudes.").
-        withHeight(span).
-        withWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
-        withSerializedId("Amps" + span).
-        withCustomStatTexturesMaker(ctx =>
-            amplitudeDisplayStatTextures(ctx.stateTrader.currentTexture, ctx.controls, ctx.row, span)).
-        withCustomStatPostProcessor((val, def) => processOutputs(span, val, def)).
-        withCustomDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS).
-        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
-}
-
-let AmplitudeDisplayFamily = Gate.generateFamily(1, 16, amplitudeDisplayMaker);
+let AmplitudeDisplayFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("Amps" + span).
+    setSymbol("Amps").
+    setTitle("Amplitude Display").
+    setBlurb("Shows the amplitudes of some wires, if separable.\nUse controls to see conditional amplitudes.").
+    setWidth(span === 1 ? 2 : span % 2 === 0 ? span : Math.ceil(span/2)).
+    promiseHasNoNetEffectOnStateVector().
+    setExtraDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined).
+    setStatTexturesMaker(ctx =>
+        amplitudeDisplayStatTextures(ctx.stateTrader.currentTexture, ctx.controls, ctx.row, span)).
+    setStatPixelDataPostProcessor((val, def) => processOutputs(span, val, def)).
+    setDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS));
 
 export {
     AmplitudeDisplayFamily,

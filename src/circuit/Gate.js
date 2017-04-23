@@ -1148,7 +1148,10 @@ class GateBuilder {
 
     /**
      * Specifies how to process raw pixel data from the custom stats texture maker into a more useful value.
-     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int)} pixelFunc
+     * @param {undefined|!function(pixelData: !Float32Array | Array.<!Float32Array>,
+     *                             circuit: !CircuitDefinition,
+     *                             col:!int,
+     *                             row:!int)} pixelFunc
      * @returns {!GateBuilder}
      */
     setStatPixelDataPostProcessor(pixelFunc) {
