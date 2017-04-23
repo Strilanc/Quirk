@@ -1161,6 +1161,16 @@ class GateBuilder {
         this.gate.customAfterOperation = afterColumnUpdateFunc;
         return this;
     }
+
+    /**
+     * Specifies a function for retrieving unusual reasons a gate is being misused and so must be disabled.
+     * @param {!function(!GateCheckArgs) : (undefined|!string)} customDisableReasonFinder
+     * @returns {!GateBuilder}
+     */
+    setExtraDisableReasonFinder(customDisableReasonFinder) {
+        this.gate.customDisableReasonFinder = customDisableReasonFinder;
+        return this;
+    }
 }
 
 export {Gate, GateBuilder}
