@@ -200,7 +200,12 @@ class Gate {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
-        return new Gate(symbol, name, blurb).withKnownMatrix(matrix);
+        let g = new Gate(symbol, name, blurb);
+        g._isDefinitelyUnitary = matrix.isUnitary(0.01);
+        g._hasNoEffect = matrix.isIdentity();
+        g._stableDuration = Infinity;
+        g._knownMatrix = matrix;
+        return g;
     }
 
     /**
@@ -218,53 +223,22 @@ class Gate {
     }
 
     /**
-     * Sets the gate's known matrix, and updates meta-properties like 'is unitary'.
-     * @param {undefined|!Matrix} matrix
-     * @returns {!Gate}
-     */
-    withKnownMatrix(matrix) {
-        let g = this._copy();
-        g._knownMatrix = matrix;
-        if (matrix !== undefined) {
-            g._isDefinitelyUnitary = matrix.isUnitary(0.01);
-            g._hasNoEffect = matrix.isIdentity();
-            g._stableDuration = Infinity;
-        }
-        return g;
-    }
-
-    /**
-     * Sets the gate's known matrix function. Doesn't update meta-properties, since functions are hard to inspect.
-     * @param {undefined|!function(!number) : !Matrix} matrixFunc
-     * @returns {!Gate}
-     */
-    withKnownMatrixFunc(matrixFunc) {
-        let g = this._copy();
-        g._knownMatrixFunc = matrixFunc;
-        return g;
-    }
-
-    /**
      * @param {!string} symbol
      * @param {!function(!number) : !Matrix} matrixFunc
      * @param {!string} name
      * @param {!string} blurb
-     * @param {!boolean=} effectPermutesStates
-     * @param {!boolean=} effectCreatesSuperpositions
      * @returns {!Gate}
      */
     static fromVaryingMatrix(
             symbol,
             matrixFunc,
             name,
-            blurb,
-            effectPermutesStates=true,
-            effectCreatesSuperpositions=true) {
+            blurb) {
         let result = new Gate(symbol, name, blurb);
         result._knownMatrixFunc = matrixFunc;
         result._hasNoEffect = false;
-        result._effectPermutesStates = effectPermutesStates;
-        result._effectCreatesSuperpositions = effectCreatesSuperpositions;
+        result._effectPermutesStates = true;
+        result._effectCreatesSuperpositions = true;
         return result;
     }
 
@@ -293,19 +267,6 @@ class Gate {
      */
     static withoutKnownMatrix(symbol, name, blurb) {
         return new Gate(symbol, name, blurb);
-    }
-
-    /**
-     * Sets meta-properties to indicate a gate is safe for classical use and quantum use, but not safe for mixed used.
-     * @returns {!Gate}
-     */
-    markedAsOnlyPermutingAndPhasing() {
-        let g = this._copy();
-        g._hasNoEffect = false;
-        g._effectPermutesStates = true;
-        g._effectCreatesSuperpositions = false;
-        g._isDefinitelyUnitary = true;
-        return g;
     }
 
     /**
@@ -424,17 +385,6 @@ class Gate {
     }
 
     /**
-     * Specifies a function for retrieving the context provided by a gate to other gates.
-     * @param {!function(qubit:!int,gate:!Gate):!Array.<!{key: !string, val: *}>} customColumnContextProvider
-     * @returns {!Gate}
-     */
-    withCustomColumnContextProvider(customColumnContextProvider) {
-        let g = this._copy();
-        g.customColumnContextProvider = customColumnContextProvider;
-        return g;
-    }
-
-    /**
      * Specifies a function for retrieving unusual reasons a gate is being misused and so must be disabled.
      * @param {!function(!GateCheckArgs) : (undefined|!string)} customDisableReasonFinder
      * @returns {!Gate}
@@ -533,26 +483,6 @@ class Gate {
     }
 
     /**
-     * Provides a function equivalent to how the gate rearranges wires, for checking in tests if the gate's behavior is
-     * correct.
-     * @param {undefined|!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
-     * given input, assuming the gate is exactly sized to the overall circuit.
-     * @returns {!Gate}
-     */
-    withKnownBitPermutation(knownBitPermutationFunc) {
-        let g = this._copy();
-        g.knownBitPermutationFunc = knownBitPermutationFunc;
-        if (knownBitPermutationFunc !== undefined) {
-            g._isDefinitelyUnitary = true;
-            g._stableDuration = Infinity;
-            g._hasNoEffect = false;
-            g._effectPermutesStates = true;
-            g._effectCreatesSuperpositions = false;
-        }
-        return g;
-    }
-
-    /**
      * Specifies the id to use when serializing/parsing this gate (instead of defaulting to the symbol).
      * @param {!string} serializedId
      * @returns {!Gate}
@@ -561,26 +491,6 @@ class Gate {
         let g = this._copy();
         g.serializedId = serializedId;
         return g;
-    }
-
-    /**
-     * Sets a setup shader to unconditionally run before executing the operations in a column containing this gate.
-     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
-     * @returns {!Gate}
-     */
-    withCustomBeforeShader(shaderFunc) {
-        return this.withCustomBeforeOperation(
-            shaderFunc === undefined ? undefined : ctx => ctx.applyOperation(shaderFunc));
-    }
-
-    /**
-     * Sets a cleanup shader to unconditionally run before executing the operations in a column containing this gate.
-     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
-     * @returns {!Gate}
-     */
-    withCustomAfterShader(shaderFunc) {
-        return this.withCustomAfterOperation(
-            shaderFunc === undefined ? undefined : ctx => ctx.applyOperation(shaderFunc));
     }
 
     /**
