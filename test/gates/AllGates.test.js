@@ -83,7 +83,7 @@ suite.testUsingWebGL("customShaderMatchesKnownMatrix", () => {
             continue;
         }
 
-        assertThat(reconstructed).withInfo({gate, time}).isApproximatelyEqualTo(matrix, 0.0001);
+        assertThat(reconstructed).withInfo({gate, time}).isApproximatelyEqualTo(matrix, 0.0005);
     }
 });
 
@@ -131,6 +131,22 @@ suite.testUsingWebGL("knownNonUnitaryGates", () => {
         '|-⟩⟨-|',
         '|X⟩⟨X|',
         '|/⟩⟨/|'
+    ]));
+});
+
+suite.testUsingWebGL("knownDynamicGates", () => {
+    let dynamicGates = new Set(Gates.KnownToSerializer.
+        filter(g => g.stableDuration() !== Infinity).
+        map(g => g.serializedId));
+    assertThat(dynamicGates).isEqualTo(new Set([
+        "Sample1", "Sample2", "Sample3", "Sample4", "Sample5", "Sample6", "Sample7", "Sample8", "Sample9", "Sample10", "Sample11", "Sample12", "Sample13", "Sample14", "Sample15", "Sample16",
+        "X^⌈t⌉", "X^⌈t-¼⌉",
+        "Counting1", "Counting2", "Counting3", "Counting4", "Counting5", "Counting6", "Counting7", "Counting8", "Counting9", "Counting10", "Counting11", "Counting12", "Counting13", "Counting14", "Counting15", "Counting16",
+        "Uncounting1", "Uncounting2", "Uncounting3", "Uncounting4", "Uncounting5", "Uncounting6", "Uncounting7", "Uncounting8", "Uncounting9", "Uncounting10", "Uncounting11", "Uncounting12", "Uncounting13", "Uncounting14", "Uncounting15", "Uncounting16",
+        ">>t2", ">>t3", ">>t4", ">>t5", ">>t6", ">>t7", ">>t8", ">>t9", ">>t10", ">>t11", ">>t12", ">>t13", ">>t14", ">>t15", ">>t16",
+        "<<t2", "<<t3", "<<t4", "<<t5", "<<t6", "<<t7", "<<t8", "<<t9", "<<t10", "<<t11", "<<t12", "<<t13", "<<t14", "<<t15", "<<t16",
+        "e^iXt", "e^iYt", "e^iZt", "e^-iXt", "e^-iYt", "e^-iZt",
+        "X^t", "Y^t", "Z^t", "X^-t", "Y^-t", "Z^-t"
     ]));
 });
 

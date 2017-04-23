@@ -1,5 +1,6 @@
 import {DetailedError} from "src/base/DetailedError.js"
 import {GateDrawParams} from "src/draw/GateDrawParams.js"
+import {Complex} from "src/math/Complex.js"
 import {Matrix} from "src/math/Matrix.js"
 import {seq, Seq} from "src/base/Seq.js"
 
@@ -169,6 +170,12 @@ class Gate {
          * @type {undefined | !function(!int) : !int}
          */
         this.knownBitPermutationFunc = undefined;
+        /**
+         * Indicates that a gate is a phasing function, and that it phases each computation basis state by the amount
+         * returned by this function.
+         * @type {undefined | !function(state: !int) : !number}
+         */
+        this.knownPhaseTurnsFunc = undefined;
         /**
          * Indicates that a gate is a re-arrangement of the basis states equivalent to the given function.
          * Used by all-gate tests to check that shaders are behaving correctly.
@@ -384,6 +391,7 @@ class Gate {
         g._controlBit = this._controlBit;
         g.isControlWireSource = this.isControlWireSource;
         g._isDefinitelyUnitary = this._isDefinitelyUnitary;
+        g.knownPhaseTurnsFunc = this.knownPhaseTurnsFunc;
         g.knownPermutationFuncTakingInputs = this.knownPermutationFuncTakingInputs;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
@@ -999,6 +1007,29 @@ class GateBuilder {
         g._effectPermutesStates = true;
         g._effectCreatesSuperpositions = false;
         g._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * Provides a phase-factor function asserted to be equivalent to the gate's effect.
+     *
+     * Determines various properties of the gate (e.g. unitarity) and also used by tests to check if the gate's shader's
+     * behavior is correct.
+     *
+     * @param {!function(state: !int) : !number} phaseTurnsFunc
+     *      Determines how many turns each basis state should be phased by, in full-turn units.
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToPhaser(phaseTurnsFunc) {
+        this.gate._hasNoEffect = false;
+        this.gate._effectPermutesStates = false;
+        this.gate._effectCreatesSuperpositions = false;
+        this.gate._isDefinitelyUnitary = true;
+        this.gate._stableDuration = Infinity;
+        this.gate.knownPhaseTurnsFunc = phaseTurnsFunc;
+        this.gate._knownMatrixFunc = () => Matrix.generateDiagonal(
+            1 << this.gate.height,
+            k => Complex.polar(1, Math.PI * 2 * phaseTurnsFunc(k)));
         return this;
     }
 

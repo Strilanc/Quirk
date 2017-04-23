@@ -1,56 +1,40 @@
-import {Complex} from "src/math/Complex.js"
 import {Gate} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
-import {Matrix} from "src/math/Matrix.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
-const τ = Math.PI * 2;
-const GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Complex.polar(1, τ*k/(2<<span)));
-const DE_GRADIENT_MATRIX_MAKER = span => Matrix.generateDiagonal(1<<span, k => Complex.polar(1, -τ*k/(2<<span)));
-
-/**
- * @param {!CircuitEvalContext} ctx
- * @param {!int} qubitSpan Size of the gate.
- * @param {!number=} factor Scaling factor for the applied phases.
- * @returns {!WglConfiguredShader} A configured shader that renders the output superposition (as a grid of amplitudes).
- */
-function phaseGradient(ctx, qubitSpan, factor=1) {
-    return PHASE_GRADIENT_SHADER.withArgs(
-        ...ketArgs(ctx, qubitSpan),
-        WglArg.float("factor", factor));
-}
 const PHASE_GRADIENT_SHADER = ketShaderPhase(
     'uniform float factor;',
-    'float angle = out_id * factor * 3.141592653589793 / span; return vec2(cos(angle), sin(angle));');
+    `
+        float angle = out_id * factor;
+        return vec2(cos(angle), sin(angle));
+    `);
 
 let PhaseGradientGates = {};
 
-PhaseGradientGates.PhaseGradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "e^iπ%",
-    "Phase Gradient Gate",
-    "Phases by an amount proportional to the target value.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withKnownMatrix(span >= 4 ? undefined : GRADIENT_MATRIX_MAKER(span)).
-    withSerializedId("PhaseGradient" + span).
-    withHeight(span).
-    withCustomShader(ctx => phaseGradient(ctx, span)));
+PhaseGradientGates.PhaseGradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("PhaseGradient" + span).
+    setSymbol("e^iπ%").
+    setTitle("Phase Gradient Gate").
+    setBlurb("Phases by an amount proportional to the target value.").
+    setActualEffectToShaderProvider(ctx => PHASE_GRADIENT_SHADER.withArgs(
+        ...ketArgs(ctx, span),
+        WglArg.float("factor", Math.PI / (1 << span)))).
+    setKnownEffectToPhaser(k => k / (2 << span)));
 
-PhaseGradientGates.PhaseDegradientFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "e^-iπ%",
-    "Inverse Phase Gradient Gate",
-    "Counter-phases by an amount proportional to the target value.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withKnownMatrix(span >= 4 ? undefined : DE_GRADIENT_MATRIX_MAKER(span)).
-    withSerializedId("PhaseUngradient" + span).
-    withHeight(span).
-    withCustomShader(ctx => phaseGradient(ctx, span, -1)));
+PhaseGradientGates.PhaseDegradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("PhaseUngradient" + span).
+    setSymbol("e^-iπ%").
+    setTitle("Inverse Phase Gradient Gate").
+    setBlurb("Counter-phases by an amount proportional to the target value.").
+    setActualEffectToShaderProvider(ctx => PHASE_GRADIENT_SHADER.withArgs(
+        ...ketArgs(ctx, span),
+        WglArg.float("factor", -Math.PI / (1 << span)))).
+    setKnownEffectToPhaser(k => -k / (2 << span)));
 
 PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseGradientFamily.all,
     ...PhaseGradientGates.PhaseDegradientFamily.all,
 ];
 
-export {PhaseGradientGates, phaseGradient}
+export {PhaseGradientGates, PHASE_GRADIENT_SHADER}
