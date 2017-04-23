@@ -219,37 +219,56 @@ function paintMultiProbabilityDisplay(args) {
     _paintMultiProbabilityDisplay_tooltips(args);
 }
 
-function multiChanceGateMaker(span) {
-    return Gate.fromIdentity(
-        "Chance",
-        "Probability Display",
-        "Shows chances of outcomes if a measurement was performed.\nUse controls to see conditional probabilities.").
-        withHeight(span).
-        withSerializedId("Chance" + span).
-        withCustomStatTexturesMaker(ctx =>
-            probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
-        withCustomStatPostProcessor(pixels => probabilityPixelsToColumnVector(pixels, span)).
-        withCustomDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay)).
-        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
+/**
+ * @param {!GateBuilder} builder
+ * @returns {!GateBuilder}
+ */
+function shared_chanceGateMaker(builder) {
+    return builder.
+        setSymbol("Chance").
+        setTitle("Probability Display").
+        setBlurb("Shows chances of outcomes if a measurement was performed.\n" +
+            "Use controls to see conditional probabilities.").
+        promiseHasNoNetEffectOnStateVector().
+        setExtraDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
 }
 
-let SingleChanceGate = Gate.fromIdentity(
-    "Chance",
-    "Probability Display",
-    "Shows the chance that measuring a wire would return ON.\nUse controls to see conditional probabilities.").
-    markedAsSingleQubitDisplay().
-    withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-        let {row, col} = args.positionInCircuit;
-        MathPainter.paintProbabilityBox(
-            args.painter,
-            args.stats.controlledWireProbabilityJustAfter(row, col),
-            args.rect,
-            args.focusPoints);
-    })).
-    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
+/**
+ * @param {!GateBuilder} builder
+ * @param {!int} span
+ * @returns {!GateBuilder}
+ */
+function multiChanceGateMaker(span, builder) {
+    return shared_chanceGateMaker(builder).
+        setSerializedId("Chance" + span).
+        setStatTexturesMaker(ctx =>
+            probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
+        setStatPixelDataPostProcessor(pixels => probabilityPixelsToColumnVector(pixels, span)).
+        setDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay));
+}
 
-let ProbabilityDisplayFamily = Gate.generateFamily(1, 16, span =>
-    span === 1 ? SingleChanceGate : multiChanceGateMaker(span));
+/**
+ * @param {!GateBuilder} builder
+ * @returns {!GateBuilder}
+ */
+function singleChangeGateMaker(builder) {
+    return shared_chanceGateMaker(builder).
+        setSerializedId("Chance").
+        markAsDrawerNeedsSingleQubitDensityStats().
+        setDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {row, col} = args.positionInCircuit;
+            MathPainter.paintProbabilityBox(
+                args.painter,
+                args.stats.controlledWireProbabilityJustAfter(row, col),
+                args.rect,
+                args.focusPoints);
+        }));
+}
+
+let ProbabilityDisplayFamily = Gate.buildFamily(1, 16, (span, builder) =>
+    span === 1 ?
+        singleChangeGateMaker(builder) :
+        multiChanceGateMaker(span, builder));
 
 export {
     ProbabilityDisplayFamily,
