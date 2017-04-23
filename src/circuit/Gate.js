@@ -929,14 +929,13 @@ class GateBuilder {
      * @returns {!GateBuilder}
      */
     setKnownEffectToPermutation(permutationFunc) {
-        let g = this.gate;
-        g.knownPermutationFuncTakingInputs = permutationFunc;
-        g._knownMatrixFunc = _ => Matrix.generateTransition(1 << g.height, permutationFunc);
-        g._stableDuration = Infinity;
-        g._hasNoEffect = false;
-        g._effectPermutesStates = true;
-        g._effectCreatesSuperpositions = false;
-        g._isDefinitelyUnitary = true;
+        this.gate.knownPermutationFuncTakingInputs = permutationFunc;
+        this.gate._knownMatrixFunc = _ => Matrix.generateTransition(1 << this.gate.height, permutationFunc);
+        this.gate._stableDuration = Infinity;
+        this.gate._hasNoEffect = false;
+        this.gate._effectPermutesStates = true;
+        this.gate._effectCreatesSuperpositions = false;
+        this.gate._isDefinitelyUnitary = true;
         return this;
     }
 

@@ -58,27 +58,25 @@ let cyclePainter = reverse => args => {
     }
 };
 
-CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<<",
-    "Left Rotate",
-    "Rotates bits downward.").
-    withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
-    withSerializedId("<<" + span).
-    withHeight(span).
-    withKnownBitPermutation(i => (i + 1) % span).
-    withCustomShader(ctx => cycleBitsShader(ctx, span, +1)).
-    withCustomDrawer(cyclePainter(false)));
+CycleBitsGates.CycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId("<<" + span).
+    setSymbol("<<<").
+    setTitle("Left Rotate").
+    setBlurb("Rotates bits downward.").
+    setDrawer(cyclePainter(false)).
+    setTooltipMatrixFunc(() => makeCycleBitsMatrix(1, span)).
+    setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, +1)).
+    setKnownEffectToBitPermutation(i => (i + 1) % span));
 
-CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>>",
-    "Right Rotate",
-    "Rotates bits upward.").
-    withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
-    withSerializedId(">>" + span).
-    withHeight(span).
-    withKnownBitPermutation(i => (i + span - 1) % span).
-    withCustomShader(ctx => cycleBitsShader(ctx, span, -1)).
-    withCustomDrawer(cyclePainter(true)));
+CycleBitsGates.ReverseCycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId(">>" + span).
+    setSymbol(">>>").
+    setSymbol("Right Rotate").
+    setTitle("Rotates bits upward.").
+    setDrawer(cyclePainter(true)).
+    setTooltipMatrixFunc(() => makeCycleBitsMatrix(-1, span)).
+    setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, -1)).
+    setKnownEffectToBitPermutation(i => (i + span - 1) % span));
 
 CycleBitsGates.all = [
     ...CycleBitsGates.CycleBitsFamily.all,
