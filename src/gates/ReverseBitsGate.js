@@ -1,20 +1,8 @@
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {Matrix} from "src/math/Matrix.js"
 import {Seq} from "src/base/Seq.js"
 
-let reverseBits = (val, len) => {
-    let r = 0;
-    for (let i = 0; i < len; i++) {
-        if (((val >> i) & 1) !== 0) {
-            r |= 1 << (len - i - 1);
-        }
-    }
-    return r;
-};
-
-let reverseBitsMatrix = span => Matrix.generateTransition(1<<span, e => reverseBits(e, span));
 let _generateReverseShaderForSize = span => span < 2 ? undefined : ketShaderPermute(
     '',
     `
@@ -36,16 +24,12 @@ let reverseShaders = Seq.range(Config.MAX_WIRE_COUNT + 1).map(_generateReverseSh
  */
 let reverseShaderForSize = span => ctx => reverseShaders[span].withArgs(...ketArgs(ctx, span));
 
-let ReverseBitsGateFamily = Gate.generateFamily(2, 16, span => {
-    return Gate.withoutKnownMatrix(
-        "Reverse",
-        "Reverse Order",
-        "Swaps bits into the opposite order.").
-        withSerializedId("rev" + span).
-        withHeight(span).
-        withKnownMatrix(span < 5 ? reverseBitsMatrix(span) : undefined).
-        withKnownBitPermutation(i => span - 1 - i).
-        withCustomShader(reverseShaderForSize(span));
-});
+let ReverseBitsGateFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId("rev" + span).
+    setSymbol("Reverse").
+    setTitle("Reverse Order").
+    setBlurb("Swaps bits into the opposite order.").
+    setKnownEffectToBitPermutation(i => span - 1 - i).
+    setActualEffectToShaderProvider(reverseShaderForSize(span)));
 
 export {ReverseBitsGateFamily, reverseShaderForSize}
