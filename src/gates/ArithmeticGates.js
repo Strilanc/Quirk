@@ -50,7 +50,7 @@ ArithmeticGates.DecrementFamily = Gate.buildFamily(1, 16, (span, builder) => bui
         WglArg.float("amount", -1))).
     setKnownEffectToPermutation(t => (t - 1) & ((1 << span) - 1)));
 
-ArithmeticGates.AdditionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+ArithmeticGates.Legacy_AdditionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId("add" + span).
     setSymbol("b+=a").
     setTitle("Addition Gate").
@@ -62,7 +62,7 @@ ArithmeticGates.AdditionFamily = Gate.buildFamily(2, 16, (span, builder) => buil
                 withInputSetToRange('A', ctx.row, Math.floor(span/2)))).
     setKnownEffectToPermutation(chunkedScaledAdditionPermutationMaker(span, 1)));
 
-ArithmeticGates.SubtractionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+ArithmeticGates.Legacy_SubtractionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId("sub" + span).
     setSymbol("b-=a").
     setTitle("Subtraction Gate").
@@ -99,8 +99,8 @@ ArithmeticGates.MinusAFamily = Gate.buildFamily(1, 16, (span, builder) => builde
 ArithmeticGates.all = [
     ...ArithmeticGates.IncrementFamily.all,
     ...ArithmeticGates.DecrementFamily.all,
-    ...ArithmeticGates.AdditionFamily.all,
-    ...ArithmeticGates.SubtractionFamily.all,
+    ...ArithmeticGates.Legacy_AdditionFamily.all,
+    ...ArithmeticGates.Legacy_SubtractionFamily.all,
     ...ArithmeticGates.PlusAFamily.all,
     ...ArithmeticGates.MinusAFamily.all,
 ];
