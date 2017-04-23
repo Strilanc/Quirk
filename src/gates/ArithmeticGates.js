@@ -35,72 +35,66 @@ ArithmeticGates.IncrementFamily = Gate.buildFamily(1, 16, (span, builder) => bui
     setSymbol("+1").
     setTitle("Increment Gate").
     setBlurb("Adds 1 to the little-endian number represented by a block of qubits.").
-    setHeight(span).
-    setKnownEffectToPermutation(t => (t + 1) & ((1 << span) - 1)).
-    setActualEffectToShader(ctx => offsetShader.withArgs(
+    setActualEffectToShaderProvider(ctx => offsetShader.withArgs(
         ...ketArgs(ctx, span),
-        WglArg.float("amount", +1))));
+        WglArg.float("amount", +1))).
+    setKnownEffectToPermutation(t => (t + 1) & ((1 << span) - 1)));
 
 ArithmeticGates.DecrementFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("dec" + span).
     setSymbol("-1").
     setTitle("Decrement Gate").
     setBlurb("Subtracts 1 from the little-endian number represented by a block of qubits.").
-    setHeight(span).
-    setKnownEffectToPermutation(t => (t - 1) & ((1 << span) - 1)).
-    setActualEffectToShader(ctx => offsetShader.withArgs(
+    setActualEffectToShaderProvider(ctx => offsetShader.withArgs(
         ...ketArgs(ctx, span),
-        WglArg.float("amount", -1))));
+        WglArg.float("amount", -1))).
+    setKnownEffectToPermutation(t => (t - 1) & ((1 << span) - 1)));
 
 ArithmeticGates.AdditionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId("add" + span).
     setSymbol("b+=a").
     setTitle("Addition Gate").
     setBlurb("Adds a little-endian number into another.").
-    setHeight(span).
     setDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
-    setKnownEffectToPermutation(chunkedScaledAdditionPermutationMaker(span, 1)).
     setActualEffectToUpdateFunc(ctx =>
         ArithmeticGates.PlusAFamily.ofSize(Math.ceil(span/2)).customOperation(
             ctx.withRow(ctx.row + Math.floor(span/2)).
-                withInputSetToRange('A', ctx.row, Math.floor(span/2)))));
+                withInputSetToRange('A', ctx.row, Math.floor(span/2)))).
+    setKnownEffectToPermutation(chunkedScaledAdditionPermutationMaker(span, 1)));
 
 ArithmeticGates.SubtractionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId("sub" + span).
     setSymbol("b-=a").
     setTitle("Subtraction Gate").
     setBlurb("Subtracts a little-endian number from another.").
-    setHeight(span).
     setDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).
-    setKnownEffectToPermutation(chunkedScaledAdditionPermutationMaker(span, -1)).
     setActualEffectToUpdateFunc(ctx =>
         ArithmeticGates.MinusAFamily.ofSize(Math.ceil(span/2)).customOperation(
             ctx.withRow(ctx.row + Math.floor(span/2)).
-                withInputSetToRange('A', ctx.row, Math.floor(span/2)))));
+                withInputSetToRange('A', ctx.row, Math.floor(span/2)))).
+    setKnownEffectToPermutation(chunkedScaledAdditionPermutationMaker(span, -1)));
 
 ArithmeticGates.PlusAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("+=A" + span).
     setSymbol("+A").
     setTitle("Addition Gate [input A]").
     setBlurb("Adds input A into the qubits covered by this gate.").
-    setHeight(span).
     setRequiredContextKeys("Input Range A").
-    setKnownEffectToParametrizedPermutation((v, a) => (v + a) & ((1 << span) - 1)).
-    setActualEffectToShader(ctx => ADDITION_SHADER.withArgs(
+    setActualEffectToShaderProvider(ctx => ADDITION_SHADER.withArgs(
         ...ketArgs(ctx, span, ['A']),
-        WglArg.float("factor", +1))));
+        WglArg.float("factor", +1))).
+    setKnownEffectToParametrizedPermutation((v, a) => (v + a) & ((1 << span) - 1)));
 
 ArithmeticGates.MinusAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("-=A" + span).
     setSymbol("−A").
     setTitle("Subtraction Gate [input A]").
     setBlurb("Subtracts input A out of the qubits covered by this gate.").
-    setHeight(span).
     setRequiredContextKeys("Input Range A").
-    setKnownEffectToParametrizedPermutation((v, a) => (v - a) & ((1 << span) - 1)).
-    setActualEffectToShader(ctx => ADDITION_SHADER.withArgs(
+    setActualEffectToShaderProvider(ctx => ADDITION_SHADER.withArgs(
         ...ketArgs(ctx, span, ['A']),
-        WglArg.float("factor", -1))));
+        WglArg.float("factor", -1))).
+    setKnownEffectToParametrizedPermutation((v, a) => (v - a) & ((1 << span) - 1)));
 
 ArithmeticGates.all = [
     ...ArithmeticGates.IncrementFamily.all,

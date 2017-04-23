@@ -4,7 +4,6 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -25,10 +24,11 @@ const CYCLE_SHADER = ketShaderPermute(
     'uniform float amount;',
     'out_id *= amount; return mod(out_id, span) + floor(out_id / span);');
 
-const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, e => {
+const makeCycleBitsPermutation = (shift, span) => e => {
     shift = Util.properMod(shift, span);
     return ((e << shift) & ((1 << span) - 1)) | (e >> (span - shift));
-});
+};
+const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, makeCycleBitsPermutation(shift, span));
 
 let cyclePainter = reverse => args => {
     if (args.positionInCircuit !== undefined) {
@@ -85,4 +85,4 @@ CycleBitsGates.all = [
     ...CycleBitsGates.ReverseCycleBitsFamily.all
 ];
 
-export {CycleBitsGates, cycleBitsShader, makeCycleBitsMatrix};
+export {CycleBitsGates, cycleBitsShader, makeCycleBitsPermutation};

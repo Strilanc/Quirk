@@ -676,13 +676,14 @@ class Gate {
      * Creates size-variants of a gate that can be resized between.
      * @param {!int} minSize
      * @param {!int} maxSize
-     * @param {!function(!int, !GateBuilder)} gateBuildFunc
+     * @param {!function(span: !int, builder: !GateBuilder)} gateBuildFunc
      * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}}
      */
     static buildFamily(minSize, maxSize, gateBuildFunc) {
         let gates = [];
         for (let span = minSize; span <= maxSize; span++) {
             let builder = new GateBuilder();
+            builder.setHeight(span);
             gateBuildFunc(span, builder);
             builder.gate.gateFamily = gates;
             gates.push(builder.gate);
@@ -836,6 +837,12 @@ class GateBuilder {
         this.gate = new Gate();
     }
 
+    setSymbolAndSerializedId(id) {
+        this.gate.symbol = id;
+        this.gate.serializedId = id;
+        return this;
+    }
+
     /**
      * Sets the text shown inside the box when drawing the gate (unless a custom drawer is used).
      * @param {!string} symbol
@@ -887,19 +894,49 @@ class GateBuilder {
     }
 
     /**
+     * Provides a custom drawing function for the gate (use undefined to use the default boxed-symbol drawer).
+     * @param {undefined|!function(!GateDrawParams) : void} drawer
+     * @returns {!GateBuilder}
+     */
+    setDrawer(drawer) {
+        this.gate.customDrawer = drawer;
+        return this;
+    }
+
+    /**
      * Provides a permutation function asserted to be equivalent to the gate's effect.
      *
      * Determines various properties of the gate (e.g. unitarity) and also used by tests to check if the gate's shader's
      * behavior is correct.
      *
-     * @param {!function(val: !int) : !int} knownPermutationFunc Returns the output state for each input state.
+     * @param {!function(val: !int) : !int} permutationFunc Returns the output state for each input state.
      * @returns {!GateBuilder}
      */
-    setKnownEffectToPermutation(knownPermutationFunc) {
+    setKnownEffectToPermutation(permutationFunc) {
         let g = this.gate;
-        g.knownPermutationFuncTakingInputs = knownPermutationFunc;
-        g._knownMatrixFunc = _ => Matrix.generateTransition(1 << g.height, knownPermutationFunc);
+        g.knownPermutationFuncTakingInputs = permutationFunc;
+        g._knownMatrixFunc = _ => Matrix.generateTransition(1 << g.height, permutationFunc);
         g._stableDuration = Infinity;
+        g._hasNoEffect = false;
+        g._effectPermutesStates = true;
+        g._effectCreatesSuperpositions = false;
+        g._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * Provides a permutation function asserted to be equivalent to the gate's effect.
+     *
+     * Determines various properties of the gate (e.g. unitarity) and also used by tests to check if the gate's shader's
+     * behavior is correct.
+     *
+     * @param {!function(time: !number, state: !int) : !int} timeVaryingPermutationFunc
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToTimeVaryingPermutation(timeVaryingPermutationFunc) {
+        let g = this.gate;
+        g._stableDuration = 0;
+        g._knownMatrixFunc = t => Matrix.generateTransition(1 << g.height, i => timeVaryingPermutationFunc(t, i));
         g._hasNoEffect = false;
         g._effectPermutesStates = true;
         g._effectCreatesSuperpositions = false;
@@ -917,19 +954,30 @@ class GateBuilder {
      *      !function(val: !int, a: !int) : !int |
      *      !function(val: !int, a: !int, b: !int) : !int |
      *      !function(val: !int, inputs: ...!int) : !int
-     *  } knownPermutationFunc A permutation function taking the initial state of the covered register, then any input
+     *  } permutationFunc A permutation function taking the initial state of the covered register, then any input
      *      gate inputs, and returning the new state.
      * @returns {!GateBuilder}
      */
-    setKnownEffectToParametrizedPermutation(knownPermutationFunc) {
+    setKnownEffectToParametrizedPermutation(permutationFunc) {
         let g = this.gate;
-        g.knownPermutationFuncTakingInputs = knownPermutationFunc;
+        g.knownPermutationFuncTakingInputs = permutationFunc;
         g._knownMatrixFunc = undefined;
         g._stableDuration = Infinity;
         g._hasNoEffect = false;
         g._effectPermutesStates = true;
         g._effectCreatesSuperpositions = false;
         g._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * @param {!function(time : !number) : !Matrix} timeToMatrixFunc
+     * @returns {!GateBuilder}
+     */
+    setEffectToTimeVaryingMatrix(timeToMatrixFunc) {
+        this.gate._stableDuration = 0;
+        this.gate._knownMatrixFunc = timeToMatrixFunc;
+        this.gate._hasNoEffect = false;
         return this;
     }
 
@@ -951,7 +999,7 @@ class GateBuilder {
      * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
      * @returns {!GateBuilder}
      */
-    setActualEffectToShader(shaderFunc) {
+    setActualEffectToShaderProvider(shaderFunc) {
         return this.setActualEffectToUpdateFunc(ctx => ctx.applyOperation(shaderFunc));
     }
 
@@ -969,12 +1017,14 @@ class GateBuilder {
     }
 
     /**
-     * Provides a custom drawing function for the gate (use undefined to use the default boxed-symbol drawer).
-     * @param {undefined|!function(!GateDrawParams) : void} drawer
+     * Sets meta-properties to indicate the gate is safe for classical use and quantum use, but not safe for mixed used.
      * @returns {!GateBuilder}
      */
-    setDrawer(drawer) {
-        this.gate.customDrawer = drawer;
+    promiseEffectOnlyPermutesAndPhases() {
+        this.gate._hasNoEffect = false;
+        this.gate._effectPermutesStates = true;
+        this.gate._effectCreatesSuperpositions = false;
+        this.gate._isDefinitelyUnitary = true;
         return this;
     }
 

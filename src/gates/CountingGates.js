@@ -1,5 +1,5 @@
 import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
@@ -7,7 +7,7 @@ import {ketArgs} from "src/circuit/KetShaderUtil.js"
 import {WglArg} from "src/webgl/WglArg.js"
 
 import {offsetShader} from "src/gates/ArithmeticGates.js"
-import {makeCycleBitsMatrix, cycleBitsShader} from "src/gates/CycleBitsGates.js"
+import {makeCycleBitsPermutation, cycleBitsShader} from "src/gates/CycleBitsGates.js"
 
 let CountingGates = {};
 
@@ -65,82 +65,87 @@ let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
     args.painter.ctx.restore();
 };
 
-const makeOffsetMatrix = (offset, qubitSpan) =>
-    Matrix.generateTransition(1<<qubitSpan, e => (e + offset) & ((1<<qubitSpan)-1));
-const COUNTING_MATRIX_MAKER = span => t => makeOffsetMatrix(Math.floor(t*(1<<span)), span);
-const UNCOUNTING_MATRIX_MAKER = span => t => makeOffsetMatrix(-Math.floor(t*(1<<span)), span);
-const LEFT_SHIFTING_MATRIX_MAKER = span => t => makeCycleBitsMatrix(Math.floor(t*span), span);
-const RIGHT_SHIFTING_MATRIX_MAKER = span => t => makeCycleBitsMatrix(-Math.floor(t*span), span);
+/**
+ * @param {!number} time
+ * @param {!int} factor
+ * @param {!int} span
+ * @param {!int} state
+ * @returns {!int}
+ */
+function offsetPermutation(time, factor, span, state) {
+    let offset = Math.floor(time * (1 << span)) * factor;
+    return (state + offset) & ((1 << span) - 1);
+}
 
-CountingGates.ClockPulseGate = Gate.fromVaryingMatrix(
-    "X^⌈t⌉",
-    t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
-    "Clock Pulse Gate",
-    "Xors a square wave into the target wire.").
-    markedAsOnlyPermutingAndPhasing().
-    withCustomDrawer(STAIRCASE_DRAWER(0, 2)).
-    withStableDuration(0.5);
+/**
+ * @param {!number} time
+ * @param {!int} factor
+ * @param {!int} span
+ * @param {!int} state
+ * @returns {!int}
+ */
+function bitOffsetPermutation(time, factor, span, state) {
+    let offset = Math.floor(time*span) * factor;
+    return makeCycleBitsPermutation(offset, span)(state)
+}
 
-CountingGates.QuarterPhaseClockPulseGate = Gate.fromVaryingMatrix(
-    "X^⌈t-¼⌉",
-    t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X,
-    "Clock Pulse Gate (Quarter Phase)",
-    "Xors a quarter-phased square wave into the target wire.").
-    markedAsOnlyPermutingAndPhasing().
-    withCustomDrawer(STAIRCASE_DRAWER(0.75, 2)).
-    withStableDuration(0.25);
+CountingGates.ClockPulseGate = new GateBuilder().
+    setSymbolAndSerializedId("X^⌈t⌉").
+    setTitle("Clock Pulse Gate").
+    setBlurb("Xors a square wave into the target wire.").
+    setDrawer(STAIRCASE_DRAWER(0, 2)).
+    setEffectToTimeVaryingMatrix(t => (t % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X).
+    promiseEffectOnlyPermutesAndPhases().
+    gate;
 
-CountingGates.CountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+⌈t⌉",
-    "Counting Gate",
-    "Adds an increasing little-endian count into a block of qubits.").
-    markedAsOnlyPermutingAndPhasing().
-    withKnownMatrixFunc(span >= 4 ? undefined : COUNTING_MATRIX_MAKER(span)).
-    withSerializedId("Counting" + span).
-    withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
-    withHeight(span).
-    withStableDuration(1.0 / (1<<span)).
-    withCustomShader(ctx => offsetShader.withArgs(
+CountingGates.QuarterPhaseClockPulseGate = new GateBuilder().
+    setSymbolAndSerializedId("X^⌈t-¼⌉").
+    setTitle("Clock Pulse Gate (Quarter Phase)").
+    setBlurb("Xors a quarter-phased square wave into the target wire.").
+    setDrawer(STAIRCASE_DRAWER(0.75, 2)).
+    setEffectToTimeVaryingMatrix(t => ((t+0.75) % 1) < 0.5 ? Matrix.identity(2) : Matrix.PAULI_X).
+    promiseEffectOnlyPermutesAndPhases().
+    gate;
+
+CountingGates.CountingFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("Counting" + span).
+    setSymbol("+⌈t⌉").
+    setTitle("Counting Gate").
+    setBlurb("Adds an increasing little-endian count into a block of qubits.").
+    setDrawer(STAIRCASE_DRAWER(0, 1 << span)).
+    setActualEffectToShaderProvider(ctx => offsetShader.withArgs(
         ...ketArgs(ctx, span),
-        WglArg.float("amount", Math.floor(ctx.time*(1<<span))))));
+        WglArg.float("amount", Math.floor(ctx.time*(1<<span))))).
+    setKnownEffectToTimeVaryingPermutation((t, i) => offsetPermutation(t, +1, span, i)));
 
-CountingGates.UncountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-⌈t⌉",
-    "Down Counting Gate",
-    "Subtracts an increasing little-endian count from a block of qubits.").
-    markedAsOnlyPermutingAndPhasing().
-    withKnownMatrixFunc(span >= 4 ? undefined : UNCOUNTING_MATRIX_MAKER(span)).
-    withSerializedId("Uncounting" + span).
-    withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
-    withHeight(span).
-    withStableDuration(1.0 / (1<<span)).
-    withCustomShader(ctx => offsetShader.withArgs(
+CountingGates.UncountingFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("Uncounting" + span).
+    setSymbol("-⌈t⌉").
+    setTitle("Down Counting Gate").
+    setBlurb("Subtracts an increasing little-endian count from a block of qubits.").
+    setDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
+    setActualEffectToShaderProvider(ctx => offsetShader.withArgs(
         ...ketArgs(ctx, span),
-        WglArg.float("amount", -Math.floor(ctx.time*(1<<span))))));
+        WglArg.float("amount", -Math.floor(ctx.time*(1<<span))))).
+    setKnownEffectToTimeVaryingPermutation((t, i) => offsetPermutation(t, -1, span, i)));
 
-CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "↟⌈t⌉",
-    "Right-Shift Cycling Gate",
-    "Right-rotates a block of bits by more and more.").
-    markedAsOnlyPermutingAndPhasing().
-    withKnownMatrixFunc(span >= 4 ? undefined : RIGHT_SHIFTING_MATRIX_MAKER(span)).
-    withSerializedId(">>t" + span).
-    withCustomDrawer(STAIRCASE_DRAWER(0, span, true)).
-    withHeight(span).
-    withStableDuration(1.0 / span).
-    withCustomShader(ctx => cycleBitsShader(ctx, span, -Math.floor(ctx.time*span))));
+CountingGates.RightShiftRotatingFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId(">>t" + span).
+    setSymbol("↟⌈t⌉").
+    setTitle("Right-Shift Cycling Gate").
+    setBlurb("Right-rotates a block of bits by more and more.").
+    setDrawer(STAIRCASE_DRAWER(0, span, true)).
+    setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, -Math.floor(ctx.time*span))).
+    setKnownEffectToTimeVaryingPermutation((t, i) => bitOffsetPermutation(t, -1, span, i)));
 
-CountingGates.LeftShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "↡⌈t⌉",
-    "Left-Shift Cycling Gate",
-    "Left-rotates a block of bits by more and more.").
-    markedAsOnlyPermutingAndPhasing().
-    withKnownMatrixFunc(span >= 4 ? undefined : LEFT_SHIFTING_MATRIX_MAKER(span)).
-    withSerializedId("<<t" + span).
-    withCustomDrawer(STAIRCASE_DRAWER(0, span)).
-    withHeight(span).
-    withStableDuration(1.0 / span).
-    withCustomShader(ctx => cycleBitsShader(ctx, span, Math.floor(ctx.time*span))));
+CountingGates.LeftShiftRotatingFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId("<<t" + span).
+    setSymbol("↡⌈t⌉").
+    setTitle("Left-Shift Cycling Gate").
+    setBlurb("Left-rotates a block of bits by more and more.").
+    setDrawer(STAIRCASE_DRAWER(0, span)).
+    setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, Math.floor(ctx.time*span))).
+    setKnownEffectToTimeVaryingPermutation((t, i) => bitOffsetPermutation(t, +1, span, i)));
 
 CountingGates.all = [
     CountingGates.ClockPulseGate,
