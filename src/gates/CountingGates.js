@@ -90,7 +90,7 @@ function bitOffsetPermutation(time, factor, span, state) {
 }
 
 CountingGates.ClockPulseGate = new GateBuilder().
-    setSymbolAndSerializedId("X^⌈t⌉").
+    setSerializedIdAndSymbol("X^⌈t⌉").
     setTitle("Clock Pulse Gate").
     setBlurb("Xors a square wave into the target wire.").
     setDrawer(STAIRCASE_DRAWER(0, 2)).
@@ -99,7 +99,7 @@ CountingGates.ClockPulseGate = new GateBuilder().
     gate;
 
 CountingGates.QuarterPhaseClockPulseGate = new GateBuilder().
-    setSymbolAndSerializedId("X^⌈t-¼⌉").
+    setSerializedIdAndSymbol("X^⌈t-¼⌉").
     setTitle("Clock Pulse Gate (Quarter Phase)").
     setBlurb("Xors a quarter-phased square wave into the target wire.").
     setDrawer(STAIRCASE_DRAWER(0.75, 2)).

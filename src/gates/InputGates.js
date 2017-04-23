@@ -1,71 +1,78 @@
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
 
 let InputGates = {};
 
-let makeInputGate = (key, reverse) => Gate.generateFamily(1, 16, span => Gate.fromIdentity(
-    (reverse ? 'rev ' : '') + `input ${key}`,
-    `Input Gate [${key}]` + (reverse ? ' [reversed]' : ''),
-    `Temporarily uses some qubits as input ${key}${reverse ? ', in big-endian order' : ''}.`).
-    withSerializedId((reverse ? 'rev' : '') + `input${key}${span}`).
-    withHeight(span).
-    markedAsNotInterestedInControls().
-    withCustomColumnContextProvider(qubitIndex => [{
+/**
+ * @param {!GateDrawParams} args
+ * @param {!string} key
+ * @param {!boolean} reverse
+ */
+function drawInputGate(args, key, reverse) {
+    GatePainting.paintBackground(args, '#DDD', '#DDD');
+    if (args.isInToolbox) {
+        GatePainting.paintOutline(args);
+    } else {
+        args.painter.strokeRect(args.rect, '#888');
+    }
+    GatePainting.paintResizeTab(args);
+
+    let {x, y} = args.rect.center();
+    args.painter.print(
+        'input',
+        x,
+        y-2,
+        'center',
+        'bottom',
+        'black',
+        '16px sans-serif',
+        args.rect.w - 2,
+        args.rect.h / 2);
+    args.painter.print(
+        key + (reverse ? '[::-1]' : ''),
+        x,
+        y+2,
+        'center',
+        'top',
+        'black',
+        '16px sans-serif',
+        args.rect.w - 2,
+        args.rect.h / 2);
+}
+
+let makeInputGate = (key, reverse) => Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId((reverse ? 'rev' : '') + `input${key}${span}`).
+    setSymbol((reverse ? 'rev ' : '') + `input ${key}`).
+    setTitle(`Input Gate [${key}]` + (reverse ? ' [reversed]' : '')).
+    setBlurb(`Temporarily uses some qubits as input ${key}${reverse ? ', in big-endian order' : ''}.`).
+    setDrawer(args => drawInputGate(args, key, reverse)).
+    promiseHasNoNetEffectOnStateVector().
+    markAsNotInterestedInControls().
+    setSetupCleanupEffectsToShaderProviders(
+        reverse && span > 1 ? reverseShaderForSize(span) : undefined,
+        reverse && span > 1 ? reverseShaderForSize(span) : undefined).
+    setContextProvider(qubitIndex => [{
         key: `Input Range ${key}`,
         val: {
             offset: qubitIndex,
             length: span
         }
-    }]).
-    withCustomBeforeShader(reverse && span > 1 ? reverseShaderForSize(span) : undefined).
-    withCustomAfterShader(reverse && span > 1 ? reverseShaderForSize(span) : undefined).
-    withCustomDrawer(args => {
-        GatePainting.paintBackground(args, '#DDD', '#DDD');
-        if (args.isInToolbox) {
-            GatePainting.paintOutline(args);
-        } else {
-            args.painter.strokeRect(args.rect, '#888');
-        }
-        GatePainting.paintResizeTab(args);
+    }]));
 
-        let {x, y} = args.rect.center();
-        args.painter.print(
-            'input',
-            x,
-            y-2,
-            'center',
-            'bottom',
-            'black',
-            '16px sans-serif',
-            args.rect.w - 2,
-            args.rect.h / 2);
-        args.painter.print(
-            key + (reverse ? '[::-1]' : ''),
-            x,
-            y+2,
-            'center',
-            'top',
-            'black',
-            '16px sans-serif',
-            args.rect.w - 2,
-            args.rect.h / 2);
-    }));
-
-let makeSetInputGate = key => Gate.fromIdentity(
-    `set${key}`,
-    `Set Default ${key}`,
-    `Sets a default value for input ${key}, for when an inline input isn't given.`).
-    withWidth(2).
-    withParam(0).
-    markedAsNotInterestedInControls().
-    withStickyContext().
-    withCustomColumnContextProvider((qubitIndex, gate) => [{
+let makeSetInputGate = key => new GateBuilder().
+    setSerializedIdAndSymbol(`set${key}`).
+    setTitle(`Set Default ${key}`).
+    setBlurb(`Sets a default value for input ${key}, for when an inline input isn't given.`).
+    setWidth(2).
+    promiseHasNoNetEffectOnStateVector().
+    markAsNotInterestedInControls().
+    setStickyContextProvider((qubitIndex, gate) => [{
         key: `Input Default ${key}`,
         val: gate.param,
         sticky: true
     }]).
-    withCustomDrawer(args => {
+    setDrawer(args => {
         GatePainting.paintBackground(args, '#EEE', '#EEE');
         GatePainting.paintOutline(args);
         if (args.isInToolbox) {
@@ -73,7 +80,9 @@ let makeSetInputGate = key => Gate.fromIdentity(
         } else {
             GatePainting.paintGateSymbol(args, `${key}=${args.gate.param}`);
         }
-    });
+    }).
+    gate.
+    withParam(0);
 
 InputGates.InputAFamily = makeInputGate('A', false);
 InputGates.InputBFamily = makeInputGate('B', false);

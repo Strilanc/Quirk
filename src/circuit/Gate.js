@@ -837,7 +837,7 @@ class GateBuilder {
         this.gate = new Gate();
     }
 
-    setSymbolAndSerializedId(id) {
+    setSerializedIdAndSymbol(id) {
         this.gate.symbol = id;
         this.gate.serializedId = id;
         return this;
@@ -890,6 +890,16 @@ class GateBuilder {
      */
     setHeight(height) {
         this.gate.height = height;
+        return this;
+    }
+
+    /**
+     * Sets the number of columns the gate spans.
+     * @param {!int} width
+     * @returns {!GateBuilder}
+     */
+    setWidth(width) {
+        this.gate.width = width;
         return this;
     }
 
@@ -1047,12 +1057,85 @@ class GateBuilder {
     }
 
     /**
+     * @returns {!GateBuilder}
+     */
+    promiseHasNoNetEffectOnStateVector() {
+        this.gate._stableDuration = Infinity;
+        this.gate._hasNoEffect = true;
+        this.gate._isDefinitelyUnitary = true;
+        this.gate._effectPermutesStates = false;
+        this.gate._effectCreatesSuperpositions = false;
+        return this;
+    }
+
+    /**
+     * Indicates that the gate isn't a control wire destination when drawing.
+     * @returns {!GateBuilder}
+     */
+    markAsNotInterestedInControls() {
+        this.gate.interestedInControls = false;
+        return this;
+    }
+
+    /**
      * Specifies context values provided by other gates that this gate needs to be present in order to function.
      * @param {...!String} keys
      * @returns {!GateBuilder}
      */
     setRequiredContextKeys(...keys) {
         this.gate._requiredContextKeys = keys;
+        return this;
+    }
+
+    /**
+     * Specifies a function for retrieving the context provided by a gate to other gates.
+     * @param {!function(qubit:!int,gate:!Gate):!Array.<!{key: !string, val: *}>} customColumnContextProvider
+     * @returns {!GateBuilder}
+     */
+    setContextProvider(customColumnContextProvider) {
+        this.gate.customColumnContextProvider = customColumnContextProvider;
+        this.gate.isContextTemporary = true;
+        return this;
+    }
+
+    /**
+     * Specifies a function for retrieving the context provided by a gate to other gates.
+     * @param {!function(qubit:!int,gate:!Gate):!Array.<!{key: !string, val: *}>} customColumnContextProvider
+     * @returns {!GateBuilder}
+     */
+    setStickyContextProvider(customColumnContextProvider) {
+        this.gate.customColumnContextProvider = customColumnContextProvider;
+        this.gate.isContextTemporary = false;
+        return this;
+    }
+
+    /**
+     * Sets a setup shader to unconditionally run before executing the operations in a column containing this gate.
+     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} beforeColumnShaderFunc
+     * @param {undefined|!function(!CircuitEvalContext) : !WglConfiguredShader} afterColumnShaderFunc
+     * @returns {!GateBuilder}
+     */
+    setSetupCleanupEffectsToShaderProviders(beforeColumnShaderFunc, afterColumnShaderFunc) {
+        return this.setSetupCleanupEffectToUpdateFunc(
+            beforeColumnShaderFunc === undefined ? undefined : ctx => ctx.applyOperation(beforeColumnShaderFunc),
+            afterColumnShaderFunc === undefined ? undefined : ctx => ctx.applyOperation(afterColumnShaderFunc));
+    }
+
+    /**
+     * Sets a setup operation to unconditionally run before executing the operations in a column containing this gate.
+     * @param {undefined|!function(!CircuitEvalContext) : void} beforeColumnUpdateFunc
+     * @param {undefined|!function(!CircuitEvalContext) : void} afterColumnUpdateFunc
+     * @returns {!GateBuilder}
+     */
+    setSetupCleanupEffectToUpdateFunc(beforeColumnUpdateFunc, afterColumnUpdateFunc) {
+        if (beforeColumnUpdateFunc !== undefined && typeof beforeColumnUpdateFunc !== "function") {
+            throw new DetailedError("Bad beforeColumnUpdateFunc", {customOperation});
+        }
+        if (afterColumnUpdateFunc !== undefined && typeof afterColumnUpdateFunc !== "function") {
+            throw new DetailedError("Bad afterColumnUpdateFunc", {customOperation});
+        }
+        this.gate.customBeforeOperation = beforeColumnUpdateFunc;
+        this.gate.customAfterOperation = afterColumnUpdateFunc;
         return this;
     }
 }
