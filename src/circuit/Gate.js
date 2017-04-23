@@ -12,7 +12,7 @@ class Gate {
      * @param {!string} name A helpful human-readable name for the operation.
      * @param {!string} blurb A helpful description of what the operation does.
      */
-    constructor(symbol, name, blurb) {
+    constructor(symbol='', name='', blurb='') {
         /** @type {!string} The text shown when drawing the gate. */
         this.symbol = symbol;
         /** @type {!string} The identifier text used for the gate when serializing/parsing JSON. */
@@ -676,6 +676,28 @@ class Gate {
      * Creates size-variants of a gate that can be resized between.
      * @param {!int} minSize
      * @param {!int} maxSize
+     * @param {!function(!int, !GateBuilder)} gateBuildFunc
+     * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}}
+     */
+    static buildFamily(minSize, maxSize, gateBuildFunc) {
+        let gates = [];
+        for (let span = minSize; span <= maxSize; span++) {
+            let builder = new GateBuilder();
+            gateBuildFunc(span, builder);
+            builder.gate.gateFamily = gates;
+            gates.push(builder.gate);
+        }
+
+        return {
+            all: gates,
+            ofSize: h => seq(gates).filter(e => e === undefined || e.height === h).first()
+        };
+    }
+
+    /**
+     * Creates size-variants of a gate that can be resized between.
+     * @param {!int} minSize
+     * @param {!int} maxSize
      * @param {!function(!int):!Gate} gateGenerator
      * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}}
      */
@@ -806,4 +828,165 @@ class Gate {
     }
 }
 
-export {Gate}
+/**
+ * Builds quantum gates.
+ */
+class GateBuilder {
+    constructor() {
+        this.gate = new Gate();
+    }
+
+    /**
+     * Sets the text shown inside the box when drawing the gate (unless a custom drawer is used).
+     * @param {!string} symbol
+     * @returns {!GateBuilder}
+     */
+    setSymbol(symbol) {
+        this.gate.symbol = symbol;
+        return this;
+    }
+
+    /**
+     * Specifies the id to use when serializing/parsing this gate (instead of defaulting to the symbol).
+     * @param {!string} serializedId
+     * @returns {!GateBuilder}
+     */
+    setSerializedId(serializedId) {
+        this.gate.serializedId = serializedId;
+        return this;
+    }
+
+    /**
+     * Sets the gate's tooltip title.
+     * @param {!string} title A helpful human-readable name for the operation.
+     * @returns {!GateBuilder}
+     */
+    setTitle(title) {
+        this.gate.name = title;
+        return this;
+    }
+
+    /**
+     * Sets the detail text shown inside tooltips for the gate.
+     * @param {!string} blurb A helpful description of what the gate does.
+     * @returns {!GateBuilder}
+     */
+    setBlurb(blurb) {
+        this.gate.blurb = blurb;
+        return this;
+    }
+
+    /**
+     * Sets the number of wires the gate spans.
+     * @param {!int} height
+     * @returns {!GateBuilder}
+     */
+    setHeight(height) {
+        this.gate.height = height;
+        return this;
+    }
+
+    /**
+     * Provides a permutation function asserted to be equivalent to the gate's effect.
+     *
+     * Determines various properties of the gate (e.g. unitarity) and also used by tests to check if the gate's shader's
+     * behavior is correct.
+     *
+     * @param {!function(val: !int) : !int} knownPermutationFunc Returns the output state for each input state.
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToPermutation(knownPermutationFunc) {
+        let g = this.gate;
+        g.knownPermutationFuncTakingInputs = knownPermutationFunc;
+        g._knownMatrixFunc = _ => Matrix.generateTransition(1 << g.height, knownPermutationFunc);
+        g._stableDuration = Infinity;
+        g._hasNoEffect = false;
+        g._effectPermutesStates = true;
+        g._effectCreatesSuperpositions = false;
+        g._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * Provides a permutation function asserted to be equivalent to the gate's effect.
+     *
+     * Determines various properties of the gate (e.g. unitarity) and also used by tests to check if the gate's shader's
+     * behavior is correct.
+     *
+     * @param {
+     *      !function(val: !int, a: !int) : !int |
+     *      !function(val: !int, a: !int, b: !int) : !int |
+     *      !function(val: !int, inputs: ...!int) : !int
+     *  } knownPermutationFunc A permutation function taking the initial state of the covered register, then any input
+     *      gate inputs, and returning the new state.
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToParametrizedPermutation(knownPermutationFunc) {
+        let g = this.gate;
+        g.knownPermutationFuncTakingInputs = knownPermutationFunc;
+        g._knownMatrixFunc = undefined;
+        g._stableDuration = Infinity;
+        g._hasNoEffect = false;
+        g._effectPermutesStates = true;
+        g._effectCreatesSuperpositions = false;
+        g._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * Sets a custom circuit-update function to run when simulating this gate.
+     * @param {undefined|!function(!CircuitEvalContext)} circuitUpdateFunc
+     * @returns {!GateBuilder}
+     */
+    setActualEffectToUpdateFunc(circuitUpdateFunc) {
+        if (circuitUpdateFunc !== undefined && typeof circuitUpdateFunc !== "function") {
+            throw new DetailedError("Bad customOperation", {circuitUpdateFunc});
+        }
+        this.gate.customOperation = circuitUpdateFunc;
+        return this;
+    }
+
+    /**
+     * Sets a shader as the custom circuit-update function to run when simulating this gate.
+     * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
+     * @returns {!GateBuilder}
+     */
+    setActualEffectToShader(shaderFunc) {
+        return this.setActualEffectToUpdateFunc(ctx => ctx.applyOperation(shaderFunc));
+    }
+
+    /**
+     * Sets a sequence of shaders as the custom circuit-update function to run when simulating this gate.
+     * @param {!Array.<!function(!CircuitEvalContext) : !WglConfiguredShader>} shaderFuncs
+     * @returns {!GateBuilder}
+     */
+    setActualEffectToShaderSequence(shaderFuncs) {
+        return this.setActualEffectToUpdateFunc(ctx => {
+            for (let shaderFunc of shaderFuncs) {
+                ctx.applyOperation(shaderFunc);
+            }
+        });
+    }
+
+    /**
+     * Provides a custom drawing function for the gate (use undefined to use the default boxed-symbol drawer).
+     * @param {undefined|!function(!GateDrawParams) : void} drawer
+     * @returns {!GateBuilder}
+     */
+    setDrawer(drawer) {
+        this.gate.customDrawer = drawer;
+        return this;
+    }
+
+    /**
+     * Specifies context values provided by other gates that this gate needs to be present in order to function.
+     * @param {...!String} keys
+     * @returns {!GateBuilder}
+     */
+    setRequiredContextKeys(...keys) {
+        this.gate._requiredContextKeys = keys;
+        return this;
+    }
+}
+
+export {Gate, GateBuilder}

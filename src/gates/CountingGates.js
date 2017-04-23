@@ -3,8 +3,10 @@ import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
+import {ketArgs} from "src/circuit/KetShaderUtil.js"
+import {WglArg} from "src/webgl/WglArg.js"
 
-import {makeOffsetMatrix, incrementShaderFunc} from "src/gates/ArithmeticGates.js"
+import {offsetShader} from "src/gates/ArithmeticGates.js"
 import {makeCycleBitsMatrix, cycleBitsShader} from "src/gates/CycleBitsGates.js"
 
 let CountingGates = {};
@@ -63,6 +65,8 @@ let STAIRCASE_DRAWER = (timeOffset, steps, flip=false) => args => {
     args.painter.ctx.restore();
 };
 
+const makeOffsetMatrix = (offset, qubitSpan) =>
+    Matrix.generateTransition(1<<qubitSpan, e => (e + offset) & ((1<<qubitSpan)-1));
 const COUNTING_MATRIX_MAKER = span => t => makeOffsetMatrix(Math.floor(t*(1<<span)), span);
 const UNCOUNTING_MATRIX_MAKER = span => t => makeOffsetMatrix(-Math.floor(t*(1<<span)), span);
 const LEFT_SHIFTING_MATRIX_MAKER = span => t => makeCycleBitsMatrix(Math.floor(t*span), span);
@@ -96,7 +100,9 @@ CountingGates.CountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKn
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader(ctx => incrementShaderFunc(ctx, span, Math.floor(ctx.time*(1<<span)))));
+    withCustomShader(ctx => offsetShader.withArgs(
+        ...ketArgs(ctx, span),
+        WglArg.float("amount", Math.floor(ctx.time*(1<<span))))));
 
 CountingGates.UncountingFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "-⌈t⌉",
@@ -108,7 +114,9 @@ CountingGates.UncountingFamily = Gate.generateFamily(1, 16, span => Gate.without
     withCustomDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
     withHeight(span).
     withStableDuration(1.0 / (1<<span)).
-    withCustomShader(ctx => incrementShaderFunc(ctx, span, -Math.floor(ctx.time*(1<<span)))));
+    withCustomShader(ctx => offsetShader.withArgs(
+        ...ketArgs(ctx, span),
+        WglArg.float("amount", -Math.floor(ctx.time*(1<<span))))));
 
 CountingGates.RightShiftRotatingFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
     "↟⌈t⌉",

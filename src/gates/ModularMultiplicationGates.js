@@ -216,7 +216,7 @@ ModularMultiplicationGates.TimesBToTheAModRFamily = Gate.generateFamily(1, 16, s
         "Multiplies the target by input B raised to the input A mod input R.\n" +
             "Only affects values less than R.\n" +
             "No effect if the multiplication would be irreversible.").
-    withSerializedId("*AtoBmodR" + span).
+    withSerializedId("*BToAmodR" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
     withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
@@ -231,7 +231,7 @@ ModularMultiplicationGates.TimesInverseBToTheAModRFamily = Gate.generateFamily(1
         "Inverse-multiplies the target by input B raised to the input A mod input R.\n" +
             "Only affects values less than R.\n" +
             "No effect if the multiplication would be irreversible.").
-    withSerializedId("/AtoBmodR" + span).
+    withSerializedId("/BToAmodR" + span).
     withHeight(span).
     withRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
     withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
