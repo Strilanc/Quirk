@@ -689,10 +689,16 @@ class Gate {
             gates.push(builder.gate);
         }
 
-        return {
-            all: gates,
-            ofSize: h => seq(gates).filter(e => e === undefined || e.height === h).first()
+        let ofSize = h => {
+            for (let g of gates) {
+                if (g.height === h) {
+                    return g;
+                }
+            }
+            return undefined;
         };
+
+        return {all: gates, ofSize};
     }
 
     /**
@@ -931,6 +937,23 @@ class GateBuilder {
         g._effectPermutesStates = true;
         g._effectCreatesSuperpositions = false;
         g._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * Provides a function equivalent to how the gate rearranges wires, for checking in tests if the gate's behavior is
+     * correct.
+     * @param {!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
+     * given input, assuming the gate is exactly sized to the overall circuit.
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToBitPermutation(knownBitPermutationFunc) {
+        this.gate.knownBitPermutationFunc = knownBitPermutationFunc;
+        this.gate._isDefinitelyUnitary = true;
+        this.gate._stableDuration = Infinity;
+        this.gate._hasNoEffect = false;
+        this.gate._effectPermutesStates = true;
+        this.gate._effectCreatesSuperpositions = false;
         return this;
     }
 
