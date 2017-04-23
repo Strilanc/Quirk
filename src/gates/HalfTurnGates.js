@@ -1,4 +1,4 @@
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
@@ -46,39 +46,43 @@ function NOT_DRAWER(args) {
 }
 
 let xShader = ketShaderPermute('', 'return 1.0-out_id;', 1);
-HalfTurnGates.X = Gate.fromKnownMatrix(
-    "X",
-    Matrix.PAULI_X,
-    "Pauli X Gate",
-    "The NOT gate.\nToggles between ON and OFF.").
-    withCustomDrawer(NOT_DRAWER).
-    withCustomShader(ctx => xShader.withArgs(...ketArgs(ctx)));
+HalfTurnGates.X = new GateBuilder().
+    setSerializedIdAndSymbol("X").
+    setTitle("Pauli X Gate").
+    setBlurb("The NOT gate.\nToggles between ON and OFF.").
+    setDrawer(NOT_DRAWER).
+    setActualEffectToShaderProvider(ctx => xShader.withArgs(...ketArgs(ctx))).
+    setKnownEffectToMatrix(Matrix.PAULI_X).
+    gate;
 
 let yShader = ketShader('', 'vec2 v = inp(1.0-out_id); return (out_id*2.0 - 1.0)*vec2(-v.y, v.x);', 1);
-HalfTurnGates.Y = Gate.fromKnownMatrix(
-    "Y",
-    Matrix.PAULI_Y,
-    "Pauli Y Gate",
-    "A combination of the X and Z gates.").
-    withCustomShader(ctx => yShader.withArgs(...ketArgs(ctx)));
+HalfTurnGates.Y = new GateBuilder().
+    setSerializedIdAndSymbol("Y").
+    setTitle("Pauli Y Gate").
+    setBlurb("A combination of the X and Z gates.").
+    setActualEffectToShaderProvider(ctx => yShader.withArgs(...ketArgs(ctx))).
+    setKnownEffectToMatrix(Matrix.PAULI_Y).
+    gate;
 
 let zShader = ketShader('', 'return amp*(1.0 - out_id*2.0);', 1);
-HalfTurnGates.Z = Gate.fromKnownMatrix(
-    "Z",
-    Matrix.PAULI_Z,
-    "Pauli Z Gate",
-    "The phase flip gate.\nNegates phases when the qubit is ON.").
-    withCustomShader(ctx => zShader.withArgs(...ketArgs(ctx)));
+HalfTurnGates.Z = new GateBuilder().
+    setSerializedIdAndSymbol("Z").
+    setTitle("Pauli Z Gate").
+    setBlurb("The phase flip gate.\nNegates phases when the qubit is ON.").
+    setActualEffectToShaderProvider(ctx => zShader.withArgs(...ketArgs(ctx))).
+    setKnownEffectToMatrix(Matrix.PAULI_Z).
+    gate;
 
 let hShader = ketShader('', 'return 0.7071067811865476*(amp*(1.0-2.0*out_id) + inp(1.0-out_id));', 1);
-HalfTurnGates.H = Gate.fromKnownMatrix(
-    "H",
-    Matrix.HADAMARD,
-    "Hadamard Gate",
-    "Creates simple superpositions.\n" +
-    "Maps ON to ON + OFF.\n" +
-    "Maps OFF to ON - OFF.").
-    withCustomShader(ctx => hShader.withArgs(...ketArgs(ctx)));
+HalfTurnGates.H = new GateBuilder().
+    setSerializedIdAndSymbol("H").
+    setTitle("Hadamard Gate").
+    setBlurb("Creates simple superpositions.\n" +
+        "Maps ON to ON + OFF.\n" +
+        "Maps OFF to ON - OFF.").
+    setActualEffectToShaderProvider(ctx => hShader.withArgs(...ketArgs(ctx))).
+    setKnownEffectToMatrix(Matrix.HADAMARD).
+    gate;
 
 HalfTurnGates.all = [
     HalfTurnGates.X,

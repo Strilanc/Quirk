@@ -838,6 +838,21 @@ class GateBuilder {
     }
 
     /**
+     * @param {!Matrix} matrix
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToMatrix(matrix) {
+        if (!(matrix instanceof Matrix)) {
+            throw new DetailedError("Bad matrix.", {matrix});
+        }
+        this.gate._isDefinitelyUnitary = matrix.isUnitary(0.01);
+        this.gate._hasNoEffect = matrix.isIdentity();
+        this.gate._stableDuration = Infinity;
+        this.gate._knownMatrix = matrix;
+        return this;
+    }
+
+    /**
      * Provides a permutation function asserted to be equivalent to the gate's effect.
      *
      * Determines various properties of the gate (e.g. unitarity) and also used by tests to check if the gate's shader's
