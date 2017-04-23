@@ -1056,6 +1056,15 @@ class GateBuilder {
     }
 
     /**
+     * Sets meta-properties indicating a qubit density matrix needs to be computed wherever this gate is placed.
+     * @returns {!GateBuilder}
+     */
+    markAsDrawerNeedsSingleQubitDensityStats() {
+        this.gate.isSingleQubitDisplay = true;
+        return this;
+    }
+
+    /**
      * Specifies context values provided by other gates that this gate needs to be present in order to function.
      * @param {...!String} keys
      * @returns {!GateBuilder}
@@ -1124,6 +1133,26 @@ class GateBuilder {
      */
     setExtraDisableReasonFinder(customDisableReasonFinder) {
         this.gate.customDisableReasonFinder = customDisableReasonFinder;
+        return this;
+    }
+
+    /**
+     * Specifies how to extract data that will be needed when drawing a display gate.
+     * @param {undefined|!function(!CircuitEvalContext) : (!WglTexture|!Array.<!WglTexture>)} statTexturesMaker
+     * @returns {!GateBuilder}
+     */
+    setStatTexturesMaker(statTexturesMaker) {
+        this.gate.customStatTexturesMaker = statTexturesMaker;
+        return this;
+    }
+
+    /**
+     * Specifies how to process raw pixel data from the custom stats texture maker into a more useful value.
+     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int)} pixelFunc
+     * @returns {!GateBuilder}
+     */
+    setStatPixelDataPostProcessor(pixelFunc) {
+        this.gate.customStatPostProcesser = pixelFunc;
         return this;
     }
 }
