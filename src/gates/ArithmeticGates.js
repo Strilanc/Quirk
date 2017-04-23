@@ -10,8 +10,6 @@ let ArithmeticGates = {};
 const makeOffsetMatrix = (offset, qubitSpan) =>
     Matrix.generateTransition(1<<qubitSpan, e => (e + offset) & ((1<<qubitSpan)-1));
 
-const INCREMENT_MATRIX_MAKER = span => makeOffsetMatrix(1, span);
-const DECREMENT_MATRIX_MAKER = span => makeOffsetMatrix(-1, span);
 const CHUNKED_ADDITION_PERMUTATION_MAKER = span => e => {
     let sa = Math.floor(span/2);
     let sb = Math.ceil(span/2);
@@ -64,7 +62,7 @@ ArithmeticGates.IncrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     "+1",
     "Increment Gate",
     "Adds 1 to the little-endian number represented by a block of qubits.").
-    withKnownMatrix(span >= 4 ? undefined : INCREMENT_MATRIX_MAKER(span)).
+    withKnownMatrixFunc(t => makeOffsetMatrix(+1, span)).
     withKnownPermutation(t => (t + 1) & ((1 << span) - 1)).
     withSerializedId("inc" + span).
     withHeight(span).
@@ -74,7 +72,7 @@ ArithmeticGates.DecrementFamily = Gate.generateFamily(1, 16, span => Gate.withou
     "−1",
     "Decrement Gate",
     "Subtracts 1 from the little-endian number represented by a block of qubits.").
-    withKnownMatrix(span >= 4 ? undefined : DECREMENT_MATRIX_MAKER(span)).
+    withKnownMatrixFunc(t => makeOffsetMatrix(-1, span)).
     withKnownPermutation(t => (t - 1) & ((1 << span) - 1)).
     withSerializedId("dec" + span).
     withHeight(span).
@@ -84,7 +82,7 @@ ArithmeticGates.AdditionFamily = Gate.generateFamily(2, 16, span => Gate.without
     "b+=a",
     "Addition Gate",
     "Adds a little-endian number into another.").
-    withKnownMatrix(span >= 5 ? undefined : CHUNKED_ADDITION_MATRIX_MAKER(span)).
+    withKnownMatrixFunc(t => CHUNKED_ADDITION_MATRIX_MAKER(span)).
     withKnownPermutation(CHUNKED_ADDITION_PERMUTATION_MAKER(span)).
     withSerializedId("add" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b+=a"], [Math.floor(span/2) / span])).
@@ -98,7 +96,7 @@ ArithmeticGates.SubtractionFamily = Gate.generateFamily(2, 16, span => Gate.with
     "b-=a",
     "Subtraction Gate",
     "Subtracts a little-endian number from another.").
-    withKnownMatrix(span >= 5 ? undefined : CHUNKED_SUBTRACTION_MATRIX_MAKER(span)).
+    withKnownMatrixFunc(t => CHUNKED_SUBTRACTION_MATRIX_MAKER(span)).
     withKnownPermutation(CHUNKED_SUBTRACTION_PERMUTATION_MAKER(span)).
     withSerializedId("sub" + span).
     withCustomDrawer(GatePainting.SECTIONED_DRAWER_MAKER(["a", "b-=a"], [Math.floor(span/2) / span])).

@@ -199,7 +199,7 @@ ModularMultiplicationGates.TimesAModRFamily = Gate.generateFamily(1, 16, span =>
 
 ModularMultiplicationGates.TimesAModRInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
     "×A^-1\nmod R",
-    "Inverse Multiplication Gate",
+    "Modular Division Gate",
     "Inverse-multiplies the target by input A mod input R.\n" +
         "Only affects values less than R.\n" +
         "No effect if the multiplication would be irreversible.").
@@ -227,7 +227,7 @@ ModularMultiplicationGates.TimesBToTheAModRFamily = Gate.generateFamily(1, 16, s
 
 ModularMultiplicationGates.TimesInverseBToTheAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
         "×B^-A\nmod R",
-        "Modular Power Inverse Multiplication Gate",
+        "Modular Power Division Gate",
         "Inverse-multiplies the target by input B raised to the input A mod input R.\n" +
             "Only affects values less than R.\n" +
             "No effect if the multiplication would be irreversible.").
