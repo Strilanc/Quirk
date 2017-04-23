@@ -971,6 +971,16 @@ class GateBuilder {
     }
 
     /**
+     * @param {!function() : !Matrix} matrixFunc
+     * @returns {GateBuilder}
+     */
+    setTooltipMatrixFunc(matrixFunc) {
+        this.gate._knownMatrixFunc = _ => matrixFunc();
+        this.gate._stableDuration = Infinity;
+        return this;
+    }
+
+    /**
      * @param {!function(time : !number) : !Matrix} timeToMatrixFunc
      * @returns {!GateBuilder}
      */
@@ -1024,6 +1034,14 @@ class GateBuilder {
         this.gate._hasNoEffect = false;
         this.gate._effectPermutesStates = true;
         this.gate._effectCreatesSuperpositions = false;
+        this.gate._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * @returns {!GateBuilder}
+     */
+    promiseEffectIsUnitary() {
         this.gate._isDefinitelyUnitary = true;
         return this;
     }

@@ -25,9 +25,8 @@ const CONTROLLED_PHASE_GRADIENT_SHADER = ketShaderPhase(
         return vec2(cos(angle), sin(angle));
     `);
 
-const τ = Math.PI * 2;
 const FOURIER_TRANSFORM_MATRIX_MAKER = span =>
-    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), τ*r*c/(1<<span)));
+    Matrix.generate(1<<span, 1<<span, (r, c) => Complex.polar(Math.pow(0.5, span/2), Math.PI*2*r*c/(1<<span)));
 const INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER = span =>
     FOURIER_TRANSFORM_MATRIX_MAKER(span).adjoint();
 
@@ -65,27 +64,23 @@ function applyBackwardGradientShaders(ctx, span) {
     }
 }
 
-FourierTransformGates.FourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "QFT",
-    "Fourier Transform Gate",
-    "Transforms to/from phase frequency space.").
-    markedAsStable().
-    markedAsUnitary().
-    withKnownMatrix(span >= 4 ? undefined : FOURIER_TRANSFORM_MATRIX_MAKER(span)).
-    withSerializedId("QFT" + span).
-    withHeight(span).
-    withCustomOperation(ctx => applyForwardGradientShaders(ctx, span)));
+FourierTransformGates.FourierTransformFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("QFT" + span).
+    setSymbol("QFT").
+    setTitle("Fourier Transform Gate").
+    setBlurb("Transforms to/from phase frequency space.").
+    setActualEffectToUpdateFunc(ctx => applyForwardGradientShaders(ctx, span)).
+    promiseEffectIsUnitary().
+    setTooltipMatrixFunc(() => FOURIER_TRANSFORM_MATRIX_MAKER(span)));
 
-FourierTransformGates.InverseFourierTransformFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "QFT^†",
-    "Inverse Fourier Transform Gate",
-    "Transforms from/to phase frequency space.").
-    markedAsStable().
-    markedAsUnitary().
-    withKnownMatrix(span >= 4 ? undefined : INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)).
-    withSerializedId("QFT†" + span).
-    withHeight(span).
-    withCustomOperation(ctx => applyBackwardGradientShaders(ctx, span)));
+FourierTransformGates.InverseFourierTransformFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("QFT†" + span).
+    setSymbol("QFT^†").
+    setTitle("Inverse Fourier Transform Gate").
+    setBlurb("Transforms from/to phase frequency space.").
+    setActualEffectToUpdateFunc(ctx => applyBackwardGradientShaders(ctx, span)).
+    promiseEffectIsUnitary().
+    setTooltipMatrixFunc(() => INVERSE_FOURIER_TRANSFORM_MATRIX_MAKER(span)));
 
 FourierTransformGates.all = [
     ...FourierTransformGates.FourierTransformFamily.all,
