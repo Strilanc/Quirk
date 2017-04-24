@@ -25,7 +25,7 @@ PoweringGates.XForward = new GateBuilder().
     setSerializedIdAndSymbol("X^t").
     setTitle("X-Raising Gate (forward)").
     setBlurb("Right-handed cycle from no-op to X.").
-    setDrawer(GatePainting.makeCycleDrawer(0.5, 1)).
+    setDrawer(GatePainting.makeCycleDrawer(1, 1)).
     setEffectToTimeVaryingMatrix(XPow).
     promiseEffectIsUnitary().
     gate;
@@ -34,7 +34,7 @@ PoweringGates.XBackward = new GateBuilder().
     setSerializedIdAndSymbol("X^-t").
     setTitle("X-Raising Gate (backward)").
     setBlurb("Left-handed cycle from no-op to X.").
-    setDrawer(GatePainting.makeCycleDrawer(-0.5, 1)).
+    setDrawer(GatePainting.makeCycleDrawer(-1, 1)).
     setEffectToTimeVaryingMatrix(t => XPow(-t)).
     promiseEffectIsUnitary().
     gate;
@@ -43,7 +43,7 @@ PoweringGates.YForward = new GateBuilder().
     setSerializedIdAndSymbol("Y^t").
     setTitle("Y-Raising Gate (forward)").
     setBlurb("Right-handed cycle from no-op to Y.").
-    setDrawer(GatePainting.makeCycleDrawer(-1, 1)).
+    setDrawer(GatePainting.makeCycleDrawer(0.5, 1)).
     setEffectToTimeVaryingMatrix(YPow).
     promiseEffectIsUnitary().
     gate;
@@ -52,7 +52,7 @@ PoweringGates.YBackward = new GateBuilder().
     setSerializedIdAndSymbol("Y^-t").
     setTitle("Y-Raising Gate (backward)").
     setBlurb("Left-handed cycle from no-op to Y.").
-    setDrawer(GatePainting.makeCycleDrawer(1, 1)).
+    setDrawer(GatePainting.makeCycleDrawer(-0.5, 1)).
     setEffectToTimeVaryingMatrix(t => YPow(-t)).
     promiseEffectIsUnitary().
     gate;
