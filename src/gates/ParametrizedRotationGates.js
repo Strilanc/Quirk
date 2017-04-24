@@ -44,7 +44,7 @@ const Y_TO_A_SHADER = ketShader(
         float c = cos(angle) * 0.5;
         float s = sin(angle) * 0.5;
         vec2 u = vec2(c + 0.5, s);
-        vec2 v = vec2(c - 0.5, -s);
+        vec2 v = vec2(s, 0.5 - c);
         // multiply state by the matrix [[u, v], [-v, u]]
         vec2 amp2 = inp(1.0-out_id);
         vec2 vs = v * (-1.0 + 2.0 * out_id);
