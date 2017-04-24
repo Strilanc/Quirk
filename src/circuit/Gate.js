@@ -223,26 +223,6 @@ class Gate {
     }
 
     /**
-     * @param {!string} symbol
-     * @param {!function(!number) : !Matrix} matrixFunc
-     * @param {!string} name
-     * @param {!string} blurb
-     * @returns {!Gate}
-     */
-    static fromVaryingMatrix(
-            symbol,
-            matrixFunc,
-            name,
-            blurb) {
-        let result = new Gate(symbol, name, blurb);
-        result._knownMatrixFunc = matrixFunc;
-        result._hasNoEffect = false;
-        result._effectPermutesStates = true;
-        result._effectCreatesSuperpositions = true;
-        return result;
-    }
-
-    /**
      * Creates a gate with meta-properties defaulted to "doesn't do anything".
      * @param {!string} symbol
      * @param {!string} name
@@ -267,54 +247,6 @@ class Gate {
      */
     static withoutKnownMatrix(symbol, name, blurb) {
         return new Gate(symbol, name, blurb);
-    }
-
-    /**
-     * Sets meta-properties to indicate a gate is safe for classical, quantum, and mixed use.
-     * @returns {!Gate}
-     */
-    markedAsOnlyPhasing() {
-        let g = this._copy();
-        g._hasNoEffect = false;
-        g._effectPermutesStates = false;
-        g._effectCreatesSuperpositions = false;
-        g._isDefinitelyUnitary = true;
-        return g;
-    }
-
-    /**
-     * Sets meta-properties to indicate a gate is a control.
-     * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
-     * @returns {!Gate}
-     */
-    markedAsControl(bit) {
-        let g = this._copy();
-        g._controlBit = bit;
-        g.isControlWireSource = true;
-        g._isDefinitelyUnitary = true;
-        g.interestedInControls = false;
-        return g;
-    }
-
-    /**
-     * Sets meta-properties to indicate a gate doesn't change over time, and so doesn't force the circuit to
-     * constantly recompute.
-     * @returns {!Gate}
-     */
-    markedAsStable() {
-        let g = this._copy();
-        g._stableDuration = Infinity;
-        return g;
-    }
-
-    /**
-     * Sets meta-properties to indicate a gate preserves probability, and so doesn't force gain/loss computations.
-     * @returns {!Gate}
-     */
-    markedAsUnitary() {
-        let g = this._copy();
-        g._isDefinitelyUnitary = true;
-        return g;
     }
 
     /**
@@ -467,34 +399,6 @@ class Gate {
     withSerializedId(serializedId) {
         let g = this._copy();
         g.serializedId = serializedId;
-        return g;
-    }
-
-    /**
-     * Sets a setup operation to unconditionally run before executing the operations in a column containing this gate.
-     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
-     * @returns {!Gate}
-     */
-    withCustomBeforeOperation(customOperation) {
-        if (customOperation !== undefined && typeof customOperation !== "function") {
-            throw new DetailedError("Bad customOperation", {customOperation});
-        }
-        let g = this._copy();
-        g.customBeforeOperation = customOperation;
-        return g;
-    }
-
-    /**
-     * Sets a cleanup operation to unconditionally run before executing the operations in a column containing this gate.
-     * @param {undefined|!function(!CircuitEvalContext) : void} customOperation
-     * @returns {!Gate}
-     */
-    withCustomAfterOperation(customOperation) {
-        if (customOperation !== undefined && typeof customOperation !== "function") {
-            throw new DetailedError("Bad customOperation", {customOperation});
-        }
-        let g = this._copy();
-        g.customAfterOperation = customOperation;
         return g;
     }
 
