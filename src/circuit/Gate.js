@@ -196,6 +196,7 @@ class Gate {
         }
         let g = new Gate();
         g.symbol = symbol;
+        g.serializedId = symbol;
         g.name = name;
         g.blurb = blurb;
         g._isDefinitelyUnitary = matrix.isUnitary(0.01);
