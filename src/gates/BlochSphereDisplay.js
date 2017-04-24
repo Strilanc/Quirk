@@ -1,5 +1,5 @@
 import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {MathPainter} from "src/draw/MathPainter.js"
 import {Point} from "src/math/Point.js"
@@ -124,16 +124,18 @@ function paintBlochSphereDisplay(
     _paintBlochSphereDisplay_tooltips(painter, drawArea, x, y, z, focusPoints);
 }
 
-let BlochSphereDisplay = Gate.fromIdentity(
-    "Bloch",
-    "Bloch Sphere Display",
-    "Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.").
-    markedAsSingleQubitDisplay().
-    withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
+let BlochSphereDisplay = new GateBuilder().
+    setSerializedIdAndSymbol("Bloch").
+    setTitle("Bloch Sphere Display").
+    setBlurb("Shows a wire's local state as a point on the Bloch Sphere.\nUse controls to see conditional states.").
+    markAsDrawerNeedsSingleQubitDensityStats().
+    setDrawer(GatePainting.makeDisplayDrawer(args => {
         let {row, col} = args.positionInCircuit;
         let ρ = args.stats.qubitDensityMatrix(col, row);
         paintBlochSphereDisplay(args.painter, ρ, args.rect, args.focusPoints);
     })).
-    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
+    promiseHasNoNetEffectOnStateVector().
+    setExtraDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined).
+    gate;
 
 export {paintBlochSphereDisplay, BlochSphereDisplay};

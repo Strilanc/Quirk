@@ -5,7 +5,7 @@ import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {describe} from "src/base/Describe.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {Format} from "src/base/Format.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -270,12 +270,14 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
             "Defaulted to a do-nothing 'parse error' gate. Failed to understand the json defining a gate.",
             {gate_json: json},
             ex);
-        return Gate.fromIdentity(
-            props.id,
-            "Parse Error",
-            describe(ex)).
-            withTag(json).
-            withCustomDisableReasonFinder(() => "parse\nerror");
+        return new GateBuilder().
+            setSerializedIdAndSymbol(props.id).
+            setTitle("Parse Error").
+            setBlurb(describe(ex)).
+            promiseHasNoNetEffectOnStateVector().
+            setExtraDisableReasonFinder(() => "parse\nerror").
+            setTag(json).
+            gate;
     }
 };
 

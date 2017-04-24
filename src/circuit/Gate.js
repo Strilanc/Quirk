@@ -223,23 +223,6 @@ class Gate {
     }
 
     /**
-     * Creates a gate with meta-properties defaulted to "doesn't do anything".
-     * @param {!string} symbol
-     * @param {!string} name
-     * @param {!string} blurb
-     * @returns {!Gate}
-     */
-    static fromIdentity(symbol, name, blurb) {
-        let result = new Gate(symbol, name, blurb);
-        result._stableDuration = Infinity;
-        result._hasNoEffect = true;
-        result._isDefinitelyUnitary = true;
-        result._effectPermutesStates = false;
-        result._effectCreatesSuperpositions = false;
-        return result;
-    }
-
-    /**
      * @param {!string} symbol
      * @param {!string} name
      * @param {!string} blurb
@@ -324,16 +307,6 @@ class Gate {
     withCustomDisableReasonFinder(customDisableReasonFinder) {
         let g = this._copy();
         g.customDisableReasonFinder = customDisableReasonFinder;
-        return g;
-    }
-
-    /**
-     * Sets meta-properties indicating a qubit density matrix needs to be computed wherever this gate is placed.
-     * @returns {!Gate}
-     */
-    markedAsSingleQubitDisplay() {
-        let g = this._copy();
-        g.isSingleQubitDisplay = true;
         return g;
     }
 
@@ -464,16 +437,6 @@ class Gate {
      */
     canDecreaseInSize() {
         return !this.gateFamily.every(e => e.height !== this.height - 1);
-    }
-
-    /**
-     * @param {*} tag
-     * @returns {!Gate}
-     */
-    withTag(tag) {
-        let g = this._copy();
-        g.tag = tag;
-        return g;
     }
 
     /**
@@ -996,6 +959,15 @@ class GateBuilder {
      */
     setStatPixelDataPostProcessor(pixelFunc) {
         this.gate.customStatPostProcesser = pixelFunc;
+        return this;
+    }
+
+    /**
+     * @param {*} tag
+     * @returns {!GateBuilder}
+     */
+    setTag(tag) {
+        this.gate.tag = tag;
         return this;
     }
 }
