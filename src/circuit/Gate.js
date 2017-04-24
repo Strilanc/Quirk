@@ -208,20 +208,6 @@ class Gate {
     }
 
     /**
-     * Returns context keys required by this gate, including keys inherited from its custom circuit (if applicable).
-     * @returns {!Set.<!String>}
-     */
-    getUnmetContextKeys() {
-        let result = new Set(this._requiredContextKeys);
-        if (this.knownCircuit !== undefined) {
-            for (let key of this.knownCircuit.getUnmetContextKeys()) {
-                result.add(key);
-            }
-        }
-        return result;
-    }
-
-    /**
      * Returns a copy of this gate which can be safely mutated.
      * @private
      * @returns {!Gate}
@@ -275,38 +261,6 @@ class Gate {
     }
 
     /**
-     * Indicates that this gate is not a control wire destination when drawing.
-     * @returns {!Gate}
-     */
-    markedAsNotInterestedInControls() {
-        let g = this._copy();
-        g.interestedInControls = false;
-        return g;
-    }
-
-    /**
-     * Provides a custom drawing function for the gate (use undefined to use the default boxed-symbol drawer).
-     * @param {undefined|!function(!GateDrawParams) : void} drawer
-     * @returns {!Gate}
-     */
-    withCustomDrawer(drawer) {
-        let g = this._copy();
-        g.customDrawer = drawer;
-        return g;
-    }
-
-    /**
-     * Specifies the id to use when serializing/parsing this gate (instead of defaulting to the symbol).
-     * @param {!string} serializedId
-     * @returns {!Gate}
-     */
-    withSerializedId(serializedId) {
-        let g = this._copy();
-        g.serializedId = serializedId;
-        return g;
-    }
-
-    /**
      * Creates size-variants of a gate that can be resized between.
      * @param {!int} minSize
      * @param {!int} maxSize
@@ -333,6 +287,20 @@ class Gate {
         };
 
         return {all: gates, ofSize};
+    }
+
+    /**
+     * Returns context keys required by this gate, including keys inherited from its custom circuit (if applicable).
+     * @returns {!Set.<!String>}
+     */
+    getUnmetContextKeys() {
+        let result = new Set(this._requiredContextKeys);
+        if (this.knownCircuit !== undefined) {
+            for (let key of this.knownCircuit.getUnmetContextKeys()) {
+                result.add(key);
+            }
+        }
+        return result;
     }
 
     /**

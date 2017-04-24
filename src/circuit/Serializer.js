@@ -221,7 +221,7 @@ let fromJson_Gate_Matrix = props => {
     let width = props.symbol === '' ? height : 1;
     let matrix = _parseGateMatrix(props.matrix);
 
-    let gate = new GateBuilder().
+    let builder = new GateBuilder().
         setSerializedId(props.id).
         setSymbol(props.symbol).
         setTitle(props.name).
@@ -230,12 +230,11 @@ let fromJson_Gate_Matrix = props => {
         setDrawer(props.symbol === "" ? matrixDrawer
             : matrix.isIdentity() ? labelDrawer
             : undefined).
-        setKnownEffectToMatrix(matrix).
-        gate;
+        setKnownEffectToMatrix(matrix);
     if (matrix.isIdentity()) {
-        gate = gate.markedAsNotInterestedInControls();
+        builder.markAsNotInterestedInControls();
     }
-    return gate;
+    return builder.gate;
 };
 
 /**

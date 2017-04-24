@@ -1,14 +1,13 @@
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {Matrix} from "src/math/Matrix.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 
-const NeGate = Gate.fromKnownMatrix(
-    "-I",
-    Matrix.square(-1, 0, 0, -1),
-    "Ne-Gate",
-    "Negates all amplitudes.").
-    withSerializedId("NeGate").
-    withCustomDrawer(args => {
+const NeGate = new GateBuilder().
+    setSerializedId("NeGate").
+    setSymbol("-I").
+    setTitle("Ne-Gate").
+    setBlurb("Negates all amplitudes.").
+    setDrawer(args => {
         let {x, y} = args.rect.center();
         if (args.isHighlighted || args.isInToolbox) {
             GatePainting.paintBackground(args);
@@ -34,6 +33,8 @@ const NeGate = Gate.fromKnownMatrix(
             '16px monospace',
             args.rect.w,
             args.rect.h);
-    });
+    }).
+    setKnownEffectToMatrix(Matrix.square(-1, 0, 0, -1)).
+    gate;
 
 export {NeGate}

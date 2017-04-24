@@ -227,8 +227,8 @@ Gates.BottomToolboxGroups = [
         gates: [
             Controls.XAntiControl, Controls.XControl,
             Controls.YAntiControl, Controls.YControl,
-            PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus,
-            PostSelectionGates.PostSelectCross, PostSelectionGates.PostSelectAntiCross,
+            PostSelectionGates.PostSelectAntiX, PostSelectionGates.PostSelectX,
+            PostSelectionGates.PostSelectAntiY, PostSelectionGates.PostSelectY,
         ]
     },
     {

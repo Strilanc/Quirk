@@ -142,8 +142,12 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 return; // Button is about to be disabled, so no handling required.
             }
 
-            let gate = Gate.fromKnownMatrix(txtName.value, mat, 'Custom Rotation Gate', '').
-                withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32));
+            let gate = new GateBuilder().
+                setSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
+                setSymbol(txtName.value).
+                setTitle('Custom Rotation Gate').
+                setKnownEffectToMatrix(mat).
+                gate;
             createCustomGateAndClose(gate);
         });
     })();

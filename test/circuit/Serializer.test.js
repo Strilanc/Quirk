@@ -75,8 +75,13 @@ suite.test("roundTrip_Gate", () => {
 });
 
 suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
-    let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
-        withSerializedId("~test");
+    let customGate = new GateBuilder().
+        setSerializedId("~test").
+        setSymbol('sym').
+        setTitle('nam').
+        setBlurb('blur').
+        setKnownEffectToMatrix(Matrix.square(2, 3, 5, 7)).
+        gate;
     let circuit = new CircuitDefinition(
         2,
         [new GateColumn([undefined, customGate])],
@@ -102,8 +107,13 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
 });
 
 suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
-    let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
-        withSerializedId("~test");
+    let customGate = new GateBuilder().
+        setSerializedId("~test").
+        setSymbol('sym').
+        setTitle('nam').
+        setBlurb('blur').
+        setKnownEffectToMatrix(Matrix.square(2, 3, 5, 7)).
+        gate;
     let circuitForGate = new CircuitDefinition(
         2,
         [new GateColumn([customGate, customGate])],
