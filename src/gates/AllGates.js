@@ -225,8 +225,8 @@ Gates.BottomToolboxGroups = [
     {
         hint: "X/Y Probes",
         gates: [
-            Controls.PlusControl, Controls.MinusControl,
-            Controls.CrossControl, Controls.AntiCrossControl,
+            Controls.XAntiControl, Controls.XControl,
+            Controls.YAntiControl, Controls.YControl,
             PostSelectionGates.PostSelectPlus, PostSelectionGates.PostSelectMinus,
             PostSelectionGates.PostSelectCross, PostSelectionGates.PostSelectAntiCross,
         ]

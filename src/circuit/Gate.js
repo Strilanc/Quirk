@@ -979,6 +979,19 @@ class GateBuilder {
     }
 
     /**
+     * Sets meta-properties to indicate a gate is a control.
+     * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
+     * @returns {!GateBuilder}
+     */
+    markAsControlExpecting(bit) {
+        this.gate._controlBit = bit;
+        this.gate.isControlWireSource = true;
+        this.gate._isDefinitelyUnitary = true;
+        this.gate.interestedInControls = false;
+        return this;
+    }
+
+    /**
      * Sets meta-properties indicating a qubit density matrix needs to be computed wherever this gate is placed.
      * @returns {!GateBuilder}
      */

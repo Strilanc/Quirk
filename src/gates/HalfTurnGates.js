@@ -46,6 +46,7 @@ function NOT_DRAWER(args) {
 }
 
 let xShader = ketShaderPermute('', 'return 1.0-out_id;', 1);
+/** @type {!Gate} */
 HalfTurnGates.X = new GateBuilder().
     setSerializedIdAndSymbol("X").
     setTitle("Pauli X Gate").
@@ -56,6 +57,7 @@ HalfTurnGates.X = new GateBuilder().
     gate;
 
 let yShader = ketShader('', 'vec2 v = inp(1.0-out_id); return (out_id*2.0 - 1.0)*vec2(-v.y, v.x);', 1);
+/** @type {!Gate} */
 HalfTurnGates.Y = new GateBuilder().
     setSerializedIdAndSymbol("Y").
     setTitle("Pauli Y Gate").
@@ -65,6 +67,7 @@ HalfTurnGates.Y = new GateBuilder().
     gate;
 
 let zShader = ketShader('', 'return amp*(1.0 - out_id*2.0);', 1);
+/** @type {!Gate} */
 HalfTurnGates.Z = new GateBuilder().
     setSerializedIdAndSymbol("Z").
     setTitle("Pauli Z Gate").
@@ -74,6 +77,7 @@ HalfTurnGates.Z = new GateBuilder().
     gate;
 
 let hShader = ketShader('', 'return 0.7071067811865476*(amp*(1.0-2.0*out_id) + inp(1.0-out_id));', 1);
+/** @type {!Gate} */
 HalfTurnGates.H = new GateBuilder().
     setSerializedIdAndSymbol("H").
     setTitle("Hadamard Gate").

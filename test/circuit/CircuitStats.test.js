@@ -18,7 +18,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ['H', Gates.HalfTurns.H],
     ['•', Gates.Controls.Control],
     ['◦', Gates.Controls.AntiControl],
-    ['⊕', Gates.Controls.PlusControl],
+    ['⊕', Gates.Controls.XAntiControl],
 
     ['M', Gates.Special.Measurement],
     ['@', Gates.Displays.BlochSphereDisplay],

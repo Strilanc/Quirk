@@ -28,9 +28,9 @@ const TEST_GATES = new Map([
     ['H', H],
     ['●', C],
     ['○', Gates.Controls.AntiControl],
-    ['⊖', Gates.Controls.MinusControl],
-    ['⊕', Gates.Controls.PlusControl],
-    ['⊗', Gates.Controls.CrossControl],
+    ['⊖', Gates.Controls.XControl],
+    ['⊕', Gates.Controls.XAntiControl],
+    ['⊗', Gates.Controls.YAntiControl],
     ['.', Gates.SpacerGate],
 
     ['A', Gates.InputGates.InputAFamily],
@@ -533,7 +533,7 @@ suite.test("colControls", () => {
     assertThat(c.colControls(1)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(3)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(5)).isEqualTo(Controls.bit(0, true));
-    assertThat(c.colControls(6)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(6)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(7)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(9)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(11)).isEqualTo(Controls.NONE);
