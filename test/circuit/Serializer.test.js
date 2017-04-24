@@ -2,11 +2,11 @@ import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {Serializer} from "src/circuit/Serializer.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {describe} from "src/base/Describe.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -110,11 +110,10 @@ suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
         undefined,
         undefined,
         new CustomGateSet(customGate));
-    let circuitGate = circuitDefinitionToGate(
-        circuitForGate,
-        'combo',
-        'name',
-        'blurb').withSerializedId('~wombo');
+    let circuitGate = setGateBuilderEffectToCircuit(new GateBuilder(), circuitForGate).
+        setSerializedId("~wombo").
+        setSymbol('combo').
+        gate;
 
     let circuit = new CircuitDefinition(
         3,

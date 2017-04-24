@@ -2,7 +2,6 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {GateDrawParams} from "src/draw/GateDrawParams.js"
 import {Complex} from "src/math/Complex.js"
 import {Matrix} from "src/math/Matrix.js"
-import {seq, Seq} from "src/base/Seq.js"
 
 /**
  * Describes a quantum operation that may vary with time.
@@ -223,16 +222,6 @@ class Gate {
     }
 
     /**
-     * @param {!string} symbol
-     * @param {!string} name
-     * @param {!string} blurb
-     * @returns {!Gate}
-     */
-    static withoutKnownMatrix(symbol, name, blurb) {
-        return new Gate(symbol, name, blurb);
-    }
-
-    /**
      * Returns a copy of this gate which can be safely mutated.
      * @private
      * @returns {!Gate}
@@ -271,31 +260,6 @@ class Gate {
         g.knownPermutationFuncTakingInputs = this.knownPermutationFuncTakingInputs;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
-        return g;
-    }
-
-    /**
-     * Sets meta-properties to indicate whether a gate may change over time, forcing the circuit to
-     * constantly recompute.
-     * @param {undefined|Infinity|!number} duration
-     * @returns {!Gate}
-     */
-    withStableDuration(duration) {
-        let g = this._copy();
-        g._stableDuration = duration;
-        return g;
-    }
-
-    /**
-     * Provides a circuit equivalent to the gate's effect, which can be used to simulate or analyze the gate.
-     * @param {undefined|!CircuitDefinition} circuitDefinition
-     * @returns {!Gate}
-     */
-    withKnownCircuit(circuitDefinition) {
-        let g = this._copy();
-        g.knownCircuit = circuitDefinition;
-        g.knownCircuitNested = circuitDefinition.withDisabledReasonsForEmbeddedContext(0, new Map());
-        g._isDefinitelyUnitary = circuitDefinition.hasOnlyUnitaryGates();
         return g;
     }
 
@@ -372,20 +336,6 @@ class Gate {
     withSerializedId(serializedId) {
         let g = this._copy();
         g.serializedId = serializedId;
-        return g;
-    }
-
-    /**
-     * Sets a custom circuit-update function to run when simulating this gate.
-     * @param {undefined|!function(!CircuitEvalContext)} customOperation
-     * @returns {!Gate}
-     */
-    withCustomOperation(customOperation) {
-        if (customOperation !== undefined && typeof customOperation !== "function") {
-            throw new DetailedError("Bad customOperation", {customOperation});
-        }
-        let g = this._copy();
-        g.customOperation = customOperation;
         return g;
     }
 
@@ -724,6 +674,20 @@ class GateBuilder {
     setTooltipMatrixFunc(matrixFunc) {
         this.gate._knownMatrixFunc = _ => matrixFunc();
         this.gate._stableDuration = Infinity;
+        return this;
+    }
+
+    /**
+     * Provides a circuit equivalent to the gate's effect, which can be used to simulate or analyze the gate.
+     * @param {!CircuitDefinition} circuitDefinition
+     * @returns {!GateBuilder}
+     */
+    setKnownEffectToCircuit(circuitDefinition) {
+        this.gate.knownCircuit = circuitDefinition;
+        this.gate.knownCircuitNested = circuitDefinition.withDisabledReasonsForEmbeddedContext(0, new Map());
+        this.gate._isDefinitelyUnitary = circuitDefinition.hasOnlyUnitaryGates();
+        this.gate._stableDuration = circuitDefinition.stableDuration();
+        this.gate.height = circuitDefinition.numWires;
         return this;
     }
 

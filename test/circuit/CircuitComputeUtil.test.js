@@ -1,7 +1,8 @@
 import {Suite} from "test/TestUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {circuitDefinitionToGate, advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit, advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 
 import {Controls} from "src/circuit/Controls.js"
 import {Gates} from "src/gates/AllGates.js"
@@ -26,6 +27,14 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ['/', undefined],
     ...extras
 ]), diagram);
+
+/**
+ * @param {!CircuitDefinition} circ
+ * @returns {!Gate}
+ */
+function circuitDefinitionToGate(circ) {
+    return setGateBuilderEffectToCircuit(new GateBuilder(), circ).gate;
+}
 
 suite.testUsingWebGL("nestedControls", () => {
     let cnot = circuitDefinitionToGate(circuit(`-•-

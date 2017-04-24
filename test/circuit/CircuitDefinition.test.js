@@ -1,10 +1,10 @@
 import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -62,6 +62,14 @@ const TEST_GATES = new Map([
 const circuit = (diagram, ...extraGates) => CircuitDefinition.fromTextDiagram(
     Util.mergeMaps(TEST_GATES, new Map(extraGates)),
     diagram);
+
+/**
+ * @param {!CircuitDefinition} circ
+ * @returns {!Gate}
+ */
+function circuitDefinitionToGate(circ) {
+    return setGateBuilderEffectToCircuit(new GateBuilder(), circ).gate;
+}
 
 suite.test("isEqualTo", () => {
     let c1 = new CircuitDefinition(2, [

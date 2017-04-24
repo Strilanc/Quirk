@@ -13,7 +13,7 @@ import {Util} from "src/base/Util.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {MysteryGateSymbol, MysteryGateMakerWithMatrix} from "src/gates/Joke_MysteryGate.js"
 import {seq} from "src/base/Seq.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 
 /** @type {!function(!GateDrawParams)} */
 let matrixDrawer = undefined;
@@ -184,6 +184,10 @@ function _parseGateMatrix(matrixProp) {
     return matrix;
 }
 
+/**
+ * @param {object} json
+ * @returns {!{id: !String, matrix: *, circuit: *, symbol: *, name: *, param: *}}
+ */
 let fromJson_Gate_props = json => {
     let id = _getGateId(json);
     let matrix = json["matrix"];
@@ -201,6 +205,10 @@ let fromJson_Gate_props = json => {
     return {id, matrix, circuit, symbol, name, param};
 };
 
+/**
+ * @param {!{id: !String, matrix: *, circuit: *, symbol: *, name: *, param: *}} props
+ * @returns {!Gate}
+ */
 let fromJson_Gate_Matrix = props => {
     let mat = _parseGateMatrix(props.matrix);
 
@@ -226,12 +234,19 @@ let fromJson_Gate_Matrix = props => {
     return gate;
 };
 
+/**
+ * @param {!{id: !String, matrix: *, circuit: *, symbol: *, name: *, param: *}} props
+ * @param {undefined|!CustomGateSet} context
+ * @returns {!Gate}
+ */
 let fromJson_Gate_Circuit = (props, context) => {
     let circuit = fromJson_CircuitDefinition(props.circuit, context).withMinimumWireCount();
-    return circuitDefinitionToGate(circuit, props.symbol, props.name, '').
-        withSerializedId(props.id).
-        withHeight(circuit.numWires).
-        withCustomDrawer(circuitDrawer);
+    return setGateBuilderEffectToCircuit(new GateBuilder(), circuit).
+        setSerializedId(props.id).
+        setSymbol(props.symbol).
+        setTitle(props.name).
+        setDrawer(circuitDrawer).
+        gate;
 };
 
 /**
