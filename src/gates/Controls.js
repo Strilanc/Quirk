@@ -41,7 +41,7 @@ Controls.AntiControl = new GateBuilder().
 Controls.XAntiControl = new GateBuilder().
     setSerializedId("⊕").  // The drawn +/- convention was changed, but the serialized id must stay the same.
     setSymbol("⊖").
-    setTitle("Negative X-Axis Control").
+    setTitle("X-Axis Anti-Control").
     setBlurb("Conditions on a qubit being ON+OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markAsControlExpecting(false).
@@ -65,7 +65,7 @@ Controls.XAntiControl = new GateBuilder().
 Controls.XControl = new GateBuilder().
     setSerializedId("⊖").  // The drawn +/- convention was changed, but the serialized id must stay the same.
     setSymbol("⊕").
-    setTitle("Positive X-Axis Control").
+    setTitle("X-Axis Control").
     setBlurb("Conditions on a qubit being ON-OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markAsControlExpecting(true).
@@ -90,7 +90,7 @@ Controls.XControl = new GateBuilder().
 Controls.YAntiControl = new GateBuilder().
     setSerializedId("⊗").  // The drawn cross/slash convention was changed, but the serialized id must stay the same.
     setSymbol("(/)").
-    setTitle("Negative Y-Axis Control").
+    setTitle("Y-Axis Anti-Control").
     setBlurb("Conditions on a qubit being ON+iOFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markAsControlExpecting(false).
@@ -118,7 +118,7 @@ Controls.YAntiControl = new GateBuilder().
 Controls.YControl = new GateBuilder().
     setSerializedId("(/)").  // The drawn cross/slash convention was changed, but the serialized id must stay the same.
     setSymbol("⊗").
-    setTitle("Positive Y-Axis Control").
+    setTitle("Y-Axis Control").
     setBlurb("Conditions on a qubit being ON-iOFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
     markAsControlExpecting(true).

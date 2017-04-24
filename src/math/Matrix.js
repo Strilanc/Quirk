@@ -1105,9 +1105,9 @@ class Matrix {
         // Density matrix from bloch vector equation: M = 1/2 (I + vσ)
         //noinspection JSUnusedLocalSymbols
         let [ar, ai, br, bi, cr, ci, dr, di] = this._buffer;
-        let x = cr + br;
-        let y = ci - bi;
-        let z = ar - dr;
+        let x = -cr - br;
+        let y = bi - ci;
+        let z = dr - ar;
         return [x, y, z];
     }
 

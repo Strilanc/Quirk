@@ -42,7 +42,7 @@ PostSelectionGates.PostSelectOn = new GateBuilder().
 PostSelectionGates.PostSelectAntiX = new GateBuilder().
     setSerializedId("|+⟩⟨+|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
     setSymbol("|-⟩⟨-|").
-    setTitle("Postselect X-axis Negative").
+    setTitle("Postselect X-Off").
     setBlurb("Keeps ON+OFF states, discards/retries ON-OFF states.").
     setDrawer(POST_SELECT_DRAWER).
     setKnownEffectToMatrix(Matrix.square(1, 1, 1, 1).times(0.5)).
@@ -52,7 +52,7 @@ PostSelectionGates.PostSelectAntiX = new GateBuilder().
 PostSelectionGates.PostSelectX = new GateBuilder().
     setSerializedId("|-⟩⟨-|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
     setSymbol("|+⟩⟨+|").
-    setTitle("Postselect X-axis Positive").
+    setTitle("Postselect X-On").
     setBlurb("Keeps ON-OFF states, discards/retries ON+OFF states.").
     setDrawer(POST_SELECT_DRAWER).
     setKnownEffectToMatrix(Matrix.square(1, -1, -1, 1).times(0.5)).
@@ -62,7 +62,7 @@ PostSelectionGates.PostSelectX = new GateBuilder().
 PostSelectionGates.PostSelectAntiY = new GateBuilder().
     setSerializedId("|X⟩⟨X|").  // The cross/slash convention was switched, but the serialized id must stay the same.
     setSymbol("|/⟩⟨/|").
-    setTitle("Postselect Y-axis Negative").
+    setTitle("Postselect Y-Off").
     setBlurb("Keeps ON+iOFF states, discards ON-iOFF states.").
     setDrawer(POST_SELECT_DRAWER).
     setKnownEffectToMatrix(Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(0.5)).
@@ -72,7 +72,7 @@ PostSelectionGates.PostSelectAntiY = new GateBuilder().
 PostSelectionGates.PostSelectY = new GateBuilder().
     setSerializedId("|/⟩⟨/|").  // The cross/slash convention was switched, but the serialized id must stay the same.
     setSymbol("|X⟩⟨X|").
-    setTitle("Postselect Y-axis Positive").
+    setTitle("Postselect Y-On").
     setBlurb("Keeps ON-iOFF states, discards/retries ON+iOFF states.").
     setDrawer(POST_SELECT_DRAWER).
     setKnownEffectToMatrix(Matrix.square(1, Complex.I, Complex.I.neg(), 1).times(0.5)).
