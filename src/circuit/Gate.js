@@ -460,29 +460,6 @@ class Gate {
     }
 
     /**
-     * Provides a function equivalent to the gate's effect, for checking in tests if the gate's behavior is correct.
-     * @param {
-     *      !function(val: !int) : !int |
-     *      !function(val: !int, a: !int) : !int |
-     *      !function(val: !int, a: !int, b: !int) : !int |
-     *      !function(val: !int, inputs: ...!int) : !int
-     *  } knownPermutationFuncTakingInputs
-     * @returns {!Gate}
-     */
-    withKnownPermutation(knownPermutationFuncTakingInputs) {
-        let g = this._copy();
-        g.knownPermutationFuncTakingInputs = knownPermutationFuncTakingInputs;
-        if (knownPermutationFuncTakingInputs !== undefined) {
-            g._stableDuration = Infinity;
-            g._hasNoEffect = false;
-            g._effectPermutesStates = true;
-            g._effectCreatesSuperpositions = false;
-            g._isDefinitelyUnitary = true;
-        }
-        return g;
-    }
-
-    /**
      * Specifies the id to use when serializing/parsing this gate (instead of defaulting to the symbol).
      * @param {!string} serializedId
      * @returns {!Gate}
@@ -536,61 +513,6 @@ class Gate {
     }
 
     /**
-     * Sets a shader as the custom circuit-update function to run when simulating this gate.
-     * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderFunc
-     * @returns {!Gate}
-     */
-    withCustomShader(shaderFunc) {
-        return this.withCustomShaders([shaderFunc]);
-    }
-
-    /**
-     * Sets a sequence of shaders as the custom circuit-update function to run when simulating this gate.
-     * @param {!Array.<!function(!CircuitEvalContext) : !WglConfiguredShader>} shaderFuncs
-     * @returns {!Gate}
-     */
-    withCustomShaders(shaderFuncs) {
-        return this.withCustomOperation(ctx => {
-            for (let shaderFunc of shaderFuncs) {
-                ctx.applyOperation(shaderFunc);
-            }
-        });
-    }
-
-    /**
-     * Specifies how to extract data that will be needed when drawing a display gate.
-     * @param {undefined|!function(!CircuitEvalContext) : (!WglTexture|!Array.<!WglTexture>)} customStatTexturesMaker
-     * @returns {!Gate}
-     */
-    withCustomStatTexturesMaker(customStatTexturesMaker) {
-        let g = this._copy();
-        g.customStatTexturesMaker = customStatTexturesMaker;
-        return g;
-    }
-
-    /**
-     * Specifies how to process raw pixel data from the custom stats texture maker into a more useful value.
-     * @param {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int)} pixelFunc
-     * @returns {!Gate}
-     */
-    withCustomStatPostProcessor(pixelFunc) {
-        let g = this._copy();
-        g.customStatPostProcesser = pixelFunc;
-        return g;
-    }
-
-    /**
-     * Specifies context values provided by other gates that this gate needs to be present in order to function.
-     * @param {...!String} keys
-     * @returns {!Gate}
-     */
-    withRequiredContextKeys(...keys) {
-        let g = this._copy();
-        g._requiredContextKeys = keys;
-        return g;
-    }
-
-    /**
      * Creates size-variants of a gate that can be resized between.
      * @param {!int} minSize
      * @param {!int} maxSize
@@ -617,24 +539,6 @@ class Gate {
         };
 
         return {all: gates, ofSize};
-    }
-
-    /**
-     * Creates size-variants of a gate that can be resized between.
-     * @param {!int} minSize
-     * @param {!int} maxSize
-     * @param {!function(!int):!Gate} gateGenerator
-     * @returns {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}}
-     */
-    static generateFamily(minSize, maxSize, gateGenerator) {
-        let gates = Seq.range(maxSize + 1).skip(minSize).map(i => gateGenerator(i)._copy()).toArray();
-        for (let g of gates) {
-            g.gateFamily = gates;
-        }
-        return {
-            all: gates,
-            ofSize: h => seq(gates).filter(e => e === undefined || e.height === h).first()
-        };
     }
 
     /**
@@ -700,18 +604,6 @@ class Gate {
             this._knownMatrix !== undefined ? !this._knownMatrix.isDiagonal() :
             true;
     }
-
-    /**
-     * Determines if the context provided by this gate should stick around and apply to later columns, instead of just
-     * the column the gate is in.
-     * @returns {!Gate}
-     */
-    withStickyContext() {
-        let g = this._copy();
-        g.isContextTemporary = false;
-        return g;
-    }
-
 
     /**
      * @returns {!boolean}
@@ -1027,10 +919,32 @@ class GateBuilder {
     }
 
     /**
+     * Sets meta-properties to indicate the gate is safe for classical, quantum, and mixed use.
+     * @returns {!GateBuilder}
+     */
+    promiseEffectOnlyPhases() {
+        this.gate._hasNoEffect = false;
+        this.gate._effectPermutesStates = false;
+        this.gate._effectCreatesSuperpositions = false;
+        this.gate._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
      * @returns {!GateBuilder}
      */
     promiseEffectIsUnitary() {
         this.gate._isDefinitelyUnitary = true;
+        return this;
+    }
+
+    /**
+     * Sets meta-properties to indicate a gate doesn't change over time, and so doesn't force the circuit to
+     * constantly recompute.
+     * @returns {!GateBuilder}
+     */
+    promiseEffectIsStable() {
+        this.gate._stableDuration = Infinity;
         return this;
     }
 

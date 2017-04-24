@@ -1,4 +1,4 @@
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {ketArgs, ketShader, ketShaderPhase, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 import {WglArg} from "src/webgl/WglArg.js"
@@ -61,89 +61,95 @@ const Z_TO_A_SHADER = ketShaderPhase(
         return vec2(cos(angle), sin(angle));
     `);
 
-ParametrizedRotationGates.XToA = Gate.withoutKnownMatrix(
-    "X^A/2ⁿ",
-    "Parametrized X Gate",
-    "Rotates the target by input A / 2ⁿ'th of a half turn around the X axis.\n" +
+ParametrizedRotationGates.XToA = new GateBuilder().
+    setSerializedId("X^(A/2^n)").
+    setSymbol("X^A/2ⁿ").
+    setTitle("Parametrized X Gate").
+    setBlurb("Rotates the target by input A / 2ⁿ'th of a half turn around the X axis.\n" +
         "n is the number of qubits in input A.").
-    markedAsStable().
-    markedAsUnitary().
-    withSerializedId("X^(A/2^n)").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomDrawer(exponent_to_A_len_painter).
-    withCustomShader(ctx => X_TO_A_SHADER.withArgs(
+    setRequiredContextKeys('Input NO_DEFAULT Range A').
+    setDrawer(exponent_to_A_len_painter).
+    setActualEffectToShaderProvider(ctx => X_TO_A_SHADER.withArgs(
         ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', Math.PI)));
+        WglArg.float('factor', Math.PI))).
+    promiseEffectIsStable().
+    promiseEffectIsUnitary().
+    gate;
 
-ParametrizedRotationGates.XToMinusA = Gate.withoutKnownMatrix(
-    "X^-A/2ⁿ",
-    "Parametrized -X Gate",
-    "Counter-rotates the target by input A / 2ⁿ'th of a half turn around the X axis.\n" +
+ParametrizedRotationGates.XToMinusA = new GateBuilder().
+    setSerializedId("X^(-A/2^n)").
+    setSymbol("X^-A/2ⁿ").
+    setTitle("Parametrized -X Gate").
+    setBlurb("Counter-rotates the target by input A / 2ⁿ'th of a half turn around the X axis.\n" +
         "n is the number of qubits in input A.").
-    markedAsStable().
-    markedAsUnitary().
-    withSerializedId("X^(-A/2^n)").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomDrawer(exponent_to_A_len_painter).
-    withCustomShader(ctx => X_TO_A_SHADER.withArgs(
+    setRequiredContextKeys('Input NO_DEFAULT Range A').
+    setDrawer(exponent_to_A_len_painter).
+    setActualEffectToShaderProvider(ctx => X_TO_A_SHADER.withArgs(
         ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', -Math.PI)));
+        WglArg.float('factor', -Math.PI))).
+    promiseEffectIsStable().
+    promiseEffectIsUnitary().
+    gate;
 
-ParametrizedRotationGates.YToA = Gate.withoutKnownMatrix(
-    "Y^A/2ⁿ",
-    "Parametrized Y Gate",
-    "Rotates the target by input A / 2ⁿ'th of a half turn around the Y axis.\n" +
+ParametrizedRotationGates.YToA = new GateBuilder().
+    setSerializedId("Y^(A/2^n)").
+    setSymbol("Y^A/2ⁿ").
+    setTitle("Parametrized Y Gate").
+    setBlurb("Rotates the target by input A / 2ⁿ'th of a half turn around the Y axis.\n" +
         "n is the number of qubits in input A.").
-    markedAsStable().
-    markedAsUnitary().
-    withSerializedId("Y^(A/2^n)").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomDrawer(exponent_to_A_len_painter).
-    withCustomShader(ctx => Y_TO_A_SHADER.withArgs(
+    setRequiredContextKeys('Input NO_DEFAULT Range A').
+    setDrawer(exponent_to_A_len_painter).
+    setActualEffectToShaderProvider(ctx => Y_TO_A_SHADER.withArgs(
         ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', Math.PI)));
+        WglArg.float('factor', Math.PI))).
+    promiseEffectIsStable().
+    promiseEffectIsUnitary().
+    gate;
 
-ParametrizedRotationGates.YToMinusA = Gate.withoutKnownMatrix(
-    "Y^-A/2ⁿ",
-    "Parametrized -Y Gate",
-    "Counter-rotates the target by input A / 2ⁿ'th of a half turn around the Y axis.\n" +
+ParametrizedRotationGates.YToMinusA = new GateBuilder().
+    setSerializedId("Y^(-A/2^n)").
+    setSymbol("Y^-A/2ⁿ").
+    setTitle("Parametrized -Y Gate").
+    setBlurb("Counter-rotates the target by input A / 2ⁿ'th of a half turn around the Y axis.\n" +
         "n is the number of qubits in input A.").
-    markedAsStable().
-    markedAsUnitary().
-    withSerializedId("Y^(-A/2^n)").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomDrawer(exponent_to_A_len_painter).
-    withCustomShader(ctx => Y_TO_A_SHADER.withArgs(
+    setRequiredContextKeys('Input NO_DEFAULT Range A').
+    setDrawer(exponent_to_A_len_painter).
+    setActualEffectToShaderProvider(ctx => Y_TO_A_SHADER.withArgs(
         ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', -Math.PI)));
+        WglArg.float('factor', -Math.PI))).
+    promiseEffectIsStable().
+    promiseEffectIsUnitary().
+    gate;
 
-ParametrizedRotationGates.ZToA = Gate.withoutKnownMatrix(
-    "Z^A/2ⁿ",
-    "Parametrized Z Gate",
-    "Rotates the target by input A / 2ⁿ'th of a half turn around the Z axis.\n" +
+ParametrizedRotationGates.ZToA = new GateBuilder().
+    setSerializedId("Z^(A/2^n)").
+    setSymbol("Z^A/2ⁿ").
+    setTitle("Parametrized Z Gate").
+    setBlurb("Rotates the target by input A / 2ⁿ'th of a half turn around the Z axis.\n" +
         "n is the number of qubits in input A.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withSerializedId("Z^(A/2^n)").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomDrawer(exponent_to_A_len_painter).
-    withCustomShader(ctx => Z_TO_A_SHADER.withArgs(
+    setRequiredContextKeys('Input NO_DEFAULT Range A').
+    setDrawer(exponent_to_A_len_painter).
+    setActualEffectToShaderProvider(ctx => Z_TO_A_SHADER.withArgs(
         ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', Math.PI)));
+        WglArg.float('factor', Math.PI))).
+    promiseEffectIsStable().
+    promiseEffectOnlyPhases().
+    gate;
 
-ParametrizedRotationGates.ZToMinusA = Gate.withoutKnownMatrix(
-    "Z^-A/2ⁿ",
-    "Parametrized -Z Gate",
-    "Counter-rotates the target by input A / 2ⁿ'th of a half turn around the Z axis.\n" +
+ParametrizedRotationGates.ZToMinusA = new GateBuilder().
+    setSerializedId("Z^(-A/2^n)").
+    setSymbol("Z^-A/2ⁿ").
+    setTitle("Parametrized -Z Gate").
+    setBlurb("Counter-rotates the target by input A / 2ⁿ'th of a half turn around the Z axis.\n" +
         "n is the number of qubits in input A.").
-    markedAsOnlyPhasing().
-    markedAsStable().
-    withSerializedId("Z^(-A/2^n)").
-    withRequiredContextKeys('Input NO_DEFAULT Range A').
-    withCustomDrawer(exponent_to_A_len_painter).
-    withCustomShader(ctx => Z_TO_A_SHADER.withArgs(
+    setRequiredContextKeys('Input NO_DEFAULT Range A').
+    setDrawer(exponent_to_A_len_painter).
+    setActualEffectToShaderProvider(ctx => Z_TO_A_SHADER.withArgs(
         ...ketArgs(ctx, 1, ['A']),
-        WglArg.float('factor', -Math.PI)));
+        WglArg.float('factor', -Math.PI))).
+    promiseEffectIsStable().
+    promiseEffectOnlyPhases().
+    gate;
 
 ParametrizedRotationGates.all =[
     ParametrizedRotationGates.XToA,
