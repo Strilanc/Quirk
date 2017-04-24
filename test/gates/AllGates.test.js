@@ -5,6 +5,7 @@ import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Controls} from "src/circuit/Controls.js"
 import {Matrix} from "src/math/Matrix.js"
+import {Gate} from "src/circuit/Gate.js"
 import {seq} from "src/base/Seq.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
@@ -66,6 +67,12 @@ let reconstructMatrixFromKnownBitPermutation = gate => {
     });
 };
 
+suite.test("allGatesAreGates", () => {
+    for (let gate of Gates.KnownToSerializer) {
+        assertThat(gate instanceof Gate).withInfo({gate, type: typeof gate}).isEqualTo(true);
+    }
+});
+
 suite.testUsingWebGL("customShaderMatchesKnownMatrix", () => {
     let time = 6/7;
     for (let gate of Gates.KnownToSerializer) {
@@ -83,7 +90,7 @@ suite.testUsingWebGL("customShaderMatchesKnownMatrix", () => {
             continue;
         }
 
-        assertThat(reconstructed).withInfo({gate, time}).isApproximatelyEqualTo(matrix, 0.0001);
+        assertThat(reconstructed).withInfo({gate, time}).isApproximatelyEqualTo(matrix, 0.0005);
     }
 });
 

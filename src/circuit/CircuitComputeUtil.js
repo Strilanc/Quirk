@@ -2,27 +2,23 @@ import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Util} from "src/base/Util.js"
 
 /**
+ * @param {!GateBuilder} builder
  * @param {!CircuitDefinition} circuitDefinition
- * @param {!string=""} symbol
- * @param {!string=""} name
- * @param {!string=""} blurb
- * @returns {!Gate}
+ * @returns {!GateBuilder}
  */
-function circuitDefinitionToGate(circuitDefinition, symbol="", name="", blurb="") {
-    return Gate.withoutKnownMatrix(symbol, name, blurb).
-        withKnownCircuit(circuitDefinition).
-        withStableDuration(circuitDefinition.stableDuration()).
-        withCustomOperation(ctx => advanceStateWithCircuit(
+function setGateBuilderEffectToCircuit(builder, circuitDefinition) {
+    return builder.
+        setActualEffectToUpdateFunc(ctx => advanceStateWithCircuit(
             ctx,
             circuitDefinition.withDisabledReasonsForEmbeddedContext(ctx.row, ctx.customContextFromGates),
             false)).
-        withHeight(circuitDefinition.numWires).
-        withCustomDisableReasonFinder(args => {
+        setKnownEffectToCircuit(circuitDefinition).
+        setExtraDisableReasonFinder(args => {
             let def = circuitDefinition.withDisabledReasonsForEmbeddedContext(args.outerRow, args.context);
             for (let row = 0; row < def.numWires; row++) {
                 for (let col = 0; col < def.columns.length; col++) {
@@ -193,4 +189,4 @@ function _advanceStateWithCircuitDefinitionColumn(
     controlTex.deallocByDepositingInPool("controlTex in _advanceStateWithCircuitDefinitionColumn");
 }
 
-export {circuitDefinitionToGate, advanceStateWithCircuit}
+export {setGateBuilderEffectToCircuit, advanceStateWithCircuit}

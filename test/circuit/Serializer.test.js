@@ -2,11 +2,11 @@ import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {Serializer} from "src/circuit/Serializer.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {describe} from "src/base/Describe.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -75,8 +75,13 @@ suite.test("roundTrip_Gate", () => {
 });
 
 suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
-    let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
-        withSerializedId("~test");
+    let customGate = new GateBuilder().
+        setSerializedId("~test").
+        setSymbol('sym').
+        setTitle('nam').
+        setBlurb('blur').
+        setKnownEffectToMatrix(Matrix.square(2, 3, 5, 7)).
+        gate;
     let circuit = new CircuitDefinition(
         2,
         [new GateColumn([undefined, customGate])],
@@ -102,19 +107,23 @@ suite.test("roundTrip_CircuitDefinitionWithCustomGate", () => {
 });
 
 suite.test("roundTrip_CircuitDefinitionWithDependentCustomGates", () => {
-    let customGate = Gate.fromKnownMatrix('sym', Matrix.square(2, 3, 5, 7), 'nam', 'blur').
-        withSerializedId("~test");
+    let customGate = new GateBuilder().
+        setSerializedId("~test").
+        setSymbol('sym').
+        setTitle('nam').
+        setBlurb('blur').
+        setKnownEffectToMatrix(Matrix.square(2, 3, 5, 7)).
+        gate;
     let circuitForGate = new CircuitDefinition(
         2,
         [new GateColumn([customGate, customGate])],
         undefined,
         undefined,
         new CustomGateSet(customGate));
-    let circuitGate = circuitDefinitionToGate(
-        circuitForGate,
-        'combo',
-        'name',
-        'blurb').withSerializedId('~wombo');
+    let circuitGate = setGateBuilderEffectToCircuit(new GateBuilder(), circuitForGate).
+        setSerializedId("~wombo").
+        setSymbol('combo').
+        gate;
 
     let circuit = new CircuitDefinition(
         3,
@@ -176,6 +185,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "Z^½", "Z^⅓", "Z^¼", "Z^⅛", "Z^⅟₁₆", "Z^⅟₃₂", "Z^⅟₆₄", "Z^⅟₁₂₈",
     "Z^-½", "Z^-⅓", "Z^-¼", "Z^-⅛", "Z^-⅟₁₆",
     "X^t", "Y^t", "Z^t", "X^-t", "Y^-t", "Z^-t",
+    "X^(A/2^n)", "Y^(A/2^n)", "Z^(A/2^n)",
+    "X^(-A/2^n)", "Y^(-A/2^n)", "Z^(-A/2^n)",
     "e^iXt", "e^iYt", "e^iZt", "e^-iXt", "e^-iYt", "e^-iZt",
     "Amps1", "Amps2", "Amps3", "Amps4", "Amps5", "Amps6", "Amps7", "Amps8", "Amps9", "Amps10", "Amps11", "Amps12", "Amps13", "Amps14", "Amps15", "Amps16",
     "Chance", "Chance2", "Chance3", "Chance4", "Chance5", "Chance6", "Chance7", "Chance8", "Chance9", "Chance10", "Chance11", "Chance12", "Chance13", "Chance14", "Chance15", "Chance16",
@@ -199,6 +210,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "/A1", "/A2", "/A3", "/A4", "/A5", "/A6", "/A7", "/A8", "/A9", "/A10", "/A11", "/A12", "/A13", "/A14", "/A15", "/A16",
     "*AmodR1", "*AmodR2", "*AmodR3", "*AmodR4", "*AmodR5", "*AmodR6", "*AmodR7", "*AmodR8", "*AmodR9", "*AmodR10", "*AmodR11", "*AmodR12", "*AmodR13", "*AmodR14", "*AmodR15", "*AmodR16",
     "/AmodR1", "/AmodR2", "/AmodR3", "/AmodR4", "/AmodR5", "/AmodR6", "/AmodR7", "/AmodR8", "/AmodR9", "/AmodR10", "/AmodR11", "/AmodR12", "/AmodR13", "/AmodR14", "/AmodR15", "/AmodR16",
+    "*BToAmodR1", "*BToAmodR2", "*BToAmodR3", "*BToAmodR4", "*BToAmodR5", "*BToAmodR6", "*BToAmodR7", "*BToAmodR8", "*BToAmodR9", "*BToAmodR10", "*BToAmodR11", "*BToAmodR12", "*BToAmodR13", "*BToAmodR14", "*BToAmodR15", "*BToAmodR16",
+    "/BToAmodR1", "/BToAmodR2", "/BToAmodR3", "/BToAmodR4", "/BToAmodR5", "/BToAmodR6", "/BToAmodR7", "/BToAmodR8", "/BToAmodR9", "/BToAmodR10", "/BToAmodR11", "/BToAmodR12", "/BToAmodR13", "/BToAmodR14", "/BToAmodR15", "/BToAmodR16",
     "+cntA1", "+cntA2", "+cntA3", "+cntA4", "+cntA5", "+cntA6", "+cntA7", "+cntA8", "+cntA9", "+cntA10", "+cntA11", "+cntA12", "+cntA13", "+cntA14", "+cntA15", "+cntA16",
     "-cntA1", "-cntA2", "-cntA3", "-cntA4", "-cntA5", "-cntA6", "-cntA7", "-cntA8", "-cntA9", "-cntA10", "-cntA11", "-cntA12", "-cntA13", "-cntA14", "-cntA15", "-cntA16",
     "^A<B", "^A>B", "^A<=B", "^A>=B", "^A=B", "^A!=B",

@@ -1,10 +1,10 @@
 import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -28,9 +28,9 @@ const TEST_GATES = new Map([
     ['H', H],
     ['●', C],
     ['○', Gates.Controls.AntiControl],
-    ['⊖', Gates.Controls.MinusControl],
-    ['⊕', Gates.Controls.PlusControl],
-    ['⊗', Gates.Controls.CrossControl],
+    ['⊖', Gates.Controls.XControl],
+    ['⊕', Gates.Controls.XAntiControl],
+    ['⊗', Gates.Controls.YAntiControl],
     ['.', Gates.SpacerGate],
 
     ['A', Gates.InputGates.InputAFamily],
@@ -49,19 +49,30 @@ const TEST_GATES = new Map([
     ['|', undefined],
     ['/', null],
 
-    ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
-    ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
+    ['#', new GateBuilder().setKnownEffectToMatrix(Matrix.zero(4, 4)).setWidth(2).setHeight(2).gate],
+    ['~', new GateBuilder().setKnownEffectToMatrix(Matrix.zero(2, 2)).setWidth(3).gate],
     ['2', Gates.Arithmetic.IncrementFamily.ofSize(2)],
     ['3', Gates.Arithmetic.IncrementFamily.ofSize(3)],
-    ['Q', Gate.fromKnownMatrix('Q', Matrix.square(1, 1, 1, 1,
-                                      1, Complex.I, -1, Complex.I.neg(),
-                                      1, -1, 1, -1,
-                                      1, Complex.I.neg(), -1, Complex.I), 'Q', 'Q').withHeight(2)],
+    ['Q', new GateBuilder().
+        setKnownEffectToMatrix(Matrix.square(1, 1, 1, 1,
+                               1, Complex.I, -1, Complex.I.neg(),
+                               1, -1, 1, -1,
+                               1, Complex.I.neg(), -1, Complex.I)).
+        setHeight(2).
+        gate],
     ['t', Gates.Exponentiating.XForward]
 ]);
 const circuit = (diagram, ...extraGates) => CircuitDefinition.fromTextDiagram(
     Util.mergeMaps(TEST_GATES, new Map(extraGates)),
     diagram);
+
+/**
+ * @param {!CircuitDefinition} circ
+ * @returns {!Gate}
+ */
+function circuitDefinitionToGate(circ) {
+    return setGateBuilderEffectToCircuit(new GateBuilder(), circ).gate;
+}
 
 suite.test("isEqualTo", () => {
     let c1 = new CircuitDefinition(2, [
@@ -533,7 +544,7 @@ suite.test("colControls", () => {
     assertThat(c.colControls(1)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(3)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(5)).isEqualTo(Controls.bit(0, true));
-    assertThat(c.colControls(6)).isEqualTo(Controls.bit(0, true));
+    assertThat(c.colControls(6)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(7)).isEqualTo(Controls.bit(0, false));
     assertThat(c.colControls(9)).isEqualTo(Controls.NONE);
     assertThat(c.colControls(11)).isEqualTo(Controls.NONE);

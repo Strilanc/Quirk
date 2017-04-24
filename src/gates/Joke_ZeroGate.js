@@ -1,13 +1,13 @@
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 
-const ZeroGate = Gate.fromKnownMatrix(
-    "0",
-    Matrix.square(0, 0, 0, 0),
-    "Zero Gate",
-    "Destroys the universe.").
-    withCustomDrawer(args => {
+/** @type {!Gate} */
+const ZeroGate = new GateBuilder().
+    setSerializedIdAndSymbol("0").
+    setTitle("Zero Gate").
+    setBlurb("Destroys the universe.").
+    setDrawer(args => {
         if (args.isHighlighted || args.isInToolbox) {
             GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
@@ -26,6 +26,8 @@ const ZeroGate = Gate.fromKnownMatrix(
             ]);
         }).thenFill('#666').thenStroke('black');
         GatePainting.paintGateSymbol(args);
-    });
+    }).
+    setKnownEffectToMatrix(Matrix.square(0, 0, 0, 0)).
+    gate;
 
 export {ZeroGate}

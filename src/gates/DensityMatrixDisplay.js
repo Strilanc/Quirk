@@ -1,5 +1,5 @@
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {MathPainter} from "src/draw/MathPainter.js"
@@ -133,19 +133,48 @@ function densityPixelsToMatrix(pixels, circuitDefinition, col, row) {
     return decohereMeasuredBitsInDensityMatrix(new Matrix(d, d, pixels), isMeasuredMask);
 }
 
-function densityMatrixDisplayMaker(span) {
-    return Gate.fromIdentity(
-        "Density",
-        "Density Matrix Display",
-        "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
-        withSerializedId("Density" + span).
-        withWidth(span).
-        withHeight(span).
-        withCustomDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
-        withCustomStatTexturesMaker(ctx => densityDisplayStatTexture(
+/**
+ * @param {!GateBuilder} builder
+ * @returns {!GateBuilder}
+ */
+function densityMatrixDisplayMaker_shared(builder) {
+    return builder.
+        setSymbol("Density").
+        setTitle("Density Matrix Display").
+        setBlurb("Shows the density matrix of the local mixed state of some wires.\n" +
+            "Use controls to see conditional states.").
+        promiseHasNoNetEffectOnStateVector().
+        setExtraDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
+}
+
+/**
+ * @param {!GateBuilder} builder
+ * @returns {!GateBuilder}
+ */
+function singleDensityMatrixDisplayMaker(builder) {
+    return densityMatrixDisplayMaker_shared(builder).
+        setSerializedId("Density").
+        markAsDrawerNeedsSingleQubitDensityStats().
+        setDrawer(GatePainting.makeDisplayDrawer(args => {
+            let {col, row} = args.positionInCircuit;
+            let ρ = args.stats.qubitDensityMatrix(col, row);
+            MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
+        }));
+}
+
+/**
+ * @param {!int} span
+ * @param {!GateBuilder} builder
+ * @returns {!GateBuilder}
+ */
+function largeDensityMatrixDisplayMaker(span, builder) {
+    return densityMatrixDisplayMaker_shared(builder).
+        setSerializedId("Density" + span).
+        setWidth(span).
+        setDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
+        setStatTexturesMaker(ctx => densityDisplayStatTexture(
             ctx.stateTrader.currentTexture, ctx.wireCount, ctx.controls, ctx.row, span)).
-        withCustomStatPostProcessor(densityPixelsToMatrix).
-        withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
+        setStatPixelDataPostProcessor(densityPixelsToMatrix);
 }
 
 /**
@@ -157,20 +186,8 @@ const DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(a
     MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
 });
 
-let SingleWireDensityMatrixDisplay = Gate.fromIdentity(
-    "Density",
-    "Density Matrix Display",
-    "Shows the density matrix of the local mixed state of some wires.\nUse controls to see conditional states.").
-    markedAsSingleQubitDisplay().
-    withSerializedId("Density").
-    withCustomDrawer(GatePainting.makeDisplayDrawer(args => {
-        let {col, row} = args.positionInCircuit;
-        let ρ = args.stats.qubitDensityMatrix(col, row);
-        MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
-    })).
-    withCustomDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined);
-
-let DensityMatrixDisplayFamily = Gate.generateFamily(1, 8, span =>
-    span === 1 ? SingleWireDensityMatrixDisplay :
-    densityMatrixDisplayMaker(span));
+let DensityMatrixDisplayFamily = Gate.buildFamily(1, 8, (span, builder) =>
+    span === 1 ?
+        singleDensityMatrixDisplayMaker(builder) :
+        largeDensityMatrixDisplayMaker(span, builder));
 export {DensityMatrixDisplayFamily, amplitudesToCouplings}

@@ -5,7 +5,7 @@ import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {describe} from "src/base/Describe.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {Format} from "src/base/Format.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -13,7 +13,7 @@ import {Util} from "src/base/Util.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
 import {MysteryGateSymbol, MysteryGateMakerWithMatrix} from "src/gates/Joke_MysteryGate.js"
 import {seq} from "src/base/Seq.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 
 /** @type {!function(!GateDrawParams)} */
 let matrixDrawer = undefined;
@@ -184,6 +184,10 @@ function _parseGateMatrix(matrixProp) {
     return matrix;
 }
 
+/**
+ * @param {object} json
+ * @returns {!{id: !String, matrix: *, circuit: *, symbol: *, name: *, param: *}}
+ */
 let fromJson_Gate_props = json => {
     let id = _getGateId(json);
     let matrix = json["matrix"];
@@ -201,6 +205,10 @@ let fromJson_Gate_props = json => {
     return {id, matrix, circuit, symbol, name, param};
 };
 
+/**
+ * @param {!{id: !String, matrix: *, circuit: *, symbol: *, name: *, param: *}} props
+ * @returns {!Gate}
+ */
 let fromJson_Gate_Matrix = props => {
     let mat = _parseGateMatrix(props.matrix);
 
@@ -213,25 +221,35 @@ let fromJson_Gate_Matrix = props => {
     let width = props.symbol === '' ? height : 1;
     let matrix = _parseGateMatrix(props.matrix);
 
-    let gate = Gate.fromKnownMatrix(props.symbol, matrix, props.name, '').
-        withCustomDrawer(props.symbol === "" ? matrixDrawer
+    let builder = new GateBuilder().
+        setSerializedId(props.id).
+        setSymbol(props.symbol).
+        setTitle(props.name).
+        setHeight(height).
+        setWidth(width).
+        setDrawer(props.symbol === "" ? matrixDrawer
             : matrix.isIdentity() ? labelDrawer
             : undefined).
-        withSerializedId(props.id).
-        withHeight(height).
-        withWidth(width);
+        setKnownEffectToMatrix(matrix);
     if (matrix.isIdentity()) {
-        gate = gate.markedAsNotInterestedInControls();
+        builder.markAsNotInterestedInControls();
     }
-    return gate;
+    return builder.gate;
 };
 
+/**
+ * @param {!{id: !String, matrix: *, circuit: *, symbol: *, name: *, param: *}} props
+ * @param {undefined|!CustomGateSet} context
+ * @returns {!Gate}
+ */
 let fromJson_Gate_Circuit = (props, context) => {
     let circuit = fromJson_CircuitDefinition(props.circuit, context).withMinimumWireCount();
-    return circuitDefinitionToGate(circuit, props.symbol, props.name, '').
-        withSerializedId(props.id).
-        withHeight(circuit.numWires).
-        withCustomDrawer(circuitDrawer);
+    return setGateBuilderEffectToCircuit(new GateBuilder(), circuit).
+        setSerializedId(props.id).
+        setSymbol(props.symbol).
+        setTitle(props.name).
+        setDrawer(circuitDrawer).
+        gate;
 };
 
 /**
@@ -270,12 +288,14 @@ let fromJson_Gate = (json, context=new CustomGateSet()) => {
             "Defaulted to a do-nothing 'parse error' gate. Failed to understand the json defining a gate.",
             {gate_json: json},
             ex);
-        return Gate.fromIdentity(
-            props.id,
-            "Parse Error",
-            describe(ex)).
-            withTag(json).
-            withCustomDisableReasonFinder(() => "parse\nerror");
+        return new GateBuilder().
+            setSerializedIdAndSymbol(props.id).
+            setTitle("Parse Error").
+            setBlurb(describe(ex)).
+            promiseHasNoNetEffectOnStateVector().
+            setExtraDisableReasonFinder(() => "parse\nerror").
+            setTag(json).
+            gate;
     }
 };
 

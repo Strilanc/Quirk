@@ -184,61 +184,59 @@ const MODULAR_POWER_MULTIPLICATION_SHADER = ketShaderPermute(
         return mod(out_id * f, modulus);
     `);
 
-ModularMultiplicationGates.TimesAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "×A\nmod R",
-    "Modular Multiplication Gate",
-    "Multiplies the target by input A mod input B.\n" +
+ModularMultiplicationGates.TimesAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("*AmodR" + span).
+    setSymbol("×A\nmod R").
+    setTitle("Modular Multiplication Gate").
+    setBlurb("Multiplies the target by input A mod input R.\n" +
         "Only affects values less than R.\n" +
         "No effect if the multiplication would be irreversible.").
-    withSerializedId("*AmodR" + span).
-    withHeight(span).
-    withRequiredContextKeys("Input Range A", "Input Range R").
-    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
-    withKnownPermutation(modularMultiply).
-    withCustomShader(ctx => MODULAR_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'R']))));
+    setRequiredContextKeys("Input Range A", "Input Range R").
+    setExtraDisableReasonFinder(modulusTooBigChecker("R", span)).
+    setActualEffectToShaderProvider(ctx => MODULAR_MULTIPLICATION_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A', 'R']))).
+    setKnownEffectToParametrizedPermutation(modularMultiply));
 
-ModularMultiplicationGates.TimesAModRInverseFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "×A^-1\nmod R",
-    "Inverse Multiplication Gate",
-    "Inverse-multiplies the target by input A mod input R.\n" +
+ModularMultiplicationGates.TimesAModRInverseFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("/AmodR" + span).
+    setSymbol("×A^-1\nmod R").
+    setTitle("Modular Division Gate").
+    setBlurb("Inverse-multiplies the target by input A mod input R.\n" +
         "Only affects values less than R.\n" +
         "No effect if the multiplication would be irreversible.").
-    withSerializedId("/AmodR" + span).
-    withHeight(span).
-    withRequiredContextKeys("Input Range A", "Input Range R").
-    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
-    withKnownPermutation(modularUnmultiply).
-    withCustomShader(ctx => MODULAR_INVERSE_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A', 'R']))));
+    setRequiredContextKeys("Input Range A", "Input Range R").
+    setExtraDisableReasonFinder(modulusTooBigChecker("R", span)).
+    setActualEffectToShaderProvider(ctx => MODULAR_INVERSE_MULTIPLICATION_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A', 'R']))).
+    setKnownEffectToParametrizedPermutation(modularUnmultiply));
 
-ModularMultiplicationGates.TimesBToTheAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-        "×B^A\nmod R",
-        "Modular Power Multiplication Gate",
-        "Multiplies the target by input B raised to the input A mod input R.\n" +
+ModularMultiplicationGates.TimesBToTheAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("*BToAmodR" + span).
+    setSymbol("×B^A\nmod R").
+    setTitle("Modular Power Multiplication Gate").
+    setBlurb("Multiplies the target by input B raised to the input A mod input R.\n" +
             "Only affects values less than R.\n" +
             "No effect if the multiplication would be irreversible.").
-    withSerializedId("*AtoBmodR" + span).
-    withHeight(span).
-    withRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
-    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
-    withKnownPermutation((t, a, b, r) => modularPowerMultiply(t, b, a, r)).
-    withCustomShader(ctx => MODULAR_POWER_MULTIPLICATION_SHADER.withArgs(
+    setRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
+    setExtraDisableReasonFinder(modulusTooBigChecker("R", span)).
+    setActualEffectToShaderProvider(ctx => MODULAR_POWER_MULTIPLICATION_SHADER.withArgs(
         ...ketArgs(ctx, span, ['A', 'B', 'R']),
-        WglArg.float('factor', +1))));
+        WglArg.float('factor', +1))).
+    setKnownEffectToParametrizedPermutation((t, a, b, r) => modularPowerMultiply(t, b, a, r)));
 
-ModularMultiplicationGates.TimesInverseBToTheAModRFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-        "×B^-A\nmod R",
-        "Modular Power Inverse Multiplication Gate",
-        "Inverse-multiplies the target by input B raised to the input A mod input R.\n" +
+ModularMultiplicationGates.TimesInverseBToTheAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("/BToAmodR" + span).
+    setSymbol("×B^-A\nmod R").
+    setTitle("Modular Power Division Gate").
+    setBlurb("Inverse-multiplies the target by input B raised to the input A mod input R.\n" +
             "Only affects values less than R.\n" +
             "No effect if the multiplication would be irreversible.").
-    withSerializedId("/AtoBmodR" + span).
-    withHeight(span).
-    withRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
-    withCustomDisableReasonFinder(modulusTooBigChecker("R", span)).
-    withKnownPermutation((t, a, b, r) => modularPowerMultiply(t, b, -a, r)).
-    withCustomShader(ctx => MODULAR_POWER_MULTIPLICATION_SHADER.withArgs(
+    setRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
+    setExtraDisableReasonFinder(modulusTooBigChecker("R", span)).
+    setActualEffectToShaderProvider(ctx => MODULAR_POWER_MULTIPLICATION_SHADER.withArgs(
         ...ketArgs(ctx, span, ['A', 'B', 'R']),
-        WglArg.float('factor', -1))));
+        WglArg.float('factor', -1))).
+    setKnownEffectToParametrizedPermutation((t, a, b, r) => modularPowerMultiply(t, b, -a, r)));
 
 ModularMultiplicationGates.all = [
     ...ModularMultiplicationGates.TimesAModRFamily.all,

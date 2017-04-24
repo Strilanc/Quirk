@@ -1,12 +1,12 @@
 import {Axis} from "src/math/Axis.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {circuitDefinitionToGate} from "src/circuit/CircuitComputeUtil.js"
+import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {Complex} from "src/math/Complex.js"
 import {Config} from "src/Config.js"
 import {DetailedError} from "src/base/DetailedError.js"
 import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
 import {Format} from "src/base/Format.js"
-import {Gate} from "src/circuit/Gate.js"
+import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {getCircuitCycleTime} from "src/ui/sim.js"
 import {MathPainter} from "src/draw/MathPainter.js"
@@ -142,8 +142,12 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 return; // Button is about to be disabled, so no handling required.
             }
 
-            let gate = Gate.fromKnownMatrix(txtName.value, mat, 'Custom Rotation Gate', '').
-                withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32));
+            let gate = new GateBuilder().
+                setSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
+                setSymbol(txtName.value).
+                setTitle('Custom Rotation Gate').
+                setKnownEffectToMatrix(mat).
+                gate;
             createCustomGateAndClose(gate);
         });
     })();
@@ -180,10 +184,14 @@ function initForge(revision, obsIsAnyOverlayShowing) {
 
             let name = txtName.value.trim();
             let h = Math.round(Math.log2(mat.height()));
-            let gate = Gate.fromKnownMatrix(name, mat, 'Custom Matrix Gate', '').
-                withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
-                withHeight(h).
-                withWidth(name === '' ? h : 1);
+            let gate = new GateBuilder().
+                setSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
+                setSymbol(name).
+                setTitle('Custom Matrix Gate').
+                setHeight(h).
+                setWidth(name === '' ? h : 1).
+                setKnownEffectToMatrix(mat).
+                gate;
             createCustomGateAndClose(gate);
         });
     })();
@@ -447,12 +455,12 @@ function parseUserGateFromCircuitRange(circuit, colRangeText, wireRangeText, nam
     let symbol = nameText;
     let id = '~' + Math.floor(Math.random()*(1 << 20)).toString(32);
 
-    return circuitDefinitionToGate(
-        gateCircuit,
-        symbol,
-        id,
-        'A custom gate.')
-        .withSerializedId(id);
+    return setGateBuilderEffectToCircuit(new GateBuilder(), gateCircuit).
+        setSerializedId(id).
+        setSymbol(symbol).
+        setTitle(id).
+        setBlurb('A custom gate.').
+        gate;
 }
 
 export {initForge, obsForgeIsShowing, parseUserRotation, parseUserMatrix, parseUserGateFromCircuitRange}

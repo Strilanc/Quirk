@@ -3,7 +3,6 @@ import {Gate} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
 import {Seq} from "src/base/Seq.js"
 
 let InterleaveBitsGates = {};
@@ -70,17 +69,22 @@ let deinterleave = valPermuteFromBit(deinterleaveBit);
  * @param {!function(bit: !int, len: !int) : !int} bitPermutation
  * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
  */
-let shaderFromBitPermutation = (span, bitPermutation) => ketShaderPermute(
-    '',
-    `
-        float r = 0.0;
-        ${Seq.range(span).
-            map(i => `r += mod(floor(out_id / ${1<<bitPermutation(i, span)}.0), 2.0) * ${1<<i}.0;`).
-            join(`
-        `)}
-        return r;
-    `,
-    span);
+function shaderFromBitPermutation(span, bitPermutation) {
+    let bitMoveLines = [];
+    for (let i = 0; i < span; i++) {
+        bitMoveLines.push(`r += mod(floor(out_id / ${1 << bitPermutation(i, span)}.0), 2.0) * ${1 << i}.0;`);
+    }
+
+    return ketShaderPermute(
+        '',
+        `
+            float r = 0.0;
+            ${bitMoveLines.join(`
+            `)}
+            return r;
+        `,
+        span);
+}
 
 /**
  * @type {!Map.<!int, !{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}>}
@@ -125,27 +129,25 @@ let interleavePainter = reverse => args => {
     }
 };
 
-InterleaveBitsGates.InterleaveBitsGateFamily = Gate.generateFamily(4, 16, span => Gate.withoutKnownMatrix(
-    "Interleave",
-    "Interleave",
-    "Re-orders blocks of bits into stripes of bits.").
-    withSerializedId("weave" + span).
-    withHeight(span).
-    withWidth(span <= 8 ? 1 : 2).
-    withKnownBitPermutation(b => interleaveBit(b, span)).
-    withCustomShader(ctx => _interleaveShadersForSize.get(span).withArgs(...ketArgs(ctx, span))).
-    withCustomDrawer(interleavePainter(false)));
+InterleaveBitsGates.InterleaveBitsGateFamily = Gate.buildFamily(4, 16, (span, builder) => builder.
+    setSerializedId("weave" + span).
+    setSymbol("Interleave").
+    setTitle("Interleave").
+    setBlurb("Re-orders blocks of bits into stripes of bits.").
+    setWidth(span <= 8 ? 1 : 2).
+    setDrawer(interleavePainter(false)).
+    setActualEffectToShaderProvider(ctx => _interleaveShadersForSize.get(span).withArgs(...ketArgs(ctx, span))).
+    setKnownEffectToBitPermutation(b => interleaveBit(b, span)));
 
-InterleaveBitsGates.DeinterleaveBitsGateFamily = Gate.generateFamily(4, 16, span => Gate.withoutKnownMatrix(
-    "Deinterleave",
-    "Deinterleave",
-    "Re-orders stripes of bits into blocks of bits.").
-    withSerializedId("split" + span).
-    withHeight(span).
-    withWidth(span <= 8 ? 1 : 2).
-    withKnownBitPermutation(b => deinterleaveBit(b, span)).
-    withCustomShader(ctx => _deinterleaveShadersForSize.get(span).withArgs(...ketArgs(ctx, span))).
-    withCustomDrawer(interleavePainter(true)));
+InterleaveBitsGates.DeinterleaveBitsGateFamily = Gate.buildFamily(4, 16, (span, builder) => builder.
+    setSerializedId("split" + span).
+    setSymbol("Deinterleave").
+    setTitle("Deinterleave").
+    setBlurb("Re-orders stripes of bits into blocks of bits.").
+    setWidth(span <= 8 ? 1 : 2).
+    setDrawer(interleavePainter(true)).
+    setActualEffectToShaderProvider(ctx => _deinterleaveShadersForSize.get(span).withArgs(...ketArgs(ctx, span))).
+    setKnownEffectToBitPermutation(b => deinterleaveBit(b, span)));
 
 InterleaveBitsGates.all = [
     ...InterleaveBitsGates.InterleaveBitsGateFamily.all,

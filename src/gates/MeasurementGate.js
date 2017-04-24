@@ -1,12 +1,13 @@
 import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 
-let MeasurementGate = Gate.fromIdentity(
-    "Measure",
-    "Measurement Gate",
-    "Measures a wire's qubit along the Z axis.").
-    withCustomDrawer(args => {
+let MeasurementGate = new GateBuilder().
+    setSerializedIdAndSymbol("Measure").
+    setTitle("Measurement Gate").
+    setBlurb("Measures a wire's qubit along the Z axis.").
+    promiseHasNoNetEffectOnStateVector().  // Because in the simulation we defer measurement by preventing operations.
+    setDrawer(args => {
         let backColor = Config.GATE_FILL_COLOR;
         if (args.isHighlighted) {
             backColor = Config.HIGHLIGHTED_GATE_FILL_COLOR;
@@ -30,7 +31,7 @@ let MeasurementGate = Gate.fromIdentity(
         // Draw the indicator head.
         args.painter.trace(trace => trace.arrowHead(p, q, r*0.3, a, τ/4)).thenFill('black');
     }).
-    withCustomDisableReasonFinder(args => {
+    setExtraDisableReasonFinder(args => {
         if (args.isNested) {
             return "can't\nnest\nmeasure\n(sorry)";
         }
@@ -39,6 +40,7 @@ let MeasurementGate = Gate.fromIdentity(
             return "can't\ncontrol\n(sorry)";
         }
         return undefined;
-    });
+    }).
+    gate;
 
 export {MeasurementGate}

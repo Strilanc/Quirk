@@ -64,7 +64,7 @@ VariousXGates.all =[
     VariousXGates.X4i,
     VariousXGates.X8i,
     VariousXGates.X16i,
-    VariousXGates.X32i
+    VariousXGates.X32i,
 ];
 
 export {VariousXGates}

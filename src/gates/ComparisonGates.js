@@ -1,4 +1,4 @@
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
@@ -22,65 +22,65 @@ function customComparisonShader(compareCode) {
     return ctx => shader.withArgs(...ketArgs(ctx, 1, ['A', 'B']));
 }
 
-ComparisonGates.ALessThanB = Gate.withoutKnownMatrix(
-    "⊕A<B",
-    "Less-Than Gate",
-    "Toggles a qubit if input A is less than input B.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withSerializedId("^A<B").
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomShader(customComparisonShader('lhs < rhs'));
+ComparisonGates.ALessThanB = new GateBuilder().
+    setSerializedId("^A<B").
+    setSymbol("⊕A<B").
+    setTitle("Less-Than Gate").
+    setBlurb("Toggles a qubit if input A is less than input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs < rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a < b ? 1 : 0)).
+    gate;
 
-ComparisonGates.AGreaterThanB = Gate.withoutKnownMatrix(
-    "⊕A>B",
-    "Greater-Than Gate",
-    "Toggles a qubit if input A is greater than input B.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withSerializedId("^A>B").
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomShader(customComparisonShader('lhs > rhs'));
+ComparisonGates.AGreaterThanB = new GateBuilder().
+    setSerializedId("^A>B").
+    setSymbol("⊕A>B").
+    setTitle("Greater-Than Gate").
+    setBlurb("Toggles a qubit if input A is greater than input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs > rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a > b ? 1 : 0)).
+    gate;
 
-ComparisonGates.ALessThanOrEqualToB = Gate.withoutKnownMatrix(
-    "⊕A≤B",
-    "At-Most Gate",
-    "Toggles a qubit if input A is at most input B.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withSerializedId("^A<=B").
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomShader(customComparisonShader('lhs <= rhs'));
+ComparisonGates.ALessThanOrEqualToB = new GateBuilder().
+    setSerializedId("^A<=B").
+    setSymbol("⊕A≤B").
+    setTitle("At-Most Gate").
+    setBlurb("Toggles a qubit if input A is at most input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs <= rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a <= b ? 1 : 0)).
+    gate;
 
-ComparisonGates.AGreaterThanOrEqualToB = Gate.withoutKnownMatrix(
-    "⊕A≥B",
-    "At-Least Gate",
-    "Toggles a qubit if input A is at least input B.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withSerializedId("^A>=B").
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomShader(customComparisonShader('lhs >= rhs'));
+ComparisonGates.AGreaterThanOrEqualToB = new GateBuilder().
+    setSerializedId("^A>=B").
+    setSymbol("⊕A≥B").
+    setTitle("At-Least Gate").
+    setBlurb("Toggles a qubit if input A is at least input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs >= rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a >= b ? 1 : 0)).
+    gate;
 
-ComparisonGates.AEqualToB = Gate.withoutKnownMatrix(
-    "⊕A=B",
-    "Equality Gate",
-    "Toggles a qubit if input A is equal to input B.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withSerializedId("^A=B").
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomShader(customComparisonShader('lhs == rhs'));
+ComparisonGates.AEqualToB = new GateBuilder().
+    setSerializedId("^A=B").
+    setSymbol("⊕A=B").
+    setTitle("Equality Gate").
+    setBlurb("Toggles a qubit if input A is equal to input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs == rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a === b ? 1 : 0)).
+    gate;
 
-ComparisonGates.ANotEqualToB = Gate.withoutKnownMatrix(
-    "⊕A≠B",
-    "Inequality Gate",
-    "Toggles the target if input A isn't equal to input B.").
-    markedAsOnlyPermutingAndPhasing().
-    markedAsStable().
-    withSerializedId("^A!=B").
-    withRequiredContextKeys("Input Range A", "Input Range B").
-    withCustomShader(customComparisonShader('lhs != rhs'));
+ComparisonGates.ANotEqualToB = new GateBuilder().
+    setSerializedId("^A!=B").
+    setSymbol("⊕A≠B").
+    setTitle("Inequality Gate").
+    setBlurb("Toggles a qubit if input A isn't equal to input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs != rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a !== b ? 1 : 0)).
+    gate;
 
 ComparisonGates.all = [
     ComparisonGates.ALessThanB,

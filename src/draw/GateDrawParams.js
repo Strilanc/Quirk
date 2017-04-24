@@ -49,6 +49,20 @@ class GateDrawParams {
         /** @type {undefined|*} */
         this.customStats = customStatsForCircuitPos;
     }
+
+    /**
+     * @param {!string} key
+     * @returns {undefined|*}
+     */
+    getGateContext(key) {
+        if (this.positionInCircuit === undefined) {
+            return undefined;
+        }
+
+        return this.stats.circuitDefinition.
+            colCustomContextFromGates(this.positionInCircuit.col, 0).
+            get(key);
+    }
 }
 
 export {GateDrawParams}

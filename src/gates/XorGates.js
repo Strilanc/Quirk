@@ -18,15 +18,14 @@ const XOR_SHADER = ketShaderPermute(
         }
         return result;`);
 
-XorGates.XorAFamily = Gate.generateFamily(1, 8, span => Gate.withoutKnownMatrix(
-    "⊕A",
-    "Xor Gate [input A]",
-    "Xors input A into the qubits covered by this gate.").
-    withHeight(span).
-    withSerializedId("^=A" + span).
-    withRequiredContextKeys("Input Range A").
-    withKnownPermutation((t, a) => t ^ (a & ((1<<span)-1))).
-    withCustomShader(ctx => XOR_SHADER.withArgs(...ketArgs(ctx, span, ['A']))));
+XorGates.XorAFamily = Gate.buildFamily(1, 8, (span, builder) => builder.
+    setSerializedId("^=A" + span).
+    setSymbol("⊕A").
+    setTitle("Xor Gate [input A]").
+    setBlurb("Xors input A into the qubits covered by this gate.").
+    setRequiredContextKeys("Input Range A").
+    setKnownEffectToParametrizedPermutation((t, a) => t ^ (a & ((1<<span)-1))).
+    setActualEffectToShaderProvider(ctx => XOR_SHADER.withArgs(...ketArgs(ctx, span, ['A']))));
 
 XorGates.all = [
     ...XorGates.XorAFamily.all,

@@ -420,6 +420,19 @@ class Util {
         }
         return {x: old_s, y: old_t, gcd: old_r};
     }
+
+    /**
+     * @param {!string} text
+     * @returns {!string}
+     */
+    static digits_to_superscript_digits(text) {
+        let digits = "0123456789";
+        let superscript_digits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+        for (let i = 0; i < 10; i++) {
+            text = text.split(digits[i]).join(superscript_digits[i]);
+        }
+        return text;
+    }
 }
 
 /**

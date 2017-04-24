@@ -1,32 +1,33 @@
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
-import {Matrix} from "src/math/Matrix.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
+import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js"
 
 let Controls = {};
 
-Controls.Control = Gate.fromIdentity(
-    "•",
-    "Control",
-    "Conditions on a qubit being ON.\nGates in the same column only apply to states meeting the condition.").
-    withSerializedId("•").
-    markedAsControl(true).
-    withCustomDrawer(args => {
+Controls.Control = new GateBuilder().
+    setSerializedIdAndSymbol("•").
+    setTitle("Control").
+    setBlurb("Conditions on a qubit being ON.\nGates in the same column only apply to states meeting the condition.").
+    promiseHasNoNetEffectOnStateVector().
+    markAsControlExpecting(true).
+    setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
         }
         args.painter.fillCircle(args.rect.center(), 5, "black");
-    });
+    }).
+    gate;
 
-Controls.AntiControl = Gate.fromIdentity(
-    "◦",
-    "Anti-Control",
-    "Conditions on a qubit being OFF.\nGates in the same column only apply to states meeting the condition.").
-    withSerializedId("◦").
-    markedAsControl(false).
-    withCustomDrawer(args => {
+Controls.AntiControl = new GateBuilder().
+    setSerializedIdAndSymbol("◦").
+    setTitle("Anti-Control").
+    setBlurb("Conditions on a qubit being OFF.\nGates in the same column only apply to states meeting the condition.").
+    promiseHasNoNetEffectOnStateVector().
+    markAsControlExpecting(false).
+    setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
@@ -34,20 +35,22 @@ Controls.AntiControl = Gate.fromIdentity(
         let p = args.rect.center();
         args.painter.fillCircle(p, 5);
         args.painter.strokeCircle(p, 5);
-    });
+    }).
+    gate;
 
-Controls.PlusControl = Gate.withoutKnownMatrix(
-    "⊖",
-    "Negative X-Axis Control",
-    "Conditions on a qubit being ON+OFF.\n" +
+Controls.XAntiControl = new GateBuilder().
+    setSerializedId("⊕").  // The drawn +/- convention was changed, but the serialized id must stay the same.
+    setSymbol("⊖").
+    setTitle("Negative X-Axis Control").
+    setBlurb("Conditions on a qubit being ON+OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
-    markedAsControl(false).
-    withSerializedId("⊕").
-    markedAsStable().
-    withCustomBeforeOperation(HalfTurnGates.H.customOperation).
-    withCustomOperation(() => {}).
-    withCustomAfterOperation(HalfTurnGates.H.customOperation).
-    withCustomDrawer(args => {
+    markAsControlExpecting(false).
+    setSetupCleanupEffectToUpdateFunc(
+        HalfTurnGates.H.customOperation,
+        HalfTurnGates.H.customOperation).
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsStable().
+    setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
@@ -56,20 +59,22 @@ Controls.PlusControl = Gate.withoutKnownMatrix(
         args.painter.fillCircle(p, 5);
         args.painter.strokeCircle(p, 5);
         args.painter.strokeLine(p.offsetBy(-5, 0), p.offsetBy(+5, 0));
-    });
+    }).
+    gate;
 
-Controls.MinusControl = Gate.withoutKnownMatrix(
-    "⊕",
-    "Positive X-Axis Control",
-    "Conditions on a qubit being ON-OFF.\n" +
+Controls.XControl = new GateBuilder().
+    setSerializedId("⊖").  // The drawn +/- convention was changed, but the serialized id must stay the same.
+    setSymbol("⊕").
+    setTitle("Positive X-Axis Control").
+    setBlurb("Conditions on a qubit being ON-OFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
-    withSerializedId("⊖").
-    markedAsControl(true).
-    markedAsStable().
-    withCustomBeforeOperation(HalfTurnGates.H.customOperation).
-    withCustomOperation(() => {}).
-    withCustomAfterOperation(HalfTurnGates.H.customOperation).
-    withCustomDrawer(args => {
+    markAsControlExpecting(true).
+    setSetupCleanupEffectToUpdateFunc(
+        HalfTurnGates.H.customOperation,
+        HalfTurnGates.H.customOperation).
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsStable().
+    setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
@@ -79,22 +84,22 @@ Controls.MinusControl = Gate.withoutKnownMatrix(
         args.painter.strokeCircle(p, 5);
         args.painter.strokeLine(p.offsetBy(0, -5), p.offsetBy(0, +5));
         args.painter.strokeLine(p.offsetBy(-5, 0), p.offsetBy(+5, 0));
-    });
+    }).
+    gate;
 
-let x1 = Matrix.fromPauliRotation(0.25, 0, 0);
-let x2 = Matrix.fromPauliRotation(-0.25, 0, 0);
-Controls.CrossControl = Gate.withoutKnownMatrix(
-    "(/)",
-    "Negative Y-Axis Control",
-    "Conditions on a qubit being ON+iOFF.\n" +
+Controls.YAntiControl = new GateBuilder().
+    setSerializedId("⊗").  // The drawn cross/slash convention was changed, but the serialized id must stay the same.
+    setSymbol("(/)").
+    setTitle("Negative Y-Axis Control").
+    setBlurb("Conditions on a qubit being ON+iOFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
-    markedAsControl(true).
-    withSerializedId("⊗").
-    markedAsStable().
-    withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
-    withCustomOperation(() => {}).
-    withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
-    withCustomDrawer(args => {
+    markAsControlExpecting(false).
+    setSetupCleanupEffectToUpdateFunc(
+        ctx => GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXForward._knownMatrix),
+        ctx => GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXBackward._knownMatrix)).
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsStable().
+    setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
             GatePainting.paintOutline(args);
@@ -107,20 +112,22 @@ Controls.CrossControl = Gate.withoutKnownMatrix(
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintOutline(args);
         }
-    });
+    }).
+    gate;
 
-Controls.AntiCrossControl = Gate.withoutKnownMatrix(
-    "⊗",
-    "Positive Y-Axis Control",
-    "Conditions on a qubit being ON-iOFF.\n" +
+Controls.YControl = new GateBuilder().
+    setSerializedId("(/)").  // The drawn cross/slash convention was changed, but the serialized id must stay the same.
+    setSymbol("⊗").
+    setTitle("Positive Y-Axis Control").
+    setBlurb("Conditions on a qubit being ON-iOFF.\n" +
         "Gates in the same column only apply to states meeting the condition.").
-    markedAsControl(true).
-    withSerializedId("(/)").
-    markedAsStable().
-    withCustomBeforeOperation(ctx => GateShaders.applyMatrixOperation(ctx, x1)).
-    withCustomOperation(() => {}).
-    withCustomAfterOperation(ctx => GateShaders.applyMatrixOperation(ctx, x2)).
-    withCustomDrawer(ctx => {
+    markAsControlExpecting(true).
+    setSetupCleanupEffectToUpdateFunc(
+        ctx => GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXForward._knownMatrix),
+        ctx => GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXBackward._knownMatrix)).
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsStable().
+    setDrawer(ctx => {
         if (ctx.isInToolbox || ctx.isHighlighted) {
             GatePainting.paintBackground(ctx);
             GatePainting.paintOutline(ctx);
@@ -134,15 +141,16 @@ Controls.AntiCrossControl = Gate.withoutKnownMatrix(
         if (ctx.isInToolbox || ctx.isHighlighted) {
             GatePainting.paintOutline(ctx);
         }
-    });
+    }).
+    gate;
 
 Controls.all = [
     Controls.Control,
     Controls.AntiControl,
-    Controls.PlusControl,
-    Controls.MinusControl,
-    Controls.CrossControl,
-    Controls.AntiCrossControl
+    Controls.XAntiControl,
+    Controls.XControl,
+    Controls.YAntiControl,
+    Controls.YControl
 ];
 
 export {Controls}

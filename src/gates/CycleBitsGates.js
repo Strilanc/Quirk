@@ -4,7 +4,6 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -25,10 +24,11 @@ const CYCLE_SHADER = ketShaderPermute(
     'uniform float amount;',
     'out_id *= amount; return mod(out_id, span) + floor(out_id / span);');
 
-const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, e => {
+const makeCycleBitsPermutation = (shift, span) => e => {
     shift = Util.properMod(shift, span);
     return ((e << shift) & ((1 << span) - 1)) | (e >> (span - shift));
-});
+};
+const makeCycleBitsMatrix = (shift, span) => Matrix.generateTransition(1<<span, makeCycleBitsPermutation(shift, span));
 
 let cyclePainter = reverse => args => {
     if (args.positionInCircuit !== undefined) {
@@ -58,31 +58,29 @@ let cyclePainter = reverse => args => {
     }
 };
 
-CycleBitsGates.CycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    "<<<",
-    "Left Rotate",
-    "Rotates bits downward.").
-    withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(1, span)).
-    withSerializedId("<<" + span).
-    withHeight(span).
-    withKnownBitPermutation(i => (i + 1) % span).
-    withCustomShader(ctx => cycleBitsShader(ctx, span, +1)).
-    withCustomDrawer(cyclePainter(false)));
+CycleBitsGates.CycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId("<<" + span).
+    setSymbol("<<<").
+    setTitle("Left Rotate").
+    setBlurb("Rotates bits downward.").
+    setDrawer(cyclePainter(false)).
+    setTooltipMatrixFunc(() => makeCycleBitsMatrix(1, span)).
+    setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, +1)).
+    setKnownEffectToBitPermutation(i => (i + 1) % span));
 
-CycleBitsGates.ReverseCycleBitsFamily = Gate.generateFamily(2, 16, span => Gate.withoutKnownMatrix(
-    ">>>",
-    "Right Rotate",
-    "Rotates bits upward.").
-    withKnownMatrix(span >= 4 ? undefined : makeCycleBitsMatrix(-1, span)).
-    withSerializedId(">>" + span).
-    withHeight(span).
-    withKnownBitPermutation(i => (i + span - 1) % span).
-    withCustomShader(ctx => cycleBitsShader(ctx, span, -1)).
-    withCustomDrawer(cyclePainter(true)));
+CycleBitsGates.ReverseCycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setSerializedId(">>" + span).
+    setSymbol(">>>").
+    setSymbol("Right Rotate").
+    setTitle("Rotates bits upward.").
+    setDrawer(cyclePainter(true)).
+    setTooltipMatrixFunc(() => makeCycleBitsMatrix(-1, span)).
+    setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, -1)).
+    setKnownEffectToBitPermutation(i => (i + span - 1) % span));
 
 CycleBitsGates.all = [
     ...CycleBitsGates.CycleBitsFamily.all,
     ...CycleBitsGates.ReverseCycleBitsFamily.all
 ];
 
-export {CycleBitsGates, cycleBitsShader, makeCycleBitsMatrix};
+export {CycleBitsGates, cycleBitsShader, makeCycleBitsPermutation};

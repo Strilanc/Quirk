@@ -1,14 +1,15 @@
 import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Rect} from "src/math/Rect.js"
 
-let SpacerGate = Gate.fromIdentity(
-    "…",
-    "Spacer",
-    "A gate with no effect.").
-    markedAsNotInterestedInControls().
-    withCustomDrawer(args => {
+let SpacerGate = new GateBuilder().
+    setSerializedIdAndSymbol("…").
+    setTitle("Spacer").
+    setBlurb("A gate with no effect.").
+    markAsNotInterestedInControls().
+    promiseHasNoNetEffectOnStateVector().
+    setDrawer(args => {
         // Drawn as an ellipsis.
         if (args.isInToolbox || args.isHighlighted) {
             let backColor = Config.GATE_FILL_COLOR;
@@ -26,6 +27,7 @@ let SpacerGate = Gate.fromIdentity(
         args.painter.fillCircle(args.rect.center().offsetBy(7, 0), 2, "black");
         args.painter.fillCircle(args.rect.center(), 2, "black");
         args.painter.fillCircle(args.rect.center().offsetBy(-7, 0), 2, "black");
-    });
+    }).
+    gate;
 
 export {SpacerGate}

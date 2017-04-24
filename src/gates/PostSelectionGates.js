@@ -1,5 +1,5 @@
 import {Complex} from "src/math/Complex.js"
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 
@@ -20,59 +20,71 @@ let POST_SELECT_DRAWER = args => {
     }
 };
 
-PostSelectionGates.PostSelectOff = Gate.fromKnownMatrix(
-    "|0⟩⟨0|",
-    Matrix.square(1, 0, 0, 0),
-    "Postselect Off",
-    "Keeps OFF states, discards/retries ON states.").
-    withCustomDrawer(POST_SELECT_DRAWER);
+/** @type {!Gate} */
+PostSelectionGates.PostSelectOff = new GateBuilder().
+    setSerializedIdAndSymbol("|0⟩⟨0|").
+    setTitle("Postselect Off").
+    setBlurb("Keeps OFF states, discards/retries ON states.").
+    setDrawer(POST_SELECT_DRAWER).
+    setKnownEffectToMatrix(Matrix.square(1, 0, 0, 0)).
+    gate;
 
-PostSelectionGates.PostSelectOn = Gate.fromKnownMatrix(
-    "|1⟩⟨1|",
-    Matrix.square(0, 0, 0, 1),
-    "Postselect On",
-    "Keeps ON states, discards/retries OFF states.").
-    withCustomDrawer(POST_SELECT_DRAWER);
+/** @type {!Gate} */
+PostSelectionGates.PostSelectOn = new GateBuilder().
+    setSerializedIdAndSymbol("|1⟩⟨1|").
+    setTitle("Postselect On").
+    setBlurb("Keeps On states, discards/retries Off states.").
+    setDrawer(POST_SELECT_DRAWER).
+    setKnownEffectToMatrix(Matrix.square(0, 0, 0, 1)).
+    gate;
 
-PostSelectionGates.PostSelectPlus = Gate.fromKnownMatrix(
-    "|-⟩⟨-|",
-    Matrix.square(1, 1, 1, 1).times(0.5),
-    "Postselect X-axis Negative",
-    "Keeps ON+OFF states, discards/retries ON-OFF states.").
-    withSerializedId("|+⟩⟨+|").
-    withCustomDrawer(POST_SELECT_DRAWER);
+/** @type {!Gate} */
+PostSelectionGates.PostSelectAntiX = new GateBuilder().
+    setSerializedId("|+⟩⟨+|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
+    setSymbol("|-⟩⟨-|").
+    setTitle("Postselect X-axis Negative").
+    setBlurb("Keeps ON+OFF states, discards/retries ON-OFF states.").
+    setDrawer(POST_SELECT_DRAWER).
+    setKnownEffectToMatrix(Matrix.square(1, 1, 1, 1).times(0.5)).
+    gate;
 
-PostSelectionGates.PostSelectMinus = Gate.fromKnownMatrix(
-    "|+⟩⟨+|",
-    Matrix.square(1, -1, -1, 1).times(0.5),
-    "Postselect X-axis Positive",
-    "Keeps ON-OFF states, discards/retries ON+OFF states.").
-    withSerializedId("|-⟩⟨-|").
-    withCustomDrawer(POST_SELECT_DRAWER);
+/** @type {!Gate} */
+PostSelectionGates.PostSelectX = new GateBuilder().
+    setSerializedId("|-⟩⟨-|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
+    setSymbol("|+⟩⟨+|").
+    setTitle("Postselect X-axis Positive").
+    setBlurb("Keeps ON-OFF states, discards/retries ON+OFF states.").
+    setDrawer(POST_SELECT_DRAWER).
+    setKnownEffectToMatrix(Matrix.square(1, -1, -1, 1).times(0.5)).
+    gate;
 
-PostSelectionGates.PostSelectCross = Gate.fromKnownMatrix(
-    "|/⟩⟨/|",
-    Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(0.5),
-    "Postselect Y-axis Negative",
-    "Keeps ON+iOFF states, discards ON-iOFF states.").
-    withSerializedId("|X⟩⟨X|").
-    withCustomDrawer(POST_SELECT_DRAWER);
+/** @type {!Gate} */
+PostSelectionGates.PostSelectAntiY = new GateBuilder().
+    setSerializedId("|X⟩⟨X|").  // The cross/slash convention was switched, but the serialized id must stay the same.
+    setSymbol("|/⟩⟨/|").
+    setTitle("Postselect Y-axis Negative").
+    setBlurb("Keeps ON+iOFF states, discards ON-iOFF states.").
+    setDrawer(POST_SELECT_DRAWER).
+    setKnownEffectToMatrix(Matrix.square(1, Complex.I.neg(), Complex.I, 1).times(0.5)).
+    gate;
 
-PostSelectionGates.PostSelectAntiCross = Gate.fromKnownMatrix(
-    "|X⟩⟨X|",
-    Matrix.square(1, Complex.I, Complex.I.neg(), 1).times(0.5),
-    "Postselect Y-axis Positive",
-    "Keeps ON-iOFF states, discards/retries ON+iOFF states.").
-    withSerializedId("|/⟩⟨/|").
-    withCustomDrawer(POST_SELECT_DRAWER);
+/** @type {!Gate} */
+PostSelectionGates.PostSelectY = new GateBuilder().
+    setSerializedId("|/⟩⟨/|").  // The cross/slash convention was switched, but the serialized id must stay the same.
+    setSymbol("|X⟩⟨X|").
+    setTitle("Postselect Y-axis Positive").
+    setBlurb("Keeps ON-iOFF states, discards/retries ON+iOFF states.").
+    setDrawer(POST_SELECT_DRAWER).
+    setKnownEffectToMatrix(Matrix.square(1, Complex.I, Complex.I.neg(), 1).times(0.5)).
+    gate;
 
 PostSelectionGates.all = [
     PostSelectionGates.PostSelectOff,
     PostSelectionGates.PostSelectOn,
-    PostSelectionGates.PostSelectPlus,
-    PostSelectionGates.PostSelectMinus,
-    PostSelectionGates.PostSelectCross,
-    PostSelectionGates.PostSelectAntiCross
+    PostSelectionGates.PostSelectAntiX,
+    PostSelectionGates.PostSelectX,
+    PostSelectionGates.PostSelectAntiY,
+    PostSelectionGates.PostSelectY
 ];
 
 export {PostSelectionGates}

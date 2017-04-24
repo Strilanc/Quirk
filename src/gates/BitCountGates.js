@@ -21,25 +21,27 @@ const POP_COUNT_SHADER = ketShaderPermute(
         float offset = mod(popcnt * factor, span);
         return mod(out_id + span - offset, span);`);
 
-BitCountGates.PlusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "+1s(A)",
-    "Bit Count Gate [input A]",
-    "Counts the number of ON bits in input A and adds that into this output.").
-    withHeight(span).
-    withSerializedId("+cntA" + span).
-    withKnownPermutation((t, a) => (t + Util.numberOfSetBits(a)) & ((1 << span) - 1)).
-    withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => POP_COUNT_SHADER.withArgs(...ketArgs(ctx, span, ['A']), WglArg.float("factor", +1))));
+BitCountGates.PlusBitCountAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedIdAndSymbol("+cntA" + span).
+    setSymbol("+1s(A)").
+    setTitle("Bit Count Gate").
+    setBlurb("Counts the number of ON bits in input A and adds that into this output.").
+    setRequiredContextKeys("Input Range A").
+    setActualEffectToShaderProvider(ctx => POP_COUNT_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A']),
+        WglArg.float("factor", +1))).
+    setKnownEffectToParametrizedPermutation((t, a) => (t + Util.numberOfSetBits(a)) & ((1 << span) - 1)));
 
-BitCountGates.MinusBitCountAFamily = Gate.generateFamily(1, 16, span => Gate.withoutKnownMatrix(
-    "-1s(A)",
-    "Bit Un-Count Gate [input A]",
-    "Counts the number of ON bits in input A and subtracts that into this output.").
-    withHeight(span).
-    withSerializedId("-cntA" + span).
-    withKnownPermutation((t, a) => (t - Util.numberOfSetBits(a)) & ((1 << span) - 1)).
-    withRequiredContextKeys("Input Range A").
-    withCustomShader(ctx => POP_COUNT_SHADER.withArgs(...ketArgs(ctx, span, ['A']), WglArg.float("factor", -1))));
+BitCountGates.MinusBitCountAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedIdAndSymbol("-cntA" + span).
+    setSymbol("-1s(A)").
+    setTitle("Bit Un-Count Gate").
+    setBlurb("Counts the number of ON bits in input A and subtracts that into this output.").
+    setRequiredContextKeys("Input Range A").
+    setActualEffectToShaderProvider(ctx => POP_COUNT_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A']),
+        WglArg.float("factor", -1))).
+    setKnownEffectToParametrizedPermutation((t, a) => (t - Util.numberOfSetBits(a)) & ((1 << span) - 1)));
 
 BitCountGates.all = [
     ...BitCountGates.PlusBitCountAFamily.all,
