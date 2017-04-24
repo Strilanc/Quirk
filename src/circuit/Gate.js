@@ -7,20 +7,15 @@ import {Matrix} from "src/math/Matrix.js"
  * Describes a quantum operation that may vary with time.
  */
 class Gate {
-    /**
-     * @param {!string} symbol The text shown inside the gate's box when drawn on the circuit.
-     * @param {!string} name A helpful human-readable name for the operation.
-     * @param {!string} blurb A helpful description of what the operation does.
-     */
-    constructor(symbol='', name='', blurb='') {
+    constructor() {
         /** @type {!string} The text shown when drawing the gate. */
-        this.symbol = symbol;
+        this.symbol = '';
         /** @type {!string} The identifier text used for the gate when serializing/parsing JSON. */
-        this.serializedId = symbol;
+        this.serializedId = '';
         /** @type {!string} The title text of gate tooltips. */
-        this.name = name;
+        this.name = '';
         /** @type {!string} Detail text of gate tooltips. */
-        this.blurb = blurb;
+        this.blurb = '';
         /** @type {!int} The number of columns the gate spans on a circuit. Controls go on the first column. */
         this.width = 1;
         /** @type {!int} The number of wires the gate spans on a circuit. */
@@ -199,7 +194,10 @@ class Gate {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
-        let g = new Gate(symbol, name, blurb);
+        let g = new Gate();
+        g.symbol = symbol;
+        g.name = name;
+        g.blurb = blurb;
         g._isDefinitelyUnitary = matrix.isUnitary(0.01);
         g._hasNoEffect = matrix.isIdentity();
         g._stableDuration = Infinity;
@@ -213,7 +211,10 @@ class Gate {
      * @returns {!Gate}
      */
     _copy() {
-        let g = new Gate(this.symbol, this.name, this.blurb);
+        let g = new Gate();
+        g.symbol = this.symbol;
+        g.name = this.name;
+        g.blurb = this.blurb;
         g.serializedId = this.serializedId;
         g.tag = this.tag;
         g.param = this.param;
@@ -657,19 +658,6 @@ class GateBuilder {
      */
     setActualEffectToShaderProvider(shaderFunc) {
         return this.setActualEffectToUpdateFunc(ctx => ctx.applyOperation(shaderFunc));
-    }
-
-    /**
-     * Sets a sequence of shaders as the custom circuit-update function to run when simulating this gate.
-     * @param {!Array.<!function(!CircuitEvalContext) : !WglConfiguredShader>} shaderFuncs
-     * @returns {!GateBuilder}
-     */
-    setActualEffectToShaderSequence(shaderFuncs) {
-        return this.setActualEffectToUpdateFunc(ctx => {
-            for (let shaderFunc of shaderFuncs) {
-                ctx.applyOperation(shaderFunc);
-            }
-        });
     }
 
     /**
