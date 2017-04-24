@@ -209,10 +209,10 @@ suite.testUsingWebGL('times_a_mod_b_inverse_gate', () => {
 suite.testUsingWebGL('TimesBToTheAModRFamily', () => {
     let circuit = new CircuitDefinition(8, [
         new GateColumn([
-            Gates.HalfTurns.X,
             undefined,
-            Gates.InputGates.SetB.withParam(1),
-            Gates.InputGates.SetA.withParam(0),
+            Gates.HalfTurns.X,
+            Gates.InputGates.SetB.withParam(5),
+            Gates.InputGates.SetA.withParam(6),
             Gates.InputGates.SetR.withParam(251),
             undefined,
             undefined,
@@ -230,33 +230,46 @@ suite.testUsingWebGL('TimesBToTheAModRFamily', () => {
         ]),
     ]);
     let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
-    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(-5);
+    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(126);
 });
 
-// suite.testUsingWebGL('TimesInverseBToTheAModRFamily', () => {
-//     let circuit = new CircuitDefinition(8, [
-//         new GateColumn([
-//             Gates.HalfTurns.X,
-//             Gates.HalfTurns.X,
-//             Gates.InputGates.SetB.withParam(5),
-//             Gates.InputGates.SetA.withParam(3),
-//             Gates.InputGates.SetR.withParam(251),
-//             undefined,
-//             undefined,
-//             undefined,
-//         ]),
-//         new GateColumn([
-//             Gates.ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(8),
-//             undefined,
-//             undefined,
-//             undefined,
-//             undefined,
-//             undefined,
-//             undefined,
-//             undefined,
-//         ]),
-//     ]);
-//     let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
-//     console.log(stats.finalState);
-//     assertThat(stats.finalState.cell(0, 3 * 201%251 * 201%251 * 201%251)).isApproximatelyEqualTo(1);
-// });
+suite.testUsingWebGL('TimesInverseBToTheAModRFamily', () => {
+    let circuit = new CircuitDefinition(8, [
+        new GateColumn([
+            Gates.HalfTurns.X,
+            Gates.HalfTurns.X,
+            Gates.InputGates.SetB.withParam(5),
+            Gates.InputGates.SetA.withParam(3),
+            Gates.InputGates.SetR.withParam(251),
+            undefined,
+            undefined,
+            undefined,
+        ]),
+        new GateColumn([
+            Gates.ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(8),
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        ]),
+    ]);
+    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
+    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(245);
+});
+
+suite.testUsingWebGL('TimesBToTheAModRFamily_perm', () => {
+    assertThatGateActsLikePermutation(
+        Gates.ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(3),
+        (v, a, b, r) => modularPowerMultiply(v, b, a, r),
+        [3, 3, 3]);
+});
+
+suite.testUsingWebGL('TimesBToTheAModRFamilyInverse_perm', () => {
+    assertThatGateActsLikePermutation(
+        Gates.ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(3),
+        (v, a, b, r) => modularPowerMultiply(v, b, -a, r),
+        [3, 3, 3]);
+});
