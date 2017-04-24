@@ -1105,9 +1105,9 @@ class Matrix {
         // Density matrix from bloch vector equation: M = 1/2 (I + vσ)
         //noinspection JSUnusedLocalSymbols
         let [ar, ai, br, bi, cr, ci, dr, di] = this._buffer;
-        let x = cr + br;
-        let y = ci - bi;
-        let z = ar - dr;
+        let x = -cr - br;
+        let y = bi - ci;
+        let z = dr - ar;
         return [x, y, z];
     }
 
@@ -1326,6 +1326,10 @@ class Matrix {
         return {U, S, V};
     }
 
+    /**
+     * @param {!int} rowIndex
+     * @returns {!Array.<!Complex>}
+     */
     getColumn(colIndex) {
         Util.need(colIndex >= 0 && colIndex <= this.width(), "colIndex >= 0 && colIndex <= this.width()");
         let col = [];
@@ -1333,6 +1337,19 @@ class Matrix {
             col.push(this.cell(colIndex, r));
         }
         return col;
+    }
+
+    /**
+     * @param {!int} rowIndex
+     * @returns {!Array.<!Complex>}
+     */
+    getRow(rowIndex) {
+        Util.need(rowIndex >= 0 && rowIndex <= this.height(), "rowIndex >= 0 && rowIndex <= this.height()");
+        let row = [];
+        for (let c = 0; c < this._width; c++) {
+            row.push(this.cell(c, rowIndex));
+        }
+        return row;
     }
 
     /**

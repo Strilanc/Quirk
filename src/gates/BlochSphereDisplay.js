@@ -29,8 +29,8 @@ function _paintBlochSphereDisplay_tooltips(
     let deg = v => (v >= 0 ? '+' : '') + (v*360/τ).toFixed(2) + '°';
     let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(4);
     let d = Math.sqrt(x*x + y*y + z*z);
-    let ϕ = Math.atan2(y, -x);
-    let θ = Math.atan2(-z, Math.sqrt(y*y + x*x));
+    let ϕ = Math.max(0, Math.atan2(y, -x));
+    let θ = Math.PI/2 - Math.atan2(-z, Math.sqrt(y*y + x*x));
     painter.strokeCircle(c, u, 'orange', 2);
     MathPainter.paintDeferredValueTooltip(
         painter,
@@ -39,6 +39,18 @@ function _paintBlochSphereDisplay_tooltips(
         'Bloch sphere representation of local state',
         `r:${forceSign(d)}, ϕ:${deg(ϕ)}, θ:${deg(θ)}`,
         `x:${forceSign(-x)}, y:${forceSign(y)}, z:${forceSign(-z)}`);
+}
+
+/**
+ * @param {!number} unit
+ * @returns {!{dx: !Point, dy: !Point, dz: !Point}}
+ */
+function coordinateSystem(unit) {
+    return {
+        dx: new Point(unit / 3, -unit / 3),
+        dy: new Point(unit, 0),
+        dz: new Point(0, unit)
+    };
 }
 
 /**
@@ -58,16 +70,13 @@ function _paintBlochSphereDisplay_indicator(
         fillColor) {
     let c = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
-    let [dx, dy, dz] = [new Point(-u, 0), new Point(u / 3, -u / 3), new Point(0, u)];
+    let {dx, dy, dz} = coordinateSystem(u);
 
-    let pxy = c.plus(dx.times(x)).plus(dy.times(y));
-    let p = pxy.plus(dz.times(z));
-    let r = 4 / (1 + y / 8);
+    let p = c.plus(dx.times(x)).plus(dy.times(y)).plus(dz.times(z));
+    let r = 3.8 / (1 + x / 6);
 
     // Draw state indicators (in not-quite-correct 3d).
-    let cz = c.plus(dz.times(z));
-    painter.strokePolygon([cz, c, pxy, p], '#666');
-    painter.strokeLine(c, p, 'black', 2);
+    painter.strokeLine(c, p, 'black', 1.5);
     painter.fillCircle(p, r, fillColor);
 
     painter.ctx.save();
@@ -77,8 +86,9 @@ function _paintBlochSphereDisplay_indicator(
 
     painter.strokeCircle(p, r, 'black');
 
+    // Show depth by lerping the line from overlaying to being overlayd by the ball.
     painter.ctx.save();
-    painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 0.5+y*5));
+    painter.ctx.globalAlpha *= Math.min(1, Math.max(0, 0.5+x*5));
     painter.strokeLine(c, p, 'black', 2);
     painter.ctx.restore();
 }
@@ -100,14 +110,14 @@ function paintBlochSphereDisplay(
         fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
     let c = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
-    let [dx, dy, dz] = [new Point(-u, 0), new Point(u / 3, -u / 3), new Point(0, u)];
+    let {dx, dy, dz} = coordinateSystem(u);
 
     // Draw sphere and axis lines (in not-quite-proper 3d).
     painter.fillCircle(c, u, backgroundColor);
     painter.trace(trace => {
         trace.circle(c.x, c.y, u);
-        trace.ellipse(c.x, c.y, dx.x, dy.y);
-        trace.ellipse(c.x, c.y, dy.x, dz.y);
+        trace.ellipse(c.x, c.y, dy.x, dx.y);
+        trace.ellipse(c.x, c.y, dx.x, dz.y);
         for (let d of [dx, dy, dz]) {
             trace.line(c.x - d.x, c.y - d.y, c.x + d.x, c.y + d.y);
         }

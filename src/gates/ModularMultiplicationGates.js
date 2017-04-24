@@ -16,6 +16,20 @@ const MODULAR_INVERSE_SHADER_CODE = `
         return vec2(v.y - q * v.x, v.x);
     }
     
+    // Avoids large multiplications that lose precision.
+    float times_mod(float b, float f, float modulus) {
+        float t = 0.0;
+        for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
+            if (mod(f, 2.0) == 1.0) {
+                f -= 1.0;
+                t = mod(t + b, modulus);
+            }
+            b = mod(b * 2.0, modulus);
+            f /= 2.0;
+        }
+        return t;
+    }
+
     float modular_multiplicative_inverse(float value, float modulus) {
         vec2 s = vec2(0.0, 1.0);
         vec2 t = vec2(1.0, 0.0);
@@ -34,6 +48,33 @@ const MODULAR_INVERSE_SHADER_CODE = `
             return -1.0;
         }
         return mod(mod(s.y, modulus) + modulus, modulus);
+    }
+`;
+
+const POW_MOD_SHADER_CODE = `
+    ${MODULAR_INVERSE_SHADER_CODE}
+
+    float pow_mod(float base, float exponent, float modulus) {
+        float base_inverse = modular_multiplicative_inverse(base, modulus);
+        if (base_inverse == -1.0) {
+            return -1.0;
+        }
+
+        if (exponent < 0.0) {
+            base = base_inverse;
+            exponent = -exponent;
+        }
+
+        float f = 1.0;
+        for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
+            if (mod(exponent, 2.0) == 1.0) {
+                exponent -= 1.0;
+                f = times_mod(f, base, modulus);
+            }
+            base = times_mod(base, base, modulus);
+            exponent /= 2.0;
+        }
+        return f;
     }
 `;
 
@@ -130,7 +171,7 @@ const MODULAR_MULTIPLICATION_SHADER = ketShaderPermute(
         if (v == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return mod(out_id * v, modulus);
+        return times_mod(out_id, v, modulus);
     `);
 
 const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
@@ -146,42 +187,26 @@ const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
         if (modular_multiplicative_inverse(input_a, modulus) == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return mod(out_id * input_a, modulus);
+        return times_mod(out_id, input_a, modulus);
     `);
 
 const MODULAR_POWER_MULTIPLICATION_SHADER = ketShaderPermute(
     `
         uniform float factor;
-        ${MODULAR_INVERSE_SHADER_CODE}
         ${ketInputGateShaderCode('A')}
         ${ketInputGateShaderCode('B')}
         ${ketInputGateShaderCode('R')}
+        ${POW_MOD_SHADER_CODE}
     `,
     `
-        float exponent = read_input_A() * factor;
+        float exponent = -read_input_A() * factor;
         float base = read_input_B();
         float modulus = read_input_R();
-        float base_inverse = modular_multiplicative_inverse(base, modulus);
-        if (base_inverse == -1.0 || out_id >= modulus) {
+        float f = pow_mod(base, exponent, modulus);
+        if (f == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        
-        if (exponent < 0.0) {
-            base = base_inverse;
-            exponent = -exponent;
-        }
-
-        float f = 1.0;
-        for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
-            if (mod(exponent, 2.0) == 1.0) {
-                exponent -= 1.0;
-                f = mod(f * base, modulus);
-            }
-            base = mod(base * base, modulus);
-            exponent /= 2.0;
-        }
-            
-        return mod(out_id * f, modulus);
+        return times_mod(out_id, f, modulus);
     `);
 
 ModularMultiplicationGates.TimesAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
@@ -248,6 +273,7 @@ ModularMultiplicationGates.all = [
 export {
     ModularMultiplicationGates,
     MODULAR_INVERSE_SHADER_CODE,
+    POW_MOD_SHADER_CODE,
     modularMultiply,
     modularUnmultiply,
     modularPowerMultiply

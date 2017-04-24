@@ -56,7 +56,7 @@ function assertThatGateActsLikePermutation(
     let wireCount = dstWire + gate.height;
     let inpWires = new Array(inputGates.length);
     for (let i = 0; i < inputGates.length; i++) {
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0.2) {
             wireCount += 1;
         }
         inpWires[i] = wireCount;
@@ -200,7 +200,7 @@ function _assertThatCircuitMutationActsLikePermutation_single(wireCount, updateA
             let actualOut = Seq.range(ampCount).filter(k => Math.floor(outVec.cell(0, k).real) === i).first('[NONE]');
             assertThat(outVal).
                 withInfo({i, j, actualIn, actualOut, permuteInfo}).
-                isApproximatelyEqualTo(inVal, 0.001);
+                isApproximatelyEqualTo(inVal, 0.01);
         }
     }
 

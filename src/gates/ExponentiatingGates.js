@@ -25,7 +25,7 @@ ExponentiatingGates.XForward = new GateBuilder().
     setSerializedIdAndSymbol("e^-iXt").
     setTitle("X-Exponentiating Gate (forward)").
     setBlurb("Right-hand rotation around the X axis.\nPasses through ±iX instead of X.").
-    setDrawer(GatePainting.makeCycleDrawer(0.5, 1, 2)).
+    setDrawer(GatePainting.makeCycleDrawer(1, 1, 2)).
     setEffectToTimeVaryingMatrix(XExp).
     promiseEffectIsUnitary().
     gate;
@@ -34,7 +34,7 @@ ExponentiatingGates.XBackward = new GateBuilder().
     setSerializedIdAndSymbol("e^iXt").
     setTitle("X-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the X axis.\nPasses through ±iX instead of X.").
-    setDrawer(GatePainting.makeCycleDrawer(-0.5, 1, 2)).
+    setDrawer(GatePainting.makeCycleDrawer(-1, 1, 2)).
     setEffectToTimeVaryingMatrix(t => XExp(-t)).
     promiseEffectIsUnitary().
     gate;
@@ -43,7 +43,7 @@ ExponentiatingGates.YForward = new GateBuilder().
     setSerializedIdAndSymbol("e^-iYt").
     setTitle("Y-Exponentiating Gate (forward)").
     setBlurb("Right-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
-    setDrawer(GatePainting.makeCycleDrawer(-1, 1, 2)).
+    setDrawer(GatePainting.makeCycleDrawer(0.5, 1, 2)).
     setEffectToTimeVaryingMatrix(YExp).
     promiseEffectIsUnitary().
     gate;
@@ -52,7 +52,7 @@ ExponentiatingGates.YBackward = new GateBuilder().
     setSerializedIdAndSymbol("e^iYt").
     setTitle("Y-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
-    setDrawer(GatePainting.makeCycleDrawer(1, 1, 2)).
+    setDrawer(GatePainting.makeCycleDrawer(-0.5, 1, 2)).
     setEffectToTimeVaryingMatrix(t => YExp(-t)).
     promiseEffectIsUnitary().
     gate;

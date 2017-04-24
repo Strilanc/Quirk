@@ -703,12 +703,12 @@ suite.test("qubitDensityMatrixToBlochVector", () => {
     let f = (...m) => Matrix.col(...m).times(Matrix.col(...m).adjoint());
     let i = Complex.I;
     let mi = i.times(-1);
-    assertThat(f(1, 0).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, 1]);
-    assertThat(f(0, 1).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, -1]);
-    assertThat(f(1, 1).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([1, 0, 0]);
-    assertThat(f(1, -1).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([-1, 0, 0]);
-    assertThat(f(1, i).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, 1, 0]);
-    assertThat(f(1, mi).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, -1, 0]);
+    assertThat(f(1, 0).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, -1]);
+    assertThat(f(0, 1).qubitDensityMatrixToBlochVector()).isEqualTo([0, 0, 1]);
+    assertThat(f(1, 1).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([-1, 0, 0]);
+    assertThat(f(1, -1).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([1, 0, 0]);
+    assertThat(f(1, i).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, -1, 0]);
+    assertThat(f(1, mi).times(0.5).qubitDensityMatrixToBlochVector()).isEqualTo([0, 1, 0]);
 });
 
 suite.test("determinant", () => {

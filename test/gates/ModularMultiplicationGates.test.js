@@ -1,12 +1,18 @@
 import {assertThat, Suite} from "test/TestUtil.js"
 import {
     MODULAR_INVERSE_SHADER_CODE,
+    POW_MOD_SHADER_CODE,
     modularMultiply,
     modularUnmultiply,
+    modularPowerMultiply,
     ModularMultiplicationGates
 } from "src/gates/ModularMultiplicationGates.js"
 
 import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
+import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "src/circuit/CircuitStats.js"
+import {GateColumn} from "src/circuit/GateColumn.js"
+import {Gates} from "src/gates/AllGates.js"
 import {Outputs, makePseudoShaderWithInputsAndOutputAndCode} from "src/webgl/ShaderCoders.js"
 import {Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
@@ -24,7 +30,6 @@ suite.testUsingWebGL('MODULAR_INVERSE_SHADER_CODE', () => {
             return modular_multiplicative_inverse(k, modulus);
         }`);
 
-
     let assertMatches = (modulus, rangePower) => {
         assertThat(testShader(WglArg.float('modulus', modulus)).readVecFloatOutputs(rangePower)).
         isEqualTo(Seq.range(1<<rangePower).
@@ -38,6 +43,59 @@ suite.testUsingWebGL('MODULAR_INVERSE_SHADER_CODE', () => {
     assertMatches(16, 4);
     assertMatches(255, 8);
     assertMatches(65363, 12);
+});
+
+suite.testUsingWebGL('MODULAR_INVERSE_SHADER_CODE_times_mod', () => {
+    let testShader = makePseudoShaderWithInputsAndOutputAndCode(
+        [],
+        Outputs.float(),
+        MODULAR_INVERSE_SHADER_CODE + `
+        uniform float modulus;
+        float outputFor(float k) {
+            return times_mod(k * 15.0, k * 7.0, modulus);
+        }`);
+
+    assertThat(testShader(WglArg.float('modulus', 65363)).readVecFloatOutputs(12)).
+        isEqualTo(Seq.range(1<<12).
+        map(e => e * e * 105.0 % 65363).
+        toFloat32Array());
+});
+
+suite.testUsingWebGL('POW_MOD_SHADER_CODE', () => {
+    let testShader = makePseudoShaderWithInputsAndOutputAndCode(
+        [],
+        Outputs.float(),
+        POW_MOD_SHADER_CODE + `
+        uniform float base;
+        uniform float modulus;
+        uniform float factor;
+        float outputFor(float k) {
+            return pow_mod(base, k * factor, modulus);
+        }`);
+
+    let assertMatches = (base, modulus, rangePower, factor=1) => {
+        assertThat(testShader(WglArg.float('base', base),
+                              WglArg.float('modulus', modulus),
+                              WglArg.float('factor', factor)).readVecFloatOutputs(rangePower)).
+            isEqualTo(Seq.range(1<<rangePower).
+            map(e => modularPowerMultiply(1, base, e * factor, modulus)).
+            map(e => e === undefined ? -1 : e).
+            toFloat32Array());
+    };
+
+    assertMatches(3, 11, 4);
+    assertMatches(4, 15, 4);
+    assertMatches(7, 16, 4);
+    assertMatches(7, 16, 4, -1);
+    assertMatches(11, 255, 8);
+    assertMatches(14, 65363, 12);
+    assertMatches(14, 65363, 12, -1);
+});
+
+suite.test("modularPowerMultiply", () => {
+    assertThat(modularPowerMultiply(8, 23, 0, 37613)).isEqualTo(8);
+    assertThat(modularPowerMultiply(3, 2, 12, 255)).isEqualTo(48);
+    assertThat(modularPowerMultiply(1, 3, -12, 251)).isEqualTo(173);
 });
 
 suite.test("modularMultiply_pow2", () => {
@@ -146,4 +204,72 @@ suite.testUsingWebGL('times_a_mod_b_inverse_gate', () => {
         ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
         modularUnmultiply,
         [3, 2]);
+});
+
+suite.testUsingWebGL('TimesBToTheAModRFamily', () => {
+    let circuit = new CircuitDefinition(8, [
+        new GateColumn([
+            undefined,
+            Gates.HalfTurns.X,
+            Gates.InputGates.SetB.withParam(5),
+            Gates.InputGates.SetA.withParam(6),
+            Gates.InputGates.SetR.withParam(251),
+            undefined,
+            undefined,
+            undefined,
+        ]),
+        new GateColumn([
+            Gates.ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(8),
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        ]),
+    ]);
+    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
+    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(126);
+});
+
+suite.testUsingWebGL('TimesInverseBToTheAModRFamily', () => {
+    let circuit = new CircuitDefinition(8, [
+        new GateColumn([
+            Gates.HalfTurns.X,
+            Gates.HalfTurns.X,
+            Gates.InputGates.SetB.withParam(5),
+            Gates.InputGates.SetA.withParam(3),
+            Gates.InputGates.SetR.withParam(251),
+            undefined,
+            undefined,
+            undefined,
+        ]),
+        new GateColumn([
+            Gates.ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(8),
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        ]),
+    ]);
+    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
+    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(245);
+});
+
+suite.testUsingWebGL('TimesBToTheAModRFamily_perm', () => {
+    assertThatGateActsLikePermutation(
+        Gates.ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(3),
+        (v, a, b, r) => modularPowerMultiply(v, b, a, r),
+        [3, 3, 3]);
+});
+
+suite.testUsingWebGL('TimesBToTheAModRFamilyInverse_perm', () => {
+    assertThatGateActsLikePermutation(
+        Gates.ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(3),
+        (v, a, b, r) => modularPowerMultiply(v, b, -a, r),
+        [3, 3, 3]);
 });

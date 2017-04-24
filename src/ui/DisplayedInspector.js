@@ -111,6 +111,14 @@ class DisplayedInspector {
     }
 
     /**
+     * @returns {undefined|!DisplayedInspector}
+     */
+    tryClick() {
+        let newDisplayedCircuit = this.displayedCircuit.tryClick(this.hand);
+        return newDisplayedCircuit === undefined ? undefined : this.withDisplayedCircuit(newDisplayedCircuit);
+    }
+
+    /**
      * @param {!boolean=false} duplicate
      * @param {!boolean=false} wholeCol
      * @returns {!DisplayedInspector}

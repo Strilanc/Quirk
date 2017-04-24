@@ -337,6 +337,37 @@ function _wireY(args, offset) {
 }
 
 /**
+ * @param {!Rect} wholeRect
+ * @returns {!Rect}
+ */
+GatePainting.gateButtonRect = wholeRect => wholeRect.bottomHalf().skipTop(10).paddedBy(-4);
+
+/**
+ * @param {!GateDrawParams} args
+ */
+GatePainting.paintGateButton = args => {
+    if (!args.isHighlighted || args.isInToolbox) {
+        return;
+    }
+
+    let buttonRect = GatePainting.gateButtonRect(args.rect);
+    let buttonFocus = !args.focusPoints.every(pt => !buttonRect.containsPoint(pt));
+    args.painter.fillRect(buttonRect, buttonFocus ? 'red' : 'orange');
+    args.painter.print(
+        'change',
+        buttonRect.center().x,
+        buttonRect.center().y,
+        'center',
+        'middle',
+        'black',
+        '12px sans-serif',
+        buttonRect.w,
+        buttonRect.h);
+    args.painter.strokeRect(buttonRect, 'black');
+}
+
+
+/**
  * @param {!GateDrawParams} args
  */
 function _eraseWiresForPermutation(args) {
