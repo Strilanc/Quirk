@@ -49,14 +49,17 @@ const TEST_GATES = new Map([
     ['|', undefined],
     ['/', null],
 
-    ['#', Gate.fromKnownMatrix('#', Matrix.zero(4, 4), '#', '#').withWidth(2).withHeight(2)],
-    ['~', Gate.fromKnownMatrix('~', Matrix.zero(2, 2), '~', '~').withWidth(3)],
+    ['#', new GateBuilder().setKnownEffectToMatrix(Matrix.zero(4, 4)).setWidth(2).setHeight(2).gate],
+    ['~', new GateBuilder().setKnownEffectToMatrix(Matrix.zero(2, 2)).setWidth(3).gate],
     ['2', Gates.Arithmetic.IncrementFamily.ofSize(2)],
     ['3', Gates.Arithmetic.IncrementFamily.ofSize(3)],
-    ['Q', Gate.fromKnownMatrix('Q', Matrix.square(1, 1, 1, 1,
-                                      1, Complex.I, -1, Complex.I.neg(),
-                                      1, -1, 1, -1,
-                                      1, Complex.I.neg(), -1, Complex.I), 'Q', 'Q').withHeight(2)],
+    ['Q', new GateBuilder().
+        setKnownEffectToMatrix(Matrix.square(1, 1, 1, 1,
+                               1, Complex.I, -1, Complex.I.neg(),
+                               1, -1, 1, -1,
+                               1, Complex.I.neg(), -1, Complex.I)).
+        setHeight(2).
+        gate],
     ['t', Gates.Exponentiating.XForward]
 ]);
 const circuit = (diagram, ...extraGates) => CircuitDefinition.fromTextDiagram(

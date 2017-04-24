@@ -1,19 +1,22 @@
-import {Gate} from "src/circuit/Gate.js"
+import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Rect} from "src/math/Rect.js"
 import {Seq} from "src/base/Seq.js"
 
-let SwapGateHalf = Gate.fromKnownMatrix(
-    "Swap",
-    Matrix.square(
+// Note: there is special code to handle swaps sprinkled everywhere, since it's the only gate with two paired sides.
+
+/** @type {!Gate} */
+let SwapGateHalf = new GateBuilder().
+    setSerializedIdAndSymbol("Swap").
+    setTitle("Swap Gate [Half]").
+    setBlurb("Swaps the values of two qubits.\n(Place two in the same column.)").
+    setKnownEffectToMatrix(Matrix.square(
         1, 0, 0, 0,
         0, 0, 1, 0,
         0, 1, 0, 0,
-        0, 0, 0, 1),
-    "Swap Gate [Half]",
-    "Swaps the values of two qubits.\n(Place two in the same column.)").
-    withCustomDrawer(args => {
+        0, 0, 0, 1)).
+    setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.DEFAULT_DRAWER(args);
             return;
@@ -24,7 +27,7 @@ let SwapGateHalf = Gate.fromKnownMatrix(
         args.painter.strokeLine(swapRect.topLeft(), swapRect.bottomRight());
         args.painter.strokeLine(swapRect.topRight(), swapRect.bottomLeft());
     }).
-    withCustomDisableReasonFinder(args => {
+    setExtraDisableReasonFinder(args => {
         let col = args.innerColumn;
         let swapRows = Seq.range(col.gates.length).filter(row => col.gates[row] === SwapGateHalf);
         let n = swapRows.count();
@@ -45,6 +48,7 @@ let SwapGateHalf = Gate.fromKnownMatrix(
         }
 
         return undefined;
-    });
+    }).
+    gate;
 
 export {SwapGateHalf}

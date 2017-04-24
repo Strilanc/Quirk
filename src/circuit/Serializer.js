@@ -221,13 +221,17 @@ let fromJson_Gate_Matrix = props => {
     let width = props.symbol === '' ? height : 1;
     let matrix = _parseGateMatrix(props.matrix);
 
-    let gate = Gate.fromKnownMatrix(props.symbol, matrix, props.name, '').
-        withCustomDrawer(props.symbol === "" ? matrixDrawer
+    let gate = new GateBuilder().
+        setSerializedId(props.id).
+        setSymbol(props.symbol).
+        setTitle(props.name).
+        setHeight(height).
+        setWidth(width).
+        setDrawer(props.symbol === "" ? matrixDrawer
             : matrix.isIdentity() ? labelDrawer
             : undefined).
-        withSerializedId(props.id).
-        withHeight(height).
-        withWidth(width);
+        setKnownEffectToMatrix(matrix).
+        gate;
     if (matrix.isIdentity()) {
         gate = gate.markedAsNotInterestedInControls();
     }

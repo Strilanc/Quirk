@@ -264,28 +264,6 @@ class Gate {
     }
 
     /**
-     * Specifies a function for retrieving unusual reasons a gate is being misused and so must be disabled.
-     * @param {!function(!GateCheckArgs) : (undefined|!string)} customDisableReasonFinder
-     * @returns {!Gate}
-     */
-    withCustomDisableReasonFinder(customDisableReasonFinder) {
-        let g = this._copy();
-        g.customDisableReasonFinder = customDisableReasonFinder;
-        return g;
-    }
-
-    /**
-     * Sets the number of columns the gate spans.
-     * @param {!int} width
-     * @returns {!Gate}
-     */
-    withWidth(width) {
-        let g = this._copy();
-        g.width = width;
-        return g;
-    }
-
-    /**
      * Sets an arbitrary number, saved and restored with the circuit, that the gate's custom functions may use.
      * @param {undefined|!int} value
      * @returns {!Gate}
@@ -293,17 +271,6 @@ class Gate {
     withParam(value) {
         let g = this._copy();
         g.param = value;
-        return g;
-    }
-
-    /**
-     * Sets the number of wires the gate spans.
-     * @param {!int} height
-     * @returns {!Gate}
-     */
-    withHeight(height) {
-        let g = this._copy();
-        g.height = height;
         return g;
     }
 

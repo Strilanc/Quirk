@@ -180,10 +180,14 @@ function initForge(revision, obsIsAnyOverlayShowing) {
 
             let name = txtName.value.trim();
             let h = Math.round(Math.log2(mat.height()));
-            let gate = Gate.fromKnownMatrix(name, mat, 'Custom Matrix Gate', '').
-                withSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
-                withHeight(h).
-                withWidth(name === '' ? h : 1);
+            let gate = new GateBuilder().
+                setSerializedId('~' + Math.floor(Math.random()*(1 << 20)).toString(32)).
+                setSymbol(name).
+                setTitle('Custom Matrix Gate').
+                setHeight(h).
+                setWidth(name === '' ? h : 1).
+                setKnownEffectToMatrix(mat).
+                gate;
             createCustomGateAndClose(gate);
         });
     })();
