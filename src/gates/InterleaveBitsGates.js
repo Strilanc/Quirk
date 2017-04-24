@@ -69,17 +69,22 @@ let deinterleave = valPermuteFromBit(deinterleaveBit);
  * @param {!function(bit: !int, len: !int) : !int} bitPermutation
  * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
  */
-let shaderFromBitPermutation = (span, bitPermutation) => ketShaderPermute(
-    '',
-    `
-        float r = 0.0;
-        ${Seq.range(span).
-            map(i => `r += mod(floor(out_id / ${1<<bitPermutation(i, span)}.0), 2.0) * ${1<<i}.0;`).
-            join(`
-        `)}
-        return r;
-    `,
-    span);
+function shaderFromBitPermutation(span, bitPermutation) {
+    let bitMoveLines = [];
+    for (let i = 0; i < span; i++) {
+        bitMoveLines.push(`r += mod(floor(out_id / ${1 << bitPermutation(i, span)}.0), 2.0) * ${1 << i}.0;`);
+    }
+
+    return ketShaderPermute(
+        '',
+        `
+            float r = 0.0;
+            ${bitMoveLines.join(`
+            `)}
+            return r;
+        `,
+        span);
+}
 
 /**
  * @type {!Map.<!int, !{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}>}
