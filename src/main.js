@@ -136,6 +136,8 @@ redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, 
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 displayed.observable().subscribe(() => redrawThrottle.trigger());
 
+let disableClickStuff = false;
+
 watchDrags(canvasDiv,
     /**
      * Grab
@@ -143,9 +145,22 @@ watchDrags(canvasDiv,
      * @param {!MouseEvent|!TouchEvent} ev
      */
     (pt, ev) => {
+        if (disableClickStuff) {
+            return;
+        }
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
-        let newInspector = syncArea(oldInspector.withHand(newHand)).afterGrabbing(ev.shiftKey, ev.ctrlKey);
+
+        let newInspector = syncArea(oldInspector.withHand(newHand));
+        let clicked = newInspector.tryClick();
+        if (clicked !== undefined) {
+            disableClickStuff = true;
+            setTimeout(() => { disableClickStuff = false; }, 100);
+            revision.commit(clicked.snapshot());
+            return;
+        }
+
+        newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey);
         if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }

@@ -886,6 +886,35 @@ class DisplayedCircuit {
 
     /**
      * @param {!Hand} hand
+     * @returns {undefined|!DisplayedCircuit}
+     */
+    tryClick(hand) {
+        let foundPt = this.findGateOverlappingPos(hand.pos);
+        if (foundPt === undefined) {
+            return undefined;
+        }
+
+        let gate = this.circuitDefinition.gateInSlot(foundPt.col, foundPt.row);
+        if (gate.onClickGateFunc === undefined) {
+            return undefined;
+        }
+
+        let buttonRect = GatePainting.gateButtonRect(this.gateRect(foundPt.row, foundPt.col, gate.width, gate.height));
+        if (hand.hoverPoints().every(e => !buttonRect.containsPoint(e))) {
+            return undefined;
+        }
+
+        let newGate = gate.onClickGateFunc(gate);
+        let cols = [...this.circuitDefinition.columns];
+        let col = cols[foundPt.col];
+        let gates = [...col.gates];
+        gates.splice(foundPt.row, 1, newGate);
+        cols.splice(foundPt.col, 1, new GateColumn(gates));
+        return this.withCircuit(this.circuitDefinition.withColumns(cols));
+    }
+
+    /**
+     * @param {!Hand} hand
      * @param {!boolean=false} duplicate
      * @param {!boolean=false} wholeColumn
      * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}

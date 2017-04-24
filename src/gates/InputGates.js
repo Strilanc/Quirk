@@ -65,6 +65,7 @@ let makeSetInputGate = key => new GateBuilder().
     setTitle(`Set Default ${key}`).
     setBlurb(`Sets a default value for input ${key}, for when an inline input isn't given.`).
     setWidth(2).
+    setHeight(2).
     promiseHasNoNetEffectOnStateVector().
     markAsNotInterestedInControls().
     setStickyContextProvider((qubitIndex, gate) => [{
@@ -80,9 +81,25 @@ let makeSetInputGate = key => new GateBuilder().
         } else {
             GatePainting.paintGateSymbol(args, `${key}=${args.gate.param}`);
         }
+        GatePainting.paintGateButton(args);
+    }).
+    setOnClickGateFunc(oldGate => {
+        let txt = prompt(`Enter new fallback value for input ${key} (between 0 and 65535).`,
+            '' + oldGate.param);
+        if (txt === null || txt.trim() === '') {
+            return oldGate;
+        }
+
+        let val = Number.parseInt(txt);
+        if (!Number.isInteger(val) || val < 0 || val >= 1<<16) {
+            alert(`'${txt}' isn't an integer between 0 and 65535. Keeping ${oldGate.param}.`);
+            return oldGate;
+        }
+
+        return oldGate.withParam(val);
     }).
     gate.
-    withParam(0);
+    withParam(2);
 
 InputGates.InputAFamily = makeInputGate('A', false);
 InputGates.InputBFamily = makeInputGate('B', false);

@@ -25,6 +25,8 @@ class Gate {
 
         /** @type {undefined|!function(!GateDrawParams) : void} Draws the gate. A default is used when undefined. */
         this.customDrawer = undefined;
+        /** @type{undefined|!function(!Gate) : !Gate} */
+        this.onClickGateFunc = undefined;
         /** @type {undefined|*} Used to stash error information when parsing goes bad. */
         this.tag = undefined;
         /**
@@ -217,6 +219,7 @@ class Gate {
         g.name = this.name;
         g.blurb = this.blurb;
         g.serializedId = this.serializedId;
+        g.onClickGateFunc = this.onClickGateFunc;
         g.tag = this.tag;
         g.param = this.param;
         g.customDrawer = this.customDrawer;
@@ -480,6 +483,15 @@ class GateBuilder {
      */
     setDrawer(drawer) {
         this.gate.customDrawer = drawer;
+        return this;
+    }
+
+    /**
+     * @param {!function(!Gate) : !Gate} gateFunc
+     * @returns {!GateBuilder}
+     */
+    setOnClickGateFunc(gateFunc) {
+        this.gate.onClickGateFunc = gateFunc;
         return this;
     }
 
