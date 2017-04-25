@@ -1,23 +1,34 @@
+import {canvasCreatedForTesting, webglContextCreatedForTesting} from "src/issues.js"
 /**
  * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.
  */
 class WglContext {
     /**
      * Creates and wraps a WebGLRenderingContext.
+     * @param {!HTMLCanvasElement} canvas
+     * @param {!WebGLRenderingContext} context
      */
-    constructor() {
+    constructor(canvas=undefined, context=undefined) {
+        if (canvas === undefined) {
+            canvas = /** @type {!HTMLCanvasElement} */ document.createElement('canvas');
+            context = undefined;
+        }
+        if (context === undefined) {
+            context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        }
+
         /**
          * A hidden canvas backing the WglContext.
          * @type {!HTMLCanvasElement}
          */
-        this.canvas = document.createElement('canvas');
+        this.canvas = canvas;
 
         /**
          * The WebGLRenderingContext instance associated with the WglContext.
          * @type {!WebGLRenderingContext}
          */
-        this.gl = /** @type {!WebGLRenderingContext} */
-            this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
+        this.gl = context;
+
         if ((/** @type {null|!WebGLRenderingContext} */ this.gl) === null) {
             throw new Error('Error creating WebGL context.');
         }
@@ -111,7 +122,7 @@ class WglContext {
 let __sharedInstance = undefined;
 function initializedWglContext() {
     if (__sharedInstance === undefined) {
-        __sharedInstance = new WglContext();
+        __sharedInstance = new WglContext(canvasCreatedForTesting, webglContextCreatedForTesting);
     }
     return __sharedInstance;
 }
