@@ -29,8 +29,8 @@ function _paintBlochSphereDisplay_tooltips(
     let deg = v => (v >= 0 ? '+' : '') + (v*360/τ).toFixed(2) + '°';
     let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(4);
     let d = Math.sqrt(x*x + y*y + z*z);
-    let ϕ = Math.max(0, Math.atan2(y, -x));
-    let θ = Math.PI/2 - Math.atan2(-z, Math.sqrt(y*y + x*x));
+    let ϕ = Math.atan2(y, -x);
+    let θ = Math.max(0, Math.PI/2 - Math.atan2(-z, Math.sqrt(y*y + x*x)));
     painter.strokeCircle(c, u, 'orange', 2);
     MathPainter.paintDeferredValueTooltip(
         painter,
