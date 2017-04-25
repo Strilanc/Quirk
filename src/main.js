@@ -2,7 +2,8 @@
 import {} from "src/browser/Polyfills.js"
 import {hookErrorHandler} from "src/fallback.js"
 hookErrorHandler();
-import {} from "src/issues.js"
+import {doDetectIssues} from "src/issues.js"
+doDetectIssues();
 
 import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 import {Config} from "src/Config.js"

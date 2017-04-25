@@ -1,4 +1,5 @@
 import {canvasCreatedForTesting, webglContextCreatedForTesting} from "src/issues.js"
+
 /**
  * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.
  */
