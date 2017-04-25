@@ -158,7 +158,7 @@ class CircuitDefinition {
                 for (let key of gate === undefined ? [] : gate.getUnmetContextKeys()) {
                     let altKey = key.
                         replace('Input Range ', 'Input Default ').
-                        replace('Input NO_DEFAULT Range', 'Input Range ');
+                        replace('Input NO_DEFAULT Range ', 'Input Range ');
                     if (!ctx.has(key) && !ctx.has(altKey)) {
                         result.add(key);
                     }

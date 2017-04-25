@@ -246,7 +246,8 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 let keys = gate.getUnmetContextKeys();
                 spanInputs.innerText = keys.size === 0 ?
                     "(none)" :
-                    [...keys].map(e => e.replace("Input Range ", "")).join(", ");
+                    [...keys].map(e => e.replace("Input Range ", "").
+                                         replace("Input NO_DEFAULT Range ", "")).join(", ");
                 spanWeight.innerText = "" + gate.knownCircuit.gateWeight();
                 drawGate(painter, gate);
                 circuitButton.disabled = false;
