@@ -42,18 +42,6 @@ function _paintBlochSphereDisplay_tooltips(
 }
 
 /**
- * @param {!number} unit
- * @returns {!{dx: !Point, dy: !Point, dz: !Point}}
- */
-function coordinateSystem(unit) {
-    return {
-        dx: new Point(unit / 3, -unit / 3),
-        dy: new Point(unit, 0),
-        dz: new Point(0, unit)
-    };
-}
-
-/**
  * @param {!Painter} painter
  * @param {!number} x
  * @param {!number} y
@@ -70,7 +58,7 @@ function _paintBlochSphereDisplay_indicator(
         fillColor) {
     let c = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
-    let {dx, dy, dz} = coordinateSystem(u);
+    let {dx, dy, dz} = MathPainter.coordinateSystem(u);
 
     let p = c.plus(dx.times(x)).plus(dy.times(y)).plus(dz.times(z));
     let r = 3.8 / (1 + x / 6);
@@ -110,7 +98,7 @@ function paintBlochSphereDisplay(
         fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
     let c = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
-    let {dx, dy, dz} = coordinateSystem(u);
+    let {dx, dy, dz} = MathPainter.coordinateSystem(u);
 
     // Draw sphere and axis lines (in not-quite-proper 3d).
     painter.fillCircle(c, u, backgroundColor);
