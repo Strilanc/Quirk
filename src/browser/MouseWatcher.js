@@ -20,10 +20,10 @@ let isMiddleClicking = ev => ev.which === 2;
  * @param {!HTMLElement} element
  * @returns {!Point}
  */
-let eventPosRelativeTo = (ev, element) => {
+function eventPosRelativeTo(ev, element) {
     let b = element.getBoundingClientRect();
     return new Point(ev.clientX - b.left, ev.clientY - b.top);
-};
+}
 
 /**
  * @param {!HTMLElement} element
@@ -33,10 +33,10 @@ let eventPosRelativeTo = (ev, element) => {
  * @param {!function(undefined|!Point, !MouseEvent|!TouchEvent) : void} dropHandler
  * @returns {!function() : void} Call this to dispose the watcher (removing any global callbacks it added).
  */
-let watchDrags = (element, grabHandler, cancelHandler, dragHandler, dropHandler) => {
+function watchDrags(element, grabHandler, cancelHandler, dragHandler, dropHandler) {
     return new DragWatcher(element, grabHandler, cancelHandler, dragHandler, dropHandler)
         .addListenersUntilResultInvoked();
-};
+}
 
 /**
  * @param {!EventTarget} target

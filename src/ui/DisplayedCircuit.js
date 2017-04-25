@@ -885,11 +885,11 @@ class DisplayedCircuit {
     }
 
     /**
-     * @param {!Hand} hand
-     * @returns {undefined|!DisplayedCircuit}
+     * @param {!Point} pos
+     * @returns {undefined|!{col: !int, row: !int, gate: !Gate}}
      */
-    tryClick(hand) {
-        let foundPt = this.findGateOverlappingPos(hand.pos);
+    findGateWithButtonContaining(pos) {
+        let foundPt = this.findGateOverlappingPos(pos);
         if (foundPt === undefined) {
             return undefined;
         }
@@ -900,16 +900,33 @@ class DisplayedCircuit {
         }
 
         let buttonRect = GatePainting.gateButtonRect(this.gateRect(foundPt.row, foundPt.col, gate.width, gate.height));
-        if (hand.hoverPoints().every(e => !buttonRect.containsPoint(e))) {
+        if (!buttonRect.containsPoint(pos)) {
             return undefined;
         }
 
-        let newGate = gate.onClickGateFunc(gate);
+        return {col: foundPt.col, row: foundPt.row, gate};
+    }
+
+    /**
+     * @param {!Hand} hand
+     * @returns {undefined|!DisplayedCircuit}
+     */
+    tryClick(hand) {
+        if (hand.pos === undefined) {
+            return undefined;
+        }
+
+        let found = this.findGateWithButtonContaining(hand.pos);
+        if (found === undefined) {
+            return undefined;
+        }
+
+        let newGate = found.gate.onClickGateFunc(found.gate);
         let cols = [...this.circuitDefinition.columns];
-        let col = cols[foundPt.col];
+        let col = cols[found.col];
         let gates = [...col.gates];
-        gates.splice(foundPt.row, 1, newGate);
-        cols.splice(foundPt.col, 1, new GateColumn(gates));
+        gates.splice(found.row, 1, newGate);
+        cols.splice(found.col, 1, new GateColumn(gates));
         return this.withCircuit(this.circuitDefinition.withColumns(cols));
     }
 
