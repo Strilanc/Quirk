@@ -299,7 +299,7 @@ GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
     args.painter.ctx.save();
 
     args.painter.ctx.translate(c.x, c.y);
-    args.painter.ctx.scale(xScale, yScale);
+    args.painter.ctx.scale(-xScale, -yScale);
     args.painter.ctx.strokeStyle = 'black';
     args.painter.ctx.fillStyle = 'yellow';
     args.painter.ctx.globalAlpha *= 0.4;
