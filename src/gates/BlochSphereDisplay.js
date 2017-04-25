@@ -29,8 +29,8 @@ function _paintBlochSphereDisplay_tooltips(
     let deg = v => (v >= 0 ? '+' : '') + (v*360/τ).toFixed(2) + '°';
     let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(4);
     let d = Math.sqrt(x*x + y*y + z*z);
-    let ϕ = Math.max(0, Math.atan2(y, -x));
-    let θ = Math.PI/2 - Math.atan2(-z, Math.sqrt(y*y + x*x));
+    let ϕ = Math.atan2(y, -x);
+    let θ = Math.max(0, Math.PI/2 - Math.atan2(-z, Math.sqrt(y*y + x*x)));
     painter.strokeCircle(c, u, 'orange', 2);
     MathPainter.paintDeferredValueTooltip(
         painter,
@@ -39,18 +39,6 @@ function _paintBlochSphereDisplay_tooltips(
         'Bloch sphere representation of local state',
         `r:${forceSign(d)}, ϕ:${deg(ϕ)}, θ:${deg(θ)}`,
         `x:${forceSign(-x)}, y:${forceSign(y)}, z:${forceSign(-z)}`);
-}
-
-/**
- * @param {!number} unit
- * @returns {!{dx: !Point, dy: !Point, dz: !Point}}
- */
-function coordinateSystem(unit) {
-    return {
-        dx: new Point(unit / 3, -unit / 3),
-        dy: new Point(unit, 0),
-        dz: new Point(0, unit)
-    };
 }
 
 /**
@@ -70,7 +58,7 @@ function _paintBlochSphereDisplay_indicator(
         fillColor) {
     let c = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
-    let {dx, dy, dz} = coordinateSystem(u);
+    let {dx, dy, dz} = MathPainter.coordinateSystem(u);
 
     let p = c.plus(dx.times(x)).plus(dy.times(y)).plus(dz.times(z));
     let r = 3.8 / (1 + x / 6);
@@ -110,7 +98,7 @@ function paintBlochSphereDisplay(
         fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
     let c = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
-    let {dx, dy, dz} = coordinateSystem(u);
+    let {dx, dy, dz} = MathPainter.coordinateSystem(u);
 
     // Draw sphere and axis lines (in not-quite-proper 3d).
     painter.fillCircle(c, u, backgroundColor);

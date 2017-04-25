@@ -4,6 +4,13 @@ import {Config} from "src/Config.js"
 import {HistoryPusher} from "src/browser/HistoryPusher.js"
 import {fromJsonText_CircuitDefinition, Serializer} from "src/circuit/Serializer.js"
 
+function urlWithCircuitHash(jsonText) {
+    if (jsonText.indexOf('%') !== -1 || jsonText.indexOf('&') !== -1) {
+        jsonText = encodeURIComponent(jsonText);
+    }
+    return "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+}
+
 /**
  * @param {!Revision} revision
  */
@@ -44,7 +51,7 @@ function initUrlCircuitSync(revision) {
             if (circuitDef.isEmpty() && params.size === 1) {
                 historyPusher.currentStateIsNotMemorable();
             } else {
-                let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
+                let urlHash = urlWithCircuitHash(jsonText);
                 historyPusher.stateChange(jsonText, urlHash);
             }
         } catch (ex) {
@@ -59,8 +66,7 @@ function initUrlCircuitSync(revision) {
     loadCircuitFromUrl();
 
     revision.latestActiveCommit().whenDifferent().skip(1).subscribe(jsonText => {
-        let urlHash = "#" + Config.URL_CIRCUIT_PARAM_KEY + "=" + jsonText;
-        historyPusher.stateChange(jsonText, urlHash);
+        historyPusher.stateChange(jsonText, urlWithCircuitHash(jsonText));
     });
 }
 

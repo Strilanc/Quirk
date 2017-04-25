@@ -61,7 +61,7 @@ ExponentiatingGates.ZForward = new GateBuilder().
     setSerializedIdAndSymbol("e^-iZt").
     setTitle("Z-Exponentiating Gate (forward)").
     setBlurb("Right-hand rotation around the Z axis.\nPasses through ±iZ instead of Z.").
-    setDrawer(GatePainting.makeCycleDrawer(1, 0.5, 2)).
+    setDrawer(GatePainting.makeCycleDrawer(-1, -0.5, 2)).
     setEffectToTimeVaryingMatrix(ZExp).
     promiseEffectOnlyPhases().
     gate;
@@ -70,7 +70,7 @@ ExponentiatingGates.ZBackward = new GateBuilder().
     setSerializedIdAndSymbol("e^iZt").
     setTitle("Z-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the Z axis.\nPasses through ±iZ instead of Z.").
-    setDrawer(GatePainting.makeCycleDrawer(-1, 0.5, 2)).
+    setDrawer(GatePainting.makeCycleDrawer(1, -0.5, 2)).
     setEffectToTimeVaryingMatrix(t => ZExp(-t)).
     promiseEffectOnlyPhases().
     gate;

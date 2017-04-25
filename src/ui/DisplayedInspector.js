@@ -111,6 +111,14 @@ class DisplayedInspector {
     }
 
     /**
+     * @returns {!boolean}
+     */
+    isHandOverButton() {
+        return this.hand.pos !== undefined &&
+            this.displayedCircuit.findGateWithButtonContaining(this.hand.pos) !== undefined;
+    }
+
+    /**
      * @returns {undefined|!DisplayedInspector}
      */
     tryClick() {

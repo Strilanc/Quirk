@@ -1099,6 +1099,50 @@ suite.test("gateAtLocIsDisabledReason_tagWithWrongCoherence", () => {
                 -M-B-`);
 });
 
+suite.test("getUnmetContextKeys", () => {
+    let ownExtraGates = [
+        ['⩲', Gates.Arithmetic.PlusAFamily],
+        ['*', Gates.MultiplyAccumulateGates.MultiplyAddInputsFamily],
+        ['x', Gates.ParametrizedRotationGates.XToA],
+        ['a', Gates.InputGates.SetA]
+    ];
+    let query = (diagram, ...extraGates) => circuit(
+        diagram,
+        ...ownExtraGates,
+        ...extraGates).getUnmetContextKeys();
+
+
+    assertThat(query(`---
+                      -Y-`)).isEqualTo(new Set());
+
+    assertThat(query(`-A-
+                      -x-`)).isEqualTo(new Set());
+
+    assertThat(query(`-A-
+                      -⩲-`)).isEqualTo(new Set());
+
+    assertThat(query(`a--
+                      -⩲-`)).isEqualTo(new Set());
+
+    assertThat(query(`---
+                      -⩲-`)).isEqualTo(new Set(['Input Range A']));
+
+    assertThat(query(`---
+                      -*-`)).isEqualTo(new Set(['Input Range A', 'Input Range B']));
+
+    assertThat(query(`-A-
+                      -*-`)).isEqualTo(new Set(['Input Range B']));
+
+    assertThat(query(`aB-
+                      -*-`)).isEqualTo(new Set());
+
+    assertThat(query(`---
+                      -x-`)).isEqualTo(new Set(['Input NO_DEFAULT Range A']));
+
+    assertThat(query(`a--
+                      -x-`)).isEqualTo(new Set(['Input NO_DEFAULT Range A']));
+});
+
 suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {
     let bad = (col, row, diagram, ...extraGates) =>
         assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);

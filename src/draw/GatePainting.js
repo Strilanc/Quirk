@@ -120,6 +120,7 @@ GatePainting.paintGateSymbol = (args, symbolOverride=undefined) => {
         symbolOverride = args.gate.symbol;
     }
     let {symbol, offsetY} = _paintSymbolHandleLines(args.painter, symbolOverride, rect);
+    painter.ctx.font = GATE_SYMBOL_FONT;  // So that measure-text calls return the right stuff.
 
     let parts = symbol.split("^");
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
@@ -299,7 +300,7 @@ GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
     args.painter.ctx.save();
 
     args.painter.ctx.translate(c.x, c.y);
-    args.painter.ctx.scale(xScale, yScale);
+    args.painter.ctx.scale(-xScale, -yScale);
     args.painter.ctx.strokeStyle = 'black';
     args.painter.ctx.fillStyle = 'yellow';
     args.painter.ctx.globalAlpha *= 0.4;

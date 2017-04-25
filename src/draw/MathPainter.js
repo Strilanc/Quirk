@@ -386,6 +386,18 @@ class MathPainter {
     }
 
     /**
+     * @param {!number} unit
+     * @returns {!{dx: !Point, dy: !Point, dz: !Point}}
+     */
+    static coordinateSystem(unit) {
+        return {
+            dx: new Point(unit / 3, -unit / 3),
+            dy: new Point(unit, 0),
+            dz: new Point(0, unit)
+        };
+    }
+
+    /**
      * @param {!Painter} painter
      * @param {!Matrix} operation
      * @param {!Rect} drawArea
@@ -399,10 +411,12 @@ class MathPainter {
                                     fillColor = Config.DISPLAY_GATE_FORE_COLOR) {
         let c = drawArea.center();
         let u = Math.min(drawArea.w, drawArea.h) / 2;
+        let {dx, dy, dz} = MathPainter.coordinateSystem(u);
         let projMatrix = Matrix.fromRows([
-            [-u, 0],
-            [-u / 3, u / 3],
-            [0, u]]).adjoint();
+            [-dx.x, -dx.y],
+            [dy.x, dy.y],
+            [-dz.x, -dz.y],
+        ]).adjoint();
         let projToPt = col => {
             let p = projMatrix.times(col);
             return new Point(p.cell(0, 0).real, p.cell(0, 1).real)
@@ -442,7 +456,7 @@ class MathPainter {
         // Find perpendicular axes, for drawing the rotation arrow circles.
         let norm = e => Math.sqrt(e.adjoint().times(e).cell(0, 0).real);
         let perpVec1 = seq(axes).
-            mapWithIndex((a, i) => a.times([2, -3, 1][i])). // Prioritize/orient axes to look good.
+            mapWithIndex((a, i) => a.times([-3, -2, 1][i])). // Prioritize/orient axes to look good.
             map(a => axisVec.cross3(a)).
             maxBy(norm);
         let perpVec2 = axisVec.cross3(perpVec1);
