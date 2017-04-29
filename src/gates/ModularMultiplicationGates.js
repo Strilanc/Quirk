@@ -11,6 +11,8 @@ import {WglArg} from "src/webgl/WglArg.js"
 
 let ModularMultiplicationGates = {};
 
+const MUL_STEP = 6;
+
 const MODULAR_INVERSE_SHADER_CODE = `
     vec2 _mod_mul_step(vec2 v, float q) {
         return vec2(v.y - q * v.x, v.x);
@@ -19,13 +21,13 @@ const MODULAR_INVERSE_SHADER_CODE = `
     // Avoids large multiplications that lose precision.
     float times_mod(float b, float f, float modulus) {
         float t = 0.0;
-        for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
-            if (mod(f, 2.0) == 1.0) {
-                f -= 1.0;
-                t = mod(t + b, modulus);
-            }
-            b = mod(b * 2.0, modulus);
-            f /= 2.0;
+        float r;
+        for (int k = 0; k < ${Math.ceil(Config.MAX_WIRE_COUNT/MUL_STEP)}; k++) {
+            r = mod(f, ${1<<MUL_STEP}.0);
+            f -= r;
+            t = mod(t + b*r, modulus);
+            b = mod(b * ${1<<MUL_STEP}.0, modulus);
+            f /= ${1<<MUL_STEP}.0;
         }
         return t;
     }

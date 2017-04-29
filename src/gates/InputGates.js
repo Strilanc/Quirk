@@ -90,7 +90,7 @@ let makeSetInputGate = key => new GateBuilder().
             return oldGate;
         }
 
-        let val = Number.parseInt(txt);
+        let val = parseInt(txt);
         if (!Number.isInteger(val) || val < 0 || val >= 1<<16) {
             alert(`'${txt}' isn't an integer between 0 and 65535. Keeping ${oldGate.param}.`);
             return oldGate;
