@@ -1,3 +1,4 @@
+import {Config} from "src/Config.js";
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
@@ -22,16 +23,31 @@ const makeScaledMultiplyAddPermutation = (span, scaleFactor) => e => {
     return a | (b << sa) | (c << (sa+sb));
 };
 
+const MUL_STEP = 6;
 const MULTIPLY_ACCUMULATE_SHADER = ketShaderPermute(
     `
         uniform float factor;
         ${ketInputGateShaderCode('A')}
         ${ketInputGateShaderCode('B')}
+
+        // Avoids large multiplications that lose precision.
+        float big_times(float b, float f) {
+            float t = 0.0;
+            float r;
+            for (int k = 0; k < ${Math.ceil(Config.MAX_WIRE_COUNT/MUL_STEP)}; k++) {
+                r = mod(f, ${1<<MUL_STEP}.0);
+                f -= r;
+                t = mod(t + b*r, span);
+                b = mod(b * ${1<<MUL_STEP}.0, span);
+                f /= ${1<<MUL_STEP}.0;
+            }
+            return t;
+        }
     `,
     `
         float d1 = read_input_A();
         float d2 = read_input_B();
-        float d = mod(d1*d2*factor, span);
+        float d = mod(big_times(d1, d2)*factor, span);
         return mod(out_id + span - d, span);`);
 
 MultiplyAccumulateGates.Legacy_MultiplyAddFamily = Gate.buildFamily(3, 16, (span, builder) => builder.
