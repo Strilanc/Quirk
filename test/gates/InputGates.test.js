@@ -2,14 +2,13 @@ import {assertThat, Suite} from "test/TestUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Gates} from "src/gates/AllGates.js"
-import {Matrix} from "src/math/Matrix.js"
 import {Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
 
 let suite = new Suite("InputGates");
 
 const TEST_GATES = new Map([
-    ['$', Gates.ModularArithmeticGates.DecrementModRFamily],
+    ['$', Gates.ModularIncrementGates.DecrementModRFamily],
     ['*', Gates.MultiplyAccumulateGates.MultiplyAddInputsFamily],
     ['X', Gates.HalfTurns.X],
     ['⊕', Gates.XorGates.XorAFamily],

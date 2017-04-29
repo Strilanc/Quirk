@@ -5,7 +5,7 @@ import {
     ketShaderPermute,
     ketInputGateShaderCode
 } from "src/circuit/KetShaderUtil.js"
-import {modulusTooBigChecker} from "src/gates/ModularArithmeticGates.js"
+import {modulusTooBigChecker} from "src/gates/ModularIncrementGates.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 
