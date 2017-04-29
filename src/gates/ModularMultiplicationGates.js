@@ -6,6 +6,7 @@ import {
     ketInputGateShaderCode
 } from "src/circuit/KetShaderUtil.js"
 import {modulusTooBigChecker} from "src/gates/ModularIncrementGates.js"
+import {BIG_MUL_MOD_SHADER_CODE} from "src/gates/MultiplyAccumulateGates.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
 
@@ -18,19 +19,7 @@ const MODULAR_INVERSE_SHADER_CODE = `
         return vec2(v.y - q * v.x, v.x);
     }
     
-    // Avoids large multiplications that lose precision.
-    float times_mod(float b, float f, float modulus) {
-        float t = 0.0;
-        float r;
-        for (int k = 0; k < ${Math.ceil(Config.MAX_WIRE_COUNT/MUL_STEP)}; k++) {
-            r = mod(f, ${1<<MUL_STEP}.0);
-            f -= r;
-            t = mod(t + b*r, modulus);
-            b = mod(b * ${1<<MUL_STEP}.0, modulus);
-            f /= ${1<<MUL_STEP}.0;
-        }
-        return t;
-    }
+    ${BIG_MUL_MOD_SHADER_CODE}
 
     float modular_multiplicative_inverse(float value, float modulus) {
         vec2 s = vec2(0.0, 1.0);
@@ -71,9 +60,9 @@ const POW_MOD_SHADER_CODE = `
         for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
             if (mod(exponent, 2.0) == 1.0) {
                 exponent -= 1.0;
-                f = times_mod(f, base, modulus);
+                f = big_mul_mod(f, base, modulus);
             }
-            base = times_mod(base, base, modulus);
+            base = big_mul_mod(base, base, modulus);
             exponent /= 2.0;
         }
         return f;
@@ -173,7 +162,7 @@ const MODULAR_MULTIPLICATION_SHADER = ketShaderPermute(
         if (v == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return times_mod(out_id, v, modulus);
+        return big_mul_mod(out_id, v, modulus);
     `);
 
 const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
@@ -189,7 +178,7 @@ const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
         if (modular_multiplicative_inverse(input_a, modulus) == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return times_mod(out_id, input_a, modulus);
+        return big_mul_mod(out_id, input_a, modulus);
     `);
 
 const MODULAR_POWER_MULTIPLICATION_SHADER = ketShaderPermute(
@@ -208,7 +197,7 @@ const MODULAR_POWER_MULTIPLICATION_SHADER = ketShaderPermute(
         if (f == -1.0 || out_id >= modulus) {
             return out_id;
         }
-        return times_mod(out_id, f, modulus);
+        return big_mul_mod(out_id, f, modulus);
     `);
 
 ModularMultiplicationGates.TimesAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.

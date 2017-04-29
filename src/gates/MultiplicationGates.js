@@ -20,7 +20,7 @@ const MULTIPLICATION_SHADER = ketShaderPermute(
         if (v == -1.0) {
             return out_id;
         }
-        return mod(out_id * v, span);
+        return big_mul_mod(out_id, v, span);
     `);
 
 const INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
@@ -34,7 +34,7 @@ const INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
         if (modular_multiplicative_inverse(input_a, span) == -1.0) {
             return out_id;
         }
-        return mod(out_id * input_a, span);
+        return big_mul_mod(out_id, input_a, span);
     `);
 
 MultiplicationGates.TimesAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.

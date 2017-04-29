@@ -1,5 +1,5 @@
 import {assertThat, Suite} from "test/TestUtil.js"
-import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
+import {assertThatGateActsLikePermutation, assertThatCircuitOutputsBasisKet} from "test/CircuitOperationTestUtil.js"
 
 import {ModularAdditionGates} from "src/gates/ModularAdditionGates.js"
 import {InputGates} from "src/gates/InputGates.js"
@@ -56,6 +56,5 @@ suite.testUsingWebGL('plus_A_mod_R_no_nan', () => {
          ---/-
          ---/-
          ---/-`);
-    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
-    assertThat(stats.finalState.cell(0, 0)).isEqualTo(1);
+    assertThatCircuitOutputsBasisKet(circuit, 0);
 });

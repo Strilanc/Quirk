@@ -3,6 +3,7 @@ import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
@@ -17,6 +18,27 @@ import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 const USE_SIMPLE_VALUES = false;
 if (USE_SIMPLE_VALUES) {
     console.warn("Using simplified random values for circuit operation testing.")
+}
+
+/**
+ * @param {!CircuitDefinition} circuit
+ * @param {!int} expected_output
+ */
+function assertThatCircuitOutputsBasisKet(circuit, expected_output) {
+    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
+    assertThat(stats.finalState.hasNaN()).isEqualTo(false);
+
+    let actualOut = Seq.range(stats.finalState.height()).
+        filter(i => stats.finalState.cell(0, i).isEqualTo(1)).
+        first('no solo ket found');
+    assertThat(actualOut).isEqualTo(expected_output);
+
+    let b = stats.finalState.rawBuffer();
+    for (let i = 0; i < b.length; i++) {
+        if (i !== expected_output * 2) {
+            assertThat(b[i]).withInfo({i}).isEqualTo(0);
+        }
+    }
 }
 
 /**
@@ -211,5 +233,6 @@ function _assertThatCircuitMutationActsLikePermutation_single(wireCount, updateA
 export {
     assertThatCircuitUpdateActsLikeMatrix,
     assertThatCircuitShaderActsLikeMatrix,
-    assertThatGateActsLikePermutation
+    assertThatGateActsLikePermutation,
+    assertThatCircuitOutputsBasisKet
 }
