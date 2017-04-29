@@ -137,9 +137,14 @@ redrawThrottle = new CooldownThrottle(redrawNow, Config.REDRAW_COOLDOWN_MILLIS, 
 window.addEventListener('resize', () => redrawThrottle.trigger(), false);
 displayed.observable().subscribe(() => redrawThrottle.trigger());
 
+/** @type {undefined|!string} */
+let clickDownGateButtonKey = undefined;
 canvasDiv.addEventListener('click', ev => {
     let pt = eventPosRelativeTo(ev, canvasDiv);
     let curInspector = displayed.get();
+    if (curInspector.isHandOverButtonKey() !== clickDownGateButtonKey) {
+        return;
+    }
     let clicked = syncArea(curInspector.withHand(curInspector.hand.withPos(pt))).tryClick();
     if (clicked !== undefined) {
         revision.commit(clicked.snapshot());
@@ -156,7 +161,8 @@ watchDrags(canvasDiv,
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand));
-        if (newInspector.isHandOverButton()) {
+        clickDownGateButtonKey = newInspector.isHandOverButtonKey();
+        if (clickDownGateButtonKey !== undefined) {
             displayed.set(newInspector);
             return;
         }
