@@ -109,6 +109,7 @@ InputGates.InputRevBFamily = makeInputGate('B', true);
 InputGates.SetA = makeSetInputGate('A');
 InputGates.SetB = makeSetInputGate('B');
 InputGates.SetR = makeSetInputGate('R');
+InputGates.Letters = ["A", "B", "R"];
 
 InputGates.all = [
     ...InputGates.InputAFamily.all,

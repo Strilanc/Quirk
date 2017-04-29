@@ -975,7 +975,7 @@ class CircuitDefinition {
         ];
 
         // Input->Output gate connections.
-        for (let letter of ["A", "B"]) {
+        for (let letter of Gates.InputGates.Letters) {
             let key = `Input Range ${letter}`;
             let altInKey = `Input Default ${letter}`;
             let altOutKey = `Input NO_DEFAULT Range ${letter}`;
