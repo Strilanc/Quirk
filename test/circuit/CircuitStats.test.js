@@ -192,8 +192,8 @@ suite.testUsingWebGL('16-qubit-hadamard-transform', () => {
         if (buf[i*2 + 1] !== 0) {
             assertThat(buf[i * 2 + 1]).withInfo({i}).isEqualTo(0);
         }
-        if (Math.abs(buf[i * 2] * 256.0 - 1.0) > 0.000001) {
-            assertThat(buf[i * 2]).withInfo({i}).isEqualTo(1/256);
+        if (Math.abs(buf[i * 2] * 256.0 - 1.0) > 0.00001) {
+            assertThat(buf[i * 2]).withInfo({i}).isApproximatelyEqualTo(1/256);
         }
     }
 
@@ -201,7 +201,7 @@ suite.testUsingWebGL('16-qubit-hadamard-transform', () => {
     for (let i = 0; i < 16; i++) {
         assertThat(stats.qubitDensityMatrix(Infinity, i)).
             withInfo({i}).
-            isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5), 0.0000001);
+            isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5), 0.000001);
     }
 
     // And unity.

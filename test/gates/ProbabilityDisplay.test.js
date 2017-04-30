@@ -20,7 +20,7 @@ suite.testUsingWebGL("amplitudesToProbabilities", () => {
     ])).toVec2Texture(3);
 
     let con = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(3);
-    assertThat(amplitudesToProbabilities(inp, con).readVecFloatOutputs(3)).isEqualTo(new Float32Array([
+    assertThat(amplitudesToProbabilities(inp, con).readVecFloatOutputs(3)).isApproximatelyEqualTo(new Float32Array([
         4+9,
         16+25,
         36+49,
