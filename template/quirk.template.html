@@ -36,7 +36,7 @@
                 &nbsp;
                 &nbsp;
                 &nbsp;
-                <span style="color:#BBB">Version 2.beta</span>
+                <span style="color:#BBB">Version 2.0</span>
             </div>
 
             <!-- Circuit drawing area -->
@@ -54,37 +54,6 @@
         <!-- INCLUDE ERROR PART -->
 
         <!-- Javascript detection -->
-        <style scoped>
-            @keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
-                from { opacity: 0; }
-                95% { opacity: 0; }
-                to { opacity: 1; }
-            }
-            @-webkit-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
-                from { opacity: 0; }
-                95% { opacity: 0; }
-                to { opacity: 1; }
-            }
-            @-moz-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
-                from { opacity: 0; }
-                95% { opacity: 0; }
-                to { opacity: 1; }
-            }
-            @-o-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
-                from { opacity: 0; }
-                95% { opacity: 0; }
-                to { opacity: 1; }
-            }
-
-            .noscript-warning {
-                color: red;
-                font-size: 24px;
-                position: absolute;
-                top: 25%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-            }
-        </style>
         <div id="noscript-div" class="noscript-warning" style="
                         animation-duration: 3.0s;
                    -moz-animation-duration: 3.0s;
@@ -94,9 +63,41 @@
                    -moz-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
                 -webkit-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
                      -o-animation-name: delay-showing-before-hide-script-can-run-but-then-jump-in;
-                      background-color:white;
-                                border:1px solid red">
-            You appear to have JavaScript blocked. But Quirk is made out of JavaScript... :(
+                      background-color: white;
+                                border: 1px solid red;
+                               padding: 10px;">
+            <style scoped>
+                @keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    95% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @-webkit-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    95% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @-moz-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    95% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @-o-keyframes delay-showing-before-hide-script-can-run-but-then-jump-in {
+                    from { opacity: 0; }
+                    95% { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                .noscript-warning {
+                    color: red;
+                    font-size: 24px;
+                    position: absolute;
+                    top: 25%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+            </style>
+            You appear to have JavaScript blocked. And Quirk is made out of JavaScript... :(
         </div>
         <script>
           document.getElementById('noscript-div').style.display = 'none';

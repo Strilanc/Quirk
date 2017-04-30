@@ -181,6 +181,26 @@ const symmetryBreakingLink = {
         {"id":"~57au","name":"disagree","matrix":"{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}"}
     ]
 };
+const shorLink = {
+    "cols":[
+        [1,1,1,1,1,1,1,1,1,1,"~mdaf",1,1,1,"~h1nm"],
+        [1,1,1,1,1,1,1,1,1,1,{"id":"setR","arg":55},1,1,1,{"id":"setB","arg":26}],
+        [],
+        ["H","H","H","H","H","H","H","H","H","H","X"],
+        ["inputA10",1,1,1,1,1,1,1,1,1,"*BToAmodR6"],
+        ["QFT†10"],
+        [1,1,1,1,"~mjoi",1,1,1,1,1,1,1,"~mjoi"],
+        ["Chance10",1,1,1,1,1,1,1,1,1,"Chance6"],
+        [1,1,1,1,"~a6uq"],
+        ["Sample10"]
+    ],
+    "gates":[
+        {"id":"~h1nm","name":"guess:","matrix":"{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}"},
+        {"id":"~mdaf","name":"input:","matrix":"{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}"},
+        {"id":"~a6uq","name":"samples:","matrix":"{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}"},
+        {"id":"~mjoi","name":"state:","matrix":"{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}"}
+    ]
+};
 
 /**
  * @param {!Revision} revision
@@ -219,8 +239,10 @@ function initMenu(revision, obsIsAnyOverlayShowing) {
     const symmetryBreakAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-symmetry-break');
     const chshTestAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-chsh-test');
     const qftAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-qft');
+    const shorAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-shor');
 
     for (let [a, t] of [[groverAnchor, groverLink],
+                        [shorAnchor, shorLink],
                         [teleportAnchor, teleportLink],
                         [eraserAnchor, eraserLink],
                         [additionAnchor, additionLink],

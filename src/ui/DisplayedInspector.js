@@ -111,11 +111,14 @@ class DisplayedInspector {
     }
 
     /**
-     * @returns {!boolean}
+     * @returns {undefined|!string}
      */
-    isHandOverButton() {
-        return this.hand.pos !== undefined &&
-            this.displayedCircuit.findGateWithButtonContaining(this.hand.pos) !== undefined;
+    isHandOverButtonKey() {
+        if (this.hand.pos === undefined) {
+            return undefined;
+        }
+        let pos = this.displayedCircuit.findGateWithButtonContaining(this.hand.pos);
+        return pos === undefined ? undefined : pos.col + ':' + pos.row;
     }
 
     /**

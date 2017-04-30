@@ -42,7 +42,7 @@ ArithmeticGates.IncrementFamily = Gate.buildFamily(1, 16, (span, builder) => bui
 
 ArithmeticGates.DecrementFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("dec" + span).
-    setSymbol("-1").
+    setSymbol("−1").
     setTitle("Decrement Gate").
     setBlurb("Subtracts 1 from the little-endian number represented by a block of qubits.").
     setActualEffectToShaderProvider(ctx => offsetShader.withArgs(

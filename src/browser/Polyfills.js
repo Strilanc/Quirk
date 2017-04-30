@@ -81,7 +81,9 @@ if (GL !== undefined && GL.INVALID_ENUM === undefined) {
         'VERTEX_SHADER'
     ];
     let gl = document.createElement('canvas').getContext('webgl');
-    for (let key of keys) {
-        GL[key] = GL[key] || gl[key];
+    if (gl !== null && gl !== undefined) {
+        for (let key of keys) {
+            GL[key] = GL[key] || gl[key];
+        }
     }
 }

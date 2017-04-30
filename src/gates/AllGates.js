@@ -14,7 +14,8 @@ import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
-import {ModularArithmeticGates} from "src/gates/ModularArithmeticGates.js"
+import {ModularIncrementGates} from "src/gates/ModularIncrementGates.js"
+import {ModularAdditionGates} from "src/gates/ModularAdditionGates.js"
 import {ModularMultiplicationGates} from "src/gates/ModularMultiplicationGates.js"
 import {MultiplicationGates} from "src/gates/MultiplicationGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
@@ -72,7 +73,8 @@ Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
-Gates.ModularArithmeticGates = ModularArithmeticGates;
+Gates.ModularIncrementGates = ModularIncrementGates;
+Gates.ModularAdditionGates = ModularAdditionGates;
 Gates.ModularMultiplicationGates = ModularMultiplicationGates;
 Gates.MultiplicationGates = MultiplicationGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
@@ -118,7 +120,8 @@ Gates.KnownToSerializer = [
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
     ...InterleaveBitsGates.all,
-    ...ModularArithmeticGates.all,
+    ...ModularAdditionGates.all,
+    ...ModularIncrementGates.all,
     ...ModularMultiplicationGates.all,
     ...MultiplicationGates.all,
     ...MultiplyAccumulateGates.all,
@@ -282,8 +285,8 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Modular",
         gates: [
-            ModularArithmeticGates.IncrementModRFamily.ofSize(2), ModularArithmeticGates.DecrementModRFamily.ofSize(2),
-            ModularArithmeticGates.PlusAModRFamily.ofSize(2), ModularArithmeticGates.MinusAModRFamily.ofSize(2),
+            ModularIncrementGates.IncrementModRFamily.ofSize(2), ModularIncrementGates.DecrementModRFamily.ofSize(2),
+            ModularAdditionGates.PlusAModRFamily.ofSize(2), ModularAdditionGates.MinusAModRFamily.ofSize(2),
             ModularMultiplicationGates.TimesAModRFamily.ofSize(2),
                 ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
             ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(2),

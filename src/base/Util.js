@@ -104,18 +104,17 @@ class Util {
 
     /**
      * @param {!int} n
-     * @returns {!int}
+     * @returns {!int} A value p such that 2**(p-1) < n <= 2**p.
      */
     static ceilLg2(n) {
         if (n <= 1) {
             return 0;
         }
         let p = Math.ceil(Math.log2(n));
-        let v = 1 << p;
-        if (v < n) {
+        if (1<<p < n) {
             return p + 1;
         }
-        if (v >= n*2) {
+        if (n <= 1<<(p-1)) {
             return p - 1;
         }
         return p;
@@ -123,18 +122,17 @@ class Util {
 
     /**
      * @param {!int} n
-     * @returns {!int}
+     * @returns {!int} A value p such that 2**p <= n < 2**(p+1).
      */
     static floorLg2(n) {
         if (n <= 1) {
             return 0;
         }
         let p = Math.floor(Math.log2(n));
-        let v = 1 << p;
-        if (v*2 < n) {
+        if (1<<(p+1) <= n) {
             return p + 1;
         }
-        if (v > n) {
+        if (n < 1<<p) {
             return p - 1;
         }
         return p;

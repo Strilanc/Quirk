@@ -201,7 +201,7 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "+=A1", "+=A2", "+=A3", "+=A4", "+=A5", "+=A6", "+=A7", "+=A8", "+=A9", "+=A10", "+=A11", "+=A12", "+=A13", "+=A14", "+=A15", "+=A16",
     "+AmodR1", "+AmodR2", "+AmodR3", "+AmodR4", "+AmodR5", "+AmodR6", "+AmodR7", "+AmodR8", "+AmodR9", "+AmodR10", "+AmodR11", "+AmodR12", "+AmodR13", "+AmodR14", "+AmodR15", "+AmodR16",
     "+=AA1", "+=AA2", "+=AA3", "+=AA4", "+=AA5", "+=AA6", "+=AA7", "+=AA8", "+=AA9", "+=AA10", "+=AA11", "+=AA12", "+=AA13", "+=AA14", "+=AA15", "+=AA16",
-    "^=A1", "^=A2", "^=A3", "^=A4", "^=A5", "^=A6", "^=A7", "^=A8",
+    "^=A1", "^=A2", "^=A3", "^=A4", "^=A5", "^=A6", "^=A7", "^=A8", "^=A9", "^=A10", "^=A11", "^=A12", "^=A13", "^=A14", "^=A15", "^=A16",
     "sub2", "sub3", "sub4", "sub5", "sub6", "sub7", "sub8", "sub9", "sub10", "sub11", "sub12", "sub13", "sub14", "sub15", "sub16",
     "-=A1", "-=A2", "-=A3", "-=A4", "-=A5", "-=A6", "-=A7", "-=A8", "-=A9", "-=A10", "-=A11", "-=A12", "-=A13", "-=A14", "-=A15", "-=A16",
     "-AmodR1", "-AmodR2", "-AmodR3", "-AmodR4", "-AmodR5", "-AmodR6", "-AmodR7", "-AmodR8", "-AmodR9", "-AmodR10", "-AmodR11", "-AmodR12", "-AmodR13", "-AmodR14", "-AmodR15", "-AmodR16",

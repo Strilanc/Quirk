@@ -1,7 +1,7 @@
 import {Suite} from "test/TestUtil.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {InputGates} from "src/gates/InputGates.js"
-import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {assertThatCircuitOutputsBasisKet, assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
@@ -46,4 +46,30 @@ suite.testUsingWebGL('minus_AB', () => {
             let t = (i>>2)&3;
             return a | (b<<4) | (((t-a*b)&3)<<2);
         }));
+});
+
+suite.testUsingWebGL('plus_big_AB', () => {
+    let circuit = CircuitDefinition.fromTextDiagram(new Map([
+        ['a', InputGates.SetA.withParam((1<<14)+1)],
+        ['b', InputGates.SetB.withParam((1<<14)+1)],
+        ['*', MultiplyAccumulateGates.MultiplyAddInputsFamily],
+        ['-', undefined],
+        ['/', null],
+    ]), `-a-*-
+         ---/-
+         -b-/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-
+         ---/-`);
+    assertThatCircuitOutputsBasisKet(circuit, 1 + (2<<14));
 });

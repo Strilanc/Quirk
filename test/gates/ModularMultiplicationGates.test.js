@@ -45,14 +45,14 @@ suite.testUsingWebGL('MODULAR_INVERSE_SHADER_CODE', () => {
     assertMatches(65363, 12);
 });
 
-suite.testUsingWebGL('MODULAR_INVERSE_SHADER_CODE_times_mod', () => {
+suite.testUsingWebGL('MODULAR_INVERSE_SHADER_CODE_big_mul_mod', () => {
     let testShader = makePseudoShaderWithInputsAndOutputAndCode(
         [],
         Outputs.float(),
         MODULAR_INVERSE_SHADER_CODE + `
         uniform float modulus;
         float outputFor(float k) {
-            return times_mod(k * 15.0, k * 7.0, modulus);
+            return big_mul_mod(k * 15.0, k * 7.0, modulus);
         }`);
 
     assertThat(testShader(WglArg.float('modulus', 65363)).readVecFloatOutputs(12)).

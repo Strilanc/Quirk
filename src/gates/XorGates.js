@@ -18,7 +18,7 @@ const XOR_SHADER = ketShaderPermute(
         }
         return result;`);
 
-XorGates.XorAFamily = Gate.buildFamily(1, 8, (span, builder) => builder.
+XorGates.XorAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("^=A" + span).
     setSymbol("⊕A").
     setTitle("Xor Gate [input A]").
