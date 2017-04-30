@@ -46,6 +46,30 @@ GatePainting.LABEL_DRAWER = args => {
 };
 
 /**
+ * @param {!GateDrawParams} args
+ */
+GatePainting.DIAMOND_DRAWER = args => {
+    if (args.isHighlighted || args.isInToolbox) {
+        GatePainting.paintBackground(args);
+        GatePainting.paintOutline(args);
+        GatePainting.paintGateSymbol(args);
+        return;
+    }
+
+    let {x, y} = args.rect.center();
+    let d = Math.min(args.rect.h, args.rect.w);
+    args.painter.trace(tracer => {
+        tracer.polygon([
+            x, y-d/2,
+            x-d/2, y,
+            x, y+d/2,
+            x+d/2, y
+        ]);
+    }).thenFill(Config.GATE_FILL_COLOR).thenStroke('black');
+    GatePainting.paintGateSymbol(args);
+};
+
+/**
  * @param {!string=} toolboxFillColor
  * @param {!string=} normalFillColor
  * @constructor
