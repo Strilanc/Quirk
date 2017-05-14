@@ -12,8 +12,6 @@ import {WglArg} from "src/webgl/WglArg.js"
 
 let ModularMultiplicationGates = {};
 
-const MUL_STEP = 6;
-
 const MODULAR_INVERSE_SHADER_CODE = `
     vec2 _mod_mul_step(vec2 v, float q) {
         return vec2(v.y - q * v.x, v.x);

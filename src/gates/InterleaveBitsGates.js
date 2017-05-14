@@ -34,36 +34,6 @@ function deinterleaveBit(bit, len) {
 }
 
 /**
- * Returns a function that permutes all of the bits in a value using the given bit permutation.
- * @param {!function(bit: !int, len: !int) : !int} bitPermutation
- * @returns {!function(val: !int, len: !int) : !int}
- */
-let valPermuteFromBit = bitPermutation => (val, len) => {
-    let r = 0;
-    for (let i = 0; i < len; i++) {
-        let b = (val >> i) & 1;
-        r |= b << bitPermutation(i, len);
-    }
-    return r;
-};
-
-/**
- * Interleaves all of the bits in an integer.
- * @param {!int} val
- * @param {!int} len
- * @returns {!int}
- */
-let interleave = valPermuteFromBit(interleaveBit);
-
-/**
- * Deinterleaves all of the bits in an integer.
- * @param {!int} val
- * @param {!int} len
- * @returns {!int}
- */
-let deinterleave = valPermuteFromBit(deinterleaveBit);
-
-/**
  * Constructs a shader that permutes bits based on the given function.
  * @param {!int} span
  * @param {!function(bit: !int, len: !int) : !int} bitPermutation
@@ -158,8 +128,5 @@ export {
     InterleaveBitsGates,
     interleaveBit,
     deinterleaveBit,
-    valPermuteFromBit,
-    interleave,
-    deinterleave,
     shaderFromBitPermutation
 }
