@@ -59,24 +59,36 @@ const teleportLink = {
         {"id":"~f7c0","name":"received","matrix":"{{1,0},{0,1}}"}
     ]
 };
-const eraserLink = {"cols":[
-    [1,"H"],
-    [1,"•",1,1,"X"],
-    [1,1,"QFT7"],
-    [1,1,"Measure","Measure","Measure","Measure","Measure","Measure","Measure"],
-    ["…","…","Chance7"],
-    ["…","…"],
-    ["…","…"],
-    ["…","…"],
-    ["H"],
-    ["Measure"],
-    ["•","X^½"],
-    [1,"Measure"],
-    ["◦","◦","Chance7"],
-    ["◦","•","Chance7"],
-    ["•","◦","Chance7"],
-    ["•","•","Chance7"]
-]};
+const eraserLink = {
+    "cols": [
+        [1,"H"],
+        [1,"•",1,1,"X"],
+        [1,"~slits","QFT7"],
+        [1,1,"Measure","Measure","Measure","Measure","Measure","Measure","Measure"],
+        ["…","…","Chance7"],
+        ["…","…"],
+        ["…","…"],
+        ["…","…"],
+        ["H"],
+        ["Measure"],
+        ["~choice"],
+        ["•","X^½"],
+        [1,"Measure"],
+        [1,"~result",1,1,1,"~flat"],
+        ["◦","◦","Chance7"],
+        ["◦","•","Chance7"],
+        [1,1,1,1,1,"~waves"],
+        ["•","◦","Chance7"],
+        ["•","•","Chance7"]
+    ],
+    "gates": [
+        {"id":"~choice","name":"choice","matrix":"{{1,0},{0,1}}"},
+        {"id":"~result","name":"result","matrix":"{{1,0},{0,1}}"},
+        {"id":"~flat","name":"flat","matrix":"{{1,0},{0,1}}"},
+        {"id":"~waves","name":"waves","matrix":"{{1,0},{0,1}}"},
+        {"id":"~slits","name":"slits","matrix":"{{1,0},{0,1}}"}
+    ]
+};
 const chshTestLink = {
     "cols": [
         ["H"],
