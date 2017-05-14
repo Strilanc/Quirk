@@ -55,7 +55,9 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
 
 /**
  * @param {!Gate} gate
- * @param {!function(target:!int,inputA:!int):!int|!function(target:!int,inputA:!int,inputB:!int):!int} permutationFunc
+ * @param {!function(target : !int,inputA:!int) : !int |
+ *         !function(target : !int, inputA : !int, inputB : !int) : !int |
+ *         !function(target : !int, inputA : !int, inputB : !int, inputR : !int) : !int} permutationFunc
  * @param {!Array.<!int>} inputSpans
  * @param {!boolean} ignoreTargetEndsUpDisabled
  */

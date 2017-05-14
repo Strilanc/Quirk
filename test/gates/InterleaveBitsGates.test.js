@@ -5,7 +5,7 @@ import {
     deinterleaveBit,
 } from "src/gates/InterleaveBitsGates.js"
 
-let suite = new Suite("InterleaveGates");
+let suite = new Suite("InterleaveBitsGates");
 
 suite.test('interleaveBit', () => {
     assertThat(interleaveBit(0, 1)).isEqualTo(0);

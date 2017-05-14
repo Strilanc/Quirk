@@ -7,7 +7,7 @@ import {Controls} from "src/circuit/Controls.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
-let suite = new Suite("GateShaders");
+let suite = new Suite("Impossible_UniverseNotGate");
 
 suite.testUsingWebGL('universalNot', () => {
     let input = Shaders.vec2Data(new Float32Array([

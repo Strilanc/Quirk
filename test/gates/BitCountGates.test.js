@@ -8,7 +8,7 @@ import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Util} from "src/base/Util.js"
 
-let suite = new Suite("ArithmeticGates");
+let suite = new Suite("BitCountGates");
 
 let GATE_SET = new Map([
     ['A', InputGates.InputAFamily],

@@ -6,7 +6,7 @@ import {ModularAdditionGates} from "src/gates/ModularAdditionGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 
-let suite = new Suite("ArithmeticGates");
+let suite = new Suite("ModularIncrementGates");
 
 suite.testUsingWebGL('mod_too_big_disable', () => {
     let circuit = diagram => CircuitDefinition.fromTextDiagram(new Map([
