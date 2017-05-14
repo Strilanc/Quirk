@@ -193,6 +193,68 @@ function _paintSymbolHandleLines(painter, symbol, rect) {
     return {symbol: lines[0], offsetY: lines.length > 1 ? -5 : 0};
 }
 
+/**
+ * @param {!GateDrawParams} args
+ * @param {!Tracer} tracer
+ */
+GatePainting.traceLocationIndependentOutline = (args, tracer) => {
+    let [x1, x2, y1, y2] = [args.rect.x, args.rect.right(), args.rect.y, args.rect.bottom()];
+    let diameter = Math.min(args.rect.h, args.rect.w, Config.GATE_RADIUS*2);
+    let clip = diameter / (2 + Math.sqrt(2));
+    tracer.polygon([
+        x1, y1 + clip,
+        x1 + clip, y1,
+
+        x2 - clip, y1,
+        x2, y1 + clip,
+
+        x2, y2 - clip,
+        x2 - clip, y2,
+
+        x1 + clip, y2,
+        x1, y2 - clip
+    ]);
+};
+
+/**
+ * @param {!GateDrawParams} args
+ * @param {!string} normalFillColor
+ * @param {!string} toolboxFillColor
+ */
+GatePainting.paintLocationIndependentFrame = (args,
+                                              normalFillColor = Config.GATE_FILL_COLOR,
+                                              toolboxFillColor = Config.GATE_FILL_COLOR) => {
+    if (args.isInToolbox) {
+        GatePainting.paintBackground(args, toolboxFillColor, normalFillColor);
+        GatePainting.paintOutline(args);
+        return;
+    }
+
+    let backColor = args.isHighlighted ? Config.HIGHLIGHTED_GATE_FILL_COLOR : normalFillColor;
+    args.painter.trace(tracer => GatePainting.traceLocationIndependentOutline(args, tracer)).
+    thenFill(backColor).
+    thenStroke('black');
+};
+
+/**
+ * @param {!string} normalFillColor
+ * @returns {!function(!GateDrawParams)}
+ */
+GatePainting.makeLocationIndependentGateDrawer = normalFillColor => args => {
+    GatePainting.paintLocationIndependentFrame(args, normalFillColor);
+    GatePainting.paintGateSymbol(args);
+};
+
+/**
+ * @param {!GateDrawParams} args
+ */
+GatePainting.LOCATION_INDEPENDENT_GATE_DRAWER = GatePainting.makeLocationIndependentGateDrawer(Config.GATE_FILL_COLOR);
+
+/**
+ * @param {!Array.<!string>} labels
+ * @param {!Array.<!number>} dividers
+ * @returns {!function(!GateDrawParams)}
+ */
 GatePainting.SECTIONED_DRAWER_MAKER = (labels, dividers) => args => {
     if (args.isInToolbox) {
         GatePainting.DEFAULT_DRAWER(args);
@@ -341,7 +403,7 @@ function _wireY(args, offset) {
  * @param {!Rect} wholeRect
  * @returns {!Rect}
  */
-GatePainting.gateButtonRect = wholeRect => wholeRect.bottomHalf().skipTop(10).paddedBy(-4);
+GatePainting.gateButtonRect = wholeRect => wholeRect.bottomHalf().skipTop(6).paddedBy(-7);
 
 /**
  * @param {!GateDrawParams} args

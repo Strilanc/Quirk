@@ -41,7 +41,7 @@ ModularAdditionGates.PlusAModRFamily = Gate.buildFamily(1, 16, (span, builder) =
     setActualEffectToShaderProvider(ctx => MODULAR_ADDITION_SHADER.withArgs(
         ...ketArgs(ctx, span, ['A', 'R']),
         WglArg.float("factor", +1))).
-    setKnownEffectToParametrizedPermutation((t, a, b) => t < b ? (t + a) % b : t));
+    setKnownEffectToParametrizedPermutation((t, a, r) => t < r ? (t + a) % r : t));
 
 ModularAdditionGates.MinusAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("-AmodR" + span).
@@ -53,7 +53,7 @@ ModularAdditionGates.MinusAModRFamily = Gate.buildFamily(1, 16, (span, builder) 
     setActualEffectToShaderProvider(ctx => MODULAR_ADDITION_SHADER.withArgs(
         ...ketArgs(ctx, span, ['A', 'R']),
         WglArg.float("factor", -1))).
-    setKnownEffectToParametrizedPermutation((t, a, b) => t < b ? Util.properMod(t - a, b) : t));
+    setKnownEffectToParametrizedPermutation((t, a, r) => t < r ? Util.properMod(t - a, r) : t));
 
 ModularAdditionGates.all = [
     ...ModularAdditionGates.PlusAModRFamily.all,

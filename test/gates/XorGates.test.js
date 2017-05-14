@@ -8,7 +8,7 @@ import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Matrix} from "src/math/Matrix.js"
 
-let suite = new Suite("ArithmeticGates");
+let suite = new Suite("XorGates");
 
 suite.testUsingWebGL('xor_a', () => {
     let matrix = Matrix.generateTransition(1 << 6, i => {

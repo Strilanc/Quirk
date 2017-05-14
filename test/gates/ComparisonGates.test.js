@@ -7,7 +7,7 @@ import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {Matrix} from "src/math/Matrix.js"
 
-let suite = new Suite("ArithmeticGates");
+let suite = new Suite("ComparisonGates");
 
 const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Map([
     ...extras,

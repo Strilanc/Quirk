@@ -410,6 +410,30 @@ class Matrix {
     }
 
     /**
+     * Determines if the matrix is a scaled identity matrix.
+     * @param {!number} epsilon
+     * @returns {!boolean}
+     */
+    isScaler(epsilon=0) {
+        if (this._width !== this._height) {
+            return false;
+        }
+        let sr = this._buffer[0];
+        let si = this._buffer[1];
+        for (let c = 0; c < this._width; c++) {
+            for (let r = 0; r < this._height; r++) {
+                let i = (this._width*r + c)*2;
+                let dr = Math.abs(this._buffer[i] - (r === c ? sr : 0));
+                let di = Math.abs(this._buffer[i+1] - (r === c ? si : 0));
+                if (Math.max(dr, di) > epsilon) {
+                    return false;
+                }
+            }
+        }
+        return !this.hasNaN();
+    }
+
+    /**
      * Determines if the matrix contains a NaN.
      * @returns {!boolean}
      */

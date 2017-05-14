@@ -68,14 +68,14 @@ let makeSetInputGate = key => new GateBuilder().
     setHeight(2).
     promiseHasNoNetEffectOnStateVector().
     markAsNotInterestedInControls().
+    markAsReachingOtherWires().
     setStickyContextProvider((qubitIndex, gate) => [{
         key: `Input Default ${key}`,
         val: gate.param,
         sticky: true
     }]).
     setDrawer(args => {
-        GatePainting.paintBackground(args, '#EEE', '#EEE');
-        GatePainting.paintOutline(args);
+        GatePainting.paintLocationIndependentFrame(args, '#EEE', '#EEE');
         if (args.isInToolbox) {
             GatePainting.paintGateSymbol(args, `${key}=#\ndefault`);
         } else {

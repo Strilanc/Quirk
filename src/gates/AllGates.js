@@ -17,11 +17,13 @@ import {MeasurementGate} from "src/gates/MeasurementGate.js"
 import {ModularIncrementGates} from "src/gates/ModularIncrementGates.js"
 import {ModularAdditionGates} from "src/gates/ModularAdditionGates.js"
 import {ModularMultiplicationGates} from "src/gates/ModularMultiplicationGates.js"
+import {ModularMultiplyAccumulateGates} from "src/gates/ModularMultiplyAccumulateGates.js"
 import {MultiplicationGates} from "src/gates/MultiplicationGates.js"
 import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
 import {ParametrizedRotationGates} from "src/gates/ParametrizedRotationGates.js"
 import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
+import {PivotFlipGates} from "src/gates/PivotFlipGates.js"
 import {PostSelectionGates} from "src/gates/PostSelectionGates.js"
 import {PoweringGates} from "src/gates/PoweringGates.js"
 import {ProbabilityDisplayFamily} from "src/gates/ProbabilityDisplay.js"
@@ -76,6 +78,7 @@ Gates.InterleaveBitsGates = InterleaveBitsGates;
 Gates.ModularIncrementGates = ModularIncrementGates;
 Gates.ModularAdditionGates = ModularAdditionGates;
 Gates.ModularMultiplicationGates = ModularMultiplicationGates;
+Gates.ModularMultiplyAccumulateGates = ModularMultiplyAccumulateGates;
 Gates.MultiplicationGates = MultiplicationGates;
 Gates.MultiplyAccumulateGates = MultiplyAccumulateGates;
 Gates.NeGate = NeGate;
@@ -84,6 +87,7 @@ Gates.OtherY = VariousYGates;
 Gates.OtherZ = VariousZGates;
 Gates.ParametrizedRotationGates = ParametrizedRotationGates;
 Gates.PhaseGradientGates = PhaseGradientGates;
+Gates.PivotFlipGates = PivotFlipGates;
 Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
@@ -123,11 +127,13 @@ Gates.KnownToSerializer = [
     ...ModularAdditionGates.all,
     ...ModularIncrementGates.all,
     ...ModularMultiplicationGates.all,
+    ...ModularMultiplyAccumulateGates.all,
     ...MultiplicationGates.all,
     ...MultiplyAccumulateGates.all,
     ...QuarterTurnGates.all,
     ...ParametrizedRotationGates.all,
     ...PhaseGradientGates.all,
+    ...PivotFlipGates.all,
     ...PostSelectionGates.all,
     ...PoweringGates.all,
     ...ReverseBitsGateFamily.all,

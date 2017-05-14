@@ -1,13 +1,12 @@
-import {assertThat, Suite} from "test/TestUtil.js"
+import {Suite} from "test/TestUtil.js"
 import {assertThatGateActsLikePermutation, assertThatCircuitOutputsBasisKet} from "test/CircuitOperationTestUtil.js"
 
 import {ModularAdditionGates} from "src/gates/ModularAdditionGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {Util} from "src/base/Util.js"
 
-let suite = new Suite("ArithmeticGates");
+let suite = new Suite("ModularAdditionGates");
 
 suite.testUsingWebGL('plus_A_mod_R_permutation', () => {
     assertThatGateActsLikePermutation(

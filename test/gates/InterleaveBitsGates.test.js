@@ -3,12 +3,9 @@ import {Suite, assertThat} from "test/TestUtil.js"
 import {
     interleaveBit,
     deinterleaveBit,
-    valPermuteFromBit,
-    interleave,
-    deinterleave
 } from "src/gates/InterleaveBitsGates.js"
 
-let suite = new Suite("InterleaveGates");
+let suite = new Suite("InterleaveBitsGates");
 
 suite.test('interleaveBit', () => {
     assertThat(interleaveBit(0, 1)).isEqualTo(0);
@@ -66,25 +63,6 @@ suite.test('deinterleaveBit', () => {
     assertThat(deinterleaveBit(4, 5)).isEqualTo(2);
     assertThat(deinterleaveBit(1, 5)).isEqualTo(3);
     assertThat(deinterleaveBit(3, 5)).isEqualTo(4);
-});
-
-suite.test('valPermuteFromBit', () => {
-    let id = valPermuteFromBit((i, n) => i);
-    assertThat(id(101, 6)).isEqualTo(37);
-    assertThat(id(101, 7)).isEqualTo(101);
-    assertThat(id(96, 7)).isEqualTo(96);
-
-    let shift = valPermuteFromBit((i, n) => (i + 1) % n);
-    assertThat(shift(0b111000, 6)).isEqualTo(0b110001);
-    assertThat(shift(0b10101, 5)).isEqualTo(0b01011);
-});
-
-suite.test('interleave', () => {
-    assertThat(interleave(0b1111100000, 10)).isEqualTo(0b1010101010);
-});
-
-suite.test('deinterleave', () => {
-    assertThat(deinterleave(0b1010101010, 10)).isEqualTo(0b1111100000);
 });
 
 suite.test('interleave_vs_deinterleave_bit', () => {

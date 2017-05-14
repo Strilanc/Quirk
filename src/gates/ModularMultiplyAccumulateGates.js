@@ -1,0 +1,65 @@
+import {BIG_MUL_MOD_SHADER_CODE} from "src/gates/MultiplyAccumulateGates.js"
+import {Gate} from "src/circuit/Gate.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
+import {modulusTooBigChecker} from "src/gates/ModularIncrementGates.js"
+import {Util} from "src/base/Util.js"
+import {WglArg} from "src/webgl/WglArg.js"
+
+let ModularMultiplyAccumulateGates = {};
+
+const MODULAR_MULTIPLY_ACCUMULATE_SHADER = ketShaderPermute(
+    `
+        uniform float factor;
+        ${ketInputGateShaderCode('A')}
+        ${ketInputGateShaderCode('B')}
+        ${ketInputGateShaderCode('R')}
+        ${BIG_MUL_MOD_SHADER_CODE}
+    `,
+    `
+        float r = read_input_R();
+        float a = read_input_A();
+        float b = read_input_B();
+
+        float d = big_mul_mod(factor * a, b, r);
+
+        float in_id = mod(out_id - d, r);
+        if (in_id < 0.0) {
+            in_id += r;
+        }
+        if (in_id >= r) {
+            in_id -= r;
+        }
+
+        return out_id >= r ? out_id : in_id;
+    `);
+
+ModularMultiplyAccumulateGates.PlusABModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("+ABmodR" + span).
+    setSymbol("+AB\nmod R").
+    setTitle("Modular Multiply-Add Gate").
+    setBlurb("Adds input A times input B into the target, mod input R.\nOnly affects values below R.").
+    setRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
+    setExtraDisableReasonFinder(modulusTooBigChecker("R", span)).
+    setActualEffectToShaderProvider(ctx => MODULAR_MULTIPLY_ACCUMULATE_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A', 'B', 'R']),
+        WglArg.float("factor", +1))).
+    setKnownEffectToParametrizedPermutation((t, a, b, r) => t < r ? (t + a*b) % r : t));
+
+ModularMultiplyAccumulateGates.MinusABModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setSerializedId("-ABmodR" + span).
+    setSymbol("−AB\nmod R").
+    setTitle("Modular Multiply-Subtract Gate").
+    setBlurb("Subtracts input A times input B out of the target, mod input R.\nOnly affects values below R.").
+    setRequiredContextKeys("Input Range A", "Input Range B", "Input Range R").
+    setExtraDisableReasonFinder(modulusTooBigChecker("R", span)).
+    setActualEffectToShaderProvider(ctx => MODULAR_MULTIPLY_ACCUMULATE_SHADER.withArgs(
+        ...ketArgs(ctx, span, ['A', 'B', 'R']),
+        WglArg.float("factor", -1))).
+    setKnownEffectToParametrizedPermutation((t, a, b, r) => t < r ? Util.properMod(t - a*b, r) : t));
+
+ModularMultiplyAccumulateGates.all = [
+    ...ModularMultiplyAccumulateGates.PlusABModRFamily.all,
+    ...ModularMultiplyAccumulateGates.MinusABModRFamily.all,
+];
+
+export {ModularMultiplyAccumulateGates}
