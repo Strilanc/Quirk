@@ -232,6 +232,7 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "-=AB1", "-=AB2", "-=AB3", "-=AB4", "-=AB5", "-=AB6", "-=AB7", "-=AB8", "-=AB9", "-=AB10", "-=AB11", "-=AB12", "-=AB13", "-=AB14", "-=AB15", "-=AB16",
     "PhaseGradient1", "PhaseGradient2", "PhaseGradient3", "PhaseGradient4", "PhaseGradient5", "PhaseGradient6", "PhaseGradient7", "PhaseGradient8", "PhaseGradient9", "PhaseGradient10", "PhaseGradient11", "PhaseGradient12", "PhaseGradient13", "PhaseGradient14", "PhaseGradient15", "PhaseGradient16",
     "PhaseUngradient1", "PhaseUngradient2", "PhaseUngradient3", "PhaseUngradient4", "PhaseUngradient5", "PhaseUngradient6", "PhaseUngradient7", "PhaseUngradient8", "PhaseUngradient9", "PhaseUngradient10", "PhaseUngradient11", "PhaseUngradient12", "PhaseUngradient13", "PhaseUngradient14", "PhaseUngradient15", "PhaseUngradient16",
+    "Flip<A1", "Flip<A2", "Flip<A3", "Flip<A4", "Flip<A5", "Flip<A6", "Flip<A7", "Flip<A8", "Flip<A9", "Flip<A10", "Flip<A11", "Flip<A12", "Flip<A13", "Flip<A14", "Flip<A15", "Flip<A16",
     "rev2", "rev3", "rev4", "rev5", "rev6", "rev7", "rev8", "rev9", "rev10", "rev11", "rev12", "rev13", "rev14", "rev15", "rev16",
     "weave4", "weave5", "weave6", "weave7", "weave8", "weave9", "weave10", "weave11", "weave12", "weave13", "weave14", "weave15", "weave16",
     "split4", "split5", "split6", "split7", "split8", "split9", "split10", "split11", "split12", "split13", "split14", "split15", "split16",

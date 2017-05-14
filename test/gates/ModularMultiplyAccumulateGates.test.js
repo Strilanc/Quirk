@@ -1,5 +1,5 @@
 import {Suite} from "test/TestUtil.js"
-import {assertThatGateActsLikePermutation, assertThatCircuitOutputsBasisKet} from "test/CircuitOperationTestUtil.js"
+import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
 
 import {ModularMultiplyAccumulateGates} from "src/gates/ModularMultiplyAccumulateGates.js"
 import {Util} from "src/base/Util.js"

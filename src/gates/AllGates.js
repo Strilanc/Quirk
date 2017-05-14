@@ -23,6 +23,7 @@ import {MultiplyAccumulateGates} from "src/gates/MultiplyAccumulateGates.js"
 import {NeGate} from "src/gates/Joke_NeGate.js"
 import {ParametrizedRotationGates} from "src/gates/ParametrizedRotationGates.js"
 import {PhaseGradientGates} from "src/gates/PhaseGradientGates.js"
+import {PivotFlipGates} from "src/gates/PivotFlipGates.js"
 import {PostSelectionGates} from "src/gates/PostSelectionGates.js"
 import {PoweringGates} from "src/gates/PoweringGates.js"
 import {ProbabilityDisplayFamily} from "src/gates/ProbabilityDisplay.js"
@@ -86,6 +87,7 @@ Gates.OtherY = VariousYGates;
 Gates.OtherZ = VariousZGates;
 Gates.ParametrizedRotationGates = ParametrizedRotationGates;
 Gates.PhaseGradientGates = PhaseGradientGates;
+Gates.PivotFlipGates = PivotFlipGates;
 Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
@@ -131,6 +133,7 @@ Gates.KnownToSerializer = [
     ...QuarterTurnGates.all,
     ...ParametrizedRotationGates.all,
     ...PhaseGradientGates.all,
+    ...PivotFlipGates.all,
     ...PostSelectionGates.all,
     ...PoweringGates.all,
     ...ReverseBitsGateFamily.all,

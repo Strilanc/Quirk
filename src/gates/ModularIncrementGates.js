@@ -8,16 +8,17 @@ let ModularIncrementGates = {};
 /**
  * @param {!string} inputKey
  * @param {!int} span
+ * @param {!string=} modName
  * @returns {!function(!GateCheckArgs) : (undefined|!string)}
  */
-let modulusTooBigChecker = (inputKey, span) => args => {
+let modulusTooBigChecker = (inputKey, span, modName='mod') => args => {
     let r = args.context.get('Input Range ' + inputKey);
     let d = args.context.get('Input Default ' + inputKey);
     if (r !== undefined && r.length > span) {
-        return "mod\ntoo\nbig";
+        return `${modName}\ntoo\nbig`;
     }
     if (r === undefined && d !== undefined && d > 1<<span) {
-        return "mod\ntoo\nbig";
+        return `${modName}\ntoo\nbig`;
     }
     return undefined;
 };
