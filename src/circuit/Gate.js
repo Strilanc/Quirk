@@ -183,6 +183,17 @@ class Gate {
          *  }
          */
         this.knownPermutationFuncTakingInputs = undefined;
+
+        /**
+         * Indicates that this gate should be shown as if it was not localized to the wires it is placed on, even if
+         * this gate has no direct effect on the state vector.
+         *
+         * Example: used by SetInput gates, which technically have no effect but do change gates on far away wires.
+         *
+         * @type {boolean}
+         * @private
+         */
+        this._showAsReachesOtherWires = false;
     }
 
     /**
@@ -235,6 +246,7 @@ class Gate {
         g.isSingleQubitDisplay = this.isSingleQubitDisplay;
         g._knownMatrix = this._knownMatrix;
         g.knownCircuit = this.knownCircuit;
+        g._showAsReachesOtherWires = this._showAsReachesOtherWires;
         g.isContextTemporary = this.isContextTemporary;
         g.knownCircuitNested = this.knownCircuitNested;
         g._requiredContextKeys = this._requiredContextKeys;
@@ -306,6 +318,13 @@ class Gate {
             }
         }
         return result;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    shouldShowAsHavingGlobalEffect() {
+        return this._showAsReachesOtherWires || !this._isDefinitelyUnitary;
     }
 
     /**
@@ -685,6 +704,7 @@ class GateBuilder {
         return this;
     }
 
+
     /**
      * Sets meta-properties to indicate the gate is safe for classical, quantum, and mixed use.
      * @returns {!GateBuilder}
@@ -755,6 +775,16 @@ class GateBuilder {
         this.gate.isControlWireSource = true;
         this.gate._isDefinitelyUnitary = true;
         this.gate.interestedInControls = false;
+        return this;
+    }
+
+    /**
+     * Indicates that the effect of this gate can immediately affect gates or displays on wires other than the ones
+     * this gate is placed on.
+     * @returns {GateBuilder}
+     */
+    markAsReachingOtherWires() {
+        this.gate._showAsReachesOtherWires = true;
         return this;
     }
 

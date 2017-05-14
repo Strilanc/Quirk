@@ -597,7 +597,7 @@ class DisplayedCircuit {
         let x = Math.round(this.opRect(columnIndex).center().x - 0.5) + 0.5;
 
         // Dashed line indicates effects from non-unitary gates may affect, or appear to affect, other wires.
-        if (this.circuitDefinition.columns[columnIndex].indexOfNonUnitaryGate() !== undefined) {
+        if (this.circuitDefinition.columns[columnIndex].hasGatesWithGlobalEffects()) {
             painter.ctx.save();
             painter.ctx.setLineDash([1, 4]);
             painter.strokeLine(

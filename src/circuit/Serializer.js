@@ -21,15 +21,19 @@ let matrixDrawer = undefined;
 let circuitDrawer = undefined;
 /** @type {!function(!GateDrawParams)} */
 let labelDrawer = undefined;
+/** @type {!function(!GateDrawParams)} */
+let locationIndependentDrawer = undefined;
 /**
  * @param {!function(!GateDrawParams)} gateLabelDrawer
  * @param {!function(!GateDrawParams)} gateMatrixDrawer
  * @param {!function(!GateDrawParams)} gateCircuitDrawer
+ * @param {!function(!GateDrawParams)} locationIndependentGateDrawer
  */
-function initSerializer(gateLabelDrawer, gateMatrixDrawer, gateCircuitDrawer) {
+function initSerializer(gateLabelDrawer, gateMatrixDrawer, gateCircuitDrawer, locationIndependentGateDrawer) {
     labelDrawer = gateLabelDrawer;
     matrixDrawer = gateMatrixDrawer;
     circuitDrawer = gateCircuitDrawer;
+    locationIndependentDrawer = locationIndependentGateDrawer;
 }
 
 /**
@@ -229,6 +233,7 @@ let fromJson_Gate_Matrix = props => {
         setWidth(width).
         setDrawer(props.symbol === "" ? matrixDrawer
             : matrix.isIdentity() ? labelDrawer
+            : matrix.isScaler() ? locationIndependentDrawer
             : undefined).
         setKnownEffectToMatrix(matrix);
     if (matrix.isIdentity()) {

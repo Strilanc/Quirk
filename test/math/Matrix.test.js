@@ -241,6 +241,40 @@ suite.test("isIdentity", () => {
     assertTrue(Matrix.square(1, 0, 0, 0, 1, 0, 0, 0, 1).isIdentity());
 });
 
+suite.test("isScaler", () => {
+    let i = Complex.I;
+
+    assertFalse(Matrix.solo(NaN).isScaler());
+    assertTrue(Matrix.solo(-1).isScaler());
+    assertTrue(Matrix.solo(0).isScaler());
+    assertTrue(Matrix.solo(1).isScaler());
+    assertTrue(Matrix.solo(i).isScaler());
+    assertTrue(Matrix.solo(2).isScaler());
+
+    assertFalse(Matrix.row(1, 0).isScaler());
+    assertFalse(Matrix.row(1, 1).isScaler());
+    assertFalse(Matrix.col(1, 0).isScaler());
+    assertFalse(Matrix.col(1, 1).isScaler());
+
+    assertFalse(Matrix.PAULI_X.isScaler());
+    assertFalse(Matrix.PAULI_Y.isScaler());
+    assertFalse(Matrix.PAULI_Z.isScaler());
+    assertFalse(Matrix.HADAMARD.isScaler());
+
+    assertTrue(Matrix.square(1, 0, 0, 1).isScaler());
+    assertTrue(Matrix.square(-1, 0, 0, -1).isScaler());
+    assertTrue(Matrix.square(i, 0, 0, i).isScaler());
+    assertFalse(Matrix.square(1, 1, 1, 1).isScaler());
+    assertFalse(Matrix.square(1, 1, 1.5, 1).isScaler());
+    assertFalse(Matrix.square(1, 1, 1.5, 1).isScaler());
+    assertFalse(Matrix.square(1, i, i, 1).isScaler());
+    assertFalse(Matrix.square(1, i, i.neg(), 1).isScaler());
+
+    assertTrue(Matrix.square(1, 0, 0, 0, 1, 0, 0, 0, 1).isScaler());
+    assertTrue(Matrix.square(i, 0, 0, 0, i, 0, 0, 0, i).isScaler());
+    assertFalse(Matrix.square(i, 0, 0, 0, 1, 0, 0, 0, i).isScaler());
+});
+
 suite.test("isPhasedPermutation", () => {
     let i = Complex.I;
 

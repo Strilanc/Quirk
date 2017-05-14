@@ -170,6 +170,19 @@ class GateColumn {
     }
 
     /**
+     * @returns {boolean} Whether there is a gate with a global effect in the column or not.
+     */
+    hasGatesWithGlobalEffects() {
+        for (let i = 0; i < this.gates.length; i++) {
+            let gate = this.gates[i];
+            if (gate !== undefined && gate.shouldShowAsHavingGlobalEffect()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @returns {undefined|!int} The index of some non-unitary gate in the column, if any.
      */
     indexOfNonUnitaryGate() {
