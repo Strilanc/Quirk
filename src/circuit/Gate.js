@@ -576,7 +576,7 @@ class GateBuilder {
      * @param {
      *      !function(val: !int, a: !int) : !int |
      *      !function(val: !int, a: !int, b: !int) : !int |
-     *      !function(val: !int, inputs: ...!int) : !int
+     *      !function(val: !int, a: !int, b: !int, r: !int) : !int
      *  } permutationFunc A permutation function taking the initial state of the covered register, then any input
      *      gate inputs, and returning the new state.
      * @returns {!GateBuilder}
