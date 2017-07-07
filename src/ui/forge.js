@@ -360,6 +360,11 @@ function parseUserGateMatrix_noCorrection(text) {
 
     let parts = text.split(',').map(e => e === '' ? 0 : Complex.parse(e));
 
+    // Expand singleton cell into a 2x2 global phase operation.
+    if (parts.length === 1) {
+        parts.push(0, 0, parts[0]);
+    }
+
     // Pad with zeroes up to next size that makes sense.
     let n = Math.max(4, 1 << (2*Math.max(1, Util.floorLg2(Math.sqrt(parts.length)))));
     if (n < parts.length) {
