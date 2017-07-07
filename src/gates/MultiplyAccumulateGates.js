@@ -111,7 +111,7 @@ MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.buildFamily(1, 16, (
 
 MultiplyAccumulateGates.SquareAddInputFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("+=AA" + span).
-    setSymbol("+=A^2").
+    setSymbol("+A^2").
     setTitle("Square-Add Gate [Input A]").
     setBlurb("Adds the square of input A into the qubits covered by this gate.").
     setRequiredContextKeys('Input Range A').
@@ -122,7 +122,7 @@ MultiplyAccumulateGates.SquareAddInputFamily = Gate.buildFamily(1, 16, (span, bu
 
 MultiplyAccumulateGates.SquareSubtractInputFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("-=AA" + span).
-    setSymbol("-=A^2").
+    setSymbol("-A^2").
     setTitle("Square-Subtract Gate [Input A]").
     setBlurb("Subtracts the square of input A out of the qubits covered by this gate.").
     setRequiredContextKeys('Input Range A').
