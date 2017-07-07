@@ -263,10 +263,10 @@ Gates.BottomToolboxGroups = [
     {
         hint: "Inputs",
         gates: [
-            InputGates.InputAFamily.ofSize(2), InputGates.InputRevAFamily.ofSize(2),
-            InputGates.InputBFamily.ofSize(2), InputGates.InputRevBFamily.ofSize(2),
+            InputGates.InputAFamily.ofSize(2), InputGates.SetA,
+            InputGates.InputBFamily.ofSize(2), InputGates.SetB,
             InputGates.InputRFamily.ofSize(2), InputGates.SetR,
-            InputGates.SetA, InputGates.SetB,
+            undefined, undefined,
         ]
     },
     {
