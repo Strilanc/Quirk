@@ -131,7 +131,7 @@ class DisplayedCircuit {
      */
     desiredWidth(forTooltip=false) {
         if (forTooltip) {
-            return this.gateRect(1, this.circuitDefinition.columns.length).x + CIRCUIT_OP_LEFT_SPACING;
+            return this.opRect(this.circuitDefinition.columns.length - 1).right() + CIRCUIT_OP_LEFT_SPACING;
         }
         return this._rectForSuperpositionDisplay().right() + 101;
     }
