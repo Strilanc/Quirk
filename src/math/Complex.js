@@ -76,8 +76,8 @@ class Complex {
 
     /**
      * Returns a complex number with the given magnitude and phase.
-     * @param {!number} magnitude
-     * @param {!number} phase
+     * @param {!number} magnitude Distance from origin.
+     * @param {!number} phase Phase in radians.
      * @returns {!Complex}
      */
     static polar(magnitude, phase) {

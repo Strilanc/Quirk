@@ -236,6 +236,8 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "rev2", "rev3", "rev4", "rev5", "rev6", "rev7", "rev8", "rev9", "rev10", "rev11", "rev12", "rev13", "rev14", "rev15", "rev16",
     "weave4", "weave5", "weave6", "weave7", "weave8", "weave9", "weave10", "weave11", "weave12", "weave13", "weave14", "weave15", "weave16",
     "split4", "split5", "split6", "split7", "split8", "split9", "split10", "split11", "split12", "split13", "split14", "split15", "split16",
+    "grad^t1", "grad^t2", "grad^t3", "grad^t4", "grad^t5", "grad^t6", "grad^t7", "grad^t8", "grad^t9", "grad^t10", "grad^t11", "grad^t12", "grad^t13", "grad^t14", "grad^t15", "grad^t16",
+    "grad^-t1", "grad^-t2", "grad^-t3", "grad^-t4", "grad^-t5", "grad^-t6", "grad^-t7", "grad^-t8", "grad^-t9", "grad^-t10", "grad^-t11", "grad^-t12", "grad^-t13", "grad^-t14", "grad^-t15", "grad^-t16",
 ];
 
 suite.test("known_gates_backwards_compatible", () => {
