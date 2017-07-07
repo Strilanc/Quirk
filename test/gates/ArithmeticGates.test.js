@@ -1,30 +1,17 @@
 import {Suite} from "test/TestUtil.js"
-import {offsetShader, ArithmeticGates} from "src/gates/ArithmeticGates.js"
+import {ArithmeticGates} from "src/gates/ArithmeticGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {
-    assertThatCircuitShaderActsLikeMatrix,
     assertThatCircuitUpdateActsLikeMatrix,
-    assertThatGateActsLikePermutation
+    assertThatGateActsLikePermutation,
 } from "test/CircuitOperationTestUtil.js"
 import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Matrix} from "src/math/Matrix.js"
-import {ketArgs} from "src/circuit/KetShaderUtil.js"
-import {WglArg} from "src/webgl/WglArg.js"
 
 let suite = new Suite("ArithmeticGates");
-
-suite.testUsingWebGL('increment', () => {
-    assertThatCircuitShaderActsLikeMatrix(
-        ctx => offsetShader.withArgs(...ketArgs(ctx, 3), WglArg.float("amount", 5)),
-        Matrix.generateTransition(8, e => (e+5)&7));
-
-    assertThatCircuitShaderActsLikeMatrix(
-        ctx => offsetShader.withArgs(...ketArgs(ctx, 2), WglArg.float("amount", -3)),
-        Matrix.generateTransition(4, e => (e-3)&3));
-});
 
 suite.testUsingWebGL('plus_A', () => {
     assertThatCircuitUpdateActsLikeMatrix(

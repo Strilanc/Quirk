@@ -51,8 +51,8 @@ const TEST_GATES = new Map([
 
     ['#', new GateBuilder().setKnownEffectToMatrix(Matrix.zero(4, 4)).setWidth(2).setHeight(2).gate],
     ['~', new GateBuilder().setKnownEffectToMatrix(Matrix.zero(2, 2)).setWidth(3).gate],
-    ['2', Gates.Arithmetic.IncrementFamily.ofSize(2)],
-    ['3', Gates.Arithmetic.IncrementFamily.ofSize(3)],
+    ['2', Gates.IncrementGates.IncrementFamily.ofSize(2)],
+    ['3', Gates.IncrementGates.IncrementFamily.ofSize(3)],
     ['Q', new GateBuilder().
         setKnownEffectToMatrix(Matrix.square(1, 1, 1, 1,
                                1, Complex.I, -1, Complex.I.neg(),

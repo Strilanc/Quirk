@@ -6,7 +6,7 @@ import {Point} from "src/math/Point.js"
 import {ketArgs} from "src/circuit/KetShaderUtil.js"
 import {WglArg} from "src/webgl/WglArg.js"
 
-import {offsetShader} from "src/gates/ArithmeticGates.js"
+import {offsetShader} from "src/gates/IncrementGates.js"
 import {makeCycleBitsPermutation, cycleBitsShader} from "src/gates/CycleBitsGates.js"
 
 let CountingGates = {};
