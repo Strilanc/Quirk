@@ -72,13 +72,13 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
  * @param {!function(target : !int,inputA:!int) : !int |
  *         !function(target : !int, inputA : !int, inputB : !int) : !int |
  *         !function(target : !int, inputA : !int, inputB : !int, inputR : !int) : !int} permutationFunc
- * @param {!Array.<!int>} inputSpans
+ * @param {!Array.<!int>=} inputSpans
  * @param {!boolean} ignoreTargetEndsUpDisabled
  */
 function assertThatGateActsLikePermutation(
         gate,
         permutationFunc,
-        inputSpans,
+        inputSpans=[],
         ignoreTargetEndsUpDisabled=false) {
     let inputGates = [];
     for (let [key, inputGate] of [['Input Range A', Gates.InputGates.InputAFamily],
@@ -129,7 +129,7 @@ function assertThatGateActsLikePermutation(
     }
 
     let updateAction = ctx => advanceStateWithCircuit(ctx, circuit, false);
-    _assertThatCircuitMutationActsLikePermutation_single(
+    assertThatCircuitUpdateActsLikePermutation(
         wireCount,
         updateAction,
         fullPermutation,
@@ -202,12 +202,26 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
 }
 
 /**
- * @param {!int} wireCount
- * @param {!function(!CircuitEvalContext)} updateAction
- * @param {!function(!int) : !int} permutation
- * @param {*} permuteInfo
+ * @param {!int} wireCount The number of wires in the circuit.
+ * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderMaker Makes the shader to apply.
+ * @param {!function(!int) : !int} permutation The expected permutation.
+ * @param {*} permuteInfo Debug info included when the assertion fails.
  */
-function _assertThatCircuitMutationActsLikePermutation_single(wireCount, updateAction, permutation, permuteInfo) {
+function assertThatCircuitShaderActsLikePermutation(wireCount, shaderMaker, permutation, permuteInfo=undefined) {
+    assertThatCircuitUpdateActsLikePermutation(
+        wireCount,
+        ctx => ctx.applyOperation(shaderMaker(ctx)),
+        permutation,
+        permuteInfo)
+}
+
+/**
+ * @param {!int} wireCount The number of wires in the circuit.
+ * @param {!function(!CircuitEvalContext) : void} updateAction The actual update action.
+ * @param {!function(!int) : !int} permutation The expected permutation.
+ * @param {*} permuteInfo Debug info included when the assertion fails.
+ */
+function assertThatCircuitUpdateActsLikePermutation(wireCount, updateAction, permutation, permuteInfo=undefined) {
     let time = Math.random();
 
     let ampCount = 1 << wireCount;
@@ -250,5 +264,7 @@ export {
     assertThatCircuitUpdateActsLikeMatrix,
     assertThatCircuitShaderActsLikeMatrix,
     assertThatGateActsLikePermutation,
-    assertThatCircuitOutputsBasisKet
+    assertThatCircuitOutputsBasisKet,
+    assertThatCircuitUpdateActsLikePermutation,
+    assertThatCircuitShaderActsLikePermutation,
 }

@@ -25,6 +25,7 @@ import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
 import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
+import {IncrementGates} from "src/gates/IncrementGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
 import {MeasurementGate} from "src/gates/MeasurementGate.js"
@@ -87,6 +88,7 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.IncrementGates = IncrementGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
 Gates.ModularIncrementGates = ModularIncrementGates;
@@ -137,6 +139,7 @@ Gates.KnownToSerializer = [
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
+    ...IncrementGates.all,
     ...InterleaveBitsGates.all,
     ...ModularAdditionGates.all,
     ...ModularIncrementGates.all,
@@ -286,7 +289,7 @@ Gates.BottomToolboxGroups = [
     {
         hint: 'Arithmetic',
         gates: [
-            ArithmeticGates.IncrementFamily.ofSize(2), ArithmeticGates.DecrementFamily.ofSize(2),
+            IncrementGates.IncrementFamily.ofSize(2), IncrementGates.DecrementFamily.ofSize(2),
             ArithmeticGates.PlusAFamily.ofSize(2), ArithmeticGates.MinusAFamily.ofSize(2),
             MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
                 MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2),
