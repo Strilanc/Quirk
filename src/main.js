@@ -233,7 +233,7 @@ canvasDiv.addEventListener('mousedown', ev => {
     let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
     let newInspector = syncArea(displayed.get()).
         withHand(newHand).
-        afterGrabbing(false, false). // Grab the gate.
+        afterGrabbing(false, false, true). // Grab the gate.
         withHand(newHand). // Lose the gate.
         afterTidyingUp().
         withJustEnoughWires(newHand, 0);

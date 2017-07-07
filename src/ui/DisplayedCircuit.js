@@ -934,13 +934,24 @@ class DisplayedCircuit {
      * @param {!Hand} hand
      * @param {!boolean=false} duplicate
      * @param {!boolean=false} wholeColumn
+     * @param {!boolean=false} ignoreResizeTabs
      * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
-    tryGrab(hand, duplicate=false, wholeColumn=false) {
+    tryGrab(hand, duplicate=false, wholeColumn=false, ignoreResizeTabs=false) {
         if (wholeColumn) {
             return this._tryGrabWholeColumn(hand, duplicate) || {newCircuit: this, newHand: hand};
         }
-        let {newCircuit, newHand} = this._tryGrabResizeTab(hand) || {newCircuit: this, newHand: hand};
+
+        let newHand = hand;
+        let newCircuit = this;
+        if (!ignoreResizeTabs) {
+            let resizing = this._tryGrabResizeTab(hand);
+            if (resizing !== undefined) {
+                newHand = resizing.newHand;
+                newCircuit = resizing.newCircuit;
+            }
+        }
+
         return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
     }
 
