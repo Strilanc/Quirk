@@ -42,7 +42,7 @@ MultiplicationGates.TimesAFamily = Gate.buildFamily(1, 16, (span, builder) => bu
     setSymbol("×A").
     setTitle("Multiplication Gate").
     setBlurb("Multiplies the target by input A.\n" +
-        "No effect if the multiplication would be irreversible.").
+        "No effect if the input is even (would be irreversible).").
     setRequiredContextKeys("Input Range A").
     setActualEffectToShaderProvider(ctx => MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A']))).
     setKnownEffectToParametrizedPermutation((x, a) => modularMultiply(x, a, 1<<span)));
@@ -52,7 +52,7 @@ MultiplicationGates.TimesAInverseFamily = Gate.buildFamily(1, 16, (span, builder
     setSymbol("×A^-1").
     setTitle("Inverse Multiplication Gate").
     setBlurb("Inverse-multiplies the target by input A (modulo 2^n).\n" +
-        "No effect if the multiplication would be irreversible.").
+        "No effect if the input is even (would be irreversible).").
     setRequiredContextKeys("Input Range A").
     setKnownEffectToParametrizedPermutation((x, a) => modularUnmultiply(x, a, 1<<span)).
     setActualEffectToShaderProvider(ctx => INVERSE_MULTIPLICATION_SHADER.withArgs(...ketArgs(ctx, span, ['A']))));
