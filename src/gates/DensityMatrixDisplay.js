@@ -190,4 +190,4 @@ let DensityMatrixDisplayFamily = Gate.buildFamily(1, 8, (span, builder) =>
     span === 1 ?
         singleDensityMatrixDisplayMaker(builder) :
         largeDensityMatrixDisplayMaker(span, builder));
-export {DensityMatrixDisplayFamily, amplitudesToCouplings}
+export {DensityMatrixDisplayFamily, amplitudesToCouplings, densityDisplayStatTexture, densityPixelsToMatrix}

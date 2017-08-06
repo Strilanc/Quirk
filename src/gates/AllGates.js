@@ -7,6 +7,7 @@ import {Controls} from "src/gates/Controls.js"
 import {CountingGates} from "src/gates/CountingGates.js"
 import {CycleBitsGates} from "src/gates/CycleBitsGates.js"
 import {DensityMatrixDisplayFamily} from "src/gates/DensityMatrixDisplay.js"
+import {EntanglementDisplays} from "src/gates/EntanglementDisplays.js"
 import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
 import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
@@ -70,6 +71,7 @@ Gates.CycleBitsGates = CycleBitsGates;
 Gates.Displays.DensityMatrixDisplay = DensityMatrixDisplayFamily.ofSize(1);
 Gates.Displays.DensityMatrixDisplay2 = DensityMatrixDisplayFamily.ofSize(2);
 Gates.Displays.ChanceDisplay = Gates.Displays.ProbabilityDisplayFamily.ofSize(1);
+Gates.EntanglementDisplays = EntanglementDisplays;
 Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
@@ -122,6 +124,7 @@ Gates.KnownToSerializer = [
     ...ComparisonGates.all,
     ...CountingGates.all,
     ...CycleBitsGates.all,
+    ...EntanglementDisplays.all,
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
@@ -229,7 +232,15 @@ Gates.TopToolboxGroups = [
             NeGate,     undefined,
             SpacerGate, undefined
         ]
-    }
+    },
+    {
+        hint: 'Test',
+        gates: [
+            EntanglementDisplays.Iteration1, EntanglementDisplays.Iteration2,
+            EntanglementDisplays.Iteration3, EntanglementDisplays.Iteration4,
+            EntanglementDisplays.Iteration5, EntanglementDisplays.Iteration6,
+        ]
+    },
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */

@@ -143,7 +143,7 @@ let toJson_Gate = (gate, context=new CustomGateSet()) => {
     } else if (gate.knownCircuit !== undefined) {
         result.circuit = toJson_CircuitDefinition(gate.knownCircuit, context);
     } else {
-        throw new DetailedError("Don't known how to serialize gate's function.", {gate});
+        throw new DetailedError("Don't know how to serialize gate's function.", {gate});
     }
 
     return result;
