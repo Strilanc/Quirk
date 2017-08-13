@@ -38,11 +38,8 @@ function initClear(revision, obsIsAnyOverlayShowing) {
  * @returns {!string}
  */
 function _getEmptyCircuitState(revision) {
-    let val;
-    revision.latestActiveCommit().subscribe(jsonText => {
-        val = JSON.parse(jsonText);
-        val["cols"] = [];
-    });
+    let val = JSON.parse(revision.peekActiveCommit());
+    val["cols"] = [];
 
     return JSON.stringify(val);
 }
