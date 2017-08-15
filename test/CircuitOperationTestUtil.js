@@ -72,13 +72,13 @@ function assertThatCircuitShaderActsLikeMatrix(shaderFunc, matrix, repeats=5) {
  * @param {!function(target : !int,inputA:!int) : !int |
  *         !function(target : !int, inputA : !int, inputB : !int) : !int |
  *         !function(target : !int, inputA : !int, inputB : !int, inputR : !int) : !int} permutationFunc
- * @param {!Array.<!int>} inputSpans
+ * @param {!Array.<!int>=} inputSpans
  * @param {!boolean} ignoreTargetEndsUpDisabled
  */
 function assertThatGateActsLikePermutation(
         gate,
         permutationFunc,
-        inputSpans,
+        inputSpans=[],
         ignoreTargetEndsUpDisabled=false) {
     let inputGates = [];
     for (let [key, inputGate] of [['Input Range A', Gates.InputGates.InputAFamily],
@@ -129,7 +129,7 @@ function assertThatGateActsLikePermutation(
     }
 
     let updateAction = ctx => advanceStateWithCircuit(ctx, circuit, false);
-    _assertThatCircuitMutationActsLikePermutation_single(
+    assertThatCircuitUpdateActsLikePermutation(
         wireCount,
         updateAction,
         fullPermutation,
@@ -142,21 +142,38 @@ function assertThatGateActsLikePermutation(
 }
 
 /**
+ * @param {!Gate} gate
+ * @param {!function(target : !int) : !number} phaserFunc
+ * @param {!number|undefined=} forcedTime
+ */
+function assertThatGateActsLikePhaser(gate, phaserFunc, forcedTime=undefined) {
+    let wireCount = gate.height;
+    let col = new Array(wireCount).fill(undefined);
+    col[0] = gate;
+    let circuit = new CircuitDefinition(wireCount, [new GateColumn(col)]);
+    let matrix = Matrix.generateDiagonal(1 << wireCount, k => Complex.polar(1, phaserFunc(k)*Math.PI*2));
+    let updateAction = ctx => advanceStateWithCircuit(ctx, circuit, false);
+    assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix, forcedTime);
+}
+
+/**
  * @param {function(!CircuitEvalContext)} updateAction
  * @param {!Matrix} matrix
  * @param {!int=} repeats
+ * @param {!number|undefined=} forcedTime
  */
-function assertThatCircuitUpdateActsLikeMatrix(updateAction, matrix, repeats=5) {
+function assertThatCircuitUpdateActsLikeMatrix(updateAction, matrix, repeats=5, forcedTime=undefined) {
     for (let i = 0; i < repeats; i++) {
-        assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix);
+        assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix, forcedTime);
     }
 }
 
 /**
- * @param {function(!CircuitEvalContext) : void} updateAction
+ * @param {function(!CircuitEvalContext)} updateAction
  * @param {!Matrix} matrix
+ * @param {!number|undefined=} forcedTime
  */
-function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
+function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix, forcedTime=undefined) {
     let qubitSpan = Math.round(Math.log2(matrix.height()));
     let extraWires = Math.floor(Math.random()*5);
     let time = Math.random();
@@ -165,6 +182,9 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
         extraWires = 0;
         time = 0;
         qubitIndex = 0;
+    }
+    if (forcedTime !== undefined) {
+        time = forcedTime;
     }
     let wireCount = qubitSpan + extraWires;
     let controls = Controls.NONE;
@@ -202,12 +222,26 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix) {
 }
 
 /**
- * @param {!int} wireCount
- * @param {!function(!CircuitEvalContext)} updateAction
- * @param {!function(!int) : !int} permutation
- * @param {*} permuteInfo
+ * @param {!int} wireCount The number of wires in the circuit.
+ * @param {!function(!CircuitEvalContext) : !WglConfiguredShader} shaderMaker Makes the shader to apply.
+ * @param {!function(!int) : !int} permutation The expected permutation.
+ * @param {*} permuteInfo Debug info included when the assertion fails.
  */
-function _assertThatCircuitMutationActsLikePermutation_single(wireCount, updateAction, permutation, permuteInfo) {
+function assertThatCircuitShaderActsLikePermutation(wireCount, shaderMaker, permutation, permuteInfo=undefined) {
+    assertThatCircuitUpdateActsLikePermutation(
+        wireCount,
+        ctx => ctx.applyOperation(shaderMaker(ctx)),
+        permutation,
+        permuteInfo)
+}
+
+/**
+ * @param {!int} wireCount The number of wires in the circuit.
+ * @param {!function(!CircuitEvalContext)} updateAction The actual update action.
+ * @param {!function(!int) : !int} permutation The expected permutation.
+ * @param {*} permuteInfo Debug info included when the assertion fails.
+ */
+function assertThatCircuitUpdateActsLikePermutation(wireCount, updateAction, permutation, permuteInfo=undefined) {
     let time = Math.random();
 
     let ampCount = 1 << wireCount;
@@ -250,5 +284,8 @@ export {
     assertThatCircuitUpdateActsLikeMatrix,
     assertThatCircuitShaderActsLikeMatrix,
     assertThatGateActsLikePermutation,
-    assertThatCircuitOutputsBasisKet
+    assertThatCircuitOutputsBasisKet,
+    assertThatCircuitUpdateActsLikePermutation,
+    assertThatCircuitShaderActsLikePermutation,
+    assertThatGateActsLikePhaser,
 }
