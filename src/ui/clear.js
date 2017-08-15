@@ -19,11 +19,29 @@
 function initClear(revision, obsIsAnyOverlayShowing) {
     const EMPTY_STATE = '{"cols":[]}';
 
-    const clearButton = /** @type {!HTMLButtonElement} */ document.getElementById('clear-button');
+    const clearAllButton = /** @type {!HTMLButtonElement} */ document.getElementById('clear-all-button');
     revision.latestActiveCommit().zipLatest(obsIsAnyOverlayShowing, (r, v) => ({r, v})).subscribe(({r, v}) => {
-        clearButton.disabled = r === EMPTY_STATE || v;
+        clearAllButton.disabled = r === EMPTY_STATE || v;
     });
-    clearButton.addEventListener('click', () => revision.commit(EMPTY_STATE));
+    clearAllButton.addEventListener('click', () => revision.commit(EMPTY_STATE));
+
+    const clearCircuitButton = /** @type {!HTMLButtonElement} */ document.getElementById('clear-circuit-button');
+    revision.latestActiveCommit().zipLatest(obsIsAnyOverlayShowing, (r, v) => ({r, v})).subscribe(({r, v}) => {
+        clearCircuitButton.disabled = r === _getEmptyCircuitState(revision) || v;
+    });
+    clearCircuitButton.addEventListener('click', () => revision.commit(_getEmptyCircuitState(revision)));
+}
+
+/**
+ * Returns current state without circuit. Keeps all custom gates.
+ * @param {!Revision} revision
+ * @returns {!string}
+ */
+function _getEmptyCircuitState(revision) {
+    let val = JSON.parse(revision.peekActiveCommit());
+    val["cols"] = [];
+
+    return JSON.stringify(val);
 }
 
 export {initClear}
