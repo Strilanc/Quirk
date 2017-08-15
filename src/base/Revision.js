@@ -61,6 +61,14 @@ class Revision {
     }
 
     /**
+     * Returns a snapshot of the current commit.
+     * @returns {*}
+     */
+    peekActiveCommit() {
+        return this._latestActiveCommit.get();
+    }
+
+    /**
      * Returns a cleared revision history, starting at the given state.
      * @param {*} state
      */
