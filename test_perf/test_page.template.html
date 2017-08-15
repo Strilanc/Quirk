@@ -4,13 +4,17 @@
         <meta charset="UTF-8">
     </head>
     <body>
+        <div id="progress"></div>
         <pre id="output">
-
         </pre>
         <script>
+            var __total_done = 0;
+            var __total_tests = 0;
             __karma__ = {
                 start: undefined,
                 result: function(arg) {
+                    __total_done++;
+                    document.getElementById('progress').innerText = 'Progress: ' + __total_done + ' / ' + __total_tests;
                     if (!arg.success) {
                         document.getElementById('output').innerText += "\nFAILED: " +
                                 arg.suite[0] + " " + arg.description;
@@ -20,7 +24,9 @@
                     }
                 },
                 info: function(arg) {
-                    document.getElementById('output').innerText += "\nTotal tests: " + arg.total;
+                    __total_tests = arg.total;
+                    document.getElementById('progress').innerText = 'Progress: ' + __total_done + ' / ' + __total_tests;
+                    document.getElementById('output').innerText += "\nTotal tests: " + arg.total + "\nRunning...";
                 },
                 complete: function() {
                     document.getElementById('output').innerText += "\nDone";
@@ -29,7 +35,7 @@
 
 <!-- INCLUDE SOURCE PART -->
 
-            document.getElementById('output').innerText = "Started...";
+            document.getElementById('output').innerText = "Starting...";
             setTimeout(function() {
                 __karma__.start();
             }, 0);

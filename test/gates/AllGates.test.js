@@ -23,7 +23,10 @@ import {Gate} from "src/circuit/Gate.js"
 import {seq} from "src/base/Seq.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
-import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
+import {
+    assertThatGateActsLikePermutation,
+    assertThatGateActsLikePhaser
+} from "test/CircuitOperationTestUtil.js"
 
 let suite = new Suite("AllGates");
 
@@ -137,6 +140,14 @@ suite.testUsingWebGL("gatesActLikeTheirKnownPermutation", () => {
     }
 });
 
+suite.testUsingWebGL("gatesActLikeTheirKnownPhasingFunction", () => {
+    for (let gate of Gates.KnownToSerializer) {
+        if (gate.knownPhaseTurnsFunc !== undefined && gate.height <= 3) {
+            assertThatGateActsLikePhaser(gate, gate.knownPhaseTurnsFunc);
+        }
+    }
+});
+
 suite.testUsingWebGL("knownNonUnitaryGates", () => {
     let nonUnitaryGates = new Set(Gates.KnownToSerializer.
         filter(g => !g.isDefinitelyUnitary()).
@@ -184,7 +195,7 @@ suite.test("knownDoNothingGateFamilies", () => {
     ]));
 });
 
-suite.testUsingWebGL("knownDynamicGateFamilies", () => {
+suite.test("knownDynamicGateFamilies", () => {
     let dynamicFamilies = new Set(Gates.KnownToSerializer.
         filter(g => g.stableDuration() !== Infinity).
         map(g => g.gateFamily[0].serializedId));
@@ -210,6 +221,8 @@ suite.testUsingWebGL("knownDynamicGateFamilies", () => {
         '>>t2',
         '<<t2',
         'X^⌈t⌉',
-        'X^⌈t-¼⌉'
+        'X^⌈t-¼⌉',
+        'grad^t1',
+        'grad^-t1',
     ]));
 });
