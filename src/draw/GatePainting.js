@@ -494,4 +494,36 @@ GatePainting.PERMUTATION_DRAWER = args => {
     }
 };
 
+/**
+ * Draws the gate as a re-arrangement of wires.
+ * @param {!GateDrawParams} args
+ * @param {!Array.<!number>} offsets
+ */
+GatePainting.DrawPerturbedWires = (args, offsets) => {
+    _eraseWiresForPermutation(args);
+
+    // Draw wires.
+    let x1 = args.rect.x;
+    let x2 = args.rect.x + 3;
+    let x3 = args.rect.right() - 3;
+    let x4 = args.rect.right();
+    args.painter.ctx.strokeStyle = 'black';
+    for (let i = 0; i < args.gate.height; i++) {
+        let pt = new Point(args.positionInCircuit.col, args.positionInCircuit.row + i);
+        let isMeasured = args.stats.circuitDefinition.locIsMeasured(pt);
+        let y = _wireY(args, i);
+        let yt = _wireY(args, i + offsets[i]);
+        args.painter.ctx.beginPath();
+        for (let [dx, dy] of isMeasured ? [[-1, -1], [0, +1]] : [[0, 0]]) {
+            args.painter.ctx.moveTo(Math.min(x1, x1 + dx), y + dy);
+            args.painter.ctx.lineTo(x1 + dx, y + dy);
+            args.painter.ctx.lineTo(x2 + dx, yt + dy);
+            args.painter.ctx.lineTo(x3 + dx, yt + dy);
+            args.painter.ctx.lineTo(x4 + dx, y + dy);
+            args.painter.ctx.lineTo(Math.max(x4, x4 + dx), y + dy);
+        }
+        args.painter.ctx.stroke();
+    }
+};
+
 export {GatePainting}

@@ -47,6 +47,7 @@ function _paintBlochSphereDisplay_indicator(
  * @param {!string} label
  * @param scale
  * @param no_scale
+ * @param {!Matrix} xyz_center
  */
 function _paintBlochSphereDisplay_indicator2(
         painter,
@@ -55,15 +56,20 @@ function _paintBlochSphereDisplay_indicator2(
         fillColor,
         label,
         scale=1,
-        no_scale=false) {
+        no_scale=false,
+        xyz_center=Matrix.col(0, 0, 0)) {
     let x = xyz.rawBuffer()[0];
     let y = xyz.rawBuffer()[2];
     let z = xyz.rawBuffer()[4];
-    let c = drawArea.center();
+    let cx = xyz_center.rawBuffer()[0];
+    let cy = xyz_center.rawBuffer()[2];
+    let cz = xyz_center.rawBuffer()[4];
+    let origin = drawArea.center();
     let u = Math.min(drawArea.w, drawArea.h) / 2;
     let {dx, dy, dz} = MathPainter.coordinateSystem(u);
 
-    let p = c.plus(dx.times(x)).plus(dy.times(y)).plus(dz.times(z));
+    let c = origin.plus(dx.times(cx)).plus(dy.times(cy)).plus(dz.times(cz));
+    let p = origin.plus(dx.times(x)).plus(dy.times(y)).plus(dz.times(z));
     let r = 7 / (1 + drawArea.w/32 * x / 6);
     r *= (no_scale ? 1 : Math.sqrt(Math.sqrt(x*x + y*y + z*z))) * scale;
 
@@ -330,7 +336,7 @@ EntanglementDisplays.Iteration5 = make_density_drawer("iter5", (args, ρ) =>
 
 EntanglementDisplays.Iteration6 = new GateBuilder().
     setSerializedIdAndSymbol('iter6').
-    setWidth(1).
+    setWidth(2).
     setHeight(2).
     promiseHasNoNetEffectOnStateVector().
     setDrawer(GatePainting.makeDisplayDrawer(args => {
@@ -343,10 +349,17 @@ EntanglementDisplays.Iteration6 = new GateBuilder().
         for (let dx of [0]) {
             args.painter.strokeLine(args.rect.topHalf().center().offsetBy(dx, 0), args.rect.bottomHalf().center().offsetBy(dx, 0));
         }
-        let topArea = args.rect.topHalf();
+        let topArea = args.rect.takeTopProportion(0.95);
         let c = topArea.center();
         let u = Math.min(topArea.w, topArea.h) / 2;
         let {dx, dy, dz} = MathPainter.coordinateSystem(u);
+
+        GatePainting.DrawPerturbedWires(args, [0.48, 0.4]);
+        let vc = args.rect.takeBottomProportion(0.01).takeLeftProportion(0.25).center();
+        args.painter.strokeLine(vc, c, 'black');
+        args.painter.fillCircle(vc, 6, '#EFF');
+        args.painter.strokeCircle(vc, 6, 'black');
+        args.painter.print('∀', vc.x, vc.y, 'center', 'middle', 'black', '16pt monospace', 20, 20);
 
         // Draw sphere and axis lines (in not-quite-proper 3d).
         args.painter.fillCircle(c, u, '#EFF');
@@ -359,14 +372,11 @@ EntanglementDisplays.Iteration6 = new GateBuilder().
             }
         }).thenStroke('#BBB');
 
-        let vc = args.rect.bottomHalf().center();
-        args.painter.fillCircle(vc, 10, '#EFF');
-        args.painter.strokeCircle(vc, 10, 'black');
-        args.painter.print('∀', vc.x, vc.y, 'center', 'middle', 'black', '16pt monospace', 20, 20);
-
         paintStatePointCloud(args.painter, ρ, topArea, second_qubit_point_given_first);
 
         let pts = [];
+        let [x,y,z] = density_qubit_2(ρ).qubitDensityMatrixToBlochVector();
+        let cen = Matrix.col(x, y, z);
         for (let [yaw, pitch, label, color, scale] of [
             [Math.PI/2, -Math.PI/2, '', '#AFA', 0.3],
             [0, -Math.PI/2, '', '#FAA', 0.3],
@@ -379,12 +389,9 @@ EntanglementDisplays.Iteration6 = new GateBuilder().
             let amp1_abs = Math.sin(pitch/2);
             let amp1 = Complex.polar(amp1_abs, yaw);
             let xyz = second_qubit_point_given_first(ρ, Matrix.col(amp0, amp1));
-            if (xyz.norm2() > 0) {
-                pts.push(xyz);
-                _paintBlochSphereDisplay_indicator2(args.painter, xyz, topArea, color, label, scale);
-            }
+            pts.push(xyz);
+            _paintBlochSphereDisplay_indicator2(args.painter, xyz, topArea, color, label, scale, false, cen);
         }
-        let [x,y,z] = density_qubit_2(ρ).qubitDensityMatrixToBlochVector();
         let m = 0;
         for (let e1 of pts) {
             for (let e2 of pts) {
@@ -393,8 +400,8 @@ EntanglementDisplays.Iteration6 = new GateBuilder().
         }
 
         args.painter.ctx.save();
-        args.painter.ctx.globalAlpha *= Math.max(0, 1 - m*10);
-        _paintBlochSphereDisplay_indicator2(args.painter, Matrix.col(x, y, z), topArea, 'white', '', 0.7, true);
+        args.painter.ctx.globalAlpha *= 0.5;
+        _paintBlochSphereDisplay_indicator2(args.painter, Matrix.col(x, y, z), topArea, 'black', '', 0.7, true);
         args.painter.ctx.restore();
     })).
     setStatTexturesMaker(ctx => densityDisplayStatTexture(
