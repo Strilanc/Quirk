@@ -158,7 +158,7 @@ function combinedShaderPartsWithCode(shaderPartsOrDescs, tailCode) {
             }
         }
         let libCode = [...libs, ...shaderPartDescs.map(e => e.toConcretePart().code)].join('');
-        return libCode + '\n//////// tail ////////\n' + tailCode;
+        return libCode.replace('void main()', '\n//////// tail ////////\n' + tailCode + '\n//////// main ////////\nvoid main()');
     };
 
     return new WglShader(sourceMaker);
