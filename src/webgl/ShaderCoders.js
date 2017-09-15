@@ -142,11 +142,11 @@ class Outputs {
 }
 
 /**
- * @param {!string} tailCode
  * @param {!Array.<!ShaderPartDescription|!ShaderPart>} shaderPartsOrDescs
+ * @param {!string} bodyCode
  * @returns {!WglShader}
  */
-function combinedShaderPartsWithCode(shaderPartsOrDescs, tailCode) {
+function combinedShaderPartsWithCode(shaderPartsOrDescs, bodyCode) {
     let shaderPartDescs = shaderPartsOrDescs.map(partOrDesc => partOrDesc instanceof ShaderPart ?
         new ShaderPartDescription(_ => partOrDesc, 'fixed') :
         partOrDesc);
@@ -158,7 +158,15 @@ function combinedShaderPartsWithCode(shaderPartsOrDescs, tailCode) {
             }
         }
         let libCode = [...libs, ...shaderPartDescs.map(e => e.toConcretePart().code)].join('');
-        return libCode.replace('void main()', '\n//////// tail ////////\n' + tailCode + '\n//////// main ////////\nvoid main()');
+        let afterLibCode = '\n//////// body ////////\n' + bodyCode + '\n';
+
+        // HACK: workaround for https://bugs.chromium.org/p/chromium/issues/detail?id=764036
+        let mainIndex = libCode.indexOf('void main()');
+        if (mainIndex !== -1) {
+          return libCode.substring(0, mainIndex) + afterLibCode + libCode.substring(mainIndex);
+        }
+
+        return libCode + afterLibCode;
     };
 
     return new WglShader(sourceMaker);
@@ -167,11 +175,11 @@ function combinedShaderPartsWithCode(shaderPartsOrDescs, tailCode) {
 /**
  * @param {!Array.<ShaderPartDescription>} inputs
  * @param {!ShaderPartDescription} output
- * @param {!string} tailCode
+ * @param {!string} bodyCode
  * @returns {!function(args: ...(!!WglTexture|!WglArg)) : !WglConfiguredShader}
  */
-function makePseudoShaderWithInputsAndOutputAndCode(inputs, output, tailCode) {
-    let shader = combinedShaderPartsWithCode([...inputs, output], tailCode);
+function makePseudoShaderWithInputsAndOutputAndCode(inputs, output, bodyCode) {
+    let shader = combinedShaderPartsWithCode([...inputs, output], bodyCode);
     return (...inputsAndArgs) => {
         let args = [];
         for (let i = 0; i < inputs.length; i++) {
