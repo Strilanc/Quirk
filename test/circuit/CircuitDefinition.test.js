@@ -762,9 +762,9 @@ suite.test("colHasDoubleWireControl", () => {
 
 suite.test("gateAtLocIsDisabledReason", () => {
     let bad = (col, row, diagram, ...extraGates) =>
-        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isNotEqualTo(undefined);
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).withInfo({diagram}).isNotEqualTo(undefined);
     let good = (col, row, diagram, ...extraGates) =>
-        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).isEqualTo(undefined);
+        assertThat(circuit(diagram, ...extraGates).gateAtLocIsDisabledReason(col, row)).withInfo({diagram}).isEqualTo(undefined);
 
     good(-100, 0, `-`);
     good(+100, 0, `-`);
@@ -857,6 +857,27 @@ suite.test("gateAtLocIsDisabledReason", () => {
     good(1, 1, `---
                -?●
                -X○`, ['?', Gates.Displays.DensityMatrixDisplay2]);
+
+    // Controlled bit permutations.
+    good(1, 1, `-●-
+                -<-
+                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    good(1, 1, `M●-
+                -<-
+                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    good(1, 1, `M●-
+                M<-
+                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    good(1, 1, `M●-
+                M<-
+                M/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+
+    bad(1, 1, `-●-
+               M<-
+               -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    bad(1, 1, `-●-
+               M<-
+               M/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
 });
 
 suite.test("gateAtLocIsDisabledReason_controls", () => {

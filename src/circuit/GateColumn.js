@@ -171,13 +171,21 @@ class GateColumn {
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
+            // Don't try to superpose measured qubits.
             if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
-            if (g.effectMightPermutesStates() &&
-                    g.knownBitPermutationFunc === undefined &&
-                    (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
-                return "no\nremix\n(sorry)";
+
+            if (g.effectMightPermutesStates()) {
+                // Only permutations that respect bit boundaries can be performed on mixed qubits.
+                if (maskMeasured !== mask && g.knownBitPermutationFunc === undefined) {
+                    return "no\nremix\n(sorry)";
+                }
+
+                // Permutations affecting classical states can't have quantum controls.
+                if (this.hasCoherentControl(inputMeasureMask)) {
+                    return "no\nremix\n(sorry)";
+                }
             }
         }
         return undefined;
