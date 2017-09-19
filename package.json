@@ -14,12 +14,12 @@
     "grunt-contrib-clean": "~1.0.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-contrib-copy": "~1.0.0",
-    "grunt-contrib-uglify": "~1.0.1",
+    "grunt-contrib-uglify": "~3.1.0",
     "grunt-karma": "~2.0.0",
     "grunt-traceur": "~0.5.5",
-    "karma": "~1.1.0",
-    "karma-chrome-launcher": "~1.0.1",
-    "karma-firefox-launcher": "~1.0.0",
+    "karma": "~1.7.0",
+    "karma-chrome-launcher": "~2.2.0",
+    "karma-firefox-launcher": "~1.0.1",
     "traceur": "0.0.111"
   },
   "scripts": {

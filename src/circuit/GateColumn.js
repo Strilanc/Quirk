@@ -1,3 +1,17 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import {DetailedError} from "src/base/DetailedError.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GateCheckArgs} from "src/circuit/GateCheckArgs.js"
@@ -157,13 +171,21 @@ class GateColumn {
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
         if (maskMeasured !== 0) {
+            // Don't try to superpose measured qubits.
             if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
-            if (g.effectMightPermutesStates() &&
-                    g.knownBitPermutationFunc === undefined &&
-                    (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask))) {
-                return "no\nremix\n(sorry)";
+
+            if (g.effectMightPermutesStates()) {
+                // Only permutations that respect bit boundaries can be performed on mixed qubits.
+                if (maskMeasured !== mask && g.knownBitPermutationFunc === undefined) {
+                    return "no\nremix\n(sorry)";
+                }
+
+                // Permutations affecting classical states can't have quantum controls.
+                if (this.hasCoherentControl(inputMeasureMask)) {
+                    return "no\nremix\n(sorry)";
+                }
             }
         }
         return undefined;
