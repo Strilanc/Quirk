@@ -154,4 +154,4 @@ MultiplyAccumulateGates.all = [
     ...MultiplyAccumulateGates.SquareSubtractInputFamily.all,
 ];
 
-export {MultiplyAccumulateGates, BIG_MUL_MOD_SHADER_CODE}
+export {MultiplyAccumulateGates, BIG_MUL_MOD_SHADER_CODE, MUL_STEP}
