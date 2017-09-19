@@ -49,7 +49,7 @@ suite.testUsingWebGL("ketShaderPermute", () => {
 suite.testUsingWebGL("ketShaderPhase", () => {
     let shader = ketShaderPhase(
         '',
-        'return vec2(cos(out_id/10.0), sin(out_id/10.0));',
+        'return out_id/10.0;',
         3);
     assertThatCircuitShaderActsLikeMatrix(
         ctx => shader.withArgs(...ketArgs(ctx)),

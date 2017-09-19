@@ -85,8 +85,8 @@ CycleBitsGates.CycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => buil
 CycleBitsGates.ReverseCycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId(">>" + span).
     setSymbol(">>>").
-    setSymbol("Right Rotate").
-    setTitle("Rotates bits upward.").
+    setTitle("Right Rotate").
+    setBlurb("Rotates bits upward.").
     setDrawer(cyclePainter(true)).
     setTooltipMatrixFunc(() => makeCycleBitsMatrix(-1, span)).
     setActualEffectToShaderProvider(ctx => cycleBitsShader(ctx, span, -1)).

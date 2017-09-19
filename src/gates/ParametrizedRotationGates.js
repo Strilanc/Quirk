@@ -71,8 +71,7 @@ const Z_TO_A_SHADER = ketShaderPhase(
         ${ketInputGateShaderCode('A')}
     `,
     `
-        float angle = read_input_A() * out_id * factor / _gen_input_span_A;
-        return vec2(cos(angle), sin(angle));
+        return read_input_A() * out_id * factor / _gen_input_span_A;
     `);
 
 ParametrizedRotationGates.XToA = new GateBuilder().
