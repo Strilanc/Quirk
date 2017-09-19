@@ -37,8 +37,7 @@ const PHASE_GRADIENT_SHADER = ketShaderPhase(
         }
     `,
     `
-        float angle = angle_mul(factor, out_id);
-        return vec2(cos(angle), sin(angle));
+        return angle_mul(factor, out_id);
     `);
 
 let PhaseGradientGates = {};
