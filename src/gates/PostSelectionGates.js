@@ -1,3 +1,17 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import {Complex} from "src/math/Complex.js"
 import {GateBuilder} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
@@ -41,7 +55,7 @@ PostSelectionGates.PostSelectOn = new GateBuilder().
 /** @type {!Gate} */
 PostSelectionGates.PostSelectAntiX = new GateBuilder().
     setSerializedId("|+⟩⟨+|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
-    setSymbol("|-⟩⟨-|").
+    setSymbol("|⊖⟩⟨⊖|").
     setTitle("Postselect X-Off").
     setBlurb("Keeps ON+OFF states, discards/retries ON-OFF states.").
     setDrawer(POST_SELECT_DRAWER).
@@ -51,7 +65,7 @@ PostSelectionGates.PostSelectAntiX = new GateBuilder().
 /** @type {!Gate} */
 PostSelectionGates.PostSelectX = new GateBuilder().
     setSerializedId("|-⟩⟨-|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
-    setSymbol("|+⟩⟨+|").
+    setSymbol("|⊕⟩⟨⊕|").
     setTitle("Postselect X-On").
     setBlurb("Keeps ON-OFF states, discards/retries ON+OFF states.").
     setDrawer(POST_SELECT_DRAWER).
@@ -61,7 +75,7 @@ PostSelectionGates.PostSelectX = new GateBuilder().
 /** @type {!Gate} */
 PostSelectionGates.PostSelectAntiY = new GateBuilder().
     setSerializedId("|X⟩⟨X|").  // The cross/slash convention was switched, but the serialized id must stay the same.
-    setSymbol("|/⟩⟨/|").
+    setSymbol("|⊘⟩⟨⊘|").
     setTitle("Postselect Y-Off").
     setBlurb("Keeps ON+iOFF states, discards ON-iOFF states.").
     setDrawer(POST_SELECT_DRAWER).
@@ -71,7 +85,7 @@ PostSelectionGates.PostSelectAntiY = new GateBuilder().
 /** @type {!Gate} */
 PostSelectionGates.PostSelectY = new GateBuilder().
     setSerializedId("|/⟩⟨/|").  // The cross/slash convention was switched, but the serialized id must stay the same.
-    setSymbol("|X⟩⟨X|").
+    setSymbol("|⊗⟩⟨⊗|").
     setTitle("Postselect Y-On").
     setBlurb("Keeps ON-iOFF states, discards/retries ON+iOFF states.").
     setDrawer(POST_SELECT_DRAWER).

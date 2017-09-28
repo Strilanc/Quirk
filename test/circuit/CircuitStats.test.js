@@ -1,7 +1,22 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {Complex} from "src/math/Complex.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -27,7 +42,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ['-', undefined],
     ['+', undefined],
     ['|', undefined],
-    ['/', undefined]
+    ['/', null]
 ]), diagram);
 
 suite.testUsingWebGL("empty", () => {
@@ -103,7 +118,7 @@ suite.testUsingWebGL('incoherent-amplitude-display', () => {
 suite.testUsingWebGL('coherent-amplitude-display', () => {
     let c = circuit(`-H-•-a/--
                      ---X-//--
-                     -H-------`, ['a', Gates.Displays.AmplitudeDisplayFamily.ofSize(2)]);
+                     -H-------`, ['a', Gates.Displays.AmplitudeDisplayFamily]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
@@ -127,7 +142,7 @@ suite.testUsingWebGL('conditional-bloch-display', () => {
 
 suite.testUsingWebGL('probability-display', () => {
     let c = circuit(`-H-•-%-
-                     ---X-/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);
+                     ---X-/-`, ['%', Gates.Displays.ProbabilityDisplayFamily]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo(
@@ -137,7 +152,7 @@ suite.testUsingWebGL('probability-display', () => {
 suite.testUsingWebGL('controlled-multi-probability-display', () => {
     let c = circuit(`---◦-
                      -H-%-
-                     ---/-`, ['%', Gates.Displays.ProbabilityDisplayFamily.ofSize(2)]);
+                     ---/-`, ['%', Gates.Displays.ProbabilityDisplayFamily]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.customStatsForSlot(3, 1)).isApproximatelyEqualTo(
         Matrix.col(0.5, 0.5, 0, 0));
@@ -145,7 +160,7 @@ suite.testUsingWebGL('controlled-multi-probability-display', () => {
 
 suite.testUsingWebGL('density-display', () => {
     let c = circuit(`-d/-
-                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
+                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.customStatsForSlot(1, 0)).isApproximatelyEqualTo(
         Matrix.square(
@@ -158,7 +173,7 @@ suite.testUsingWebGL('density-display', () => {
 suite.testUsingWebGL('shifted-density-display', () => {
     let c = circuit(`----
                      -d/-
-                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily.ofSize(2)]);
+                     -//-`, ['d', Gates.Displays.DensityMatrixDisplayFamily]);
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.customStatsForSlot(1, 1)).isApproximatelyEqualTo(
         Matrix.square(
@@ -247,4 +262,32 @@ suite.testUsingWebGL('survival-rates-controlled-postselection', () => {
     assertThat(stats.survivalRate(12)).isApproximatelyEqualTo(1);
     assertThat(stats.survivalRate(13)).isApproximatelyEqualTo(0.5);
     assertThat(stats.survivalRate(14)).isApproximatelyEqualTo(0.5);
+});
+
+suite.testUsingWebGL('dynamic-phase-gradient-keeps-qubits-coherent', () => {
+    let stats = CircuitStats.fromCircuitAtTime(
+        circuit(`-H-P-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-
+                 -H-/-`, ['P', Gates.PhaseGradientGates.DynamicPhaseGradientFamily]),
+        0.9);
+
+    // Check coherence of each qubit.
+    for (let i = 0; i < 16; i++) {
+        let [x, y, z] = stats.qubitDensityMatrix(Infinity, i).qubitDensityMatrixToBlochVector();
+        let r = x*x + y*y + z*z;
+        assertThat(r).withInfo({i, x, y, z}).isApproximatelyEqualTo(1);
+    }
 });

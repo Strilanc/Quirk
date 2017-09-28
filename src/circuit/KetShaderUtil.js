@@ -1,3 +1,17 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import {WglArg} from "src/webgl/WglArg.js"
 import {makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "src/webgl/ShaderCoders.js"
 
@@ -72,20 +86,31 @@ const ketShaderPermute = (head, body, span=null) => ketShader(
     span);
 
 /**
- * @param {!String} head
- * @param {!String} body
- * @param {null|!int=null} span
+ * Returns a shader that multiplies each of the amplitudes in a superposition by computed phase factors.
+ *
+ * @param {!String} head Header code defining shader methods, uniforms, etc.
+ * @param {!String} body The body of a shader method returning the number of radians to phase by.
+ * @param {null|!int=null} span The number of qubits this operation applies to, if known ahead of time.
  * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
  */
 const ketShaderPhase = (head, body, span=null) => ketShader(
-    head + `vec2 _ketgen_phase_for(float out_id) { ${body} }`,
-    'return cmul(amp, _ketgen_phase_for(out_id));',
+    `${head}
+        float _ketgen_phase_for(float out_id) {
+            ${body}
+        }
+    `,
+    `
+        float angle = _ketgen_phase_for(out_id);
+        return cmul(amp, vec2(cos(angle), sin(angle)));
+    `,
     span);
 
 /**
- * @param {!CircuitEvalContext} ctx
- * @param {undefined|!int=undefined} span
- * @param {undefined|!Array.<!string>} input_letters
+ * Determines some arguments to give to a shader produced by one of the ketShader methods.
+ *
+ * @param {!CircuitEvalContext} ctx The context in which the ket shader is being applied.
+ * @param {undefined|!int=undefined} span The number of qubits this shader applies to (if wasn't known ahead of time).
+ * @param {undefined|!Array.<!string>} input_letters The input gates that this shader cares about.
  * @returns {!Array.<!WglArg>}
  */
 function ketArgs(ctx, span=undefined, input_letters=[]) {
