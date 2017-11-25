@@ -51,7 +51,7 @@ function deinterleaveBit(bit, len) {
  * Constructs a shader that permutes bits based on the given function.
  * @param {!int} span
  * @param {!function(bit: !int, len: !int) : !int} bitPermutation
- * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
+ * @return {!{withArgs: !function(args: ...!WglArg|!WglTexture) : !WglConfiguredShader}}
  */
 function shaderFromBitPermutation(span, bitPermutation) {
     let bitMoveLines = [];
@@ -71,14 +71,14 @@ function shaderFromBitPermutation(span, bitPermutation) {
 }
 
 /**
- * @type {!Map.<!int, !{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}>}
+ * @type {!Map.<!int, !{withArgs: !function(args: ...!WglArg|!WglTexture) : !WglConfiguredShader}>}
  */
 let _interleaveShadersForSize = Seq.range(Config.MAX_WIRE_COUNT + 1).
     skip(2).
     toMap(k => k, k => shaderFromBitPermutation(k, interleaveBit));
 
 /**
- * @type {!Map.<!int, !{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}>}
+ * @type {!Map.<!int, !{withArgs: !function(args: ...!WglArg|!WglTexture) : !WglConfiguredShader}>}
  */
 let _deinterleaveShadersForSize = Seq.range(Config.MAX_WIRE_COUNT + 1).
     skip(2).

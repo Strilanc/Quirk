@@ -190,6 +190,7 @@ class Painter {
      * @param {!string} fillStyle Text color.
      * @param {!string} font
      * @param {!function(!number, !number) : void} afterMeasureBeforeDraw
+     * @param {!boolean} alsoStroke
      */
     print(text,
           x,
@@ -200,7 +201,8 @@ class Painter {
           font,
           boundingWidth,
           boundingHeight,
-          afterMeasureBeforeDraw = undefined) {
+          afterMeasureBeforeDraw = undefined,
+          alsoStroke = false) {
 
         this.ctx.font = font;
         let naiveWidth = this.ctx.measureText(text).width;
@@ -218,6 +220,9 @@ class Painter {
         this.ctx.fillStyle = fillStyle;
         this.ctx.translate(x, y);
         this.ctx.scale(scale, scale);
+        if (alsoStroke) {
+            this.ctx.strokeText(text, 0, 0);
+        }
         this.ctx.fillText(text, 0, 0);
         this.ctx.restore();
     }

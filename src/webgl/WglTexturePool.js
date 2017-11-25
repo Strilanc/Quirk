@@ -23,7 +23,7 @@ const BYTE_POOL = [];
 let unreturnedTextureCount = 0;
 
 /**
- * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.
+ * Keeps track of a collection of textures of various sizes and types, so they can be used and returned and re-used.
  */
 class WglTexturePool {
     /**
@@ -45,6 +45,10 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a texture with the given pixel type with a total area of 1<<sizePower.
+     *
+     * If there is a matching texture in the pool, it will be taken instead of initializing a new texture.
+     *
      * @param {!int} sizePower
      * @param {!int} pixelType
      * @returns {!WglTexture}
@@ -87,6 +91,7 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a texture with the same size and type as the given texture.
      * @param {!WglTexture} texture
      * @returns {!WglTexture}
      */
@@ -95,6 +100,7 @@ class WglTexturePool {
     }
 
     /**
+     * Determines how many textures have been taken from the pool without yet being given back.
      * @returns {!int}
      */
     static getUnReturnedTextureCount() {
@@ -102,6 +108,11 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a FLOAT RGBA texture with an area of 1<<sizePower.
+     *
+     * Some GPUs don't support rendering to and/or reading pixels from float textures. If you want the floats to be
+     * encoded into bytes if necessary, use takeVecFloatTex instead.
+     *
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */
@@ -112,6 +123,8 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates an UNSIGNED_BYTE RGBA texture with an area of 1<<sizePower.
+     *
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */
@@ -122,6 +135,8 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a texture for storing an encoded array of 1<<sizePower booleans (encoded into bytes).
+     *
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */
@@ -132,6 +147,8 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a texture for storing an encoded array of 1<<sizePower floats (possibly encoded into bytes).
+     *
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */
@@ -142,6 +159,8 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a texture for storing an encoded array of 1<<sizePower float-pairs (possibly encoded into bytes).
+     *
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */
@@ -152,6 +171,8 @@ class WglTexturePool {
     }
 
     /**
+     * Allocates a texture for storing an encoded array of 1<<sizePower float-quadruplets (possibly encoded into bytes).
+     *
      * @param {!int} sizePower
      * @returns {!WglTexture}
      */

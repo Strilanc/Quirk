@@ -69,6 +69,9 @@ class WglTextureTrader {
     }
 
     /**
+     * Renders to a texture that's a half the size of the current texture, then uses the rendered texture as the new
+     * current texture.
+     *
      * @param {!function(!WglTexture) : !WglConfiguredShader} reducingShaderFunc
      */
     shadeHalveAndTrade(reducingShaderFunc) {
@@ -78,6 +81,9 @@ class WglTextureTrader {
     }
 
     /**
+     * Renders to a texture that's a quarter of the size of the current texture, then uses the rendered texture as the
+     * new current texture.
+     *
      * @param {!function(!WglTexture) : !WglConfiguredShader} reducingShaderFunc
      */
     shadeQuarterAndTrade(reducingShaderFunc) {
