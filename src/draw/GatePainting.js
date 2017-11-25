@@ -360,9 +360,10 @@ GatePainting.MATRIX_DRAWER = args => {
  * @param {!number=} xScale
  * @param {!number=} yScale
  * @param {!number=} tScale
+ * @param {!number=} zeroAngle
  * @returns {!function(!GateDrawParams) : *}
  */
-GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
+GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1, zeroAngle=0) => args => {
     GatePainting.MAKE_HIGHLIGHTED_DRAWER(Config.TIME_DEPENDENT_HIGHLIGHT_COLOR)(args);
 
     if (args.isInToolbox && !args.isHighlighted) {
@@ -377,6 +378,7 @@ GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1) => args => {
 
     args.painter.ctx.translate(c.x, c.y);
     args.painter.ctx.scale(-xScale, -yScale);
+    args.painter.ctx.rotate(zeroAngle);
     args.painter.ctx.strokeStyle = 'black';
     args.painter.ctx.fillStyle = 'yellow';
     args.painter.ctx.globalAlpha *= 0.4;
