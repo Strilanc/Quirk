@@ -36,9 +36,9 @@ import {makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "src/w
  * @param {!String} body Code that goes inside the output-computing function.
  * @param {null|!int=null} span The height of the gate; the number of qubits it spans.
  * @param {!Array.<!ShaderPartDescription>} inputs
- * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}} A function that, when given the args
- * returned by ketArgs when given your input texture and also a WglArg for each custom uniform you defined, returns
- * a WglConfiguredShader that can be used to renderTo a destination texture.
+ * @return {!{withArgs: !function(args: ...!WglArg|!WglTexture) : !WglConfiguredShader}} A function that, when given the
+ *     args returned by ketArgs when given your input texture and also a WglArg for each custom uniform you defined,
+ *     returns a WglConfiguredShader that can be used to renderTo a destination texture.
  */
 const ketShader = (head, body, span=null, inputs=[]) => ({withArgs: makePseudoShaderWithInputsAndOutputAndCode(
     [
@@ -78,7 +78,7 @@ const ketShader = (head, body, span=null, inputs=[]) => ({withArgs: makePseudoSh
  * @param {!String} head
  * @param {!String} body
  * @param {null|!int=null} span
- * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
+ * @return {!{withArgs: !function(args: ...!WglArg|!WglTexture) : !WglConfiguredShader}}
  */
 const ketShaderPermute = (head, body, span=null) => ketShader(
     head + `float _ketgen_input_for(float out_id) { ${body} }`,
@@ -91,7 +91,7 @@ const ketShaderPermute = (head, body, span=null) => ketShader(
  * @param {!String} head Header code defining shader methods, uniforms, etc.
  * @param {!String} body The body of a shader method returning the number of radians to phase by.
  * @param {null|!int=null} span The number of qubits this operation applies to, if known ahead of time.
- * @return {!{withArgs: !function(args: ...!WglArg) : !WglConfiguredShader}}
+ * @return {!{withArgs: !function(args: ...!WglArg|!WglTexture) : !WglConfiguredShader}}
  */
 const ketShaderPhase = (head, body, span=null) => ketShader(
     `${head}

@@ -392,7 +392,8 @@ class GateColumn {
         // Post-selection gates un-measure (in that the simulator can then do coherent operations on the qubit
         // without getting the wrong answer, at least).
         let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
-            || gate === Gates.PostSelectionGates.PostSelectOff;
+            || gate === Gates.PostSelectionGates.PostSelectOff
+            || gate === Gates.Detector;
         if (!this.hasControl() && hasSingleResult) {
             state.measureMask &= ~(1<<row);
             return;

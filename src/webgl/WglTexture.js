@@ -95,7 +95,9 @@ class WglTexture {
     toString() {
         return 'Texture(' + [
             this.width + 'x' + this.height,
-            this.pixelType,
+            this.pixelType === WebGLRenderingContext.FLOAT ? 'FLOAT' :
+                this.pixelType === WebGLRenderingContext.UNSIGNED_BYTE ? 'UNSIGNED_BYTE' :
+                this.pixelType,
             this._hasBeenRenderedTo ? 'rendered' : 'not rendered'].join(', ') + ')';
     }
 

@@ -926,7 +926,7 @@ class CircuitDefinition {
         let result = [];
         for (let row = 0; row < col.gates.length; row++) {
             if (col.gates[row] !== undefined &&
-                    col.gates[row].customStatPostProcesser !== undefined &&
+                    col.gates[row].customStatTexturesMaker !== undefined &&
                     this.gateAtLocIsDisabledReason(colIndex, row) === undefined) {
                 result.push(row);
             }

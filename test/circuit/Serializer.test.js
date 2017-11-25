@@ -179,7 +179,7 @@ suite.test("roundTrip_circuitDefinition", () => {
 const IDS_THAT_SHOULD_BE_KNOWN = [
     "•", "◦", "⊕", "⊖", "⊗", "(/)",
     "|0⟩⟨0|", "|1⟩⟨1|", "|+⟩⟨+|", "|-⟩⟨-|", "|X⟩⟨X|", "|/⟩⟨/|",
-    "Measure",
+    "Measure", "Detector",
     "Swap",
     "…",
     "inputA1", "inputA2", "inputA3", "inputA4", "inputA5", "inputA6", "inputA7", "inputA8", "inputA9", "inputA10", "inputA11", "inputA12", "inputA13", "inputA14", "inputA15", "inputA16",

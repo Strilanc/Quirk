@@ -718,6 +718,18 @@ class GateBuilder {
         return this;
     }
 
+    /**
+     * Sets meta-properties to indicate the gate is equivalent to a matrix with diagonal entries, such as post-selection
+     * in the computational basis.
+     *
+     * @returns {!GateBuilder}
+     */
+    promiseEffectIsDiagonal() {
+        this.gate._hasNoEffect = false;
+        this.gate._effectPermutesStates = false;
+        this.gate._effectCreatesSuperpositions = false;
+        return this;
+    }
 
     /**
      * Sets meta-properties to indicate the gate is safe for classical, quantum, and mixed use.
