@@ -18,6 +18,8 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
 import {MUL_STEP} from "src/gates/MultiplyAccumulateGates.js"
 import {WglArg} from "src/webgl/WglArg.js"
+import {Matrix} from "src/math/Matrix.js";
+import {Complex} from "src/math/Complex.js";
 
 const PHASE_GRADIENT_SHADER = ketShaderPhase(
     `
@@ -70,8 +72,11 @@ PhaseGradientGates.DynamicPhaseGradientFamily = Gate.buildFamily(1, 16, (span, b
     setActualEffectToShaderProvider(ctx => PHASE_GRADIENT_SHADER.withArgs(
         ...ketArgs(ctx, span),
         WglArg.float("factor", ctx.time * Math.PI * 2))).
+    setEffectToTimeVaryingMatrix(t => Matrix.generateDiagonal(
+        1 << span,
+        k => Complex.polar(1, t * 2 * Math.PI * k))).
     promiseEffectOnlyPhases().
-    setDrawer(GatePainting.makeCycleDrawer(-1, -1)));
+    setDrawer(GatePainting.makeCycleDrawer(-1, -1, 1, -Math.PI / 2)));
 
 PhaseGradientGates.DynamicPhaseDegradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("grad^-t" + span).
@@ -81,8 +86,11 @@ PhaseGradientGates.DynamicPhaseDegradientFamily = Gate.buildFamily(1, 16, (span,
     setActualEffectToShaderProvider(ctx => PHASE_GRADIENT_SHADER.withArgs(
         ...ketArgs(ctx, span),
         WglArg.float("factor", -ctx.time * Math.PI * 2))).
+    setEffectToTimeVaryingMatrix(t => Matrix.generateDiagonal(
+        1 << span,
+        k => Complex.polar(1, t * 2 * Math.PI * -k))).
     promiseEffectOnlyPhases().
-    setDrawer(GatePainting.makeCycleDrawer(1, -1)));
+    setDrawer(GatePainting.makeCycleDrawer(1, -1, 1, Math.PI / 2)));
 
 PhaseGradientGates.all = [
     ...PhaseGradientGates.PhaseGradientFamily.all,

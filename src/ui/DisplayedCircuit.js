@@ -562,11 +562,11 @@ class DisplayedCircuit {
             let rate = Math.round(-marginalRate * 100);
             let rateDesc = marginalRate === -1 ? "100" : rate < 100 ? rate : ">99";
             descAmount = `${rateDesc}%`;
-            descCategory = 'fails';
+            descCategory = 'omits';
         } else {
             let factor = Math.round(marginalRate * 100 + 100);
             descAmount = `${factor}%`;
-            descCategory = 'gain';
+            descCategory = 'gains';
         }
 
         let pt = this.opRect(col).bottomCenter();
@@ -1241,10 +1241,10 @@ class DisplayedCircuit {
                 let rateDesc = survivalRate === 0 ? "0" :
                     rate > 0 ? rate :
                     "<1";
-                desc = `Survival rate: ${rateDesc}%`;
+                desc = `kept: ${rateDesc}%`;
             } else {
                 let factor = Math.round(survivalRate * 100);
-                desc = `Over-unity: ${factor}%`;
+                desc = `over-unity: ${factor}%`;
             }
             painter.print(
                 desc,

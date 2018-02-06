@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Util} from "src/base/Util.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
 
 /**

@@ -78,9 +78,7 @@ function advanceStateWithCircuit(ctx, circuitDefinition, collectStats) {
         colQubitDensities.push(qubitDensities);
         colNorms.push(norm);
         for (let {row, stat} of customGateStats) {
-            //noinspection JSUnusedAssignment
             customStatsMap.push({col, row, out: customStats.length});
-            //noinspection JSUnusedAssignment
             customStats.push(stat);
         }
     };

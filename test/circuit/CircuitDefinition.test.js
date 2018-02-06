@@ -401,7 +401,7 @@ suite.test("minimumRequiredColCount", () => {
 
 suite.test("colIsMeasuredMask", () => {
     let assertAbout = (diagram, ...extraGates) => {
-        let c = circuit(diagram, ...extraGates);
+        let c = circuit(diagram, ['D', Gates.Detector], ...extraGates);
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colIsMeasuredMask(i-1)).toArray());
     };
 
@@ -419,6 +419,13 @@ suite.test("colIsMeasuredMask", () => {
     assertAbout('MM').isEqualTo([0, 0, 1, 1, 1]);
     // Post-selection clears
     assertAbout(`M!`).isEqualTo([0, 0, 1, 0, 0]);
+    // Detector clears.
+    assertAbout(`MD`).isEqualTo([0, 0, 1, 0, 0]);
+    // Controlled detector doesn't clear.
+    assertAbout(`MD
+                 -●`).isEqualTo([0, 0, 1, 1, 1]);
+    assertAbout(`MD
+                 M●`).isEqualTo([0, 0, 3, 3, 3]);
     // Swap moves measured
     assertAbout(`---s=
                  -M=s-`).isEqualTo([0, 0, 0, 2, 2, 1, 1, 1]);

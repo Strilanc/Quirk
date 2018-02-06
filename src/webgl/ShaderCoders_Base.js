@@ -42,13 +42,19 @@ class ShaderPart {
  */
 class SingleTypeCoder {
     /**
-     * @param {!function(name: !string) : !ShaderPart} inputPartGetter
-     * @param {!ShaderPart} outputPart
-     * @param {!int} powerSizeOverhead
-     * @param {!int} pixelType
-     * @param {!function(*) : !Float32Array|!Uint8Array} dataToPixels
-     * @param {!function(!Float32Array|!Uint8Array) : *} pixelsToData
-     * @param {!boolean} needRearrangingToBeInVec4Format
+     * @param {!function(name: !string) : !ShaderPart} inputPartGetter Determines how values are decoded from the
+     *     various given input textures while rendering.
+     * @param {!ShaderPart} outputPart Determines how computed values are encoded into the next texture while rendering.
+     * @param {!int} powerSizeOverhead This value is the k in the 2^k * N texture area (pixels) it takes to encode N
+     *     values.
+     * @param {!int} pixelType Determines whether encoding goes into float or byte textures.
+     * @param {!function(*) : !Float32Array|!Uint8Array} dataToPixels Converts from tightly packed data into the data
+     *     that would be returned by readPixels (or that should be written into a texture encoding the data).
+     * @param {!function(!Float32Array|!Uint8Array) : *} pixelsToData Converts from raw pixel data returned by
+     *     readPixels into tightly packed data.
+     * @param {!boolean} needRearrangingToBeInVec4Format Determines if the encoded values will be spread out instead of
+     *     packed together tightly when readPixels is called. Code trying to minimize the time spent blocked on
+     *     readPixels uses this as a hint to rearrange the data before reading it.
      */
     constructor(inputPartGetter,
                 outputPart,

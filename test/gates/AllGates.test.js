@@ -162,7 +162,8 @@ suite.testUsingWebGL("knownNonUnitaryGates", () => {
         '|+⟩⟨+|',
         '|-⟩⟨-|',
         '|X⟩⟨X|',
-        '|/⟩⟨/|'
+        '|/⟩⟨/|',
+        'Detector',
     ]));
 });
 
@@ -222,7 +223,9 @@ suite.test("knownDynamicGateFamilies", () => {
         '<<t2',
         'X^⌈t⌉',
         'X^⌈t-¼⌉',
+        // Other.
         'grad^t1',
         'grad^-t1',
+        'Detector',
     ]));
 });
