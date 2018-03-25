@@ -69,20 +69,6 @@ class GateColumn {
         return this.gates.every(e => e === undefined);
     }
 
-    /**
-     * @returns {!(!(![!int, !int])[])}
-     */
-    swapPairs() {
-        let swapIndices = Seq.
-            range(this.gates.length).
-            filter(i => this.gates[i] === Gates.Special.SwapHalf).
-            toArray();
-        if (swapIndices.length !== 2) {
-            return [];
-        }
-        return [swapIndices];
-    }
-
     hasControl(inputMeasureMask) {
         return this.hasCoherentControl(inputMeasureMask) || this.hasMeasuredControl(inputMeasureMask);
     }
@@ -178,7 +164,8 @@ class GateColumn {
 
             if (g.effectMightPermutesStates()) {
                 // Only permutations that respect bit boundaries can be performed on mixed qubits.
-                if (maskMeasured !== mask && g.knownBitPermutationFunc === undefined) {
+                if (maskMeasured !== mask && (g.knownBitPermutationFunc === undefined ||
+                                              this.hasMeasuredControl(inputMeasureMask))) {
                     return "no\nremix\n(sorry)";
                 }
 

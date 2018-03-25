@@ -727,22 +727,25 @@ class CircuitDefinition {
 
     /**
      * @param {int} col
-     * @returns {boolean}
+     * @returns {undefined|![!int, !int]}
      */
-    colHasEnabledSwapGate(col) {
+    colGetEnabledSwapGate(col) {
         if (col < 0 || col >= this.columns.length) {
-            return false;
+            return undefined;
         }
-        let count = 0;
+        let locs = [];
         for (let row = 0; row < this.numWires; row++) {
             if (this.gateInSlot(col, row) === Gates.Special.SwapHalf) {
                 if (this.gateAtLocIsDisabledReason(col, row) !== undefined) {
-                    return false;
+                    return undefined;
                 }
-                count++;
+                locs.push(row);
             }
         }
-        return count === 2;
+        if (locs.length !== 2) {
+            return undefined;
+        }
+        return locs;
     }
 
     /**
@@ -864,8 +867,9 @@ class CircuitDefinition {
             return ctx => GateShaders.applyMatrixOperation(ctx, gate.knownMatrixAt(ctx.time));
         });
 
-        for (let [i, j] of this.columns[colIndex].swapPairs()) {
-            //noinspection JSUnusedAssignment
+        let swapRows = this.colGetEnabledSwapGate(colIndex);
+        if (swapRows !== undefined) {
+            let [i, j] = swapRows;
             ctx.applyOperation(CircuitShaders.swap(ctx.withRow(i + ctx.row), j + ctx.row));
         }
     }
@@ -971,13 +975,13 @@ class CircuitDefinition {
         let col = this.columns[columnIndex];
         let n = col.gates.length;
 
-        let hasTwoSwaps = this.colHasEnabledSwapGate(columnIndex);
+        let swapRows = this.colGetEnabledSwapGate(columnIndex);
 
         let pt = i => new Point(columnIndex, i);
         let hasControllable = i => this.locHasControllableGate(pt(i));
         let hasCoherentControl = i => this.locStartsSingleControlWire(pt(i));
         let hasMeasuredControl = i => this.locStartsDoubleControlWire(pt(i));
-        let hasSwap = i => hasTwoSwaps && col.gates[i] === Gates.Special.SwapHalf;
+        let hasSwap = i => swapRows !== undefined && swapRows.indexOf(i) !== -1;
         let coversCoherentWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== true;
         let coversMeasuredWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== false;
 
