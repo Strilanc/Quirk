@@ -164,7 +164,8 @@ class GateColumn {
 
             if (g.effectMightPermutesStates()) {
                 // Only permutations that respect bit boundaries can be performed on mixed qubits.
-                if (maskMeasured !== mask && g.knownBitPermutationFunc === undefined) {
+                if (maskMeasured !== mask && (g.knownBitPermutationFunc === undefined ||
+                                              this.hasMeasuredControl(inputMeasureMask))) {
                     return "no\nremix\n(sorry)";
                 }
 

@@ -874,11 +874,11 @@ suite.test("gateAtLocIsDisabledReason", () => {
                 -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
     good(1, 1, `M●-
                 M<-
-                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
-    good(1, 1, `M●-
-                M<-
                 M/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
 
+    bad(1, 1, `M●-
+               M<-
+               -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
     bad(1, 1, `-●-
                M<-
                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);

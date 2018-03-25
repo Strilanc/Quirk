@@ -292,7 +292,6 @@ suite.testUsingWebGL('dynamic-phase-gradient-keeps-qubits-coherent', () => {
     }
 });
 
-
 suite.testUsingWebGL('classical-swap-with-quantum-control-does-not-fire', () => {
     // Swap should be disabled.
     let c = circuit(`-M-X-S-
@@ -319,6 +318,36 @@ suite.testUsingWebGL('classical-swap-with-classical-control-does-fire', () => {
     assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
 
     // And swap should not have fired.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL('classical-bit-rotate-with-quantum-control-does-not-fire', () => {
+    // Bit rotation should be disabled.
+    let c = circuit(`-M-X-<-
+                     -M---/-
+                     ---X-•-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And bit rotation should not fire.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL('classical-bit-rotate-with-classical-control-does-fire', () => {
+    // Bit rotation should be disabled.
+    let c = circuit(`-M-X-<-
+                     -M---/-
+                     -M-X-•-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And bit rotation should not fire.
     let stats = CircuitStats.fromCircuitAtTime(c, 0);
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(1, 0, 0, 0));
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(0, 0, 0, 1));
