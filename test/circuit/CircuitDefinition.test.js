@@ -658,26 +658,26 @@ suite.test("locStartsDoubleControlWire", () => {
     assertFalse(c.locStartsDoubleControlWire(new Point(4, 1)));
 });
 
-suite.test("colHasEnabledSwapGate", () => {
+suite.test("colGetEnabledSwapGate", () => {
     let c = circuit(`-s-●-s-●-●
                      --ss---sMs
                      --X-ss-s-s
                      ----s-----
                      -----s----`);
 
-    assertFalse(c.colHasEnabledSwapGate(-1));
-    assertFalse(c.colHasEnabledSwapGate(0));
-    assertFalse(c.colHasEnabledSwapGate(1));
-    assertFalse(c.colHasEnabledSwapGate(2));
-    assertFalse(c.colHasEnabledSwapGate(3));
-    assertFalse(c.colHasEnabledSwapGate(5));
-    assertFalse(c.colHasEnabledSwapGate(6));
-    assertFalse(c.colHasEnabledSwapGate(8));
-    assertFalse(c.colHasEnabledSwapGate(9));
-    assertFalse(c.colHasEnabledSwapGate(10));
+    assertThat(c.colGetEnabledSwapGate(-1)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(0)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(1)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(2)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(3)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(5)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(6)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(8)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(9)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(10)).isEqualTo(undefined);
 
-    assertTrue(c.colHasEnabledSwapGate(4));
-    assertTrue(c.colHasEnabledSwapGate(7));
+    assertThat(c.colGetEnabledSwapGate(4)).isEqualTo([2, 3]);
+    assertThat(c.colGetEnabledSwapGate(7)).isEqualTo([1, 2]);
 });
 
 suite.test("locHasControllableGate", () => {

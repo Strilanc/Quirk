@@ -291,3 +291,36 @@ suite.testUsingWebGL('dynamic-phase-gradient-keeps-qubits-coherent', () => {
         assertThat(r).withInfo({i, x, y, z}).isApproximatelyEqualTo(1);
     }
 });
+
+
+suite.testUsingWebGL('classical-swap-with-quantum-control-does-not-fire', () => {
+    // Swap should be disabled.
+    let c = circuit(`-M-X-S-
+                     -M---S-
+                     ---X-•-`, ['S', Gates.Special.SwapHalf]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 1)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And swap should not have fired.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL('classical-swap-with-classical-control-does-fire', () => {
+    // Swap should be disabled.
+    let c = circuit(`-M-X-S-
+                     -M---S-
+                     -M-X-•-`, ['S', Gates.Special.SwapHalf]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 1)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And swap should not have fired.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});

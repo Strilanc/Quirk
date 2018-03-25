@@ -66,18 +66,3 @@ suite.test("isEmpty", () => {
     assertFalse(new GateColumn([Gates.HalfTurns.X, undefined]).isEmpty());
     assertFalse(new GateColumn([Gates.HalfTurns.X, Gates.HalfTurns.X]).isEmpty());
 });
-
-suite.test("swapPairs", () => {
-    assertThat(new GateColumn([]).swapPairs()).isEqualTo([]);
-    assertThat(new GateColumn([undefined, undefined]).swapPairs()).isEqualTo([]);
-    assertThat(new GateColumn([Gates.HalfTurns.X, undefined]).swapPairs()).isEqualTo([]);
-    assertThat(new GateColumn([
-        Gates.Controls.Control, Gates.Controls.AntiControl, Gates.Special.SwapHalf
-    ]).swapPairs()).isEqualTo([]);
-    assertThat(new GateColumn([
-        Gates.Special.SwapHalf, Gates.Special.SwapHalf
-    ]).swapPairs()).isEqualTo([[0, 1]]);
-    assertThat(new GateColumn([
-        Gates.Special.SwapHalf, undefined, Gates.Controls.AntiControl, Gates.Special.SwapHalf, undefined
-    ]).swapPairs()).isEqualTo([[0, 3]]);
-});

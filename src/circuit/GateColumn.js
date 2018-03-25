@@ -69,20 +69,6 @@ class GateColumn {
         return this.gates.every(e => e === undefined);
     }
 
-    /**
-     * @returns {!(!(![!int, !int])[])}
-     */
-    swapPairs() {
-        let swapIndices = Seq.
-            range(this.gates.length).
-            filter(i => this.gates[i] === Gates.Special.SwapHalf).
-            toArray();
-        if (swapIndices.length !== 2) {
-            return [];
-        }
-        return [swapIndices];
-    }
-
     hasControl(inputMeasureMask) {
         return this.hasCoherentControl(inputMeasureMask) || this.hasMeasuredControl(inputMeasureMask);
     }
