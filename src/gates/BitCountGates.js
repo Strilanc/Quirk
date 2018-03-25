@@ -28,7 +28,7 @@ const POP_COUNT_SHADER = ketShaderPermute(
     `
         float d = read_input_A();
         float popcnt = 0.0;
-        for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
+        for (int i = 0; i < ${Config.MAX_SIMULATION_WIRE_COUNT}; i++) {
             popcnt += mod(d, 2.0);
             d = floor(d / 2.0);
         }

@@ -39,7 +39,7 @@ const MODULAR_INVERSE_SHADER_CODE = `
         vec2 r = vec2(modulus, value);
         float q;
         // For values up to x, a number of iterations n satisfying phi^n > x should be sufficient.
-        for (int repeat = 0; repeat < ${Math.ceil(Config.MAX_WIRE_COUNT/(Math.log2(1+Math.sqrt(5))-1))}; repeat++) {
+        for (int repeat = 0; repeat < ${Math.ceil(Config.MAX_SIMULATION_WIRE_COUNT/(Math.log2(1+Math.sqrt(5))-1))}; repeat++) {
             if (r.x != 0.0) {
                 q = floor(r.y / r.x);
                 r = _mod_mul_step(r, q);
@@ -69,7 +69,7 @@ const POW_MOD_SHADER_CODE = `
         }
 
         float f = 1.0;
-        for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
+        for (int k = 0; k < ${Config.MAX_SIMULATION_WIRE_COUNT}; k++) {
             if (mod(exponent, 2.0) == 1.0) {
                 exponent -= 1.0;
                 f = big_mul_mod(f, base, modulus);

@@ -1089,6 +1089,10 @@ class DisplayedCircuit {
      * @private
      */
     _drawOutputDisplays(painter, stats, hand) {
+        if (stats.circuitDefinition.numWires > Config.MAX_SIMULATION_WIRE_COUNT) {
+            return;
+        }
+
         let chanceCol = this.clampedCircuitColCount() + 1;
         let blochCol = chanceCol + 1;
         let numWire = this.importantWireCount();

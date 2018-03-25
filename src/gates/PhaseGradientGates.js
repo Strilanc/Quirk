@@ -29,7 +29,7 @@ const PHASE_GRADIENT_SHADER = ketShaderPhase(
         /// Performs the multiplication gradually, to avoid losing precision.
         float angle_mul(float base_angle, float whole_factor) {
             float result = 0.0;
-            for (int k = 0; k < ${Math.ceil(Config.MAX_WIRE_COUNT/MUL_STEP)}; k++) {
+            for (int k = 0; k < ${Math.ceil(Config.MAX_SIMULATION_WIRE_COUNT/MUL_STEP)}; k++) {
                 result += base_angle * mod(whole_factor, ${1<<MUL_STEP}.0);
                 result = mod(result, 6.283185307179586476925286766559);
                 whole_factor = floor(whole_factor / ${1<<MUL_STEP}.0);

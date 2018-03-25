@@ -15,6 +15,7 @@
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {Config} from "src/Config.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
@@ -33,7 +34,7 @@ class CircuitStats {
      * @param {!number} time
      * @param {!Array.<!number>} survivalRates
      * @param {!Array.<!Array.<!Matrix>>} singleQubitDensities
-     * @param {!Matrix} finalState
+     * @param {undefined|!Matrix} finalState
      * @param {!Map<!string, *>} customStatsProcessed
      */
     constructor(circuitDefinition,
@@ -169,7 +170,9 @@ class CircuitStats {
             time,
             [1],
             [],
-            Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN),
+            circuitDefinition.numWires <= Config.MAX_SIMULATION_WIRE_COUNT ?
+                Matrix.zero(1, 1 << circuitDefinition.numWires).times(NaN) :
+                undefined,
             new Map());
     }
 
@@ -179,6 +182,10 @@ class CircuitStats {
      * @returns {!CircuitStats}
      */
     static fromCircuitAtTime(circuitDefinition, time) {
+        if (circuitDefinition.numWires > Config.MAX_SIMULATION_WIRE_COUNT) {
+            return CircuitStats.withNanDataFromCircuitAtTime(circuitDefinition, time);
+        }
+
         try {
             return CircuitStats._fromCircuitAtTime_noFallback(circuitDefinition, time);
         } catch (ex) {

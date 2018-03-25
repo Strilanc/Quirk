@@ -23,7 +23,9 @@ import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 import {Config} from "src/Config.js"
 import {DisplayedInspector} from "src/ui/DisplayedInspector.js"
 import {Painter} from "src/draw/Painter.js"
+import {Gates} from "src/gates/AllGates.js"
 import {Rect} from "src/math/Rect.js"
+import {Point} from "src/math/Point.js"
 import {RestartableRng} from "src/base/RestartableRng.js"
 import {Revision} from "src/base/Revision.js"
 import {initSerializer, fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
@@ -169,6 +171,17 @@ canvasDiv.addEventListener('click', ev => {
     }
 });
 
+let heldKeys = new Set();
+canvasDiv.addEventListener('keydown', ev => {
+    heldKeys.add(ev.keyCode);
+});
+canvasDiv.addEventListener('keyup', ev => {
+    heldKeys.delete(ev.keyCode);
+});
+Gates.OtherZ.Z4.symbol = 'T';
+Gates.OtherZ.Z4i.symbol = 'T^-1';
+Gates.QuarterTurns.SqrtZForward.symbol = 'S';
+Gates.QuarterTurns.SqrtZBackward.symbol = 'S^-1';
 watchDrags(canvasDiv,
     /**
      * Grab
@@ -185,7 +198,26 @@ watchDrags(canvasDiv,
             return;
         }
 
-        newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey);
+        let used = false;
+        for (let [c, g] of [['X', Gates.HalfTurns.X],
+            ['Y', Gates.HalfTurns.Y],
+            ['Z', Gates.HalfTurns.Z],
+            ['S', Gates.QuarterTurns.SqrtZForward],
+            ['T', Gates.OtherZ.Z4],
+            ['H', Gates.HalfTurns.H],
+            ['C', Gates.Controls.Control]]) {
+            if (heldKeys.has(c.charCodeAt(0))) {
+                newHand = newInspector.hand.withHeldGate(
+                    g,
+                    new Point(Config.GATE_RADIUS, Config.GATE_RADIUS));
+                newInspector = newInspector.withHand(newHand);
+                used = true;
+            }
+        }
+        if (!used) {
+            newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey);
+        }
+
         if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }

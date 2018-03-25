@@ -43,7 +43,7 @@ const BIG_MUL_MOD_SHADER_CODE = `
     float big_mul_mod(float b, float f, float modulus) {
         float t = 0.0;
         float r;
-        for (int k = 0; k < ${Math.ceil(Config.MAX_WIRE_COUNT/MUL_STEP)}; k++) {
+        for (int k = 0; k < ${Math.ceil(Config.MAX_SIMULATION_WIRE_COUNT/MUL_STEP)}; k++) {
             r = mod(f, ${1<<MUL_STEP}.0);
             f -= r;
             t = mod(t + b*r, modulus);
