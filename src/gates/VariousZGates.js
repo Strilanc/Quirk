@@ -28,15 +28,17 @@ VariousZGates.Z3i = Gate.fromKnownMatrix(
     "Z^-⅓ Gate",
     "Adjoint third root of Z.");
 VariousZGates.Z4 = Gate.fromKnownMatrix(
-    "Z^¼",
+    "T",
     Matrix.fromPauliRotation(0, 0, 1 / 8),
     "Z^¼ Gate",
-    "Principle fourth root of Z.\nAlso known as the 'T' gate.");
+    "Principle fourth root of Z.",
+    "Z^¼");
 VariousZGates.Z4i = Gate.fromKnownMatrix(
-    "Z^-¼",
+    "T^-1",
     Matrix.fromPauliRotation(0, 0, -1 / 8),
     "Z^-¼ Gate",
-    "Adjoint fourth root of Z.");
+    "Adjoint fourth root of Z.",
+    "Z^-¼");
 VariousZGates.Z8 = Gate.fromKnownMatrix(
     "Z^⅛",
     Matrix.fromPauliRotation(0, 0, 1 / 16),

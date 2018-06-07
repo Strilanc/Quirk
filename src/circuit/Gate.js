@@ -215,15 +215,16 @@ class Gate {
      * @param {!Matrix} matrix
      * @param {!string} name
      * @param {!string} blurb
+     * @param {undefined|!string} serializedId
      * @returns {!Gate}
      */
-    static fromKnownMatrix(symbol, matrix, name='', blurb='') {
+    static fromKnownMatrix(symbol, matrix, name='', blurb='', serializedId=undefined) {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
         let g = new Gate();
         g.symbol = symbol;
-        g.serializedId = symbol;
+        g.serializedId = serializedId === undefined ? symbol : serializedId;
         g.name = name;
         g.blurb = blurb;
         g._isDefinitelyUnitary = matrix.isUnitary(0.01);
