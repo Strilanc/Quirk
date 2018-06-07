@@ -306,6 +306,10 @@ class DisplayedInspector {
      * @private
      */
     _watchOutputsChangeVisibility() {
+        if (this.displayedCircuit.circuitDefinition.customInitialValues.size > 0) {
+            return 0;
+        }
+
         let gatesInCircuit = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
         let gatesInPlay = gatesInCircuit + (this.hand.isBusy() ? 1 : 0);
         if (gatesInCircuit >= 2 || gatesInPlay === 0) {
@@ -412,6 +416,10 @@ class DisplayedInspector {
         let circ = this.displayedCircuit.circuitDefinition;
         let gatesInCircuit = circ.countGatesUpTo(2);
         let gatesInPlay = gatesInCircuit + (this.hand.heldGate !== undefined ? 1 : 0);
+
+        if (circ.customInitialValues.size > 0) {
+            return 0;
+        }
 
         let gate = circ.gateInSlot(0, 0);
         if (circ.hasControls() || !circ.hasNonControlGates() || (gate !== undefined && gate.height > 1)) {

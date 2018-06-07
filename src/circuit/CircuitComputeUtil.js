@@ -14,6 +14,7 @@
 
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {DetailedError} from "src/base/DetailedError.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {GateBuilder} from "src/circuit/Gate.js"
@@ -82,6 +83,8 @@ function advanceStateWithCircuit(ctx, circuitDefinition, collectStats) {
             customStats.push(stat);
         }
     };
+
+    circuitDefinition.applyInitialStateOperations(ctx);
 
     // Apply each column in the circuit.
     for (let col = 0; col < circuitDefinition.columns.length; col++) {

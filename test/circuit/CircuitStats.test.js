@@ -353,3 +353,17 @@ suite.testUsingWebGL('classical-bit-rotate-with-classical-control-does-fire', ()
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(0, 0, 0, 1));
     assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
 });
+
+suite.testUsingWebGL("initial_states", () => {
+    let circuit = Serializer.fromJson(CircuitDefinition, {
+        init: [0, 1, '+', '-', 'S', 'S†'],
+        cols: [],
+    });
+    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
+    assertThat(stats.qubitDensityMatrix(9, 0).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, 0, -1]);
+    assertThat(stats.qubitDensityMatrix(9, 1).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, 0, +1]);
+    assertThat(stats.qubitDensityMatrix(9, 2).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([-1, 0, 0]);
+    assertThat(stats.qubitDensityMatrix(9, 3).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([+1, 0, 0]);
+    assertThat(stats.qubitDensityMatrix(9, 4).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, +1, 0]);
+    assertThat(stats.qubitDensityMatrix(9, 5).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, -1, 0]);
+});

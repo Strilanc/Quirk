@@ -341,7 +341,7 @@ class DisplayedCircuit {
      */
     paint(painter, hand, stats, forTooltip=false, showWires=true) {
         if (showWires) {
-            this._drawWires(painter, !forTooltip);
+            this._drawWires(painter, !forTooltip, hand);
         }
 
         for (let col = 0; col < this.circuitDefinition.columns.length; col++) {
@@ -357,9 +357,10 @@ class DisplayedCircuit {
     /**
      * @param {!Painter} painter
      * @param {!boolean} showLabels
+     * @param {!Hand} hand
      * @private
      */
-    _drawWires(painter, showLabels) {
+    _drawWires(painter, showLabels, hand) {
         let drawnWireCount = Math.min(this.circuitDefinition.numWires, (this._extraWireStartIndex || Infinity) + 1);
 
         // Initial value labels
@@ -367,7 +368,16 @@ class DisplayedCircuit {
             for (let row = 0; row < drawnWireCount; row++) {
                 let wireRect = this.wireRect(row);
                 let y = wireRect.center().y;
-                painter.print('|0⟩', 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING);
+                let v = this.circuitDefinition.customInitialValues.get(row);
+                if (v === undefined) {
+                    v = '0';
+                }
+                let rect = this._wireInitialStateClickableRect(row);
+                painter.noteTouchBlocker({rect, cursor: 'pointer'});
+                if (hand.pos !== undefined && rect.containsPoint(hand.pos)) {
+                    painter.fillRect(rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
+                }
+                painter.print(`|${v}⟩`, 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING);
             }
         }
 
@@ -922,12 +932,58 @@ class DisplayedCircuit {
     }
 
     /**
+     * @param {!int} wire
+     * @returns {!Rect}
+     * @private
+     */
+    _wireInitialStateClickableRect(wire) {
+        let r = this.wireRect(wire);
+        r.x = 0;
+        r.y += 5;
+        r.w = 30;
+        r.h -= 10;
+        return r;
+    }
+
+    /**
+     * @param {!Point} pt
+     * @returns {undefined|!int}
+     * @private
+     */
+    _findWireWithInitialStateAreaContaining(pt) {
+        // Is it in the right vertical band; the one at the start of the circuit?
+        if (pt.x < 0 || pt.x > 30) {
+            return undefined;
+        }
+
+        // Which wire is it? Is it one that's actually in the circuit?
+        let wire = this.wireIndexAt(pt.y);
+        if (wire < 0 || wire >= this.circuitDefinition.numWires) {
+            return undefined;
+        }
+
+        // Is it inside the intended click area, instead of just off to the side?
+        let r = this._wireInitialStateClickableRect(wire);
+        if (!r.containsPoint(pt)) {
+            return undefined;
+        }
+
+        // Good to go.
+        return wire;
+    }
+
+    /**
      * @param {!Hand} hand
      * @returns {undefined|!DisplayedCircuit}
      */
     tryClick(hand) {
         if (hand.pos === undefined) {
             return undefined;
+        }
+
+        let clickedInitialStateWire = this._findWireWithInitialStateAreaContaining(hand.pos);
+        if (clickedInitialStateWire !== undefined) {
+            return this.withCircuit(this.circuitDefinition.withSwitchedInitialStateOn(clickedInitialStateWire))
         }
 
         let found = this.findGateWithButtonContaining(hand.pos);
@@ -1179,6 +1235,7 @@ class DisplayedCircuit {
 
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
+        //noinspection JSCheckFunctionSignatures
         return new Matrix(colCount, rowCount, buf);
     }
 
@@ -1436,7 +1493,9 @@ let _cachedRowLabelDrawer = new CachablePainting(
     (painter, numWire) => {
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let rowCount = 1 << rowWires;
+        //noinspection JSCheckFunctionSignatures
         let suffix = colWires < 4 ? "_".repeat(colWires) : "_..";
+        //noinspection JSCheckFunctionSignatures
         _drawLabelsReasonablyFast(
             painter,
             painter.canvas.height / rowCount,
@@ -1463,7 +1522,9 @@ let _cachedColLabelDrawer = new CachablePainting(
 
         painter.ctx.translate(colCount*dw, 0);
         painter.ctx.rotate(Math.PI/2);
+        //noinspection JSCheckFunctionSignatures
         let prefix = rowWires < 4 ? "_".repeat(rowWires) : ".._";
+        //noinspection JSCheckFunctionSignatures
         _drawLabelsReasonablyFast(
             painter,
             dw,
