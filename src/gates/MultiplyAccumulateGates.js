@@ -44,10 +44,10 @@ const BIG_MUL_MOD_SHADER_CODE = `
         float t = 0.0;
         float r;
         for (int k = 0; k < ${Math.ceil(Config.MAX_WIRE_COUNT/MUL_STEP)}; k++) {
-            r = mod(f, ${1<<MUL_STEP}.0);
+            r = floor(mod(f + 0.5, ${1<<MUL_STEP}.0));
             f -= r;
-            t = mod(t + b*r, modulus);
-            b = mod(b * ${1<<MUL_STEP}.0, modulus);
+            t = floor(mod(t + b*r + 0.5, modulus));
+            b = floor(mod(b * ${1<<MUL_STEP}.0 + 0.5, modulus));
             f /= ${1<<MUL_STEP}.0;
         }
         return t;

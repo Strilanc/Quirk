@@ -182,7 +182,7 @@ const SPREAD_LENGTH_ACROSS_POLAR_KETS_SHADER = makePseudoShaderWithInputsAndOutp
     uniform float bit;
 
     float xorBit(float v) {
-        float b = mod(floor(v/bit), 2.0);
+        float b = floor(mod(floor(v/bit) + 0.5, 2.0));
         float d = 1.0 - 2.0*b;
         return v + bit*d;
     }
@@ -257,7 +257,7 @@ const TO_RATIOS_VS_REPRESENTATIVE_SHADER = makePseudoShaderWithInputsAndOutputAn
     ],
     Outputs.vec4(),
     `vec4 outputFor(float k) {
-        return vec4(read_ket(k), read_rep(mod(k, len_rep())).xy);
+        return vec4(read_ket(k), read_rep(floor(mod(k + 0.5, len_rep()))).xy);
     }`);
 
 /**
