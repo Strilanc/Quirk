@@ -45,7 +45,7 @@ import {ProbabilityDisplayFamily} from "src/gates/ProbabilityDisplay.js"
 import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js"
 import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGate.js"
 import {SampleDisplayFamily} from "src/gates/SampleDisplay.js"
-import {Detector} from "src/gates/Detector.js"
+import {Detectors} from "src/gates/Detector.js"
 import {SpacerGate} from "src/gates/SpacerGate.js"
 import {SwapGateHalf} from "src/gates/SwapGateHalf.js"
 import {UniversalNotGate} from "src/gates/Impossible_UniversalNotGate.js"
@@ -109,7 +109,7 @@ Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
 Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
-Gates.Detector = Detector;
+Gates.Detectors = Detectors;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 Gates.XorGates = XorGates;
@@ -120,7 +120,6 @@ Gates.KnownToSerializer = [
     ...Controls.all,
     ...InputGates.all,
     MeasurementGate,
-    Detector,
     SwapGateHalf,
     SpacerGate,
     UniversalNotGate,
@@ -139,6 +138,7 @@ Gates.KnownToSerializer = [
     ...ComparisonGates.all,
     ...CountingGates.all,
     ...CycleBitsGates.all,
+    ...Detectors.all,
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
@@ -244,7 +244,15 @@ Gates.TopToolboxGroups = [
         gates: [
             ZeroGate,   MysteryGateMaker(),
             NeGate,     undefined,
-            SpacerGate, undefined
+            SpacerGate, undefined,
+        ]
+    },
+    {
+        hint: 'Sample',
+        gates: [
+            Detectors.ZDetector, Detectors.ZDetectControlClear,
+            Detectors.YDetector, Detectors.YDetectControlClear,
+            Detectors.XDetector, Detectors.XDetectControlClear,
         ]
     }
 ];

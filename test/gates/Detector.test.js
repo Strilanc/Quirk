@@ -24,7 +24,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ...extras,
     ['-', undefined],
     ['●', Gates.Controls.Control],
-    ['D', Gates.Detector],
+    ['D', Gates.Detectors.ZDetector],
     ['X', Gates.HalfTurns.X],
     ['Z', Gates.HalfTurns.Z],
     ['H', Gates.HalfTurns.H],

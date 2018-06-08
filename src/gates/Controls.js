@@ -26,6 +26,7 @@ Controls.Control = new GateBuilder().
     setBlurb("Conditions on a qubit being ON.\nGates in the same column only apply to states meeting the condition.").
     promiseHasNoNetEffectOnStateVector().
     markAsControlExpecting(true).
+    promiseEffectIsUnitary().
     setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -41,6 +42,7 @@ Controls.AntiControl = new GateBuilder().
     setBlurb("Conditions on a qubit being OFF.\nGates in the same column only apply to states meeting the condition.").
     promiseHasNoNetEffectOnStateVector().
     markAsControlExpecting(false).
+    promiseEffectIsUnitary().
     setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -64,6 +66,7 @@ Controls.XAntiControl = new GateBuilder().
         HalfTurnGates.H.customOperation).
     setActualEffectToUpdateFunc(() => {}).
     promiseEffectIsStable().
+    promiseEffectIsUnitary().
     setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -88,6 +91,7 @@ Controls.XControl = new GateBuilder().
         HalfTurnGates.H.customOperation).
     setActualEffectToUpdateFunc(() => {}).
     promiseEffectIsStable().
+    promiseEffectIsUnitary().
     setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -113,6 +117,7 @@ Controls.YAntiControl = new GateBuilder().
         ctx => GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXBackward._knownMatrix)).
     setActualEffectToUpdateFunc(() => {}).
     promiseEffectIsStable().
+    promiseEffectIsUnitary().
     setDrawer(args => {
         if (args.isInToolbox || args.isHighlighted) {
             GatePainting.paintBackground(args);
@@ -141,6 +146,7 @@ Controls.YControl = new GateBuilder().
         ctx => GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXBackward._knownMatrix)).
     setActualEffectToUpdateFunc(() => {}).
     promiseEffectIsStable().
+    promiseEffectIsUnitary().
     setDrawer(ctx => {
         if (ctx.isInToolbox || ctx.isHighlighted) {
             GatePainting.paintBackground(ctx);

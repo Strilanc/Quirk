@@ -69,11 +69,21 @@ class GateColumn {
         return this.gates.every(e => e === undefined);
     }
 
-    hasControl(inputMeasureMask) {
-        return this.hasCoherentControl(inputMeasureMask) || this.hasMeasuredControl(inputMeasureMask);
+    /**
+     * @param {!int} inputMeasureMask
+     * @param {!int} ignoreMask
+     * @returns {!boolean}
+     */
+    hasControl(inputMeasureMask=0, ignoreMask=0) {
+        return this.hasCoherentControl(inputMeasureMask | ignoreMask) ||
+            this.hasMeasuredControl(inputMeasureMask & ~ignoreMask);
     }
 
-    hasCoherentControl(inputMeasureMask) {
+    /**
+     * @param {!int} inputMeasureMask
+     * @returns {!boolean}
+     */
+    hasCoherentControl(inputMeasureMask=0) {
         for (let i = 0; i < this.gates.length; i++) {
             if ((inputMeasureMask & (1 << i)) === 0 &&
                     this.gates[i] !== undefined &&
@@ -84,7 +94,11 @@ class GateColumn {
         return false;
     }
 
-    hasMeasuredControl(inputMeasureMask) {
+    /**
+     * @param {!int} inputMeasureMask
+     * @returns {!boolean}
+     */
+    hasMeasuredControl(inputMeasureMask=0) {
         for (let i = 0; i < this.gates.length; i++) {
             if ((inputMeasureMask & (1 << i)) !== 0 &&
                     this.gates[i] !== undefined &&
@@ -380,8 +394,9 @@ class GateColumn {
         // without getting the wrong answer, at least).
         let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
             || gate === Gates.PostSelectionGates.PostSelectOff
-            || gate === Gates.Detector;
-        if (!this.hasControl() && hasSingleResult) {
+            || gate === Gates.Detectors.ZDetector
+            || gate === Gates.Detectors.ZDetectControlClear;
+        if (!this.hasControl(0, 1 << row) && hasSingleResult) {
             state.measureMask &= ~(1<<row);
             return;
         }

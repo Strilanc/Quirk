@@ -800,7 +800,6 @@ class GateBuilder {
     markAsControlExpecting(bit) {
         this.gate._controlBit = bit;
         this.gate.isControlWireSource = true;
-        this.gate._isDefinitelyUnitary = true;
         this.gate.interestedInControls = false;
         return this;
     }
