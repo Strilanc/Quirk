@@ -427,6 +427,7 @@ export class Suite {
                 status.warn_only = true;
                 status.ignore_warn_only_on_success = true;
                 status.warn_failure_message = `Ignoring ${this.name}.${caseName} failure due to lack of WebGL support.`;
+                status.warn_show_error = true;
             }
 
             let preTexCount = WglTexturePool.getUnReturnedTextureCount();

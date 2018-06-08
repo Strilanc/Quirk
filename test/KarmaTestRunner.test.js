@@ -73,6 +73,14 @@ let promiseRunTest = (suite, name, method) => {
                 status.warn_failure_message :
                 `${suite.name}.${name} FAILED, but is set to warn_only (${status.warn_only})`;
             console.warn(msg);
+
+            if (status.warn_show_error) {
+                for (let logMsg of result.log) {
+                    for (let line of logMsg.split('\n')) {
+                        console.warn('(ignored) ' + line);
+                    }
+                }
+            }
         }
         result.success = status.warn_only;
         return finish();
