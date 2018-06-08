@@ -258,7 +258,7 @@ function drawControlBulb(args, axis) {
             args.painter.strokeCircle(p, 5);
             let r = 5*Math.sqrt(0.5)*1.1;
             args.painter.strokeLine(p.offsetBy(+r, -r), p.offsetBy(-r, +r));
-            args.painter.strokeLine(p.offsetBy(-r, +r), p.offsetBy(+r, -r));
+            args.painter.strokeLine(p.offsetBy(-r, -r), p.offsetBy(+r, +r));
             break;
         case 'Z':
             args.painter.fillCircle(p, 5, "black");

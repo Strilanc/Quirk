@@ -374,7 +374,7 @@ class DisplayedCircuit {
                 }
                 let rect = this._wireInitialStateClickableRect(row);
                 painter.noteTouchBlocker({rect, cursor: 'pointer'});
-                if (hand.pos !== undefined && rect.containsPoint(hand.pos)) {
+                if (this._highlightedSlot === undefined && hand.pos !== undefined && rect.containsPoint(hand.pos)) {
                     painter.fillRect(rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
                 }
                 painter.print(`|${v}⟩`, 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING);
@@ -948,9 +948,8 @@ class DisplayedCircuit {
     /**
      * @param {!Point} pt
      * @returns {undefined|!int}
-     * @private
      */
-    _findWireWithInitialStateAreaContaining(pt) {
+    findWireWithInitialStateAreaContaining(pt) {
         // Is it in the right vertical band; the one at the start of the circuit?
         if (pt.x < 0 || pt.x > 30) {
             return undefined;
@@ -977,11 +976,11 @@ class DisplayedCircuit {
      * @returns {undefined|!DisplayedCircuit}
      */
     tryClick(hand) {
-        if (hand.pos === undefined) {
+        if (hand.pos === undefined || hand.heldGate !== undefined) {
             return undefined;
         }
 
-        let clickedInitialStateWire = this._findWireWithInitialStateAreaContaining(hand.pos);
+        let clickedInitialStateWire = this.findWireWithInitialStateAreaContaining(hand.pos);
         if (clickedInitialStateWire !== undefined) {
             return this.withCircuit(this.circuitDefinition.withSwitchedInitialStateOn(clickedInitialStateWire))
         }

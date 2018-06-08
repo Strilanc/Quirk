@@ -131,8 +131,15 @@ class DisplayedInspector {
         if (this.hand.pos === undefined) {
             return undefined;
         }
-        let pos = this.displayedCircuit.findGateWithButtonContaining(this.hand.pos);
-        return pos === undefined ? undefined : pos.col + ':' + pos.row;
+        let butBos = this.displayedCircuit.findGateWithButtonContaining(this.hand.pos);
+        if (butBos !== undefined) {
+            return `gate-button-${butBos.col}:${butBos.row}`;
+        }
+        let initPos = this.displayedCircuit.findWireWithInitialStateAreaContaining(this.hand.pos);
+        if (initPos !== undefined) {
+            return `wire-init-${initPos}`;
+        }
+        return undefined;
     }
 
     /**
