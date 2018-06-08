@@ -302,7 +302,7 @@ export function assertThrows(func, extraArgCatcher) {
 /** @type {boolean|undefined} */
 let __webGLSupportPresent = undefined;
 /** @type {boolean|undefined} */
-let _partialWebGLSupportPresent = undefined;
+let __onlyPartialWebGLSupportPresent = undefined;
 function isWebGLSupportPresent() {
     if (__webGLSupportPresent === undefined) {
         __webGLSupportPresent = false;
@@ -310,7 +310,7 @@ function isWebGLSupportPresent() {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
             if (ctx instanceof WebGLRenderingContext) {
-                _partialWebGLSupportPresent = true;
+                __webGLSupportPresent = true;
 
                 let shader = ctx.createShader(WebGLRenderingContext.VERTEX_SHADER);
                 ctx.shaderSource(shader, `
@@ -322,9 +322,8 @@ function isWebGLSupportPresent() {
 
                 // HACK: tests on travis-ci give this warning when compiling shaders, and then give
                 // bad test results. Checking for it is a workaround to make the build pass.
-                if (ctx.getShaderInfoLog(shader).indexOf("extension `GL_ARB_gpu_shader5' unsupported") === -1) {
-                    __webGLSupportPresent = true;
-                }
+                __onlyPartialWebGLSupportPresent = (
+                    ctx.getShaderInfoLog(shader).indexOf("extension `GL_ARB_gpu_shader5' unsupported") !== -1);
             }
         }
     }
@@ -334,8 +333,8 @@ function isWebGLSupportPresent() {
 /**
  * @returns {!boolean|undefined}
  */
-function isPartialWebGLSupportPresent() {
-    return !isWebGLSupportPresent() && _partialWebGLSupportPresent;
+function isOnlyPartialWebGLSupportPresent() {
+    return !isWebGLSupportPresent() && __onlyPartialWebGLSupportPresent;
 }
 
 let promiseImageDataFromSrc = src => {
@@ -420,7 +419,7 @@ export class Suite {
                 status.log.push(msg);
                 assertThat(undefined); // Cancel 'no assertion' warning.
                 return;
-            } else if (isPartialWebGLSupportPresent()) {
+            } else if (isOnlyPartialWebGLSupportPresent()) {
                 status.warn_only = true;
                 status.warn_message = `Ignoring ${this.name}.${caseName} failure due to lack of WebGL support.`;
             }
