@@ -326,9 +326,8 @@ function isWebGLSupportPresent() {
                 __onlyPartialWebGLSupportPresent = ctx.getShaderInfoLog(shader).indexOf(term) !== -1;
                 if (__onlyPartialWebGLSupportPresent) {
                     Config.IGNORED_WEBGL_INFO_TERMS.push(term);
+                    console.log('Only partial WebGL support is present. Some tests may fail and be ignored.')
                 }
-                console.log('__onlyPartialWebGLSupportPresent', __onlyPartialWebGLSupportPresent);
-                console.log(Config.IGNORED_WEBGL_INFO_TERMS);
             }
         }
     }
