@@ -301,6 +301,8 @@ export function assertThrows(func, extraArgCatcher) {
 
 /** @type {boolean|undefined} */
 let __webGLSupportPresent = undefined;
+/** @type {boolean|undefined} */
+let _partialWebGLSupportPresent = undefined;
 function isWebGLSupportPresent() {
     if (__webGLSupportPresent === undefined) {
         __webGLSupportPresent = false;
@@ -308,6 +310,8 @@ function isWebGLSupportPresent() {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
             if (ctx instanceof WebGLRenderingContext) {
+                _partialWebGLSupportPresent = true;
+
                 let shader = ctx.createShader(WebGLRenderingContext.VERTEX_SHADER);
                 ctx.shaderSource(shader, `
                     precision highp float;
@@ -325,6 +329,13 @@ function isWebGLSupportPresent() {
         }
     }
     return __webGLSupportPresent;
+}
+
+/**
+ * @returns {!boolean|undefined}
+ */
+function isPartialWebGLSupportPresent() {
+    return !isWebGLSupportPresent() && _partialWebGLSupportPresent;
 }
 
 let promiseImageDataFromSrc = src => {
@@ -409,6 +420,9 @@ export class Suite {
                 status.log.push(msg);
                 assertThat(undefined); // Cancel 'no assertion' warning.
                 return;
+            } else if (isPartialWebGLSupportPresent()) {
+                status.warn_only = true;
+                status.warn_message = `Ignoring ${this.name}.${caseName} failure due to lack of WebGL support.`;
             }
 
             let preTexCount = WglTexturePool.getUnReturnedTextureCount();

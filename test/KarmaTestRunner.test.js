@@ -52,7 +52,10 @@ let promiseRunTest = (suite, name, method) => {
     return promise.then(() => {
         result.success = true;
         if (status.warn_only) {
-            console.warn(`${suite.name}.${name} passed, but is set to warn_only (${status.warn_only})`)
+            let msg = status.warn_message !== undefined ?
+                status.warn_message :
+                `${suite.name}.${name} passed, but is set to warn_only (${status.warn_only})`;
+            console.warn(msg);
         }
         return finish();
     }, ex => {
