@@ -64,7 +64,7 @@ const MULTIPLY_ACCUMULATE_SHADER = ketShaderPermute(
     `
         float d1 = read_input_A();
         float d2 = read_input_B();
-        float d = mod(big_mul_mod(d1, d2, span)*factor, span);
+        float d = floor(mod(big_mul_mod(d1, d2, span)*factor + 0.5, span));
         return mod(out_id + span - d, span);`);
 
 MultiplyAccumulateGates.Legacy_MultiplyAddFamily = Gate.buildFamily(3, 16, (span, builder) => builder.

@@ -44,7 +44,7 @@ suite.testUsingWebGL("amplitudesToPolarKets", () => {
         25,new Complex(3,4).phase(),25,0,
         2,Math.PI*3/4,2,0,
         0.25,Math.PI/2,0.25,0
-    ]), 0.0001);
+    ]), 0.001);
     input.deallocByDepositingInPool();
 });
 
