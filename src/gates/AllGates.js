@@ -25,6 +25,7 @@ import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
 import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
+import {ImaginaryGate} from "src/gates/Joke_ImaginaryGate.js"
 import {IncrementGates} from "src/gates/IncrementGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
@@ -89,6 +90,7 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.ImaginaryGate = ImaginaryGate;
 Gates.IncrementGates = IncrementGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
@@ -126,6 +128,7 @@ Gates.KnownToSerializer = [
     ErrorInjectionGate,
     ZeroGate,
     NeGate,
+    ImaginaryGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -240,21 +243,21 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: 'Silly',
-        gates: [
-            ZeroGate,   MysteryGateMaker(),
-            NeGate,     undefined,
-            SpacerGate, undefined,
-        ]
-    },
-    {
-        hint: 'Sample',
+        hint: 'Sampling',
         gates: [
             Detectors.ZDetector, Detectors.ZDetectControlClear,
             Detectors.YDetector, Detectors.YDetectControlClear,
             Detectors.XDetector, Detectors.XDetectControlClear,
         ]
-    }
+    },
+    {
+        hint: 'Silly',
+        gates: [
+            ZeroGate,   MysteryGateMaker(),
+            NeGate,     ImaginaryGate,
+            SpacerGate, undefined,
+        ]
+    },
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */

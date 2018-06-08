@@ -13,16 +13,14 @@
 // limitations under the License.
 
 import {GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
 import {Matrix} from "src/math/Matrix.js"
+import {Complex} from "src/math/Complex.js"
 
-/** @type {!Gate} */
-const ZeroGate = new GateBuilder().
-    setSerializedIdAndSymbol("0").
-    setTitle("Nothing Gate").
-    setBlurb("Destroys the universe.").
-    setDrawer(GatePainting.makeLocationIndependentGateDrawer('#666')).
-    setKnownEffectToMatrix(Matrix.square(0, 0, 0, 0)).
+const ImaginaryGate = new GateBuilder().
+    setSerializedIdAndSymbol("i").
+    setTitle("Imaginary Gate").
+    setBlurb("Phases everything by i.").
+    setKnownEffectToMatrix(Matrix.square(Complex.I, 0, 0, Complex.I)).
     gate;
 
-export {ZeroGate}
+export {ImaginaryGate}
