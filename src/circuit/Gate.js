@@ -181,6 +181,12 @@ class Gate {
          */
         this.knownBitPermutationFunc = undefined;
         /**
+         * When a permutation factors into sub-permutations over subsets of the bits, this map indexes each bit with
+         * an id for the group that it belongs to.
+         * @type {!Array.<!int>}
+         */
+        this.knownBitPermutationGroupMasks = undefined;
+        /**
          * Indicates that a gate is a phasing function, and that it phases each computation basis state by the amount
          * returned by this function.
          * @type {undefined | !function(state: !int) : !number}
@@ -278,6 +284,7 @@ class Gate {
         g.knownPermutationFuncTakingInputs = this.knownPermutationFuncTakingInputs;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
+        g.knownBitPermutationGroupMasks = this.knownBitPermutationGroupMasks;
         return g;
     }
 
@@ -568,11 +575,12 @@ class GateBuilder {
      * Provides a function equivalent to how the gate rearranges wires, for checking in tests if the gate's behavior is
      * correct.
      * @param {!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
-     * given input, assuming the gate is exactly sized to the overall circuit.
+     *     given input, assuming the gate is exactly sized to the overall circuit.
      * @returns {!GateBuilder}
      */
     setKnownEffectToBitPermutation(knownBitPermutationFunc) {
         this.gate.knownBitPermutationFunc = knownBitPermutationFunc;
+        this.gate.knownBitPermutationGroupMasks = permutationGrouping(knownBitPermutationFunc, this.gate.height);
         this.gate._isDefinitelyUnitary = true;
         this.gate._stableDuration = Infinity;
         this.gate._hasNoEffect = false;
@@ -926,6 +934,30 @@ class GateBuilder {
         this.gate.tag = tag;
         return this;
     }
+}
+
+/**
+ * @param {!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
+ *     given input, assuming the gate is exactly sized to the overall circuit.
+ * @param {!int} height
+ * @returns {!Array.<!int>}
+ */
+function permutationGrouping(knownBitPermutationFunc, height) {
+    let seen = new Set();
+    let result = [];
+    for (let i = 0; i < height; i++) {
+        let mask = 0;
+        let j = i;
+        while (!seen.has(j)) {
+            seen.add(j);
+            mask |= 1 << j;
+            j = knownBitPermutationFunc(j);
+        }
+        if (mask !== 0) {
+            result.push(mask);
+        }
+    }
+    return result;
 }
 
 export {Gate, GateBuilder}

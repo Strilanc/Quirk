@@ -111,6 +111,21 @@ class GateColumn {
     }
 
     /**
+     * @returns {!int}
+     */
+    controlMask() {
+        let mask = 0;
+        for (let i = 0; i < this.gates.length; i++) {
+            if (this.gates[i] !== undefined &&
+                    this.gates[i].definitelyHasNoEffect() &&
+                    this.gates[i].isControl()) {
+                mask |= 1 << i;
+            }
+        }
+        return mask;
+    }
+
+    /**
      * @param {!int} inputMeasureMask
      * @param {!int} row
      * @param {!int} outerRowOffset
@@ -170,25 +185,41 @@ class GateColumn {
         let g = this.gates[row];
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
-        if (maskMeasured !== 0) {
+        if (maskMeasured !== 0 && g.knownBitPermutationFunc === undefined) {
             // Don't try to superpose measured qubits.
             if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
 
+            // Don't try to mix measured and coherent qubits, or coherently mix measured qubits.
             if (g.effectMightPermutesStates()) {
-                // Only permutations that respect bit boundaries can be performed on mixed qubits.
-                if (maskMeasured !== mask && (g.knownBitPermutationFunc === undefined ||
-                                              this.hasMeasuredControl(inputMeasureMask))) {
-                    return "no\nremix\n(sorry)";
-                }
-
-                // Permutations affecting classical states can't have quantum controls.
-                if (this.hasCoherentControl(inputMeasureMask)) {
+                if (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask)) {
                     return "no\nremix\n(sorry)";
                 }
             }
         }
+
+        // Check permutation subgroups for bad mixing of measured and coherent qubits.
+        if (g.knownBitPermutationGroupMasks !== undefined) {
+            for (let maskGroup of g.knownBitPermutationGroupMasks) {
+                let isSingleton = ((maskGroup - 1) & maskGroup) === 0;
+                if (isSingleton) {
+                    continue;
+                }
+
+                maskGroup <<= row;
+                let hasCoherentQubits = (maskGroup & inputMeasureMask) !== maskGroup;
+                let hasMeasuredQubits = (maskGroup & inputMeasureMask) !== 0;
+                let coherentControl = this.hasCoherentControl(inputMeasureMask);
+                let controlled = this.hasControl(inputMeasureMask);
+                let coherentControlledMixingOfMeasured = hasMeasuredQubits && coherentControl;
+                let controlledMixingOfCoherentAndMeasured = hasCoherentQubits && hasMeasuredQubits && controlled;
+                if (coherentControlledMixingOfMeasured || controlledMixingOfCoherentAndMeasured) {
+                    return "no\nremix\n(sorry)";
+                }
+            }
+        }
+
         return undefined;
     }
 

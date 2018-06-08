@@ -901,6 +901,66 @@ suite.test("gateAtLocIsDisabledReason", () => {
     bad(1, 0, `MR`, ['R', Gates.Detectors.XDetectControlClear]);
     bad(1, 0, `MR`, ['R', Gates.Detectors.YDetectControlClear]);
     good(1, 0, `MR`, ['R', Gates.Detectors.ZDetectControlClear]);
+
+    // Permutation sub-groups.
+    good(2, 0, `--P-
+                --/-
+                --/-
+                --/-
+                H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                --/-
+                --/-
+                -M/-
+                H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `--P-
+                --/-
+                --/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                --/-
+                --/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `--P-
+                -M/-
+                -M/-
+                --/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                -M/-
+                -M/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               -M/-
+               --/-
+               H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               --/-
+               --/-
+               HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+
+    // Non-trivial subgroup.
+    good(2, 0, `--P-
+                -M/-
+                -M/-
+                --/-
+                -M/-
+                --/-
+                --/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               --/-
+               -M/-
+               -M/-
+               --/-
+               --/-
+               HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
 });
 
 suite.test("gateAtLocIsDisabledReason_controls", () => {
