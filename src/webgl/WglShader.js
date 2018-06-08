@@ -226,6 +226,10 @@ class WglCompiledShader {
                 }
             }
             if (!ignored) {
+                console.log(Config.IGNORED_WEBGL_INFO_TERMS);
+                for (let term in Config.IGNORED_WEBGL_INFO_TERMS) {
+                    console.log(term, info.indexOf(term));
+                }
                 console.warn("WebGLShader: gl.getShaderInfoLog() wasn't empty: " + gl.getShaderInfoLog(shader));
                 console.warn("Source code was: " + sourceCode);
             }
