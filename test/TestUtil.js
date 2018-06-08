@@ -327,6 +327,8 @@ function isWebGLSupportPresent() {
                 if (__onlyPartialWebGLSupportPresent) {
                     Config.IGNORED_WEBGL_INFO_TERMS.push(term);
                 }
+                console.log('__onlyPartialWebGLSupportPresent', __onlyPartialWebGLSupportPresent);
+                console.log(Config.IGNORED_WEBGL_INFO_TERMS);
             }
         }
     }
@@ -337,7 +339,7 @@ function isWebGLSupportPresent() {
  * @returns {!boolean|undefined}
  */
 function isOnlyPartialWebGLSupportPresent() {
-    return !isWebGLSupportPresent() && __onlyPartialWebGLSupportPresent;
+    return isWebGLSupportPresent() && __onlyPartialWebGLSupportPresent;
 }
 
 let promiseImageDataFromSrc = src => {
