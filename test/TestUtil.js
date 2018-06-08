@@ -322,8 +322,11 @@ function isWebGLSupportPresent() {
 
                 // HACK: tests on travis-ci give this warning when compiling shaders, and then give
                 // bad test results. Checking for it is a workaround to make the build pass.
-                __onlyPartialWebGLSupportPresent = (
-                    ctx.getShaderInfoLog(shader).indexOf("extension `GL_ARB_gpu_shader5' unsupported") !== -1);
+                let term = "extension `GL_ARB_gpu_shader5' unsupported";
+                __onlyPartialWebGLSupportPresent = ctx.getShaderInfoLog(shader).indexOf(term) !== -1;
+                if (__onlyPartialWebGLSupportPresent) {
+                    Config.IGNORED_WEBGL_INFO_TERMS.push(term);
+                }
             }
         }
     }
@@ -421,7 +424,8 @@ export class Suite {
                 return;
             } else if (isOnlyPartialWebGLSupportPresent()) {
                 status.warn_only = true;
-                status.warn_message = `Ignoring ${this.name}.${caseName} failure due to lack of WebGL support.`;
+                status.ignore_warn_only_on_success = true;
+                status.warn_failure_message = `Ignoring ${this.name}.${caseName} failure due to lack of WebGL support.`;
             }
 
             let preTexCount = WglTexturePool.getUnReturnedTextureCount();

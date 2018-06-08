@@ -51,11 +51,8 @@ let promiseRunTest = (suite, name, method) => {
 
     return promise.then(() => {
         result.success = true;
-        if (status.warn_only) {
-            let msg = status.warn_message !== undefined ?
-                status.warn_message :
-                `${suite.name}.${name} passed, but is set to warn_only (${status.warn_only})`;
-            console.warn(msg);
+        if (status.warn_only && !status.ignore_warn_only_on_success) {
+            console.warn(`${suite.name}.${name} passed, but is set to warn_only (${status.warn_only})`);
         }
         return finish();
     }, ex => {
@@ -72,7 +69,10 @@ let promiseRunTest = (suite, name, method) => {
             result.log.push(stackMsg);
         }
         if (status.warn_only) {
-            console.warn(`${suite.name}.${name} FAILED, but is set to warn_only (${status.warn_only})`)
+            let msg = status.warn_failure_message !== undefined ?
+                status.warn_failure_message :
+                `${suite.name}.${name} FAILED, but is set to warn_only (${status.warn_only})`;
+            console.warn(msg);
         }
         result.success = status.warn_only;
         return finish();
