@@ -14,7 +14,7 @@
 
 import {ObservableValue} from "src/base/Obs.js"
 
-const menuIsVisible = new ObservableValue(true);
+const menuIsVisible = new ObservableValue(false);
 const obsMenuIsShowing = menuIsVisible.observable().whenDifferent();
 let closeMenu = () => menuIsVisible.set(false);
 
@@ -266,38 +266,38 @@ function initMenu(revision, obsIsAnyOverlayShowing) {
         });
     })();
 
-    const groverAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-grover');
-    const teleportAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-teleport');
-    const eraserAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-delayed-eraser');
-    const additionAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-addition');
-    const superdenseCodeAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-superdense-coding');
-    const symmetryBreakAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-symmetry-break');
-    const chshTestAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-chsh-test');
-    const qftAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-qft');
-    const shorAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-shor');
+//    const groverAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-grover');
+//    const teleportAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-teleport');
+//    const eraserAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-delayed-eraser');
+//    const additionAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-addition');
+//    const superdenseCodeAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-superdense-coding');
+//    const symmetryBreakAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-symmetry-break');
+//    const chshTestAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-chsh-test');
+//    const qftAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-qft');
+//    const shorAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-shor');
 
-    for (let [a, t] of [[groverAnchor, groverLink],
-                        [shorAnchor, shorLink],
-                        [teleportAnchor, teleportLink],
-                        [eraserAnchor, eraserLink],
-                        [additionAnchor, additionLink],
-                        [superdenseCodeAnchor, superdenseCodingLink],
-                        [symmetryBreakAnchor, symmetryBreakingLink],
-                        [chshTestAnchor, chshTestLink],
-                        [qftAnchor, qftLink]]) {
-        let text = JSON.stringify(t);
-        a.href = "#circuit=" + text;
-        a.onclick = ev => {
-            // Urgh, this is terrible but it will have to do.
-            if (ev.shiftKey || ev.ctrlKey || ev.altKey || ev.which !== 1) {
-                return undefined;
-            }
-
-            revision.commit(text);
-            menuIsVisible.set(false);
-            return false;
-        };
-    }
+//    for (let [a, t] of [[groverAnchor, groverLink],
+//                        [shorAnchor, shorLink],
+//                        [teleportAnchor, teleportLink],
+//                        [eraserAnchor, eraserLink],
+//                        [additionAnchor, additionLink],
+//                        [superdenseCodeAnchor, superdenseCodingLink],
+//                        [symmetryBreakAnchor, symmetryBreakingLink],
+//                        [chshTestAnchor, chshTestLink],
+//                        [qftAnchor, qftLink]]) {
+//        let text = JSON.stringify(t);
+//        a.href = "#circuit=" + text;
+//        a.onclick = ev => {
+//            // Urgh, this is terrible but it will have to do.
+//            if (ev.shiftKey || ev.ctrlKey || ev.altKey || ev.which !== 1) {
+//                return undefined;
+//            }
+//
+//            revision.commit(text);
+//            menuIsVisible.set(false);
+//            return false;
+//        };
+//    }
 }
 
 export {initMenu, obsMenuIsShowing, closeMenu}

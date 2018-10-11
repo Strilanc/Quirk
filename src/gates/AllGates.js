@@ -176,7 +176,7 @@ Gates.findKnownGateById = (id, customGateSet) => {
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.TopToolboxGroups = [
     {
-        hint: "Basic",
+        hint: "",
         gates: [
             MeasurementGate,                  undefined,
             undefined,                        undefined,
@@ -208,15 +208,7 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: "Sixteenths",
-        gates: [
-            VariousZGates.Z8,  VariousZGates.Z8i,
-            VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousXGates.X8,  VariousXGates.X8i,
-        ]
-    },
-    {
-        hint: "Spinning",
+        hint: "Varying",
         gates: [
             PoweringGates.ZForward, PoweringGates.ZBackward,
             PoweringGates.YForward, PoweringGates.YBackward,

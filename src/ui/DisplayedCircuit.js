@@ -399,18 +399,18 @@ class DisplayedCircuit {
             }).thenStroke('black');
         }
         painter.ctx.restore();
-        if (this._extraWireStartIndex !== undefined && this.circuitDefinition.numWires === Config.MAX_WIRE_COUNT) {
-            painter.print(
-                `(Max wires. Qubit limit is ${Config.MAX_WIRE_COUNT}.)`,
-                5,
-                this.wireRect(Config.MAX_WIRE_COUNT).y,
-                'left',
-                'top',
-                'red',
-                '16px bold monospace',
-                400,
-                Config.WIRE_SPACING);
-        }
+//        if (this._extraWireStartIndex !== undefined && this.circuitDefinition.numWires === Config.MAX_WIRE_COUNT) {
+//            painter.print(
+//                `(Max wires. Qubit limit is ${Config.MAX_WIRE_COUNT}.)`,
+//                5,
+//                this.wireRect(Config.MAX_WIRE_COUNT).y,
+//                'left',
+//                'top',
+//                'red',
+//                '16px bold monospace',
+//                400,
+//                Config.WIRE_SPACING);
+//        }
     }
 
     /**
