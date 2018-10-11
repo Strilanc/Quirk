@@ -176,25 +176,17 @@ Gates.findKnownGateById = (id, customGateSet) => {
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
 Gates.TopToolboxGroups = [
     {
-        hint: "Probes",
+        hint: "Basic",
         gates: [
             MeasurementGate,                  undefined,
-            PostSelectionGates.PostSelectOff, PostSelectionGates.PostSelectOn,
-            Controls.AntiControl,             Controls.Control
-        ]
-    },
-    {
-        hint: "Displays",
-        gates: [
-            SampleDisplayFamily.ofSize(3),        undefined,
-            DensityMatrixDisplayFamily.ofSize(1), BlochSphereDisplay,
-            ProbabilityDisplayFamily.ofSize(1),   AmplitudeDisplayFamily.ofSize(2)
+            undefined,                        undefined,
+            Controls.Control,                 SwapGateHalf
         ]
     },
     {
         hint: "Half Turns",
         gates: [
-            HalfTurnGates.Z, SwapGateHalf,
+            HalfTurnGates.Z, undefined,
             HalfTurnGates.Y, undefined,
             HalfTurnGates.X, HalfTurnGates.H
         ]
@@ -230,97 +222,10 @@ Gates.TopToolboxGroups = [
             PoweringGates.YForward, PoweringGates.YBackward,
             PoweringGates.XForward, PoweringGates.XBackward,
         ]
-    },
-    {
-        hint: "Parametrized",
-        gates: [
-            ParametrizedRotationGates.ZToA, ParametrizedRotationGates.ZToMinusA,
-            ParametrizedRotationGates.YToA, ParametrizedRotationGates.YToMinusA,
-            ParametrizedRotationGates.XToA, ParametrizedRotationGates.XToMinusA,
-        ]
-    },
-    {
-        hint: 'Silly',
-        gates: [
-            ZeroGate,   MysteryGateMaker(),
-            NeGate,     undefined,
-            SpacerGate, undefined
-        ]
     }
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
-Gates.BottomToolboxGroups = [
-    {
-        hint: "X/Y Probes",
-        gates: [
-            Controls.XAntiControl, Controls.XControl,
-            Controls.YAntiControl, Controls.YControl,
-            PostSelectionGates.PostSelectAntiX, PostSelectionGates.PostSelectX,
-            PostSelectionGates.PostSelectAntiY, PostSelectionGates.PostSelectY,
-        ]
-    },
-    {
-        hint: "Order",
-        gates: [
-            CountingGates.CountingFamily.ofSize(3),          CountingGates.UncountingFamily.ofSize(3),
-            ReverseBitsGateFamily.ofSize(2), undefined,
-            CycleBitsGates.CycleBitsFamily.ofSize(3),        CycleBitsGates.ReverseCycleBitsFamily.ofSize(3),
-            InterleaveBitsGates.InterleaveBitsGateFamily.ofSize(6),
-            InterleaveBitsGates.DeinterleaveBitsGateFamily.ofSize(6),
-        ]
-    },
-    {
-        hint: 'Frequency',
-        gates: [
-            FourierTransformGates.FourierTransformFamily.ofSize(2),
-                FourierTransformGates.InverseFourierTransformFamily.ofSize(2),
-            undefined, undefined,
-            PhaseGradientGates.PhaseGradientFamily.ofSize(2),
-                PhaseGradientGates.PhaseDegradientFamily.ofSize(2),
-            PhaseGradientGates.DynamicPhaseGradientFamily.ofSize(2),
-                PhaseGradientGates.DynamicPhaseDegradientFamily.ofSize(2),
-        ]
-    },
-    {
-        hint: "Inputs",
-        gates: [
-            InputGates.InputAFamily.ofSize(2), InputGates.SetA,
-            InputGates.InputBFamily.ofSize(2), InputGates.SetB,
-            InputGates.InputRFamily.ofSize(2), InputGates.SetR,
-            undefined, undefined,
-        ]
-    },
-    {
-        hint: 'Arithmetic',
-        gates: [
-            IncrementGates.IncrementFamily.ofSize(2), IncrementGates.DecrementFamily.ofSize(2),
-            ArithmeticGates.PlusAFamily.ofSize(2), ArithmeticGates.MinusAFamily.ofSize(2),
-            MultiplyAccumulateGates.MultiplyAddInputsFamily.ofSize(2),
-                MultiplyAccumulateGates.MultiplySubtractInputsFamily.ofSize(2),
-            MultiplicationGates.TimesAFamily.ofSize(2), MultiplicationGates.TimesAInverseFamily.ofSize(2),
-        ]
-    },
-    {
-        hint: "Compare",
-        gates: [
-            ComparisonGates.ALessThanB, ComparisonGates.AGreaterThanB,
-            ComparisonGates.ALessThanOrEqualToB, ComparisonGates.AGreaterThanOrEqualToB,
-            ComparisonGates.AEqualToB, ComparisonGates.ANotEqualToB,
-            undefined, undefined,
-        ]
-    },
-    {
-        hint: "Modular",
-        gates: [
-            ModularIncrementGates.IncrementModRFamily.ofSize(2), ModularIncrementGates.DecrementModRFamily.ofSize(2),
-            ModularAdditionGates.PlusAModRFamily.ofSize(2), ModularAdditionGates.MinusAModRFamily.ofSize(2),
-            ModularMultiplicationGates.TimesAModRFamily.ofSize(2),
-                ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
-            ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(2),
-                ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(2),
-        ]
-    },
-];
+Gates.BottomToolboxGroups = [];
 
 export {Gates}
