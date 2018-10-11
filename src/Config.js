@@ -23,10 +23,10 @@ Config.EMPTY_CIRCUIT_TITLE = 'Quirk: Quantum Circuit Simulator';
 // Also each qubit tends to increase the amount of accuracy required.
 // I see obvious errors when I set this to 20, and things get pretty laggy past 16.
 // Beware setting it too high.
-Config.MAX_WIRE_COUNT = 16;
+Config.MAX_WIRE_COUNT = 4;
 Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD = 14;
 
-Config.MIN_WIRE_COUNT = 2;
+Config.MIN_WIRE_COUNT = 4;
 Config.MIN_COL_COUNT = 5;
 Config.URL_CIRCUIT_PARAM_KEY = 'circuit';
 
