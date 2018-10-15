@@ -1089,28 +1089,28 @@ class DisplayedCircuit {
      * @private
      */
     _drawOutputDisplays(painter, stats, hand) {
-        let chanceCol = this.clampedCircuitColCount() + 1;
-        let blochCol = chanceCol + 1;
-        let numWire = this.importantWireCount();
-
-        for (let i = 0; i < numWire; i++) {
-            let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
-            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, chanceCol), hand.hoverPoints());
-            let m = stats.qubitDensityMatrix(Infinity, i);
-            if (m !== undefined) {
-                paintBlochSphereDisplay(painter, m, this.gateRect(i, blochCol), hand.hoverPoints());
-            }
-        }
-
-        let bottom = this.wireRect(numWire-1).bottom();
-        let x = this.opRect(chanceCol - 1).x;
-        painter.printParagraph(
-            "Local wire states\n(Chance/Bloch)",
-            new Rect(x, bottom+4, 190, 40),
-            new Point(0.5, 0),
-            'gray');
-
-        this._drawOutputSuperpositionDisplay(painter, stats, hand);
+//        let chanceCol = this.clampedCircuitColCount() + 1;
+//        let blochCol = chanceCol + 1;
+//        let numWire = this.importantWireCount();
+//
+//        for (let i = 0; i < numWire; i++) {
+//            let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
+//            MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, chanceCol), hand.hoverPoints());
+//            let m = stats.qubitDensityMatrix(Infinity, i);
+//            if (m !== undefined) {
+//                paintBlochSphereDisplay(painter, m, this.gateRect(i, blochCol), hand.hoverPoints());
+//            }
+//        }
+//
+//        let bottom = this.wireRect(numWire-1).bottom();
+//        let x = this.opRect(chanceCol - 1).x;
+//        painter.printParagraph(
+//            "Local wire states\n(Chance/Bloch)",
+//            new Rect(x, bottom+4, 190, 40),
+//            new Point(0.5, 0),
+//            'gray');
+//
+//        this._drawOutputSuperpositionDisplay(painter, stats, hand);
     }
 
     /**
@@ -1205,58 +1205,58 @@ class DisplayedCircuit {
      * @private
      */
     _drawHintLabels(painter, stats) {
-        let gridRect = this._rectForSuperpositionDisplay();
+//        let gridRect = this._rectForSuperpositionDisplay();
 
-        // Amplitude hint.
-        painter.print(
-            'Final amplitudes',
-            gridRect.right() + 3,
-            gridRect.bottom() + 3,
-            'left',
-            'top',
-            'gray',
-            '12px sans-serif',
-            100,
-            20);
-
-        // Deferred measurement warning.
-        if (this.circuitDefinition.colIsMeasuredMask(Infinity) !== 0) {
-            painter.printParagraph(
-                "(assuming measurement deferred)",
-                new Rect(
-                    gridRect.right() + 3,
-                    gridRect.bottom() + 20,
-                    100,
-                    75),
-                new Point(0.5, 0),
-                'red');
-        }
-
-        // Discard rate warning.
-        let survivalRate = stats.survivalRate(Infinity);
-        if (Math.abs(survivalRate - 1) > 0.01) {
-            let desc;
-            if (survivalRate < 1) {
-                let rate = Math.round(survivalRate * 100);
-                let rateDesc = survivalRate === 0 ? "0" :
-                    rate > 0 ? rate :
-                    "<1";
-                desc = `kept: ${rateDesc}%`;
-            } else {
-                let factor = Math.round(survivalRate * 100);
-                desc = `over-unity: ${factor}%`;
-            }
-            painter.print(
-                desc,
-                this._rectForSuperpositionDisplay().x - 5,
-                gridRect.bottom() + SUPERPOSITION_GRID_LABEL_SPAN,
-                'right',
-                'bottom',
-                'red',
-                '14px sans-serif',
-                800,
-                50);
-        }
+//        // Amplitude hint.
+//        painter.print(
+//            'Final amplitudes',
+//            gridRect.right() + 3,
+//            gridRect.bottom() + 3,
+//            'left',
+//            'top',
+//            'gray',
+//            '12px sans-serif',
+//            100,
+//            20);
+//
+//        // Deferred measurement warning.
+//        if (this.circuitDefinition.colIsMeasuredMask(Infinity) !== 0) {
+//            painter.printParagraph(
+//                "(assuming measurement deferred)",
+//                new Rect(
+//                    gridRect.right() + 3,
+//                    gridRect.bottom() + 20,
+//                    100,
+//                    75),
+//                new Point(0.5, 0),
+//                'red');
+//        }
+//
+//        // Discard rate warning.
+//        let survivalRate = stats.survivalRate(Infinity);
+//        if (Math.abs(survivalRate - 1) > 0.01) {
+//            let desc;
+//            if (survivalRate < 1) {
+//                let rate = Math.round(survivalRate * 100);
+//                let rateDesc = survivalRate === 0 ? "0" :
+//                    rate > 0 ? rate :
+//                    "<1";
+//                desc = `kept: ${rateDesc}%`;
+//            } else {
+//                let factor = Math.round(survivalRate * 100);
+//                desc = `over-unity: ${factor}%`;
+//            }
+//            painter.print(
+//                desc,
+//                this._rectForSuperpositionDisplay().x - 5,
+//                gridRect.bottom() + SUPERPOSITION_GRID_LABEL_SPAN,
+//                'right',
+//                'bottom',
+//                'red',
+//                '14px sans-serif',
+//                800,
+//                50);
+//        }
     }
 
     /**
