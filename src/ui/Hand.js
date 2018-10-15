@@ -85,7 +85,9 @@ class Hand {
     }
 
     /**
-     * @param {!Hand|*} other
+     * @p        elif g == '•':
+            controls.append(q)
+aram {!Hand|*} other
      * @returns {!boolean}
      */
     isEqualTo(other) {

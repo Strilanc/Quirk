@@ -37,10 +37,10 @@ class DisplayedInspector {
         /** @type {!DisplayedCircuit} */
         this.displayedCircuit = circuitWidget;
         /** @type {!DisplayedToolbox} */
-        this.displayedToolboxTop = displayedToolboxTop;
-        /** @type {!DisplayedToolbox} */
-        this.displayedToolboxBottom = displayedToolboxBottom.
+        this.displayedToolboxTop = displayedToolboxTop.
             withCustomGatesInserted(circuitWidget.circuitDefinition.customGateSet);
+        /** @type {!DisplayedToolbox} */
+        this.displayedToolboxBottom = displayedToolboxBottom;
         /** @type {!Hand} */
         this.hand = hand;
         /** @type {!Rect} */
@@ -64,8 +64,8 @@ class DisplayedInspector {
         this.drawArea = drawArea;
 
         this.displayedToolboxTop = this.displayedToolboxTop.withTop(0);
-        this.displayedToolboxBottom = this.displayedToolboxBottom.withTop(
-            this.drawArea.bottom() - this.displayedToolboxBottom.desiredHeight());
+        //this.displayedToolboxBottom = this.displayedToolboxBottom.withTop(
+        //    this.drawArea.bottom() - this.displayedToolboxBottom.desiredHeight());
     }
 
     /**
@@ -97,7 +97,7 @@ class DisplayedInspector {
         painter.fillRect(this.drawArea, Config.BACKGROUND_COLOR);
 
         this.displayedToolboxTop.paint(painter, stats, this.hand);
-        this.displayedToolboxBottom.paint(painter, stats, this.hand);
+        //this.displayedToolboxBottom.paint(painter, stats, this.hand);
         this.displayedCircuit.paint(painter, this.hand, stats);
         this._paintHand(painter, stats);
         this._drawHint(painter);
@@ -154,7 +154,7 @@ class DisplayedInspector {
         let circuit = this.displayedCircuit;
 
         hand = this.displayedToolboxTop.tryGrab(hand);
-        hand = this.displayedToolboxBottom.tryGrab(hand);
+        //hand = this.displayedToolboxBottom.tryGrab(hand);
         let obj = circuit.tryGrab(hand, duplicate, wholeCol, ignoreResizeTabs);
         hand = obj.newHand;
         circuit = obj.newCircuit;
@@ -296,9 +296,9 @@ class DisplayedInspector {
     }
 
     _drawHint(painter) {
-        this._drawHint_dragGatesOntoCircuit(painter);
-        this._drawHint_watchOutputsChange(painter);
-        this._drawHint_useControls(painter);
+//        this._drawHint_dragGatesOntoCircuit(painter);
+//        this._drawHint_watchOutputsChange(painter);
+//        this._drawHint_useControls(painter);
     }
 
     /**

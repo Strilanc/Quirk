@@ -447,11 +447,12 @@ class GateColumn {
      * @returns {!int}
      */
     nextMeasureMask(inputMeasureMask, disabledReasons) {
-        let state = {measureMask: inputMeasureMask, earlierRowWithSwapGate: undefined};
-        for (let row = 0; row < this.gates.length; row++) {
-            this._updateMeasureMask_gateStep(state, row, disabledReasons);
-        }
-        return state.measureMask;
+        return 0;
+//        let state = {measureMask: inputMeasureMask, earlierRowWithSwapGate: undefined};
+//        for (let row = 0; row < this.gates.length; row++) {
+//            this._updateMeasureMask_gateStep(state, row, disabledReasons);
+//        }
+//        return state.measureMask;
     }
 
     /**

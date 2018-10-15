@@ -17,8 +17,19 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js"
+import {Seq, seq} from "src/base/Seq.js"
 
 let Controls = {};
+
+let singleControlOnly = args => {
+    let col = args.innerColumn;
+    let otherControlRows = Seq.range(col.gates.length).filter(row => col.gates[row] !== undefined && col.gates[row].isControl());
+    let n = otherControlRows.count();
+    if (n > 1) {
+        return "too\nmany\ncontrols";
+    }
+    return undefined;
+};
 
 Controls.Control = new GateBuilder().
     setSerializedIdAndSymbol("•").
@@ -33,6 +44,7 @@ Controls.Control = new GateBuilder().
         }
         args.painter.fillCircle(args.rect.center(), 5, "black");
     }).
+    setExtraDisableReasonFinder(singleControlOnly).
     gate;
 
 Controls.AntiControl = new GateBuilder().
@@ -50,6 +62,7 @@ Controls.AntiControl = new GateBuilder().
         args.painter.fillCircle(p, 5);
         args.painter.strokeCircle(p, 5);
     }).
+    setExtraDisableReasonFinder(singleControlOnly).
     gate;
 
 Controls.XAntiControl = new GateBuilder().
@@ -74,6 +87,7 @@ Controls.XAntiControl = new GateBuilder().
         args.painter.strokeCircle(p, 5);
         args.painter.strokeLine(p.offsetBy(-5, 0), p.offsetBy(+5, 0));
     }).
+    setExtraDisableReasonFinder(singleControlOnly).
     gate;
 
 Controls.XControl = new GateBuilder().
@@ -127,6 +141,7 @@ Controls.YAntiControl = new GateBuilder().
             GatePainting.paintOutline(args);
         }
     }).
+    setExtraDisableReasonFinder(singleControlOnly).
     gate;
 
 Controls.YControl = new GateBuilder().
@@ -156,6 +171,7 @@ Controls.YControl = new GateBuilder().
             GatePainting.paintOutline(ctx);
         }
     }).
+    setExtraDisableReasonFinder(singleControlOnly).
     gate;
 
 Controls.all = [
