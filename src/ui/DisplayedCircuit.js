@@ -103,6 +103,8 @@ class DisplayedCircuit {
     }
 
     /**
+     * The number of wires that were in the circuit before picking up a gate, or the number that will be in the circuit
+     * after dropping a gate; whichever is larger.
      * @returns {!int}
      * @private
      */
@@ -661,6 +663,13 @@ class DisplayedCircuit {
         if (hand.pos === undefined) {
             return this;
         }
+        let handWire = this.wireIndexAt(hand.pos.y);
+        if (handWire < 0 || handWire >= Config.MAX_WIRE_COUNT || hand.pos.x <= 1) {
+            // Dragged the gate column out of the circuit.
+            return this;
+        }
+
+
         let halfCol = this.findOpHalfColumnAt(new Point(hand.pos.x, this.top));
         let mustInsert = halfCol % 1 === 0 &&
             this.circuitDefinition.columns[halfCol] !== undefined &&
