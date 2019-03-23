@@ -236,6 +236,38 @@ const shorLink = {
         {"id":"~out","name":"out:","matrix":"{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}"}
     ]
 };
+const distillLink = {
+    "cols":[
+        ["H","H","H","H","H"],
+        [1,"Z","Z","Z",1,"⊖"],
+        [1,"Z","Z",1,"Z",1,"⊖"],
+        [1,"Z",1,"Z","Z",1,1,"⊖"],
+        [1,1,"Z","Z","Z",1,1,1,"⊖"],
+        ["Z","Z","Z","Z","Z",1,1,1,1,"⊖"],
+        ["Z",1,1,"Z","Z",1,1,1,1,1,"⊖"],
+        ["Z",1,"Z",1,"Z",1,1,1,1,1,1,"⊖"],
+        ["Z","Z",1,1,"Z",1,1,1,1,1,1,1,"⊖"],
+        ["Z",1,"Z","Z",1,1,1,1,1,1,1,1,1,"⊖"],
+        ["Z","Z",1,"Z",1,1,1,1,1,1,1,1,1,1,"⊖"],
+        ["Z","Z","Z",1,1,1,1,1,1,1,1,1,1,1,1,"⊖"],
+        [1,"Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼","Z^¼"],
+        [1,"H","H","H","H","H","H","H","H","H","H","H","H","H","H","H"],
+        [1,"Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure","Measure"],
+        [1,"X","X","X",1,"•"],
+        [1,"X","X",1,"X",1,"•"],
+        [1,"X",1,"X","X",1,1,"•"],
+        [1,1,"X","X","X",1,1,1,"•"],
+        ["Z","X","X","X","X",1,1,1,1,"•"],
+        ["Z",1,1,"X","X",1,1,1,1,1,"•"],
+        ["Z",1,"X",1,"X",1,1,1,1,1,1,"•"],
+        ["Z","X",1,1,"X",1,1,1,1,1,1,1,"•"],
+        ["Z",1,"X","X",1,1,1,1,1,1,1,1,1,"•"],
+        ["Z","X",1,"X",1,1,1,1,1,1,1,1,1,1,"•"],
+        ["Z","X","X",1,1,1,1,1,1,1,1,1,1,1,1,"•"],
+        ["X","Chance4"],
+        ["Amps1","|0⟩⟨0|","|0⟩⟨0|","|0⟩⟨0|","|0⟩⟨0|"]
+    ]
+};
 
 /**
  * @param {!Revision} revision
@@ -275,6 +307,7 @@ function initMenu(revision, obsIsAnyOverlayShowing) {
     const chshTestAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-chsh-test');
     const qftAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-qft');
     const shorAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-shor');
+    const distillAnchor = /** @type {!HTMLAnchorElement} */ document.getElementById('example-anchor-distill');
 
     for (let [a, t] of [[groverAnchor, groverLink],
                         [shorAnchor, shorLink],
@@ -284,7 +317,8 @@ function initMenu(revision, obsIsAnyOverlayShowing) {
                         [superdenseCodeAnchor, superdenseCodingLink],
                         [symmetryBreakAnchor, symmetryBreakingLink],
                         [chshTestAnchor, chshTestLink],
-                        [qftAnchor, qftLink]]) {
+                        [qftAnchor, qftLink],
+                        [distillAnchor, distillLink]]) {
         let text = JSON.stringify(t);
         a.href = "#circuit=" + text;
         a.onclick = ev => {
