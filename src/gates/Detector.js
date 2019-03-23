@@ -100,7 +100,12 @@ let detectorShader = makePseudoShaderWithInputsAndOutputAndCode(
             float detectChance = read_detection_weight(0.0) / read_total_weight(0.0);
             float detection_type = float(rnd < detectChance);
             float own_type = read_classification(k);
-            return read_ket(k) * float(detection_type == own_type);
+            if (detection_type == own_type) {
+                float matchChance = detectChance * own_type + (1.0 - own_type) * (1.0 - detectChance);
+                return read_ket(k) / sqrt(matchChance);
+            } else {
+                return vec2(0.0, 0.0);
+            }
         }
     `);
 

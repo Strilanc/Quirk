@@ -16,7 +16,6 @@ import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {Complex} from "src/math/Complex.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -366,4 +365,26 @@ suite.testUsingWebGL("initial_states", () => {
     assertThat(stats.qubitDensityMatrix(9, 3).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([+1, 0, 0]);
     assertThat(stats.qubitDensityMatrix(9, 4).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, +1, 0]);
     assertThat(stats.qubitDensityMatrix(9, 5).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, -1, 0]);
+});
+
+suite.testUsingWebGL("distillation", () => {
+    let c = circuit(
+        `
+        -X-X--X-X--X-X--X-X-------X-X--X-X-------X-X------------HTH-0-
+        -X-X--X-X--X-X-------X-X--X-X-------X-X-------X-X-------HTH-0-
+        -X-X--X-X-------X-X--X-X-------X-X--X-X------------X-X--HTH-0-
+        -X-X-------X-X--X-X--X-X-----------------X-X--X-X--X-X--HTH-0-
+        -X-X----------------------X-X--X-X--X-X--X-X--X-X--X-X--------
+        -#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--------
+        `,
+        [']', Gates.Detectors.XDetectControlClear],
+        ['0', Gates.PostSelectionGates.PostSelectOff],
+        ['#', Gates.Controls.XControl],
+        ['T', Gates.OtherZ.Z4]);
+    for (let i = 0; i < 5; i++) {
+        let stats = CircuitStats.fromCircuitAtTime(c, 0);
+        assertThat(stats.qubitDensityMatrix(Infinity, 4).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo(
+            [0, Math.sqrt(0.5), -Math.sqrt(0.5)]);
+        assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(1, 0.001);
+    }
 });

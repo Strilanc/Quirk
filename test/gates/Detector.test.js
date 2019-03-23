@@ -88,3 +88,21 @@ suite.testUsingWebGL("collapsed-control-clicks", () => {
         }
     }
 });
+
+suite.testUsingWebGL("renormalizes", () => {
+    // Doesn't decrease survival probability.
+    let c = circuit(
+        '-]-D-]-D-]-D-]-',
+        [']', Gates.Detectors.XDetector],
+        ['0', Gates.PostSelectionGates.PostSelectOff]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(1, 0.001);
+
+    // Renormalization doesn't increase survival probability.
+    let c2 = circuit(
+        '-]-0-D-]-D-]-D-]-',
+        [']', Gates.Detectors.XDetector],
+        ['0', Gates.PostSelectionGates.PostSelectOff]);
+    let stats2 = CircuitStats.fromCircuitAtTime(c2, 0);
+    assertThat(stats2.survivalRate(Infinity)).isApproximatelyEqualTo(0.5, 0.001);
+});
