@@ -21,7 +21,7 @@ import {equate_Maps} from "src/base/Equate.js";
 import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
-import {Gates} from "src/gates/AllGates.js"
+import {Gates, INITIAL_STATES_TO_GATES} from "src/gates/AllGates.js"
 import {Point} from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
@@ -147,7 +147,7 @@ class CircuitDefinition {
     withSwitchedInitialStateOn(wire) {
         let m = new Map([...this.customInitialValues.entries()]);
         let v = m.get(wire);
-        let cycle = [undefined, '1', '+', '-', 'S', 'S†'];
+        let cycle = [...INITIAL_STATES_TO_GATES.keys()];
         let newVal = cycle[(cycle.indexOf(v) + 1) % cycle.length];
         if (newVal === undefined) {
             m.delete(wire);
@@ -901,10 +901,10 @@ class CircuitDefinition {
     applyInitialStateOperations(ctx) {
         for (let wire = 0; wire < this.numWires; wire++) {
             let state = this.customInitialValues.get(wire);
-            if (!STATE_TO_GATES.has(state)) {
+            if (!INITIAL_STATES_TO_GATES.has(state)) {
                 throw new DetailedError('Unrecognized initial state.', {state});
             }
-            for (let gate of STATE_TO_GATES.get(state)) {
+            for (let gate of INITIAL_STATES_TO_GATES.get(state)) {
                 GateShaders.applyMatrixOperation(ctx.withRow(ctx.row + wire), gate.knownMatrixAt(ctx.time))
             }
         }
@@ -1116,16 +1116,6 @@ function firstLastMatchInRange(rangeLen, predicate){
     }
     return [first, last];
 }
-
-/** @type {!Map.<undefined|!string, !Array.<!Gate>>} */
-const STATE_TO_GATES = new Map([
-    [undefined, []],
-    ['1', [Gates.HalfTurns.X]],
-    ['+', [Gates.HalfTurns.H]],
-    ['-', [Gates.HalfTurns.H, Gates.HalfTurns.Z]],
-    ['S', [Gates.HalfTurns.H, Gates.QuarterTurns.SqrtZForward]],
-    ['S†', [Gates.HalfTurns.H, Gates.QuarterTurns.SqrtZBackward]]
-]);
 
 CircuitDefinition.EMPTY = new CircuitDefinition(0, []);
 

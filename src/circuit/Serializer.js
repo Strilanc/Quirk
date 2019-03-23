@@ -21,7 +21,7 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {Format} from "src/base/Format.js"
 import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
-import {Gates} from "src/gates/AllGates.js"
+import {Gates, INITIAL_STATES_TO_GATES} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Util} from "src/base/Util.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
@@ -428,7 +428,7 @@ function _fromJson_InitialState(json) {
             // 0 is the default. Don't need to do anything.
         } else if (v === 1) {
             result.set(i, '1');
-        } else if (['+', '-', 'S', 'S†'].indexOf(v) !== -1) {
+        } else if (INITIAL_STATES_TO_GATES.has(v)) {
             result.set(i, v);
         } else {
             throw new DetailedError('Unrecognized initial state key.', {v, json});

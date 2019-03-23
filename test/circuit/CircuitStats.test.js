@@ -355,7 +355,7 @@ suite.testUsingWebGL('classical-bit-rotate-with-classical-control-does-fire', ()
 
 suite.testUsingWebGL("initial_states", () => {
     let circuit = Serializer.fromJson(CircuitDefinition, {
-        init: [0, 1, '+', '-', 'S', 'S†'],
+        init: [0, 1, '+', '-', 'i', '-i'],
         cols: [],
     });
     let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
