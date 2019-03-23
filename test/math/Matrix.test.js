@@ -628,6 +628,8 @@ suite.test("singularValueDecomposition", () => {
         new Complex(2, 3), new Complex(5, 7), new Complex(11, 13),
         new Complex(17, 19), new Complex(-23, 29), new Complex(31, 37),
         new Complex(41, -43), new Complex(47, -53), new Complex(59, 61)));
+
+    assertSvdDecompositionWorksFor(Matrix.generateDiagonal(4, k => Complex.polar(1, Math.PI*2/3*k)));
 });
 
 suite.test("singularValueDecomposition_randomized", () => {
@@ -637,7 +639,7 @@ suite.test("singularValueDecomposition_randomized", () => {
     }
 });
 
-suite.test("closestUnitary_2x2", () => {
+suite.test("closestUnitary", () => {
     let i = Complex.I;
     let ni = i.neg();
     assertThat(Matrix.square(0, 0, 0, 0).closestUnitary()).
@@ -655,6 +657,9 @@ suite.test("closestUnitary_2x2", () => {
         1, -1,  1, -1,
         1, ni, -1,  i);
     assertThat(m.closestUnitary(0.001)).isApproximatelyEqualTo(m.times(0.5));
+
+    let m2 = Matrix.generateDiagonal(4, k => Complex.polar(1, Math.PI*2/3*k));
+    assertThat(m2.closestUnitary(0.001)).isApproximatelyEqualTo(m2);
 });
 
 suite.test("eigenDecomposition", () => {

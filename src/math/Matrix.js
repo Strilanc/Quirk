@@ -1343,13 +1343,15 @@ class Matrix {
         // Fix ordering, so that the singular values are ascending.
         let permutation = Seq.range(this._width).sortedBy(i => -S.cell(i, i).norm2()).toArray();
         for (let i = 0; i < S._width; i++) {
-            let j = permutation[i];
+            let j = permutation.indexOf(i);
             if (i !== j) {
                 U._inline_colMix_postMultiply(i, j, Matrix.PAULI_X);
                 V._inline_rowMix_preMultiply(i, j, Matrix.PAULI_X);
-                [S._buffer[i*2], S._buffer[j*2]] = [S._buffer[j*2], S._buffer[i*2]];
-                [S._buffer[i*2+1], S._buffer[j*2+1]] = [S._buffer[j*2+1], S._buffer[i*2+1]];
-                [permutation[j], permutation[i]] = [permutation[i], permutation[j]]
+                let si = i*(S._width + 1)*2;
+                let sj = j*(S._width + 1)*2;
+                [S._buffer[si], S._buffer[sj]] = [S._buffer[sj], S._buffer[si]];
+                [S._buffer[si+1], S._buffer[sj+1]] = [S._buffer[sj+1], S._buffer[si+1]];
+                [permutation[j], permutation[i]] = [permutation[i], permutation[j]];
             }
         }
 
@@ -1365,7 +1367,7 @@ class Matrix {
     }
 
     /**
-     * @param {!int} rowIndex
+     * @param {!int} colIndex
      * @returns {!Array.<!Complex>}
      */
     getColumn(colIndex) {
