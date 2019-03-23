@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {Complex} from "src/math/Complex.js"
 import {Config} from "src/Config.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {Gate} from "src/circuit/Gate.js"
@@ -19,7 +20,7 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {Format} from "src/base/Format.js"
 import {MathPainter} from "src/draw/MathPainter.js"
-import {Matrix} from "src/math/Matrix.js"
+import {Matrix, complexVectorToReadableJson, realVectorToReadableJson} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Util} from "src/base/Util.js"
 import {WglArg} from "src/webgl/WglArg.js"
@@ -417,6 +418,30 @@ function paintErrorIfPresent(args, isIncoherent) {
     }
 }
 
+/**
+ * @param customStats
+ */
+function customStatsToJsonData(customStats) {
+    let {probabilities, superposition, phaseLockIndex} = customStats;
+    let result = {
+        coherence_measure: superposition !== undefined ? 1 : 0,
+        superposition_phase_locked_state_index: phaseLockIndex === undefined ? null : phaseLockIndex,
+        probabilities: null,
+        amplitudes: null,
+
+    };
+    if (probabilities !== undefined) {
+        let n = probabilities._width * probabilities._height;
+        result['probabilities'] = realVectorToReadableJson(
+            new Matrix(1, n, probabilities._buffer).getColumn(0).map(e => Math.pow(Complex.realPartOf(e), 2)));
+    }
+    if (superposition !== undefined) {
+        let n = superposition._width * superposition._height;
+        result['superposition'] = complexVectorToReadableJson(new Matrix(1, n, superposition._buffer).getColumn(0));
+    }
+    return result;
+}
+
 let AmplitudeDisplayFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("Amps" + span).
     setSymbol("Amps").
@@ -428,6 +453,7 @@ let AmplitudeDisplayFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setStatTexturesMaker(ctx =>
         amplitudeDisplayStatTextures(ctx.stateTrader.currentTexture, ctx.controls, ctx.row, span)).
     setStatPixelDataPostProcessor((val, def) => processOutputs(span, val, def)).
+    setProcessedStatsToJsonFunc(customStatsToJsonData).
     setDrawer(AMPLITUDE_DRAWER_FROM_CUSTOM_STATS));
 
 export {

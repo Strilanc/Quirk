@@ -71,6 +71,11 @@ class Gate {
          * @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *}
          */
         this.customStatPostProcesser = undefined;
+        /**
+         * Returns a json form of the custom-stat data, used when exporting it.
+         * @type {undefined|!function(data: *) : *}
+         */
+        this.processedStatsToJsonFunc = undefined;
         /** @type {!Array.<!Gate>} A list of size variants of this gate.*/
         this.gateFamily = [this];
 
@@ -262,6 +267,7 @@ class Gate {
         g.customAfterOperation = this.customAfterOperation;
         g.customStatTexturesMaker = this.customStatTexturesMaker;
         g.customStatPostProcesser = this.customStatPostProcesser;
+        g.processedStatsToJsonFunc = this.processedStatsToJsonFunc;
         g.width = this.width;
         g.height = this.height;
         g.isSingleQubitDisplay = this.isSingleQubitDisplay;
@@ -923,6 +929,16 @@ class GateBuilder {
      */
     setStatPixelDataPostProcessor(pixelFunc) {
         this.gate.customStatPostProcesser = pixelFunc;
+        return this;
+    }
+
+    /**
+     * Specifies how to convert custom stats data into json when exporting.
+     * @param {undefined|!function(data: *) : *} jsonFunc
+     * @returns {!GateBuilder}
+     */
+    setProcessedStatsToJsonFunc(jsonFunc) {
+        this.gate.processedStatsToJsonFunc = jsonFunc;
         return this;
     }
 

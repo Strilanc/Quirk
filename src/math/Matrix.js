@@ -71,6 +71,13 @@ class Matrix {
     }
 
     /**
+     * Encodes the matrix into JSON that could easily be read by humans or processed by external programs.
+     * @returns {*}
+     */
+    toReadableJson() {
+        return seq(this.rows()).map(complexVectorToReadableJson).toArray();
+    }
+    /**
      * @returns {!Array.<!Array.<Complex>>}
      */
     rows() {
@@ -1426,4 +1433,22 @@ Matrix.PAULI_Z = Matrix.square(1, 0, 0, -1);
  */
 Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).times(Math.sqrt(0.5));
 
-export {Matrix}
+/**
+ * Encodes a complex vector into JSON that could easily be read by humans or processed by external programs.
+ * @param {!Iterable.<!Complex>} vector
+ * @returns {*}
+ */
+function complexVectorToReadableJson(vector) {
+    return seq(vector).map(e => {return {real: Complex.realPartOf(e), imag: Complex.imagPartOf(e)}; }).toArray();
+}
+
+/**
+ * Encodes a real vector into JSON that could easily be read by humans or processed by external programs.
+ * @param {!Iterable.<!Complex>} vector
+ * @returns {*}
+ */
+function realVectorToReadableJson(vector) {
+    return seq(vector).map(Complex.realPartOf).toArray();
+}
+
+export {Matrix, complexVectorToReadableJson, realVectorToReadableJson}

@@ -388,3 +388,46 @@ suite.testUsingWebGL("distillation", () => {
         assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(1, 0.001);
     }
 });
+
+suite.testUsingWebGL("toReadableJson", () => {
+    let c = circuit(
+        `
+        --%D
+        H@/-
+        `,
+        ['%', Gates.Displays.ProbabilityDisplayFamily],
+        ['D', Gates.Detectors.ZDetector]
+    );
+    let stats = CircuitStats.fromCircuitAtTime(c, 0.5);
+    let json = stats.toReadableJson();
+    assertThat(json).isApproximatelyEqualTo({
+        circuit: Serializer.toJson(c),
+        output_amplitudes: [
+            {real: Math.sqrt(0.5), imag: 0},
+            {real: 0, imag: 0},
+            {real: Math.sqrt(0.5), imag: 0},
+            {real: 0, imag: 0},
+        ],
+        time_parameter: 0.5,
+        chance_of_surviving_to_each_column: [1, 1, 1, 1],
+        computed_bloch_vectors_by_column_then_wire: [
+            [null, null],
+            [null, {x: +1, y: 0, z: 0}],
+            [null, null],
+            [null, null],
+            [{x: 0, y: 0, z: +1}, {x: +1, y: 0, z: 0}],
+        ],
+        displays: [
+            {
+                location: {wire: 0, column: 2},
+                type: {serialized_id: "Chance2", name: "Probability Display"},
+                data: {probabilities: [0.5, 0, 0.5, 0]}
+            },
+            {
+                location: {wire: 0, column: 3},
+                type: {serialized_id: "ZDetector", name: "Z Axis Detector"},
+                data: false
+            }
+        ]
+    })
+});

@@ -19,7 +19,11 @@ import {MathPainter} from "src/draw/MathPainter.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
 import {Util} from "src/base/Util.js"
-import {probabilityStatTexture, probabilityPixelsToColumnVector} from "src/gates/ProbabilityDisplay.js"
+import {
+    probabilityStatTexture,
+    probabilityPixelsToColumnVector,
+    probabilityDataToJson
+} from "src/gates/ProbabilityDisplay.js"
 
 /**
  * @param {!GateDrawParams} args
@@ -106,6 +110,7 @@ let SampleDisplayFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
         probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
     setStatPixelDataPostProcessor(e => probabilityPixelsToColumnVector(e, span)).
     promiseHasNoNetEffectOnStateVectorButStillRequiresDynamicRedraw().
+    setProcessedStatsToJsonFunc(probabilityDataToJson).
     setDrawer(GatePainting.makeDisplayDrawer(paintSampleDisplay)).
     setExtraDisableReasonFinder(args => args.isNested ? "can't\nnest\ndisplays\n(sorry)" : undefined));
 

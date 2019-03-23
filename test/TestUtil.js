@@ -90,6 +90,8 @@ function isApproximatelyEqualToHelper(subject, other, epsilon) {
         return true;
     } else if (subject instanceof Object && subject.toString() === "[object Object]") {
         return isApproximatelyEqualToHelperDestructured(subject, other, epsilon);
+    } else if (subject === other) {
+        return true;
     } else {
         fail('Expected ' + describe(subject) + ' to have an isApproximatelyEqualTo method');
         return false;
