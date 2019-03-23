@@ -551,7 +551,7 @@ class MathPainter {
         let traceCouplingsWith = cellTraceFunc => painter.trace(trace => {
             for (let row = 0; row < numRows; row++) {
                 for (let col = 0; col < numCols; col++) {
-                    let k = (row * numCols + col) * 2;
+                    let k = (row + col * numRows) * 2;
                     cellTraceFunc(
                         trace,
                         buf[k],
@@ -623,7 +623,7 @@ class MathPainter {
         MathPainter.paintMatrixTooltip(painter, matrix, drawArea, focusPoints,
             (c, r) => c === r ?
                 `Probability of |${Util.bin(c, n)}⟩` :
-                `Coupling of |${Util.bin(c, n)}⟩ to ⟨${Util.bin(r, n)}|`,
+                `Coupling of |${Util.bin(r, n)}⟩ to ⟨${Util.bin(c, n)}|`,
             (c, r, v) => c === r ?
                 (matrix.cell(c, r).real*100).toFixed(4) + "%" :
                 matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));
