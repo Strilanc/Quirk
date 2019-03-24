@@ -15,11 +15,16 @@
 import {GateBuilder} from "src/circuit/Gate.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Complex} from "src/math/Complex.js"
+import {GatePainting} from "src/draw/GatePainting.js"
 
 const ImaginaryGate = new GateBuilder().
     setSerializedIdAndSymbol("i").
     setTitle("Imaginary Gate").
     setBlurb("Phases everything by i.").
+    setDrawer(args => {
+        GatePainting.paintLocationIndependentFrame(args);
+        GatePainting.paintGateSymbol(args);
+    }).
     setKnownEffectToMatrix(Matrix.square(Complex.I, 0, 0, Complex.I)).
     gate;
 
