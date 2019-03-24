@@ -1439,7 +1439,7 @@ Matrix.HADAMARD = Matrix.square(1, 1, 1, -1).times(Math.sqrt(0.5));
  * @returns {*}
  */
 function complexVectorToReadableJson(vector) {
-    return seq(vector).map(e => {return {real: Complex.realPartOf(e), imag: Complex.imagPartOf(e)}; }).toArray();
+    return seq(vector).map(e => {return {r: Complex.realPartOf(e), i: Complex.imagPartOf(e)}; }).toArray();
 }
 
 /**

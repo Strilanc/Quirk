@@ -152,10 +152,10 @@ suite.testUsingWebGL("AmplitudesDisplayWithOtherQubit_Minus", () => {
         0);
     let out = stats.toReadableJson();
     assertThat(out.displays[0].data.ket).isApproximatelyEqualTo([
-        {real: 1, imag: 0},
-        {real: 0, imag: 0},
-        {real: 0, imag: 0},
-        {real: 0, imag: 0},
+        {r: 1, i: 0},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
     ]);
     assertThat(out.displays[0].data.coherence_measure).isApproximatelyEqualTo(1);
 });
@@ -166,10 +166,10 @@ suite.testUsingWebGL("AmplitudesDisplayWithOtherQubit_i", () => {
         0);
     let out = stats.toReadableJson();
     assertThat(out.displays[0].data.ket).isApproximatelyEqualTo([
-        {real: 1, imag: 0},
-        {real: 0, imag: 0},
-        {real: 0, imag: 0},
-        {real: 0, imag: 0},
+        {r: 1, i: 0},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
     ]);
     assertThat(out.displays[0].data.coherence_measure).isApproximatelyEqualTo(1);
 });
@@ -180,10 +180,10 @@ suite.testUsingWebGL("AmplitudesDisplayWithOtherQubit_own_i", () => {
         0);
     let out = stats.toReadableJson();
     assertThat(out.displays[0].data.ket).isApproximatelyEqualTo([
-        {real: Math.sqrt(0.5), imag: 0},
-        {real: 0, imag: Math.sqrt(0.5)},
-        {real: 0, imag: 0},
-        {real: 0, imag: 0},
+        {r: Math.sqrt(0.5), i: 0},
+        {r: 0, i: Math.sqrt(0.5)},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
     ]);
     assertThat(out.displays[0].data.coherence_measure).isApproximatelyEqualTo(1);
 });

@@ -120,7 +120,10 @@ function initExports(revision, mostRecentStats, obsIsAnyOverlayShowing) {
             copyButton,
             outputTextElement,
             copyResultElement,
-            () => JSON.stringify(mostRecentStats.get().toReadableJson(!excludeAmps.checked), null, '  '));
+            () => {
+                let raw = JSON.stringify(mostRecentStats.get().toReadableJson(!excludeAmps.checked), null, ' ');
+                return raw.replace(/{\s*"r": /g, '{"r":').replace(/,\s*"i":\s*([-e\d\.]+)\s*}/g, ',"i":$1}');
+            });
     })();
 
     // Export offline copy.

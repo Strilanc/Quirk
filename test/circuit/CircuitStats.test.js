@@ -405,10 +405,10 @@ suite.testUsingWebGL("toReadableJson", () => {
     assertThat(json).isApproximatelyEqualTo({
         circuit: Serializer.toJson(c),
         output_amplitudes: [
-            {real: Math.sqrt(0.5), imag: 0},
-            {real: 0, imag: 0},
-            {real: Math.sqrt(0.5), imag: 0},
-            {real: 0, imag: 0},
+            {r: Math.sqrt(0.5), i: 0},
+            {r: 0, i: 0},
+            {r: Math.sqrt(0.5), i: 0},
+            {r: 0, i: 0},
         ],
         time_parameter: 0.5,
         chance_of_surviving_to_each_column: [1, 1, 1, 1],
