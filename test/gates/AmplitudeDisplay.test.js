@@ -174,6 +174,20 @@ suite.testUsingWebGL("AmplitudesDisplayWithOtherQubit_i", () => {
     assertThat(out.displays[0].data.coherence_measure).isApproximatelyEqualTo(1);
 });
 
+suite.testUsingWebGL("AmplitudesDisplayWithOtherQubit_postselect", () => {
+    let stats = CircuitStats.fromCircuitAtTime(
+        Serializer.fromJson(CircuitDefinition, {cols:[["Amps2",1,"|0⟩⟨0|"]],init:[0,0,"+"]}),
+        0);
+    let out = stats.toReadableJson();
+    assertThat(out.displays[0].data.ket).isApproximatelyEqualTo([
+        {r: 1, i: 0},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
+        {r: 0, i: 0},
+    ]);
+    assertThat(out.displays[0].data.coherence_measure).isApproximatelyEqualTo(1);
+});
+
 suite.testUsingWebGL("AmplitudesDisplayWithOtherQubit_own_i", () => {
     let stats = CircuitStats.fromCircuitAtTime(
         Serializer.fromJson(CircuitDefinition, {cols:[["Amps2"]],init:["i",0,1]}),

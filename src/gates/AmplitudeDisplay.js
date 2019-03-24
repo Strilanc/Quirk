@@ -127,7 +127,6 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
     for (let e of ketPixels) {
         unity += e*e;
     }
-    let quality = denormalizedQuality / unity;
     let incoherentKetPixels = new Float32Array(w * h * 2);
     let incoherentUnity = 0;
     for (let i = 0; i < n; i++) {
@@ -142,6 +141,7 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
             incoherentKet: Matrix.zero(w, h).times(NaN),
         };
     }
+    let quality = denormalizedQuality / unity / incoherentUnity;
 
     let phaseIndex = span === circuitDefinition.numWires ? undefined : _processOutputs_pickPhaseLockIndex(ketPixels);
     let phase = phaseIndex === undefined ? 0 : Math.atan2(ketPixels[phaseIndex*2+1], ketPixels[phaseIndex*2]);
