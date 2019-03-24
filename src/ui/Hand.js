@@ -25,7 +25,7 @@ class Hand {
      * @param {undefined|!Gate} heldGate
      * @param {undefined|!Point} holdOffset
      * @param {undefined|!GateColumn} heldColumn
-     * @param {undefined|!GateColumn} heldRow
+     * @param {undefined|!{initialState: *, gates: !Array.<undefined|!Gate>}} heldRow
      * @param {undefined|!Point} resizingGateSlot
      */
     constructor(pos, heldGate, holdOffset, heldColumn, heldRow, resizingGateSlot) {
@@ -45,7 +45,7 @@ class Hand {
         if (heldColumn !== undefined && !(heldColumn instanceof GateColumn)) {
             throw new DetailedError("Bad heldColumn", args);
         }
-        if (heldRow !== undefined && !(heldRow instanceof GateColumn)) {
+        if (heldRow !== undefined && !Array.isArray(heldRow.gates)) {
             throw new DetailedError("Bad heldRow", args);
         }
         if (heldGate !== undefined && this.resizingGateSlot !== undefined) {
@@ -60,7 +60,7 @@ class Hand {
         this.holdOffset = holdOffset;
         /** @type {undefined|!GateColumn} */
         this.heldColumn = heldColumn;
-        /** @type {undefined|!GateColumn} */
+        /** @type {undefined|!{initialState: *, gates: !Array.<undefined|!Gate>}} */
         this.heldRow = heldRow;
         /** @type {undefined|!Point} */
         this.resizingGateSlot = resizingGateSlot;
@@ -159,7 +159,7 @@ class Hand {
     }
 
     /**
-     * @param {!GateColumn} heldRow
+     * @param {!{initialState: *, gates: !Array.<undefined|!Gate>}} heldRow
      * @param {!Point} heldGateOffset
      * @returns {!Hand}
      */
@@ -182,7 +182,7 @@ class Hand {
     stableDuration() {
         return this.heldGate !== undefined ? this.heldGate.stableDuration() :
             this.heldColumn !== undefined ? this.heldColumn.stableDuration() :
-            this.heldRow !== undefined ? this.heldRow.stableDuration() :
+            this.heldRow !== undefined ? new GateColumn(this.heldRow.gates).stableDuration() :
             Infinity;
     }
 }

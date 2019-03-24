@@ -700,7 +700,13 @@ class DisplayedCircuit {
             newCols.push(new GateColumn(gates));
         }
 
-        let newCircuitDef = this.circuitDefinition.withColumns(newCols);
+        let newInitialStates = seq(this.circuitDefinition.customInitialValues.entries()).
+            map(([k, v]) => [k + (k >= handWire ? 1 : 0), v]).
+            toMap(([k, _]) => k, ([_, v]) => v);
+        if (hand.heldRow.initialState !== undefined) {
+            newInitialStates.set(handWire, hand.heldRow.initialState);
+        }
+        let newCircuitDef = this.circuitDefinition.withColumns(newCols).withInitialStates(newInitialStates);
 
         return this.withCircuit(newCircuitDef).
             _withHighlightedSlot({row: handWire, col: undefined, resizeStyle: false});
@@ -1110,17 +1116,17 @@ class DisplayedCircuit {
             return undefined;
         }
 
-        let {new_circuit, row_gates} = this._cutRow(wire);
+        let {newCircuit, initialState, rowGates} = this._cutRow(wire);
         let holdOffset = new Point(0, hand.pos.y - r.y);
         return {
-            newCircuit: this.withCircuit(new_circuit),
-            newHand: hand.withHeldRow(row_gates, holdOffset)
+            newCircuit: this.withCircuit(newCircuit),
+            newHand: hand.withHeldRow({initialState, gates: rowGates}, holdOffset)
         };
     }
 
     /**
      * @param {!int} row
-     * @returns {!{new_circuit: !CircuitDefinition, row_gates: !GateColumn}}
+     * @returns {!{newCircuit: !CircuitDefinition, rowGates: !Array.<undefined|!Gate>, initialState: *}}
      * @private
      */
     _cutRow(row) {
@@ -1133,9 +1139,14 @@ class DisplayedCircuit {
             col_gates.push(undefined);
             cols.push(new GateColumn(col_gates));
         }
+        let newInitialStates = seq(this.circuitDefinition.customInitialValues.entries()).
+            filter(([k, _]) => k !== row).
+            map(([k, v]) => [k - (k > row ? 1 : 0), v]).
+            toMap(([k, _]) => k, ([_, v]) => v);
         return {
-            new_circuit: this.circuitDefinition.withColumns(cols),
-            row_gates: new GateColumn(row_gates)
+            newCircuit: this.circuitDefinition.withColumns(cols).withInitialStates(newInitialStates),
+            rowGates: row_gates,
+            initialState: this.circuitDefinition.customInitialValues.get(row)
         };
     }
 

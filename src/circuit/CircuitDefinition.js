@@ -154,6 +154,14 @@ class CircuitDefinition {
         } else {
             m.set(wire, newVal);
         }
+        return this.withInitialStates(m);
+    }
+
+    /**
+     * @param {!Map.<!int, *>} map
+     * @returns {!CircuitDefinition}
+     */
+    withInitialStates(map) {
         return new CircuitDefinition(
             this.numWires,
             this.columns,
@@ -161,7 +169,7 @@ class CircuitDefinition {
             this.outerContext,
             this.customGateSet,
             this.isNested,
-            m);
+            map);
     }
 
     /**
