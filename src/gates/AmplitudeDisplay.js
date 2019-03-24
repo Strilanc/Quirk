@@ -113,7 +113,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, controlsTexture, range
  * @param {!int} span
  * @param {!Array.<!Float32Array>} pixelGroups
  * @param {!CircuitDefinition} circuitDefinition
- * @returns {!{quality: !float, ket: undefined|!Matrix, phaseLockIndex: undefined|!int}}
+ * @returns {!{quality: !number, ket: !Matrix, phaseLockIndex: !int,incoherentKet: !Matrix}}
  */
 function processOutputs(span, pixelGroups, circuitDefinition) {
     let [ketPixels, qualityPixels, rawIncoherentKetPixels] = pixelGroups;
@@ -128,8 +128,18 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
         unity += e*e;
     }
     let incoherentKetPixels = new Float32Array(w * h * 2);
+    let incoherentUnity = 0;
     for (let i = 0; i < n; i++) {
+        incoherentUnity += rawIncoherentKetPixels[i];
         incoherentKetPixels[i << 1] = Math.sqrt(rawIncoherentKetPixels[i]);
+    }
+    if (isNaN(unity) || unity < 0.000001) {
+        return {
+            quality: 0.0,
+            ket: Matrix.zero(w, h).times(NaN),
+            phaseLockIndex: 0,
+            incoherentKet: Matrix.zero(w, h).times(NaN),
+        };
     }
 
     let phaseIndex = span === circuitDefinition.numWires ? undefined : _processOutputs_pickPhaseLockIndex(ketPixels);
@@ -322,7 +332,7 @@ function paintErrorIfPresent(args, indicatorAlpha) {
 }
 
 /**
- * @param {!{quality: !float, ket: undefined|!Matrix, phaseLockIndex: undefined|!int}} customStats
+ * @param {!{quality: !number, ket: !Matrix, phaseLockIndex: !int,incoherentKet: !Matrix}} customStats
  */
 function customStatsToJsonData(customStats) {
     let {quality, ket, phaseLockIndex, incoherentKet} = customStats;
