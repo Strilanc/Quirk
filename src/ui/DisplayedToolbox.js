@@ -290,6 +290,7 @@ class DisplayedToolbox {
      */
     static _paintGate(painter, gate, rect, isHighlighted, stats) {
         let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
+        painter.startIgnoringIncomingTouchBlockers();
         drawer(new GateDrawParams(
             painter,
             true, // inToolbox
@@ -302,6 +303,7 @@ class DisplayedToolbox {
             undefined, // positionInCircuit
             [], // focusPoints
             undefined)); // customStatsForCircuitPos
+        painter.stopIgnoringIncomingTouchBlockers();
     }
 
     /**
