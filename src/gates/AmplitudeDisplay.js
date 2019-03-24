@@ -245,7 +245,7 @@ const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args =
     let matrix = isIncoherent ? incoherentKet : ket;
     let dw = args.rect.w - args.rect.h*ket.width()/ket.height();
     let drawRect = args.rect.skipLeft(dw/2).skipRight(dw/2);
-    let indicatorAlpha = Math.min(1, Math.max(0, (quality - 0.999) / 0.001));
+    let indicatorAlpha = Math.min(1, Math.max(0, (quality - 0.9999) / 0.0001));
     MathPainter.paintMatrix(
         args.painter,
         matrix,
