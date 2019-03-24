@@ -127,7 +127,7 @@ class DisplayedInspector {
     /**
      * @returns {undefined|!string}
      */
-    isHandOverButtonKey() {
+    tryGetHandOverButtonKey() {
         if (this.hand.pos === undefined) {
             return undefined;
         }

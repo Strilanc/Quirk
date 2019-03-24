@@ -25,26 +25,31 @@ class Hand {
      * @param {undefined|!Gate} heldGate
      * @param {undefined|!Point} holdOffset
      * @param {undefined|!GateColumn} heldColumn
+     * @param {undefined|!GateColumn} heldRow
      * @param {undefined|!Point} resizingGateSlot
      */
-    constructor(pos, heldGate, holdOffset, heldColumn, resizingGateSlot) {
+    constructor(pos, heldGate, holdOffset, heldColumn, heldRow, resizingGateSlot) {
+        let args = {pos, heldGate, holdOffset, heldColumn, heldRow, resizingGateSlot};
         if (pos !== undefined && !(pos instanceof Point)) {
-            throw new DetailedError("Bad pos", {pos, heldGate, holdOffset, heldColumn, resizingGateSlot});
+            throw new DetailedError("Bad pos", args);
         }
         if (heldGate !== undefined && !(heldGate instanceof Gate)) {
-            throw new DetailedError("Bad heldGate", {pos, heldGate, holdOffset, heldColumn, resizingGateSlot});
+            throw new DetailedError("Bad heldGate", args);
         }
         if (holdOffset !== undefined && !(holdOffset instanceof Point)) {
-            throw new DetailedError("Bad holdOffset", {pos, heldGate, holdOffset, heldColumn, resizingGateSlot});
+            throw new DetailedError("Bad holdOffset", args);
         }
         if (resizingGateSlot !== undefined && !(resizingGateSlot instanceof Point)) {
-            throw new DetailedError("Bad resizingGateSlot", {pos, heldGate, holdOffset, heldColumn, resizingGateSlot});
+            throw new DetailedError("Bad resizingGateSlot", args);
         }
         if (heldColumn !== undefined && !(heldColumn instanceof GateColumn)) {
-            throw new DetailedError("Bad heldColumn", {pos, heldGate, holdOffset, heldColumn, resizingGateSlot});
+            throw new DetailedError("Bad heldColumn", args);
+        }
+        if (heldRow !== undefined && !(heldRow instanceof GateColumn)) {
+            throw new DetailedError("Bad heldRow", args);
         }
         if (heldGate !== undefined && this.resizingGateSlot !== undefined) {
-            throw new DetailedError("Holding AND resizing", {pos, heldGate, holdOffset, heldColumn, resizingGateSlot});
+            throw new DetailedError("Holding AND resizing", args);
         }
 
         /** @type {undefined|!Point} */
@@ -55,6 +60,8 @@ class Hand {
         this.holdOffset = holdOffset;
         /** @type {undefined|!GateColumn} */
         this.heldColumn = heldColumn;
+        /** @type {undefined|!GateColumn} */
+        this.heldRow = heldRow;
         /** @type {undefined|!Point} */
         this.resizingGateSlot = resizingGateSlot;
     }
@@ -74,7 +81,10 @@ class Hand {
      * @returns {!boolean}
      */
     isBusy() {
-        return this.heldGate !== undefined || this.heldColumn !== undefined || this.resizingGateSlot !== undefined;
+        return (this.heldGate !== undefined ||
+            this.heldColumn !== undefined ||
+            this.resizingGateSlot !== undefined ||
+            this.heldRow !== undefined);
     }
 
     /**
@@ -97,6 +107,7 @@ class Hand {
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.holdOffset, other.holdOffset) &&
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldGate, other.heldGate) &&
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldColumn, other.heldColumn) &&
+            Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.heldRow, other.heldRow) &&
             Util.CUSTOM_IS_EQUAL_TO_EQUALITY(this.resizingGateSlot, other.resizingGateSlot);
     }
 
@@ -109,6 +120,7 @@ class Hand {
             heldGate: this.heldGate,
             holdOffset: this.holdOffset,
             heldColumn: this.heldColumn,
+            heldRow: this.heldRow,
             resizingGateSlot: this.resizingGateSlot
         })}`;
     }
@@ -118,14 +130,14 @@ class Hand {
      * @returns {!Hand}
      */
     withPos(newPos) {
-        return new Hand(newPos, this.heldGate, this.holdOffset, this.heldColumn, this.resizingGateSlot);
+        return new Hand(newPos, this.heldGate, this.holdOffset, this.heldColumn, this.heldRow, this.resizingGateSlot);
     }
 
     /**
      * @returns {!Hand}
      */
     withDrop() {
-        return new Hand(this.pos, undefined, undefined, undefined, undefined);
+        return new Hand(this.pos, undefined, undefined, undefined, undefined, undefined);
     }
 
     /**
@@ -134,7 +146,7 @@ class Hand {
      * @returns {!Hand}
      */
     withHeldGate(heldGate, heldGateOffset) {
-        return new Hand(this.pos, heldGate, heldGateOffset, undefined, undefined);
+        return new Hand(this.pos, heldGate, heldGateOffset, undefined, undefined, undefined);
     }
 
     /**
@@ -143,7 +155,16 @@ class Hand {
      * @returns {!Hand}
      */
     withHeldGateColumn(heldGateColumn, heldGateOffset) {
-        return new Hand(this.pos, undefined, heldGateOffset, heldGateColumn, undefined);
+        return new Hand(this.pos, undefined, heldGateOffset, heldGateColumn, undefined, undefined);
+    }
+
+    /**
+     * @param {!GateColumn} heldRow
+     * @param {!Point} heldGateOffset
+     * @returns {!Hand}
+     */
+    withHeldRow(heldRow, heldGateOffset) {
+        return new Hand(this.pos, undefined, heldGateOffset, undefined, heldRow, undefined);
     }
 
     /**
@@ -152,7 +173,7 @@ class Hand {
      * @returns {!Hand}
      */
     withResizeSlot(resizeSlot, resizeTabOffset) {
-        return new Hand(this.pos, undefined, resizeTabOffset, undefined, resizeSlot);
+        return new Hand(this.pos, undefined, resizeTabOffset, undefined, undefined, resizeSlot);
     }
 
     /**
@@ -161,10 +182,11 @@ class Hand {
     stableDuration() {
         return this.heldGate !== undefined ? this.heldGate.stableDuration() :
             this.heldColumn !== undefined ? this.heldColumn.stableDuration() :
+            this.heldRow !== undefined ? this.heldRow.stableDuration() :
             Infinity;
     }
 }
 
-Hand.EMPTY = new Hand(undefined, undefined, undefined, undefined, undefined);
+Hand.EMPTY = new Hand(undefined, undefined, undefined, undefined, undefined, undefined);
 
 export {Hand}

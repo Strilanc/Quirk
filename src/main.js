@@ -163,7 +163,7 @@ let clickDownGateButtonKey = undefined;
 canvasDiv.addEventListener('click', ev => {
     let pt = eventPosRelativeTo(ev, canvasDiv);
     let curInspector = displayed.get();
-    if (curInspector.isHandOverButtonKey() !== clickDownGateButtonKey) {
+    if (curInspector.tryGetHandOverButtonKey() !== clickDownGateButtonKey) {
         return;
     }
     let clicked = syncArea(curInspector.withHand(curInspector.hand.withPos(pt))).tryClick();
@@ -182,7 +182,7 @@ watchDrags(canvasDiv,
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand));
-        clickDownGateButtonKey = newInspector.isHandOverButtonKey();
+        clickDownGateButtonKey = ev.ctrlKey ? undefined : newInspector.tryGetHandOverButtonKey();
         if (clickDownGateButtonKey !== undefined) {
             displayed.set(newInspector);
             return;
