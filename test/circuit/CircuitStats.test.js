@@ -289,7 +289,7 @@ suite.testUsingWebGL('dynamic-phase-gradient-keeps-qubits-coherent', () => {
     for (let i = 0; i < 16; i++) {
         let [x, y, z] = stats.qubitDensityMatrix(Infinity, i).qubitDensityMatrixToBlochVector();
         let r = x*x + y*y + z*z;
-        assertThat(r).withInfo({i, x, y, z}).isApproximatelyEqualTo(1);
+        assertThat(r).withInfo({i, x, y, z}).isApproximatelyEqualTo(1, 0.00001);
     }
 });
 

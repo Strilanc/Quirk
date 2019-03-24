@@ -648,7 +648,7 @@ suite.test("closestUnitary", () => {
         isApproximatelyEqualTo(Matrix.square(1, 0, 0, 1));
     assertThat(Matrix.square(0, 0.5, 0.0001, 0).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(0, 1, 1, 0));
-    assertThat(Matrix.square(1, i, -1, ni).closestUnitary()).
+    assertThat(Matrix.square(1.01, i, -1, ni).closestUnitary()).
         isApproximatelyEqualTo(Matrix.square(1, 0, 0, ni));
 
     let m = Matrix.square(
