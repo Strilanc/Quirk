@@ -120,6 +120,12 @@ suite.testUsingWebGL("sumFold", () => {
         0,4,
         2,4
     ]));
+    assertThat(Shaders.sumFoldVec2Adjacents(coords).readVec2Outputs(2)).isEqualTo(new Float32Array([
+        1,0,
+        1,2,
+        1,4,
+        1,6,
+    ]));
     coords.deallocByDepositingInPool();
 
     let solid = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec4(), `

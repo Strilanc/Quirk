@@ -183,6 +183,18 @@ Shaders.sumFoldVec2 = makePseudoShaderWithInputsAndOutputAndCode(
      }`);
 
 /**
+ * Adds the odd half of its input to the even half of its input.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldVec2Adjacents = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
+    `vec2 outputFor(float k) {
+         return read_input(k*2.0) + read_input(k*2.0 + 1.0);
+     }`);
+
+/**
  * Adds the second half of its input into the first half.
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}

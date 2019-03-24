@@ -82,23 +82,23 @@ function amplitudeDisplayStatTextures(stateKet, controls, controlsTexture, range
 
     // Compute the dot product of the largest vector against every other vector.
     trader.shadeAndTrade(
-        small_input => POINTWISE_CMUL_SHADER(small_input, ketJustAfterCycle),
+        small_input => POINTWISE_CMUL_CONJ_SHADER(small_input, ketJustAfterCycle),
         WglTexturePool.takeVec2Tex(involvedQubits));
     ketJustAfterCycle.deallocByDepositingInPool("ketJustAfterCycle in makeAmplitudeSpanPipeline");
-    for (let k = 0; k < broadcastQubits; k++) {
-        trader.shadeHalveAndTrade(Shaders.sumFoldVec2);
+    for (let k = 0; k < rangeLength; k++) {
+        trader.shadeHalveAndTrade(Shaders.sumFoldVec2Adjacents);
     }
 
     // Sum up the magnitudes of the dot products to get a quality metric for how well the largest vector worked.
-    trader.shadeAndTrade(AMPS_TO_ABS_MAGS_SHADER, WglTexturePool.takeVecFloatTex(rangeLength));
-    for (let k = 0; k < rangeLength; k++) {
+    trader.shadeAndTrade(AMPS_TO_SQUARED_MAGS_SHADER, WglTexturePool.takeVecFloatTex(broadcastQubits));
+    for (let k = 0; k < broadcastQubits; k++) {
         trader.shadeHalveAndTrade(Shaders.sumFoldFloat);
     }
 
     if (currentShaderCoder().float.needRearrangingToBeInVec4Format) {
         trader.shadeHalveAndTrade(Shaders.packFloatIntoVec4);
     }
-    let quality = trader.currentTexture;
+    let denormalizedQuality = trader.currentTexture;
 
     trader.currentTexture = rawKet;
     if (currentShaderCoder().vec2.needRearrangingToBeInVec4Format) {
@@ -106,7 +106,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, controlsTexture, range
     }
     let ket = trader.currentTexture;
 
-    return [ket, quality, incoherentKet];
+    return [ket, denormalizedQuality, incoherentKet];
 }
 
 /**
@@ -117,7 +117,7 @@ function amplitudeDisplayStatTextures(stateKet, controls, controlsTexture, range
  */
 function processOutputs(span, pixelGroups, circuitDefinition) {
     let [ketPixels, qualityPixels, rawIncoherentKetPixels] = pixelGroups;
-    let quality = qualityPixels[0];
+    let denormalizedQuality = qualityPixels[0];
     let n = 1 << span;
     let w = n === 2 ? 2 : 1 << Math.floor(Math.round(Math.log2(n))/2);
     let h = n/w;
@@ -127,13 +127,14 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
     for (let e of ketPixels) {
         unity += e*e;
     }
+    let quality = denormalizedQuality / unity;
     let incoherentKetPixels = new Float32Array(w * h * 2);
     let incoherentUnity = 0;
     for (let i = 0; i < n; i++) {
         incoherentUnity += rawIncoherentKetPixels[i];
         incoherentKetPixels[i << 1] = Math.sqrt(rawIncoherentKetPixels[i]);
     }
-    if (isNaN(unity) || unity < 0.000001) {
+    if (isNaN(incoherentUnity) || incoherentUnity < 0.000001) {
         return {
             quality: 0.0,
             ket: Matrix.zero(w, h).times(NaN),
@@ -191,14 +192,6 @@ const AMPS_TO_SQUARED_MAGS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
         return dot(ri, ri);
     }`);
 
-const AMPS_TO_ABS_MAGS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
-    [Inputs.vec2('input')],
-    Outputs.float(),
-    `float outputFor(float k) {
-        vec2 ri = read_input(k);
-        return sqrt(dot(ri, ri));
-    }`);
-
 const MAGS_TO_INDEXED_MAGS_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.float('input')],
     Outputs.vec2(),
@@ -222,17 +215,17 @@ const LOOKUP_KET_AT_INDEXED_MAG_SHADER = makePseudoShaderWithInputsAndOutputAndC
         return read_input(k + read_indexed_mag(0.0).x * len_output());
     }`);
 
-const POINTWISE_CMUL_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
+const POINTWISE_CMUL_CONJ_SHADER = makePseudoShaderWithInputsAndOutputAndCode(
     [Inputs.vec2('small_input'), Inputs.vec2('large_input')],
     Outputs.vec2(),
     `
-    vec2 cmul(vec2 c1, vec2 c2) {
-        return mat2(c1.x, c1.y, -c1.y, c1.x) * c2;
+    vec2 cmul_conj(vec2 c1, vec2 c2) {
+        return mat2(c1.x, -c1.y, c1.y, c1.x) * c2;
     }
     vec2 outputFor(float k) {
         vec2 in1 = read_small_input(floor(mod(k + 0.5, len_small_input())));
         vec2 in2 = read_large_input(k);
-        return cmul(in1, in2);
+        return cmul_conj(in1, in2);
     }
     `);
 
@@ -367,10 +360,9 @@ let AmplitudeDisplayFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
 export {
     AmplitudeDisplayFamily,
     AMPS_TO_SQUARED_MAGS_SHADER,
-    AMPS_TO_ABS_MAGS_SHADER,
     MAGS_TO_INDEXED_MAGS_SHADER,
     FOLD_MAX_INDEXED_MAG_SHADER,
     LOOKUP_KET_AT_INDEXED_MAG_SHADER,
-    POINTWISE_CMUL_SHADER,
+    POINTWISE_CMUL_CONJ_SHADER,
     amplitudeDisplayStatTextures,
 };
