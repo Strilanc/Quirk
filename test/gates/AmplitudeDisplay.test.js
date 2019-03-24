@@ -14,278 +14,148 @@
 
 import {Suite, assertThat} from "test/TestUtil.js"
 import {
-    amplitudesToPolarKets,
-    convertAwayFromPolar,
     amplitudeDisplayStatTextures,
-    reduceToLongestPolarKet,
-    foldConsistentRatios,
-    spreadLengthAcrossPolarKets,
-    signallingSumAll,
-    toRatiosVsRepresentative
+    AMPS_TO_SQUARED_MAGS_SHADER,
+    AMPS_TO_ABS_MAGS_SHADER,
+    MAGS_TO_INDEXED_MAGS_SHADER,
+    FOLD_MAX_INDEXED_MAG_SHADER,
+    LOOKUP_KET_AT_INDEXED_MAG_SHADER,
+    POINTWISE_CMUL_SHADER,
 } from "src/gates/AmplitudeDisplay.js"
 
 import {Complex} from "src/math/Complex.js"
 import {Controls} from "src/circuit/Controls.js"
+import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AmplitudeDisplay");
 
-suite.testUsingWebGL("amplitudesToPolarKets", () => {
+suite.testUsingWebGL("AMPS_TO_SQUARED_MAGS_SHADER", () => {
     let input = Shaders.vec2Data(new Float32Array([
         1,0,
         3,4,
         -1,1,
         0,0.5
     ])).toVec2Texture(2);
-    assertThat(amplitudesToPolarKets(input).readVec4Outputs(2)).isApproximatelyEqualTo(new Float32Array([
-        1,0,1,0,
-        25,new Complex(3,4).phase(),25,0,
-        2,Math.PI*3/4,2,0,
-        0.25,Math.PI/2,0.25,0
+    assertThat(AMPS_TO_SQUARED_MAGS_SHADER(input).readVecFloatOutputs(2)).isApproximatelyEqualTo(new Float32Array([
+        1,
+        25,
+        2,
+        0.25,
     ]), 0.001);
     input.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("amplitudesToPolarKets_zero", () => {
+suite.testUsingWebGL("AMPS_TO_ABS_MAGS_SHADER", () => {
     let input = Shaders.vec2Data(new Float32Array([
-        0,0
-    ])).toVec2Texture(0);
-    assertThat(amplitudesToPolarKets(input).readVec4Outputs(0)).isEqualTo(new Float32Array([
-        0,0,0,0
-    ]));
+        1,0,
+        3,4,
+        -1,1,
+        0,0.5
+    ])).toVec2Texture(2);
+    assertThat(AMPS_TO_ABS_MAGS_SHADER(input).readVecFloatOutputs(2)).isApproximatelyEqualTo(new Float32Array([
+        1,
+        5,
+        Math.sqrt(2),
+        0.5,
+    ]), 0.001);
     input.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("spreadLengthAcrossPolarKets", () => {
-    let inp = Shaders.vec4Data(new Float32Array([
-         1, 2,100,0,
-         3, 4,200,0,
-         5, 6,400,0,
-         7, 8,800,0,
-         9,10,1600,0,
-        11,12,3200,0,
-        13,14,6400,0,
-        15,16,12800,0
-    ])).toVec4Texture(3);
-    let out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 1), true);
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-         1, 2,300,0,
-         3, 4,300,0,
-         5, 6,1200,0,
-         7, 8,1200,0,
-         9,10,4800,0,
-        11,12,4800,0,
-        13,14,19200,0,
-        15,16,19200,0
-    ]));
-    out.deallocByDepositingInPool();
-
-    out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 2), true);
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        1, 2,1500,0,
-        3, 4,1500,0,
-        5, 6,1500,0,
-        7, 8,1500,0,
-        9,10,24000,0,
-        11,12,24000,0,
-        13,14,24000,0,
-        15,16,24000,0
-    ]));
-    out.deallocByDepositingInPool();
-
-
-    out = inp.tradeThrough(t => spreadLengthAcrossPolarKets(t, 3));
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        1, 2,25500,0,
-        3, 4,25500,0,
-        5, 6,25500,0,
-        7, 8,25500,0,
-        9,10,25500,0,
-        11,12,25500,0,
-        13,14,25500,0,
-        15,16,25500,0
-    ]));
-    out.deallocByDepositingInPool();
-});
-
-suite.testUsingWebGL("reduceToLongestPolarKet", () => {
-    let inp = Shaders.vec4Data(new Float32Array([
-        1, 2,300,0,
-        3, 4,300,0,
-        5, 6,1200,0,
-        7, 8,1200,0,
-        9,10,4800,0,
-        11,12,4800,0,
-        13,14,19200,0,
-        15,16,19200,0
-    ])).toVec4Texture(3);
-    let out;
-
-    out = inp.tradeThrough(t => reduceToLongestPolarKet(t, 1));
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        1+5+9+13,14,25500,0,    3+7+11+15,16,25500,0
-    ]));
-    out.deallocByDepositingInPool();
-
-    inp = Shaders.vec4Data(new Float32Array([
-        1, 2,300,0,
-        3, 4,300,0,
-        55,6,120000,0,
-        7, 8,1200,0,
-        9,10,4800,0,
-        11,12,4800,0,
-        13,14,19200,0,
-        15,16,19200,0
-    ])).toVec4Texture(3);
-    out = inp.tradeThrough(t => reduceToLongestPolarKet(t, 1));
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        1+55+9+13,6,144300,0,
-        3+7+11+15,16,25500,0
-    ]));
-    out.deallocByDepositingInPool();
-});
-
-suite.testUsingWebGL("convertAwayFromPolar", () => {
-    let input = Shaders.vec4Data(new Float32Array([
-        1,0,3,0,
-        25,new Complex(3,4).phase(),9,0,
-        2,Math.PI*3/4,10,0,
-        0.25,Math.PI/2,20,0
-    ])).toVec4Texture(2);
-    assertThat(convertAwayFromPolar(input).readVec4Outputs(2)).isApproximatelyEqualTo(new Float32Array([
-        1,0,3,0,
-        3,4,9,0,
-        -1,1,10,0,
-        0,0.5,20,0
-    ]), 0.0001);
-
+suite.testUsingWebGL("MAGS_TO_INDEXED_MAGS_SHADER", () => {
+    let input = Shaders.floatData(new Float32Array([
+        2,
+        3,
+        5,
+        7,
+    ])).toVecFloatTexture(2);
+    assertThat(MAGS_TO_INDEXED_MAGS_SHADER(input).readVec2Outputs(2)).isApproximatelyEqualTo(new Float32Array([
+        0, 2,
+        1, 3,
+        2, 5,
+        3, 7,
+    ]), 0.001);
     input.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("toRatiosVsRepresentative", () => {
-    let c = (r, i=0) => new Complex(r, i);
-    let inp = Shaders.vec2Data(new Float32Array([
-        1,0,    1,0,    1,0,    1,0,
-        2,0,    3,0,    4,0,    5,0,
-        1,2,    3,4,    5,6,    7,8,
-        0,0,    0,-1,   0,-2,   0,0
+suite.testUsingWebGL("FOLD_MAX_INDEXED_MAG_SHADER", () => {
+    let input = Shaders.vec2Data(new Float32Array([
+        0, 4.2,
+        8, 2.1,
+        13, 1.5,
+        23, 3.3,
+    ])).toVec2Texture(2);
+    assertThat(FOLD_MAX_INDEXED_MAG_SHADER(input).readVec2Outputs(1)).isApproximatelyEqualTo(new Float32Array([
+        0, 4.2,
+        23, 3.3,
+    ]), 0.001);
+    input.deallocByDepositingInPool();
+});
+
+suite.testUsingWebGL("LOOKUP_KET_AT_INDEXED_MAG_SHADER", () => {
+    let input = Shaders.vec2Data(new Float32Array([
+        0, 1, 2, 3, 4, 5, 6, 7,
+        2, 3, 5, 7, 11, 13, 17, 19,
+        0, 1, 4, 9, 16, 25, 36, 49,
+        1, 2, 4, 8, 16, 32, 64, 128,
     ])).toVec2Texture(4);
-    let rep = Shaders.vec4Data(new Float32Array([
-        1,0,0,0,    3,4,0,0,    -0.5,0,0,0,    0,0.5,0,0
-    ])).toVec4Texture(2);
-    assertThat(toRatiosVsRepresentative(inp, rep).readVec4Outputs(4)).isApproximatelyEqualTo(seq([
-        c(1),c(1),   c(1),c(3,4),    c(1),c(-0.5),    c(1),c(0,0.5),
-        c(2),c(1),   c(3),c(3,4),    c(4),c(-0.5),    c(5),c(0,0.5),
-        c(1,2),c(1), c(3,4),c(3,4),  c(5,6),c(-0.5),  c(7,8),c(0,0.5),
-        c(0),c(1),   c(0,-1),c(3,4), c(0,-2),c(-0.5), c(0),c(0,0.5)
-    ]).flatMap(e => [e.real, e.imag]).toFloat32Array(), 0.0001);
-
-    inp.deallocByDepositingInPool();
-    rep.deallocByDepositingInPool();
+    let index = Shaders.vec2Data(new Float32Array([
+        1, 5000.3,
+    ])).toVec2Texture(0);
+    assertThat(LOOKUP_KET_AT_INDEXED_MAG_SHADER(input, index).readVec2Outputs(2)).isApproximatelyEqualTo(new Float32Array([
+        2, 3, 5, 7, 11, 13, 17, 19,
+    ]), 0.001);
+    index.deallocByDepositingInPool();
+    input.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("foldConsistentRatios", () => {
-    let inp = Shaders.vec4Data(new Float32Array([
-        1,0,0,0,    2,0,0,0,
-        0,0,1,0,    0,0,2,3,
-        1,0,1,0,    2,0,2,0,
-        1,0,3,0,    2,0,6,0,
-        1,0,0,1,    0,-1,1,0,
-        1,2,3,4,    2,-1,4,-3,
-        1,2,3,4,    1,2,3,5,
-        1,0,2,0,    1,0,3,0
-    ])).toVec4Texture(4);
-    let out;
-
-    out = inp.tradeThrough(t => foldConsistentRatios(t, 1), true);
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        2,0,0,0,
-        0,0,2,3,
-        2,0,2,0,
-        2,0,6,0,
-        1,0,0,1,
-        1,2,3,4,
-        -666,-666,-666,-666,
-        -666,-666,-666,-666
-    ]));
-    out.deallocByDepositingInPool();
-
-    out = inp.tradeThrough(t => foldConsistentRatios(t, 2));
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        -666,-666,-666,-666,
-        -666,-666,-666,-666,
-        -666,-666,-666,-666,
-        -666,-666,-666,-666
-    ]));
-    out.deallocByDepositingInPool();
-
-    inp = Shaders.vec4Data(new Float32Array([
-        1,0,0,0,    20,0,0,0,   0,0,0,0,  3,1,0,0,
-        1,0,0,0,    0,0,2,0,   0,0,0,0,  1,0,0,0,
-        0,0,0,0,    0,0,0,0,   0,0,0,0,  0,0,0,0,
-        -666,0,0,0,  0,0,0,0,   0,0,0,0,  0,0,0,0
-    ])).toVec4Texture(4);
-    out = inp.tradeThrough(t => foldConsistentRatios(t, 2));
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        20,0,0,0,
-        -666,-666,-666,-666,
-        0,0,0,0,
-        -666,-666,-666,-666
-    ]));
-    out.deallocByDepositingInPool();
+suite.testUsingWebGL("POINTWISE_CMUL_SHADER", () => {
+    let small_input = Shaders.vec2Data(new Float32Array([
+        1, 2,
+    ])).toVec2Texture(0);
+    let large_input = Shaders.vec2Data(new Float32Array([
+        0, 1, 2, 3, 4, 5, 6, 7,
+        2, 3, 5, 7, 11, 13, 17, 19,
+        0, 1, 4, 9, 16, 25, 36, 49,
+        1, 2, 4, 8, 16, 32, 64, 128,
+    ])).toVec2Texture(4);
+    assertThat(POINTWISE_CMUL_SHADER(small_input, large_input).readVec2Outputs(4)).isApproximatelyEqualTo(new Float32Array([
+        -2, 1, -4, 7, -6, 13, -8, 19,
+        -4, 7, -9, 17, -15, 35, -21, 53,
+        -2, 1, -14, 17, -34, 57, -62, 121,
+        -3, 4, -12, 16, -48, 64, -192, 256
+    ]), 0.001);
+    small_input.deallocByDepositingInPool();
+    large_input.deallocByDepositingInPool();
 });
 
-suite.testUsingWebGL("pipelineToSumAll", () => {
-    let inp = Shaders.vec4Data(new Float32Array([
-        2,0,0,0,
-        0,0,2,3,
-        2,0,2,0,
-        2,0,6,0,
-        1,0,0,1,
-        1,2,3,4,
-        1,2,3,4,
-        1,2,3,4
-    ])).toVec4Texture(3);
-    let out;
-
-    out = inp.tradeThrough(signallingSumAll);
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        10,6,19,16
-    ]));
-    out.deallocByDepositingInPool();
-});
-
-suite.testUsingWebGL("pipelineToSumAll_signal", () => {
-    let inp = Shaders.vec4Data(new Float32Array([
-        2,0,0,0,
-        0,0,2,3,
-        2,0,2,0,
-        -666.0,-666.0,-666.0,-666.0,
-        -666.0,-666.0,-666.0,-666.0,
-        1,2,3,4,
-        1,2,3,4,
-        1,2,3,4
-    ])).toVec4Texture(3);
-    let out;
-
-    out = inp.tradeThrough(signallingSumAll);
-    assertThat(currentShaderCoder().vec4.pixelsToData(out.readPixels())).isEqualTo(new Float32Array([
-        -666.0,-666.0,-666.0,-666.0
-    ]));
-    out.deallocByDepositingInPool();
-});
-
-suite.testUsingWebGL("makeAmplitudeSpanPipeline_OffOff", () => {
-    let inp = Shaders.vec2Data(new Float32Array([1,0, 0,0, 0,0, 0,0])).
+suite.testUsingWebGL("makeAmplitudeSpanPipeline_coherent", () => {
+    let inp = Shaders.vec2Data(new Float32Array([0.6,0.8, 0,0, 0,0, 0,0])).
         toVec2Texture(2);
-    let [afterPolar, final] = amplitudeDisplayStatTextures(inp, Controls.NONE, 0, 2);
-    assertThat(currentShaderCoder().vec4.pixelsToData(afterPolar.readPixels())).isEqualTo(
-        new Float32Array([1,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]));
-    assertThat(currentShaderCoder().vec4.pixelsToData(final.readPixels())).isEqualTo(new Float32Array([1,0,1,0]));
+    let controlTex = CircuitShaders.controlMask(Controls.NONE).toBoolTexture(2);
+    let [ketData, qualityData, incoherentKetData] = amplitudeDisplayStatTextures(inp, Controls.NONE, controlTex, 0, 2);
+    let ket = currentShaderCoder().vec4.pixelsToData(ketData.readPixels());
+    let quality = currentShaderCoder().float.pixelsToData(qualityData.readPixels());
+    let incoherentKet = currentShaderCoder().vec4.pixelsToData(incoherentKetData.readPixels());
+    assertThat(ket).isApproximatelyEqualTo(new Float32Array([
+        0.6,0.8,
+        0,0,
+        0,0,
+        0,0
+    ]));
+    assertThat(incoherentKet).isApproximatelyEqualTo(new Float32Array([
+        1,
+        0,
+        0,
+        0,
+    ]));
+    assertThat(quality).isApproximatelyEqualTo(new Float32Array([1]));
 
     inp.deallocByDepositingInPool();
-    afterPolar.deallocByDepositingInPool();
-    final.deallocByDepositingInPool();
+    controlTex.deallocByDepositingInPool();
+    ketData.deallocByDepositingInPool();
+    qualityData.deallocByDepositingInPool();
+    incoherentKetData.deallocByDepositingInPool();
 });

@@ -108,9 +108,10 @@ suite.testUsingWebGL('incoherent-amplitude-display', () => {
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
-        probabilities: Matrix.row(1, 1).times(Math.sqrt(0.5)),
-        superposition: undefined,
-        phaseLockIndex: undefined
+        quality: 0.5,
+        ket: Matrix.row(1, 0),
+        phaseLockIndex: 0,
+        incoherentKet: Matrix.row(Math.sqrt(0.5), Math.sqrt(0.5))
     });
 });
 
@@ -123,8 +124,9 @@ suite.testUsingWebGL('coherent-amplitude-display', () => {
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.qubitDensityMatrix(Infinity, 2)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
-        probabilities: undefined,
-        superposition: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
+        quality: 1,
+        ket: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
+        incoherentKet: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
         phaseLockIndex: 0
     });
 });

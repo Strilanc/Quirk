@@ -90,6 +90,25 @@ suite.testUsingWebGL("data-bytes", () => {
 });
 
 suite.testUsingWebGL("sumFold", () => {
+    let raws = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.float(), `
+        float outputFor(float k) {
+            return k*k;
+        }
+    `)().toVecFloatTexture(3);
+    assertThat(Shaders.sumFoldFloat(raws).readVecFloatOutputs(2)).isEqualTo(new Float32Array([
+        16,
+        1+25,
+        4+36,
+        9+49
+    ]));
+    assertThat(Shaders.sumFoldFloatAdjacents(raws).readVecFloatOutputs(2)).isEqualTo(new Float32Array([
+        1,
+        4+9,
+        16+25,
+        36+49
+    ]));
+    raws.deallocByDepositingInPool();
+
     let coords = makePseudoShaderWithInputsAndOutputAndCode([], Outputs.vec2(), `
         vec2 outputFor(float k) {
             return vec2(mod(k, 2.0), floor(k/2.0));
