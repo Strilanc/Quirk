@@ -112,12 +112,15 @@ function initExports(revision, mostRecentStats, obsIsAnyOverlayShowing) {
         const outputTextElement = /** @type {HTMLPreElement} */ document.getElementById('export-amplitudes-pre');
         const copyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-amplitudes-button');
         const copyResultElement = /** @type {HTMLElement} */ document.getElementById('export-amplitudes-result');
-        obsIsAnyOverlayShowing.subscribe(_ => { outputTextElement.innerText = '[not generated yet]'; });
+        const excludeAmps = /** @type {HTMLInputElement} */ document.getElementById('export-amplitudes-use-amps');
+        obsIsAnyOverlayShowing.subscribe(_ => {
+            outputTextElement.innerText = '[not generated yet]';
+        });
         setupButtonElementCopyToClipboard(
             copyButton,
             outputTextElement,
             copyResultElement,
-            () => JSON.stringify(mostRecentStats.get().toReadableJson(), null, '  '));
+            () => JSON.stringify(mostRecentStats.get().toReadableJson(!excludeAmps.checked), null, '  '));
     })();
 
     // Export offline copy.

@@ -110,11 +110,11 @@ class CircuitStats {
 
     /**
      * Converts the circuit stats into an exportable JSON object.
+     * @param {!boolean} includeOutputAmplitudes
      * @returns {!object}
      */
-    toReadableJson() {
-        return {
-            output_amplitudes: complexVectorToReadableJson(this.finalState.getColumn(0)),
+    toReadableJson(includeOutputAmplitudes=true) {
+        let result = {
             time_parameter: this.time,
             circuit: Serializer.toJson(this.circuitDefinition),
             chance_of_surviving_to_each_column: this._survivalRates,
@@ -123,6 +123,10 @@ class CircuitStats {
             ),
             displays: this._customStatsToReadableJson()
         };
+        if (includeOutputAmplitudes) {
+            result['output_amplitudes'] = complexVectorToReadableJson(this.finalState.getColumn(0));
+        }
+        return result;
     }
 
     _customStatsToReadableJson() {
