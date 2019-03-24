@@ -901,6 +901,12 @@ suite.test("gateAtLocIsDisabledReason", () => {
     bad(1, 0, `MR`, ['R', Gates.Detectors.XDetectControlClear]);
     bad(1, 0, `MR`, ['R', Gates.Detectors.YDetectControlClear]);
     good(1, 0, `MR`, ['R', Gates.Detectors.ZDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.XDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.YDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.ZDetectControlClear]);
 
     // Permutation sub-groups.
     good(2, 0, `--P-

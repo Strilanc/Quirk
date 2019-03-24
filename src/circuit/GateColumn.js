@@ -87,7 +87,8 @@ class GateColumn {
         for (let i = 0; i < this.gates.length; i++) {
             if ((inputMeasureMask & (1 << i)) === 0 &&
                     this.gates[i] !== undefined &&
-                    this.gates[i].isControl()) {
+                    this.gates[i].isControl() &&
+                    !this.gates[i].isClassicalControl()) {
                 return true;
             }
         }

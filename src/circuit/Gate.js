@@ -159,6 +159,14 @@ class Gate {
          */
         this._controlBit = undefined;
         /**
+         * Determines if a controlled gate's control is guaranteed to be known classically. This is used by the
+         * combination detect-control-reset gates as a way to communicate that they can control permutation operations
+         * on classical wires.
+         * @type {boolean}
+         * @private
+         */
+        this._isClassicalControl = false;
+        /**
          * Indicates that this gate is guaranteed to preserve probability (as opposed to e.g. post-selection).
          * When gates with this property not set to true are present in a column, the simulator computes losses/gains.
          * @type {!boolean}
@@ -284,6 +292,7 @@ class Gate {
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
+        g._isClassicalControl = this._isClassicalControl;
         g.isControlWireSource = this.isControlWireSource;
         g._isDefinitelyUnitary = this._isDefinitelyUnitary;
         g.knownPhaseTurnsFunc = this.knownPhaseTurnsFunc;
@@ -391,6 +400,13 @@ class Gate {
      */
     isControl() {
         return this._controlBit !== undefined;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    isClassicalControl() {
+        return this._isClassicalControl;
     }
 
     /**
@@ -809,12 +825,15 @@ class GateBuilder {
     /**
      * Sets meta-properties to indicate a gate is a control.
      * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
+     * @param {!boolean} guaranteedClassical Whether or not the control can be used to control permutations of classical
+     *     wires, even if placed on a coherent wire.
      * @returns {!GateBuilder}
      */
-    markAsControlExpecting(bit) {
+    markAsControlExpecting(bit, guaranteedClassical=false) {
         this.gate._controlBit = bit;
         this.gate.isControlWireSource = true;
         this.gate.interestedInControls = false;
+        this.gate._isClassicalControl = guaranteedClassical;
         return this;
     }
 

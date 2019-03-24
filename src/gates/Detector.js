@@ -370,7 +370,7 @@ function makeDetectControlClearGate(axis) {
         setTitle(`${axis} Detect-Control-Reset`).
         setBlurb(`Does a collapsing ${axis}-axis measurement.\nControls operations with the result.\nResets the target to |0⟩.`).
         setDrawer(args => drawDetectClearReset(args, axis)).
-        markAsControlExpecting(true).
+        markAsControlExpecting(true, true).
         markAsReachingOtherWires().
         setActualEffectToUpdateFunc(() => {}).
         setStatTexturesMaker(withClearedControls(detectorStatTexture)).
