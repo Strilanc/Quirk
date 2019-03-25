@@ -47,17 +47,19 @@ QuarterTurnGates.SqrtYBackward = Gate.fromKnownMatrix(
 
 /** @type {!Gate} */
 QuarterTurnGates.SqrtZForward = Gate.fromKnownMatrix(
-    "Z^½",
+    "S",
     Matrix.fromPauliRotation(0, 0, 0.25),
     "√Z Gate",
-    "Principle square root of Z.\nAlso known as the 'S' gate.");
+    "Principle square root of Z.\nAlso known as the 'S' gate.",
+    "Z^½");
 
 /** @type {!Gate} */
 QuarterTurnGates.SqrtZBackward = Gate.fromKnownMatrix(
-    "Z^-½",
+    "S^-1",
     Matrix.fromPauliRotation(0, 0, 0.75),
     "Z^-½ Gate",
-    "Adjoint square root of Z.");
+    "Adjoint square root of Z.",
+    "Z^-½");
 
 QuarterTurnGates.all = [
     QuarterTurnGates.SqrtXForward,

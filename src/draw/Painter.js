@@ -56,13 +56,25 @@ class Painter {
          * @type {!RestartableRng}
          */
         this.rng = rng;
+
+        this._ignoringTouchBlockers = 0;
+    }
+
+    startIgnoringIncomingTouchBlockers() {
+        this._ignoringTouchBlockers += 1
+    }
+
+    stopIgnoringIncomingTouchBlockers() {
+        this._ignoringTouchBlockers -= 1
     }
 
     /**
      * @param {!{rect: !Rect, cursor: undefined|!string}} blocker
      */
     noteTouchBlocker(blocker) {
-        this.touchBlockers.push(blocker);
+        if (this._ignoringTouchBlockers === 0) {
+            this.touchBlockers.push(blocker);
+        }
     }
 
     /**

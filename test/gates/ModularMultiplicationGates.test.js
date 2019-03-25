@@ -244,7 +244,7 @@ suite.testUsingWebGL('TimesBToTheAModRFamily', () => {
         ]),
     ]);
     let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
-    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(126);
+    assertThat([...stats.finalState.rawBuffer()].indexOf(1) / 2).isEqualTo(126);
 });
 
 suite.testUsingWebGL('TimesInverseBToTheAModRFamily', () => {
@@ -271,7 +271,7 @@ suite.testUsingWebGL('TimesInverseBToTheAModRFamily', () => {
         ]),
     ]);
     let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
-    assertThat(stats.finalState.rawBuffer().indexOf(1) / 2).isEqualTo(245);
+    assertThat([...stats.finalState.rawBuffer()].indexOf(1) / 2).isEqualTo(245);
 });
 
 suite.testUsingWebGL('TimesBToTheAModRFamily_perm', () => {

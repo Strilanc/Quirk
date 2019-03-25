@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {Complex} from "src/math/Complex.js"
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
@@ -20,6 +21,7 @@ import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
+import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -98,6 +100,20 @@ function probabilityPixelsToColumnVector(pixels, span) {
     return new Matrix(1, n, buf);
 }
 
+/**
+ * @param {!Matrix} data
+ * @returns {!{probabilities: !float[]}}
+ */
+function probabilityDataToJson(data) {
+    return {
+        probabilities: Seq.range(data.height()).map(k => Complex.realPartOf(data.cell(0, k))).toArray()
+    };
+}
+
+/**
+ * @param {!GateDrawParams} args
+ * @private
+ */
 function _paintMultiProbabilityDisplay_grid(args) {
     let {painter, rect: {x, y, w, h}} = args;
     let n = 1 << args.gate.height;
@@ -258,6 +274,7 @@ function multiChanceGateMaker(span, builder) {
         setStatTexturesMaker(ctx =>
             probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
         setStatPixelDataPostProcessor(pixels => probabilityPixelsToColumnVector(pixels, span)).
+        setProcessedStatsToJsonFunc(probabilityDataToJson).
         setDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay));
 }
 
@@ -288,5 +305,6 @@ export {
     ProbabilityDisplayFamily,
     probabilityStatTexture,
     probabilityPixelsToColumnVector,
-    amplitudesToProbabilities
+    amplitudesToProbabilities,
+    probabilityDataToJson,
 };

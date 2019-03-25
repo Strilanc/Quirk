@@ -401,7 +401,11 @@ suite.test("minimumRequiredColCount", () => {
 
 suite.test("colIsMeasuredMask", () => {
     let assertAbout = (diagram, ...extraGates) => {
-        let c = circuit(diagram, ['D', Gates.Detector], ...extraGates);
+        let c = circuit(
+            diagram,
+            ['D', Gates.Detectors.ZDetector],
+            ['R', Gates.Detectors.ZDetectControlClear],
+            ...extraGates);
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colIsMeasuredMask(i-1)).toArray());
     };
 
@@ -421,6 +425,10 @@ suite.test("colIsMeasuredMask", () => {
     assertAbout(`M!`).isEqualTo([0, 0, 1, 0, 0]);
     // Detector clears.
     assertAbout(`MD`).isEqualTo([0, 0, 1, 0, 0]);
+    // Detect-Control-Reset clears.
+    assertAbout(`MR`).isEqualTo([0, 0, 1, 0, 0]);
+    assertAbout(`MR
+                 -X`).isEqualTo([0, 0, 1, 0, 0]);
     // Controlled detector doesn't clear.
     assertAbout(`MD
                  -●`).isEqualTo([0, 0, 1, 1, 1]);
@@ -885,6 +893,80 @@ suite.test("gateAtLocIsDisabledReason", () => {
     bad(1, 1, `-●-
                M<-
                M/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+
+    // Detectors.
+    bad(1, 0, `MD`, ['D', Gates.Detectors.XDetectControlClear]);
+    bad(1, 0, `MD`, ['D', Gates.Detectors.YDetectControlClear]);
+    good(1, 0, `MD`, ['D', Gates.Detectors.ZDetectControlClear]);
+    bad(1, 0, `MR`, ['R', Gates.Detectors.XDetectControlClear]);
+    bad(1, 0, `MR`, ['R', Gates.Detectors.YDetectControlClear]);
+    good(1, 0, `MR`, ['R', Gates.Detectors.ZDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.XDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.YDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.ZDetectControlClear]);
+
+    // Permutation sub-groups.
+    good(2, 0, `--P-
+                --/-
+                --/-
+                --/-
+                H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                --/-
+                --/-
+                -M/-
+                H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `--P-
+                --/-
+                --/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                --/-
+                --/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `--P-
+                -M/-
+                -M/-
+                --/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                -M/-
+                -M/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               -M/-
+               --/-
+               H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               --/-
+               --/-
+               HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+
+    // Non-trivial subgroup.
+    good(2, 0, `--P-
+                -M/-
+                -M/-
+                --/-
+                -M/-
+                --/-
+                --/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               --/-
+               -M/-
+               -M/-
+               --/-
+               --/-
+               HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
 });
 
 suite.test("gateAtLocIsDisabledReason_controls", () => {

@@ -102,6 +102,13 @@ Shaders.data = rgbaData => new WglConfiguredShader(destinationTexture => {
 });
 
 /**
+ * Returns a configured shader that overlays the destination texture with the given float data.
+ * @param {!Float32Array} floats
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.floatData = floats => Shaders.data(currentShaderCoder().float.dataToPixels(floats));
+
+/**
  * Returns a configured shader that overlays the destination texture with the given vec2 data.
  * @param {!Float32Array} floats
  * @returns {!WglConfiguredShader}
@@ -152,6 +159,18 @@ Shaders.sumFoldFloat = makePseudoShaderWithInputsAndOutputAndCode(
      }`);
 
 /**
+ * Adds the odd half of its input to the even half of its input.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldFloatAdjacents = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.float('input')],
+    Outputs.float(),
+    `float outputFor(float k) {
+         return read_input(k*2.0) + read_input(k*2.0 + 1.0);
+     }`);
+
+/**
  * Adds the second half of its input into the first half.
  * @param {!WglTexture} inp
  * @returns {!WglConfiguredShader}
@@ -161,6 +180,18 @@ Shaders.sumFoldVec2 = makePseudoShaderWithInputsAndOutputAndCode(
     Outputs.vec2(),
     `vec2 outputFor(float k) {
          return read_input(k) + read_input(k + len_output());
+     }`);
+
+/**
+ * Adds the odd half of its input to the even half of its input.
+ * @param {!WglTexture} inp
+ * @returns {!WglConfiguredShader}
+ */
+Shaders.sumFoldVec2Adjacents = makePseudoShaderWithInputsAndOutputAndCode(
+    [Inputs.vec2('input')],
+    Outputs.vec2(),
+    `vec2 outputFor(float k) {
+         return read_input(k*2.0) + read_input(k*2.0 + 1.0);
      }`);
 
 /**

@@ -21,7 +21,7 @@ import {DetailedError} from "src/base/DetailedError.js"
 import {Format} from "src/base/Format.js"
 import {Gate, GateBuilder} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
-import {Gates} from "src/gates/AllGates.js"
+import {Gates, INITIAL_STATES_TO_GATES} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Util} from "src/base/Util.js"
 import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
@@ -381,6 +381,17 @@ let toJson_CircuitDefinition = (v, context) => {
     if (context === undefined && v.customGateSet.gates.length > 0) {
         result.gates = toJson_CustomGateSet(v.customGateSet);
     }
+    if (v.customInitialValues.size > 0) {
+        result.init = [];
+        let maxInit = seq(v.customInitialValues.keys()).max();
+        for (let i = 0; i <= maxInit; i++) {
+            let s = v.customInitialValues.get(i);
+            result.init.push(
+                s === undefined ? 0 :
+                s === '1' ? 1 :
+                s);
+        }
+    }
     return result;
 };
 
@@ -393,6 +404,38 @@ function fromJsonText_CircuitDefinition(jsonText) {
     _cachedCircuit_Arg = jsonText;
     _cachedCircuit = fromJson_CircuitDefinition(JSON.parse(jsonText), undefined);
     return _cachedCircuit;
+}
+
+/**
+ * @param {object} json
+ * @returns {!Map.<!int, !string>}
+ * @throws
+ */
+function _fromJson_InitialState(json) {
+    let {init} = json;
+    if (init === undefined) {
+        return new Map();
+    }
+
+    if (!Array.isArray(init)) {
+        throw new DetailedError('Initial states must be an array.', {json});
+    }
+
+    let result = new Map();
+    for (let i = 0; i < init.length; i++) {
+        let v = init[i];
+        if (v === 0) {
+            // 0 is the default. Don't need to do anything.
+        } else if (v === 1) {
+            result.set(i, '1');
+        } else if (INITIAL_STATES_TO_GATES.has(v)) {
+            result.set(i, v);
+        } else {
+            throw new DetailedError('Unrecognized initial state key.', {v, json});
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -411,11 +454,16 @@ function fromJson_CircuitDefinition(json, context=undefined) {
     }
     let gateCols = cols.map(e => fromJson_GateColumn(e, customGateSet));
 
+    let initialValues = _fromJson_InitialState(json);
+
     let numWires = 0;
     for (let col of gateCols) {
         numWires = Math.max(numWires, col.minimumRequiredWireCount());
     }
-    numWires = Math.max(Config.MIN_WIRE_COUNT, Math.min(numWires, Config.MAX_WIRE_COUNT));
+    numWires = Math.max(
+        Config.MIN_WIRE_COUNT,
+        Math.min(numWires, Config.MAX_WIRE_COUNT),
+        ...[...initialValues.keys()].map(e => e + 1));
 
     gateCols = gateCols.map(col => new GateColumn([
             ...col.gates,
@@ -424,7 +472,7 @@ function fromJson_CircuitDefinition(json, context=undefined) {
         // Silently discard gates off the edge of the circuit.
         ].slice(0, numWires)));
 
-    return new CircuitDefinition(numWires, gateCols, undefined, undefined, customGateSet).
+    return new CircuitDefinition(numWires, gateCols, undefined, undefined, customGateSet, false, initialValues).
         withTrailingSpacersIncluded();
 }
 

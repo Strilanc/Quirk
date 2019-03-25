@@ -148,7 +148,7 @@ suite.testUsingWebGL("gatesActLikeTheirKnownPhasingFunction", () => {
     }
 });
 
-suite.testUsingWebGL("knownNonUnitaryGates", () => {
+suite.test("knownNonUnitaryGates", () => {
     let nonUnitaryGates = new Set(Gates.KnownToSerializer.
         filter(g => !g.isDefinitelyUnitary()).
         map(g => g.serializedId));
@@ -163,7 +163,14 @@ suite.testUsingWebGL("knownNonUnitaryGates", () => {
         '|-⟩⟨-|',
         '|X⟩⟨X|',
         '|/⟩⟨/|',
-        'Detector',
+        // Collapsing measurement isn't unitary.
+        'XDetector',
+        'YDetector',
+        'ZDetector',
+        // Especially if you reset the qubit afterwards.
+        'XDetectControlReset',
+        'YDetectControlReset',
+        'ZDetectControlReset',
     ]));
 });
 
@@ -226,6 +233,11 @@ suite.test("knownDynamicGateFamilies", () => {
         // Other.
         'grad^t1',
         'grad^-t1',
-        'Detector',
+        'XDetector',
+        'YDetector',
+        'ZDetector',
+        'XDetectControlReset',
+        'YDetectControlReset',
+        'ZDetectControlReset',
     ]));
 });

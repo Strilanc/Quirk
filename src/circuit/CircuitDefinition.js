@@ -17,10 +17,11 @@ import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {DetailedError} from "src/base/DetailedError.js"
+import {equate_Maps} from "src/base/Equate.js";
 import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
-import {Gates} from "src/gates/AllGates.js"
+import {Gates, INITIAL_STATES_TO_GATES} from "src/gates/AllGates.js"
 import {Point} from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
@@ -39,13 +40,15 @@ class CircuitDefinition {
      * @param {undefined|!Map.<!string, *>=} outerContext
      * @param {!CustomGateSet} customGateSet
      * @param {!boolean} isNested
+     * @param {!Map.<!int, !string>} customInitialValues
      */
     constructor(numWires,
                 columns,
                 outerRowOffset=0,
                 outerContext=new Map(),
                 customGateSet=new CustomGateSet(),
-                isNested=false) {
+                isNested=false,
+                customInitialValues=new Map()) {
         if (numWires < 0) {
             throw new DetailedError("Bad numWires", {numWires})
         }
@@ -69,6 +72,17 @@ class CircuitDefinition {
         this.outerRowOffset = outerRowOffset;
         this.outerContext = outerContext;
         this.isNested = isNested;
+        /** @type {!Map.<!int, !string>} */
+        this.customInitialValues = new Map();
+        for (let [k, v] of customInitialValues.entries()) {
+            if (!Number.isInteger(k) || k < 0) {
+                throw new DetailedError('Initial state key out of range.', {customInitialValues, numWires});
+            }
+            if (k >= this.numWires) {
+                continue;
+            }
+            this.customInitialValues.set(k, v);
+        }
 
         /**
          * @type {!Array.<!Array.<undefined|!string>>}
@@ -124,6 +138,38 @@ class CircuitDefinition {
      */
     hasControls() {
         return !this.columns.every(e => !e.hasControl(-1));
+    }
+
+    /**
+     * @param {!int} wire
+     * @returns {!CircuitDefinition}
+     */
+    withSwitchedInitialStateOn(wire) {
+        let m = new Map([...this.customInitialValues.entries()]);
+        let v = m.get(wire);
+        let cycle = [...INITIAL_STATES_TO_GATES.keys()];
+        let newVal = cycle[(cycle.indexOf(v) + 1) % cycle.length];
+        if (newVal === undefined) {
+            m.delete(wire);
+        } else {
+            m.set(wire, newVal);
+        }
+        return this.withInitialStates(m);
+    }
+
+    /**
+     * @param {!Map.<!int, *>} map
+     * @returns {!CircuitDefinition}
+     */
+    withInitialStates(map) {
+        return new CircuitDefinition(
+            this.numWires,
+            this.columns,
+            this.outerRowOffset,
+            this.outerContext,
+            this.customGateSet,
+            this.isNested,
+            map);
     }
 
     /**
@@ -194,7 +240,8 @@ class CircuitDefinition {
             outerRowOffset,
             outerContext,
             this.customGateSet,
-            true);
+            true,
+            this.customInitialValues);
     }
 
     /**
@@ -235,7 +282,8 @@ class CircuitDefinition {
         }
         return other instanceof CircuitDefinition &&
             this.numWires === other.numWires &&
-            seq(this.columns).isEqualTo(seq(other.columns), Util.CUSTOM_IS_EQUAL_TO_EQUALITY);
+            seq(this.columns).isEqualTo(seq(other.columns), Util.CUSTOM_IS_EQUAL_TO_EQUALITY) &&
+            equate_Maps(this.customInitialValues, other.customInitialValues);
     }
 
     /**
@@ -355,7 +403,9 @@ class CircuitDefinition {
             cols,
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet);
+            this.customGateSet,
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -508,7 +558,9 @@ class CircuitDefinition {
             seq(this.columns).filterWithIndex((e, i) => used.has(i)).toArray(),
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet);
+            this.customGateSet,
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -527,7 +579,9 @@ class CircuitDefinition {
             ])),
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet);
+            this.customGateSet,
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -538,6 +592,9 @@ class CircuitDefinition {
         let best = 1;
         for (let c of this.columns) {
             best = Math.max(best, c.minimumRequiredWireCount());
+        }
+        for (let usedWire of this.customInitialValues.keys()) {
+            best = Math.max(best, usedWire + 1);
         }
         return best;
     }
@@ -846,6 +903,22 @@ class CircuitDefinition {
     }
 
     /**
+     * @param {!CircuitEvalContext} ctx
+     * @return {void}
+     */
+    applyInitialStateOperations(ctx) {
+        for (let wire = 0; wire < this.numWires; wire++) {
+            let state = this.customInitialValues.get(wire);
+            if (!INITIAL_STATES_TO_GATES.has(state)) {
+                throw new DetailedError('Unrecognized initial state.', {state});
+            }
+            for (let gate of INITIAL_STATES_TO_GATES.get(state)) {
+                GateShaders.applyMatrixOperation(ctx.withRow(ctx.row + wire), gate.knownMatrixAt(ctx.time))
+            }
+        }
+    }
+
+    /**
      * @param {!int} colIndex
      * @param {!CircuitEvalContext} ctx
      * @return {void}
@@ -964,7 +1037,9 @@ class CircuitDefinition {
             this.columns,
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet.withGate(gate));
+            this.customGateSet.withGate(gate),
+            false,
+            this.customInitialValues);
     }
 
     /**

@@ -623,7 +623,7 @@ class MathPainter {
         MathPainter.paintMatrixTooltip(painter, matrix, drawArea, focusPoints,
             (c, r) => c === r ?
                 `Probability of |${Util.bin(c, n)}⟩` :
-                `Coupling of |${Util.bin(c, n)}⟩ to ⟨${Util.bin(r, n)}|`,
+                `Coupling of |${Util.bin(r, n)}⟩ to ⟨${Util.bin(c, n)}|`,
             (c, r, v) => c === r ?
                 (matrix.cell(c, r).real*100).toFixed(4) + "%" :
                 matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));

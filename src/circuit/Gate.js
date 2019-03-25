@@ -71,6 +71,11 @@ class Gate {
          * @type {undefined|!function(!Float32Array, !CircuitDefinition, !int, !int) : *}
          */
         this.customStatPostProcesser = undefined;
+        /**
+         * Returns a json form of the custom-stat data, used when exporting it.
+         * @type {undefined|!function(data: *) : *}
+         */
+        this.processedStatsToJsonFunc = undefined;
         /** @type {!Array.<!Gate>} A list of size variants of this gate.*/
         this.gateFamily = [this];
 
@@ -154,6 +159,14 @@ class Gate {
          */
         this._controlBit = undefined;
         /**
+         * Determines if a controlled gate's control is guaranteed to be known classically. This is used by the
+         * combination detect-control-reset gates as a way to communicate that they can control permutation operations
+         * on classical wires.
+         * @type {boolean}
+         * @private
+         */
+        this._isClassicalControl = false;
+        /**
          * Indicates that this gate is guaranteed to preserve probability (as opposed to e.g. post-selection).
          * When gates with this property not set to true are present in a column, the simulator computes losses/gains.
          * @type {!boolean}
@@ -180,6 +193,12 @@ class Gate {
          * @type {undefined | !function(!int) : !int}
          */
         this.knownBitPermutationFunc = undefined;
+        /**
+         * When a permutation factors into sub-permutations over subsets of the bits, this map indexes each bit with
+         * an id for the group that it belongs to.
+         * @type {!Array.<!int>}
+         */
+        this.knownBitPermutationGroupMasks = undefined;
         /**
          * Indicates that a gate is a phasing function, and that it phases each computation basis state by the amount
          * returned by this function.
@@ -215,15 +234,16 @@ class Gate {
      * @param {!Matrix} matrix
      * @param {!string} name
      * @param {!string} blurb
+     * @param {undefined|!string} serializedId
      * @returns {!Gate}
      */
-    static fromKnownMatrix(symbol, matrix, name='', blurb='') {
+    static fromKnownMatrix(symbol, matrix, name='', blurb='', serializedId=undefined) {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
         let g = new Gate();
         g.symbol = symbol;
-        g.serializedId = symbol;
+        g.serializedId = serializedId === undefined ? symbol : serializedId;
         g.name = name;
         g.blurb = blurb;
         g._isDefinitelyUnitary = matrix.isUnitary(0.01);
@@ -255,6 +275,7 @@ class Gate {
         g.customAfterOperation = this.customAfterOperation;
         g.customStatTexturesMaker = this.customStatTexturesMaker;
         g.customStatPostProcesser = this.customStatPostProcesser;
+        g.processedStatsToJsonFunc = this.processedStatsToJsonFunc;
         g.width = this.width;
         g.height = this.height;
         g.isSingleQubitDisplay = this.isSingleQubitDisplay;
@@ -271,12 +292,14 @@ class Gate {
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
         g._affectsOtherWires = this._affectsOtherWires;
         g._controlBit = this._controlBit;
+        g._isClassicalControl = this._isClassicalControl;
         g.isControlWireSource = this.isControlWireSource;
         g._isDefinitelyUnitary = this._isDefinitelyUnitary;
         g.knownPhaseTurnsFunc = this.knownPhaseTurnsFunc;
         g.knownPermutationFuncTakingInputs = this.knownPermutationFuncTakingInputs;
         g.customColumnContextProvider = this.customColumnContextProvider;
         g.customDisableReasonFinder = this.customDisableReasonFinder;
+        g.knownBitPermutationGroupMasks = this.knownBitPermutationGroupMasks;
         return g;
     }
 
@@ -377,6 +400,13 @@ class Gate {
      */
     isControl() {
         return this._controlBit !== undefined;
+    }
+
+    /**
+     * @returns {!boolean}
+     */
+    isClassicalControl() {
+        return this._isClassicalControl;
     }
 
     /**
@@ -567,11 +597,12 @@ class GateBuilder {
      * Provides a function equivalent to how the gate rearranges wires, for checking in tests if the gate's behavior is
      * correct.
      * @param {!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
-     * given input, assuming the gate is exactly sized to the overall circuit.
+     *     given input, assuming the gate is exactly sized to the overall circuit.
      * @returns {!GateBuilder}
      */
     setKnownEffectToBitPermutation(knownBitPermutationFunc) {
         this.gate.knownBitPermutationFunc = knownBitPermutationFunc;
+        this.gate.knownBitPermutationGroupMasks = permutationGrouping(knownBitPermutationFunc, this.gate.height);
         this.gate._isDefinitelyUnitary = true;
         this.gate._stableDuration = Infinity;
         this.gate._hasNoEffect = false;
@@ -794,13 +825,15 @@ class GateBuilder {
     /**
      * Sets meta-properties to indicate a gate is a control.
      * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
+     * @param {!boolean} guaranteedClassical Whether or not the control can be used to control permutations of classical
+     *     wires, even if placed on a coherent wire.
      * @returns {!GateBuilder}
      */
-    markAsControlExpecting(bit) {
+    markAsControlExpecting(bit, guaranteedClassical=false) {
         this.gate._controlBit = bit;
         this.gate.isControlWireSource = true;
-        this.gate._isDefinitelyUnitary = true;
         this.gate.interestedInControls = false;
+        this.gate._isClassicalControl = guaranteedClassical;
         return this;
     }
 
@@ -919,6 +952,16 @@ class GateBuilder {
     }
 
     /**
+     * Specifies how to convert custom stats data into json when exporting.
+     * @param {undefined|!function(data: *) : *} jsonFunc
+     * @returns {!GateBuilder}
+     */
+    setProcessedStatsToJsonFunc(jsonFunc) {
+        this.gate.processedStatsToJsonFunc = jsonFunc;
+        return this;
+    }
+
+    /**
      * @param {*} tag
      * @returns {!GateBuilder}
      */
@@ -926,6 +969,30 @@ class GateBuilder {
         this.gate.tag = tag;
         return this;
     }
+}
+
+/**
+ * @param {!function(!int) : !int} knownBitPermutationFunc Returns the output of the permutation for a
+ *     given input, assuming the gate is exactly sized to the overall circuit.
+ * @param {!int} height
+ * @returns {!Array.<!int>}
+ */
+function permutationGrouping(knownBitPermutationFunc, height) {
+    let seen = new Set();
+    let result = [];
+    for (let i = 0; i < height; i++) {
+        let mask = 0;
+        let j = i;
+        while (!seen.has(j)) {
+            seen.add(j);
+            mask |= 1 << j;
+            j = knownBitPermutationFunc(j);
+        }
+        if (mask !== 0) {
+            result.push(mask);
+        }
+    }
+    return result;
 }
 
 export {Gate, GateBuilder}

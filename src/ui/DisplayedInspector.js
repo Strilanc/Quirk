@@ -127,12 +127,19 @@ class DisplayedInspector {
     /**
      * @returns {undefined|!string}
      */
-    isHandOverButtonKey() {
+    tryGetHandOverButtonKey() {
         if (this.hand.pos === undefined) {
             return undefined;
         }
-        let pos = this.displayedCircuit.findGateWithButtonContaining(this.hand.pos);
-        return pos === undefined ? undefined : pos.col + ':' + pos.row;
+        let butBos = this.displayedCircuit.findGateWithButtonContaining(this.hand.pos);
+        if (butBos !== undefined) {
+            return `gate-button-${butBos.col}:${butBos.row}`;
+        }
+        let initPos = this.displayedCircuit.findWireWithInitialStateAreaContaining(this.hand.pos);
+        if (initPos !== undefined) {
+            return `wire-init-${initPos}`;
+        }
+        return undefined;
     }
 
     /**
@@ -306,6 +313,10 @@ class DisplayedInspector {
      * @private
      */
     _watchOutputsChangeVisibility() {
+        if (this.displayedCircuit.circuitDefinition.customInitialValues.size > 0) {
+            return 0;
+        }
+
         let gatesInCircuit = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
         let gatesInPlay = gatesInCircuit + (this.hand.isBusy() ? 1 : 0);
         if (gatesInCircuit >= 2 || gatesInPlay === 0) {
@@ -412,6 +423,10 @@ class DisplayedInspector {
         let circ = this.displayedCircuit.circuitDefinition;
         let gatesInCircuit = circ.countGatesUpTo(2);
         let gatesInPlay = gatesInCircuit + (this.hand.heldGate !== undefined ? 1 : 0);
+
+        if (circ.customInitialValues.size > 0) {
+            return 0;
+        }
 
         let gate = circ.gateInSlot(0, 0);
         if (circ.hasControls() || !circ.hasNonControlGates() || (gate !== undefined && gate.height > 1)) {

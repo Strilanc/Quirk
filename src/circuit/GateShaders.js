@@ -164,7 +164,7 @@ const CYCLE_ALL_SHADER_VEC2 = makePseudoShaderWithInputsAndOutputAndCode(
  * @returns {!WglConfiguredShader}
  */
 GateShaders.cycleAllBitsFloat = (inputTexture, shiftAmount) => {
-    let size = currentShaderCoder().vec2.arrayPowerSizeOfTexture(inputTexture);
+    let size = currentShaderCoder().float.arrayPowerSizeOfTexture(inputTexture);
     return CYCLE_ALL_SHADER_FLOAT(
         inputTexture,
         WglArg.float("shiftAmount", 1 << Util.properMod(-shiftAmount, size)));

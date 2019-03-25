@@ -19,6 +19,7 @@ hookErrorHandler();
 import {doDetectIssues} from "src/issues.js"
 doDetectIssues();
 
+import {CircuitStats} from "src/circuit/CircuitStats.js"
 import {CooldownThrottle} from "src/base/CooldownThrottle.js"
 import {Config} from "src/Config.js"
 import {DisplayedInspector} from "src/ui/DisplayedInspector.js"
@@ -79,6 +80,7 @@ const inspectorDiv = document.getElementById("inspectorDiv");
 /** @type {ObservableValue.<!DisplayedInspector>} */
 const displayed = new ObservableValue(
     DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
+const mostRecentStats = new ObservableValue(CircuitStats.EMPTY);
 /** @type {!Revision} */
 let revision = Revision.startingAt(displayed.get().snapshot());
 
@@ -132,6 +134,7 @@ const redrawNow = () => {
 
     let shown = syncArea(displayed.get()).previewDrop();
     let stats = simulate(shown.displayedCircuit.circuitDefinition);
+    mostRecentStats.set(stats);
 
     let size = desiredCanvasSizeFor(shown);
     canvas.width = size.w;
@@ -160,7 +163,7 @@ let clickDownGateButtonKey = undefined;
 canvasDiv.addEventListener('click', ev => {
     let pt = eventPosRelativeTo(ev, canvasDiv);
     let curInspector = displayed.get();
-    if (curInspector.isHandOverButtonKey() !== clickDownGateButtonKey) {
+    if (curInspector.tryGetHandOverButtonKey() !== clickDownGateButtonKey) {
         return;
     }
     let clicked = syncArea(curInspector.withHand(curInspector.hand.withPos(pt))).tryClick();
@@ -179,7 +182,7 @@ watchDrags(canvasDiv,
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand));
-        clickDownGateButtonKey = newInspector.isHandOverButtonKey();
+        clickDownGateButtonKey = ev.ctrlKey ? undefined : newInspector.tryGetHandOverButtonKey();
         if (clickDownGateButtonKey !== undefined) {
             displayed.set(newInspector);
             return;
@@ -275,7 +278,7 @@ canvasDiv.addEventListener('mouseleave', () => {
 
 let obsIsAnyOverlayShowing = new ObservableSource();
 initUrlCircuitSync(revision);
-initExports(revision, obsIsAnyOverlayShowing.observable());
+initExports(revision, mostRecentStats, obsIsAnyOverlayShowing.observable());
 initForge(revision, obsIsAnyOverlayShowing.observable());
 initUndoRedo(revision, obsIsAnyOverlayShowing.observable());
 initClear(revision, obsIsAnyOverlayShowing.observable());

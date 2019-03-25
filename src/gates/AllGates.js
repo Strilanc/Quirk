@@ -25,6 +25,7 @@ import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
 import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
+import {ImaginaryGate} from "src/gates/Joke_ImaginaryGate.js"
 import {IncrementGates} from "src/gates/IncrementGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
@@ -45,7 +46,7 @@ import {ProbabilityDisplayFamily} from "src/gates/ProbabilityDisplay.js"
 import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js"
 import {ReverseBitsGateFamily} from "src/gates/ReverseBitsGate.js"
 import {SampleDisplayFamily} from "src/gates/SampleDisplay.js"
-import {Detector} from "src/gates/Detector.js"
+import {Detectors} from "src/gates/Detector.js"
 import {SpacerGate} from "src/gates/SpacerGate.js"
 import {SwapGateHalf} from "src/gates/SwapGateHalf.js"
 import {UniversalNotGate} from "src/gates/Impossible_UniversalNotGate.js"
@@ -89,6 +90,7 @@ Gates.ErrorInjection = ErrorInjectionGate;
 Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
+Gates.ImaginaryGate = ImaginaryGate;
 Gates.IncrementGates = IncrementGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
@@ -109,7 +111,7 @@ Gates.PostSelectionGates = PostSelectionGates;
 Gates.Powering = PoweringGates;
 Gates.QuarterTurns = QuarterTurnGates;
 Gates.ReverseBitsGateFamily = ReverseBitsGateFamily;
-Gates.Detector = Detector;
+Gates.Detectors = Detectors;
 Gates.SpacerGate = SpacerGate;
 Gates.UniversalNot = UniversalNotGate;
 Gates.XorGates = XorGates;
@@ -120,13 +122,13 @@ Gates.KnownToSerializer = [
     ...Controls.all,
     ...InputGates.all,
     MeasurementGate,
-    Detector,
     SwapGateHalf,
     SpacerGate,
     UniversalNotGate,
     ErrorInjectionGate,
     ZeroGate,
     NeGate,
+    ImaginaryGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -139,6 +141,7 @@ Gates.KnownToSerializer = [
     ...ComparisonGates.all,
     ...CountingGates.all,
     ...CycleBitsGates.all,
+    ...Detectors.all,
     ...ExponentiatingGates.all,
     ...FourierTransformGates.all,
     ...HalfTurnGates.all,
@@ -240,13 +243,21 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
+        hint: 'Sampling',
+        gates: [
+            Detectors.ZDetector, Detectors.ZDetectControlClear,
+            Detectors.YDetector, Detectors.YDetectControlClear,
+            Detectors.XDetector, Detectors.XDetectControlClear,
+        ]
+    },
+    {
         hint: 'Silly',
         gates: [
             ZeroGate,   MysteryGateMaker(),
-            NeGate,     undefined,
-            SpacerGate, undefined
+            NeGate,     ImaginaryGate,
+            SpacerGate, undefined,
         ]
-    }
+    },
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
@@ -323,4 +334,14 @@ Gates.BottomToolboxGroups = [
     },
 ];
 
-export {Gates}
+/** @type {!Map.<undefined|!string, !Array.<!Gate>>} */
+const INITIAL_STATES_TO_GATES = new Map([
+    [undefined, []],
+    ['1', [Gates.HalfTurns.X]],
+    ['+', [Gates.HalfTurns.H]],
+    ['-', [Gates.HalfTurns.H, Gates.HalfTurns.Z]],
+    ['i', [Gates.HalfTurns.H, Gates.QuarterTurns.SqrtZForward]],
+    ['-i', [Gates.HalfTurns.H, Gates.QuarterTurns.SqrtZBackward]]
+]);
+
+export {Gates, INITIAL_STATES_TO_GATES}
