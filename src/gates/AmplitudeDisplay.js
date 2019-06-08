@@ -131,7 +131,9 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
     let incoherentUnity = 0;
     for (let i = 0; i < n; i++) {
         incoherentUnity += rawIncoherentKetPixels[i];
-        incoherentKetPixels[i << 1] = Math.sqrt(rawIncoherentKetPixels[i]);
+    }
+    for (let i = 0; i < n; i++) {
+        incoherentKetPixels[i << 1] = Math.sqrt(rawIncoherentKetPixels[i] / incoherentUnity);
     }
     if (isNaN(incoherentUnity) || incoherentUnity < 0.000001) {
         return {
