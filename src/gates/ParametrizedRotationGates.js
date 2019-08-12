@@ -90,6 +90,7 @@ ParametrizedRotationGates.XToA = new GateBuilder().
     gate;
 
 ParametrizedRotationGates.XToMinusA = new GateBuilder().
+    setAlternate(ParametrizedRotationGates.XToA).
     setSerializedId("X^(-A/2^n)").
     setSymbol("X^-A/2ⁿ").
     setTitle("Parametrized -X Gate").
@@ -120,6 +121,7 @@ ParametrizedRotationGates.YToA = new GateBuilder().
     gate;
 
 ParametrizedRotationGates.YToMinusA = new GateBuilder().
+    setAlternate(ParametrizedRotationGates.YToA).
     setSerializedId("Y^(-A/2^n)").
     setSymbol("Y^-A/2ⁿ").
     setTitle("Parametrized -Y Gate").
@@ -150,6 +152,7 @@ ParametrizedRotationGates.ZToA = new GateBuilder().
     gate;
 
 ParametrizedRotationGates.ZToMinusA = new GateBuilder().
+    setAlternate(ParametrizedRotationGates.ZToA).
     setSerializedId("Z^(-A/2^n)").
     setSymbol("Z^-A/2ⁿ").
     setTitle("Parametrized -Z Gate").

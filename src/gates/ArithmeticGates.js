@@ -53,6 +53,7 @@ ArithmeticGates.Legacy_AdditionFamily = Gate.buildFamily(2, 16, (span, builder) 
     setKnownEffectToPermutation(chunkedScaledAdditionPermutationMaker(span, 1)));
 
 ArithmeticGates.Legacy_SubtractionFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setAlternateFromFamily(ArithmeticGates.Legacy_AdditionFamily).
     setSerializedId("sub" + span).
     setSymbol("b-=a").
     setTitle("Subtraction Gate").
@@ -76,6 +77,7 @@ ArithmeticGates.PlusAFamily = Gate.buildFamily(1, 16, (span, builder) => builder
     setKnownEffectToParametrizedPermutation((v, a) => (v + a) & ((1 << span) - 1)));
 
 ArithmeticGates.MinusAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ArithmeticGates.PlusAFamily).
     setSerializedId("-=A" + span).
     setSymbol("−A").
     setTitle("Subtraction Gate [input A]").

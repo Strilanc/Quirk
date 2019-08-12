@@ -154,15 +154,16 @@ class DisplayedInspector {
      * @param {!boolean=false} duplicate
      * @param {!boolean=false} wholeCol
      * @param {!boolean=false} ignoreResizeTabs
+     * @param {!boolean=false} alt
      * @returns {!DisplayedInspector}
      */
-    afterGrabbing(duplicate=false, wholeCol=false, ignoreResizeTabs=false) {
+    afterGrabbing(duplicate=false, wholeCol=false, ignoreResizeTabs=false, alt=false) {
         let hand = this.hand;
         let circuit = this.displayedCircuit;
 
         hand = this.displayedToolboxTop.tryGrab(hand);
         hand = this.displayedToolboxBottom.tryGrab(hand);
-        let obj = circuit.tryGrab(hand, duplicate, wholeCol, ignoreResizeTabs);
+        let obj = circuit.tryGrab(hand, duplicate, wholeCol, ignoreResizeTabs, alt);
         hand = obj.newHand;
         circuit = obj.newCircuit;
 

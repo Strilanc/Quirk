@@ -133,6 +133,7 @@ CountingGates.CountingFamily = Gate.buildFamily(1, 16, (span, builder) => builde
     setKnownEffectToTimeVaryingPermutation((t, i) => offsetPermutation(t, +1, span, i)));
 
 CountingGates.UncountingFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(CountingGates.CountingFamily).
     setSerializedId("Uncounting" + span).
     setSymbol("-⌈t⌉").
     setTitle("Down Counting Gate").

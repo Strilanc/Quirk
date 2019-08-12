@@ -25,7 +25,12 @@ import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
 import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
-import {ImaginaryGate} from "src/gates/Joke_ImaginaryGate.js"
+import {
+    ImaginaryGate,
+    AntiImaginaryGate,
+    SqrtImaginaryGate,
+    AntiSqrtImaginaryGate
+} from "src/gates/Joke_ImaginaryGate.js"
 import {IncrementGates} from "src/gates/IncrementGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
@@ -91,6 +96,9 @@ Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
 Gates.ImaginaryGate = ImaginaryGate;
+Gates.AntiImaginaryGate = AntiImaginaryGate;
+Gates.SqrtImaginaryGate = SqrtImaginaryGate;
+Gates.AntiSqrtImaginaryGate = AntiSqrtImaginaryGate;
 Gates.IncrementGates = IncrementGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
@@ -129,6 +137,9 @@ Gates.KnownToSerializer = [
     ZeroGate,
     NeGate,
     ImaginaryGate,
+    AntiImaginaryGate,
+    SqrtImaginaryGate,
+    AntiSqrtImaginaryGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -250,14 +261,6 @@ Gates.TopToolboxGroups = [
             Detectors.XDetector, Detectors.XDetectControlClear,
         ]
     },
-    {
-        hint: 'Silly',
-        gates: [
-            ZeroGate,   MysteryGateMaker(),
-            NeGate,     ImaginaryGate,
-            SpacerGate, undefined,
-        ]
-    },
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
@@ -330,6 +333,15 @@ Gates.BottomToolboxGroups = [
                 ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
             ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(2),
                 ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(2),
+        ]
+    },
+    {
+        hint: 'Scalar',
+        gates: [
+            SpacerGate, ZeroGate,
+            NeGate, undefined,
+            ImaginaryGate, AntiImaginaryGate,
+            SqrtImaginaryGate, AntiSqrtImaginaryGate,
         ]
     },
 ];

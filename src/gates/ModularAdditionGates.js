@@ -50,6 +50,7 @@ ModularAdditionGates.PlusAModRFamily = Gate.buildFamily(1, 16, (span, builder) =
     setKnownEffectToParametrizedPermutation((t, a, r) => t < r ? (t + a) % r : t));
 
 ModularAdditionGates.MinusAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularAdditionGates.PlusAModRFamily).
     setSerializedId("-AmodR" + span).
     setSymbol("−A\nmod R").
     setTitle("Modular Subtraction Gate").

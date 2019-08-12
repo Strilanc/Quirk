@@ -1071,15 +1071,16 @@ class DisplayedCircuit {
      * @param {!boolean=false} duplicate
      * @param {!boolean=false} wholeColumn
      * @param {!boolean=false} ignoreResizeTabs
+     * @param {!boolean=false} alt Whether or not to replace grabbed gates with their alternates.
      * @returns {!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
-    tryGrab(hand, duplicate=false, wholeColumn=false, ignoreResizeTabs=false) {
+    tryGrab(hand, duplicate=false, wholeColumn=false, ignoreResizeTabs=false, alt=false) {
         if (wholeColumn) {
-            let grabRowResult = this._tryGrabRow(hand);
+            let grabRowResult = this._tryGrabRow(hand, alt);
             if (grabRowResult !== undefined) {
                 return grabRowResult;
             }
-            return this._tryGrabWholeColumn(hand, duplicate) || {newCircuit: this, newHand: hand};
+            return this._tryGrabWholeColumn(hand, duplicate, alt) || {newCircuit: this, newHand: hand};
         }
 
         let newHand = hand;
@@ -1092,14 +1093,15 @@ class DisplayedCircuit {
             }
         }
 
-        return newCircuit._tryGrabGate(newHand, duplicate) || {newCircuit, newHand};
+        return newCircuit._tryGrabGate(newHand, duplicate, alt) || {newCircuit, newHand};
     }
 
     /**
      * @param {!Hand} hand
+     * @param {!boolean} alt
      * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
-    _tryGrabRow(hand) {
+    _tryGrabRow(hand, alt) {
         if (hand.pos === undefined) {
             return undefined;
         }
@@ -1118,6 +1120,9 @@ class DisplayedCircuit {
 
         let {newCircuit, initialState, rowGates} = this._cutRow(wire);
         let holdOffset = new Point(0, hand.pos.y - r.y);
+        if (alt) {
+            rowGates = rowGates.map(e => e === undefined ? e : e.alternate);
+        }
         return {
             newCircuit: this.withCircuit(newCircuit),
             newHand: hand.withHeldRow({initialState, gates: rowGates}, holdOffset)
@@ -1152,10 +1157,11 @@ class DisplayedCircuit {
 
     /**
      * @param {!Hand} hand
-     * @param {!boolean=} duplicate
+     * @param {!boolean} duplicate
+     * @param {!boolean} alt
      * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      */
-    _tryGrabGate(hand, duplicate=false) {
+    _tryGrabGate(hand, duplicate, alt) {
         if (hand.isBusy() || hand.pos === undefined) {
             return undefined;
         }
@@ -1167,6 +1173,9 @@ class DisplayedCircuit {
 
         let {col, row, offset} = foundPt;
         let gate = this.circuitDefinition.columns[col].gates[row];
+        if (alt) {
+            gate = gate.alternate;
+        }
 
         let remainingGates = seq(this.circuitDefinition.columns[col].gates).toArray();
         if (!duplicate) {
@@ -1219,10 +1228,11 @@ class DisplayedCircuit {
     /**
      * @param {!Hand} hand
      * @param {!boolean} duplicate
+     * @param {!boolean} alt Whether or not to replace grabbed gates with their alternates.
      * @returns {undefined|!{newCircuit: !DisplayedCircuit, newHand: !Hand}}
      * @private
      */
-    _tryGrabWholeColumn(hand, duplicate) {
+    _tryGrabWholeColumn(hand, duplicate, alt) {
         if (hand.isBusy() || hand.pos === undefined) {
             return undefined;
         }
@@ -1238,9 +1248,13 @@ class DisplayedCircuit {
         }
 
         let holdOffset = new Point(0, this.wireIndexAt(hand.pos.y) * Config.WIRE_SPACING + Config.WIRE_SPACING/2);
+        let grabbedGates = this.circuitDefinition.columns[col];
+        if (alt) {
+            grabbedGates = new GateColumn(grabbedGates.gates.map(e => e === undefined ? e : e.alternate));
+        }
         return {
             newCircuit: this.withCircuit(this.circuitDefinition.withColumns(newCols)),
-            newHand: hand.withHeldGateColumn(this.circuitDefinition.columns[col], holdOffset)
+            newHand: hand.withHeldGateColumn(grabbedGates, holdOffset)
         };
     }
 

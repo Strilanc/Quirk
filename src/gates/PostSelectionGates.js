@@ -45,6 +45,7 @@ PostSelectionGates.PostSelectOff = new GateBuilder().
 
 /** @type {!Gate} */
 PostSelectionGates.PostSelectOn = new GateBuilder().
+    setAlternate(PostSelectionGates.PostSelectOff).
     setSerializedIdAndSymbol("|1⟩⟨1|").
     setTitle("Postselect On").
     setBlurb("Keeps On states, discards/retries Off states.").
@@ -64,6 +65,7 @@ PostSelectionGates.PostSelectAntiX = new GateBuilder().
 
 /** @type {!Gate} */
 PostSelectionGates.PostSelectX = new GateBuilder().
+    setAlternate(PostSelectionGates.PostSelectAntiX).
     setSerializedId("|-⟩⟨-|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
     setSymbol("|⊕⟩⟨⊕|").
     setTitle("Postselect X-On").
@@ -84,6 +86,7 @@ PostSelectionGates.PostSelectAntiY = new GateBuilder().
 
 /** @type {!Gate} */
 PostSelectionGates.PostSelectY = new GateBuilder().
+    setAlternate(PostSelectionGates.PostSelectAntiY).
     setSerializedId("|/⟩⟨/|").  // The cross/slash convention was switched, but the serialized id must stay the same.
     setSymbol("|⊗⟩⟨⊗|").
     setTitle("Postselect Y-On").

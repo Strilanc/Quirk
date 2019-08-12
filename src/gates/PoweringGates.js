@@ -45,6 +45,7 @@ PoweringGates.XForward = new GateBuilder().
     gate;
 
 PoweringGates.XBackward = new GateBuilder().
+    setAlternate(PoweringGates.XForward).
     setSerializedIdAndSymbol("X^-t").
     setTitle("X-Raising Gate (backward)").
     setBlurb("Left-handed cycle from no-op to X.").
@@ -63,6 +64,7 @@ PoweringGates.YForward = new GateBuilder().
     gate;
 
 PoweringGates.YBackward = new GateBuilder().
+    setAlternate(PoweringGates.YForward).
     setSerializedIdAndSymbol("Y^-t").
     setTitle("Y-Raising Gate (backward)").
     setBlurb("Left-handed cycle from no-op to Y.").
@@ -81,6 +83,7 @@ PoweringGates.ZForward = new GateBuilder().
     gate;
 
 PoweringGates.ZBackward = new GateBuilder().
+    setAlternate(PoweringGates.ZForward).
     setSerializedIdAndSymbol("Z^-t").
     setTitle("Z-Raising Gate (backward)").
     setBlurb("Left-handed cycle from no-op to Z.").

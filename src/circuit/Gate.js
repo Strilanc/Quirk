@@ -174,6 +174,11 @@ class Gate {
          */
         this._isDefinitelyUnitary = false;
         /**
+         * The alternate gate for this one, used when shift+alt dragging.
+         * @type {!Gate}
+         */
+        this.alternate = this;
+        /**
          * Returns context provided by this gate to other gates in the same column (or later columns in some cases).
          * @param {!int} qubit
          * @param {!Gate} gate
@@ -235,22 +240,23 @@ class Gate {
      * @param {!string} name
      * @param {!string} blurb
      * @param {undefined|!string} serializedId
+     * @param {undefined|!Gate=} alternate
      * @returns {!Gate}
      */
-    static fromKnownMatrix(symbol, matrix, name='', blurb='', serializedId=undefined) {
+    static fromKnownMatrix(symbol, matrix, name='', blurb='', serializedId=undefined, alternate=undefined) {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
-        let g = new Gate();
-        g.symbol = symbol;
-        g.serializedId = serializedId === undefined ? symbol : serializedId;
-        g.name = name;
-        g.blurb = blurb;
-        g._isDefinitelyUnitary = matrix.isUnitary(0.01);
-        g._hasNoEffect = matrix.isIdentity();
-        g._stableDuration = Infinity;
-        g._knownMatrix = matrix;
-        return g;
+        let builder = new GateBuilder().
+            setSymbol(symbol).
+            setSerializedId(serializedId === undefined ? symbol : serializedId).
+            setTitle(name).
+            setBlurb(blurb).
+            setKnownEffectToMatrix(matrix);
+        if (alternate !== undefined) {
+            builder = builder.setAlternate(alternate);
+        }
+        return builder.gate;
     }
 
     /**
@@ -263,6 +269,7 @@ class Gate {
         g.symbol = this.symbol;
         g.name = this.name;
         g.blurb = this.blurb;
+        g.alternate = this.alternate;
         g.serializedId = this.serializedId;
         g.onClickGateFunc = this.onClickGateFunc;
         g.tag = this.tag;
@@ -486,6 +493,33 @@ class GateBuilder {
      */
     setSymbol(symbol) {
         this.gate.symbol = symbol;
+        return this;
+    }
+
+    /**
+     * @param {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}} alternateFamily
+     * @returns {!GateBuilder}
+     */
+    setAlternateFromFamily(alternateFamily) {
+        return this.setAlternate(alternateFamily.ofSize(this.gate.height));
+    }
+
+    /**
+     * @param {!Gate} alternate
+     * @returns {!GateBuilder}
+     */
+    setAlternate(alternate) {
+        if (alternate === undefined) {
+            throw new Error("alternate === undefined");
+        }
+        if (alternate.height !== this.gate.height) {
+            throw new Error("alternate.height !== this.gate.height");
+        }
+        if (alternate.alternate !== alternate) {
+            throw new Error("alternate.alternate !== alternate");
+        }
+        alternate.alternate = this.gate;
+        this.gate.alternate = alternate;
         return this;
     }
 

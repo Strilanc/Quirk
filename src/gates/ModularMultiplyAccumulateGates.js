@@ -60,6 +60,7 @@ ModularMultiplyAccumulateGates.PlusABModRFamily = Gate.buildFamily(1, 16, (span,
     setKnownEffectToParametrizedPermutation((t, a, b, r) => t < r ? (t + a*b) % r : t));
 
 ModularMultiplyAccumulateGates.MinusABModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularMultiplyAccumulateGates.PlusABModRFamily).
     setSerializedId("-ABmodR" + span).
     setSymbol("−AB\nmod R").
     setTitle("Modular Multiply-Subtract Gate").

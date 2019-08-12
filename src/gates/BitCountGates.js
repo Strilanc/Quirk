@@ -47,6 +47,7 @@ BitCountGates.PlusBitCountAFamily = Gate.buildFamily(1, 16, (span, builder) => b
     setKnownEffectToParametrizedPermutation((t, a) => (t + Util.numberOfSetBits(a)) & ((1 << span) - 1)));
 
 BitCountGates.MinusBitCountAFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(BitCountGates.PlusBitCountAFamily).
     setSerializedIdAndSymbol("-cntA" + span).
     setSymbol("-1s(A)").
     setTitle("Bit Un-Count Gate").

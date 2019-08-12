@@ -226,6 +226,7 @@ ModularMultiplicationGates.TimesAModRFamily = Gate.buildFamily(1, 16, (span, bui
     setKnownEffectToParametrizedPermutation(modularMultiply));
 
 ModularMultiplicationGates.TimesAModRInverseFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularMultiplicationGates.TimesAModRFamily).
     setSerializedId("/AmodR" + span).
     setSymbol("×A^-1\nmod R").
     setTitle("Modular Division Gate").
@@ -253,6 +254,7 @@ ModularMultiplicationGates.TimesBToTheAModRFamily = Gate.buildFamily(1, 16, (spa
     setKnownEffectToParametrizedPermutation((t, a, b, r) => modularPowerMultiply(t, b, a, r)));
 
 ModularMultiplicationGates.TimesInverseBToTheAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularMultiplicationGates.TimesBToTheAModRFamily).
     setSerializedId("/BToAmodR" + span).
     setSymbol("×B^-A\nmod R").
     setTitle("Modular Power Division Gate").
