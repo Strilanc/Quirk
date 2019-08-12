@@ -142,13 +142,17 @@ class CircuitDefinition {
 
     /**
      * @param {!int} wire
+     * @param {!int=} newStateIndex=
      * @returns {!CircuitDefinition}
      */
-    withSwitchedInitialStateOn(wire) {
+    withSwitchedInitialStateOn(wire, newStateIndex=undefined) {
         let m = new Map([...this.customInitialValues.entries()]);
         let v = m.get(wire);
         let cycle = [...INITIAL_STATES_TO_GATES.keys()];
         let newVal = cycle[(cycle.indexOf(v) + 1) % cycle.length];
+        if (newStateIndex !== undefined) {
+            newVal = newStateIndex;
+        }
         if (newVal === undefined) {
             m.delete(wire);
         } else {

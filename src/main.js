@@ -247,13 +247,22 @@ canvasDiv.addEventListener('mousedown', ev => {
     if (!isMiddleClicking(ev)) {
         return;
     }
-    let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
-    let newInspector = syncArea(displayed.get()).
-        withHand(newHand).
-        afterGrabbing(false, false, true, false). // Grab the gate.
-        withHand(newHand). // Lose the gate.
-        afterTidyingUp().
-        withJustEnoughWires(newHand, 0);
+    let cur = syncArea(displayed.get());
+    let initOver = cur.tryGetHandOverButtonKey();
+    let newHand = cur.hand.withPos(eventPosRelativeTo(ev, canvas));
+    let newInspector;
+    if (initOver !== undefined && initOver.startsWith('wire-init-')) {
+        let newCircuit = cur.displayedCircuit.circuitDefinition.withSwitchedInitialStateOn(
+            parseInt(initOver.substr(10)), 0);
+        newInspector = cur.withCircuitDefinition(newCircuit).withHand(newHand).afterTidyingUp();
+    } else {
+        newInspector = cur.
+            withHand(newHand).
+            afterGrabbing(false, false, true, false). // Grab the gate.
+            withHand(newHand). // Lose the gate.
+            afterTidyingUp().
+            withJustEnoughWires(newHand, 0);
+    }
     if (!displayed.get().isEqualTo(newInspector)) {
         revision.commit(newInspector.snapshot());
         ev.preventDefault();
