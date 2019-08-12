@@ -396,8 +396,8 @@ function makeDetectControlClearGate(axis) {
 function makeDetector(axis) {
     let state = new Map([
         ['X', '|0⟩-|1⟩'],
-        ['Y', '|0⟩+i|1⟩'],
-        ['Z', '|0⟩'],
+        ['Y', '|0⟩-i|1⟩'],
+        ['Z', '|1⟩'],
     ]).get(axis);
     let builder = new GateBuilder().
         setSerializedIdAndSymbol(`${axis}Detector`).
