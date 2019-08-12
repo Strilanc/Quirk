@@ -306,7 +306,8 @@ function paintErrorIfPresent(args, indicatorAlpha) {
     let err = undefined;
     let {col, row} = args.positionInCircuit;
     let measured = ((args.stats.circuitDefinition.colIsMeasuredMask(col) >> row) & ((1 << args.gate.height) - 1)) !== 0;
-    if (measured && indicatorAlpha > 0.9) {
+    if (measured) {
+        indicatorAlpha = 0;
         err = args.gate.width <= 2 ? '(w/ measure defer)' : '(assuming measurement deferred)';
     } else if (indicatorAlpha < 0.999) {
         err = 'incoherent';
