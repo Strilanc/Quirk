@@ -583,14 +583,17 @@ suite.test("colControls", () => {
     assertThat(c.colControls(17)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(102)).isEqualTo(Controls.NONE);
 
-    let c2 = circuit(`--●○○-
-                      -X○●s-
-                      ---s●-`);
+    let c2 = circuit(`--●○○-P-
+                      -X○●s-P-
+                      ---s●-X-`, ['P', Gates.Controls.ZParityControl]);
     assertThat(c2.colControls(0)).isEqualTo(Controls.NONE);
     assertThat(c2.colControls(1)).isEqualTo(Controls.NONE);
     assertThat(c2.colControls(2)).isEqualTo(new Controls(3, 1));
     assertThat(c2.colControls(3)).isEqualTo(new Controls(3, 2));
     assertThat(c2.colControls(4)).isEqualTo(new Controls(5, 4));
+    assertThat(c2.colControls(5)).isEqualTo(Controls.NONE);
+    assertThat(c2.colControls(6)).isEqualTo(new Controls(1, 1, 3));
+    assertThat(c2.colControls(7)).isEqualTo(Controls.NONE);
 });
 
 suite.test("locIsControlWireStarter", () => {

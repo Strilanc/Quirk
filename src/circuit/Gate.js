@@ -152,9 +152,10 @@ class Gate {
 
         /**
          * Determines if this gate conditions or anti-conditions other operations or not.
-         * Note that 'False' means 'anti-control', not 'not a control'. Use undefined for 'not a control'.
+         * Note that 'False' means 'anti-control', not 'not a control'. Use undefined for 'not a control'. Also,
+         * this value may be set to "parity" to indicate a parity control.
          * Non-computational-basis controls also use this mechanism, but with before/after operations.
-         * @type {undefined|!boolean}
+         * @type {undefined|!string|!boolean}
          * @private
          */
         this._controlBit = undefined;
@@ -417,7 +418,7 @@ class Gate {
     }
 
     /**
-     * @returns {undefined|!boolean}
+     * @returns {undefined|!string|!boolean}
      */
     controlBit() {
         return this._controlBit;
@@ -827,6 +828,11 @@ class GateBuilder {
     }
 
     /**
+     * Indicates that the gate may temporarily, but not permanently, transform the system state.
+     *
+     * The gate may also be part of a pair that together permanently changes the state (e.g. an input gate with an
+     * addition gate), but the other gate in the pair will not be marked as having no effect.
+     *
      * @returns {!GateBuilder}
      */
     promiseHasNoNetEffectOnStateVector() {
@@ -858,7 +864,8 @@ class GateBuilder {
 
     /**
      * Sets meta-properties to indicate a gate is a control.
-     * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
+     * @param {!boolean|!string} bit: Whether gate is a control (True), anti-control (False), or parity control
+     *     ("parity"). Use before/after operations for flexibility.
      * @param {!boolean} guaranteedClassical Whether or not the control can be used to control permutations of classical
      *     wires, even if placed on a coherent wire.
      * @returns {!GateBuilder}

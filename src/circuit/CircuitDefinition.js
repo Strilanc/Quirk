@@ -876,18 +876,30 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return Controls.NONE;
         }
-        let result = Controls.NONE;
         let column = this.columns[col];
+        let includeMask = 0;
+        let desireMask = 0;
+        let parityMask = 0;
         for (let i = 0; i < column.gates.length; i++) {
             let gate = column.gates[i];
             if (gate !== undefined && this.gateAtLocIsDisabledReason(col, i) === undefined) {
                 let bit = gate.controlBit();
-                if (bit !== undefined) {
-                    result = result.and(Controls.bit(i, bit));
+                if (bit === 'parity') {
+                    parityMask |= 1 << i;
+                } else if (bit !== undefined) {
+                    includeMask |= 1 << i;
+                    if (bit) {
+                        desireMask |= 1 << i;
+                    }
                 }
             }
         }
-        return result;
+        if (parityMask !== 0) {
+            let parityBit = parityMask & ~(parityMask - 1);
+            desireMask |= parityBit;
+            includeMask |= parityBit;
+        }
+        return new Controls(includeMask, desireMask, parityMask);
     }
 
     /**

@@ -133,6 +133,7 @@ function _extractStateStatsNeededByCircuitColumn(
             circuitDefinition.numWires,
             ctx.controls,
             ctx.controlsTexture,
+            ctx.controls,
             ctx.stateTrader,
             Util.mergeMaps(
                 ctx.customContextFromGates,
@@ -185,6 +186,7 @@ function _advanceStateWithCircuitDefinitionColumn(
         ctx.wireCount,
         ctx.controls,
         ctx.controlsTexture,
+        controls,
         trader,
         colContext);
     let mainCtx = new CircuitEvalContext(
@@ -193,6 +195,7 @@ function _advanceStateWithCircuitDefinitionColumn(
         ctx.wireCount,
         controls,
         controlTex,
+        controls,
         trader,
         colContext);
 

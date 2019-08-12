@@ -53,6 +53,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
             numQubits,
             Controls.NONE,
             control,
+            Controls.NONE,
             trader,
             new Map());
         gate.customOperation(ctx);
@@ -184,6 +185,9 @@ suite.test("knownDoNothingGateFamilies", () => {
         // Operation modifiers technically do things, but we assign the effects to the operation itself.
         '•',
         '◦',
+        'xpar',
+        'ypar',
+        'zpar',
         'inputA1',
         'inputB1',
         'inputR1',

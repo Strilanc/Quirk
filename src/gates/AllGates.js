@@ -261,6 +261,14 @@ Gates.TopToolboxGroups = [
             Detectors.XDetector, Detectors.XDetectControlClear,
         ]
     },
+    {
+        hint: "Parity",
+        gates: [
+            Controls.ZParityControl, undefined,
+            Controls.YParityControl, undefined,
+            Controls.XParityControl, undefined,
+        ]
+    },
 ];
 
 /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */

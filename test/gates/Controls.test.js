@@ -21,6 +21,11 @@ import {Gates} from "src/gates/AllGates.js"
 
 import {Complex} from "src/math/Complex.js"
 import {Matrix} from "src/math/Matrix.js"
+import {Util} from "src/base/Util.js"
+import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js";
+import {
+    assertThatCircuitUpdateActsLikeMatrix,
+} from "test/CircuitOperationTestUtil.js";
 
 let suite = new Suite("Gates.Controls");
 
@@ -104,4 +109,84 @@ suite.testUsingWebGL('Y-control', () => {
     assertControlOverlapState(c, 0.5, [-1, 1]);
     assertControlOverlapState(c, 0, [1, i]);
     assertControlOverlapState(c, 1, [-1, i]);
+});
+
+suite.testUsingWebGL('Z-parity', () => {
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => advanceStateWithCircuit(
+            ctx,
+            new CircuitDefinition(2, [new GateColumn([
+                Gates.Controls.ZParityControl,
+                Gates.HalfTurns.Z
+            ])]),
+            false),
+        Matrix.generateDiagonal(1 << 2, i => i === 3 ? -1 : 1));
+
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => advanceStateWithCircuit(
+            ctx,
+            new CircuitDefinition(4, [new GateColumn([
+                Gates.Controls.ZParityControl,
+                undefined,
+                Gates.Controls.ZParityControl,
+                Gates.HalfTurns.Z])
+            ]),
+            false),
+        Matrix.generateDiagonal(1 << 4, i => Util.popcnt(i & 5) % 2 === 1 && ((i & 8) !== 0) ? -1 : 1));
+});
+
+suite.testUsingWebGL('X-parity', () => {
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => advanceStateWithCircuit(
+            ctx,
+            new CircuitDefinition(4, [
+                new GateColumn([
+                    Gates.HalfTurns.H,
+                    Gates.HalfTurns.H,
+                    Gates.HalfTurns.H,
+                    undefined,
+                ]),
+                new GateColumn([
+                    Gates.Controls.XParityControl,
+                    Gates.Controls.XParityControl,
+                    Gates.Controls.XParityControl,
+                    Gates.HalfTurns.Z
+                ]),
+                new GateColumn([
+                    Gates.HalfTurns.H,
+                    Gates.HalfTurns.H,
+                    Gates.HalfTurns.H,
+                    undefined,
+                ]),
+            ]),
+            false),
+        Matrix.generateDiagonal(1 << 4, i => Util.popcnt(i & 7) % 2 === 1 && ((i & 8) !== 0) ? -1 : 1));
+});
+
+suite.testUsingWebGL('X-parity', () => {
+    assertThatCircuitUpdateActsLikeMatrix(
+        ctx => advanceStateWithCircuit(
+            ctx,
+            new CircuitDefinition(4, [
+                new GateColumn([
+                    Gates.QuarterTurns.SqrtXBackward,
+                    Gates.QuarterTurns.SqrtXBackward,
+                    Gates.QuarterTurns.SqrtXBackward,
+                    undefined,
+                ]),
+                new GateColumn([
+                    Gates.Controls.YParityControl,
+                    Gates.Controls.YParityControl,
+                    Gates.Controls.YParityControl,
+                    Gates.HalfTurns.Z,
+                ]),
+                new GateColumn([
+                    Gates.QuarterTurns.SqrtXForward,
+                    Gates.QuarterTurns.SqrtXForward,
+                    Gates.QuarterTurns.SqrtXForward,
+                    undefined,
+                ]),
+            ]),
+            false),
+        Matrix.generateDiagonal(1 << 4, i => Util.popcnt(i & 7) % 2 === 1 && ((i & 8) !== 0) ? -1 : 1));
 });
