@@ -190,3 +190,25 @@ suite.testUsingWebGL('X-parity', () => {
             false),
         Matrix.generateDiagonal(1 << 4, i => Util.popcnt(i & 7) % 2 === 1 && ((i & 8) !== 0) ? -1 : 1));
 });
+
+suite.test('xyParityControlsDisabledByMeasurement', () => {
+    let c = CircuitDefinition.fromTextDiagram(
+        new Map([
+            ['M', Gates.Special.Measurement],
+            ['H', Gates.HalfTurns.H],
+            ['x', Gates.Controls.XParityControl],
+            ['y', Gates.Controls.YParityControl],
+            ['z', Gates.Controls.ZParityControl],
+            ['-', undefined],
+        ]),
+        `-x-M-x-
+         -y-M-y-
+         -z-M-z-
+         -H---H-`);
+    assertThat(c.gateAtLocIsDisabledReason(1, 0)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(1, 1)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(1, 2)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 1)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+});

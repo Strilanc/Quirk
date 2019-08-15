@@ -828,10 +828,11 @@ class GateBuilder {
     }
 
     /**
-     * Indicates that the gate may temporarily, but not permanently, transform the system state.
+     * Indicates that the gate can be skipped over when computing the system state.
      *
-     * The gate may also be part of a pair that together permanently changes the state (e.g. an input gate with an
-     * addition gate), but the other gate in the pair will not be marked as having no effect.
+     * Note that Input gates and Z controls meet this definition, because their effects happen via other gates
+     * conditioning on them. X and Y controls don't meet the definition because they have to perform a temporary
+     * basis change which counts as a change.
      *
      * @returns {!GateBuilder}
      */

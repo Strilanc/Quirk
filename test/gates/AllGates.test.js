@@ -182,11 +182,9 @@ suite.test("knownDoNothingGateFamilies", () => {
     assertThat(doNothingFamilies).isEqualTo(new Set([
         // Measurement technically does something, but internally it's deferred and handled special almost everywhere.
         'Measure',
-        // Operation modifiers technically do things, but we assign the effects to the operation itself.
+        // Z basis operation modifiers technically do things, but we assign the effects to the operation itself.
         '•',
         '◦',
-        'xpar',
-        'ypar',
         'zpar',
         'inputA1',
         'inputB1',

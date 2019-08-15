@@ -236,7 +236,6 @@ Controls.XParityControl = new GateBuilder().
     setActualEffectToUpdateFunc(() => {}).
     promiseEffectIsStable().
     promiseEffectIsUnitary().
-    promiseHasNoNetEffectOnStateVector().
     markAsControlExpecting('parity').
     setSetupCleanupEffectToUpdateFunc(
         ctx => {
@@ -258,7 +257,6 @@ Controls.YParityControl = new GateBuilder().
     setActualEffectToUpdateFunc(() => {}).
     promiseEffectIsStable().
     promiseEffectIsUnitary().
-    promiseHasNoNetEffectOnStateVector().
     markAsControlExpecting('parity').
     setSetupCleanupEffectToUpdateFunc(
         ctx => {
