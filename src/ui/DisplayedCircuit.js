@@ -533,6 +533,7 @@ class DisplayedCircuit {
             }
             drawer(new GateDrawParams(
                 painter,
+                hand,
                 false,
                 isHighlighted && !isResizeHighlighted,
                 isResizeShowing,

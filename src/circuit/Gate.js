@@ -34,8 +34,16 @@ class Gate {
         this.width = 1;
         /** @type {!int} The number of wires the gate spans on a circuit. */
         this.height = 1;
-        /** @type {undefined|!int} A custom value that gets serialized. Each gate may use it to determine behavior. */
+        /** @type {undefined|!string|!number|!Array} A custom value that gets serialized.
+         *     Each gate may use it to determine behavior. */
         this.param = undefined;
+        /**
+         * Updates gate properties based on a new parameter value.
+         * Called by `Gate.withParam` before returning its result.
+         * @type {!function(gate: !Gate): undefined}
+         * @private
+         */
+        this._withParamRecomputeFunc = g => {};
 
         /** @type {undefined|!function(!GateDrawParams) : void} Draws the gate. A default is used when undefined. */
         this.customDrawer = undefined;
@@ -295,6 +303,7 @@ class Gate {
         g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
+        g._withParamRecomputeFunc = this._withParamRecomputeFunc;
         g._hasNoEffect = this._hasNoEffect;
         g._effectPermutesStates = this._effectPermutesStates;
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
@@ -312,13 +321,14 @@ class Gate {
     }
 
     /**
-     * Sets an arbitrary number, saved and restored with the circuit, that the gate's custom functions may use.
-     * @param {undefined|!int} value
+     * Sets an arbitrary json value, saved and restored with the circuit, that the gate's custom functions may use.
+     * @param {undefined|!string|!number|!Array} value
      * @returns {!Gate}
      */
     withParam(value) {
         let g = this._copy();
         g.param = value;
+        g._withParamRecomputeFunc(g);
         return g;
     }
 
@@ -399,7 +409,7 @@ class Gate {
      */
     knownMatrixAt(time) {
         return this._knownMatrix !== undefined ? this._knownMatrix :
-            this._knownMatrixFunc !== undefined ? this._knownMatrixFunc(time) :
+            this._knownMatrixFunc !== undefined ? this._knownMatrixFunc(time, this.param) :
             undefined;
     }
 
@@ -740,13 +750,23 @@ class GateBuilder {
     }
 
     /**
-     * @param {!function(time : !number) : !Matrix} timeToMatrixFunc
+     * @param {!function(time : !number, gateParam: *) : !Matrix} timeToMatrixFunc
      * @returns {!GateBuilder}
      */
     setEffectToTimeVaryingMatrix(timeToMatrixFunc) {
         this.gate._stableDuration = 0;
         this.gate._knownMatrixFunc = timeToMatrixFunc;
         this.gate._hasNoEffect = false;
+        return this;
+    }
+
+    /**
+     * A function called by `Gate.withParam` before returning its result.
+     * @param {!function(gate: !Gate): undefined} withParamRecomputeFunc
+     * @returns {!GateBuilder}
+     */
+    setWithParamPropertyRecomputeFunc(withParamRecomputeFunc) {
+        this.gate._withParamRecomputeFunc = withParamRecomputeFunc;
         return this;
     }
 

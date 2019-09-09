@@ -126,8 +126,9 @@ GatePainting.paintResizeTab = args => {
 /**
  * @param {!GateDrawParams} args
  * @param {undefined|!string=undefined} symbolOverride
+ * @param {!boolean=} allowExponent
  */
-GatePainting.paintGateSymbol = (args, symbolOverride=undefined) => {
+GatePainting.paintGateSymbol = (args, symbolOverride=undefined, allowExponent=true) => {
     let painter = args.painter;
     let rect = args.rect.paddedBy(-2);
     if (symbolOverride === undefined) {
@@ -136,7 +137,8 @@ GatePainting.paintGateSymbol = (args, symbolOverride=undefined) => {
     let {symbol, offsetY} = _paintSymbolHandleLines(args.painter, symbolOverride, rect);
     painter.ctx.font = GATE_SYMBOL_FONT;  // So that measure-text calls return the right stuff.
 
-    let parts = symbol.split("^");
+    let splitIndex = allowExponent ? symbol.indexOf('^') : -1;
+    let parts = splitIndex === -1 ? [symbol] : [symbol.substr(0, splitIndex), symbol.substr(splitIndex + 1)];
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "") {
         painter.print(
             symbol,
@@ -369,10 +371,20 @@ GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1, zeroAngle=0) => ar
     if (args.isInToolbox && !args.isHighlighted) {
         return;
     }
-    let τ = 2 * Math.PI;
-    let t = Util.properMod(-args.stats.time * τ * tScale, τ);
+    GatePainting.paintCycleState(args, args.stats.time * 2 * Math.PI * tScale, xScale, yScale, zeroAngle);
+};
+
+/**
+ * @param {!GateDrawParams} args
+ * @param {!number} angle
+ * @param {!number} xScale
+ * @param {!number} yScale
+ * @param {!number} zeroAngle
+ */
+GatePainting.paintCycleState = (args, angle, xScale=1, yScale=1, zeroAngle=0) => {
+    let t = Util.properMod(-angle, 2 * Math.PI);
     let c = args.rect.center();
-    let r = 0.4 * args.rect.w;
+    let r = 16;
 
     args.painter.ctx.save();
 
@@ -386,7 +398,7 @@ GatePainting.makeCycleDrawer = (xScale=1, yScale=1, tScale=1, zeroAngle=0) => ar
     args.painter.ctx.beginPath();
     args.painter.ctx.moveTo(0, 0);
     args.painter.ctx.lineTo(0, r);
-    args.painter.ctx.arc(0, 0, r, τ/4, τ/4 + t, true);
+    args.painter.ctx.arc(0, 0, r, Math.PI/2, Math.PI/2 + t, true);
     args.painter.ctx.lineTo(0, 0);
     args.painter.ctx.closePath();
     args.painter.ctx.stroke();
@@ -419,13 +431,18 @@ function _wireY(args, offset) {
  * @param {!Rect} wholeRect
  * @returns {!Rect}
  */
-GatePainting.gateButtonRect = wholeRect => wholeRect.bottomHalf().skipTop(6).paddedBy(-7);
+GatePainting.gateButtonRect = wholeRect => {
+    if (wholeRect.h > 50) {
+        return wholeRect.bottomHalf().skipTop(6).paddedBy(-7);
+    }
+    return wholeRect.bottomHalf().paddedBy(+2);
+};
 
 /**
  * @param {!GateDrawParams} args
  */
 GatePainting.paintGateButton = args => {
-    if (!args.isHighlighted || args.isInToolbox) {
+    if (!args.isHighlighted || args.isInToolbox || args.hand.isHoldingSomething()) {
         return;
     }
 
@@ -443,7 +460,7 @@ GatePainting.paintGateButton = args => {
         buttonRect.w,
         buttonRect.h);
     args.painter.strokeRect(buttonRect, 'black');
-}
+};
 
 
 /**

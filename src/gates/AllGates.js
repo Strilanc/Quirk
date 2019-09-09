@@ -60,8 +60,6 @@ import {VariousYGates} from "src/gates/VariousYGates.js"
 import {VariousZGates} from "src/gates/VariousZGates.js"
 import {XorGates} from "src/gates/XorGates.js"
 import {ZeroGate} from "src/gates/Joke_ZeroGate.js"
-import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
-
 import {seq} from "src/base/Seq.js"
 
 let Gates = {};
@@ -230,19 +228,19 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: "Sixteenths",
-        gates: [
-            VariousZGates.Z8,  VariousZGates.Z8i,
-            VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousXGates.X8,  VariousXGates.X8i,
-        ]
-    },
-    {
         hint: "Spinning",
         gates: [
             PoweringGates.ZForward, PoweringGates.ZBackward,
             PoweringGates.YForward, PoweringGates.YBackward,
             PoweringGates.XForward, PoweringGates.XBackward,
+        ]
+    },
+    {
+        hint: "Formulaic",
+        gates: [
+            ParametrizedRotationGates.FormulaicRotationZ, ParametrizedRotationGates.FormulaicRotationRz,
+            ParametrizedRotationGates.FormulaicRotationY, ParametrizedRotationGates.FormulaicRotationRy,
+            ParametrizedRotationGates.FormulaicRotationX, ParametrizedRotationGates.FormulaicRotationRx,
         ]
     },
     {

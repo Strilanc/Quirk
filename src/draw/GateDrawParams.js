@@ -18,6 +18,7 @@
 class GateDrawParams {
     /**
      * @param {!Painter} painter
+     * @param {!Hand} hand
      * @param {!boolean} isInToolbox
      * @param {!boolean} isHighlighted
      * @param {!boolean} isResizeShowing
@@ -30,6 +31,7 @@ class GateDrawParams {
      * @param {undefined|*} customStatsForCircuitPos
      */
     constructor(painter,
+                hand,
                 isInToolbox,
                 isHighlighted,
                 isResizeShowing,
@@ -42,6 +44,8 @@ class GateDrawParams {
                 customStatsForCircuitPos) {
         /** @type {!Painter} */
         this.painter = painter;
+        /** @type {!Hand} */
+        this.hand = hand;
         /** @type {!boolean} */
         this.isInToolbox = isInToolbox;
         /** @type {!boolean} */

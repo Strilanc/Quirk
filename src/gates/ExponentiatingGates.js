@@ -101,4 +101,4 @@ ExponentiatingGates.all = [
     ExponentiatingGates.ZForward
 ];
 
-export {ExponentiatingGates}
+export {ExponentiatingGates, XExp, YExp, ZExp}

@@ -121,7 +121,19 @@ class DisplayedInspector {
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.width-1),
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.height-1));
         let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
-        drawer(new GateDrawParams(painter, false, true, true, false, rect, gate, stats, undefined, [], undefined));
+        drawer(new GateDrawParams(
+            painter,
+            this.hand,
+            false,
+            true,
+            true,
+            false,
+            rect,
+            gate,
+            stats,
+            undefined,
+            [],
+            undefined));
     }
 
     /**
