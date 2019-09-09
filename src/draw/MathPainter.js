@@ -622,8 +622,8 @@ class MathPainter {
         let n = Math.round(Math.log2(numRows));
         MathPainter.paintMatrixTooltip(painter, matrix, drawArea, focusPoints,
             (c, r) => c === r ?
-                `Probability of |${Util.bin(c, n)}⟩` :
-                `Coupling of |${Util.bin(r, n)}⟩ to ⟨${Util.bin(c, n)}|`,
+                `Probability of |${Util.bin(c, n)}⟩ (decimal ${c})` :
+                `Coupling of |${Util.bin(r, n)}⟩ to ⟨${Util.bin(c, n)}| (decimal ${r} to ${c})`,
             (c, r, v) => c === r ?
                 (matrix.cell(c, r).real*100).toFixed(4) + "%" :
                 matrix.cell(c, r).toString(new Format(false, 0, 6, ", ")));

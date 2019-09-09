@@ -198,7 +198,7 @@ Gates.TopToolboxGroups = [
     {
         hint: "Displays",
         gates: [
-            SampleDisplayFamily.ofSize(3),        undefined,
+            undefined, undefined,
             DensityMatrixDisplayFamily.ofSize(1), BlochSphereDisplay,
             ProbabilityDisplayFamily.ofSize(1),   AmplitudeDisplayFamily.ofSize(2)
         ]
