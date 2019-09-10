@@ -188,13 +188,13 @@ watchDrags(canvasDiv,
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand));
         clickDownGateButtonKey = (
-            ev.ctrlKey || ev.shiftKey || ev.altKey ? undefined : newInspector.tryGetHandOverButtonKey());
+            ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey ? undefined : newInspector.tryGetHandOverButtonKey());
         if (clickDownGateButtonKey !== undefined) {
             displayed.set(newInspector);
             return;
         }
 
-        newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey);
+        newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey || ev.metaKey);
         if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }
@@ -203,7 +203,7 @@ watchDrags(canvasDiv,
         revision.startedWorkingOnCommit();
         displayed.set(
             syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
-                afterGrabbing(ev.shiftKey, ev.ctrlKey, false, ev.altKey));
+                afterGrabbing(ev.shiftKey, ev.ctrlKey || ev.metaKey, false, ev.altKey));
 
         ev.preventDefault();
     },
