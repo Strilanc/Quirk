@@ -131,7 +131,9 @@ function processOutputs(span, pixelGroups, circuitDefinition) {
     let incoherentUnity = 0;
     for (let i = 0; i < n; i++) {
         incoherentUnity += rawIncoherentKetPixels[i];
-        incoherentKetPixels[i << 1] = Math.sqrt(rawIncoherentKetPixels[i]);
+    }
+    for (let i = 0; i < n; i++) {
+        incoherentKetPixels[i << 1] = Math.sqrt(rawIncoherentKetPixels[i] / incoherentUnity);
     }
     if (isNaN(incoherentUnity) || incoherentUnity < 0.000001) {
         return {
@@ -259,12 +261,12 @@ const AMPLITUDE_DRAWER_FROM_CUSTOM_STATS = GatePainting.makeDisplayDrawer(args =
     let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(2);
     if (isIncoherent) {
         MathPainter.paintMatrixTooltip(args.painter, matrix, drawRect, args.focusPoints,
-            (c, r) => `Chance of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩ [amplitude not defined]`,
+            (c, r) => `Chance of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩ (decimal ${r*matrix.width() + c}) [amplitude not defined]`,
             (c, r, v) => `raw: ${(v.norm2()*100).toFixed(4)}%, log: ${(Math.log10(v.norm2())*10).toFixed(1)} dB`,
             (c, r, v) => '[entangled with other qubits]');
     } else {
         MathPainter.paintMatrixTooltip(args.painter, matrix, drawRect, args.focusPoints,
-            (c, r) => `Amplitude of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩`,
+            (c, r) => `Amplitude of |${Util.bin(r*matrix.width() + c, args.gate.height)}⟩ (decimal ${r*matrix.width() + c})`,
             (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
             (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
         if (phaseLockIndex !== undefined) {
@@ -304,7 +306,8 @@ function paintErrorIfPresent(args, indicatorAlpha) {
     let err = undefined;
     let {col, row} = args.positionInCircuit;
     let measured = ((args.stats.circuitDefinition.colIsMeasuredMask(col) >> row) & ((1 << args.gate.height) - 1)) !== 0;
-    if (measured && indicatorAlpha > 0.9) {
+    if (measured) {
+        indicatorAlpha = 0;
         err = args.gate.width <= 2 ? '(w/ measure defer)' : '(assuming measurement deferred)';
     } else if (indicatorAlpha < 0.999) {
         err = 'incoherent';

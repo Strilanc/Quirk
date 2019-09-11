@@ -63,6 +63,7 @@ ModularIncrementGates.IncrementModRFamily = Gate.buildFamily(1, 16, (span, build
     setKnownEffectToParametrizedPermutation((t, a) => t < a ? (t + 1) % a : t));
 
 ModularIncrementGates.DecrementModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularIncrementGates.IncrementModRFamily).
     setSerializedId("decmodR" + span).
     setSymbol("−1\nmod R").
     setTitle("Modular Decrement Gate").

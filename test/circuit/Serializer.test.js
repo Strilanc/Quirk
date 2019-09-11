@@ -178,6 +178,7 @@ suite.test("roundTrip_circuitDefinition", () => {
 
 const IDS_THAT_SHOULD_BE_KNOWN = [
     "•", "◦", "⊕", "⊖", "⊗", "(/)",
+    "xpar", "ypar", "zpar",
     "|0⟩⟨0|", "|1⟩⟨1|", "|+⟩⟨+|", "|-⟩⟨-|", "|X⟩⟨X|", "|/⟩⟨/|",
     "Measure",
     "XDetector", "YDetector", "ZDetector",
@@ -191,9 +192,11 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "revinputA1", "revinputA2", "revinputA3", "revinputA4", "revinputA5", "revinputA6", "revinputA7", "revinputA8", "revinputA9", "revinputA10", "revinputA11", "revinputA12", "revinputA13", "revinputA14", "revinputA15", "revinputA16",
     "revinputB1", "revinputB2", "revinputB3", "revinputB4", "revinputB5", "revinputB6", "revinputB7", "revinputB8", "revinputB9", "revinputB10", "revinputB11", "revinputB12", "revinputB13", "revinputB14", "revinputB15", "revinputB16",
     "__error__",
-    "0", "NeGate", "i",
+    "0", "NeGate", "i", "-i", "√i", "√-i",
     "H",
     "X", "Y", "Z",
+    "X^ft", "Y^ft", "Z^ft",
+    "Rxft", "Ryft", "Rzft",
     "X^½", "X^⅓", "X^¼", "X^⅛", "X^⅟₁₆", "X^⅟₃₂",
     "X^-½", "X^-⅓", "X^-¼", "X^-⅛", "X^-⅟₁₆", "X^-⅟₃₂",
     "Y^½", "Y^⅓", "Y^¼", "Y^⅛", "Y^⅟₁₆", "Y^⅟₃₂",

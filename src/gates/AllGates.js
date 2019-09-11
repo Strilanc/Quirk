@@ -25,7 +25,12 @@ import {ErrorInjectionGate} from "src/gates/Debug_ErrorInjectionGate.js"
 import {ExponentiatingGates} from "src/gates/ExponentiatingGates.js"
 import {FourierTransformGates} from "src/gates/FourierTransformGates.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
-import {ImaginaryGate} from "src/gates/Joke_ImaginaryGate.js"
+import {
+    ImaginaryGate,
+    AntiImaginaryGate,
+    SqrtImaginaryGate,
+    AntiSqrtImaginaryGate
+} from "src/gates/Joke_ImaginaryGate.js"
 import {IncrementGates} from "src/gates/IncrementGates.js"
 import {InputGates} from "src/gates/InputGates.js"
 import {InterleaveBitsGates} from "src/gates/InterleaveBitsGates.js"
@@ -55,8 +60,6 @@ import {VariousYGates} from "src/gates/VariousYGates.js"
 import {VariousZGates} from "src/gates/VariousZGates.js"
 import {XorGates} from "src/gates/XorGates.js"
 import {ZeroGate} from "src/gates/Joke_ZeroGate.js"
-import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
-
 import {seq} from "src/base/Seq.js"
 
 let Gates = {};
@@ -91,6 +94,9 @@ Gates.Exponentiating = ExponentiatingGates;
 Gates.FourierTransformGates = FourierTransformGates;
 Gates.HalfTurns = HalfTurnGates;
 Gates.ImaginaryGate = ImaginaryGate;
+Gates.AntiImaginaryGate = AntiImaginaryGate;
+Gates.SqrtImaginaryGate = SqrtImaginaryGate;
+Gates.AntiSqrtImaginaryGate = AntiSqrtImaginaryGate;
 Gates.IncrementGates = IncrementGates;
 Gates.InputGates = InputGates;
 Gates.InterleaveBitsGates = InterleaveBitsGates;
@@ -129,6 +135,9 @@ Gates.KnownToSerializer = [
     ZeroGate,
     NeGate,
     ImaginaryGate,
+    AntiImaginaryGate,
+    SqrtImaginaryGate,
+    AntiSqrtImaginaryGate,
 
     ...AmplitudeDisplayFamily.all,
     ...ProbabilityDisplayFamily.all,
@@ -189,7 +198,7 @@ Gates.TopToolboxGroups = [
     {
         hint: "Displays",
         gates: [
-            SampleDisplayFamily.ofSize(3),        undefined,
+            undefined, undefined,
             DensityMatrixDisplayFamily.ofSize(1), BlochSphereDisplay,
             ProbabilityDisplayFamily.ofSize(1),   AmplitudeDisplayFamily.ofSize(2)
         ]
@@ -219,19 +228,19 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: "Sixteenths",
-        gates: [
-            VariousZGates.Z8,  VariousZGates.Z8i,
-            VariousYGates.Y8,  VariousYGates.Y8i,
-            VariousXGates.X8,  VariousXGates.X8i,
-        ]
-    },
-    {
         hint: "Spinning",
         gates: [
             PoweringGates.ZForward, PoweringGates.ZBackward,
             PoweringGates.YForward, PoweringGates.YBackward,
             PoweringGates.XForward, PoweringGates.XBackward,
+        ]
+    },
+    {
+        hint: "Formulaic",
+        gates: [
+            ParametrizedRotationGates.FormulaicRotationZ, ParametrizedRotationGates.FormulaicRotationRz,
+            ParametrizedRotationGates.FormulaicRotationY, ParametrizedRotationGates.FormulaicRotationRy,
+            ParametrizedRotationGates.FormulaicRotationX, ParametrizedRotationGates.FormulaicRotationRx,
         ]
     },
     {
@@ -251,11 +260,11 @@ Gates.TopToolboxGroups = [
         ]
     },
     {
-        hint: 'Silly',
+        hint: "Parity",
         gates: [
-            ZeroGate,   MysteryGateMaker(),
-            NeGate,     ImaginaryGate,
-            SpacerGate, undefined,
+            Controls.ZParityControl, undefined,
+            Controls.YParityControl, undefined,
+            Controls.XParityControl, undefined,
         ]
     },
 ];
@@ -330,6 +339,15 @@ Gates.BottomToolboxGroups = [
                 ModularMultiplicationGates.TimesAModRInverseFamily.ofSize(2),
             ModularMultiplicationGates.TimesBToTheAModRFamily.ofSize(2),
                 ModularMultiplicationGates.TimesInverseBToTheAModRFamily.ofSize(2),
+        ]
+    },
+    {
+        hint: 'Scalar',
+        gates: [
+            SpacerGate, ZeroGate,
+            NeGate, undefined,
+            ImaginaryGate, AntiImaginaryGate,
+            SqrtImaginaryGate, AntiSqrtImaginaryGate,
         ]
     },
 ];

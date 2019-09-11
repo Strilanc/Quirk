@@ -45,6 +45,7 @@ PostSelectionGates.PostSelectOff = new GateBuilder().
 
 /** @type {!Gate} */
 PostSelectionGates.PostSelectOn = new GateBuilder().
+    setAlternate(PostSelectionGates.PostSelectOff).
     setSerializedIdAndSymbol("|1⟩⟨1|").
     setTitle("Postselect On").
     setBlurb("Keeps On states, discards/retries Off states.").
@@ -55,7 +56,7 @@ PostSelectionGates.PostSelectOn = new GateBuilder().
 /** @type {!Gate} */
 PostSelectionGates.PostSelectAntiX = new GateBuilder().
     setSerializedId("|+⟩⟨+|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
-    setSymbol("|⊖⟩⟨⊖|").
+    setSymbol("|+⟩⟨+|").
     setTitle("Postselect X-Off").
     setBlurb("Keeps ON+OFF states, discards/retries ON-OFF states.").
     setDrawer(POST_SELECT_DRAWER).
@@ -64,8 +65,9 @@ PostSelectionGates.PostSelectAntiX = new GateBuilder().
 
 /** @type {!Gate} */
 PostSelectionGates.PostSelectX = new GateBuilder().
+    setAlternate(PostSelectionGates.PostSelectAntiX).
     setSerializedId("|-⟩⟨-|").  // The +/- drawing convention was switched, but the serialized id must stay the same.
-    setSymbol("|⊕⟩⟨⊕|").
+    setSymbol("|-⟩⟨-|").
     setTitle("Postselect X-On").
     setBlurb("Keeps ON-OFF states, discards/retries ON+OFF states.").
     setDrawer(POST_SELECT_DRAWER).
@@ -75,7 +77,7 @@ PostSelectionGates.PostSelectX = new GateBuilder().
 /** @type {!Gate} */
 PostSelectionGates.PostSelectAntiY = new GateBuilder().
     setSerializedId("|X⟩⟨X|").  // The cross/slash convention was switched, but the serialized id must stay the same.
-    setSymbol("|⊘⟩⟨⊘|").
+    setSymbol("|i⟩⟨i|").
     setTitle("Postselect Y-Off").
     setBlurb("Keeps ON+iOFF states, discards ON-iOFF states.").
     setDrawer(POST_SELECT_DRAWER).
@@ -84,8 +86,9 @@ PostSelectionGates.PostSelectAntiY = new GateBuilder().
 
 /** @type {!Gate} */
 PostSelectionGates.PostSelectY = new GateBuilder().
+    setAlternate(PostSelectionGates.PostSelectAntiY).
     setSerializedId("|/⟩⟨/|").  // The cross/slash convention was switched, but the serialized id must stay the same.
-    setSymbol("|⊗⟩⟨⊗|").
+    setSymbol("|-i⟩⟨-i|").
     setTitle("Postselect Y-On").
     setBlurb("Keeps ON-iOFF states, discards/retries ON+iOFF states.").
     setDrawer(POST_SELECT_DRAWER).

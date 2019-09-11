@@ -26,7 +26,9 @@ VariousZGates.Z3i = Gate.fromKnownMatrix(
     "Z^-⅓",
     Matrix.fromPauliRotation(0, 0, -1 / 6),
     "Z^-⅓ Gate",
-    "Adjoint third root of Z.");
+    "Adjoint third root of Z.",
+    undefined,
+    VariousZGates.Z3);
 VariousZGates.Z4 = Gate.fromKnownMatrix(
     "T",
     Matrix.fromPauliRotation(0, 0, 1 / 8),
@@ -38,7 +40,8 @@ VariousZGates.Z4i = Gate.fromKnownMatrix(
     Matrix.fromPauliRotation(0, 0, -1 / 8),
     "Z^-¼ Gate",
     "Adjoint fourth root of Z.",
-    "Z^-¼");
+    "Z^-¼",
+    VariousZGates.Z4);
 VariousZGates.Z8 = Gate.fromKnownMatrix(
     "Z^⅛",
     Matrix.fromPauliRotation(0, 0, 1 / 16),
@@ -48,7 +51,9 @@ VariousZGates.Z8i = Gate.fromKnownMatrix(
     "Z^-⅛",
     Matrix.fromPauliRotation(0, 0, -1 / 16),
     "Z^-⅛ Gate",
-    "Adjoint eighth root of Z.");
+    "Adjoint eighth root of Z.",
+    undefined,
+    VariousZGates.Z8);
 VariousZGates.Z16 = Gate.fromKnownMatrix(
     "Z^⅟₁₆",
     Matrix.fromPauliRotation(0, 0, 1 / 32),
@@ -58,7 +63,9 @@ VariousZGates.Z16i = Gate.fromKnownMatrix(
     "Z^-⅟₁₆",
     Matrix.fromPauliRotation(0, 0, -1 / 32),
     "Z^-⅟₁₆ Gate",
-    "Adjoint 16'th root of Z.");
+    "Adjoint 16'th root of Z.",
+    undefined,
+    VariousZGates.Z16);
 
 VariousZGates.Z32 = Gate.fromKnownMatrix(
     "Z^⅟₃₂",

@@ -121,7 +121,19 @@ class DisplayedInspector {
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.width-1),
             Config.GATE_RADIUS*2 + Config.WIRE_SPACING*(gate.height-1));
         let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
-        drawer(new GateDrawParams(painter, false, true, true, false, rect, gate, stats, undefined, [], undefined));
+        drawer(new GateDrawParams(
+            painter,
+            this.hand,
+            false,
+            true,
+            true,
+            false,
+            rect,
+            gate,
+            stats,
+            undefined,
+            [],
+            undefined));
     }
 
     /**
@@ -154,15 +166,16 @@ class DisplayedInspector {
      * @param {!boolean=false} duplicate
      * @param {!boolean=false} wholeCol
      * @param {!boolean=false} ignoreResizeTabs
+     * @param {!boolean=false} alt
      * @returns {!DisplayedInspector}
      */
-    afterGrabbing(duplicate=false, wholeCol=false, ignoreResizeTabs=false) {
+    afterGrabbing(duplicate=false, wholeCol=false, ignoreResizeTabs=false, alt=false) {
         let hand = this.hand;
         let circuit = this.displayedCircuit;
 
         hand = this.displayedToolboxTop.tryGrab(hand);
         hand = this.displayedToolboxBottom.tryGrab(hand);
-        let obj = circuit.tryGrab(hand, duplicate, wholeCol, ignoreResizeTabs);
+        let obj = circuit.tryGrab(hand, duplicate, wholeCol, ignoreResizeTabs, alt);
         hand = obj.newHand;
         circuit = obj.newCircuit;
 
@@ -309,32 +322,11 @@ class DisplayedInspector {
     }
 
     /**
-     * @returns {!number}
-     * @private
-     */
-    _watchOutputsChangeVisibility() {
-        if (this.displayedCircuit.circuitDefinition.customInitialValues.size > 0) {
-            return 0;
-        }
-
-        let gatesInCircuit = this.displayedCircuit.circuitDefinition.countGatesUpTo(2);
-        let gatesInPlay = gatesInCircuit + (this.hand.isBusy() ? 1 : 0);
-        if (gatesInCircuit >= 2 || gatesInPlay === 0) {
-            return 0;
-        }
-
-        let handPosY = this.hand.pos === undefined ? Infinity : this.hand.pos.y;
-        return gatesInCircuit === 0 ? (handPosY - 125)/25 :
-               gatesInPlay === 2 ? (150 - handPosY)/25 :
-               1.0;
-    }
-
-    /**
      * @param {!Painter} painter
      * @private
      */
     _drawHint_watchOutputsChange(painter) {
-        let visibilityFactor = this._watchOutputsChangeVisibility();
+        let visibilityFactor = this._hintVisibility();
         if (visibilityFactor <= 0) {
             return;
         }
@@ -369,20 +361,22 @@ class DisplayedInspector {
         painter.ctx.restore();
     }
 
+    _hintVisibility() {
+        if (this.displayedCircuit.circuitDefinition.columns.length > 0) {
+            return 0;
+        }
+        return this.hand.pos === undefined || !this.hand.isBusy() ? 1.0 :
+            this.hand.heldGate !== undefined && this.hand.heldGate.isControl() ? 1.0 :
+            (150-this.hand.pos.y)/50;
+    }
+
 
     /**
      * @param {!Painter} painter
      * @private
      */
     _drawHint_dragGatesOntoCircuit(painter) {
-        if (this.displayedCircuit.circuitDefinition.hasNonControlGates()) {
-            return;
-        }
-
-        let visibilityFactor =
-            this.hand.pos === undefined || !this.hand.isBusy() ? 1.0 :
-            this.hand.heldGate !== undefined && this.hand.heldGate.isControl() ? 1.0 :
-            (150-this.hand.pos.y)/50;
+        let visibilityFactor = this._hintVisibility();
         if (visibilityFactor <= 0) {
             return;
         }
@@ -391,7 +385,7 @@ class DisplayedInspector {
         painter.ctx.globalAlpha *= Math.min(1, visibilityFactor);
 
         painter.ctx.save();
-        painter.ctx.translate(70, 190);
+        painter.ctx.translate(130, 195);
         painter.ctx.rotate(Math.PI * 0.05);
         painter.ctx.fillStyle = 'red';
         painter.ctx.font = '16px sans-serif';
@@ -416,40 +410,11 @@ class DisplayedInspector {
     }
 
     /**
-     * @returns {!number}
-     * @private
-     */
-    _useControlsHintVisibility() {
-        let circ = this.displayedCircuit.circuitDefinition;
-        let gatesInCircuit = circ.countGatesUpTo(2);
-        let gatesInPlay = gatesInCircuit + (this.hand.heldGate !== undefined ? 1 : 0);
-
-        if (circ.customInitialValues.size > 0) {
-            return 0;
-        }
-
-        let gate = circ.gateInSlot(0, 0);
-        if (circ.hasControls() || !circ.hasNonControlGates() || (gate !== undefined && gate.height > 1)) {
-            return 0;
-        }
-
-        if (gatesInCircuit === 1 && gatesInPlay === 1 && !this.displayedCircuit.isBeingEdited()) {
-            return 1;
-        }
-
-        if (gatesInCircuit === 1 && gatesInPlay === 2 && this.displayedCircuit.isBeingEdited()) {
-            return (150-this.hand.pos.y)/50;
-        }
-
-        return 0;
-    }
-
-    /**
      * @param {!Painter} painter
      * @private
      */
     _drawHint_useControls(painter) {
-        let visibilityFactor = this._useControlsHintVisibility();
+        let visibilityFactor = this._hintVisibility();
         if (visibilityFactor <= 0) {
             return;
         }

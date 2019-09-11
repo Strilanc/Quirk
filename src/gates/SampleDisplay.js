@@ -26,6 +26,7 @@ import {
 } from "src/gates/ProbabilityDisplay.js"
 
 /**
+ * Looks up the simulated probability distribution and samples from it using the current graphics PRNG.
  * @param {!GateDrawParams} args
  * @returns {!{i: !number, p: !number}}
  */

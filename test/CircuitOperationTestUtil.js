@@ -208,6 +208,7 @@ function assertThatCircuitMutationActsLikeMatrix_single(updateAction, matrix, fo
         wireCount,
         controls,
         controlsTexture,
+        controls,
         trader,
         new Map());
     updateAction(ctx);
@@ -255,6 +256,7 @@ function assertThatCircuitUpdateActsLikePermutation(wireCount, updateAction, per
         wireCount,
         Controls.NONE,
         controlsTexture,
+        Controls.NONE,
         trader,
         new Map());
     updateAction(ctx);

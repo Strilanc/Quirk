@@ -444,3 +444,9 @@ suite.test("raisedTo", () => {
     assertThat(new Complex(2, 3).raisedTo(new Complex(5, 7))).isApproximatelyEqualTo(
         new Complex(0.1525582909989, 0.6079153491494));
 });
+
+suite.test("trig", () => {
+    assertThat(Complex.from(0.2).cos()).isApproximatelyEqualTo(Complex.from(Math.cos(0.2)));
+    assertThat(Complex.from(0.2).sin()).isApproximatelyEqualTo(Complex.from(Math.sin(0.2)));
+    assertThat(Complex.from(0.2).tan()).isApproximatelyEqualTo(Complex.from(Math.tan(0.2)));
+});

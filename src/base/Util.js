@@ -153,6 +153,24 @@ class Util {
     }
 
     /**
+     * Counts the number of set bits in an integer.
+     *
+     * @param {!int} i
+     * @returns {!int}
+     */
+    static popcnt(i) {
+        if (i < 0) {
+            return Math.POSITIVE_INFINITY;
+        }
+        let t = 0;
+        while (i > 0) {
+            i &= i - 1;
+            t++;
+        }
+        return t;
+    }
+
+    /**
      * Determines how multiply-even a number is; how many times you can divide it by 2 before getting an odd result.
      * Odd numbers have 0 power-of-two-ness, multiples of 2 that aren't multiples of 4 have 1 power-of-two-ness,
      * multiples of 4 that aren't multiples of 8 have 3 power-of-two-ness, and so forth.
@@ -160,18 +178,19 @@ class Util {
      * Note that zero has infinite power-of-two-ness.
      *
      * @param {!int} i
-     * @returns {!int}
+     * @param {T=} zeroResult The value to return when i == 0. Defaults to positive infinity (because you can divide
+     *     zero by two as many times as you want and still get an integer).
+     * @returns {T|!int}
+     * @template T
      */
-    static powerOfTwoness(i) {
+    static powerOfTwoness(i, zeroResult=Math.POSITIVE_INFINITY) {
         if (i === 0) {
-            return Math.POSITIVE_INFINITY;
+            return zeroResult;
         }
         if (i < 0) {
-            return Util.powerOfTwoness(-i);
+            return Util.powerOfTwoness(-i, zeroResult);
         }
-        let lowMask = i ^ (i - 1);
-        let lowBit = i & lowMask;
-        return Math.round(Math.log2(lowBit));
+        return Math.round(Math.log2(i & ~(i - 1)));
     }
 
     /**

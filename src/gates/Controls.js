@@ -17,6 +17,10 @@ import {GatePainting} from "src/draw/GatePainting.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
 import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
 import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js"
+import {Config} from "src/Config.js"
+import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js";
+import {WglArg} from "src/webgl/WglArg.js";
+import {Util} from "src/base/Util.js";
 
 let Controls = {};
 
@@ -37,6 +41,7 @@ Controls.Control = new GateBuilder().
     gate;
 
 Controls.AntiControl = new GateBuilder().
+    setAlternate(Controls.Control).
     setSerializedIdAndSymbol("◦").
     setTitle("Anti-Control").
     setBlurb("Conditions on a qubit being OFF.\nGates in the same column only apply to states meeting the condition.").
@@ -80,6 +85,7 @@ Controls.XAntiControl = new GateBuilder().
     gate;
 
 Controls.XControl = new GateBuilder().
+    setAlternate(Controls.XAntiControl).
     setSerializedId("⊖").  // The drawn +/- convention was changed, but the serialized id must stay the same.
     setSymbol("⊕").
     setTitle("X-Axis Control").
@@ -135,6 +141,7 @@ Controls.YAntiControl = new GateBuilder().
     gate;
 
 Controls.YControl = new GateBuilder().
+    setAlternate(Controls.YAntiControl).
     setSerializedId("(/)").  // The drawn cross/slash convention was changed, but the serialized id must stay the same.
     setSymbol("⊗").
     setTitle("Y-Axis Control").
@@ -164,13 +171,130 @@ Controls.YControl = new GateBuilder().
     }).
     gate;
 
+const PARITY_SHADER = ketShaderPermute(
+    `
+        uniform float parityMask;
+    `,
+    `
+        float bitPos = 1.0;
+        float result = 0.5;
+        for (int i = 0; i < ${Config.MAX_WIRE_COUNT}; i++) {
+            float maskBit = mod(floor(parityMask/bitPos), 2.0);
+            float posBit = mod(floor(full_out_id/bitPos), 2.0);
+            float flip = maskBit * posBit;
+            result += flip;
+            bitPos *= 2.0;
+        }
+        return mod(result, 2.0) - 0.5;`,
+    1);
+
+/**
+ * Applies a multi-target CNOT operation, merging the parities onto a single qubit (or reversing that process).
+ *
+ * Note that this method is invoked for each parity control, but only the last one in the column is supposed to
+ * perform the operation (or, when uncomputing, the first one).
+ *
+ * @param {!CircuitEvalContext} ctx
+ * @param {!boolean} order
+ */
+function parityGatherScatter(ctx, order) {
+    let c = ctx.rawControls;
+    let isLast = 2 << ctx.row > c.parityMask;
+    let isFirst = 1 << ctx.row === (c.parityMask & ~(c.parityMask - 1));
+    if (order ? isLast : isFirst) {
+        ctx.applyOperation(PARITY_SHADER.withArgs(
+            ...ketArgs(ctx.withRow(Util.ceilLg2(c.parityMask & c.inclusionMask))),
+            WglArg.float('parityMask', c.parityMask)
+        ));
+    }
+}
+
+/**
+ * @param {!string} name
+ * @returns {!function(args: !GateDrawParams)}
+ */
+function parityDrawer(name) {
+    return args => {
+        if (args.isInToolbox || args.isHighlighted) {
+            GatePainting.paintBackground(args);
+            GatePainting.paintOutline(args);
+        }
+        let center = args.rect.paddedBy(-10);
+        args.painter.fillRect(center);
+        args.painter.strokeRect(center);
+        args.painter.fillRect(center.paddedBy(-4).skipBottom(-6).skipTop(-6));
+        args.painter.printLine(name, center, 0.5, undefined, undefined, undefined, 0);
+        args.painter.printLine('par', center, 0.5, 'red', 10, undefined, 1);
+    }
+}
+
+Controls.XParityControl = new GateBuilder().
+    setSerializedIdAndSymbol("xpar").
+    setTitle("Parity Control (X)").
+    setBlurb("Includes a qubit's X observable in the column parity control.\n" +
+        "Gates in the same column only apply if an odd number of parity controls are satisfied.").
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsStable().
+    promiseEffectIsUnitary().
+    markAsControlExpecting('parity').
+    setSetupCleanupEffectToUpdateFunc(
+        ctx => {
+            HalfTurnGates.H.customOperation(ctx);
+            parityGatherScatter(ctx, true);
+        },
+        ctx => {
+            parityGatherScatter(ctx, false);
+            HalfTurnGates.H.customOperation(ctx);
+        }).
+    setDrawer(parityDrawer('X')).
+    gate;
+
+Controls.YParityControl = new GateBuilder().
+    setSerializedIdAndSymbol("ypar").
+    setTitle("Parity Control (Y)").
+    setBlurb("Includes a qubit's Y observable in the column parity control.\n" +
+        "Gates in the same column only apply if an odd number of parity controls are satisfied.").
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsStable().
+    promiseEffectIsUnitary().
+    markAsControlExpecting('parity').
+    setSetupCleanupEffectToUpdateFunc(
+        ctx => {
+            GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXForward._knownMatrix);
+            parityGatherScatter(ctx, true);
+        },
+        ctx => {
+            parityGatherScatter(ctx, false);
+            GateShaders.applyMatrixOperation(ctx, QuarterTurnGates.SqrtXBackward._knownMatrix);
+        }).
+    setDrawer(parityDrawer('Y')).
+    gate;
+
+Controls.ZParityControl = new GateBuilder().
+    setSerializedIdAndSymbol("zpar").
+    setTitle("Parity Control (Z)").
+    setBlurb("Includes a qubit's Z observable in the column parity control.\n" +
+        "Gates in the same column only apply if an odd number of parity controls are satisfied.").
+    promiseHasNoNetEffectOnStateVector().
+    markAsControlExpecting('parity').
+    setSetupCleanupEffectToUpdateFunc(
+        ctx => parityGatherScatter(ctx, true),
+        ctx => parityGatherScatter(ctx, false)).
+    setActualEffectToUpdateFunc(() => {}).
+    promiseEffectIsUnitary().
+    setDrawer(parityDrawer('Z')).
+    gate;
+
 Controls.all = [
     Controls.Control,
     Controls.AntiControl,
     Controls.XAntiControl,
     Controls.XControl,
     Controls.YAntiControl,
-    Controls.YControl
+    Controls.YControl,
+    Controls.XParityControl,
+    Controls.YParityControl,
+    Controls.ZParityControl,
 ];
 
 export {Controls}

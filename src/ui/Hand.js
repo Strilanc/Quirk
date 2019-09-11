@@ -67,6 +67,13 @@ class Hand {
     }
 
     /**
+     * @returns {!boolean}
+     */
+    isHoldingSomething() {
+        return this.heldGate !== undefined || this.heldColumn !== undefined || this.heldRow !== undefined;
+    }
+
+    /**
      * @param {!Painter} painter
      */
     paintCursor(painter) {

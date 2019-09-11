@@ -211,7 +211,7 @@ class DisplayedToolbox {
     _paintStandardContents(painter) {
         // Gates.
         for (let groupIndex = 0; groupIndex < this.toolboxGroups.length; groupIndex++) {
-            this._paintGatesInGroup(painter, groupIndex);
+            this._paintGatesInGroup(painter, Hand.EMPTY, groupIndex);
         }
 
         // Title of toolbox.
@@ -233,7 +233,7 @@ class DisplayedToolbox {
         for (let groupIndex = 0; groupIndex < this.toolboxGroups.length; groupIndex++) {
             // Custom gates.
             if (groupIndex >= this._originalGroups.length) {
-                this._paintGatesInGroup(painter, groupIndex);
+                this._paintGatesInGroup(painter, hand, groupIndex);
             }
 
             // Keep scroll blockers positioned over gates.
@@ -253,10 +253,11 @@ class DisplayedToolbox {
 
     /**
      * @param {!Painter} painter
+     * @param {!Hand} hand
      * @param {!int} groupIndex
      * @private
      */
-    _paintGatesInGroup(painter, groupIndex) {
+    _paintGatesInGroup(painter, hand, groupIndex) {
         let group = this.toolboxGroups[groupIndex];
         let r = this.groupLabelRect(groupIndex);
         painter.print(
@@ -276,23 +277,25 @@ class DisplayedToolbox {
                 continue;
             }
             let rect = this.gateDrawRect(groupIndex, gateIndex);
-            DisplayedToolbox._paintGate(painter, gate, rect, false, CircuitStats.EMPTY);
+            DisplayedToolbox._paintGate(painter, hand, gate, rect, false, CircuitStats.EMPTY);
         }
     }
 
     /**
      * @param {!Painter} painter
+     * @param {!Hand} hand
      * @param {!Gate} gate
      * @param {!Rect} rect
      * @param {!boolean} isHighlighted
      * @param {!CircuitStats} stats
      * @private
      */
-    static _paintGate(painter, gate, rect, isHighlighted, stats) {
+    static _paintGate(painter, hand, gate, rect, isHighlighted, stats) {
         let drawer = gate.customDrawer || GatePainting.DEFAULT_DRAWER;
         painter.startIgnoringIncomingTouchBlockers();
         drawer(new GateDrawParams(
             painter,
+            hand,
             true, // inToolbox
             isHighlighted,
             false, // isResizeShowing
@@ -320,7 +323,7 @@ class DisplayedToolbox {
         }
 
         // Draw highlight.
-        DisplayedToolbox._paintGate(painter, f.gate, f.rect, true, stats);
+        DisplayedToolbox._paintGate(painter, hand, f.gate, f.rect, true, stats);
 
         // Size tooltip.
         painter.ctx.save();

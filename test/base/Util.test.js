@@ -54,6 +54,24 @@ suite.test("ceilLg2", () => {
     assertThat(Util.ceilLg2((1<<20)+1)).isEqualTo(21);
 });
 
+suite.test("popcnt", () => {
+    assertThat(Util.popcnt(-2)).isEqualTo(Math.POSITIVE_INFINITY);
+    assertThat(Util.popcnt(-1)).isEqualTo(Math.POSITIVE_INFINITY);
+    assertThat(Util.popcnt(0)).isEqualTo(0);
+    assertThat(Util.popcnt(1)).isEqualTo(1);
+    assertThat(Util.popcnt(2)).isEqualTo(1);
+    assertThat(Util.popcnt(3)).isEqualTo(2);
+    assertThat(Util.popcnt(4)).isEqualTo(1);
+    assertThat(Util.popcnt(5)).isEqualTo(2);
+    assertThat(Util.popcnt(6)).isEqualTo(2);
+    assertThat(Util.popcnt(7)).isEqualTo(3);
+    assertThat(Util.popcnt(8)).isEqualTo(1);
+    assertThat(Util.popcnt(9)).isEqualTo(2);
+    assertThat(Util.popcnt((1<<20)-1)).isEqualTo(20);
+    assertThat(Util.popcnt((1<<20))).isEqualTo(1);
+    assertThat(Util.popcnt((1<<20)+1)).isEqualTo(2);
+});
+
 suite.test("floorLg2", () => {
     assertThat(Util.floorLg2(0)).isEqualTo(0);
     assertThat(Util.floorLg2(1)).isEqualTo(0);
@@ -105,7 +123,10 @@ suite.test("ceilingPowerOf2", () => {
 suite.test("powerOfTwoness", () => {
     assertThat(Util.powerOfTwoness(-2)).isEqualTo(1);
     assertThat(Util.powerOfTwoness(-1)).isEqualTo(0);
+    assertThat(Util.powerOfTwoness(-1, 'z')).isEqualTo(0);
     assertThat(Util.powerOfTwoness(0)).isEqualTo(Math.POSITIVE_INFINITY);
+    assertThat(Util.powerOfTwoness(0, 'z')).isEqualTo('z');
+    assertThat(Util.powerOfTwoness(1, 'z')).isEqualTo(0);
     assertThat(Util.powerOfTwoness(1)).isEqualTo(0);
     assertThat(Util.powerOfTwoness(2)).isEqualTo(1);
     assertThat(Util.powerOfTwoness(3)).isEqualTo(0);

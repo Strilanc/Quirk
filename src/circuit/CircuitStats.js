@@ -344,6 +344,7 @@ class CircuitStats {
                 numWires,
                 Controls.NONE,
                 controlTex,
+                Controls.NONE,
                 stateTrader,
                 new Map()),
             circuitDefinition,

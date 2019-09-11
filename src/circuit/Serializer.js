@@ -211,9 +211,6 @@ let fromJson_Gate_props = json => {
     let matrix = json["matrix"];
     let circuit = json["circuit"];
     let param = json["arg"];
-    if (param !== undefined && (!Number.isInteger(param) || param < 0 || param > 1<<16)) {
-        throw new DetailedError("Gate arg not int in [0, 2^16].", {json});
-    }
     let symbol = json.name !== undefined ? json.name :
         id.startsWith('~') ? '' :
         id;

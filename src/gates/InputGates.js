@@ -112,6 +112,13 @@ let makeSetInputGate = key => new GateBuilder().
 
         return oldGate.withParam(val);
     }).
+    setExtraDisableReasonFinder(args => {
+        let p = args.gate.param;
+        if (!Number.isInteger(p) || p < 0 || p > 1<<16) {
+            return 'bad\nvalue';
+        }
+        return undefined;
+    }).
     gate.
     withParam(2);
 

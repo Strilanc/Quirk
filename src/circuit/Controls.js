@@ -25,17 +25,25 @@ class Controls {
     /**
      * @param {!int} inclusionMask.
      * @param {!int} desiredValueMask
+     * @param {!int=0} parityMask
      * @property {!int} inclusionMask.
      * @property {!int} desiredValueMask
      */
-    constructor(inclusionMask, desiredValueMask) {
+    constructor(inclusionMask, desiredValueMask, parityMask=0) {
         if ((desiredValueMask & ~inclusionMask) !== 0) {
             throw new DetailedError("Desired un-included bits", {inclusionMask, desiredValueMask});
         }
+        if (parityMask !== 0 && Util.popcnt(inclusionMask & parityMask) !== 1) {
+            throw new DetailedError("Exactly one parity bit must be in the inclusion mask",
+                {inclusionMask, parityMask});
+        }
+
         /** @type {!int} */
         this.inclusionMask = inclusionMask;
         /** @type {!int} */
         this.desiredValueMask = desiredValueMask;
+        /** @type {!int} */
+        this.parityMask = parityMask;
     }
 
     /**
@@ -57,7 +65,8 @@ class Controls {
     isEqualTo(other) {
         return other instanceof Controls &&
             this.inclusionMask === other.inclusionMask &&
-            this.desiredValueMask === other.desiredValueMask;
+            this.desiredValueMask === other.desiredValueMask &&
+            this.parityMask === other.parityMask;
     }
 
     /**
@@ -68,12 +77,20 @@ class Controls {
             return "No Controls";
         }
 
-        return "Controls: ...__" + Seq.naturals().
-            takeWhile(i => (1<<i) <= this.inclusionMask).
-            map(this.desiredValueFor.bind(this)).
+        let range = Seq.naturals().takeWhile(i => (1<<i) <= (this.inclusionMask | this.parityMask));
+        let result = "Controls: ...__" + range.
+            map(e => this.desiredValueFor(e)).
             map(e => e === undefined ? "_" : e ? "1" : "0").
             reverse().
             join("");
+        if (this.parityMask !== 0) {
+            result += "\n  parity: ...__" + range.
+                map(e => this.parityMask & (1 << e)).
+                map(e => e ? "1" : "_").
+                reverse().
+                join("")
+        }
+        return result;
     }
 
     /**
@@ -113,9 +130,13 @@ class Controls {
         if ((other.desiredValueMask & this.inclusionMask) !== (this.desiredValueMask & other.inclusionMask)) {
             throw new DetailedError("Contradictory controls.", {"this": this, other})
         }
+        if ((other.parityMask & this.inclusionMask) !== 0 || (this.parityMask & other.inclusionMask) !== 0) {
+            throw new DetailedError("Can't intersect parity controls.", {"this": this, other})
+        }
         return new Controls(
             this.inclusionMask | other.inclusionMask,
-            this.desiredValueMask | other.desiredValueMask);
+            this.desiredValueMask | other.desiredValueMask,
+            this.parityMask | other.parityMask);
     }
 
     /**
@@ -125,7 +146,8 @@ class Controls {
     shift(offset) {
         return new Controls(
             this.inclusionMask << offset,
-            this.desiredValueMask << offset)
+            this.desiredValueMask << offset,
+            this.parityMask << offset)
     }
 }
 

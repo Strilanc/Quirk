@@ -43,6 +43,8 @@ import {initTitleSync} from "src/ui/title.js"
 import {simulate} from "src/ui/sim.js"
 import {GatePainting} from "src/draw/GatePainting.js"
 import {GATE_CIRCUIT_DRAWER} from "src/ui/DisplayedCircuit.js"
+import {GateColumn} from "src/circuit/GateColumn.js";
+import {Point} from "src/math/Point.js";
 initSerializer(
     GatePainting.LABEL_DRAWER,
     GatePainting.MATRIX_DRAWER,
@@ -133,6 +135,9 @@ const redrawNow = () => {
     }
 
     let shown = syncArea(displayed.get()).previewDrop();
+    if (displayed.get().hand.isHoldingSomething() && !shown.hand.isHoldingSomething()) {
+        shown = shown.withHand(shown.hand.withHeldGateColumn(new GateColumn([]), new Point(0, 0)))
+    }
     let stats = simulate(shown.displayedCircuit.circuitDefinition);
     mostRecentStats.set(stats);
 
@@ -168,7 +173,7 @@ canvasDiv.addEventListener('click', ev => {
     }
     let clicked = syncArea(curInspector.withHand(curInspector.hand.withPos(pt))).tryClick();
     if (clicked !== undefined) {
-        revision.commit(clicked.snapshot());
+        revision.commit(clicked.afterTidyingUp().snapshot());
     }
 });
 
@@ -182,13 +187,14 @@ watchDrags(canvasDiv,
         let oldInspector = displayed.get();
         let newHand = oldInspector.hand.withPos(pt);
         let newInspector = syncArea(oldInspector.withHand(newHand));
-        clickDownGateButtonKey = ev.ctrlKey ? undefined : newInspector.tryGetHandOverButtonKey();
+        clickDownGateButtonKey = (
+            ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey ? undefined : newInspector.tryGetHandOverButtonKey());
         if (clickDownGateButtonKey !== undefined) {
             displayed.set(newInspector);
             return;
         }
 
-        newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey);
+        newInspector = newInspector.afterGrabbing(ev.shiftKey, ev.ctrlKey || ev.metaKey);
         if (displayed.get().isEqualTo(newInspector) || !newInspector.hand.isBusy()) {
             return;
         }
@@ -197,7 +203,7 @@ watchDrags(canvasDiv,
         revision.startedWorkingOnCommit();
         displayed.set(
             syncArea(oldInspector.withHand(newHand).withJustEnoughWires(newInspector.hand, 1)).
-                afterGrabbing(ev.shiftKey, ev.ctrlKey));
+                afterGrabbing(ev.shiftKey, ev.ctrlKey || ev.metaKey, false, ev.altKey));
 
         ev.preventDefault();
     },
@@ -247,13 +253,22 @@ canvasDiv.addEventListener('mousedown', ev => {
     if (!isMiddleClicking(ev)) {
         return;
     }
-    let newHand = displayed.get().hand.withPos(eventPosRelativeTo(ev, canvas));
-    let newInspector = syncArea(displayed.get()).
-        withHand(newHand).
-        afterGrabbing(false, false, true). // Grab the gate.
-        withHand(newHand). // Lose the gate.
-        afterTidyingUp().
-        withJustEnoughWires(newHand, 0);
+    let cur = syncArea(displayed.get());
+    let initOver = cur.tryGetHandOverButtonKey();
+    let newHand = cur.hand.withPos(eventPosRelativeTo(ev, canvas));
+    let newInspector;
+    if (initOver !== undefined && initOver.startsWith('wire-init-')) {
+        let newCircuit = cur.displayedCircuit.circuitDefinition.withSwitchedInitialStateOn(
+            parseInt(initOver.substr(10)), 0);
+        newInspector = cur.withCircuitDefinition(newCircuit).withHand(newHand).afterTidyingUp();
+    } else {
+        newInspector = cur.
+            withHand(newHand).
+            afterGrabbing(false, false, true, false). // Grab the gate.
+            withHand(newHand). // Lose the gate.
+            afterTidyingUp().
+            withJustEnoughWires(newHand, 0);
+    }
     if (!displayed.get().isEqualTo(newInspector)) {
         revision.commit(newInspector.snapshot());
         ev.preventDefault();

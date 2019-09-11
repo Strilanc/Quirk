@@ -368,7 +368,7 @@ function makeDetectControlClearGate(axis) {
     let builder = new GateBuilder().
         setSerializedIdAndSymbol(`${axis}DetectControlReset`).
         setTitle(`${axis} Detect-Control-Reset`).
-        setBlurb(`Does a collapsing ${axis}-axis measurement.\nControls operations with the result.\nResets the target to |0⟩.`).
+        setBlurb(`Does a sampled ${axis}-axis measurement.\nControls operations with the result.\nResets the target to |0⟩.`).
         setDrawer(args => drawDetectClearReset(args, axis)).
         markAsControlExpecting(true, true).
         markAsReachingOtherWires().
@@ -396,14 +396,14 @@ function makeDetectControlClearGate(axis) {
 function makeDetector(axis) {
     let state = new Map([
         ['X', '|0⟩-|1⟩'],
-        ['Y', '|0⟩+i|1⟩'],
-        ['Z', '|0⟩'],
+        ['Y', '|0⟩-i|1⟩'],
+        ['Z', '|1⟩'],
     ]).get(axis);
     let builder = new GateBuilder().
         setSerializedIdAndSymbol(`${axis}Detector`).
         setTitle(`${axis} Axis Detector`).
         setBlurb(
-            `Collapsing ${axis}-axis measurement.\n` +
+            `Sampled ${axis}-axis measurement.\n` +
             `Shows *click* when the target qubit is ${state} and controls are satisfied.`).
         setDrawer(args => drawDetector(args, axis)).
         markAsReachingOtherWires().

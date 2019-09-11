@@ -34,8 +34,16 @@ class Gate {
         this.width = 1;
         /** @type {!int} The number of wires the gate spans on a circuit. */
         this.height = 1;
-        /** @type {undefined|!int} A custom value that gets serialized. Each gate may use it to determine behavior. */
+        /** @type {undefined|!string|!number|!Array} A custom value that gets serialized.
+         *     Each gate may use it to determine behavior. */
         this.param = undefined;
+        /**
+         * Updates gate properties based on a new parameter value.
+         * Called by `Gate.withParam` before returning its result.
+         * @type {!function(gate: !Gate): undefined}
+         * @private
+         */
+        this._withParamRecomputeFunc = g => {};
 
         /** @type {undefined|!function(!GateDrawParams) : void} Draws the gate. A default is used when undefined. */
         this.customDrawer = undefined;
@@ -152,9 +160,10 @@ class Gate {
 
         /**
          * Determines if this gate conditions or anti-conditions other operations or not.
-         * Note that 'False' means 'anti-control', not 'not a control'. Use undefined for 'not a control'.
+         * Note that 'False' means 'anti-control', not 'not a control'. Use undefined for 'not a control'. Also,
+         * this value may be set to "parity" to indicate a parity control.
          * Non-computational-basis controls also use this mechanism, but with before/after operations.
-         * @type {undefined|!boolean}
+         * @type {undefined|!string|!boolean}
          * @private
          */
         this._controlBit = undefined;
@@ -173,6 +182,11 @@ class Gate {
          * @private
          */
         this._isDefinitelyUnitary = false;
+        /**
+         * The alternate gate for this one, used when shift+alt dragging.
+         * @type {!Gate}
+         */
+        this.alternate = this;
         /**
          * Returns context provided by this gate to other gates in the same column (or later columns in some cases).
          * @param {!int} qubit
@@ -235,22 +249,23 @@ class Gate {
      * @param {!string} name
      * @param {!string} blurb
      * @param {undefined|!string} serializedId
+     * @param {undefined|!Gate=} alternate
      * @returns {!Gate}
      */
-    static fromKnownMatrix(symbol, matrix, name='', blurb='', serializedId=undefined) {
+    static fromKnownMatrix(symbol, matrix, name='', blurb='', serializedId=undefined, alternate=undefined) {
         if (!(matrix instanceof Matrix)) {
             throw new DetailedError("Bad matrix.", {symbol, matrix, name, blurb});
         }
-        let g = new Gate();
-        g.symbol = symbol;
-        g.serializedId = serializedId === undefined ? symbol : serializedId;
-        g.name = name;
-        g.blurb = blurb;
-        g._isDefinitelyUnitary = matrix.isUnitary(0.01);
-        g._hasNoEffect = matrix.isIdentity();
-        g._stableDuration = Infinity;
-        g._knownMatrix = matrix;
-        return g;
+        let builder = new GateBuilder().
+            setSymbol(symbol).
+            setSerializedId(serializedId === undefined ? symbol : serializedId).
+            setTitle(name).
+            setBlurb(blurb).
+            setKnownEffectToMatrix(matrix);
+        if (alternate !== undefined) {
+            builder = builder.setAlternate(alternate);
+        }
+        return builder.gate;
     }
 
     /**
@@ -263,6 +278,7 @@ class Gate {
         g.symbol = this.symbol;
         g.name = this.name;
         g.blurb = this.blurb;
+        g.alternate = this.alternate;
         g.serializedId = this.serializedId;
         g.onClickGateFunc = this.onClickGateFunc;
         g.tag = this.tag;
@@ -287,6 +303,7 @@ class Gate {
         g._requiredContextKeys = this._requiredContextKeys;
         g._knownMatrixFunc = this._knownMatrixFunc;
         g._stableDuration = this._stableDuration;
+        g._withParamRecomputeFunc = this._withParamRecomputeFunc;
         g._hasNoEffect = this._hasNoEffect;
         g._effectPermutesStates = this._effectPermutesStates;
         g._effectCreatesSuperpositions = this._effectCreatesSuperpositions;
@@ -304,13 +321,14 @@ class Gate {
     }
 
     /**
-     * Sets an arbitrary number, saved and restored with the circuit, that the gate's custom functions may use.
-     * @param {undefined|!int} value
+     * Sets an arbitrary json value, saved and restored with the circuit, that the gate's custom functions may use.
+     * @param {undefined|!string|!number|!Array} value
      * @returns {!Gate}
      */
     withParam(value) {
         let g = this._copy();
         g.param = value;
+        g._withParamRecomputeFunc(g);
         return g;
     }
 
@@ -391,7 +409,7 @@ class Gate {
      */
     knownMatrixAt(time) {
         return this._knownMatrix !== undefined ? this._knownMatrix :
-            this._knownMatrixFunc !== undefined ? this._knownMatrixFunc(time) :
+            this._knownMatrixFunc !== undefined ? this._knownMatrixFunc(time, this.param) :
             undefined;
     }
 
@@ -410,7 +428,7 @@ class Gate {
     }
 
     /**
-     * @returns {undefined|!boolean}
+     * @returns {undefined|!string|!boolean}
      */
     controlBit() {
         return this._controlBit;
@@ -486,6 +504,33 @@ class GateBuilder {
      */
     setSymbol(symbol) {
         this.gate.symbol = symbol;
+        return this;
+    }
+
+    /**
+     * @param {!{all: !Array.<!Gate>, ofSize: !function(!int) : !Gate}} alternateFamily
+     * @returns {!GateBuilder}
+     */
+    setAlternateFromFamily(alternateFamily) {
+        return this.setAlternate(alternateFamily.ofSize(this.gate.height));
+    }
+
+    /**
+     * @param {!Gate} alternate
+     * @returns {!GateBuilder}
+     */
+    setAlternate(alternate) {
+        if (alternate === undefined) {
+            throw new Error("alternate === undefined");
+        }
+        if (alternate.height !== this.gate.height) {
+            throw new Error("alternate.height !== this.gate.height");
+        }
+        if (alternate.alternate !== alternate) {
+            throw new Error("alternate.alternate !== alternate");
+        }
+        alternate.alternate = this.gate;
+        this.gate.alternate = alternate;
         return this;
     }
 
@@ -705,13 +750,23 @@ class GateBuilder {
     }
 
     /**
-     * @param {!function(time : !number) : !Matrix} timeToMatrixFunc
+     * @param {!function(time : !number, gateParam: *) : !Matrix} timeToMatrixFunc
      * @returns {!GateBuilder}
      */
     setEffectToTimeVaryingMatrix(timeToMatrixFunc) {
         this.gate._stableDuration = 0;
         this.gate._knownMatrixFunc = timeToMatrixFunc;
         this.gate._hasNoEffect = false;
+        return this;
+    }
+
+    /**
+     * A function called by `Gate.withParam` before returning its result.
+     * @param {!function(gate: !Gate): undefined} withParamRecomputeFunc
+     * @returns {!GateBuilder}
+     */
+    setWithParamPropertyRecomputeFunc(withParamRecomputeFunc) {
+        this.gate._withParamRecomputeFunc = withParamRecomputeFunc;
         return this;
     }
 
@@ -793,6 +848,12 @@ class GateBuilder {
     }
 
     /**
+     * Indicates that the gate can be skipped over when computing the system state.
+     *
+     * Note that Input gates and Z controls meet this definition, because their effects happen via other gates
+     * conditioning on them. X and Y controls don't meet the definition because they have to perform a temporary
+     * basis change which counts as a change.
+     *
      * @returns {!GateBuilder}
      */
     promiseHasNoNetEffectOnStateVector() {
@@ -824,7 +885,8 @@ class GateBuilder {
 
     /**
      * Sets meta-properties to indicate a gate is a control.
-     * @param {!boolean} bit: Whether gate is a control or anti-control. Use before/after operations for flexibility.
+     * @param {!boolean|!string} bit: Whether gate is a control (True), anti-control (False), or parity control
+     *     ("parity"). Use before/after operations for flexibility.
      * @param {!boolean} guaranteedClassical Whether or not the control can be used to control permutations of classical
      *     wires, even if placed on a coherent wire.
      * @returns {!GateBuilder}

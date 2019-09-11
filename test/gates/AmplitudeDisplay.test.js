@@ -229,3 +229,15 @@ suite.testUsingWebGL("AmplitudesDisplayIncoherent_hadamard", () => {
     ]);
     assertThat(out.displays[0].data.coherence_measure).isLessThan(0.85);
 });
+
+suite.testUsingWebGL("AmplitudesDisplayIncoherent_conditioned", () => {
+    let stats = CircuitStats.fromCircuitAtTime(
+        Serializer.fromJson(CircuitDefinition, {"cols":[[1,"•","Z"],["•","Amps1"]],"init":["+","+","+"]}),
+        0);
+    let out = stats.toReadableJson();
+    assertThat(out.displays[0].data.incoherentKet).isApproximatelyEqualTo([
+        Math.sqrt(0.5),
+        Math.sqrt(0.5),
+    ]);
+    assertThat(out.displays[0].data.coherence_measure).isLessThan(0.85);
+});

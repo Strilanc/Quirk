@@ -45,6 +45,7 @@ ExponentiatingGates.XForward = new GateBuilder().
     gate;
 
 ExponentiatingGates.XBackward = new GateBuilder().
+    setAlternate(ExponentiatingGates.XForward).
     setSerializedIdAndSymbol("e^iXt").
     setTitle("X-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the X axis.\nPasses through ±iX instead of X.").
@@ -63,6 +64,7 @@ ExponentiatingGates.YForward = new GateBuilder().
     gate;
 
 ExponentiatingGates.YBackward = new GateBuilder().
+    setAlternate(ExponentiatingGates.YForward).
     setSerializedIdAndSymbol("e^iYt").
     setTitle("Y-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
@@ -81,6 +83,7 @@ ExponentiatingGates.ZForward = new GateBuilder().
     gate;
 
 ExponentiatingGates.ZBackward = new GateBuilder().
+    setAlternate(ExponentiatingGates.ZForward).
     setSerializedIdAndSymbol("e^iZt").
     setTitle("Z-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the Z axis.\nPasses through ±iZ instead of Z.").
@@ -98,4 +101,4 @@ ExponentiatingGates.all = [
     ExponentiatingGates.ZForward
 ];
 
-export {ExponentiatingGates}
+export {ExponentiatingGates, XExp, YExp, ZExp}

@@ -85,6 +85,7 @@ MultiplyAccumulateGates.Legacy_MultiplyAddFamily = Gate.buildFamily(3, 16, (span
     setKnownEffectToPermutation(makeScaledMultiplyAddPermutation(span, +1)));
 
 MultiplyAccumulateGates.Legacy_MultiplySubtractFamily = Gate.buildFamily(3, 16, (span, builder) => builder.
+    setAlternateFromFamily(MultiplyAccumulateGates.Legacy_MultiplyAddFamily).
     setSerializedId("c-=ab" + span).
     setSymbol("c-=ab").
     setTitle("Multiply-Subtract Gate").
@@ -113,6 +114,7 @@ MultiplyAccumulateGates.MultiplyAddInputsFamily = Gate.buildFamily(1, 16, (span,
     setKnownEffectToParametrizedPermutation((t, a, b) => (t + a*b) & ((1 << span) - 1)));
 
 MultiplyAccumulateGates.MultiplySubtractInputsFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(MultiplyAccumulateGates.MultiplyAddInputsFamily).
     setSerializedId("-=AB" + span).
     setSymbol("−AB").
     setTitle("Multiply-Subtract Gate [Inputs A, B]").
@@ -135,6 +137,7 @@ MultiplyAccumulateGates.SquareAddInputFamily = Gate.buildFamily(1, 16, (span, bu
     setKnownEffectToParametrizedPermutation((t, a) => (t + a*a) & ((1 << span) - 1)));
 
 MultiplyAccumulateGates.SquareSubtractInputFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(MultiplyAccumulateGates.SquareAddInputFamily).
     setSerializedId("-=AA" + span).
     setSymbol("-A^2").
     setTitle("Square-Subtract Gate [Input A]").

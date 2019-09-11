@@ -53,6 +53,7 @@ let reconstructMatrixFromGateCustomOperation = (gate, time) => {
             numQubits,
             Controls.NONE,
             control,
+            Controls.NONE,
             trader,
             new Map());
         gate.customOperation(ctx);
@@ -181,9 +182,10 @@ suite.test("knownDoNothingGateFamilies", () => {
     assertThat(doNothingFamilies).isEqualTo(new Set([
         // Measurement technically does something, but internally it's deferred and handled special almost everywhere.
         'Measure',
-        // Operation modifiers technically do things, but we assign the effects to the operation itself.
+        // Z basis operation modifiers technically do things, but we assign the effects to the operation itself.
         '•',
         '◦',
+        'zpar',
         'inputA1',
         'inputB1',
         'inputR1',
@@ -211,18 +213,12 @@ suite.test("knownDynamicGateFamilies", () => {
         // Dynamic displays.
         'Sample1',
         // Qubit rotating gates.
-        'X^t',
-        'Y^t',
-        'Z^t',
-        'X^-t',
-        'Y^-t',
-        'Z^-t',
-        'e^iXt',
-        'e^iYt',
-        'e^iZt',
-        'e^-iXt',
-        'e^-iYt',
-        'e^-iZt',
+        'X^t', 'Y^t', 'Z^t',
+        'X^-t', 'Y^-t', 'Z^-t',
+        'X^ft', 'Y^ft', 'Z^ft',
+        'Rxft', 'Ryft', 'Rzft',
+        'e^iXt', 'e^iYt', 'e^iZt',
+        'e^-iXt', 'e^-iYt', 'e^-iZt',
         // Discrete cycles.
         'Counting1',
         'Uncounting1',
