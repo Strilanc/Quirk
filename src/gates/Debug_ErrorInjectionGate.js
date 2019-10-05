@@ -23,7 +23,8 @@ let ErrorInjectionGate = new GateBuilder().
     setBlurb("Throws an exception during circuit stat computations, for testing error paths.").
     setDrawer(GatePainting.MAKE_HIGHLIGHTED_DRAWER('red', 'red')).
     setActualEffectToUpdateFunc(ctx => {
-        throw new DetailedError("Applied an Error Injection Gate", {qubit: ctx.row});
+        throw new DetailedError("Applied an Error Injection Gate",
+            {qubit: ctx.row, recognition_code: '927, I am a potato'});
     }).
     promiseEffectIsStable().
     gate;
