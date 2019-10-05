@@ -36,7 +36,8 @@ const ZExp = t => {
 };
 
 ExponentiatingGates.XForward = new GateBuilder().
-    setSerializedIdAndSymbol("e^-iXt").
+    setSerializedId("e^-iXt").
+    setSymbol("e^-i𝜏Xt").
     setTitle("X-Exponentiating Gate (forward)").
     setBlurb("Right-hand rotation around the X axis.\nPasses through ±iX instead of X.").
     setDrawer(GatePainting.makeCycleDrawer(1, 1, 2)).
@@ -46,7 +47,8 @@ ExponentiatingGates.XForward = new GateBuilder().
 
 ExponentiatingGates.XBackward = new GateBuilder().
     setAlternate(ExponentiatingGates.XForward).
-    setSerializedIdAndSymbol("e^iXt").
+    setSerializedId("e^iXt").
+    setSymbol("e^i𝜏Xt").
     setTitle("X-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the X axis.\nPasses through ±iX instead of X.").
     setDrawer(GatePainting.makeCycleDrawer(-1, 1, 2)).
@@ -55,7 +57,8 @@ ExponentiatingGates.XBackward = new GateBuilder().
     gate;
 
 ExponentiatingGates.YForward = new GateBuilder().
-    setSerializedIdAndSymbol("e^-iYt").
+    setSerializedId("e^-iYt").
+    setSymbol("e^-i𝜏Yt").
     setTitle("Y-Exponentiating Gate (forward)").
     setBlurb("Right-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
     setDrawer(GatePainting.makeCycleDrawer(0.5, 1, 2)).
@@ -65,7 +68,8 @@ ExponentiatingGates.YForward = new GateBuilder().
 
 ExponentiatingGates.YBackward = new GateBuilder().
     setAlternate(ExponentiatingGates.YForward).
-    setSerializedIdAndSymbol("e^iYt").
+    setSerializedId("e^iYt").
+    setSymbol("e^i𝜏Yt").
     setTitle("Y-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the Y axis.\nPasses through ±iY instead of Y.").
     setDrawer(GatePainting.makeCycleDrawer(-0.5, 1, 2)).
@@ -74,7 +78,8 @@ ExponentiatingGates.YBackward = new GateBuilder().
     gate;
 
 ExponentiatingGates.ZForward = new GateBuilder().
-    setSerializedIdAndSymbol("e^-iZt").
+    setSerializedId("e^-iZt").
+    setSymbol("e^-i𝜏Zt").
     setTitle("Z-Exponentiating Gate (forward)").
     setBlurb("Right-hand rotation around the Z axis.\nPasses through ±iZ instead of Z.").
     setDrawer(GatePainting.makeCycleDrawer(-1, -0.5, 2)).
@@ -84,7 +89,8 @@ ExponentiatingGates.ZForward = new GateBuilder().
 
 ExponentiatingGates.ZBackward = new GateBuilder().
     setAlternate(ExponentiatingGates.ZForward).
-    setSerializedIdAndSymbol("e^iZt").
+    setSerializedId("e^iZt").
+    setSymbol("e^i𝜏Zt").
     setTitle("Z-Exponentiating Gate (backward)").
     setBlurb("Left-hand rotation around the Z axis.\nPasses through ±iZ instead of Z.").
     setDrawer(GatePainting.makeCycleDrawer(1, -0.5, 2)).
