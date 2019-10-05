@@ -26,6 +26,15 @@ import {Config} from "src/Config.js";
 let ParametrizedRotationGates = {};
 
 /**
+ * Converts simulation time into formulaic time.
+ * @param {!number} t The time parameter for the simulation (ranging from 0 to 1).
+ * @returns {!number} Remapped time ranging from -1 to +1.
+ */
+function tt(t) {
+    return (t + 0.5) % 1 * 2 - 1
+}
+
+/**
  * @param {!string} pattern
  * @param {!int} xyz
  * @param {!number} tScale
@@ -46,8 +55,14 @@ function configurableRotationDrawer(pattern, xyz, tScale) {
 
         let isStable = args.gate.stableDuration() === Infinity;
         if ((!args.isInToolbox || args.isHighlighted) && !isStable) {
-            let rads = tScale * parseTimeFormula(args.gate.param, args.stats.time*2-1, false) || 0;
-            GatePainting.paintCycleState(args, rads, xScale, yScale);
+            let rads = tScale * parseTimeFormula(args.gate.param, tt(args.stats.time), false) || 0;
+            rads = Util.properMod(rads, 2 * Math.PI);
+            let s = xScale;
+            if (rads > Math.PI) {
+                rads = 2 * Math.PI - rads;
+                s *= -1;
+            }
+            GatePainting.paintCycleState(args, rads, s, yScale);
         }
     };
 }
@@ -298,7 +313,7 @@ ParametrizedRotationGates.FormulaicRotationX = new GateBuilder().
     setExtraDisableReasonFinder(badFormulaDetector).
     setOnClickGateFunc(angleClicker("X gate's exponent")).
     setEffectToTimeVaryingMatrix((t, formula) => {
-        let exponent = parseTimeFormula(formula, t*2-1, true) || 0;
+        let exponent = parseTimeFormula(formula, tt(t), true) || 0;
         return Matrix.fromPauliRotation(exponent/2, 0, 0);
     }).
     setWithParamPropertyRecomputeFunc(updateUsingFormula).
@@ -314,7 +329,7 @@ ParametrizedRotationGates.FormulaicRotationY = new GateBuilder().
     setExtraDisableReasonFinder(badFormulaDetector).
     setOnClickGateFunc(angleClicker("Y gate's exponent")).
     setEffectToTimeVaryingMatrix((t, formula) => {
-        let exponent = parseTimeFormula(formula, t*2-1, true) || 0;
+        let exponent = parseTimeFormula(formula, tt(t), true) || 0;
         return Matrix.fromPauliRotation(0, exponent/2, 0);
     }).
     setWithParamPropertyRecomputeFunc(updateUsingFormula).
@@ -330,7 +345,7 @@ ParametrizedRotationGates.FormulaicRotationZ = new GateBuilder().
     setExtraDisableReasonFinder(badFormulaDetector).
     setOnClickGateFunc(angleClicker("Z gate's exponent")).
     setEffectToTimeVaryingMatrix((t, formula) => {
-        let exponent = parseTimeFormula(formula, t*2-1, true) || 0;
+        let exponent = parseTimeFormula(formula, tt(t), true) || 0;
         return Matrix.fromPauliRotation(0, 0, exponent/2);
     }).
     setWithParamPropertyRecomputeFunc(updateUsingFormula).
@@ -345,7 +360,7 @@ ParametrizedRotationGates.FormulaicRotationRx = new GateBuilder().
     setWidth(2).
     setExtraDisableReasonFinder(badFormulaDetector).
     setOnClickGateFunc(angleClicker("Rx gate's angle in radians")).
-    setEffectToTimeVaryingMatrix((t, formula) => XExp((parseTimeFormula(formula, t*2-1, true) || 0) / Math.PI / 4)).
+    setEffectToTimeVaryingMatrix((t, formula) => XExp((parseTimeFormula(formula, tt(t), true) || 0) / Math.PI / 4)).
     setWithParamPropertyRecomputeFunc(updateUsingFormula).
     promiseEffectIsUnitary().
     gate.withParam('pi t^2');
@@ -358,7 +373,7 @@ ParametrizedRotationGates.FormulaicRotationRy = new GateBuilder().
     setWidth(2).
     setExtraDisableReasonFinder(badFormulaDetector).
     setOnClickGateFunc(angleClicker("Ry gate's angle in radians")).
-    setEffectToTimeVaryingMatrix((t, formula) => YExp((parseTimeFormula(formula, t*2-1, true) || 0) / Math.PI / 4)).
+    setEffectToTimeVaryingMatrix((t, formula) => YExp((parseTimeFormula(formula, tt(t), true) || 0) / Math.PI / 4)).
     setWithParamPropertyRecomputeFunc(updateUsingFormula).
     promiseEffectIsUnitary().
     gate.withParam('pi t^2');
@@ -371,7 +386,7 @@ ParametrizedRotationGates.FormulaicRotationRz = new GateBuilder().
     setWidth(2).
     setExtraDisableReasonFinder(badFormulaDetector).
     setOnClickGateFunc(angleClicker("Rz gate's angle in radians")).
-    setEffectToTimeVaryingMatrix((t, formula) => ZExp((parseTimeFormula(formula, t*2-1, true) || 0) / Math.PI / 4)).
+    setEffectToTimeVaryingMatrix((t, formula) => ZExp((parseTimeFormula(formula, tt(t), true) || 0) / Math.PI / 4)).
     setWithParamPropertyRecomputeFunc(updateUsingFormula).
     promiseEffectOnlyPhases().
     gate.withParam('pi t^2');

@@ -186,7 +186,7 @@ suite.testUsingWebGL('formulaic_formulas', () => {
         ['H', Gates.HalfTurns.H],
         ['t', Gates.ParametrizedRotationGates.FormulaicRotationZ.withParam(text)],
         ['-', undefined],
-    ]), 'Ht'), (t+1)/2).finalState.cell(0, 1).ln().imag / Math.PI;
+    ]), 'Ht'), t/2).finalState.cell(0, 1).ln().imag / Math.PI;
 
     assertThat(f('0.5', 0.1)).isApproximatelyEqualTo(0.5);
     assertThat(f('0.5', 0.2)).isApproximatelyEqualTo(0.5);
@@ -215,59 +215,61 @@ suite.testUsingWebGL('formulaic_formulas', () => {
 suite.testUsingWebGL('formulaic_matrices', () => {
     assertThat(Gates.ParametrizedRotationGates.FormulaicRotationZ.withParam('0.5').knownMatrixAt(0.1)
         ).isApproximatelyEqualTo(Matrix.square(1, 0, 0, Complex.I));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationZ.withParam('t').knownMatrixAt(0.75)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationZ.withParam('t').knownMatrixAt(0.25)
         ).isApproximatelyEqualTo(Matrix.square(1, 0, 0, Complex.I));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationZ.withParam('t').knownMatrixAt(1)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationZ.withParam('t').knownMatrixAt(0.5)
         ).isApproximatelyEqualTo(Matrix.square(1, 0, 0, -1));
 
     assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRz.withParam('0.5 pi').knownMatrixAt(0.1)
         ).isApproximatelyEqualTo(Matrix.square(Complex.polar(1, -Math.PI/4), 0, 0, Complex.polar(1, Math.PI/4)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRz.withParam('t pi').knownMatrixAt(0.75)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRz.withParam('t pi').knownMatrixAt(0.25)
         ).isApproximatelyEqualTo(Matrix.square(Complex.polar(1, -Math.PI/4), 0, 0, Complex.polar(1, Math.PI/4)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRz.withParam('t pi').knownMatrixAt(1)
-        ).isApproximatelyEqualTo(Matrix.square(Complex.I.neg(), 0, 0, Complex.I));
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRz.withParam('t pi').knownMatrixAt(0.4999999999)
+    ).isApproximatelyEqualTo(Matrix.square(Complex.I.neg(), 0, 0, Complex.I));
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRz.withParam('t pi').knownMatrixAt(0.5000000001)
+    ).isApproximatelyEqualTo(Matrix.square(Complex.I, 0, 0, Complex.I.neg()));
 
     assertThat(Gates.ParametrizedRotationGates.FormulaicRotationX.withParam('0.5').knownMatrixAt(0.1)
         ).isApproximatelyEqualTo(Matrix.square(
             new Complex(0.5, 0.5), new Complex(0.5, -0.5),
             new Complex(0.5, -0.5), new Complex(0.5, 0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationX.withParam('t').knownMatrixAt(0.75)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationX.withParam('t').knownMatrixAt(0.25)
         ).isApproximatelyEqualTo(Matrix.square(
             new Complex(0.5, 0.5), new Complex(0.5, -0.5),
             new Complex(0.5, -0.5), new Complex(0.5, 0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationX.withParam('t').knownMatrixAt(1)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationX.withParam('t').knownMatrixAt(0.5)
         ).isApproximatelyEqualTo(Matrix.square(0, 1, 1, 0));
 
     assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRx.withParam('0.5 pi').knownMatrixAt(0.1)
         ).isApproximatelyEqualTo(Matrix.square(
             1, Complex.I.neg(),
             Complex.I.neg(), 1).times(Math.sqrt(0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRx.withParam('t pi').knownMatrixAt(0.75)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRx.withParam('t pi').knownMatrixAt(0.25)
         ).isApproximatelyEqualTo(Matrix.square(
             1, Complex.I.neg(),
             Complex.I.neg(), 1).times(Math.sqrt(0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRx.withParam('t pi').knownMatrixAt(1)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRx.withParam('t pi').knownMatrixAt(0.4999999999)
         ).isApproximatelyEqualTo(Matrix.square(0, Complex.I.neg(), Complex.I.neg(), 0));
 
     assertThat(Gates.ParametrizedRotationGates.FormulaicRotationY.withParam('0.5').knownMatrixAt(0.1)
         ).isApproximatelyEqualTo(Matrix.square(
             new Complex(0.5, 0.5), new Complex(-0.5, -0.5),
             new Complex(0.5, 0.5), new Complex(0.5, 0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationY.withParam('t').knownMatrixAt(0.75)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationY.withParam('t').knownMatrixAt(0.25)
         ).isApproximatelyEqualTo(Matrix.square(
             new Complex(0.5, 0.5), new Complex(-0.5, -0.5),
             new Complex(0.5, 0.5), new Complex(0.5, 0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationY.withParam('t').knownMatrixAt(1)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationY.withParam('t').knownMatrixAt(0.5)
         ).isApproximatelyEqualTo(Matrix.square(0, Complex.I.neg(), Complex.I, 0));
 
     assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRy.withParam('0.5 pi').knownMatrixAt(0.1)
         ).isApproximatelyEqualTo(Matrix.square(
             1, -1,
             1, 1).times(Math.sqrt(0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRy.withParam('t pi').knownMatrixAt(0.75)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRy.withParam('t pi').knownMatrixAt(0.25)
         ).isApproximatelyEqualTo(Matrix.square(
             1, -1,
             1, 1).times(Math.sqrt(0.5)));
-    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRy.withParam('t pi').knownMatrixAt(1)
+    assertThat(Gates.ParametrizedRotationGates.FormulaicRotationRy.withParam('t pi').knownMatrixAt(0.4999999999)
         ).isApproximatelyEqualTo(Matrix.square(0, -1, 1, 0));
 });
