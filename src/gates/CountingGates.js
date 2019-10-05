@@ -113,7 +113,8 @@ CountingGates.ClockPulseGate = new GateBuilder().
     gate;
 
 CountingGates.QuarterPhaseClockPulseGate = new GateBuilder().
-    setSerializedIdAndSymbol("X^⌈t-¼⌉").
+    setSerializedId("X^⌈t-¼⌉").
+    setSymbol("X^⌈t-½⌉").
     setTitle("Clock Pulse Gate (Quarter Phase)").
     setBlurb("Xors a quarter-phased square wave into the target wire.").
     setDrawer(STAIRCASE_DRAWER(0.75, 2)).
@@ -123,7 +124,7 @@ CountingGates.QuarterPhaseClockPulseGate = new GateBuilder().
 
 CountingGates.CountingFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("Counting" + span).
-    setSymbol("+⌈t⌉").
+    setSymbol("+⌈t'⌉").
     setTitle("Counting Gate").
     setBlurb("Adds an increasing little-endian count into a block of qubits.").
     setDrawer(STAIRCASE_DRAWER(0, 1 << span)).
@@ -135,7 +136,7 @@ CountingGates.CountingFamily = Gate.buildFamily(1, 16, (span, builder) => builde
 CountingGates.UncountingFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setAlternateFromFamily(CountingGates.CountingFamily).
     setSerializedId("Uncounting" + span).
-    setSymbol("-⌈t⌉").
+    setSymbol("-⌈t'⌉").
     setTitle("Down Counting Gate").
     setBlurb("Subtracts an increasing little-endian count from a block of qubits.").
     setDrawer(STAIRCASE_DRAWER(0, 1 << span, true)).
@@ -146,7 +147,7 @@ CountingGates.UncountingFamily = Gate.buildFamily(1, 16, (span, builder) => buil
 
 CountingGates.RightShiftRotatingFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId(">>t" + span).
-    setSymbol("↟⌈t⌉").
+    setSymbol("↟⌈t'⌉").
     setTitle("Right-Shift Cycling Gate").
     setBlurb("Right-rotates a block of bits by more and more.").
     setDrawer(STAIRCASE_DRAWER(0, span, true)).
@@ -155,7 +156,7 @@ CountingGates.RightShiftRotatingFamily = Gate.buildFamily(2, 16, (span, builder)
 
 CountingGates.LeftShiftRotatingFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
     setSerializedId("<<t" + span).
-    setSymbol("↡⌈t⌉").
+    setSymbol("↡⌈t'⌉").
     setTitle("Left-Shift Cycling Gate").
     setBlurb("Left-rotates a block of bits by more and more.").
     setDrawer(STAIRCASE_DRAWER(0, span)).

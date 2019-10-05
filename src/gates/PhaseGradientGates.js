@@ -67,7 +67,7 @@ PhaseGradientGates.PhaseDegradientFamily = Gate.buildFamily(1, 16, (span, builde
 
 PhaseGradientGates.DynamicPhaseGradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setSerializedId("grad^t" + span).
-    setSymbol("Grad^t").
+    setSymbol("Grad^t'").
     setTitle("Cycling Gradient Gate").
     setBlurb("Phases the target by a cycling amount proportional its value.").
     setActualEffectToShaderProvider(ctx => PHASE_GRADIENT_SHADER.withArgs(
@@ -82,7 +82,7 @@ PhaseGradientGates.DynamicPhaseGradientFamily = Gate.buildFamily(1, 16, (span, b
 PhaseGradientGates.DynamicPhaseDegradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
     setAlternateFromFamily(PhaseGradientGates.DynamicPhaseGradientFamily).
     setSerializedId("grad^-t" + span).
-    setSymbol("Grad^-t").
+    setSymbol("Grad^-t'").
     setTitle("Inverse Cycling Gradient Gate").
     setBlurb("Counter-phases the target by a cycling amount proportional its value.").
     setActualEffectToShaderProvider(ctx => PHASE_GRADIENT_SHADER.withArgs(
