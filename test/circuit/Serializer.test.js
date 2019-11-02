@@ -211,6 +211,7 @@ const IDS_THAT_SHOULD_BE_KNOWN = [
     "Chance", "Chance2", "Chance3", "Chance4", "Chance5", "Chance6", "Chance7", "Chance8", "Chance9", "Chance10", "Chance11", "Chance12", "Chance13", "Chance14", "Chance15", "Chance16",
     "Sample1", "Sample2", "Sample3", "Sample4", "Sample5", "Sample6", "Sample7", "Sample8", "Sample9", "Sample10", "Sample11", "Sample12", "Sample13", "Sample14", "Sample15", "Sample16",
     "Density", "Density2", "Density3", "Density4", "Density5", "Density6", "Density7", "Density8",
+    "entdisp",
     "Bloch",
     "inc1", "inc2", "inc3", "inc4", "inc5", "inc6", "inc7", "inc8", "inc9", "inc10", "inc11", "inc12", "inc13", "inc14", "inc15", "inc16",
     "dec1", "dec2", "dec3", "dec4", "dec5", "dec6", "dec7", "dec8", "dec9", "dec10", "dec11", "dec12", "dec13", "dec14", "dec15", "dec16",

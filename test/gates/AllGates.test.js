@@ -200,6 +200,7 @@ suite.test("knownDoNothingGateFamilies", () => {
         'Sample1',
         'Density',
         'Bloch',
+        'entdisp',
         // Spacer gate.
         '…'
     ]));

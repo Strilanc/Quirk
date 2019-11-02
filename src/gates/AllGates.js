@@ -201,7 +201,7 @@ Gates.TopToolboxGroups = [
     {
         hint: "Displays",
         gates: [
-            EntanglementDisplays.Iteration1, undefined,
+            EntanglementDisplays.EntanglementDisplay, undefined,
             DensityMatrixDisplayFamily.ofSize(1), BlochSphereDisplay,
             ProbabilityDisplayFamily.ofSize(1),   AmplitudeDisplayFamily.ofSize(2)
         ]
