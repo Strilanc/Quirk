@@ -43,7 +43,7 @@ suite.testUsingWebGL("boolOutputs", () => {
     let output = BOOL_TYPE_CODER.outputPart;
     let shader = combinedShaderPartsWithCode([output], `
         bool outputFor(float k) {
-            return mod(k, 3.0) == 1.0;
+            return floor(mod(k + 0.5, 3.0)) == 1.0;
         }`);
 
     assertThat(shaderWithOutputPartAndArgs(shader, output, []).readBoolOutputs(3)).isEqualTo(new Uint8Array([

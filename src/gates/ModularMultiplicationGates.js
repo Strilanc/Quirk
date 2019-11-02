@@ -50,7 +50,7 @@ const MODULAR_INVERSE_SHADER_CODE = `
         if (r.y != 1.0) {
             return -1.0;
         }
-        return mod(mod(s.y, modulus) + modulus, modulus);
+        return floor(mod(floor(mod(s.y + 0.5, modulus)) + modulus + 0.5, modulus));
     }
 `;
 
@@ -70,7 +70,7 @@ const POW_MOD_SHADER_CODE = `
 
         float f = 1.0;
         for (int k = 0; k < ${Config.MAX_WIRE_COUNT}; k++) {
-            if (mod(exponent, 2.0) == 1.0) {
+            if (floor(mod(exponent + 0.5, 2.0)) == 1.0) {
                 exponent -= 1.0;
                 f = big_mul_mod(f, base, modulus);
             }
@@ -169,7 +169,7 @@ const MODULAR_MULTIPLICATION_SHADER = ketShaderPermute(
     `
         float input_a = read_input_A();
         float modulus = read_input_R();
-        input_a = mod(input_a, modulus);
+        input_a = floor(mod(input_a + 0.5, modulus));
         float v = modular_multiplicative_inverse(input_a, modulus);
         if (v == -1.0 || out_id >= modulus) {
             return out_id;
@@ -186,7 +186,7 @@ const MODULAR_INVERSE_MULTIPLICATION_SHADER = ketShaderPermute(
     `
         float input_a = read_input_A();
         float modulus = read_input_R();
-        input_a = mod(input_a, modulus);
+        input_a = floor(mod(input_a + 0.5, modulus));
         if (modular_multiplicative_inverse(input_a, modulus) == -1.0 || out_id >= modulus) {
             return out_id;
         }
@@ -226,6 +226,7 @@ ModularMultiplicationGates.TimesAModRFamily = Gate.buildFamily(1, 16, (span, bui
     setKnownEffectToParametrizedPermutation(modularMultiply));
 
 ModularMultiplicationGates.TimesAModRInverseFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularMultiplicationGates.TimesAModRFamily).
     setSerializedId("/AmodR" + span).
     setSymbol("×A^-1\nmod R").
     setTitle("Modular Division Gate").
@@ -253,6 +254,7 @@ ModularMultiplicationGates.TimesBToTheAModRFamily = Gate.buildFamily(1, 16, (spa
     setKnownEffectToParametrizedPermutation((t, a, b, r) => modularPowerMultiply(t, b, a, r)));
 
 ModularMultiplicationGates.TimesInverseBToTheAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularMultiplicationGates.TimesBToTheAModRFamily).
     setSerializedId("/BToAmodR" + span).
     setSymbol("×B^-A\nmod R").
     setTitle("Modular Power Division Gate").

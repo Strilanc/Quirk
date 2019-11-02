@@ -16,7 +16,6 @@ import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
 import {CircuitStats} from "src/circuit/CircuitStats.js"
 
 import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {Complex} from "src/math/Complex.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {Gates} from "src/gates/AllGates.js"
 import {Matrix} from "src/math/Matrix.js"
@@ -109,9 +108,10 @@ suite.testUsingWebGL('incoherent-amplitude-display', () => {
     assertThat(stats.qubitDensityMatrix(Infinity, 0)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
-        probabilities: Matrix.row(1, 1).times(Math.sqrt(0.5)),
-        superposition: undefined,
-        phaseLockIndex: undefined
+        quality: 0.5,
+        ket: Matrix.row(1, 0),
+        phaseLockIndex: 0,
+        incoherentKet: Matrix.row(Math.sqrt(0.5), Math.sqrt(0.5))
     });
 });
 
@@ -124,8 +124,9 @@ suite.testUsingWebGL('coherent-amplitude-display', () => {
     assertThat(stats.qubitDensityMatrix(Infinity, 1)).isApproximatelyEqualTo(Matrix.square(0.5, 0, 0, 0.5));
     assertThat(stats.qubitDensityMatrix(Infinity, 2)).isApproximatelyEqualTo(Matrix.square(0.5, 0.5, 0.5, 0.5));
     assertThat(stats.customStatsForSlot(5, 0)).isApproximatelyEqualTo({
-        probabilities: undefined,
-        superposition: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
+        quality: 1,
+        ket: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
+        incoherentKet: Matrix.square(1, 0, 0, 1).times(Math.sqrt(0.5)),
         phaseLockIndex: 0
     });
 });
@@ -288,6 +289,147 @@ suite.testUsingWebGL('dynamic-phase-gradient-keeps-qubits-coherent', () => {
     for (let i = 0; i < 16; i++) {
         let [x, y, z] = stats.qubitDensityMatrix(Infinity, i).qubitDensityMatrixToBlochVector();
         let r = x*x + y*y + z*z;
-        assertThat(r).withInfo({i, x, y, z}).isApproximatelyEqualTo(1);
+        assertThat(r).withInfo({i, x, y, z}).isApproximatelyEqualTo(1, 0.00001);
     }
+});
+
+suite.testUsingWebGL('classical-swap-with-quantum-control-does-not-fire', () => {
+    // Swap should be disabled.
+    let c = circuit(`-M-X-S-
+                     -M---S-
+                     ---X-•-`, ['S', Gates.Special.SwapHalf]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 1)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And swap should not have fired.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL('classical-swap-with-classical-control-does-fire', () => {
+    // Swap should be disabled.
+    let c = circuit(`-M-X-S-
+                     -M---S-
+                     -M-X-•-`, ['S', Gates.Special.SwapHalf]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 1)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And swap should not have fired.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL('classical-bit-rotate-with-quantum-control-does-not-fire', () => {
+    // Bit rotation should be disabled.
+    let c = circuit(`-M-X-<-
+                     -M---/-
+                     ---X-•-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isNotEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And bit rotation should not fire.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL('classical-bit-rotate-with-classical-control-does-fire', () => {
+    // Bit rotation should be disabled.
+    let c = circuit(`-M-X-<-
+                     -M---/-
+                     -M-X-•-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+    assertThat(c.gateAtLocIsDisabledReason(5, 0)).isEqualTo(undefined);
+    assertThat(c.gateAtLocIsDisabledReason(5, 2)).isEqualTo(undefined);
+
+    // And bit rotation should not fire.
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.qubitDensityMatrix(Infinity, 0)).isEqualTo(Matrix.square(1, 0, 0, 0));
+    assertThat(stats.qubitDensityMatrix(Infinity, 1)).isEqualTo(Matrix.square(0, 0, 0, 1));
+    assertThat(stats.qubitDensityMatrix(Infinity, 2)).isEqualTo(Matrix.square(0, 0, 0, 1));
+});
+
+suite.testUsingWebGL("initial_states", () => {
+    let circuit = Serializer.fromJson(CircuitDefinition, {
+        init: [0, 1, '+', '-', 'i', '-i'],
+        cols: [],
+    });
+    let stats = CircuitStats.fromCircuitAtTime(circuit, 0);
+    assertThat(stats.qubitDensityMatrix(9, 0).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, 0, -1]);
+    assertThat(stats.qubitDensityMatrix(9, 1).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, 0, +1]);
+    assertThat(stats.qubitDensityMatrix(9, 2).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([-1, 0, 0]);
+    assertThat(stats.qubitDensityMatrix(9, 3).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([+1, 0, 0]);
+    assertThat(stats.qubitDensityMatrix(9, 4).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, +1, 0]);
+    assertThat(stats.qubitDensityMatrix(9, 5).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo([0, -1, 0]);
+});
+
+suite.testUsingWebGL("distillation", () => {
+    let c = circuit(
+        `
+        -X-X--X-X--X-X--X-X-------X-X--X-X-------X-X------------HTH-0-
+        -X-X--X-X--X-X-------X-X--X-X-------X-X-------X-X-------HTH-0-
+        -X-X--X-X-------X-X--X-X-------X-X--X-X------------X-X--HTH-0-
+        -X-X-------X-X--X-X--X-X-----------------X-X--X-X--X-X--HTH-0-
+        -X-X----------------------X-X--X-X--X-X--X-X--X-X--X-X--------
+        -#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--#T]--------
+        `,
+        [']', Gates.Detectors.XDetectControlClear],
+        ['0', Gates.PostSelectionGates.PostSelectOff],
+        ['#', Gates.Controls.XControl],
+        ['T', Gates.OtherZ.Z4]);
+    for (let i = 0; i < 5; i++) {
+        let stats = CircuitStats.fromCircuitAtTime(c, 0);
+        assertThat(stats.qubitDensityMatrix(Infinity, 4).qubitDensityMatrixToBlochVector()).isApproximatelyEqualTo(
+            [0, Math.sqrt(0.5), -Math.sqrt(0.5)]);
+        assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(1, 0.001);
+    }
+});
+
+suite.testUsingWebGL("toReadableJson", () => {
+    let c = circuit(
+        `
+        --%D
+        H@/-
+        `,
+        ['%', Gates.Displays.ProbabilityDisplayFamily],
+        ['D', Gates.Detectors.ZDetector]
+    );
+    let stats = CircuitStats.fromCircuitAtTime(c, 0.5);
+    let json = stats.toReadableJson();
+    assertThat(json).isApproximatelyEqualTo({
+        circuit: Serializer.toJson(c),
+        output_amplitudes: [
+            {r: Math.sqrt(0.5), i: 0},
+            {r: 0, i: 0},
+            {r: Math.sqrt(0.5), i: 0},
+            {r: 0, i: 0},
+        ],
+        time_parameter: 0.5,
+        chance_of_surviving_to_each_column: [1, 1, 1, 1],
+        computed_bloch_vectors_by_column_then_wire: [
+            [null, null],
+            [null, {x: +1, y: 0, z: 0}],
+            [null, null],
+            [null, null],
+            [{x: 0, y: 0, z: +1}, {x: +1, y: 0, z: 0}],
+        ],
+        displays: [
+            {
+                location: {wire: 0, column: 2},
+                type: {serialized_id: "Chance2", name: "Probability Display"},
+                data: {probabilities: [0.5, 0, 0.5, 0]}
+            },
+            {
+                location: {wire: 0, column: 3},
+                type: {serialized_id: "ZDetector", name: "Z Axis Detector"},
+                data: false
+            }
+        ]
+    })
 });

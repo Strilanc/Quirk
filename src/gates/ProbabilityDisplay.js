@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {Complex} from "src/math/Complex.js"
 import {Config} from "src/Config.js"
 import {Gate} from "src/circuit/Gate.js"
 import {GatePainting} from "src/draw/GatePainting.js"
@@ -20,6 +21,7 @@ import {MathPainter} from "src/draw/MathPainter.js"
 import {Matrix} from "src/math/Matrix.js"
 import {Point} from "src/math/Point.js"
 import {Rect} from "src/math/Rect.js"
+import {Seq} from "src/base/Seq.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Util} from "src/base/Util.js"
 import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
@@ -33,11 +35,13 @@ import {WglTexturePool} from "src/webgl/WglTexturePool.js"
 import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
 
 /**
- * @param {!WglTexture} ketTexture
- * @param {!WglTexture} controlTexture
- * @param {!int} rangeOffset
- * @param {!int} rangeLength
- * @returns {!WglTexture}
+ * Derives conditional computational basis measurement probabilities from the state vector.
+ *
+ * @param {!WglTexture} ketTexture The texture storing the wavefunction.
+ * @param {!WglTexture} controlTexture A precomputed texture storing a control mask set to 1 for satisfying states.
+ * @param {!int} rangeOffset Which wire the probability display starts on.
+ * @param {!int} rangeLength How many wires the probability display covers.
+ * @returns {!WglTexture} Texture storing the probabilities. Not normalized.
  */
 function probabilityStatTexture(ketTexture, controlTexture, rangeOffset, rangeLength) {
     let trader = new WglTextureTrader(ketTexture);
@@ -84,20 +88,37 @@ const AMPLITUDES_TO_PROBABILITIES_SHADER = makePseudoShaderWithInputsAndOutputAn
  */
 function probabilityPixelsToColumnVector(pixels, span) {
     let n = 1 << span;
+    // CAUTION: pixels may be longer than n due to the length rounding up to a multiple of 4.
+
     let unity = 0;
-    for (let e of pixels) {
-        unity += e;
+    for (let i = 0; i < n; i++) {
+        unity += pixels[i];
     }
     if (isNaN(unity) || unity < 0.000001) {
         return Matrix.zero(1, n).times(NaN);
     }
     let buf = new Float32Array(n*2);
-    for (let i = 0; i <  n; i++) {
+    for (let i = 0; i < n; i++) {
         buf[i*2] = pixels[i] / unity;
     }
     return new Matrix(1, n, buf);
 }
 
+/**
+ * Produces the exported simulator data associated with a probability display.
+ * @param {!Matrix} data
+ * @returns {!{probabilities: !float[]}}
+ */
+function probabilityDataToJson(data) {
+    return {
+        probabilities: Seq.range(data.height()).map(k => Complex.realPartOf(data.cell(0, k))).toArray()
+    };
+}
+
+/**
+ * @param {!GateDrawParams} args
+ * @private
+ */
 function _paintMultiProbabilityDisplay_grid(args) {
     let {painter, rect: {x, y, w, h}} = args;
     let n = 1 << args.gate.height;
@@ -186,7 +207,7 @@ function _paintMultiProbabilityDisplay_tooltips(args) {
                 painter,
                 x + w,
                 y + k * d,
-                `Chance of |${Util.bin(k, args.gate.height)}⟩ if measured`,
+                `Chance of |${Util.bin(k, args.gate.height)}⟩ (decimal ${k}) if measured`,
                 'raw: ' + (p * 100).toFixed(4) + "%",
                 'log: ' + (Math.log10(p) * 10).toFixed(1) + " dB");
         }
@@ -258,6 +279,7 @@ function multiChanceGateMaker(span, builder) {
         setStatTexturesMaker(ctx =>
             probabilityStatTexture(ctx.stateTrader.currentTexture, ctx.controlsTexture, ctx.row, span)).
         setStatPixelDataPostProcessor(pixels => probabilityPixelsToColumnVector(pixels, span)).
+        setProcessedStatsToJsonFunc(probabilityDataToJson).
         setDrawer(GatePainting.makeDisplayDrawer(paintMultiProbabilityDisplay));
 }
 
@@ -288,5 +310,6 @@ export {
     ProbabilityDisplayFamily,
     probabilityStatTexture,
     probabilityPixelsToColumnVector,
-    amplitudesToProbabilities
+    amplitudesToProbabilities,
+    probabilityDataToJson,
 };

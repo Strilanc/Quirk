@@ -70,35 +70,36 @@ class GateColumn {
     }
 
     /**
-     * @returns {!(!(![!int, !int])[])}
+     * @param {!int} inputMeasureMask
+     * @param {!int} ignoreMask
+     * @returns {!boolean}
      */
-    swapPairs() {
-        let swapIndices = Seq.
-            range(this.gates.length).
-            filter(i => this.gates[i] === Gates.Special.SwapHalf).
-            toArray();
-        if (swapIndices.length !== 2) {
-            return [];
-        }
-        return [swapIndices];
+    hasControl(inputMeasureMask=0, ignoreMask=0) {
+        return this.hasCoherentControl(inputMeasureMask | ignoreMask) ||
+            this.hasMeasuredControl(inputMeasureMask & ~ignoreMask);
     }
 
-    hasControl(inputMeasureMask) {
-        return this.hasCoherentControl(inputMeasureMask) || this.hasMeasuredControl(inputMeasureMask);
-    }
-
-    hasCoherentControl(inputMeasureMask) {
+    /**
+     * @param {!int} inputMeasureMask
+     * @returns {!boolean}
+     */
+    hasCoherentControl(inputMeasureMask=0) {
         for (let i = 0; i < this.gates.length; i++) {
             if ((inputMeasureMask & (1 << i)) === 0 &&
                     this.gates[i] !== undefined &&
-                    this.gates[i].isControl()) {
+                    this.gates[i].isControl() &&
+                    !this.gates[i].isClassicalControl()) {
                 return true;
             }
         }
         return false;
     }
 
-    hasMeasuredControl(inputMeasureMask) {
+    /**
+     * @param {!int} inputMeasureMask
+     * @returns {!boolean}
+     */
+    hasMeasuredControl(inputMeasureMask=0) {
         for (let i = 0; i < this.gates.length; i++) {
             if ((inputMeasureMask & (1 << i)) !== 0 &&
                     this.gates[i] !== undefined &&
@@ -108,6 +109,21 @@ class GateColumn {
             }
         }
         return false;
+    }
+
+    /**
+     * @returns {!int}
+     */
+    controlMask() {
+        let mask = 0;
+        for (let i = 0; i < this.gates.length; i++) {
+            if (this.gates[i] !== undefined &&
+                    this.gates[i].definitelyHasNoEffect() &&
+                    this.gates[i].isControl()) {
+                mask |= 1 << i;
+            }
+        }
+        return mask;
     }
 
     /**
@@ -170,24 +186,41 @@ class GateColumn {
         let g = this.gates[row];
         let mask = ((1 << g.height) - 1) << row;
         let maskMeasured = mask & inputMeasureMask;
-        if (maskMeasured !== 0) {
+        if (maskMeasured !== 0 && g.knownBitPermutationFunc === undefined) {
             // Don't try to superpose measured qubits.
             if (g.effectMightCreateSuperpositions()) {
                 return "no\nremix\n(sorry)";
             }
 
+            // Don't try to mix measured and coherent qubits, or coherently mix measured qubits.
             if (g.effectMightPermutesStates()) {
-                // Only permutations that respect bit boundaries can be performed on mixed qubits.
-                if (maskMeasured !== mask && g.knownBitPermutationFunc === undefined) {
-                    return "no\nremix\n(sorry)";
-                }
-
-                // Permutations affecting classical states can't have quantum controls.
-                if (this.hasCoherentControl(inputMeasureMask)) {
+                if (maskMeasured !== mask || this.hasCoherentControl(inputMeasureMask)) {
                     return "no\nremix\n(sorry)";
                 }
             }
         }
+
+        // Check permutation subgroups for bad mixing of measured and coherent qubits.
+        if (g.knownBitPermutationGroupMasks !== undefined) {
+            for (let maskGroup of g.knownBitPermutationGroupMasks) {
+                let isSingleton = ((maskGroup - 1) & maskGroup) === 0;
+                if (isSingleton) {
+                    continue;
+                }
+
+                maskGroup <<= row;
+                let hasCoherentQubits = (maskGroup & inputMeasureMask) !== maskGroup;
+                let hasMeasuredQubits = (maskGroup & inputMeasureMask) !== 0;
+                let coherentControl = this.hasCoherentControl(inputMeasureMask);
+                let controlled = this.hasControl(inputMeasureMask);
+                let coherentControlledMixingOfMeasured = hasMeasuredQubits && coherentControl;
+                let controlledMixingOfCoherentAndMeasured = hasCoherentQubits && hasMeasuredQubits && controlled;
+                if (coherentControlledMixingOfMeasured || controlledMixingOfCoherentAndMeasured) {
+                    return "no\nremix\n(sorry)";
+                }
+            }
+        }
+
         return undefined;
     }
 
@@ -393,8 +426,9 @@ class GateColumn {
         // without getting the wrong answer, at least).
         let hasSingleResult = gate === Gates.PostSelectionGates.PostSelectOn
             || gate === Gates.PostSelectionGates.PostSelectOff
-            || gate === Gates.Detector;
-        if (!this.hasControl() && hasSingleResult) {
+            || gate === Gates.Detectors.ZDetector
+            || gate === Gates.Detectors.ZDetectControlClear;
+        if (!this.hasControl(0, 1 << row) && hasSingleResult) {
             state.measureMask &= ~(1<<row);
             return;
         }

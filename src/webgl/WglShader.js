@@ -150,7 +150,9 @@ class WglCompiledShader {
         gl.attachShader(program, glFragmentShader);
         gl.linkProgram(program);
 
-        let warnings = gl.getProgramInfoLog(program).trim();
+        // Note: MDN says the result of getProgramInfoLog is always a DOMString, but a user reported an
+        // error where it returned null. So now we fallback to the empty string when getting a falsy value.
+        let warnings = (gl.getProgramInfoLog(program) || '').trim();
         if (warnings !== '' &&
                 warnings !== '\0' && // [happened in Ubuntu with NVIDIA GK107GL]
                 Config.SUPPRESSED_GLSL_WARNING_PATTERNS.every(e => !e.test(warnings))) {
@@ -219,8 +221,16 @@ class WglCompiledShader {
 
         let info = gl.getShaderInfoLog(shader);
         if (info !== '') {
-            console.warn("WebGLShader: gl.getShaderInfoLog() wasn't empty: " + gl.getShaderInfoLog(shader));
-            console.warn("Source code was: " + sourceCode);
+            let ignored = false;
+            for (let term of Config.IGNORED_WEBGL_INFO_TERMS) {
+                if (info.indexOf(term)) {
+                    ignored = true;
+                }
+            }
+            if (!ignored) {
+                console.warn("WebGLShader: gl.getShaderInfoLog() wasn't empty: " + gl.getShaderInfoLog(shader));
+                console.warn("Source code was: " + sourceCode);
+            }
         }
 
         if (gl.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS) === false) {

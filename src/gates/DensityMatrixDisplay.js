@@ -144,7 +144,7 @@ function densityPixelsToMatrix(pixels, circuitDefinition, col, row) {
     }
 
     let isMeasuredMask = circuitDefinition.colIsMeasuredMask(col) >> row;
-    return decohereMeasuredBitsInDensityMatrix(new Matrix(d, d, pixels), isMeasuredMask);
+    return decohereMeasuredBitsInDensityMatrix(new Matrix(d, d, pixels), isMeasuredMask).transpose();
 }
 
 /**
@@ -171,7 +171,7 @@ function singleDensityMatrixDisplayMaker(builder) {
         markAsDrawerNeedsSingleQubitDensityStats().
         setDrawer(GatePainting.makeDisplayDrawer(args => {
             let {col, row} = args.positionInCircuit;
-            let ρ = args.stats.qubitDensityMatrix(col, row);
+            let ρ = args.stats.qubitDensityMatrix(col, row).transpose();
             MathPainter.paintDensityMatrix(args.painter, ρ, args.rect, args.focusPoints);
         }));
 }
@@ -186,6 +186,9 @@ function largeDensityMatrixDisplayMaker(span, builder) {
         setSerializedId("Density" + span).
         setWidth(span).
         setDrawer(DENSITY_MATRIX_DRAWER_FROM_CUSTOM_STATS).
+        setProcessedStatsToJsonFunc(data => {
+            return {density_matrix: data.toReadableJson()};
+        }).
         setStatTexturesMaker(ctx => densityDisplayStatTexture(
             ctx.stateTrader.currentTexture, ctx.wireCount, ctx.controls, ctx.row, span)).
         setStatPixelDataPostProcessor(densityPixelsToMatrix);

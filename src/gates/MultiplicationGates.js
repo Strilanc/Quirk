@@ -62,6 +62,7 @@ MultiplicationGates.TimesAFamily = Gate.buildFamily(1, 16, (span, builder) => bu
     setKnownEffectToParametrizedPermutation((x, a) => modularMultiply(x, a, 1<<span)));
 
 MultiplicationGates.TimesAInverseFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(MultiplicationGates.TimesAFamily).
     setSerializedId("/A" + span).
     setSymbol("×A^-1").
     setTitle("Inverse Multiplication Gate").

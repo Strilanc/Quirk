@@ -14,6 +14,7 @@
 
 import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
 import {CircuitShaders} from "src/circuit/CircuitShaders.js"
+import {DetailedError} from "src/base/DetailedError.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {GateBuilder} from "src/circuit/Gate.js"
@@ -83,6 +84,8 @@ function advanceStateWithCircuit(ctx, circuitDefinition, collectStats) {
         }
     };
 
+    circuitDefinition.applyInitialStateOperations(ctx);
+
     // Apply each column in the circuit.
     for (let col = 0; col < circuitDefinition.columns.length; col++) {
         _advanceStateWithCircuitDefinitionColumn(
@@ -130,6 +133,7 @@ function _extractStateStatsNeededByCircuitColumn(
             circuitDefinition.numWires,
             ctx.controls,
             ctx.controlsTexture,
+            ctx.controls,
             ctx.stateTrader,
             Util.mergeMaps(
                 ctx.customContextFromGates,
@@ -182,6 +186,7 @@ function _advanceStateWithCircuitDefinitionColumn(
         ctx.wireCount,
         ctx.controls,
         ctx.controlsTexture,
+        controls,
         trader,
         colContext);
     let mainCtx = new CircuitEvalContext(
@@ -190,6 +195,7 @@ function _advanceStateWithCircuitDefinitionColumn(
         ctx.wireCount,
         controls,
         controlTex,
+        controls,
         trader,
         colContext);
 

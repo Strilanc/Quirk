@@ -19,6 +19,7 @@ IncrementGates.IncrementFamily = Gate.buildFamily(1, 16, (span, builder) => buil
     setKnownEffectToPermutation(t => (t + 1) & ((1 << span) - 1)));
 
 IncrementGates.DecrementFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(IncrementGates.IncrementFamily).
     setSerializedId("dec" + span).
     setSymbol("−1").
     setTitle("Decrement Gate").

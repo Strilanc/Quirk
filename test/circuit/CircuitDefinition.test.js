@@ -401,7 +401,11 @@ suite.test("minimumRequiredColCount", () => {
 
 suite.test("colIsMeasuredMask", () => {
     let assertAbout = (diagram, ...extraGates) => {
-        let c = circuit(diagram, ['D', Gates.Detector], ...extraGates);
+        let c = circuit(
+            diagram,
+            ['D', Gates.Detectors.ZDetector],
+            ['R', Gates.Detectors.ZDetectControlClear],
+            ...extraGates);
         return assertThat(Seq.range(c.columns.length + 3).map(i => c.colIsMeasuredMask(i-1)).toArray());
     };
 
@@ -421,6 +425,10 @@ suite.test("colIsMeasuredMask", () => {
     assertAbout(`M!`).isEqualTo([0, 0, 1, 0, 0]);
     // Detector clears.
     assertAbout(`MD`).isEqualTo([0, 0, 1, 0, 0]);
+    // Detect-Control-Reset clears.
+    assertAbout(`MR`).isEqualTo([0, 0, 1, 0, 0]);
+    assertAbout(`MR
+                 -X`).isEqualTo([0, 0, 1, 0, 0]);
     // Controlled detector doesn't clear.
     assertAbout(`MD
                  -●`).isEqualTo([0, 0, 1, 1, 1]);
@@ -575,14 +583,17 @@ suite.test("colControls", () => {
     assertThat(c.colControls(17)).isEqualTo(Controls.bit(0, true));
     assertThat(c.colControls(102)).isEqualTo(Controls.NONE);
 
-    let c2 = circuit(`--●○○-
-                      -X○●s-
-                      ---s●-`);
+    let c2 = circuit(`--●○○-P-
+                      -X○●s-P-
+                      ---s●-X-`, ['P', Gates.Controls.ZParityControl]);
     assertThat(c2.colControls(0)).isEqualTo(Controls.NONE);
     assertThat(c2.colControls(1)).isEqualTo(Controls.NONE);
     assertThat(c2.colControls(2)).isEqualTo(new Controls(3, 1));
     assertThat(c2.colControls(3)).isEqualTo(new Controls(3, 2));
     assertThat(c2.colControls(4)).isEqualTo(new Controls(5, 4));
+    assertThat(c2.colControls(5)).isEqualTo(Controls.NONE);
+    assertThat(c2.colControls(6)).isEqualTo(new Controls(1, 1, 3));
+    assertThat(c2.colControls(7)).isEqualTo(Controls.NONE);
 });
 
 suite.test("locIsControlWireStarter", () => {
@@ -658,26 +669,26 @@ suite.test("locStartsDoubleControlWire", () => {
     assertFalse(c.locStartsDoubleControlWire(new Point(4, 1)));
 });
 
-suite.test("colHasEnabledSwapGate", () => {
+suite.test("colGetEnabledSwapGate", () => {
     let c = circuit(`-s-●-s-●-●
                      --ss---sMs
                      --X-ss-s-s
                      ----s-----
                      -----s----`);
 
-    assertFalse(c.colHasEnabledSwapGate(-1));
-    assertFalse(c.colHasEnabledSwapGate(0));
-    assertFalse(c.colHasEnabledSwapGate(1));
-    assertFalse(c.colHasEnabledSwapGate(2));
-    assertFalse(c.colHasEnabledSwapGate(3));
-    assertFalse(c.colHasEnabledSwapGate(5));
-    assertFalse(c.colHasEnabledSwapGate(6));
-    assertFalse(c.colHasEnabledSwapGate(8));
-    assertFalse(c.colHasEnabledSwapGate(9));
-    assertFalse(c.colHasEnabledSwapGate(10));
+    assertThat(c.colGetEnabledSwapGate(-1)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(0)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(1)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(2)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(3)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(5)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(6)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(8)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(9)).isEqualTo(undefined);
+    assertThat(c.colGetEnabledSwapGate(10)).isEqualTo(undefined);
 
-    assertTrue(c.colHasEnabledSwapGate(4));
-    assertTrue(c.colHasEnabledSwapGate(7));
+    assertThat(c.colGetEnabledSwapGate(4)).isEqualTo([2, 3]);
+    assertThat(c.colGetEnabledSwapGate(7)).isEqualTo([1, 2]);
 });
 
 suite.test("locHasControllableGate", () => {
@@ -874,17 +885,91 @@ suite.test("gateAtLocIsDisabledReason", () => {
                 -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
     good(1, 1, `M●-
                 M<-
-                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
-    good(1, 1, `M●-
-                M<-
                 M/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
 
+    bad(1, 1, `M●-
+               M<-
+               -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
     bad(1, 1, `-●-
                M<-
                -/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
     bad(1, 1, `-●-
                M<-
                M/-`, ['<', Gates.CycleBitsGates.CycleBitsFamily]);
+
+    // Detectors.
+    bad(1, 0, `MD`, ['D', Gates.Detectors.XDetectControlClear]);
+    bad(1, 0, `MD`, ['D', Gates.Detectors.YDetectControlClear]);
+    good(1, 0, `MD`, ['D', Gates.Detectors.ZDetectControlClear]);
+    bad(1, 0, `MR`, ['R', Gates.Detectors.XDetectControlClear]);
+    bad(1, 0, `MR`, ['R', Gates.Detectors.YDetectControlClear]);
+    good(1, 0, `MR`, ['R', Gates.Detectors.ZDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.XDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.YDetectControlClear]);
+    good(3, 1, `---]-
+                -M-X-`, [']', Gates.Detectors.ZDetectControlClear]);
+
+    // Permutation sub-groups.
+    good(2, 0, `--P-
+                --/-
+                --/-
+                --/-
+                H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                --/-
+                --/-
+                -M/-
+                H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `--P-
+                --/-
+                --/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                --/-
+                --/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `--P-
+                -M/-
+                -M/-
+                --/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    good(2, 0, `-MP-
+                -M/-
+                -M/-
+                -M/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               -M/-
+               --/-
+               H-●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               --/-
+               --/-
+               HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+
+    // Non-trivial subgroup.
+    good(2, 0, `--P-
+                -M/-
+                -M/-
+                --/-
+                -M/-
+                --/-
+                --/-
+                HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
+    bad(2, 0, `--P-
+               -M/-
+               --/-
+               -M/-
+               -M/-
+               --/-
+               --/-
+               HM●-`, ['P', Gates.InterleaveBitsGates.InterleaveBitsGateFamily]);
 });
 
 suite.test("gateAtLocIsDisabledReason_controls", () => {

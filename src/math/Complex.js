@@ -17,7 +17,9 @@ import {Format, UNICODE_FRACTIONS} from "src/base/Format.js"
 import {Util} from "src/base/Util.js"
 import {parseFormula} from "src/math/FormulaParser.js"
 
-const PARSE_COMPLEX_TOKEN_MAP = new Map();
+const PARSE_COMPLEX_TOKEN_MAP_ALL = new Map();
+const PARSE_COMPLEX_TOKEN_MAP_RAD = new Map();
+const PARSE_COMPLEX_TOKEN_MAP_DEG = new Map();
 
 /**
  * Represents a complex number like `a + b i`, where `a` and `b` are real values and `i` is the square root of -1.
@@ -184,7 +186,7 @@ class Complex {
      * @returns {!Complex}
      */
     static parse(text) {
-        return Complex.from(parseFormula(text, PARSE_COMPLEX_TOKEN_MAP));
+        return Complex.from(parseFormula(text, PARSE_COMPLEX_TOKEN_MAP_DEG));
     }
 
     /**
@@ -313,6 +315,29 @@ class Complex {
     }
 
     /**
+     * @returns {!Complex}
+     */
+    cos() {
+        let z = this.times(Complex.I);
+        return z.exp().plus(z.neg().exp()).times(0.5);
+    }
+
+    /**
+     * @returns {!Complex}
+     */
+    sin() {
+        let z = this.times(Complex.I);
+        return z.exp().minus(z.neg().exp()).dividedBy(new Complex(0, 2));
+    }
+
+    /**
+     * @returns {!Complex}
+     */
+    tan() {
+        return this.sin().dividedBy(this.cos());
+    }
+
+    /**
      * Returns the natural logarithm of the receiving complex value.
      * @returns {!Complex}
      */
@@ -381,37 +406,50 @@ Complex.ONE = new Complex(1, 0);
  */
 Complex.I = new Complex(0, 1);
 
-PARSE_COMPLEX_TOKEN_MAP.set("i", Complex.I);
-PARSE_COMPLEX_TOKEN_MAP.set("e", Complex.from(Math.E));
-PARSE_COMPLEX_TOKEN_MAP.set("pi", Complex.from(Math.PI));
-PARSE_COMPLEX_TOKEN_MAP.set("(", "(");
-PARSE_COMPLEX_TOKEN_MAP.set(")", ")");
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("i", Complex.I);
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("e", Complex.from(Math.E));
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("pi", Complex.from(Math.PI));
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("(", "(");
+PARSE_COMPLEX_TOKEN_MAP_ALL.set(")", ")");
 for (let {character, value} of UNICODE_FRACTIONS) {
     //noinspection JSUnusedAssignment
-    PARSE_COMPLEX_TOKEN_MAP.set(character, value);
+    PARSE_COMPLEX_TOKEN_MAP_ALL.set(character, value);
 }
-PARSE_COMPLEX_TOKEN_MAP.set("sqrt", {
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("sqrt", {
     unary_action: e => Complex.from(e).raisedTo(0.5),
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("exp", {
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("exp", {
     unary_action: e => Complex.from(e).exp(),
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("ln", {
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("ln", {
     unary_action: e => Complex.from(e).ln(),
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("cos", {
-    unary_action: e => {
-        let z = Complex.from(e).times(new Complex(0, Math.PI/180));
-        return z.exp().plus(z.neg().exp()).times(0.5);
-    },
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("^", {
+    binary_action: (a, b) => Complex.from(a).raisedTo(b),
+    priority: 3});
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("*", {
+    binary_action: (a, b) => Complex.from(a).times(b),
+    priority: 2});
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("/", {
+    binary_action: (a, b) => Complex.from(a).dividedBy(b),
+    priority: 2});
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("-", {
+    unary_action: e => Complex.from(e).neg(),
+    binary_action: (a, b) => Complex.from(a).minus(b),
+    priority: 1});
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("+", {
+    unary_action: e => e,
+    binary_action: (a, b) => Complex.from(a).plus(b),
+    priority: 1});
+PARSE_COMPLEX_TOKEN_MAP_ALL.set("√", PARSE_COMPLEX_TOKEN_MAP_ALL.get("sqrt"));
+
+PARSE_COMPLEX_TOKEN_MAP_DEG.set("cos", {
+    unary_action: e => new Complex(Math.PI/180, 0).times(e).cos(),
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("sin", {
-    unary_action: e => {
-        let z = Complex.from(e).times(new Complex(0, Math.PI/180));
-        return z.exp().minus(z.neg().exp()).dividedBy(new Complex(0, 2));
-    },
+PARSE_COMPLEX_TOKEN_MAP_DEG.set("sin", {
+    unary_action: e => new Complex(Math.PI/180, 0).times(e).sin(),
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("asin", {
+PARSE_COMPLEX_TOKEN_MAP_DEG.set("asin", {
     unary_action: e => {
         if (Complex.imagPartOf(e) !== 0) {
             throw new DetailedError("asin input out of range", {e});
@@ -419,7 +457,7 @@ PARSE_COMPLEX_TOKEN_MAP.set("asin", {
         return Complex.from(Math.asin(Complex.realPartOf(e))*180/Math.PI);
     },
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("acos", {
+PARSE_COMPLEX_TOKEN_MAP_DEG.set("acos", {
     unary_action: e => {
         if (Complex.imagPartOf(e) !== 0) {
             throw new DetailedError("acos input out of range", {e});
@@ -427,25 +465,46 @@ PARSE_COMPLEX_TOKEN_MAP.set("acos", {
         return Complex.from(Math.acos(Complex.realPartOf(e))*180/Math.PI);
     },
     priority: 4});
-PARSE_COMPLEX_TOKEN_MAP.set("^", {
-    binary_action: (a, b) => Complex.from(a).raisedTo(b),
-    priority: 3});
-PARSE_COMPLEX_TOKEN_MAP.set("*", {
-    binary_action: (a, b) => Complex.from(a).times(b),
-    priority: 2});
-PARSE_COMPLEX_TOKEN_MAP.set("/", {
-    binary_action: (a, b) => Complex.from(a).dividedBy(b),
-    priority: 2});
-PARSE_COMPLEX_TOKEN_MAP.set("-", {
-    unary_action: e => Complex.from(e).neg(),
-    binary_action: (a, b) => Complex.from(a).minus(b),
-    priority: 1});
-PARSE_COMPLEX_TOKEN_MAP.set("+", {
-    unary_action: e => e,
-    binary_action: (a, b) => Complex.from(a).plus(b),
-    priority: 1});
-PARSE_COMPLEX_TOKEN_MAP.set("√", PARSE_COMPLEX_TOKEN_MAP.get("sqrt"));
-PARSE_COMPLEX_TOKEN_MAP.set("arccos", PARSE_COMPLEX_TOKEN_MAP.get("acos"));
-PARSE_COMPLEX_TOKEN_MAP.set("arcsin", PARSE_COMPLEX_TOKEN_MAP.get("asin"));
+PARSE_COMPLEX_TOKEN_MAP_DEG.set("arccos", PARSE_COMPLEX_TOKEN_MAP_DEG.get("acos"));
+PARSE_COMPLEX_TOKEN_MAP_DEG.set("arcsin", PARSE_COMPLEX_TOKEN_MAP_DEG.get("asin"));
 
-export {Complex}
+PARSE_COMPLEX_TOKEN_MAP_RAD.set("cos", {
+    unary_action: e => Complex.from(e).cos(),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP_RAD.set("sin", {
+    unary_action: e => Complex.from(e).sin(),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP_RAD.set("tan", {
+    unary_action: e => Complex.from(e).tan(),
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP_RAD.set("asin", {
+    unary_action: e => {
+        if (Complex.imagPartOf(e) !== 0) {
+            throw new DetailedError("asin input out of range", {e});
+        }
+        return Complex.from(Math.asin(Complex.realPartOf(e)));
+    },
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP_RAD.set("acos", {
+    unary_action: e => {
+        if (Complex.imagPartOf(e) !== 0) {
+            throw new DetailedError("acos input out of range", {e});
+        }
+        return Complex.from(Math.acos(Complex.realPartOf(e)));
+    },
+    priority: 4});
+PARSE_COMPLEX_TOKEN_MAP_RAD.set("atan", {
+    unary_action: e => {
+        if (Complex.imagPartOf(e) !== 0) {
+            throw new DetailedError("atan input out of range", {e});
+        }
+        return Complex.from(Math.atan(Complex.realPartOf(e)));
+    },
+    priority: 4});
+
+for (let [k, v] of PARSE_COMPLEX_TOKEN_MAP_ALL.entries()) {
+    PARSE_COMPLEX_TOKEN_MAP_DEG.set(k, v);
+    PARSE_COMPLEX_TOKEN_MAP_RAD.set(k, v);
+}
+
+export {Complex, PARSE_COMPLEX_TOKEN_MAP_DEG, PARSE_COMPLEX_TOKEN_MAP_RAD}

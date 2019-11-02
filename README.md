@@ -1,7 +1,6 @@
 # <a href="http://algassert.com/quirk">Quirk <img src="doc/favicon.ico" alt="Icon" title="Icon" /></a>
 
 [![Build Status](https://travis-ci.org/Strilanc/Quirk.svg?branch=master)](https://travis-ci.org/Strilanc/Quirk)
-[![Code Climate](https://codeclimate.com/github/Strilanc/Quirk/badges/gpa.svg)](https://codeclimate.com/github/Strilanc/Quirk)
 
 Quirk is a toy quantum circuit simulator, intended to help people in learning about quantum computing.
 
@@ -78,3 +77,7 @@ If you want to modify Quirk, this is how you get the code and turn your changes 
     `firefox out/quirk.html`
 
 7. Copy `out/quirk.html` to wherever you want.
+
+# Disclaimer
+
+Quirk is not an official Google product.

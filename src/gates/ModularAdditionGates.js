@@ -33,16 +33,8 @@ const MODULAR_ADDITION_SHADER = ketShaderPermute(
         }
         float d = read_input_A();
         d *= factor;
-        d = mod(d, r);
-        float result = mod(out_id + r - d, r);
-
-        // Despite sanity, I consistently get result=33 instead of result=0 when out_id=0, d=0, r=33.
-        // HACK: Fix it by hand.
-        if (result >= r) {
-            result -= r;
-        }
-
-        return result;
+        d = floor(mod(d + 0.5, r));
+        return floor(mod(out_id + r - d + 0.5, r));
     `);
 
 ModularAdditionGates.PlusAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
@@ -58,6 +50,7 @@ ModularAdditionGates.PlusAModRFamily = Gate.buildFamily(1, 16, (span, builder) =
     setKnownEffectToParametrizedPermutation((t, a, r) => t < r ? (t + a) % r : t));
 
 ModularAdditionGates.MinusAModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularAdditionGates.PlusAModRFamily).
     setSerializedId("-AmodR" + span).
     setSymbol("−A\nmod R").
     setTitle("Modular Subtraction Gate").

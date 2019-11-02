@@ -55,6 +55,7 @@ PhaseGradientGates.PhaseGradientFamily = Gate.buildFamily(1, 16, (span, builder)
     setKnownEffectToPhaser(k => k / (2 << span)));
 
 PhaseGradientGates.PhaseDegradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(PhaseGradientGates.PhaseGradientFamily).
     setSerializedId("PhaseUngradient" + span).
     setSymbol("Grad^-½").
     setTitle("Inverse Half Gradient Gate").
@@ -79,6 +80,7 @@ PhaseGradientGates.DynamicPhaseGradientFamily = Gate.buildFamily(1, 16, (span, b
     setDrawer(GatePainting.makeCycleDrawer(-1, -1, 1, -Math.PI / 2)));
 
 PhaseGradientGates.DynamicPhaseDegradientFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(PhaseGradientGates.DynamicPhaseGradientFamily).
     setSerializedId("grad^-t" + span).
     setSymbol("Grad^-t").
     setTitle("Inverse Cycling Gradient Gate").

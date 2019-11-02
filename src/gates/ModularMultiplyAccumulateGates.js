@@ -36,7 +36,7 @@ const MODULAR_MULTIPLY_ACCUMULATE_SHADER = ketShaderPermute(
 
         float d = big_mul_mod(factor * a, b, r);
 
-        float in_id = mod(out_id - d, r);
+        float in_id = floor(mod(out_id - d + 0.5, r));
         if (in_id < 0.0) {
             in_id += r;
         }
@@ -60,6 +60,7 @@ ModularMultiplyAccumulateGates.PlusABModRFamily = Gate.buildFamily(1, 16, (span,
     setKnownEffectToParametrizedPermutation((t, a, b, r) => t < r ? (t + a*b) % r : t));
 
 ModularMultiplyAccumulateGates.MinusABModRFamily = Gate.buildFamily(1, 16, (span, builder) => builder.
+    setAlternateFromFamily(ModularMultiplyAccumulateGates.PlusABModRFamily).
     setSerializedId("-ABmodR" + span).
     setSymbol("−AB\nmod R").
     setTitle("Modular Multiply-Subtract Gate").

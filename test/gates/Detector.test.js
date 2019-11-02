@@ -24,7 +24,7 @@ const circuit = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Ma
     ...extras,
     ['-', undefined],
     ['●', Gates.Controls.Control],
-    ['D', Gates.Detector],
+    ['D', Gates.Detectors.ZDetector],
     ['X', Gates.HalfTurns.X],
     ['Z', Gates.HalfTurns.Z],
     ['H', Gates.HalfTurns.H],
@@ -87,4 +87,22 @@ suite.testUsingWebGL("collapsed-control-clicks", () => {
             assertThat(c.finalState).isApproximatelyEqualTo(Matrix.col(s, s, s, 0));
         }
     }
+});
+
+suite.testUsingWebGL("renormalizes", () => {
+    // Doesn't decrease survival probability.
+    let c = circuit(
+        '-]-D-]-D-]-D-]-',
+        [']', Gates.Detectors.XDetector],
+        ['0', Gates.PostSelectionGates.PostSelectOff]);
+    let stats = CircuitStats.fromCircuitAtTime(c, 0);
+    assertThat(stats.survivalRate(Infinity)).isApproximatelyEqualTo(1, 0.001);
+
+    // Renormalization doesn't increase survival probability.
+    let c2 = circuit(
+        '-]-0-D-]-D-]-D-]-',
+        [']', Gates.Detectors.XDetector],
+        ['0', Gates.PostSelectionGates.PostSelectOff]);
+    let stats2 = CircuitStats.fromCircuitAtTime(c2, 0);
+    assertThat(stats2.survivalRate(Infinity)).isApproximatelyEqualTo(0.5, 0.001);
 });

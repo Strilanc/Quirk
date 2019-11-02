@@ -18,7 +18,7 @@ import {CircuitShaders} from "src/circuit/CircuitShaders.js"
 import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
 import {Controls} from "src/circuit/Controls.js"
 import {DetailedError} from "src/base/DetailedError.js"
-import {Matrix} from "src/math/Matrix.js"
+import {Matrix, complexVectorToReadableJson} from "src/math/Matrix.js"
 import {Shaders} from "src/webgl/Shaders.js"
 import {Serializer} from "src/circuit/Serializer.js"
 import {Util} from "src/base/Util.js"
@@ -106,6 +106,52 @@ class CircuitStats {
             return Matrix.zero(2, 2).times(NaN);
         }
         return this._qubitDensities[col][wireIndex];
+    }
+
+    /**
+     * Converts the circuit stats into an exportable JSON object.
+     * @param {!boolean} includeOutputAmplitudes
+     * @returns {!object}
+     */
+    toReadableJson(includeOutputAmplitudes=true) {
+        let result = {
+            time_parameter: this.time,
+            circuit: Serializer.toJson(this.circuitDefinition),
+            chance_of_surviving_to_each_column: this._survivalRates,
+            computed_bloch_vectors_by_column_then_wire: this._qubitDensities.map(
+                col => col.map(singleQubitDensityMatrixToReadableJson)
+            ),
+            displays: this._customStatsToReadableJson()
+        };
+        if (includeOutputAmplitudes) {
+            result['output_amplitudes'] = complexVectorToReadableJson(this.finalState.getColumn(0));
+        }
+        return result;
+    }
+
+    _customStatsToReadableJson() {
+        let result = [];
+        for (let [key, data] of this._customStatsProcessed.entries()) {
+            let [col, row] = key.split(':');
+            row = parseInt(row);
+            col = parseInt(col);
+            let gate = this.circuitDefinition.columns[col].gates[row];
+            if (gate.processedStatsToJsonFunc !== undefined) {
+                data = gate.processedStatsToJsonFunc(data);
+            }
+            result.push({
+                location: {
+                    wire: row,
+                    column: col,
+                },
+                type: {
+                    serialized_id: gate.serializedId,
+                    name: gate.name,
+                },
+                data
+            });
+        }
+        return result;
     }
 
     /**
@@ -298,6 +344,7 @@ class CircuitStats {
                 numWires,
                 Controls.NONE,
                 controlTex,
+                Controls.NONE,
                 stateTrader,
                 new Map()),
             circuitDefinition,
@@ -339,6 +386,19 @@ class CircuitStats {
             outputSuperposition,
             customStatsProcessed);
     }
+}
+
+/**
+ * @param {!Matrix} matrix
+ */
+function singleQubitDensityMatrixToReadableJson(matrix) {
+    if (matrix.hasNaN()) {
+        return null;
+    }
+    let [x, y, z] = matrix.qubitDensityMatrixToBlochVector();
+    x *= -1;
+    z *= -1;
+    return {x, y, z};
 }
 
 CircuitStats.EMPTY = CircuitStats.withNanDataFromCircuitAtTime(CircuitDefinition.EMPTY, 0);

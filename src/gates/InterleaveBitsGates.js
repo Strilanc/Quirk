@@ -124,6 +124,7 @@ InterleaveBitsGates.InterleaveBitsGateFamily = Gate.buildFamily(4, 16, (span, bu
     setKnownEffectToBitPermutation(b => interleaveBit(b, span)));
 
 InterleaveBitsGates.DeinterleaveBitsGateFamily = Gate.buildFamily(4, 16, (span, builder) => builder.
+    setAlternateFromFamily(InterleaveBitsGates.InterleaveBitsGateFamily).
     setSerializedId("split" + span).
     setSymbol("Deinterleave").
     setTitle("Deinterleave").

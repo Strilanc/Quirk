@@ -90,6 +90,8 @@ function isApproximatelyEqualToHelper(subject, other, epsilon) {
         return true;
     } else if (subject instanceof Object && subject.toString() === "[object Object]") {
         return isApproximatelyEqualToHelperDestructured(subject, other, epsilon);
+    } else if (subject === other) {
+        return true;
     } else {
         fail('Expected ' + describe(subject) + ' to have an isApproximatelyEqualTo method');
         return false;
@@ -301,6 +303,8 @@ export function assertThrows(func, extraArgCatcher) {
 
 /** @type {boolean|undefined} */
 let __webGLSupportPresent = undefined;
+/** @type {boolean|undefined} */
+let __onlyPartialWebGLSupportPresent = undefined;
 function isWebGLSupportPresent() {
     if (__webGLSupportPresent === undefined) {
         __webGLSupportPresent = false;
@@ -308,6 +312,8 @@ function isWebGLSupportPresent() {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
             if (ctx instanceof WebGLRenderingContext) {
+                __webGLSupportPresent = true;
+
                 let shader = ctx.createShader(WebGLRenderingContext.VERTEX_SHADER);
                 ctx.shaderSource(shader, `
                     precision highp float;
@@ -318,13 +324,23 @@ function isWebGLSupportPresent() {
 
                 // HACK: tests on travis-ci give this warning when compiling shaders, and then give
                 // bad test results. Checking for it is a workaround to make the build pass.
-                if (ctx.getShaderInfoLog(shader).indexOf("extension `GL_ARB_gpu_shader5' unsupported") === -1) {
-                    __webGLSupportPresent = true;
+                let term = "extension `GL_ARB_gpu_shader5' unsupported";
+                __onlyPartialWebGLSupportPresent = ctx.getShaderInfoLog(shader).indexOf(term) !== -1;
+                if (__onlyPartialWebGLSupportPresent) {
+                    Config.IGNORED_WEBGL_INFO_TERMS.push(term);
+                    console.log('Only partial WebGL support is present. Some tests may fail and be ignored.')
                 }
             }
         }
     }
     return __webGLSupportPresent;
+}
+
+/**
+ * @returns {!boolean|undefined}
+ */
+function isOnlyPartialWebGLSupportPresent() {
+    return isWebGLSupportPresent() && __onlyPartialWebGLSupportPresent;
 }
 
 let promiseImageDataFromSrc = src => {
@@ -409,6 +425,11 @@ export class Suite {
                 status.log.push(msg);
                 assertThat(undefined); // Cancel 'no assertion' warning.
                 return;
+            } else if (isOnlyPartialWebGLSupportPresent()) {
+                status.warn_only = true;
+                status.ignore_warn_only_on_success = true;
+                status.warn_failure_message = `Ignoring ${this.name}.${caseName} failure due to lack of WebGL support.`;
+                status.warn_show_error = true;
             }
 
             let preTexCount = WglTexturePool.getUnReturnedTextureCount();

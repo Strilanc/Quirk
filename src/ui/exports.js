@@ -14,6 +14,7 @@
 
 import {Config} from "src/Config.js"
 import {ObservableValue} from "src/base/Obs.js"
+import {Serializer} from "src/circuit/Serializer.js"
 import {selectAndCopyToClipboard} from "src/browser/Clipboard.js"
 import {fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
 import {saveFile} from "src/browser/SaveFile.js"
@@ -23,9 +24,10 @@ const obsExportsIsShowing = exportsIsVisible.observable().whenDifferent();
 
 /**
  * @param {!Revision} revision
+ * @param {!ObservableValue.<!CircuitStats>} mostRecentStats
  * @param {!Observable.<!boolean>} obsIsAnyOverlayShowing
  */
-function initExports(revision, obsIsAnyOverlayShowing) {
+function initExports(revision, mostRecentStats, obsIsAnyOverlayShowing) {
     // Show/hide exports overlay.
     (() => {
         const exportButton = /** @type {!HTMLButtonElement} */ document.getElementById('export-button');
@@ -52,9 +54,14 @@ function initExports(revision, obsIsAnyOverlayShowing) {
      * @param {!HTMLButtonElement} button
      * @param {!HTMLElement} contentElement
      * @param {!HTMLElement} resultElement
+     * @param {undefined|!function(): !string} contentMaker
      */
-    const setupButtonElementCopyToClipboard = (button, contentElement, resultElement) =>
+    const setupButtonElementCopyToClipboard = (button, contentElement, resultElement, contentMaker=undefined) =>
         button.addEventListener('click', () => {
+            if (contentMaker !== undefined) {
+                contentElement.innerText = contentMaker();
+            }
+
             //noinspection UnusedCatchParameterJS,EmptyCatchBlockJS
             try {
                 selectAndCopyToClipboard(contentElement);
@@ -98,6 +105,25 @@ function initExports(revision, obsIsAnyOverlayShowing) {
                 jsonTextElement.innerText = jsonText;
             }
         });
+    })();
+
+    // Export final output.
+    (() => {
+        const outputTextElement = /** @type {HTMLPreElement} */ document.getElementById('export-amplitudes-pre');
+        const copyButton = /** @type {HTMLButtonElement} */ document.getElementById('export-amplitudes-button');
+        const copyResultElement = /** @type {HTMLElement} */ document.getElementById('export-amplitudes-result');
+        const excludeAmps = /** @type {HTMLInputElement} */ document.getElementById('export-amplitudes-use-amps');
+        obsIsAnyOverlayShowing.subscribe(_ => {
+            outputTextElement.innerText = '[not generated yet]';
+        });
+        setupButtonElementCopyToClipboard(
+            copyButton,
+            outputTextElement,
+            copyResultElement,
+            () => {
+                let raw = JSON.stringify(mostRecentStats.get().toReadableJson(!excludeAmps.checked), null, ' ');
+                return raw.replace(/{\s*"r": /g, '{"r":').replace(/,\s*"i":\s*([-e\d\.]+)\s*}/g, ',"i":$1}');
+            });
     })();
 
     // Export offline copy.

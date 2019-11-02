@@ -26,6 +26,8 @@ class CircuitEvalContext {
      * @param {!int} wireCount
      * @param {!Controls} controls
      * @param {!WglTexture} controlsTexture
+     * @param {!Controls} rawControls The controls of the gate column, made available so that before/after operations
+     *     can use this information (even though they are not themselves controlled).
      * @param {!WglTextureTrader} stateTrader
      * @param {!Map.<!string, *>} customContextFromGates
      */
@@ -34,6 +36,7 @@ class CircuitEvalContext {
                 wireCount,
                 controls,
                 controlsTexture,
+                rawControls,
                 stateTrader,
                 customContextFromGates) {
         /** @type {!number} */
@@ -47,6 +50,8 @@ class CircuitEvalContext {
         this.wireCount = wireCount;
         /** @type {!Controls} */
         this.controls = controls;
+        /** @type {!Controls} */
+        this.rawControls = rawControls;
         /** @type {!WglTexture} */
         this.controlsTexture = controlsTexture;
         /** @type {!WglTextureTrader} */
@@ -75,6 +80,7 @@ class CircuitEvalContext {
             this.wireCount,
             this.controls,
             this.controlsTexture,
+            this.rawControls,
             this.stateTrader,
             this.customContextFromGates);
     }

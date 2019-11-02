@@ -47,7 +47,8 @@ class WidgetPainter {
                         return "doesn't affect " + inputDescription;
                     }
                 } else if (Seq.range(n).every(r => r === c || col[r].isEqualTo(0))) {
-                    return "phases " + inputDescription + " by " + col[c].toString(format);
+                    let degs = col[c].ln().imag * 180/Math.PI;
+                    return "phases " + inputDescription + " by " + format.formatFloat(degs) + "°";
                 }
                 let outputDescription = new Seq(col).
                     mapWithIndex((e, c) => WidgetPainter.describeKet(b, c, e, format)).
@@ -146,7 +147,7 @@ class WidgetPainter {
             `rotates: ${format.formatFloat(angle * 180 / Math.PI)}°`,
             `around: ${WidgetPainter.describeAxis(axis, format)}`,
             '',
-            `hidden phase: exp(${format.formatFloat(phase * 180 / Math.PI)}°i)`,
+            `global phase: exp(${format.formatFloat(phase * 180 / Math.PI)}°i)`,
             ''
         ]).join('\n');
         pushRect(painter.printParagraph(

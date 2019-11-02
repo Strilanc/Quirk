@@ -17,10 +17,11 @@ import {Config} from "src/Config.js"
 import {Controls} from "src/circuit/Controls.js"
 import {CustomGateSet} from "src/circuit/CustomGateSet.js"
 import {DetailedError} from "src/base/DetailedError.js"
+import {equate_Maps} from "src/base/Equate.js";
 import {Gate} from "src/circuit/Gate.js"
 import {GateColumn} from "src/circuit/GateColumn.js"
 import {GateShaders} from "src/circuit/GateShaders.js"
-import {Gates} from "src/gates/AllGates.js"
+import {Gates, INITIAL_STATES_TO_GATES} from "src/gates/AllGates.js"
 import {Point} from "src/math/Point.js"
 import {seq, Seq} from "src/base/Seq.js"
 import {Util} from "src/base/Util.js"
@@ -39,13 +40,15 @@ class CircuitDefinition {
      * @param {undefined|!Map.<!string, *>=} outerContext
      * @param {!CustomGateSet} customGateSet
      * @param {!boolean} isNested
+     * @param {!Map.<!int, !string>} customInitialValues
      */
     constructor(numWires,
                 columns,
                 outerRowOffset=0,
                 outerContext=new Map(),
                 customGateSet=new CustomGateSet(),
-                isNested=false) {
+                isNested=false,
+                customInitialValues=new Map()) {
         if (numWires < 0) {
             throw new DetailedError("Bad numWires", {numWires})
         }
@@ -69,6 +72,17 @@ class CircuitDefinition {
         this.outerRowOffset = outerRowOffset;
         this.outerContext = outerContext;
         this.isNested = isNested;
+        /** @type {!Map.<!int, !string>} */
+        this.customInitialValues = new Map();
+        for (let [k, v] of customInitialValues.entries()) {
+            if (!Number.isInteger(k) || k < 0) {
+                throw new DetailedError('Initial state key out of range.', {customInitialValues, numWires});
+            }
+            if (k >= this.numWires) {
+                continue;
+            }
+            this.customInitialValues.set(k, v);
+        }
 
         /**
          * @type {!Array.<!Array.<undefined|!string>>}
@@ -124,6 +138,42 @@ class CircuitDefinition {
      */
     hasControls() {
         return !this.columns.every(e => !e.hasControl(-1));
+    }
+
+    /**
+     * @param {!int} wire
+     * @param {!int=} newStateIndex=
+     * @returns {!CircuitDefinition}
+     */
+    withSwitchedInitialStateOn(wire, newStateIndex=undefined) {
+        let m = new Map([...this.customInitialValues.entries()]);
+        let v = m.get(wire);
+        let cycle = [...INITIAL_STATES_TO_GATES.keys()];
+        let newVal = cycle[(cycle.indexOf(v) + 1) % cycle.length];
+        if (newStateIndex !== undefined) {
+            newVal = newStateIndex;
+        }
+        if (newVal === undefined) {
+            m.delete(wire);
+        } else {
+            m.set(wire, newVal);
+        }
+        return this.withInitialStates(m);
+    }
+
+    /**
+     * @param {!Map.<!int, *>} map
+     * @returns {!CircuitDefinition}
+     */
+    withInitialStates(map) {
+        return new CircuitDefinition(
+            this.numWires,
+            this.columns,
+            this.outerRowOffset,
+            this.outerContext,
+            this.customGateSet,
+            this.isNested,
+            map);
     }
 
     /**
@@ -194,7 +244,8 @@ class CircuitDefinition {
             outerRowOffset,
             outerContext,
             this.customGateSet,
-            true);
+            true,
+            this.customInitialValues);
     }
 
     /**
@@ -235,7 +286,8 @@ class CircuitDefinition {
         }
         return other instanceof CircuitDefinition &&
             this.numWires === other.numWires &&
-            seq(this.columns).isEqualTo(seq(other.columns), Util.CUSTOM_IS_EQUAL_TO_EQUALITY);
+            seq(this.columns).isEqualTo(seq(other.columns), Util.CUSTOM_IS_EQUAL_TO_EQUALITY) &&
+            equate_Maps(this.customInitialValues, other.customInitialValues);
     }
 
     /**
@@ -355,7 +407,9 @@ class CircuitDefinition {
             cols,
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet);
+            this.customGateSet,
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -508,7 +562,9 @@ class CircuitDefinition {
             seq(this.columns).filterWithIndex((e, i) => used.has(i)).toArray(),
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet);
+            this.customGateSet,
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -527,7 +583,9 @@ class CircuitDefinition {
             ])),
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet);
+            this.customGateSet,
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -538,6 +596,9 @@ class CircuitDefinition {
         let best = 1;
         for (let c of this.columns) {
             best = Math.max(best, c.minimumRequiredWireCount());
+        }
+        for (let usedWire of this.customInitialValues.keys()) {
+            best = Math.max(best, usedWire + 1);
         }
         return best;
     }
@@ -727,22 +788,25 @@ class CircuitDefinition {
 
     /**
      * @param {int} col
-     * @returns {boolean}
+     * @returns {undefined|![!int, !int]}
      */
-    colHasEnabledSwapGate(col) {
+    colGetEnabledSwapGate(col) {
         if (col < 0 || col >= this.columns.length) {
-            return false;
+            return undefined;
         }
-        let count = 0;
+        let locs = [];
         for (let row = 0; row < this.numWires; row++) {
             if (this.gateInSlot(col, row) === Gates.Special.SwapHalf) {
                 if (this.gateAtLocIsDisabledReason(col, row) !== undefined) {
-                    return false;
+                    return undefined;
                 }
-                count++;
+                locs.push(row);
             }
         }
-        return count === 2;
+        if (locs.length !== 2) {
+            return undefined;
+        }
+        return locs;
     }
 
     /**
@@ -816,18 +880,30 @@ class CircuitDefinition {
         if (col < 0 || col >= this.columns.length) {
             return Controls.NONE;
         }
-        let result = Controls.NONE;
         let column = this.columns[col];
+        let includeMask = 0;
+        let desireMask = 0;
+        let parityMask = 0;
         for (let i = 0; i < column.gates.length; i++) {
             let gate = column.gates[i];
             if (gate !== undefined && this.gateAtLocIsDisabledReason(col, i) === undefined) {
                 let bit = gate.controlBit();
-                if (bit !== undefined) {
-                    result = result.and(Controls.bit(i, bit));
+                if (bit === 'parity') {
+                    parityMask |= 1 << i;
+                } else if (bit !== undefined) {
+                    includeMask |= 1 << i;
+                    if (bit) {
+                        desireMask |= 1 << i;
+                    }
                 }
             }
         }
-        return result;
+        if (parityMask !== 0) {
+            let parityBit = parityMask & ~(parityMask - 1);
+            desireMask |= parityBit;
+            includeMask |= parityBit;
+        }
+        return new Controls(includeMask, desireMask, parityMask);
     }
 
     /**
@@ -840,6 +916,22 @@ class CircuitDefinition {
             return undefined;
         }
         return this._colRowDisabledReason[col][row];
+    }
+
+    /**
+     * @param {!CircuitEvalContext} ctx
+     * @return {void}
+     */
+    applyInitialStateOperations(ctx) {
+        for (let wire = 0; wire < this.numWires; wire++) {
+            let state = this.customInitialValues.get(wire);
+            if (!INITIAL_STATES_TO_GATES.has(state)) {
+                throw new DetailedError('Unrecognized initial state.', {state});
+            }
+            for (let gate of INITIAL_STATES_TO_GATES.get(state)) {
+                GateShaders.applyMatrixOperation(ctx.withRow(ctx.row + wire), gate.knownMatrixAt(ctx.time))
+            }
+        }
     }
 
     /**
@@ -864,8 +956,9 @@ class CircuitDefinition {
             return ctx => GateShaders.applyMatrixOperation(ctx, gate.knownMatrixAt(ctx.time));
         });
 
-        for (let [i, j] of this.columns[colIndex].swapPairs()) {
-            //noinspection JSUnusedAssignment
+        let swapRows = this.colGetEnabledSwapGate(colIndex);
+        if (swapRows !== undefined) {
+            let [i, j] = swapRows;
             ctx.applyOperation(CircuitShaders.swap(ctx.withRow(i + ctx.row), j + ctx.row));
         }
     }
@@ -960,7 +1053,9 @@ class CircuitDefinition {
             this.columns,
             this.outerRowOffset,
             this.outerContext,
-            this.customGateSet.withGate(gate));
+            this.customGateSet.withGate(gate),
+            false,
+            this.customInitialValues);
     }
 
     /**
@@ -971,13 +1066,13 @@ class CircuitDefinition {
         let col = this.columns[columnIndex];
         let n = col.gates.length;
 
-        let hasTwoSwaps = this.colHasEnabledSwapGate(columnIndex);
+        let swapRows = this.colGetEnabledSwapGate(columnIndex);
 
         let pt = i => new Point(columnIndex, i);
         let hasControllable = i => this.locHasControllableGate(pt(i));
         let hasCoherentControl = i => this.locStartsSingleControlWire(pt(i));
         let hasMeasuredControl = i => this.locStartsDoubleControlWire(pt(i));
-        let hasSwap = i => hasTwoSwaps && col.gates[i] === Gates.Special.SwapHalf;
+        let hasSwap = i => swapRows !== undefined && swapRows.indexOf(i) !== -1;
         let coversCoherentWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== true;
         let coversMeasuredWire = i => this.locClassifyMeasuredIncludingGateExtension(pt(i)) !== false;
 

@@ -83,6 +83,7 @@ CycleBitsGates.CycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => buil
     setKnownEffectToBitPermutation(i => (i + 1) % span));
 
 CycleBitsGates.ReverseCycleBitsFamily = Gate.buildFamily(2, 16, (span, builder) => builder.
+    setAlternateFromFamily(CycleBitsGates.CycleBitsFamily).
     setSerializedId(">>" + span).
     setSymbol(">>>").
     setTitle("Right Rotate").

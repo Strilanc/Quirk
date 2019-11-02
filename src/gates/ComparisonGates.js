@@ -47,6 +47,7 @@ ComparisonGates.ALessThanB = new GateBuilder().
     gate;
 
 ComparisonGates.AGreaterThanB = new GateBuilder().
+    setAlternate(ComparisonGates.ALessThanB).
     setSerializedId("^A>B").
     setSymbol("⊕A>B").
     setTitle("Greater-Than Gate").
@@ -67,6 +68,7 @@ ComparisonGates.ALessThanOrEqualToB = new GateBuilder().
     gate;
 
 ComparisonGates.AGreaterThanOrEqualToB = new GateBuilder().
+    setAlternate(ComparisonGates.ALessThanOrEqualToB).
     setSerializedId("^A>=B").
     setSymbol("⊕A≥B").
     setTitle("At-Least Gate").
@@ -87,6 +89,7 @@ ComparisonGates.AEqualToB = new GateBuilder().
     gate;
 
 ComparisonGates.ANotEqualToB = new GateBuilder().
+    setAlternate(ComparisonGates.AEqualToB).
     setSerializedId("^A!=B").
     setSymbol("⊕A≠B").
     setTitle("Inequality Gate").

@@ -84,7 +84,7 @@ class SingleTypeCoder {
      * @returns {!int}
      */
     arrayPowerSizeOfTexture(tex) {
-        return tex.sizePower() - this.powerSizeOverhead;
+        return Math.max(0, tex.sizePower() - this.powerSizeOverhead);
     }
 }
 

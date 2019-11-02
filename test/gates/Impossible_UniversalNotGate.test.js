@@ -38,6 +38,7 @@ suite.testUsingWebGL('universalNot', () => {
             2,
             control,
             controlTex,
+            control,
             trader,
             new Map());
         try {
