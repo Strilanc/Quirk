@@ -380,12 +380,20 @@ export class Suite {
      */
     constructor(name) {
         Suite.suites.push(this);
-        /** @type {!(!function(!{ warn_only: !boolean|!string })[])} */
+        /** @type {!Array.<[!string, !function(!{ warn_only: !boolean|!string })]>} */
         this.tests = [];
-        /** @type {!(!function(!{ warn_only: !boolean|!string })[])} */
+        /** @type {!Array.<[!string, !function(!{ warn_only: !boolean|!string })]>} */
         this.later_tests = [];
          /** @type {!string} */
         this.name = name;
+    }
+
+    /**
+     * @param {!RegExp|undefined} filter
+     * @param {!boolean} later
+     */
+    testsMatching(filter, later) {
+        return (later ? this.later_tests : this.tests).filter(e => filter === undefined || filter.test(e[0]));
     }
 
     /**

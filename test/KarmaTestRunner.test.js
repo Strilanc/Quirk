@@ -14,6 +14,10 @@
 
 import {Suite} from "test/TestUtil.js";
 
+const TEST_SUITE_NAME_FILTER = /** @type {!RegExp|undefined} */ undefined;
+const TEST_NAME_FILTER = /** @type {!RegExp|undefined} */ undefined;
+const TEST_REPETITIONS = 1;
+
 let tryPromiseRun = method => {
     try {
         return Promise.resolve(method());
@@ -22,6 +26,27 @@ let tryPromiseRun = method => {
     }
 };
 
+/**
+ * @param {!Suite} suite
+ * @param {!string} name
+ * @param {!function(status: *): (!Promise|*)} method
+ * @param {!int} reps
+ * @returns {!Promise}
+ */
+let promiseRepeatTest = (suite, name, method, reps) => {
+    let root = promiseRunTest(suite, name, method);
+    for (let k = 1; k < reps; k++) {
+        root = root.then(e => e.success ? promiseRunTest(suite, name, method) : e);
+    }
+    return root;
+};
+
+/**
+ * @param {!Suite} suite
+ * @param {!string} name
+ * @param {!function(status: *): (!Promise|*)} method
+ * @returns {!Promise}
+ */
 let promiseRunTest = (suite, name, method) => {
     let result = {
         description: name,
@@ -88,9 +113,18 @@ let promiseRunTest = (suite, name, method) => {
 };
 
 __karma__.start = () => {
+    if (TEST_SUITE_NAME_FILTER !== undefined || TEST_NAME_FILTER !== undefined) {
+        console.warn("TEST FILTERS IN EFFECT:");
+        console.warn("    SUITE=" + TEST_SUITE_NAME_FILTER);
+        console.warn("    TEST=" + TEST_NAME_FILTER);
+    }
+    let keptSuites = Suite.suites.
+        filter(e => TEST_SUITE_NAME_FILTER === undefined || TEST_SUITE_NAME_FILTER.test(e.name));
+
     let total = 0;
-    for (let suite of Suite.suites) {
-        total += suite.tests.length + suite.later_tests.length;
+    for (let suite of keptSuites) {
+        total += suite.testsMatching(TEST_NAME_FILTER, false).length
+            + suite.testsMatching(TEST_NAME_FILTER, true).length;
         if (suite.tests.length + suite.later_tests.length === 0) {
             console.warn(`Empty test suite: ${suite.name}`);
         }
@@ -98,20 +132,17 @@ __karma__.start = () => {
     __karma__.info({ total: total });
 
     let chain = Promise.resolve();
-    for (let suite of Suite.suites) {
-        chain = chain.then(() => new Promise(resolver => setTimeout(() => {
-            let suiteResult = Promise.all(suite.tests.map(e => promiseRunTest(suite, e[0], e[1])));
-            suiteResult.catch(() => console.error(`${suite.name} suite failed`));
-            resolver();
-        }, 0)));
-    }
 
-    for (let suite of Suite.suites) {
-        chain = chain.then(() => new Promise(resolver => setTimeout(() => {
-            let suiteResult = Promise.all(suite.later_tests.map(e => promiseRunTest(suite, e[0], e[1])));
-            suiteResult.catch(() => console.error(`${suite.name} suite failed`));
-            resolver();
-        }, 0)));
+    for (let later of [false, true]) {
+        for (let suite of keptSuites) {
+            chain = chain.then(() => new Promise(resolver => setTimeout(() => {
+                let suiteResult = Promise.all(
+                    suite.testsMatching(TEST_NAME_FILTER, later).
+                        map(e => promiseRepeatTest(suite, e[0], e[1], TEST_REPETITIONS)));
+                suiteResult.catch(() => console.error(`${suite.name} suite failed`));
+                resolver();
+            }, 0)));
+        }
     }
 
     return chain.then(() => __karma__.complete());
