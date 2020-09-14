@@ -18,6 +18,5 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm install
+    - run: grunt build-test-page
     - run: node PuppeteerRunTests.js
-      env:
-        DISPLAY: ":0.0"
