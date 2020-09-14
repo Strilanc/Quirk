@@ -1,0 +1,27 @@
+name: ci
+on: [push]
+jobs:
+  build-and-run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm install
+    - run: grunt build-test-page
+    - run: node PuppeteerRunTests.js
+  screenshot-circuit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm install
+    - run: npm run build
+    - run: node PuppeteerScreenshotCircuit.js
+    - uses: actions/upload-artifact@v2
+      with:
+        name: screenshot
+        path: screenshot.png

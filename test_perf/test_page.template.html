@@ -10,26 +10,37 @@
         <script>
             var __total_done = 0;
             var __total_tests = 0;
+            var __any_failures = false;
             __karma__ = {
                 start: undefined,
                 result: function(arg) {
                     __total_done++;
+                    if (__total_done % 100 === 0 || __total_done === __total_tests) {
+                        console.log("Finished running " + __total_done + '/' + __total_tests + " tests")
+                    }
                     document.getElementById('progress').innerText = 'Progress: ' + __total_done + ' / ' + __total_tests;
                     if (!arg.success) {
-                        document.getElementById('output').innerText += "\nFAILED: " +
-                                arg.suite[0] + " " + arg.description;
+                        var msg = "FAILED: " + arg.suite[0] + " " + arg.description;
+                        console.error(msg);
+                        __any_failures = true;
+                        document.getElementById('output').innerText += "\n" + msg;
                     }
                     for (var i = 0; i < arg.log.length; i++) {
                         document.getElementById('output').innerText += "\n     " + arg.log[i];
+                        console.log("    " + arg.log[i]);
                     }
                 },
                 info: function(arg) {
                     __total_tests = arg.total;
                     document.getElementById('progress').innerText = 'Progress: ' + __total_done + ' / ' + __total_tests;
                     document.getElementById('output').innerText += "\nTotal tests: " + arg.total + "\nRunning...";
+                    console.log("Running " + arg.total + " tests...");
                 },
                 complete: function() {
-                    document.getElementById('output').innerText += "\nDone";
+                    var doneDiv = document.createElement('div');
+                    doneDiv.id = 'done';
+                    doneDiv.innerText = 'Done';
+                    document.body.appendChild(doneDiv);
                 }
             };
 

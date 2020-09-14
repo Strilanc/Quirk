@@ -9,18 +9,19 @@
     "url": "https://github.com/Strilanc/Quirk/issues"
   },
   "devDependencies": {
-    "grunt": "~1.0.1",
-    "grunt-cli": "~1.2.0",
-    "grunt-contrib-clean": "~1.0.0",
+    "grunt": "~1.3.0",
+    "grunt-cli": "~1.3.2",
+    "grunt-contrib-clean": "~2.0.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-contrib-copy": "~1.0.0",
-    "grunt-contrib-uglify": "~3.1.0",
-    "grunt-karma": "~2.0.0",
+    "grunt-contrib-uglify": "~5.0.0",
+    "grunt-karma": "~4.0.0",
     "grunt-traceur": "~0.5.5",
-    "karma": "~1.7.0",
-    "karma-chrome-launcher": "~2.2.0",
-    "karma-firefox-launcher": "~1.0.1",
-    "traceur": "0.0.111"
+    "karma": "~5.2.2",
+    "karma-chrome-launcher": "~3.1.0",
+    "karma-firefox-launcher": "~1.3.0",
+    "traceur": "0.0.111",
+    "puppeteer": "^5.3.0"
   },
   "scripts": {
     "build": "grunt build-src",
