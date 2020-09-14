@@ -15,7 +15,7 @@ jobs:
       with:
         name: test
         path: example.png
-  screenshot:
+  screenshot-circuit:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -27,4 +27,5 @@ jobs:
     - run: node PuppeteerScreenshotCircuit.js
     - uses: actions/upload-artifact@v2
       with:
+        name: screenshot
         path: screenshot.png
