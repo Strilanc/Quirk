@@ -11,10 +11,6 @@ jobs:
     - run: npm install
     - run: grunt build-test-page
     - run: node PuppeteerRunTests.js
-    - uses: actions/upload-artifact@v2
-      with:
-        name: test
-        path: example.png
   screenshot-circuit:
     runs-on: ubuntu-latest
     steps:
