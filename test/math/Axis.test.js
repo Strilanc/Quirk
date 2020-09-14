@@ -54,7 +54,6 @@ suite.test("parse", () => {
     assertThrows(() => Axis.parse("x*y"));
     assertThrows(() => Axis.parse("x^y"));
     assertThrows(() => Axis.parse("x/y"));
-    assertThat(1).isEqualTo(2);
 
     assertThat(Axis.parse("x")).isEqualTo(new Axis(1, 0, 0));
     assertThat(Axis.parse("y")).isEqualTo(new Axis(0, 1, 0));
