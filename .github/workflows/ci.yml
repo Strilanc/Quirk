@@ -15,3 +15,16 @@ jobs:
       with:
         name: test
         path: example.png
+  screenshot:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm install
+    - run: npm run build
+    - run: node PuppeteerScreenshotCircuit.js
+    - uses: actions/upload-artifact@v2
+      with:
+        path: screenshot.png
