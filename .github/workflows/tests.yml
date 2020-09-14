@@ -18,6 +18,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm install
-    - run: npm run test-travis
+    - run: npm run test-chrome
       env:
         DISPLAY: ":0.0"
