@@ -32,7 +32,6 @@ class DisplayedToolbox {
      * @param {!number} top
      * @param {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} toolboxGroups
      * @param {!boolean} labelsOnTop
-     * @param {!int} groupHeight
      * @param {undefined|!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>=} originalGroups
      * @param {undefined|!CachablePainting=undefined} standardAppearance
      */
@@ -41,7 +40,6 @@ class DisplayedToolbox {
             top,
             toolboxGroups,
             labelsOnTop,
-            groupHeight,
             originalGroups=undefined,
             standardAppearance=undefined) {
         /** @type {!String} */
@@ -52,8 +50,6 @@ class DisplayedToolbox {
         this.toolboxGroups = toolboxGroups;
         /** @type {!boolean} */
         this.labelsOnTop = labelsOnTop;
-        /** @type {!int} */
-        this.groupHeight = groupHeight;
         /** @type {!Array<!{hint: !string, gates: !Array<undefined|!Gate>}>} */
         this._originalGroups = originalGroups || this.toolboxGroups;
         /**
@@ -68,6 +64,13 @@ class DisplayedToolbox {
                 this._paintStandardContents(painter);
                 painter.ctx.restore();
             });
+
+        /** @type {!int} */
+        this.groupHeight = 1;
+        for (let group of toolboxGroups) {
+            let h = Math.ceil(group.gates.length / 2);
+            this.groupHeight = Math.max(this.groupHeight, h);
+        }
     }
 
     /**
@@ -90,7 +93,6 @@ class DisplayedToolbox {
             this.top,
             groups,
             this.labelsOnTop,
-            this.groupHeight,
             this._originalGroups,
             this._standardApperance);
     }
@@ -181,7 +183,6 @@ class DisplayedToolbox {
             newTop,
             this.toolboxGroups,
             this.labelsOnTop,
-            this.groupHeight,
             this._originalGroups,
             this._standardApperance);
     }
