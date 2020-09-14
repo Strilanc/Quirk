@@ -32,5 +32,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Strilanc/Quirk.git"
+  },
+  "dependencies": {
+    "puppeteer": "^5.3.0"
   }
 }
