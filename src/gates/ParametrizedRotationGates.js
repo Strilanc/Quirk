@@ -45,7 +45,7 @@ function configurableRotationDrawer(pattern, xyz, tScale) {
         GatePainting.paintGateButton(args);
 
         let isStable = args.gate.stableDuration() === Infinity;
-        if ((!args.isInToolbox || args.isHighlighted) && !isStable) {
+        if ((!args.isInToolbox || args.isHighlighted) && !isStable && !args.gate.customDisableReasonFinder(args)) {
             let rads = tScale * parseTimeFormula(args.gate.param, args.stats.time*2-1, false) || 0;
             GatePainting.paintCycleState(args, rads, xScale, yScale);
         }
