@@ -153,7 +153,7 @@ class CircuitDefinition {
         if (newStateIndex !== undefined) {
             newVal = newStateIndex;
         }
-        if (newVal === undefined) {
+        if (newVal === undefined || newVal === 0) {
             m.delete(wire);
         } else {
             m.set(wire, newVal);
