@@ -46,17 +46,6 @@ ComparisonGates.ALessThanB = new GateBuilder().
     setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a < b ? 1 : 0)).
     gate;
 
-ComparisonGates.AGreaterThanB = new GateBuilder().
-    setAlternate(ComparisonGates.ALessThanB).
-    setSerializedId("^A>B").
-    setSymbol("⊕A>B").
-    setTitle("Greater-Than Gate").
-    setBlurb("Toggles a qubit if input A is greater than input B.").
-    setRequiredContextKeys("Input Range A", "Input Range B").
-    setActualEffectToShaderProvider(customComparisonShader('lhs > rhs')).
-    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a > b ? 1 : 0)).
-    gate;
-
 ComparisonGates.ALessThanOrEqualToB = new GateBuilder().
     setSerializedId("^A<=B").
     setSymbol("⊕A≤B").
@@ -67,8 +56,19 @@ ComparisonGates.ALessThanOrEqualToB = new GateBuilder().
     setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a <= b ? 1 : 0)).
     gate;
 
-ComparisonGates.AGreaterThanOrEqualToB = new GateBuilder().
+ComparisonGates.AGreaterThanB = new GateBuilder().
     setAlternate(ComparisonGates.ALessThanOrEqualToB).
+    setSerializedId("^A>B").
+    setSymbol("⊕A>B").
+    setTitle("Greater-Than Gate").
+    setBlurb("Toggles a qubit if input A is greater than input B.").
+    setRequiredContextKeys("Input Range A", "Input Range B").
+    setActualEffectToShaderProvider(customComparisonShader('lhs > rhs')).
+    setKnownEffectToParametrizedPermutation((v, a, b) => v ^ (a > b ? 1 : 0)).
+    gate;
+
+ComparisonGates.AGreaterThanOrEqualToB = new GateBuilder().
+    setAlternate(ComparisonGates.ALessThanB).
     setSerializedId("^A>=B").
     setSymbol("⊕A≥B").
     setTitle("At-Least Gate").
