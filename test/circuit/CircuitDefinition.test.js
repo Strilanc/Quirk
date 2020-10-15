@@ -1310,6 +1310,21 @@ suite.test("gateAtLocIsDisabledReason_multiwireOperations", () => {
 
 });
 
+suite.test("withSwitchedInitialStateOn", () => {
+    let c = circuit(`-
+                     -`);
+    assertThat(c.customInitialValues).isEqualTo(new Map());
+
+    c = c.withSwitchedInitialStateOn(0);
+    assertThat(c.customInitialValues).isEqualTo(new Map([[0, '1']]));
+
+    c = c.withSwitchedInitialStateOn(0);
+    assertThat(c.customInitialValues).isEqualTo(new Map([[0, '+']]));
+
+    c = c.withSwitchedInitialStateOn(0, 0);
+    assertThat(c.customInitialValues).isEqualTo(new Map());
+});
+
 suite.test("colCustomContextFromGates", () => {
     let c = circuit(`-A-B-
                      -A-A-
