@@ -22,7 +22,6 @@ Quirk assumes you already know background facts like "each wire represents a qub
 **Notable limitations**:
 
 - Can't recohere measured qubits (because measurement is implemented as a hack based on the [deferred measurement principle](https://en.wikipedia.org/wiki/Deferred_Measurement_Principle)).
-- Dragging works poorly in Firefox on Android (because Firefox doesn't support [`touch-action: none`](https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action) yet).
 
 **Try it out**:
 
