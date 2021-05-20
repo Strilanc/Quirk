@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
-import {provideWglTexturePoolToWglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {WglTexture} from "./WglTexture.js"
+import {provideWglTexturePoolToWglConfiguredShader} from "./WglConfiguredShader.js"
+import {currentShaderCoder} from "./ShaderCoders.js"
 
 /** @type {!Array.<!Array.<!WglTexture>>} */
 const FLOAT_POOL = [];

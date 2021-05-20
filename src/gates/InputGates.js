@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Gate, GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
+import {Gate, GateBuilder} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {reverseShaderForSize} from "./ReverseBitsGate.js"
 
 let InputGates = {};
 

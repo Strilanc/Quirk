@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js";
-import {Gate} from "src/circuit/Gate.js"
+import {Config} from "../Config.js";
+import {Gate} from "../circuit//Gate.js"
 import {
     ketArgs,
     ketShaderPermute,
     ketInputGateShaderCode
-} from "src/circuit/KetShaderUtil.js"
-import {modulusTooBigChecker} from "src/gates/ModularIncrementGates.js"
-import {BIG_MUL_MOD_SHADER_CODE} from "src/gates/MultiplyAccumulateGates.js"
-import {Util} from "src/base/Util.js"
-import {WglArg} from "src/webgl/WglArg.js"
+} from "../circuit//KetShaderUtil.js"
+import {modulusTooBigChecker} from "./ModularIncrementGates.js"
+import {BIG_MUL_MOD_SHADER_CODE} from "./MultiplyAccumulateGates.js"
+import {Util} from "../base/Util.js"
+import {WglArg} from "../webgl/WglArg.js"
 
 let ModularMultiplicationGates = {};
 

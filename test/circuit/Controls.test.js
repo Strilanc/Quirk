@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {assertTrue, assertFalse, assertThat, assertThrows, Suite} from "test/TestUtil.js"
-import {Controls} from "src/circuit/Controls.js"
+import {assertTrue, assertFalse, assertThat, assertThrows, Suite} from "../TestUtil.js"
+import {Controls} from "../../src/circuit/Controls.js"
 
 let suite = new Suite("Controls");
 

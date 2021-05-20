@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {assertThat, Suite} from "test/TestUtil.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Seq} from "src/base/Seq.js"
-import {Util} from "src/base/Util.js"
+import {assertThat, Suite} from "../TestUtil.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../../src/circuit/CircuitStats.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Seq} from "../../src/base/Seq.js"
+import {Util} from "../../src/base/Util.js"
 
 let suite = new Suite("InputGates");
 

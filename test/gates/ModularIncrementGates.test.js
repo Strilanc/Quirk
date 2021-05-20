@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {assertThat, Suite} from "test/TestUtil.js"
-import {assertThatGateActsLikePermutation} from "test/CircuitOperationTestUtil.js"
+import {assertThat, Suite} from "../TestUtil.js"
+import {assertThatGateActsLikePermutation} from "../CircuitOperationTestUtil.js"
 
-import {ModularIncrementGates} from "src/gates/ModularIncrementGates.js"
-import {ModularAdditionGates} from "src/gates/ModularAdditionGates.js"
-import {InputGates} from "src/gates/InputGates.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {ModularIncrementGates} from "../../src/gates/ModularIncrementGates.js"
+import {ModularAdditionGates} from "../../src/gates/ModularAdditionGates.js"
+import {InputGates} from "../../src/gates/InputGates.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
 
 let suite = new Suite("ModularIncrementGates");
 

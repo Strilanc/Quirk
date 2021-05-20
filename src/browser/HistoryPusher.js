@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
+import {DetailedError} from "../base/DetailedError.js"
 
 /**
  * Manages interactions with the browser's history as the app's state changes and frequently updates the URL.

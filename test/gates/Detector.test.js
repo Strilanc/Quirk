@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {Gates} from "src/gates/AllGates.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js";
-import {CircuitStats} from "src/circuit/CircuitStats.js";
-import {Matrix} from "src/math/Matrix.js";
+import {Suite, assertThat} from "../TestUtil.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js";
+import {CircuitStats} from "../../src/circuit/CircuitStats.js";
+import {Matrix} from "../../src/math/Matrix.js";
 
 let suite = new Suite("Detector");
 

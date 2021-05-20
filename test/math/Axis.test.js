@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
-import {Axis} from "src/math/Axis.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "../TestUtil.js"
+import {Axis} from "../../src/math/Axis.js"
 
 let suite = new Suite("Axis");
 

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
+import {Suite, assertThat, assertTrue} from "../TestUtil.js"
+import {CircuitStats} from "../../src/circuit/CircuitStats.js"
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Serializer} from "src/circuit/Serializer.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {GateColumn} from "../../src/circuit/GateColumn.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Matrix} from "../../src/math/Matrix.js"
+import {Serializer} from "../../src/circuit/Serializer.js"
+import {seq, Seq} from "../../src/base/Seq.js"
 
 let suite = new Suite("CircuitStats");
 

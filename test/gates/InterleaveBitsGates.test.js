@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
+import {Suite, assertThat} from "../TestUtil.js"
 
 import {
     interleaveBit,
     deinterleaveBit,
-} from "src/gates/InterleaveBitsGates.js"
+} from "../../src/gates/InterleaveBitsGates.js"
 
 let suite = new Suite("InterleaveBitsGates");
 

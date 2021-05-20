@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {WglArg} from "src/webgl/WglArg.js"
-import {initializedWglContext} from "src/webgl/WglContext.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {WglArg} from "./WglArg.js"
+import {initializedWglContext} from "./WglContext.js"
+import {WglShader} from "./WglShader.js"
+import {WglConfiguredShader} from "./WglConfiguredShader.js"
 import {
     currentShaderCoder,
     Inputs,
     Outputs,
     makePseudoShaderWithInputsAndOutputAndCode
-} from "src/webgl/ShaderCoders.js"
+} from "./ShaderCoders.js"
 
 /**
  * Utilities for creating/configuring shaders that render various simple things.

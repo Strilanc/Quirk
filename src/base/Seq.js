@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
+import {DetailedError} from "./DetailedError.js"
 
 export const THROW_IF_EMPTY = { if_same_instance_as_this_then_throw: true };
 

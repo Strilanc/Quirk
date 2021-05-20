@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CooldownThrottle} from "src/base/CooldownThrottle.js"
+import {CooldownThrottle} from "./CooldownThrottle.js"
 
 /**
  * An observable sequence of events.

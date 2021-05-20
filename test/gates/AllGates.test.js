@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {Gates} from "src/gates/AllGates.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {Gates} from "../../src/gates/AllGates.js"
 
-import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Controls} from "src/circuit/Controls.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Gate} from "src/circuit/Gate.js"
-import {seq} from "src/base/Seq.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
-import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
+import {CircuitEvalContext} from "../../src/circuit/CircuitEvalContext.js"
+import {CircuitShaders} from "../../src/circuit/CircuitShaders.js"
+import {Controls} from "../../src/circuit/Controls.js"
+import {Matrix} from "../../src/math/Matrix.js"
+import {Gate} from "../../src/circuit/Gate.js"
+import {seq} from "../../src/base/Seq.js"
+import {WglTextureTrader} from "../../src/webgl/WglTextureTrader.js"
+import {currentShaderCoder} from "../../src/webgl/ShaderCoders.js"
 import {
     assertThatGateActsLikePermutation,
     assertThatGateActsLikePhaser
-} from "test/CircuitOperationTestUtil.js"
+} from "../CircuitOperationTestUtil.js"
 
 let suite = new Suite("AllGates");
 

@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Complex} from "src/math/Complex.js"
-import {Config} from "src/Config.js"
-import {Format} from "src/base/Format.js"
-import {Gate} from "src/circuit/Gate.js"
-import {MathPainter} from "src/draw/MathPainter.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Painter} from "src/draw/Painter.js"
-import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {Seq} from "src/base/Seq.js"
-import {drawCircuitTooltip} from "src/ui/DisplayedCircuit.js"
-import {Util} from "src/base/Util.js"
+import {Complex} from "../math/Complex.js"
+import {Config} from "../Config.js"
+import {Format} from "../base/Format.js"
+import {Gate} from "../circuit/Gate.js"
+import {MathPainter} from "./MathPainter.js"
+import {Matrix} from "../math/Matrix.js"
+import {Painter} from "./Painter.js"
+import {Point} from "../math/Point.js"
+import {Rect} from "../math/Rect.js"
+import {Seq} from "../base/Seq.js"
+import {drawCircuitTooltip} from "../ui/DisplayedCircuit.js"
+import {Util} from "../base/Util.js"
 
 class WidgetPainter {
 

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Rect} from "src/math/Rect.js"
-import {Seq} from "src/base/Seq.js"
+import {GateBuilder} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {Matrix} from "../math/Matrix.js"
+import {Rect} from "../math/Rect.js"
+import {Seq} from "../base/Seq.js"
 
 // Note: there is special code to handle swaps sprinkled everywhere, since it's the only gate with two paired sides.
 

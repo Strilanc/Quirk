@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {assertThat, Suite} from "test/TestUtil.js"
+import {assertThat, Suite} from "../TestUtil.js"
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Complex} from "src/math/Complex.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Matrix} from "src/math/Matrix.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../../src/circuit/CircuitStats.js"
+import {Complex} from "../../src/math/Complex.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Matrix} from "../../src/math/Matrix.js"
 
 let suite = new Suite("ParametrizedRotationGates");
 

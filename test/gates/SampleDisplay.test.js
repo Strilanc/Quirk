@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
+import {Suite, assertThat} from "../TestUtil.js"
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../../src/circuit/CircuitStats.js"
+import {Serializer} from "../../src/circuit/Serializer.js"
 
 let suite = new Suite("SampleDisplay");
 

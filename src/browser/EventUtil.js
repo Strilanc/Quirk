@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Observable} from "src/base/Obs.js"
+import {Observable} from "../base/Obs.js"
 
 /**
  * @param {!HTMLInputElement} textBox

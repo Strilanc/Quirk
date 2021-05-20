@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {WglConfiguredShader} from "../webgl/WglConfiguredShader.js"
 
 /**
  * Values used by the various gate effects.

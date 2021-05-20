@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite} from "test/TestUtil.js";
+import {Suite} from "./TestUtil.js";
 
 let tryPromiseRun = method => {
     try {

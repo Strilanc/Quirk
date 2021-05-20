@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {describe} from "src/base/Describe.js"
+import {describe} from "./Describe.js"
 
 let CONSTRUCTOR_CALLS_NESTING = 0;
 

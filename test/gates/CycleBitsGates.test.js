@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite} from "test/TestUtil.js"
-import {assertThatCircuitShaderActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
-import {cycleBitsShader} from "src/gates/CycleBitsGates.js"
+import {Suite} from "../TestUtil.js"
+import {assertThatCircuitShaderActsLikeMatrix} from "../CircuitOperationTestUtil.js"
+import {cycleBitsShader} from "../../src/gates/CycleBitsGates.js"
 
-import {Matrix} from "src/math/Matrix.js"
+import {Matrix} from "../../src/math/Matrix.js"
 
 let suite = new Suite("CycleBitsGates");
 

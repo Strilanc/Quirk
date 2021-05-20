@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Gate, GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {ketArgs, ketShader, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
+import {Gate, GateBuilder} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {Matrix} from "../math/Matrix.js"
+import {Point} from "../math/Point.js"
+import {ketArgs, ketShader, ketShaderPermute} from "../circuit//KetShaderUtil.js"
 
 /**
  * Gates that correspond to 180 degree rotations around the Bloch sphere, so they're their own inverses.

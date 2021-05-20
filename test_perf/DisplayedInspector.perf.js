@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {perfGoal, millis} from "test_perf/TestPerfUtil.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Rect} from "src/math/Rect.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Hand} from "src/ui/Hand.js"
-import {Painter} from "src/draw/Painter.js"
-import {RestartableRng} from "src/base/RestartableRng.js"
-import {DisplayedCircuit} from "src/ui/DisplayedCircuit.js"
-import {DisplayedInspector} from "src/ui/DisplayedInspector.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {perfGoal, millis} from "./TestPerfUtil.js"
+import {CircuitDefinition} from "../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../src/circuit/CircuitStats.js"
+import {Rect} from "../src/math/Rect.js"
+import {Gates} from "../src/gates/AllGates.js"
+import {Hand} from "../src/ui/Hand.js"
+import {Painter} from "../src/draw/Painter.js"
+import {RestartableRng} from "../src/base/RestartableRng.js"
+import {DisplayedCircuit} from "../src/ui/DisplayedCircuit.js"
+import {DisplayedInspector} from "../src/ui/DisplayedInspector.js"
+import {Serializer} from "../src/circuit/Serializer.js"
 
 perfGoal(
     "Update inspector circuit",

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
-import {initializedWglContext} from "src/webgl/WglContext.js"
-import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {WglArg} from "./WglArg.js"
+import {WglShader} from "./WglShader.js"
+import {WglTexture} from "./WglTexture.js"
+import {initializedWglContext} from "./WglContext.js"
+import {provideWorkingShaderCoderToWglConfiguredShader, WglConfiguredShader} from "./WglConfiguredShader.js"
 
-import {ShaderPart} from "src/webgl/ShaderCoders_Base.js"
-import {SHADER_CODER_BYTES} from "src/webgl/ShaderCoders_intoBytes.js"
-import {SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders_intoFloats.js"
+import {ShaderPart} from "./ShaderCoders_Base.js"
+import {SHADER_CODER_BYTES} from "./ShaderCoders_intoBytes.js"
+import {SHADER_CODER_FLOATS} from "./ShaderCoders_intoFloats.js"
 
 class ShaderPartDescription {
     /**

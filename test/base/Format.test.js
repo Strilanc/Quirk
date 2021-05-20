@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {Format} from "src/base/Format.js"
+import {Suite, assertThat, assertThrows} from "../TestUtil.js"
+import {Format} from "../../src/base/Format.js"
 
 let suite = new Suite("Format");
 

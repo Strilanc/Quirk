@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {WglArg} from "src/webgl/WglArg.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {WglArg} from "../../src/webgl/WglArg.js"
+import {WglShader} from "../../src/webgl/WglShader.js"
+import {WglTexture} from "../../src/webgl/WglTexture.js"
 
 let suite = new Suite("WglArg");
 

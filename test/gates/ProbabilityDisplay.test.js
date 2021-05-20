@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {amplitudesToProbabilities} from "src/gates/ProbabilityDisplay.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {amplitudesToProbabilities} from "../../src/gates/ProbabilityDisplay.js"
 
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Controls} from "src/circuit/Controls.js"
-import {Shaders} from "src/webgl/Shaders.js"
+import {CircuitShaders} from "../../src/circuit/CircuitShaders.js"
+import {Controls} from "../../src/circuit/Controls.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
 
 let suite = new Suite("ProbabilityDisplay");
 

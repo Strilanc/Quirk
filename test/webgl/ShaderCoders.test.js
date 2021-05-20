@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {combinedShaderPartsWithCode, shaderWithOutputPartAndArgs} from "src/webgl/ShaderCoders.js"
-import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
-import {Shaders} from "src/webgl/Shaders.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {combinedShaderPartsWithCode, shaderWithOutputPartAndArgs} from "../../src/webgl/ShaderCoders.js"
+import {currentShaderCoder} from "../../src/webgl/ShaderCoders.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
 
 let suite = new Suite("ShaderCoders");
 

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {Config} from "src/Config.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
+import {CircuitDefinition} from "../circuit/CircuitDefinition.js"
+import {Config} from "../Config.js"
+import {CircuitStats} from "../circuit/CircuitStats.js"
 
 const getCircuitCycleTime = (() => {
     /**

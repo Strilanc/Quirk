@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {Complex} from "src/math/Complex.js"
-import {Matrix} from "src/math/Matrix.js"
-import {parseUserMatrix, parseUserRotation} from "src/ui/forge.js"
+import {Suite, assertThat, assertThrows} from "../TestUtil.js"
+import {Complex} from "../../src/math/Complex.js"
+import {Matrix} from "../../src/math/Matrix.js"
+import {parseUserMatrix, parseUserRotation} from "../../src/ui/forge.js"
 
 let suite = new Suite("forge");
 

@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Config} from "src/Config.js"
-import {DisplayedCircuit} from "src/ui/DisplayedCircuit.js"
-import {DisplayedToolbox} from "src/ui/DisplayedToolbox.js"
-import {GateDrawParams} from "src/draw/GateDrawParams.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Hand} from "src/ui/Hand.js"
-import {Painter} from "src/draw/Painter.js"
-import {Rect} from "src/math/Rect.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {CircuitDefinition} from "../circuit/CircuitDefinition.js"
+import {CircuitStats} from "../circuit/CircuitStats.js"
+import {Config} from "../Config.js"
+import {DisplayedCircuit} from "../ui/DisplayedCircuit.js"
+import {DisplayedToolbox} from "../ui/DisplayedToolbox.js"
+import {GateDrawParams} from "../draw/GateDrawParams.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {Gates} from "../gates/AllGates.js"
+import {Hand} from "../ui/Hand.js"
+import {Painter} from "../draw/Painter.js"
+import {Rect} from "../math/Rect.js"
+import {Serializer} from "../circuit/Serializer.js"
 
 class DisplayedInspector {
     /**

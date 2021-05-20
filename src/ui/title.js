@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
+import {Config} from "../Config.js"
+import {fromJsonText_CircuitDefinition} from "../circuit/Serializer.js"
 
 /**
  * @param {!Revision} revision

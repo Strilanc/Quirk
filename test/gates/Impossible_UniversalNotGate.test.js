@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {universalNot} from "src/gates/Impossible_UniversalNotGate.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {CircuitEvalContext} from "../../src/circuit/CircuitEvalContext.js"
+import {CircuitShaders} from "../../src/circuit/CircuitShaders.js"
+import {universalNot} from "../../src/gates/Impossible_UniversalNotGate.js"
 
-import {Controls} from "src/circuit/Controls.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
+import {Controls} from "../../src/circuit/Controls.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
+import {WglTextureTrader} from "../../src/webgl/WglTextureTrader.js"
 
 let suite = new Suite("Impossible_UniverseNotGate");
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Rect} from "src/math/Rect.js"
+import {Rect} from "../math/Rect.js"
 
 class TouchScrollBlocker {
     /**

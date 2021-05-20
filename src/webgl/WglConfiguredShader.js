@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Matrix} from "src/math/Matrix.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
+import {Matrix} from "../math/Matrix.js"
+import {WglTexture} from "./WglTexture.js"
 
 /** @returns {undefined|!ShaderCoder} */
 let currentShaderCoder = undefined;

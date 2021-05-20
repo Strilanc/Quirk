@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {getKnownPerfTests} from "test_perf/TestPerfUtil.js";
+import {getKnownPerfTests} from "./TestPerfUtil.js";
 
 let execIntoPromise = method => {
     try {
