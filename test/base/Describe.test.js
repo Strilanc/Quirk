@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {describe} from "src/base/Describe.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {describe} from "../../src/base/Describe.js"
 
 let suite = new Suite("Describe");
 

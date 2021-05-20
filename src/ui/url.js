@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {Config} from "src/Config.js"
-import {HistoryPusher} from "src/browser/HistoryPusher.js"
-import {fromJsonText_CircuitDefinition, Serializer} from "src/circuit/Serializer.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "../fallback.js"
+import {CircuitDefinition} from "../circuit/CircuitDefinition.js"
+import {Config} from "../Config.js"
+import {HistoryPusher} from "../browser/HistoryPusher.js"
+import {fromJsonText_CircuitDefinition, Serializer} from "../circuit/Serializer.js"
 
 function urlWithCircuitHash(jsonText) {
     if (jsonText.indexOf('%') !== -1 || jsonText.indexOf('&') !== -1) {

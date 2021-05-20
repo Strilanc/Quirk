@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {perfGoal, millis} from "test_perf/TestPerfUtil.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Gate} from "src/circuit/Gate.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Matrix} from "src/math/Matrix.js"
+import {perfGoal, millis} from "./TestPerfUtil.js"
+import {CircuitDefinition} from "../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../src/circuit/CircuitStats.js"
+import {Gate} from "../src/circuit/Gate.js"
+import {Gates} from "../src/gates/AllGates.js"
+import {Matrix} from "../src/math/Matrix.js"
 
 const diagram = (diagram, ...extras) => CircuitDefinition.fromTextDiagram(new Map([
     ...extras,

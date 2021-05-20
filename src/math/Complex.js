@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {Format, UNICODE_FRACTIONS} from "src/base/Format.js"
-import {Util} from "src/base/Util.js"
-import {parseFormula} from "src/math/FormulaParser.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Format, UNICODE_FRACTIONS} from "../base/Format.js"
+import {Util} from "../base/Util.js"
+import {parseFormula} from "./FormulaParser.js"
 
 const PARSE_COMPLEX_TOKEN_MAP_ALL = new Map();
 const PARSE_COMPLEX_TOKEN_MAP_RAD = new Map();

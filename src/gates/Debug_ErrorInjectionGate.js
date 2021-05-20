@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {GateBuilder} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
 
 let ErrorInjectionGate = new GateBuilder().
     setSerializedId("__error__").

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {WglArg} from "src/webgl/WglArg.js"
+import {WglArg} from "./WglArg.js"
 
 /**
  * A piece of a shader.

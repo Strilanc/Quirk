@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertTrue} from "test/TestUtil.js"
-import {Serializer} from "src/circuit/Serializer.js"
+import {Suite, assertThat, assertTrue} from "../TestUtil.js"
+import {Serializer} from "../../src/circuit/Serializer.js"
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {setGateBuilderEffectToCircuit} from "src/circuit/CircuitComputeUtil.js"
-import {Complex} from "src/math/Complex.js"
-import {CustomGateSet} from "src/circuit/CustomGateSet.js"
-import {describe} from "src/base/Describe.js"
-import {Gate, GateBuilder} from "src/circuit/Gate.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Matrix} from "src/math/Matrix.js"
-import {MysteryGateMaker} from "src/gates/Joke_MysteryGate.js"
-import {seq} from "src/base/Seq.js"
-import {Util} from "src/base/Util.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {setGateBuilderEffectToCircuit} from "../../src/circuit/CircuitComputeUtil.js"
+import {Complex} from "../../src/math/Complex.js"
+import {CustomGateSet} from "../../src/circuit/CustomGateSet.js"
+import {describe} from "../../src/base/Describe.js"
+import {Gate, GateBuilder} from "../../src/circuit/Gate.js"
+import {GateColumn} from "../../src/circuit/GateColumn.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Matrix} from "../../src/math/Matrix.js"
+import {MysteryGateMaker} from "../../src/gates/Joke_MysteryGate.js"
+import {seq} from "../../src/base/Seq.js"
+import {Util} from "../../src/base/Util.js"
 
 let suite = new Suite("Serializer");
 

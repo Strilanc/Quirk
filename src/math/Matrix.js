@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Complex} from "src/math/Complex.js"
-import {DetailedError} from "src/base/DetailedError.js"
-import {Format} from "src/base/Format.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {Util} from "src/base/Util.js"
+import {Complex} from "./Complex.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Format} from "../base/Format.js"
+import {seq, Seq} from "../base/Seq.js"
+import {Util} from "../base/Util.js"
 
 /**
  * A matrix of complex values.

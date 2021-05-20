@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {assertThat, assertTrue} from "test/TestUtil.js"
-import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Complex} from "src/math/Complex.js"
-import {Controls} from "src/circuit/Controls.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {Matrix} from "src/math/Matrix.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {seq, Seq} from "src/base/Seq.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
+import {assertThat, assertTrue} from "./TestUtil.js"
+import {advanceStateWithCircuit} from "../src/circuit/CircuitComputeUtil.js"
+import {CircuitDefinition} from "../src/circuit/CircuitDefinition.js"
+import {CircuitEvalContext} from "../src/circuit/CircuitEvalContext.js"
+import {CircuitShaders} from "../src/circuit/CircuitShaders.js"
+import {CircuitStats} from "../src/circuit/CircuitStats.js"
+import {Complex} from "../src/math/Complex.js"
+import {Controls} from "../src/circuit/Controls.js"
+import {GateColumn} from "../src/circuit/GateColumn.js"
+import {Gates} from "../src/gates/AllGates.js"
+import {Shaders} from "../src/webgl/Shaders.js"
+import {Matrix} from "../src/math/Matrix.js"
+import {KetTextureUtil} from "../src/circuit/KetTextureUtil.js"
+import {seq, Seq} from "../src/base/Seq.js"
+import {WglTextureTrader} from "../src/webgl/WglTextureTrader.js"
 
 // Turn this on to make it easier to debug why a randomized test is failing.
 const USE_SIMPLE_VALUES = false;

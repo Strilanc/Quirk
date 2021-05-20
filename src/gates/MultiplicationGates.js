@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
+import {Gate} from "../circuit//Gate.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
 import {
     modularMultiply,
     modularUnmultiply,
     MODULAR_INVERSE_SHADER_CODE
-} from "src/gates/ModularMultiplicationGates.js"
+} from "./ModularMultiplicationGates.js"
 
 let MultiplicationGates = {};
 

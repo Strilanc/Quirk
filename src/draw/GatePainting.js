@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {GateDrawParams} from "src/draw/GateDrawParams.js"
-import {MathPainter} from "src/draw/MathPainter.js"
-import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {Util} from "src/base/Util.js"
+import {Config} from "../Config.js"
+import {GateDrawParams} from "./GateDrawParams.js"
+import {MathPainter} from "./MathPainter.js"
+import {Point} from "../math/Point.js"
+import {Rect} from "../math/Rect.js"
+import {Util} from "../base/Util.js"
 
 /**
  * A described and possibly time-varying quantum operation.

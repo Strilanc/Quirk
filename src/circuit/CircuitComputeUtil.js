@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {DetailedError} from "src/base/DetailedError.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {Controls} from "src/circuit/Controls.js"
-import {GateBuilder} from "src/circuit/Gate.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Util} from "src/base/Util.js"
+import {CircuitEvalContext} from "./CircuitEvalContext.js"
+import {CircuitShaders} from "./CircuitShaders.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {KetTextureUtil} from "./KetTextureUtil.js"
+import {Controls} from "./Controls.js"
+import {GateBuilder} from "./Gate.js"
+import {Gates} from "../gates/AllGates.js"
+import {Util} from "../base/Util.js"
 
 /**
  * @param {!GateBuilder} builder

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {Rect} from "src/math/Rect.js"
+import {Config} from "../Config.js"
+import {GateBuilder} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {Rect} from "../math/Rect.js"
 
 let SpacerGate = new GateBuilder().
     setSerializedIdAndSymbol("…").

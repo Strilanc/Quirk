@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite} from "test/TestUtil.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {setGateBuilderEffectToCircuit, advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
-import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
-import {GateBuilder} from "src/circuit/Gate.js"
+import {Suite} from "../TestUtil.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {setGateBuilderEffectToCircuit, advanceStateWithCircuit} from "../../src/circuit/CircuitComputeUtil.js"
+import {assertThatCircuitUpdateActsLikeMatrix} from "../CircuitOperationTestUtil.js"
+import {GateBuilder} from "../../src/circuit/Gate.js"
 
-import {Controls} from "src/circuit/Controls.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Matrix} from "src/math/Matrix.js"
+import {Controls} from "../../src/circuit/Controls.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Matrix} from "../../src/math/Matrix.js"
 
 let suite = new Suite("CircuitComputeUtil");
 

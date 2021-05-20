@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitEvalContext} from "src/circuit/CircuitEvalContext.js"
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {KetTextureUtil} from "src/circuit/KetTextureUtil.js"
-import {Controls} from "src/circuit/Controls.js"
-import {DetailedError} from "src/base/DetailedError.js"
-import {Matrix, complexVectorToReadableJson} from "src/math/Matrix.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {Serializer} from "src/circuit/Serializer.js"
-import {Util} from "src/base/Util.js"
-import {notifyAboutRecoveryFromUnexpectedError} from "src/fallback.js"
-import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
-import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
+import {CircuitDefinition} from "./CircuitDefinition.js"
+import {CircuitEvalContext} from "./CircuitEvalContext.js"
+import {CircuitShaders} from "./CircuitShaders.js"
+import {KetTextureUtil} from "./KetTextureUtil.js"
+import {Controls} from "./Controls.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Matrix, complexVectorToReadableJson} from "../math/Matrix.js"
+import {Shaders} from "../webgl/Shaders.js"
+import {Serializer} from "./Serializer.js"
+import {Util} from "../base/Util.js"
+import {notifyAboutRecoveryFromUnexpectedError} from "../fallback.js"
+import {advanceStateWithCircuit} from "./CircuitComputeUtil.js"
+import {currentShaderCoder} from "../webgl/ShaderCoders.js"
+import {WglTextureTrader} from "../webgl/WglTextureTrader.js"
 
 class CircuitStats {
     /**

@@ -24,12 +24,12 @@ import {WglArg} from 'src/webgl/WglArg.js';
 import {Config} from 'src/Config.js'
 import {GatePainting} from 'src/draw/GatePainting.js'
 import {makePseudoShaderWithInputsAndOutputAndCode, Outputs} from 'src/webgl/ShaderCoders.js';
-import {Matrix} from "src/math/Matrix.js";
-import {GateShaders} from "src/circuit/GateShaders.js";
-import {Point} from "src/math/Point.js";
-import {DetailedError} from "src/base/DetailedError.js";
-import {QuarterTurnGates} from "src/gates/QuarterTurnGates.js";
-import {HalfTurnGates} from "src/gates/HalfTurnGates.js";
+import {Matrix} from "../math/Matrix.js";
+import {GateShaders} from "../circuit//GateShaders.js";
+import {Point} from "../math/Point.js";
+import {DetailedError} from "../base/DetailedError.js";
+import {QuarterTurnGates} from "./QuarterTurnGates.js";
+import {HalfTurnGates} from "./HalfTurnGates.js";
 
 /**
  * @param {!CircuitEvalContext} ctx

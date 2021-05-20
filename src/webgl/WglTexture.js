@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {Util} from "src/base/Util.js"
-import {WglMortalValueSlot} from "src/webgl/WglMortalValueSlot.js"
-import {initializedWglContext}  from "src/webgl/WglContext.js"
-import {checkGetErrorResult, checkFrameBufferStatusResult} from "src/webgl/WglUtil.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Util} from "../base/Util.js"
+import {WglMortalValueSlot} from "./WglMortalValueSlot.js"
+import {initializedWglContext}  from "./WglContext.js"
+import {checkGetErrorResult, checkFrameBufferStatusResult} from "./WglUtil.js"
 
 /**
  * Stores pixel data for/from the gpu.

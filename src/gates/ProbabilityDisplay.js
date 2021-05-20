@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Complex} from "src/math/Complex.js"
-import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
-import {MathPainter} from "src/draw/MathPainter.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {Rect} from "src/math/Rect.js"
-import {Seq} from "src/base/Seq.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {Util} from "src/base/Util.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {Complex} from "../math/Complex.js"
+import {Config} from "../Config.js"
+import {Gate} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {GateShaders} from "../circuit//GateShaders.js"
+import {MathPainter} from "../draw/MathPainter.js"
+import {Matrix} from "../math/Matrix.js"
+import {Point} from "../math/Point.js"
+import {Rect} from "../math/Rect.js"
+import {Seq} from "../base/Seq.js"
+import {Shaders} from "../webgl/Shaders.js"
+import {Util} from "../base/Util.js"
+import {WglConfiguredShader} from "../webgl/WglConfiguredShader.js"
 import {
     Inputs,
     Outputs,
     currentShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode
-} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
+} from "../webgl/ShaderCoders.js"
+import {WglTexturePool} from "../webgl/WglTexturePool.js"
+import {WglTextureTrader} from "../webgl/WglTextureTrader.js"
 
 /**
  * Derives conditional computational basis measurement probabilities from the state vector.

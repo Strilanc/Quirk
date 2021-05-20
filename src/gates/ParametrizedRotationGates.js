@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {GateBuilder} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {Complex, PARSE_COMPLEX_TOKEN_MAP_RAD} from "src/math/Complex.js"
-import {Matrix} from "src/math/Matrix.js"
-import {ketArgs, ketShader, ketShaderPhase, ketInputGateShaderCode} from "src/circuit/KetShaderUtil.js"
-import {WglArg} from "src/webgl/WglArg.js"
-import {Util} from "src/base/Util.js";
-import {parseFormula} from "src/math/FormulaParser.js";
-import {XExp, YExp, ZExp} from "src/gates/ExponentiatingGates.js";
-import {Config} from "src/Config.js";
+import {GateBuilder} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {Complex, PARSE_COMPLEX_TOKEN_MAP_RAD} from "../math/Complex.js"
+import {Matrix} from "../math/Matrix.js"
+import {ketArgs, ketShader, ketShaderPhase, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {WglArg} from "../webgl/WglArg.js"
+import {Util} from "../base/Util.js";
+import {parseFormula} from "../math/FormulaParser.js";
+import {XExp, YExp, ZExp} from "./ExponentiatingGates.js";
+import {Config} from "../Config.js";
 
 let ParametrizedRotationGates = {};
 

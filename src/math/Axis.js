@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {UNICODE_FRACTIONS} from "src/base/Format.js"
-import {parseFormula} from "src/math/FormulaParser.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {UNICODE_FRACTIONS} from "../base/Format.js"
+import {parseFormula} from "./FormulaParser.js"
 
 const PARSE_AXIS_TOKEN_MAP = new Map();
 

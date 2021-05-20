@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Complex} from "src/math/Complex.js"
-import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPhase} from "src/circuit/KetShaderUtil.js"
-import {Matrix} from "src/math/Matrix.js"
-import {HalfTurnGates} from "src/gates/HalfTurnGates.js"
-import {reverseShaderForSize} from "src/gates/ReverseBitsGate.js"
-import {WglArg} from "src/webgl/WglArg.js"
+import {Complex} from "../math/Complex.js"
+import {Gate} from "../circuit//Gate.js"
+import {ketArgs, ketShaderPhase} from "../circuit//KetShaderUtil.js"
+import {Matrix} from "../math/Matrix.js"
+import {HalfTurnGates} from "./HalfTurnGates.js"
+import {reverseShaderForSize} from "./ReverseBitsGate.js"
+import {WglArg} from "../webgl/WglArg.js"
 
 /**
  * @param {!CircuitEvalContext} ctx

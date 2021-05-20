@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {DisplayedCircuit} from "src/ui/DisplayedCircuit.js"
+import {Suite, assertThat, assertThrows} from "../TestUtil.js"
+import {DisplayedCircuit} from "../../src/ui/DisplayedCircuit.js"
 
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Point} from "src/math/Point.js"
-import {RestartableRng} from "src/base/RestartableRng.js"
-import {Hand} from "src/ui/Hand.js"
-import {Painter} from "src/draw/Painter.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../../src/circuit/CircuitStats.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Point} from "../../src/math/Point.js"
+import {RestartableRng} from "../../src/base/RestartableRng.js"
+import {Hand} from "../../src/ui/Hand.js"
+import {Painter} from "../../src/draw/Painter.js"
 
 const COMMON_GATES = new Map([
     ['X', Gates.HalfTurns.X],

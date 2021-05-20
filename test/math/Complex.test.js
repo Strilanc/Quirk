@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows, assertTrue} from "test/TestUtil.js"
-import {Complex} from "src/math/Complex.js"
+import {Suite, assertThat, assertThrows, assertTrue} from "../TestUtil.js"
+import {Complex} from "../../src/math/Complex.js"
 
-import {Format} from "src/base/Format.js"
+import {Format} from "../../src/base/Format.js"
 
 let suite = new Suite("Complex");
 

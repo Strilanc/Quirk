@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {Controls} from "src/circuit/Controls.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {Util} from "src/base/Util.js"
-import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {Config} from "../Config.js"
+import {Controls} from "./Controls.js"
+import {ketArgs, ketShaderPermute} from "./KetShaderUtil.js"
+import {Shaders} from "../webgl/Shaders.js"
+import {Util} from "../base/Util.js"
+import {WglArg} from "../webgl/WglArg.js"
+import {WglConfiguredShader} from "../webgl/WglConfiguredShader.js"
 import {
     currentShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode,
     Inputs,
     Outputs
-} from "src/webgl/ShaderCoders.js"
+} from "../webgl/ShaderCoders.js"
 
 /**
  * Defines operations used to initialize, advance, and inspect quantum states stored in WebGL textures.

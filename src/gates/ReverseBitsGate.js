@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {Seq} from "src/base/Seq.js"
+import {Config} from "../Config.js"
+import {Gate} from "../circuit//Gate.js"
+import {ketArgs, ketShaderPermute} from "../circuit//KetShaderUtil.js"
+import {Seq} from "../base/Seq.js"
 
 let _generateReverseShaderForSize = span => span < 2 ? undefined : ketShaderPermute(
     '',

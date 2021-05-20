@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {Gate} from "src/circuit/Gate.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {ketArgs, ketShaderPermute} from "src/circuit/KetShaderUtil.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Point} from "src/math/Point.js"
-import {Util} from "src/base/Util.js"
-import {WglArg} from "src/webgl/WglArg.js"
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
+import {Config} from "../Config.js"
+import {Gate} from "../circuit//Gate.js"
+import {GatePainting} from "../draw/GatePainting.js"
+import {ketArgs, ketShaderPermute} from "../circuit//KetShaderUtil.js"
+import {Matrix} from "../math/Matrix.js"
+import {Point} from "../math/Point.js"
+import {Util} from "../base/Util.js"
+import {WglArg} from "../webgl/WglArg.js"
+import {WglConfiguredShader} from "../webgl/WglConfiguredShader.js"
 
 let CycleBitsGates = {};
 

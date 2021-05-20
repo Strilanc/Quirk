@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {Shaders} from "src/webgl/Shaders.js"
+import {Suite, assertThat, assertThrows} from "../TestUtil.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
 import {
     Outputs,
     makePseudoShaderWithInputsAndOutputAndCode
-} from "src/webgl/ShaderCoders.js"
-import {WglShader} from "src/webgl/WglShader.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
+} from "../../src/webgl/ShaderCoders.js"
+import {WglShader} from "../../src/webgl/WglShader.js"
+import {WglTexture} from "../../src/webgl/WglTexture.js"
 
-import {Seq} from "src/base/Seq.js"
+import {Seq} from "../../src/base/Seq.js"
 
 let suite = new Suite("Shaders");
 

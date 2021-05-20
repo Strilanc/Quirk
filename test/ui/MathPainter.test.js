@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {MathPainter} from "src/draw/MathPainter.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {MathPainter} from "../../src/draw/MathPainter.js"
 
 let suite = new Suite("MathPainter");
 

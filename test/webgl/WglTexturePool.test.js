@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
+import {Suite, assertThat} from "../TestUtil.js"
 import {
     currentShaderCoder,
     Outputs,
     makePseudoShaderWithInputsAndOutputAndCode
-} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+} from "../../src/webgl/ShaderCoders.js"
+import {WglTexturePool} from "../../src/webgl/WglTexturePool.js"
 
 let suite = new Suite("WglTexturePool");
 

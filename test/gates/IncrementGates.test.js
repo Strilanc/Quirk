@@ -1,12 +1,12 @@
-import {Suite} from "test/TestUtil.js"
-import {offsetShader, IncrementGates} from "src/gates/IncrementGates.js"
+import {Suite} from "../TestUtil.js"
+import {offsetShader, IncrementGates} from "../../src/gates/IncrementGates.js"
 import {
     assertThatCircuitShaderActsLikePermutation,
     assertThatGateActsLikePermutation,
-} from "test/CircuitOperationTestUtil.js"
+} from "../CircuitOperationTestUtil.js"
 
-import {ketArgs} from "src/circuit/KetShaderUtil.js"
-import {WglArg} from "src/webgl/WglArg.js"
+import {ketArgs} from "../../src/circuit/KetShaderUtil.js"
+import {WglArg} from "../../src/webgl/WglArg.js"
 
 let suite = new Suite("ArithmeticGates");
 

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {GateShaders} from "src/circuit/GateShaders.js"
-import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {GateShaders} from "../../src/circuit/GateShaders.js"
+import {assertThatCircuitUpdateActsLikeMatrix} from "../CircuitOperationTestUtil.js"
 
-import {Complex} from "src/math/Complex.js"
-import {Seq} from "src/base/Seq.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {Matrix} from "src/math/Matrix.js"
+import {Complex} from "../../src/math/Complex.js"
+import {Seq} from "../../src/base/Seq.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
+import {Matrix} from "../../src/math/Matrix.js"
 
 let suite = new Suite("GateShaders");
 

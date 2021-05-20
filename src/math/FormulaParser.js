@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {seq} from "src/base/Seq.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {seq} from "../base/Seq.js"
 
 /**
  * @param {!Array.<!String>} tokens

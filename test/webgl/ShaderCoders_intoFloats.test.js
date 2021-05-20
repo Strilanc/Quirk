@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows} from "test/TestUtil.js"
-import {SHADER_CODER_FLOATS} from "src/webgl/ShaderCoders_intoFloats.js"
-import {Shaders} from "src/webgl/Shaders.js"
+import {Suite, assertThat, assertThrows} from "../TestUtil.js"
+import {SHADER_CODER_FLOATS} from "../../src/webgl/ShaderCoders_intoFloats.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
 
 let suite = new Suite("ShaderCoders");
 

@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Controls} from "src/circuit/Controls.js"
-import {DetailedError} from "src/base/DetailedError.js"
-import {Matrix} from "src/math/Matrix.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {Util} from "src/base/Util.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {CircuitShaders} from "./CircuitShaders.js"
+import {Controls} from "./Controls.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Matrix} from "../math/Matrix.js"
+import {Shaders} from "../webgl/Shaders.js"
+import {Util} from "../base/Util.js"
+import {WglTexture} from "../webgl/WglTexture.js"
+import {seq, Seq} from "../base/Seq.js"
 import {
     outputShaderCoder,
     currentShaderCoder,
     makePseudoShaderWithInputsAndOutputAndCode,
     Inputs,
     Outputs
-} from "src/webgl/ShaderCoders.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
-import {WglTextureTrader} from "src/webgl/WglTextureTrader.js"
+} from "../webgl/ShaderCoders.js"
+import {WglTexturePool} from "../webgl/WglTexturePool.js"
+import {WglTextureTrader} from "../webgl/WglTextureTrader.js"
 
 /**
  * Utilities related to storing and operation on superpositions and other circuit information in WebGL textures.

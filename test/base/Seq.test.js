@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "test/TestUtil.js"
-import {seq, Seq} from "src/base/Seq.js"
+import {Suite, assertThat, assertThrows, assertTrue, assertFalse} from "../TestUtil.js"
+import {seq, Seq} from "../../src/base/Seq.js"
 
 let suite = new Suite("Seq");
 

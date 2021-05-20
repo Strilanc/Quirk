@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
+import {Config} from "../Config.js"
 
 /**
  * Checks if the given code, returned by gl.getError, is an error or not.

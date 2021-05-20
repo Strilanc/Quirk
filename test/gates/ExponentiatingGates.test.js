@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {Gates} from "src/gates/AllGates.js"
-import {Complex} from "src/math/Complex.js"
-import {Matrix} from "src/math/Matrix.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {Complex} from "../../src/math/Complex.js"
+import {Matrix} from "../../src/math/Matrix.js"
 
 let suite = new Suite("ExponentiatingGates");
 

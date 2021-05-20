@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {GateDrawParams} from "src/draw/GateDrawParams.js"
-import {Complex} from "src/math/Complex.js"
-import {Matrix} from "src/math/Matrix.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {GateDrawParams} from "../draw/GateDrawParams.js"
+import {Complex} from "../math/Complex.js"
+import {Matrix} from "../math/Matrix.js"
 
 /**
  * Describes a quantum operation that may vary with time.

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite} from "test/TestUtil.js"
-import {assertThatCircuitUpdateActsLikeMatrix} from "test/CircuitOperationTestUtil.js"
-import {applyControlledPhaseGradient, FourierTransformGates} from "src/gates/FourierTransformGates.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
-import {advanceStateWithCircuit} from "src/circuit/CircuitComputeUtil.js"
+import {Suite} from "../TestUtil.js"
+import {assertThatCircuitUpdateActsLikeMatrix} from "../CircuitOperationTestUtil.js"
+import {applyControlledPhaseGradient, FourierTransformGates} from "../../src/gates/FourierTransformGates.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {GateColumn} from "../../src/circuit/GateColumn.js"
+import {advanceStateWithCircuit} from "../../src/circuit/CircuitComputeUtil.js"
 
-import {Complex} from "src/math/Complex.js"
-import {Matrix} from "src/math/Matrix.js"
+import {Complex} from "../../src/math/Complex.js"
+import {Matrix} from "../../src/math/Matrix.js"
 
 let suite = new Suite("FourierTransformGates");
 

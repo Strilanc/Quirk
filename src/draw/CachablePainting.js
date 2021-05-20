@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Painter} from "src/draw/Painter.js"
-import {RestartableRng} from "src/base/RestartableRng.js"
+import {Painter} from "./Painter.js"
+import {RestartableRng} from "../base/RestartableRng.js"
 
 const fixedRng = new RestartableRng();
 

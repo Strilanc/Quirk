@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {canvasCreatedForTesting, webglContextCreatedForTesting} from "src/issues.js"
+import {canvasCreatedForTesting, webglContextCreatedForTesting} from "../issues.js"
 
 /**
  * A WebGLRenderingContext wrapped with metadata helpers, lifetime information, and utility methods.

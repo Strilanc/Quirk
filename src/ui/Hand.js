@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {describe} from "src/base/Describe.js"
-import {DetailedError} from "src/base/DetailedError.js"
-import {Gate} from "src/circuit/Gate.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
-import {Point} from "src/math/Point.js"
-import {Util} from "src/base/Util.js"
+import {describe} from "../base/Describe.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Gate} from "../circuit/Gate.js"
+import {GateColumn} from "../circuit/GateColumn.js"
+import {Point} from "../math/Point.js"
+import {Util} from "../base/Util.js"
 
 class Hand {
     /**

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat, assertTrue, assertFalse} from "test/TestUtil.js"
-import {GateColumn} from "src/circuit/GateColumn.js"
+import {Suite, assertThat, assertTrue, assertFalse} from "../TestUtil.js"
+import {GateColumn} from "../../src/circuit/GateColumn.js"
 
-import {Gates} from "src/gates/AllGates.js"
+import {Gates} from "../../src/gates/AllGates.js"
 
 let suite = new Suite("GateColumn");
 

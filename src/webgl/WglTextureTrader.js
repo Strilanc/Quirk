@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {WglConfiguredShader} from "src/webgl/WglConfiguredShader.js"
-import {WglTexture} from "src/webgl/WglTexture.js"
-import {WglTexturePool} from "src/webgl/WglTexturePool.js"
+import {WglConfiguredShader} from "./WglConfiguredShader.js"
+import {WglTexture} from "./WglTexture.js"
+import {WglTexturePool} from "./WglTexturePool.js"
 
 /**
  * A mechanism, for applying a series of shaders to textures, that handles tedious deallocation for you.

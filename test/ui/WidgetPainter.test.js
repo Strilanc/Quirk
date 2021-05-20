@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
-import {WidgetPainter} from "src/draw/WidgetPainter.js"
+import {Suite, assertThat} from "../TestUtil.js"
+import {WidgetPainter} from "../../src/draw/WidgetPainter.js"
 
-import {Format} from "src/base/Format.js"
-import {Complex} from "src/math/Complex.js"
+import {Format} from "../../src/base/Format.js"
+import {Complex} from "../../src/math/Complex.js"
 
 let suite = new Suite("WidgetPainter");
 

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Config} from "src/Config.js"
-import {ObservableValue} from "src/base/Obs.js"
-import {Serializer} from "src/circuit/Serializer.js"
-import {selectAndCopyToClipboard} from "src/browser/Clipboard.js"
-import {fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
-import {saveFile} from "src/browser/SaveFile.js"
+import {Config} from "../Config.js"
+import {ObservableValue} from "../base/Obs.js"
+import {Serializer} from "../circuit/Serializer.js"
+import {selectAndCopyToClipboard} from "../browser/Clipboard.js"
+import {fromJsonText_CircuitDefinition} from "../circuit/Serializer.js"
+import {saveFile} from "../browser/SaveFile.js"
 
 const exportsIsVisible = new ObservableValue(false);
 const obsExportsIsShowing = exportsIsVisible.observable().whenDifferent();

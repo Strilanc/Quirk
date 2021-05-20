@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {ShaderPart, SingleTypeCoder, ShaderCoder, BOOL_TYPE_CODER} from "src/webgl/ShaderCoders_Base.js"
-import {WglArg} from "src/webgl/WglArg.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {ShaderPart, SingleTypeCoder, ShaderCoder, BOOL_TYPE_CODER} from "./ShaderCoders_Base.js"
+import {WglArg} from "./WglArg.js"
 
 /**
  * @param {!int} vecSize

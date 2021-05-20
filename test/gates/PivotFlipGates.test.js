@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite} from "test/TestUtil.js"
-import {assertThatCircuitOutputsBasisKet} from "test/CircuitOperationTestUtil.js"
+import {Suite} from "../TestUtil.js"
+import {assertThatCircuitOutputsBasisKet} from "../CircuitOperationTestUtil.js"
 
-import {PivotFlipGates} from "src/gates/PivotFlipGates.js"
-import {Gates} from "src/gates/AllGates.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
+import {PivotFlipGates} from "../../src/gates/PivotFlipGates.js"
+import {Gates} from "../../src/gates/AllGates.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
 
 let suite = new Suite("PivotFlipGates");
 

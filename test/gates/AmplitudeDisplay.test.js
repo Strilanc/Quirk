@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Suite, assertThat} from "test/TestUtil.js"
+import {Suite, assertThat} from "../TestUtil.js"
 import {
     amplitudeDisplayStatTextures,
     AMPS_TO_SQUARED_MAGS_SHADER,
@@ -20,17 +20,17 @@ import {
     FOLD_MAX_INDEXED_MAG_SHADER,
     LOOKUP_KET_AT_INDEXED_MAG_SHADER,
     POINTWISE_CMUL_CONJ_SHADER,
-} from "src/gates/AmplitudeDisplay.js"
+} from "../../src/gates/AmplitudeDisplay.js"
 
-import {Complex} from "src/math/Complex.js"
-import {Controls} from "src/circuit/Controls.js"
-import {CircuitDefinition} from "src/circuit/CircuitDefinition.js"
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {CircuitShaders} from "src/circuit/CircuitShaders.js"
-import {Serializer} from "src/circuit/Serializer.js"
-import {seq} from "src/base/Seq.js"
-import {Shaders} from "src/webgl/Shaders.js"
-import {currentShaderCoder} from "src/webgl/ShaderCoders.js"
+import {Complex} from "../../src/math/Complex.js"
+import {Controls} from "../../src/circuit/Controls.js"
+import {CircuitDefinition} from "../../src/circuit/CircuitDefinition.js"
+import {CircuitStats} from "../../src/circuit/CircuitStats.js"
+import {CircuitShaders} from "../../src/circuit/CircuitShaders.js"
+import {Serializer} from "../../src/circuit/Serializer.js"
+import {seq} from "../../src/base/Seq.js"
+import {Shaders} from "../../src/webgl/Shaders.js"
+import {currentShaderCoder} from "../../src/webgl/ShaderCoders.js"
 
 let suite = new Suite("AmplitudeDisplay");
 

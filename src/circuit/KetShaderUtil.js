@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {WglArg} from "src/webgl/WglArg.js"
-import {makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "src/webgl/ShaderCoders.js"
+import {WglArg} from "../webgl/WglArg.js"
+import {makePseudoShaderWithInputsAndOutputAndCode, Inputs, Outputs} from "../webgl/ShaderCoders.js"
 
 /**
  * Creates a shader for a quantum gate based on a minimalist input like `return cmul(inp(0.0), vec2(0.0, 1.0));`.

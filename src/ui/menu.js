@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ObservableValue} from "src/base/Obs.js"
+import {ObservableValue} from "../base/Obs.js"
 
 const menuIsVisible = new ObservableValue(true);
 const obsMenuIsShowing = menuIsVisible.observable().whenDifferent();

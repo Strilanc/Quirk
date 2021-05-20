@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DetailedError} from "src/base/DetailedError.js"
-import {Seq} from "src/base/Seq.js"
-import {Util} from "src/base/Util.js"
+import {DetailedError} from "../base/DetailedError.js"
+import {Seq} from "../base/Seq.js"
+import {Util} from "../base/Util.js"
 
 /**
  * Stores a set of requirements that a state's bits must meet.
