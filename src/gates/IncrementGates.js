@@ -1,5 +1,5 @@
-import {Gate} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPermute} from "../circuit//KetShaderUtil.js"
+import {Gate} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPermute} from "../circuit/KetShaderUtil.js"
 import {WglArg} from "../webgl/WglArg.js"
 
 let IncrementGates = {};

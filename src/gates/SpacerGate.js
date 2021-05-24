@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {Config} from "../Config.js"
-import {GateBuilder} from "../circuit//Gate.js"
+import {GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 import {Rect} from "../math/Rect.js"
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Gate} from "../circuit//Gate.js"
+import {Gate} from "../circuit/Gate.js"
 import {Matrix} from "../math/Matrix.js"
 
 let VariousZGates = {};

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Gate} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {Gate} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit/KetShaderUtil.js"
 import {Util} from "../base/Util.js"
 import {WglArg} from "../webgl/WglArg.js"
 import {modulusTooBigChecker} from "./ModularIncrementGates.js"

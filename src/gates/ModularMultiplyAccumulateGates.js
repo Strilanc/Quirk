@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import {BIG_MUL_MOD_SHADER_CODE} from "./MultiplyAccumulateGates.js"
-import {Gate} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {Gate} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit/KetShaderUtil.js"
 import {modulusTooBigChecker} from "./ModularIncrementGates.js"
 import {Util} from "../base/Util.js"
 import {WglArg} from "../webgl/WglArg.js"

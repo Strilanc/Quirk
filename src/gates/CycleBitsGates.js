@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import {Config} from "../Config.js"
-import {Gate} from "../circuit//Gate.js"
+import {Gate} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {ketArgs, ketShaderPermute} from "../circuit//KetShaderUtil.js"
+import {ketArgs, ketShaderPermute} from "../circuit/KetShaderUtil.js"
 import {Matrix} from "../math/Matrix.js"
 import {Point} from "../math/Point.js"
 import {Util} from "../base/Util.js"

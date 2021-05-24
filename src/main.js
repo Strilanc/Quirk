@@ -13,38 +13,38 @@
 // limitations under the License.
 
 // It's important that the polyfills and error fallback get loaded first!
-import {} from "src/browser/Polyfills.js"
-import {hookErrorHandler} from "src/fallback.js"
+import {} from "./browser/Polyfills.js"
+import {hookErrorHandler} from "./fallback.js"
 hookErrorHandler();
-import {doDetectIssues} from "src/issues.js"
+import {doDetectIssues} from "./issues.js"
 doDetectIssues();
 
-import {CircuitStats} from "src/circuit/CircuitStats.js"
-import {CooldownThrottle} from "src/base/CooldownThrottle.js"
-import {Config} from "src/Config.js"
-import {DisplayedInspector} from "src/ui/DisplayedInspector.js"
-import {Painter} from "src/draw/Painter.js"
-import {Rect} from "src/math/Rect.js"
-import {RestartableRng} from "src/base/RestartableRng.js"
-import {Revision} from "src/base/Revision.js"
-import {initSerializer, fromJsonText_CircuitDefinition} from "src/circuit/Serializer.js"
-import {TouchScrollBlocker} from "src/browser/TouchScrollBlocker.js"
-import {Util} from "src/base/Util.js"
-import {initializedWglContext} from "src/webgl/WglContext.js"
-import {watchDrags, isMiddleClicking, eventPosRelativeTo} from "src/browser/MouseWatcher.js"
-import {ObservableValue, ObservableSource} from "src/base/Obs.js"
-import {initExports, obsExportsIsShowing} from "src/ui/exports.js"
-import {initForge, obsForgeIsShowing} from "src/ui/forge.js"
-import {initMenu, obsMenuIsShowing, closeMenu} from "src/ui/menu.js"
-import {initUndoRedo} from "src/ui/undo.js"
-import {initClear} from "src/ui/clear.js"
-import {initUrlCircuitSync} from "src/ui/url.js"
-import {initTitleSync} from "src/ui/title.js"
-import {simulate} from "src/ui/sim.js"
-import {GatePainting} from "src/draw/GatePainting.js"
-import {GATE_CIRCUIT_DRAWER} from "src/ui/DisplayedCircuit.js"
-import {GateColumn} from "src/circuit/GateColumn.js";
-import {Point} from "src/math/Point.js";
+import {CircuitStats} from "./circuit/CircuitStats.js"
+import {CooldownThrottle} from "./base/CooldownThrottle.js"
+import {Config} from "./Config.js"
+import {DisplayedInspector} from "./ui/DisplayedInspector.js"
+import {Painter} from "./draw/Painter.js"
+import {Rect} from "./math/Rect.js"
+import {RestartableRng} from "./base/RestartableRng.js"
+import {Revision} from "./base/Revision.js"
+import {initSerializer, fromJsonText_CircuitDefinition} from "./circuit/Serializer.js"
+import {TouchScrollBlocker} from "./browser/TouchScrollBlocker.js"
+import {Util} from "./base/Util.js"
+import {initializedWglContext} from "./webgl/WglContext.js"
+import {watchDrags, isMiddleClicking, eventPosRelativeTo} from "./browser/MouseWatcher.js"
+import {ObservableValue, ObservableSource} from "./base/Obs.js"
+import {initExports, obsExportsIsShowing} from "./ui/exports.js"
+import {initForge, obsForgeIsShowing} from "./ui/forge.js"
+import {initMenu, obsMenuIsShowing, closeMenu} from "./ui/menu.js"
+import {initUndoRedo} from "./ui/undo.js"
+import {initClear} from "./ui/clear.js"
+import {initUrlCircuitSync} from "./ui/url.js"
+import {initTitleSync} from "./ui/title.js"
+import {simulate} from "./ui/sim.js"
+import {GatePainting} from "./draw/GatePainting.js"
+import {GATE_CIRCUIT_DRAWER} from "./ui/DisplayedCircuit.js"
+import {GateColumn} from "./circuit/GateColumn.js";
+import {Point} from "./math/Point.js";
 initSerializer(
     GatePainting.LABEL_DRAWER,
     GatePainting.MATRIX_DRAWER,

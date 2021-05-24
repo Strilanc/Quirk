@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {Complex} from "../math/Complex.js"
-import {GateBuilder} from "../circuit//Gate.js"
+import {GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 import {Matrix} from "../math/Matrix.js"
 

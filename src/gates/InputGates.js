@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Gate, GateBuilder} from "../circuit//Gate.js"
+import {Gate, GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 import {reverseShaderForSize} from "./ReverseBitsGate.js"
 
