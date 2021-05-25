@@ -15,11 +15,11 @@
  */
 
 import {Config} from "../Config.js"
-import {Gate, GateBuilder} from "../circuit//Gate.js"
+import {Gate, GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 import {Matrix} from "../math/Matrix.js"
 import {Point} from "../math/Point.js"
-import {ketArgs} from "../circuit//KetShaderUtil.js"
+import {ketArgs} from "../circuit/KetShaderUtil.js"
 import {WglArg} from "../webgl/WglArg.js"
 
 import {offsetShader} from "./IncrementGates.js"

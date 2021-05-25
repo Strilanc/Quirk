@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {notifyAboutKnownIssue} from "src/fallback.js"
+import {notifyAboutKnownIssue} from "./fallback.js"
 
 let canvasCreatedForTesting = document.createElement('canvas');
 let webglContextCreatedForTesting = canvasCreatedForTesting.getContext('webgl') ||

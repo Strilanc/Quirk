@@ -15,8 +15,8 @@
  */
 
 import {Complex} from "../math/Complex.js"
-import {Gate} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPhase} from "../circuit//KetShaderUtil.js"
+import {Gate} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPhase} from "../circuit/KetShaderUtil.js"
 import {Matrix} from "../math/Matrix.js"
 import {HalfTurnGates} from "./HalfTurnGates.js"
 import {reverseShaderForSize} from "./ReverseBitsGate.js"

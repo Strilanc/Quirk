@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {GateBuilder} from "../circuit//Gate.js"
+import {GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {GateShaders} from "../circuit//GateShaders.js"
+import {GateShaders} from "../circuit/GateShaders.js"
 import {HalfTurnGates} from "./HalfTurnGates.js"
 import {QuarterTurnGates} from "./QuarterTurnGates.js"
 import {Config} from "../Config.js"
-import {ketArgs, ketShaderPermute} from "../circuit//KetShaderUtil.js";
+import {ketArgs, ketShaderPermute} from "../circuit/KetShaderUtil.js";
 import {WglArg} from "../webgl/WglArg.js";
 import {Util} from "../base/Util.js";
 

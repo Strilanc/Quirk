@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {GateBuilder} from "../circuit//Gate.js"
+import {GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 import {Complex, PARSE_COMPLEX_TOKEN_MAP_RAD} from "../math/Complex.js"
 import {Matrix} from "../math/Matrix.js"
-import {ketArgs, ketShader, ketShaderPhase, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {ketArgs, ketShader, ketShaderPhase, ketInputGateShaderCode} from "../circuit/KetShaderUtil.js"
 import {WglArg} from "../webgl/WglArg.js"
 import {Util} from "../base/Util.js";
 import {parseFormula} from "../math/FormulaParser.js";

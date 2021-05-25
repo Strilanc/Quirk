@@ -15,9 +15,9 @@
  */
 
 import {Config} from "../Config.js";
-import {Gate} from "../circuit//Gate.js"
+import {Gate} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {ketArgs, ketShaderPhase} from "../circuit//KetShaderUtil.js"
+import {ketArgs, ketShaderPhase} from "../circuit/KetShaderUtil.js"
 import {MUL_STEP} from "./MultiplyAccumulateGates.js"
 import {WglArg} from "../webgl/WglArg.js"
 import {Matrix} from "../math/Matrix.js";

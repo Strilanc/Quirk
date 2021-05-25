@@ -15,8 +15,8 @@
  */
 
 import {Config} from "../Config.js"
-import {Gate} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {Gate} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit/KetShaderUtil.js"
 import {Util} from "../base/Util.js"
 import {WglArg} from "../webgl/WglArg.js"
 

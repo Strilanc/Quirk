@@ -15,10 +15,10 @@
  */
 
 import {Config} from "../Config.js"
-import {CircuitShaders} from "../circuit//CircuitShaders.js"
-import {Gate} from "../circuit//Gate.js"
+import {CircuitShaders} from "../circuit/CircuitShaders.js"
+import {Gate} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {GateShaders} from "../circuit//GateShaders.js"
+import {GateShaders} from "../circuit/GateShaders.js"
 import {Format} from "../base/Format.js"
 import {MathPainter} from "../draw/MathPainter.js"
 import {Matrix, complexVectorToReadableJson, realVectorToReadableJson} from "../math/Matrix.js"

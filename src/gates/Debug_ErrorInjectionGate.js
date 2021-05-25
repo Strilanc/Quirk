@@ -15,7 +15,7 @@
  */
 
 import {DetailedError} from "../base/DetailedError.js"
-import {GateBuilder} from "../circuit//Gate.js"
+import {GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 
 let ErrorInjectionGate = new GateBuilder().

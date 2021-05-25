@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {describe} from "src/base/Describe.js"
+import {describe} from "./base/Describe.js"
 
 /**
  * @type {!Array.<{regex: !Pattern, handler: !function()}>}

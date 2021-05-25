@@ -15,7 +15,7 @@
  */
 
 import {Config} from "../Config.js"
-import {GateBuilder} from "../circuit//Gate.js"
+import {GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
 import {MathPainter} from "../draw/MathPainter.js"
 import {Point} from "../math/Point.js"

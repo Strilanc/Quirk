@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Gate, GateBuilder} from "../circuit//Gate.js"
+import {Gate, GateBuilder} from "../circuit/Gate.js"
 import {Matrix} from "../math/Matrix.js"
 
 let QuarterTurnGates = {};

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Gate} from "../circuit//Gate.js"
+import {Gate} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit/KetShaderUtil.js"
 import {WglArg} from "../webgl/WglArg.js"
 
 let ArithmeticGates = {};

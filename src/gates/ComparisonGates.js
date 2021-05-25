@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {GateBuilder} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit//KetShaderUtil.js"
+import {GateBuilder} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPermute, ketInputGateShaderCode} from "../circuit/KetShaderUtil.js"
 import {WglConfiguredShader} from "../webgl/WglConfiguredShader.js"
 
 let ComparisonGates = {};

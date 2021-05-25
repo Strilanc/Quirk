@@ -15,8 +15,8 @@
  */
 
 import {Config} from "../Config.js"
-import {Gate} from "../circuit//Gate.js"
-import {ketArgs, ketShaderPermute} from "../circuit//KetShaderUtil.js"
+import {Gate} from "../circuit/Gate.js"
+import {ketArgs, ketShaderPermute} from "../circuit/KetShaderUtil.js"
 import {Seq} from "../base/Seq.js"
 
 let _generateReverseShaderForSize = span => span < 2 ? undefined : ketShaderPermute(

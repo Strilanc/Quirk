@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {CircuitShaders} from "../circuit//CircuitShaders.js"
-import {Gate, GateBuilder} from "../circuit//Gate.js"
+import {CircuitShaders} from "../circuit/CircuitShaders.js"
+import {Gate, GateBuilder} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {GateShaders} from "../circuit//GateShaders.js"
+import {GateShaders} from "../circuit/GateShaders.js"
 import {MathPainter} from "../draw/MathPainter.js"
 import {Matrix} from "../math/Matrix.js"
 import {Shaders} from "../webgl/Shaders.js"

@@ -16,9 +16,9 @@
 
 import {Complex} from "../math/Complex.js"
 import {Config} from "../Config.js"
-import {Gate} from "../circuit//Gate.js"
+import {Gate} from "../circuit/Gate.js"
 import {GatePainting} from "../draw/GatePainting.js"
-import {GateShaders} from "../circuit//GateShaders.js"
+import {GateShaders} from "../circuit/GateShaders.js"
 import {MathPainter} from "../draw/MathPainter.js"
 import {Matrix} from "../math/Matrix.js"
 import {Point} from "../math/Point.js"
