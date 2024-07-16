@@ -342,7 +342,7 @@ class MathPainter {
             let height = 40 + (valueText2 === undefined ? 0 : 20);
             let width = Math.max(Math.max(width1, width2), width3);
             let boundingRect = new Rect(x, y - height, width, height).snapInside(
-                new Rect(0, 0, painter.ctx.canvas.clientWidth, painter.ctx.canvas.clientHeight));
+                new Rect(0, 0, painter.ctx.canvas.getBoundingClientRect().width, painter.ctx.canvas.getBoundingClientRect().height));
 
             let borderPainter = (w, h) => {
                 let r = new Rect(

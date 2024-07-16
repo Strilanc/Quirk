@@ -16,6 +16,7 @@
 
 import {Painter} from "./Painter.js"
 import {RestartableRng} from "../base/RestartableRng.js"
+import {Util} from "../base/Util.js"
 
 const fixedRng = new RestartableRng();
 
@@ -40,6 +41,7 @@ class CachablePainting {
          * @private
          */
         this._cachedCanvases = new Map();
+        this.dpr = 0;
     }
 
     /**
@@ -49,15 +51,22 @@ class CachablePainting {
      * @param {!*=} key
      */
     paint(x, y, painter, key=undefined) {
+        let {width, height} = this.sizeFunc(key);
+        let dpr = Util.getDpr();
+        if(this.dpr != dpr) //user changed zoom level, purge bitmaps
+        {
+            this.dpr = dpr;
+            this._cachedCanvases = new Map();
+        }
         if (!this._cachedCanvases.has(key)) {
             let canvas = /** @type {!HTMLCanvasElement} */ document.createElement('canvas');
-            let {width, height} = this.sizeFunc(key);
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
             this._drawingFunc(new Painter(canvas, fixedRng.restarted()), key);
             this._cachedCanvases.set(key, canvas);
         }
-        painter.ctx.drawImage(this._cachedCanvases.get(key), x, y);
+        let kanvas=this._cachedCanvases.get(key)
+        painter.ctx.drawImage(kanvas,Math.round(x*dpr)/dpr,Math.round(y*dpr)/dpr, kanvas.width/dpr, kanvas.height/dpr);
     }
 }
 

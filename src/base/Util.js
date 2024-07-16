@@ -466,6 +466,19 @@ class Util {
         }
         return text;
     }
+
+    /**
+     * Polyfill to determine browser zoom level.
+     * @return {!number}
+     */
+    static getDpr() {
+        // As of 2024, the following works in current versions of Firefox, Chromium and QtWebengine on X11/Linux.
+        // Notably Epiphany does NOT support this api (always returns 1)
+        let dpr = window.devicePixelRatio
+        if (dpr === undefined)
+            dpr = 1
+        return dpr
+    }
 }
 
 /**

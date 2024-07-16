@@ -40,6 +40,20 @@ const forgeIsVisible = new ObservableValue(false);
 const obsForgeIsShowing = forgeIsVisible.observable().whenDifferent();
 
 /**
+ * @param {!HTMLCanvasElement} canvas
+ * @returns {!Painter}
+ */
+function getNewPainterForCanvas(canvas) {
+    let dpr = Util.getDpr();
+    canvas.height = Math.round(parseInt(canvas.style.height) * dpr)
+    canvas.width = Math.round(parseInt(canvas.style.width) * dpr)
+    //Resizing the canvas is a hack to purge context because `new Painter(…)` is not idempotent; otherwise image zooms in and in - BRJSP
+    let painter = new Painter(canvas);
+    painter.clear();
+    return painter;
+}
+
+/**
  * @param {!Revision} revision
  * @param {!Observable.<!boolean>} obsIsAnyOverlayShowing
  */
@@ -73,9 +87,8 @@ function initForge(revision, obsIsAnyOverlayShowing) {
 
     function computeAndPaintOp(canvas, opGetter, button) {
         button.disabled = true;
-        let painter = new Painter(canvas);
-        painter.clear();
-        let d = Math.min((canvas.width - 5)/2, canvas.height);
+        let painter = getNewPainterForCanvas(canvas);
+        let d = Math.min((canvas.getBoundingClientRect().width - 5)/2, canvas.getBoundingClientRect().height);
         let rect1 = new Rect(0, 0, d, d);
         let rect2 = new Rect(d + 5, 0, d, d);
         try {
@@ -103,14 +116,14 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                     Config.OPERATION_FORE_COLOR);
             }
             let cx = (rect1.right() + rect2.x)/2;
-            painter.strokeLine(new Point(cx, 0), new Point(cx, canvas.height), 'black', 2);
+            painter.strokeLine(new Point(cx, 0), new Point(cx, canvas.getBoundingClientRect().height), 'black', 2);
             if (!op.hasNaN()) {
                 button.disabled = false;
             }
         } catch (ex) {
             painter.printParagraph(
                 ex+"",
-                new Rect(0, 0, canvas.width, canvas.height),
+                new Rect(0, 0, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height),
                 new Point(0.5, 0.5),
                 'red',
                 24);
@@ -237,7 +250,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
         let drawGate = (painter, gate) => drawCircuitTooltip(
             painter,
             gate.knownCircuitNested,
-            new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+            new Rect(0, 0, circuitCanvas.getBoundingClientRect().width, circuitCanvas.getBoundingClientRect().height),
             true,
             getCircuitCycleTime());
 
@@ -248,15 +261,13 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 Observable.requestAnimationTicker().map(_ => e)).
             flattenLatest().
             subscribe(e => {
-                let painter = new Painter(circuitCanvas);
-                painter.clear();
+                let painter = getNewPainterForCanvas(circuitCanvas);
                 drawGate(painter, e.gate);
             });
 
         let redraw = () => {
             circuitButton.disabled = true;
-            let painter = new Painter(circuitCanvas);
-            painter.clear();
+            let painter = getNewPainterForCanvas(circuitCanvas);
             try {
                 let {gate} = parseEnteredCircuitGate();
                 let keys = gate.getUnmetContextKeys();
@@ -274,7 +285,7 @@ function initForge(revision, obsIsAnyOverlayShowing) {
                 spanWeight.innerText = "(err)";
                 painter.printParagraph(
                     ex+"",
-                    new Rect(0, 0, circuitCanvas.width, circuitCanvas.height),
+                    new Rect(0, 0, circuitCanvas.getBoundingClientRect().width, circuitCanvas.getBoundingClientRect().height),
                     new Point(0.5, 0.5),
                     'red',
                     24);

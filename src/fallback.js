@@ -15,6 +15,7 @@
  */
 
 import {describe} from "./base/Describe.js"
+import {Util} from "./base/Util.js";
 
 /**
  * @type {!Array.<{regex: !Pattern, handler: !function()}>}
@@ -187,6 +188,8 @@ let drawErrorBox = msg => {
         return;
     }
     let ctx = canvas.getContext("2d");
+    let dpr = Util.getDpr();
+    ctx.scale(dpr,dpr)
     ctx.font = '12px monospace';
     let lines = msg.split("\n");
     let w = 0;

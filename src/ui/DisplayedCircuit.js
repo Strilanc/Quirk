@@ -399,7 +399,7 @@ class DisplayedCircuit {
                 let lastX = showLabels ? 25 : 5;
                 //noinspection ForLoopThatDoesntUseLoopVariableJS
                 for (let col = 0;
-                        showLabels ? lastX < painter.canvas.width : col <= this.circuitDefinition.columns.length;
+                        showLabels ? lastX < painter.canvas.getBoundingClientRect().width : col <= this.circuitDefinition.columns.length;
                         col++) {
                     let x = this.opRect(col).center().x;
                     if (this.circuitDefinition.locIsMeasured(new Point(col, row))) {
@@ -1638,9 +1638,10 @@ let _cachedRowLabelDrawer = new CachablePainting(
         //noinspection JSCheckFunctionSignatures
         let suffix = colWires < 4 ? "_".repeat(colWires) : "_..";
         //noinspection JSCheckFunctionSignatures
+        let dpr = Util.getDpr();
         _drawLabelsReasonablyFast(
             painter,
-            painter.canvas.height / rowCount,
+            painter.canvas.height / dpr / rowCount,
             rowCount,
             i => Util.bin(i, rowWires) + suffix,
             SUPERPOSITION_GRID_LABEL_SPAN);
@@ -1660,7 +1661,8 @@ let _cachedColLabelDrawer = new CachablePainting(
     (painter, numWire) => {
         let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
         let colCount = 1 << colWires;
-        let dw = painter.canvas.width / colCount;
+        let dpr = Util.getDpr();
+        let dw = painter.canvas.width / dpr/ colCount;
 
         painter.ctx.translate(colCount*dw, 0);
         painter.ctx.rotate(Math.PI/2);

@@ -26,6 +26,7 @@ import {Painter} from "../draw/Painter.js"
 import {Point} from "../math/Point.js"
 import {seq} from "../base/Seq.js"
 import {WidgetPainter} from "../draw/WidgetPainter.js"
+import {Util} from "../base/Util.js";
 
 class DisplayedToolbox {
     /**
@@ -61,8 +62,9 @@ class DisplayedToolbox {
         this._standardApperance = standardAppearance || new CachablePainting(
             () => ({width: this.desiredWidth(), height: this.desiredHeight()}),
             painter => {
+                let dpr = Util.getDpr();
                 painter.ctx.save();
-                painter.ctx.translate(0, -this.top);
+                painter.ctx.translate(0, -Math.floor(this.top*dpr)/dpr);
                 this._paintStandardContents(painter);
                 painter.ctx.restore();
             });
@@ -109,18 +111,19 @@ class DisplayedToolbox {
         let dx = gateIndex % 2;
         let dy = Math.floor(gateIndex / 2);
 
+        let dpr = Util.getDpr();
         let x = Config.TOOLBOX_MARGIN_X +
             dx * Config.TOOLBOX_GATE_SPAN +
             groupIndex * Config.TOOLBOX_GROUP_SPAN;
-        let y = this.top +
+        let y = Math.floor(this.top*dpr)/dpr +
             (this.labelsOnTop ? Config.TOOLBOX_MARGIN_Y : 3) +
             dy * Config.TOOLBOX_GATE_SPAN;
-
+        //We snap the rectangle to physical pixels to fix jumpy buttons on the lower toolbox on odd DPI
         return new Rect(
-            Math.round(x - 0.5) + 0.5,
-            Math.round(y - 0.5) + 0.5,
-            Config.GATE_RADIUS * 2,
-            Config.GATE_RADIUS * 2);
+            (Math.round(x*dpr - 0.5) + 0.5)/dpr,
+            (Math.round(y*dpr - 0.5) + 0.5)/dpr,
+            Math.floor(Config.GATE_RADIUS*dpr)/dpr * 2,
+            Math.floor(Config.GATE_RADIUS*dpr)/dpr * 2);
     }
 
     /**
@@ -203,8 +206,9 @@ class DisplayedToolbox {
      * @param {!Hand} hand
      */
     paint(painter, stats, hand) {
-        painter.fillRect(this.curArea(painter.canvas.width), Config.BACKGROUND_COLOR_TOOLBOX);
-        this._standardApperance.paint(0, this.top, painter);
+        let dpr = Util.getDpr();
+        painter.fillRect(this.curArea(painter.canvas.getBoundingClientRect().width), Config.BACKGROUND_COLOR_TOOLBOX);
+        this._standardApperance.paint(0, Math.floor(this.top*dpr)/dpr, painter);
         this._paintDeviations(painter, stats, hand);
     }
 
@@ -333,8 +337,8 @@ class DisplayedToolbox {
         painter.ctx.globalAlpha = 0;
         painter.ctx.translate(-10000, -10000);
         let {maxW, maxH} = WidgetPainter.paintGateTooltip(
-            painter, new Rect(0, 0, 500, 300), f.gate, stats.time, true);
-        let mayNeedToScale = maxW >= 500 || maxH >= 300;
+            painter, new Rect(0, 0, 500, 300), f.gate, stats.time, false);
+        let mayNeedToScale = false;
         painter.ctx.restore();
 
         // Draw tooltip.

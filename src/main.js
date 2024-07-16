@@ -62,8 +62,22 @@ const canvas = document.getElementById("drawCanvas");
 if (!canvas) {
     throw new Error("Couldn't find 'drawCanvas'");
 }
-canvas.width = canvasDiv.clientWidth;
-canvas.height = window.innerHeight*0.9;
+
+/** @param {!number} w
+ *  @param {!number} h
+ *  @returns {!void}
+ */
+function resizeCanvas(w,h) {
+    //Scale canvas for high dpi displays
+    canvas.style.width=Math.floor(w)+"px"
+    canvas.style.height=Math.floor(h)+"px"
+    let dpr = Util.getDpr();
+    canvas.width = Math.round(Math.floor(w)* dpr);
+    canvas.height = Math.round(Math.floor(h)* dpr);
+}
+
+resizeCanvas(canvasDiv.getBoundingClientRect().width,window.innerHeight*0.9);
+
 let haveLoaded = false;
 const semiStableRng = (() => {
     const target = {cur: new RestartableRng()};
@@ -83,7 +97,7 @@ const inspectorDiv = document.getElementById("inspectorDiv");
 
 /** @type {ObservableValue.<!DisplayedInspector>} */
 const displayed = new ObservableValue(
-    DisplayedInspector.empty(new Rect(0, 0, canvas.clientWidth, canvas.clientHeight)));
+    DisplayedInspector.empty(new Rect(0, 0, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height)));
 const mostRecentStats = new ObservableValue(CircuitStats.EMPTY);
 /** @type {!Revision} */
 let revision = Revision.startingAt(displayed.get().snapshot());
@@ -100,7 +114,7 @@ revision.latestActiveCommit().subscribe(jsonText => {
  */
 let desiredCanvasSizeFor = curInspector => {
     return {
-        w: Math.max(canvasDiv.clientWidth, curInspector.desiredWidth()),
+        w: Math.max(canvasDiv.getBoundingClientRect().width, curInspector.desiredWidth()),
         h: curInspector.desiredHeight()
     };
 };
@@ -144,8 +158,7 @@ const redrawNow = () => {
     mostRecentStats.set(stats);
 
     let size = desiredCanvasSizeFor(shown);
-    canvas.width = size.w;
-    canvas.height = size.h;
+    resizeCanvas(size.w,size.h);
     let painter = new Painter(canvas, semiStableRng.cur.restarted());
     shown.updateArea(painter.paintableArea());
     shown.paint(painter, stats);

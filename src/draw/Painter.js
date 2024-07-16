@@ -31,6 +31,8 @@ class Painter {
         this.canvas = canvas;
         /** @type {!CanvasRenderingContext2D} */
         this.ctx = canvas.getContext("2d");
+        let dpr = Util.getDpr();
+        this.ctx.scale(dpr,dpr);
         /**
          * @type {!Array.<!function()>}
          * @private
@@ -104,7 +106,7 @@ class Painter {
      * @returns {!Rect}
      */
     paintableArea() {
-        return new Rect(0, 0, this.canvas.width, this.canvas.height);
+        return new Rect(0, 0, this.canvas.getBoundingClientRect().width, this.canvas.getBoundingClientRect().height);
     }
 
     /**
@@ -112,7 +114,7 @@ class Painter {
      */
     clear(color = Config.DEFAULT_FILL_COLOR) {
         this.ctx.fillStyle = color;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, this.canvas.getBoundingClientRect().width, this.canvas.getBoundingClientRect().height);
     }
 
     /**
