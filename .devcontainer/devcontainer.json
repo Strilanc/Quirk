@@ -1,0 +1,49 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+	"name": "Node.js & TypeScript",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		// "ghcr.io/devcontainers-contrib/features/apt-packages:1": {},
+		// "ghcr.io/devcontainers-contrib/features/browserify:2": {},
+		// "ghcr.io/devcontainers-contrib/features/gulp-cli:2": {},
+		// "ghcr.io/devcontainers-contrib/features/http-server:1": {},
+		// "ghcr.io/devcontainers-contrib/features/jshint:2": {},
+		// "ghcr.io/devcontainers-contrib/features/npm-package:1": {},
+		// "ghcr.io/devcontainers-contrib/features/ts-node:1": {},
+		// "ghcr.io/devcontainers-contrib/features/turborepo-npm:1": {},
+		// "ghcr.io/devcontainers-contrib/features/typescript:2": {}
+	},
+
+	// "runArgs": [
+	// 	"--net", "host",
+	// 	"-e", "DISPLAY=:0",
+	// 	"-e", "XAUTHORITY=/tmp/.Xauthority",
+	// 	"-v", "${localEnv:XAUTHORITY}:/tmp/.Xauthority"
+	// ]
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [8080],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "yarn install",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				// "esbenp.prettier-vscode",
+				"ms-vscode.live-server"
+			]
+		}
+	}
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
