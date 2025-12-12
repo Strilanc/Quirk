@@ -27,6 +27,7 @@ import {Gates, INITIAL_STATES_TO_GATES} from "../gates/AllGates.js"
 import {Point} from "../math/Point.js"
 import {seq, Seq} from "../base/Seq.js"
 import {Util} from "../base/Util.js"
+import {isValidQumodePlacement} from "./QumodeConfig.js";
 
 /**
  * Defines a circuit layout, with wires and columns and gates.
@@ -105,6 +106,18 @@ class CircuitDefinition {
                 outerContext,
                 prevStickyCtx,
                 isNested);
+
+            for (let row = 0; row < this.numWires; row++) {
+                let gate = col.gates[row];
+                // Check if gate exists and has our "isBosonic" tag
+                if (gate !== undefined && gate.isBosonic) {
+                    // If it is NOT on row 0, 4, 8... disable it!
+                    if (!isValidQumodeRow(row)) {
+                        rowReasons[row] = "Bosonic gates must be placed on Qumode wires (0, 4, 8...).";
+                    }
+                }
+            }
+
             mask = col.nextMeasureMask(mask, rowReasons);
             this._colRowDisabledReason.push(rowReasons);
             this._measureMasks.push(mask);
@@ -1144,5 +1157,11 @@ function firstLastMatchInRange(rangeLen, predicate){
 }
 
 CircuitDefinition.EMPTY = new CircuitDefinition(0, []);
+
+// --- Helper for CV-DV Logic ---
+function isValidQumodeRow(row) {
+    // We strictly assume Qumodes start at 0, 4, 8, 12...
+    return row % 4 === 0;
+}
 
 export {CircuitDefinition}

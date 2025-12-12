@@ -42,6 +42,8 @@ const SUPERPOSITION_GRID_LABEL_SPAN = 50;
 
 const EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS = 2;
 
+const QUMODE_SIZE = 4;
+
 class DisplayedCircuit {
     /**
      *
@@ -368,10 +370,36 @@ class DisplayedCircuit {
      */
     _drawWires(painter, showLabels, hand) {
         let drawnWireCount = Math.min(this.circuitDefinition.numWires, (this._extraWireStartIndex || Infinity) + 1);
+        const QUMODE_SIZE = 4;  // 4 qubits per qumode
+        // Only the first 4 wires should form a qumode. Do not auto-group subsequent wires.
+        let qumodeCount = drawnWireCount >= QUMODE_SIZE ? 1 : 0;
+        let regularQubitStart = qumodeCount * QUMODE_SIZE;  // Where qumodes end, qubits begin
 
-        // Initial value labels
+        // Initial value labels for QUMODES (grouped)
         if (showLabels) {
-            for (let row = 0; row < drawnWireCount; row++) {
+            for (let q = 0; q < qumodeCount; q++) {
+                let startWire = q * QUMODE_SIZE;
+                let endWire = startWire + QUMODE_SIZE - 1;
+                let wireRectStart = this.wireRect(startWire);
+                let wireRectEnd = this.wireRect(endWire);
+                let y = (wireRectStart.center().y + wireRectEnd.center().y) / 2;
+                
+                let v = this.circuitDefinition.customInitialValues.get(startWire);
+                if (v === undefined) {
+                    v = '0';
+                }
+                let rect = this._wireInitialStateClickableRect(startWire);
+                painter.noteTouchBlocker({rect, cursor: 'pointer'});
+                if (this._highlightedSlot === undefined && hand.pos !== undefined && rect.containsPoint(hand.pos)) {
+                    painter.fillRect(rect, Config.HIGHLIGHTED_GATE_FILL_COLOR);
+                }
+                painter.print(`|${v}⟩`, 20, y, 'right', 'middle', 'black', '14px sans-serif', 20, Config.WIRE_SPACING * QUMODE_SIZE);
+            }
+        }
+
+        // Initial value labels for REGULAR QUBITS (individual)
+        if (showLabels) {
+            for (let row = regularQubitStart; row < drawnWireCount; row++) {
                 let wireRect = this.wireRect(row);
                 let y = wireRect.center().y;
                 let v = this.circuitDefinition.customInitialValues.get(row);
@@ -387,9 +415,33 @@ class DisplayedCircuit {
             }
         }
 
-        // Wires (doubled-up for measured sections).
+        // Draw QUMODE wires as thick red lines
         painter.ctx.save();
-        for (let row = 0; row < drawnWireCount; row++) {
+        for (let q = 0; q < qumodeCount; q++) {
+            let startWire = q * QUMODE_SIZE;
+            if (startWire === this._extraWireStartIndex) {
+                painter.ctx.globalAlpha *= 0.5;
+            }
+            painter.trace(trace => {
+                let wireRectStart = this.wireRect(startWire);
+                let wireRectEnd = this.wireRect(startWire + QUMODE_SIZE - 1);
+                let y = (wireRectStart.center().y + wireRectEnd.center().y) / 2;
+                let lastX = showLabels ? 25 : 5;
+                for (let col = 0;
+                        showLabels ? lastX < painter.canvas.width : col <= this.circuitDefinition.columns.length;
+                        col++) {
+                    let x = this.opRect(col).center().x;
+                    // Qumodes are always drawn as single thick lines (assume unmeasured)
+                    trace.line(lastX, y, x, y);
+                    lastX = x;
+                }
+            }).thenStroke('red', 4);  // Thick red line for qumode
+        }
+        painter.ctx.restore();
+
+        // Draw regular QUBIT wires (doubled-up for measured sections)
+        painter.ctx.save();
+        for (let row = regularQubitStart; row < drawnWireCount; row++) {
             if (row === this._extraWireStartIndex) {
                 painter.ctx.globalAlpha *= 0.5;
             }
@@ -397,7 +449,6 @@ class DisplayedCircuit {
                 let wireRect = this.wireRect(row);
                 let y = Math.round(wireRect.center().y - 0.5) + 0.5;
                 let lastX = showLabels ? 25 : 5;
-                //noinspection ForLoopThatDoesntUseLoopVariableJS
                 for (let col = 0;
                         showLabels ? lastX < painter.canvas.width : col <= this.circuitDefinition.columns.length;
                         col++) {
@@ -412,7 +463,7 @@ class DisplayedCircuit {
                     }
                     lastX = x;
                 }
-            }).thenStroke('black');
+            }).thenStroke('black');  // Normal black line for qubits
         }
         painter.ctx.restore();
         if (this._extraWireStartIndex !== undefined && this.circuitDefinition.numWires === Config.MAX_WIRE_COUNT) {
@@ -1290,8 +1341,14 @@ class DisplayedCircuit {
         let chanceCol = this.clampedCircuitColCount() + 1;
         let blochCol = chanceCol + 1;
         let numWire = this.importantWireCount();
+        
+        const QUMODE_SIZE = 4;
+        // Only the first 4 wires should be treated as a qumode; additional wires remain qubits.
+        let qumodeCount = numWire >= QUMODE_SIZE ? 1 : 0;
+        let regularQubitStart = qumodeCount * QUMODE_SIZE;  // Qumodes don't get displays
 
-        for (let i = 0; i < numWire; i++) {
+        // Only draw output displays for regular qubits, NOT for qumodes
+        for (let i = regularQubitStart; i < numWire; i++) {
             let p = stats.controlledWireProbabilityJustAfter(i, Infinity);
             MathPainter.paintProbabilityBox(painter, p, this.gateRect(i, chanceCol), hand.hoverPoints());
             let m = stats.qubitDensityMatrix(Infinity, i);
@@ -1331,32 +1388,35 @@ class DisplayedCircuit {
     _drawOutputSuperpositionDisplay(painter, stats, hand) {
         let amplitudeGrid = this._outputStateAsMatrix(stats);
         let gridRect = this._rectForSuperpositionDisplay();
-
+        // Use reduced qubit count (skip the first QUMODE_SIZE wires) for labeling and color heuristics.
+        const QUMODE_SIZE = 4;
         let numWire = this.importantWireCount();
+        let regularCount = Math.max(0, numWire - QUMODE_SIZE);
+
         MathPainter.paintMatrix(
             painter,
             amplitudeGrid,
             gridRect,
-            numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_MID_COLOR : undefined,
+            regularCount < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_MID_COLOR : undefined,
             'black',
-            numWire < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_FORE_COLOR : undefined,
+            regularCount < Config.SIMPLE_SUPERPOSITION_DRAWING_WIRE_THRESHOLD ? Config.SUPERPOSITION_FORE_COLOR : undefined,
             Config.SUPERPOSITION_BACK_COLOR);
         let forceSign = v => (v >= 0 ? '+' : '') + v.toFixed(2);
         MathPainter.paintMatrixTooltip(painter, amplitudeGrid, gridRect, hand.hoverPoints(),
-            (c, r) => `Amplitude of |${Util.bin(r*amplitudeGrid.width() + c, numWire)}⟩ (decimal ${r*amplitudeGrid.width() + c})`,
+            (c, r) => `Amplitude of |${Util.bin(r*amplitudeGrid.width() + c, regularCount)}⟩ (decimal ${r*amplitudeGrid.width() + c})`,
             (c, r, v) => 'val:' + v.toString(new Format(false, 0, 5, ", ")),
             (c, r, v) => `mag²:${(v.norm2()*100).toFixed(4)}%, phase:${forceSign(v.phase() * 180 / Math.PI)}°`);
 
-        this._drawOutputSuperpositionDisplay_labels(painter);
+        this._drawOutputSuperpositionDisplay_labels(painter, regularCount);
     }
 
     /**
      * @param {!Painter} painter
      * @private
      */
-    _drawOutputSuperpositionDisplay_labels(painter) {
+    _drawOutputSuperpositionDisplay_labels(painter, reducedNumWire) {
         let gridRect = this._rectForSuperpositionDisplay();
-        let numWire = this.importantWireCount();
+        let numWire = reducedNumWire === undefined ? this.importantWireCount() : reducedNumWire;
         _cachedRowLabelDrawer.paint(gridRect.right(), gridRect.y, painter, numWire);
         _cachedColLabelDrawer.paint(gridRect.x, gridRect.bottom(), painter, numWire);
     }
@@ -1367,18 +1427,37 @@ class DisplayedCircuit {
      * @private
      */
     _outputStateAsMatrix(stats) {
+        const QUMODE_SIZE = 4; // start superposition display after the first 4 wires
         let numWire = this.importantWireCount();
-        let buf = stats.finalState.rawBuffer();
-        if (stats.circuitDefinition.numWires !== numWire) {
-            let r = new Float32Array(2 << numWire);
-            r.set(buf.slice(0, r.length));
-            buf = r;
+        let regularStart = QUMODE_SIZE;
+        let regularCount = Math.max(0, numWire - regularStart);
+
+        // If there are no regular qubits to display, return a trivial 1x1 amplitude.
+        if (regularCount <= 0) {
+            return new Matrix(1, 1, new Float32Array([1, 0]));
         }
 
-        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        // Full raw buffer: interleaved real/imag for each basis state of the full circuit.
+        let fullBuf = stats.finalState.rawBuffer();
+        let fullComplexCount = fullBuf.length / 2;
+
+        // Build a reduced buffer by folding (summing) amplitudes over the skipped first 4 wires.
+        // This produces an amplitude vector for the subsystem consisting of wires [4..end].
+        let reducedComplexCount = 1 << regularCount;
+        let newBuf = new Float32Array(2 * reducedComplexCount);
+        let mask = (1 << regularCount) - 1;
+        for (let i = 0; i < fullComplexCount; i++) {
+            let r = fullBuf[2*i];
+            let im = fullBuf[2*i + 1];
+            let reducedIndex = i & mask; // keep lower bits corresponding to the last wires
+            newBuf[2 * reducedIndex] += r;
+            newBuf[2 * reducedIndex + 1] += im;
+        }
+
+        let [colWires, rowWires] = [Math.floor(regularCount/2), Math.ceil(regularCount/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
         //noinspection JSCheckFunctionSignatures
-        return new Matrix(colCount, rowCount, buf);
+        return new Matrix(colCount, rowCount, newBuf);
     }
 
     /**
@@ -1387,11 +1466,21 @@ class DisplayedCircuit {
      */
     _rectForSuperpositionDisplay() {
         let col = this.clampedCircuitColCount() + EXTRA_COLS_FOR_SINGLE_QUBIT_DISPLAYS + 1;
+        const QUMODE_SIZE = 4; // show grid starting after first 4 wires
         let numWire = this.importantWireCount();
-        let [colWires, rowWires] = [Math.floor(numWire/2), Math.ceil(numWire/2)];
+        let regularStart = QUMODE_SIZE;
+        let regularCount = Math.max(0, numWire - regularStart);
+
+        if (regularCount <= 0) {
+            // Nothing to display: return a small box near the output area.
+            let r = this.gateRect(Math.max(0, Math.min(this.circuitDefinition.numWires - 1, 0)), col);
+            return new Rect(r.x, r.y, r.w, r.h);
+        }
+
+        let [colWires, rowWires] = [Math.floor(regularCount/2), Math.ceil(regularCount/2)];
         let [colCount, rowCount] = [1 << colWires, 1 << rowWires];
-        let topRect = this.gateRect(0, col);
-        let bottomRect = this.gateRect(numWire-1, col);
+        let topRect = this.gateRect(regularStart, col);
+        let bottomRect = this.gateRect(numWire - 1, col);
         let gridRect = new Rect(topRect.x, topRect.y, 0, bottomRect.bottom() - topRect.y);
         return gridRect.withW(gridRect.h * (colCount/rowCount));
     }
